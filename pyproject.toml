@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "text2spoken"
+dynamic = ["version"]
+description = "Rewrite written text into the words a voice speaks: numbers, dates, times, units, titles and contractions"
+license = {text = "Apache-2.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Text Processing :: Linguistic",
+]
+authors = [{name = "JarbasAI", email = "jarbasai@mailfence.com"}]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ovos-number-parser>=0.4.0",
+    "ovos-date-parser>=0.6.4a1",
+    "unicode_rbnf>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/TigreGotico/text2spoken"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "text2spoken.version.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["text2spoken*"]
