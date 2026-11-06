@@ -1,0 +1,111 @@
+"""The tokenizer hook, the token checks, the word joins and the context words (design section 2.1)."""
+import unicodedata
+
+import pytest
+
+from tests.fixtures import quebra_frases_pr25
+from text2spoken import Token, TokenizerError, analyze, normalize
+from text2spoken.core.spans import clause_window, context_words
+from text2spoken.core.tokens import (check_tokens, default_tokenizer, digit_script, fold_digits, join_split_words,
+                                     protect_blocks)
+
+
+def pr25_tokenizer(text, lang):
+    return tuple(Token(a, b, t) for a, b, t in quebra_frases_pr25.span_indexed_word_tokenize(text))
+
+
+def words(text, tokenizer, marks=frozenset()):
+    tokens = join_split_words(check_tokens(tokenizer(text, "und"), text), text, marks)
+    return [w.text for w in context_words(tokens)]
+
+
+# Each row: the text and its context words, written by hand from the rule of section 2.1.
+ROWS = [
+    ("मेरे पास ५ किताबें", ["मेरे", "पास", "५", "किताबें"]),
+    ("اشتريتُ ٣ سَيّاراتٍ", ["اشتريتُ", "٣", "سَيّاراتٍ"]),
+    (unicodedata.normalize("NFD", "3 cafés às 14:30"), ["3", unicodedata.normalize("NFD", "cafés"),
+                                                        unicodedata.normalize("NFD", "às"), "14:30"]),
+    ("O Dr. Silva pagou 2,50 € às 14:30.", ["O", "Dr", "Silva", "pagou", "2,50", "às", "14:30"]),
+    ("background-color: #fff;", ["background-color", "fff"]),
+    ("25°C e 5 km/h", ["25", "C", "e", "5", "km", "h"]),
+    ("+351 912 345 678", ["351", "912", "345", "678"]),
+    ("1995/03/07an", ["1995/03/07", "an"]),
+    ("Er kam am 3. Mai.", ["Er", "kam", "am", "3", "Mai"]),
+    ("۵‌تا کتاب", ["۵‌تا", "کتاب"]),
+]
+
+
+@pytest.mark.parametrize("text,expected", ROWS)
+def test_context_words_are_equal_on_both_tokenizers(text, expected):
+    assert words(text, default_tokenizer) == expected
+    assert words(text, pr25_tokenizer) == expected
+
+
+@pytest.mark.parametrize("text,tag", [("Call +44 20 7946 0018 today.", "en-GB"), ("The colour is #FF0000.", "en"),
+                                      ("It is 25°C.", "en"), ("Pay $5.50, ok?", "en"), ("मेरे पास ५ किताबें", "hi"),
+                                      ("اشتريتُ ٣ سَيّاراتٍ", "ar"), ("我有3本书", "zh"), ("3本あります", "ja")])
+def test_spans_are_equal_on_both_tokenizers(text, tag):
+    assert analyze(text, tag).spans == analyze(text, tag, tokenizer=pr25_tokenizer).spans
+
+
+def test_the_arabic_decimal_mark_join_needs_a_declared_mark():
+    text = "١٢٫٥"
+    split = check_tokens(default_tokenizer(text, "ar"), text)
+    assert len(join_split_words(split, text, frozenset({"٫"}))) == 1
+    assert len(join_split_words(split, text, frozenset())) == len(split)
+
+
+def test_a_trailing_combining_mark_stays_on_its_word():
+    text = "سَيّاراتٍ"
+    cut = (Token(0, len(text) - 1, text[:-1]),)
+    assert join_split_words(cut, text, frozenset())[0].text == text
+
+
+@pytest.mark.parametrize("tokens", [
+    (Token(0, 2, "xy"),),                                  # text mismatch
+    (Token(3, 5, "de"), Token(0, 2, "ab")),                # out of order
+    (Token(0, 3, "abc"), Token(2, 4, "cd")),               # overlap
+    (Token(0, 0, ""),),                                    # empty
+    ((0, 3, "abc"),),                                      # not a Token
+])
+def test_a_tokenizer_that_breaks_a_rule_raises(tokens):
+    with pytest.raises(TokenizerError):
+        normalize("abc de", "en", tokenizer=lambda text, lang: tokens)
+
+
+def test_a_downstream_tokenizer_feeds_the_context_words():
+    seen = []
+
+    def tokenizer(text, lang):
+        seen.append(lang)
+        return (Token(0, 2, "at"), Token(3, 8, "14:30"))
+
+    assert normalize("at 14:30", "en-US", tokenizer=tokenizer) == "at two thirty PM"
+    assert seen == ["en-US"]
+    assert normalize("at 14:30", "en-US", tokenizer=lambda text, lang: ()) == "at 14:30"
+
+
+def test_a_clause_end_token_stops_the_window():
+    text = "at 14:30"
+    tokens = (Token(0, 2, "at", clause_end=True), Token(3, 8, "14:30"))
+    assert normalize(text, "en-US", tokenizer=lambda t, l: tokens) == "at 14:30"
+
+
+@pytest.mark.parametrize("text,before", [("a b; at 14:30", ("at",)), ("Go. At 14:30", ("At",)),
+                                         ("one two three four 14:30", ("two", "three", "four")),
+                                         ("x! y 14:30", ("y",)), ("e.g. b 14:30", ("e.g", "b"))])
+def test_the_window_stops_at_a_clause_mark_and_holds_three_words(text, before):
+    found = context_words(default_tokenizer(text, "en"))
+    start = text.index("14:30")
+    assert clause_window(text, found, start, start + 5, -1) == before
+
+
+def test_inline_blocks():
+    assert protect_blocks("a [[x]] b [[y") == ((2, 7),)
+    assert normalize("I have [[3]] and 3.", "en") == "I have [[3]] and three."
+
+
+def test_digit_folding_keeps_the_length_and_names_the_script():
+    assert fold_digits("٤٥ and ۵ and ५") == "45 and 5 and 5"
+    assert digit_script("٤٥") == "Arab" and digit_script("45") == "Latn" and digit_script("५") == "Deva"
+    assert digit_script("4٥") is None
