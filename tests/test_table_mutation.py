@@ -14,7 +14,7 @@ DELETE = object()
 
 # One entry of each table of en.py; DELETE removes a table that holds one value.
 EN_ENTRIES = {
-    "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero",
+    "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero", "leads": "#",
     "fraction_names": "2", "idioms": "24/7", "range_word": DELETE, "dimension_marks": "x", "dimension_word": DELETE,
     "operators": "+", "time_words": "at", "day_periods": "pm", "spoken_periods": "pm", "minute_phrases": "0",
     "months": "March", "numeric_date_reading": "full", "currencies": "USD", "percent": "word", "units": "kg",

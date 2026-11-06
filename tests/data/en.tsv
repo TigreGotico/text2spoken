@@ -41,7 +41,7 @@ en-039	en-US	date	In March 2024 we moved.	In March twenty twenty-four we moved.	
 en-040	en-GB	date	Founded 01/01/2001.	Founded the first of January two thousand one.	Wikipedia, English numerals (fetched 2026-11-06): two thousand (and) one	unchecked
 en-041	en-GB	date	Born 01/05/1901.	Born the first of May nineteen oh-one.	Wikipedia, English numerals (fetched 2026-11-06): nineteen oh-one	unchecked
 en-042	en-US	time	Dr. Smith paid 20% at 14:30.	Doctor Smith paid twenty percent at two thirty PM.	text2spoken-design section 15 target verbatim	unchecked
-en-043	en-GB	time	Dr. Smith paid 20% at 14:30.	Doctor Smith paid twenty per cent at two thirty PM.	Wikipedia, 12-hour clock (fetched 2026-11-06); per cent is British style, from memory, not fetched	unchecked
+en-043	en-GB	time	Dr. Smith paid 20% at 14:30.	Doctor Smith paid twenty per cent at two thirty PM.	Wikipedia, 12-hour clock (fetched 2026-11-06); the en-GB 12h default is unsourced model knowledge; per cent is British style, from memory, not fetched	unchecked
 en-044	en-US	time	Wake me at 6:02 tomorrow.	Wake me at six oh two tomorrow.	Wikipedia, 12-hour clock (fetched 2026-11-06): six oh two	unchecked
 en-045	en-US	time	The train leaves at 9am.	The train leaves at nine AM.	Wikipedia, 12-hour clock (fetched 2026-11-06): AM and PM	unchecked
 en-046	en-US	time	It starts at 10 p.m. sharp.	It starts at ten PM sharp.	Wikipedia, 12-hour clock (fetched 2026-11-06)	unchecked
@@ -81,6 +81,12 @@ en-079	en-GB	color	Use #808080 as the colour.	Use grey as the colour.	seeded tab
 en-080	en-US	color	Use #808080 as the color.	Use gray as the color.	seeded table	unchecked
 en-081	en-GB	color	We love #decade today.	We love #decade today.	text2spoken-design section 4.2 rule	unchecked
 en-082	en-GB	color	We love #ace today.	We love #ace today.	text2spoken-design section 4.2 rule	unchecked
-en-083	en-GB	color	Room #000 is shut.	Room #000 is shut.	text2spoken-design section 4.2 names CARDINAL; kept as written until the schema question for # is ruled	unchecked
+en-083	en-GB	cardinal	Room #000 is shut.	Room number zero zero zero is shut.	text2spoken-design section 4.2: no colour word, so not a colour; a leading zero after a lead reads digit by digit	unchecked
 en-084	en-GB	none	I can't go, I'd say.	I can't go, I'd say.	design section 1: no contraction is expanded	unchecked
 en-085	en-GB	cardinal	The city has 1,234,567 people.	The city has one million two hundred and thirty-four thousand five hundred and sixty-seven people.	Wikipedia, English numerals (fetched 2026-11-06): British and in the whole part; 1234567 = 1000000 + 234000 + 567 by hand; a comma is written style	unchecked
+en-086	en-GB	cardinal	The sub-23 team won.	The sub twenty-three team won.	text2spoken-design section 4.2: the lead - reads as a space; twenty-three from Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-087	en-GB	cardinal	Room #20 is shut.	Room number twenty is shut.	text2spoken-design section 4.2: the lead # reads number	unchecked
+en-088	en-US	cardinal	Take the A-1 road.	Take the A one road.	text2spoken-design section 4.2: the lead - reads as a space	unchecked
+en-089	en-GB	telephone	Call +44 20 7946 0018 today.	Call plus four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: + reads plus, digits one by one	unchecked
+en-090	en-GB	telephone	Call 0044 20 7946 0018 today.	Call zero zero four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: a number written with 00 reads the digits as written	unchecked
+en-091	en-GB	color	The colour is #000 here.	The colour is black here.	text2spoken-design section 4.2: all digits with a colour word in the clause; seeded table	unchecked

@@ -15,6 +15,7 @@ from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.numbers import Number, find_numbers, number_marks
 from text2spoken.core.spans import Features, SpanContext, Span, clause_window, context_words
+from text2spoken.core.spellers import DigitSpeller
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, fold_digits, is_digit, is_letter, is_mark, is_word_char
 from text2spoken.params import FrozenMap, Form
@@ -67,15 +68,36 @@ def _affixes(text: str, start: int, end: int, data) -> tuple[int, int, str, str]
         start -= len(prefix)
     elif not _free_before(text, start, symbols):
         return None
+    after = _suffix(text, end, data)
+    if after is None:
+        return None
+    return start, after[0], prefix, after[1]
+
+
+def _suffix(text: str, end: int, data) -> tuple[int, str] | None:
+    """The end of the span with a declared case ending after text[:end], or None when other letters touch it."""
     letters = end
     while letters < len(text) and (is_letter(text[letters]) or is_mark(text[letters])):
         letters += 1
     suffix = text[end:letters]
     if suffix and suffix not in data.get("case_suffixes", ()):
         return None
-    if not _free_after(text, letters, symbols):
+    if not _free_after(text, letters, data.get("symbols", FrozenMap())):
         return None
-    return start, letters, prefix, suffix
+    return letters, suffix
+
+
+def _lead(text: str, start: int, leads) -> str:
+    """The longest declared lead that ends right before the digits at `start`.
+
+    No lead follows a digit. A lead with words follows no word character either, so `C#5` stays as written,
+    while a lead that stands for a space joins a word, as in `sub-23`.
+    """
+    for lead in sorted(leads, key=len, reverse=True):
+        before = text[start - len(lead) - 1] if start > len(lead) else ""
+        if text.endswith(lead, 0, start) and not is_digit(before) and not (leads[lead] and is_word_char(before)):
+            return lead
+    return ""
 
 
 def _sentence_period(text: str, end: int) -> bool:
@@ -114,16 +136,25 @@ class Cardinal:
     form: Form = Form.CARDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        leads = request.data.get("leads", FrozenMap())
         for number in _numbers(text, request):
-            if number.fraction is not None or (len(number.integer) > 1 and number.integer[0] == "0"):
+            if number.fraction is not None:
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
-            if bounds is None:
+            proclitic = bounds is not None and bounds[2]
+            lead = "" if number.sign or proclitic else _lead(text, number.start, leads)
+            if lead:
+                after = _suffix(text, number.end, request.data)
+                if after is None:
+                    continue
+                start, end, prefix, suffix = number.start - len(lead), after[0], "", after[1]
+            elif bounds is None or (len(number.integer) > 1 and number.integer[0] == "0"):
                 continue
-            start, end, prefix, suffix = bounds
+            else:
+                start, end, prefix, suffix = bounds
             yield Span(start, end, Form.CARDINAL,
-                       FrozenMap({"digits": number.integer, "sign": number.sign, "prefix": prefix, "suffix": suffix,
-                                  "script": number.script}), recognizer=self.name)
+                       FrozenMap({"digits": number.integer, "sign": number.sign, "lead": lead, "prefix": prefix,
+                                  "suffix": suffix, "script": number.script}), recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -412,17 +443,16 @@ class Telephone:
             if not 7 <= len(digits) <= 15:
                 continue
             country_code = ""
-            international = written.startswith("+") or digits.startswith("00")
-            if international:
-                if written.startswith("00"):
-                    groups[0] = groups[0][2:]
-                    groups = [g for g in groups if g]
+            if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
                     country_code, groups = groups[0], groups[1:]
                 else:
                     country_code = next((c for c in codes if groups[0].startswith(c)), "")
                     groups[0] = groups[0][len(country_code):]
                 if not country_code:
+                    continue
+            elif digits.startswith("00"):
+                if not any(digits[2:].startswith(code) for code in codes):
                     continue
             else:
                 trunk = any(plan["trunk"] and digits.startswith(plan["trunk"])
@@ -439,11 +469,21 @@ def speak_lexicon(span: Span, context: SpanContext) -> str:
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
-    """A cardinal through the language's cardinal speller, with the sign words of its data."""
-    fields = span.fields
-    words = context.request.language.spellers[Form.CARDINAL].cardinal(fields["digits"], Features(), context.request)
+    """A cardinal through the language's cardinal speller, with the sign words and the lead words of its data.
+
+    A lead word of "" stands for a space. Digits with a leading zero, which only a lead admits, read one by one.
+    """
+    fields, request = span.fields, context.request
+    digits = fields["digits"]
+    if len(digits) > 1 and digits[0] == "0":
+        words = DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
+    else:
+        words = request.language.spellers[Form.CARDINAL].cardinal(digits, Features(), request)
     if fields["sign"]:
-        return f"{context.request.data['sign_words'][fields['sign']]} {words}"
+        words = f"{request.data['sign_words'][fields['sign']]} {words}"
+    if fields["lead"]:
+        lead = request.data["leads"][fields["lead"]]
+        words = f"{lead} {words}" if lead else f" {words}"
     return words
 
 

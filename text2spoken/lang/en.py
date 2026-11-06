@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.recognizers import PHONE_PLANS, SHARED, speak_lexicon
+from text2spoken.core.recognizers import PHONE_PLANS, SHARED, speak_cardinal, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
 from text2spoken.core.times import twelve_hour
@@ -82,6 +82,7 @@ DATA = freeze({
     "sign_words": {"-": "minus", "+": "plus"},
     "decimal_word": "point",
     "digit_words": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
+    "leads": {"#": "number", "-": ""},
     "fraction_names": {"2": ["half", "halves"], "4": ["quarter", "quarters"]},
     "idioms": {"24/7": "twenty-four seven", "50/50": "fifty-fifty"},
     "range_word": "to",
@@ -202,10 +203,6 @@ def _amount(amount: FrozenMap, request: Request) -> str:
 
 def _written(amount: FrozenMap) -> str:
     return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
-
-
-def speak_cardinal(span: Span, context: SpanContext) -> str:
-    return _signed(_cardinal(span.fields["digits"], context.request), span.fields["sign"], context.request)
 
 
 def speak_ordinal(span: Span, context: SpanContext) -> str:

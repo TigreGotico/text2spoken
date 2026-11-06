@@ -18,7 +18,7 @@ LOG = logging.getLogger("text2spoken")
 
 FIELDS: Mapping[Form, frozenset[str]] = {
     Form.LEXICON: frozenset({"spoken"}),
-    Form.CARDINAL: frozenset({"digits", "sign", "prefix", "suffix", "script"}),
+    Form.CARDINAL: frozenset({"digits", "sign", "lead", "prefix", "suffix", "script"}),
     Form.ORDINAL: frozenset({"digits", "marker", "prefix", "suffix", "script"}),
     Form.DECIMAL: frozenset({"integer", "fraction", "sign", "prefix", "suffix", "script"}),
     Form.FRACTION: frozenset({"numerator", "denominator", "sign", "prefix", "suffix"}),
@@ -117,7 +117,8 @@ def splits_token(span: Span, tokens: Sequence[Token], text: str) -> bool:
     """Whether a span edge falls inside a token at a point the rule of section 2.1 refuses."""
     for token in tokens:
         for edge in (span.start, span.end):
-            if token.start < edge < token.end and not _boundary_allowed(text, edge, span.form):
+            lead_start = edge == span.start and bool(span.fields.get("lead"))
+            if token.start < edge < token.end and not (lead_start or _boundary_allowed(text, edge, span.form)):
                 return True
     return False
 

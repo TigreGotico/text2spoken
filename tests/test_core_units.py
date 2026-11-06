@@ -82,3 +82,49 @@ def _patterns():
 def test_every_compiled_regex_of_the_package_is_portable(name, pattern):
     check_pattern(pattern.pattern)
     assert pattern.flags == re.UNICODE, f"{name} compiles with flags"
+
+
+def test_a_lead_missing_from_the_table_stays_written(monkeypatch):
+    from dataclasses import replace
+
+    from text2spoken import normalize
+    from text2spoken.core import language
+    from text2spoken.lang import en
+
+    data = FrozenMap({**en.LANGUAGE.data, "leads": FrozenMap({"-": ""})})
+    monkeypatch.setattr(language, "_registry", lambda: {"en": replace(en.LANGUAGE, data=data)})
+    assert normalize("Room #20 is shut.", "en-GB") == "Room #20 is shut."
+    assert normalize("The sub-23 team won.", "en-GB") == "The sub twenty-three team won."
+
+
+def test_a_lead_after_a_digit_is_no_lead():
+    from text2spoken import NormalizationParams, normalize
+
+    assert normalize("It was 3-2.", "en", NormalizationParams().only(Form.CARDINAL)) == "It was 3-2."
+
+
+def test_a_lead_with_words_after_a_letter_is_no_lead():
+    from text2spoken import normalize
+
+    assert normalize("Play C#5 now.", "en-GB") == "Play C#5 now."
+    assert normalize("Play #5 now.", "en-GB") == "Play number five now."
+
+
+@pytest.mark.parametrize("text,spans", [("Dial 0044 20 7946 0018 now.", 1), ("Dial 0099 20 7946 0018 now.", 0)])
+def test_a_number_written_with_00_needs_a_country_code(text, spans):
+    from text2spoken import analyze
+
+    assert sum(span.form is Form.TELEPHONE for span in analyze(text, "en-GB").spans) == spans
+
+
+def test_a_proclitic_wins_over_a_lead(monkeypatch):
+    from dataclasses import replace
+
+    from text2spoken import normalize
+    from text2spoken.core import language
+    from text2spoken.lang import en
+
+    data = FrozenMap({**en.LANGUAGE.data, "proclitics": ("ab-",)})
+    monkeypatch.setattr(language, "_registry", lambda: {"en": replace(en.LANGUAGE, data=data)})
+    assert normalize("Go ab-5 now.", "en-GB") == "Go ab-five now."
+    assert normalize("Go cd-5 now.", "en-GB") == "Go cd five now."
