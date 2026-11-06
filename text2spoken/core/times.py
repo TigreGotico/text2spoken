@@ -19,6 +19,3 @@ def twelve_hour(hour: int) -> int:
     """The hour on a 12-hour clock face: 0 and 12 are 12."""
     return hour % 12 or 12
 
-
-def day_period(hour: int) -> str:
-    return "am" if hour < 12 else "pm"

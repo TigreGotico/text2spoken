@@ -57,14 +57,19 @@ def test_roman_value(numeral, value):
     assert roman.value(numeral) == value
 
 
-def test_a_span_may_split_a_token_only_where_a_digit_meets_a_non_digit():
+def test_a_span_may_split_a_token_only_where_a_digit_meets_a_non_digit_or_next_to_punctuation():
     text = "MIXER 2024ko"
     tokens = (Token(0, 5, "MIXER"), Token(6, 12, "2024ko"))
     assert splits_token(Span(0, 3, Form.ROMAN, FrozenMap()), tokens, text)
     assert not splits_token(Span(6, 10, Form.YEAR, FrozenMap()), tokens, text)
+    assert splits_token(Span(6, 8, Form.CARDINAL, FrozenMap()), tokens, text)
+    assert splits_token(Span(8, 12, Form.CARDINAL, FrozenMap()), tokens, text)
     lexicon = "l'ACME"
     assert not splits_token(Span(2, 6, Form.LEXICON, FrozenMap()), (Token(0, 6, lexicon),), lexicon)
-    assert splits_token(Span(2, 6, Form.CARDINAL, FrozenMap()), (Token(0, 6, lexicon),), lexicon)
+    assert not splits_token(Span(2, 6, Form.CARDINAL, FrozenMap()), (Token(0, 6, lexicon),), lexicon)
+    dashed = "ACME-based"
+    assert not splits_token(Span(0, 4, Form.LEXICON, FrozenMap()), (Token(0, 10, dashed),), dashed)
+    assert splits_token(Span(0, 3, Form.LEXICON, FrozenMap()), (Token(0, 10, dashed),), dashed)
 
 
 def _patterns():

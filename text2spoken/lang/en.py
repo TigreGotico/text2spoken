@@ -13,11 +13,12 @@ from dataclasses import dataclass
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.recognizers import PHONE_PLANS, SHARED, speak_cardinal, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext
+from text2spoken.core.numbers import find_numbers, number_marks
+from text2spoken.core.recognizers import PHONE_PLANS, SHARED, join_ranges, speak_cardinal, speak_lexicon
+from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
 from text2spoken.core.times import twelve_hour
-from text2spoken.core.tokens import Token, fold_digits, is_word_char
+from text2spoken.core.tokens import Token, fold_digits, is_bounded, next_visible
 from text2spoken.params import FrozenMap, Form, freeze
 
 LOG = logging.getLogger("text2spoken")
@@ -86,10 +87,12 @@ DATA = freeze({
     "fraction_names": {"2": ["half", "halves"], "4": ["quarter", "quarters"]},
     "idioms": {"24/7": "twenty-four seven", "50/50": "fifty-fifty"},
     "range_word": "to",
+    "range_marks": ["-", "–"],
     "dimension_marks": ["x", "×"],
     "dimension_word": "by",
     "operators": {"+": "plus", "−": "minus", "×": "times", "÷": "divided by", "=": "equals"},
-    "time_words": ["at", "from", "until", "till", "by", "since", "before", "after", "around", "about", "to"],
+    "time_words": ["at", "from", "until", "till", "since", "before", "after", "around"],
+    "year_words": ["in", "since", "until", "till", "during", "circa", "year"],
     "day_periods": {"am": ["am", "a.m.", "AM", "A.M."], "pm": ["pm", "p.m.", "PM", "P.M."]},
     "spoken_periods": {"am": "AM", "pm": "PM"},
     "minute_phrases": {"0": "{hour} o'clock", "15": "quarter past {hour}", "30": "half past {hour}",
@@ -101,7 +104,10 @@ DATA = freeze({
                 "minor": {"one": "cent", "other": "cents"}},
         "GBP": {"symbols": ["£"], "one": "pound", "other": "pounds", "minor": {"one": "penny", "other": "pence"}},
         "EUR": {"symbols": ["€"], "one": "euro", "other": "euros", "minor": {"one": "cent", "other": "cents"}},
+        "JPY": {"symbols": ["¥"], "one": "yen", "other": "yen", "minor": {"one": "sen", "other": "sen"}},
     },
+    "scales": {"thousand": "thousand", "million": "million", "billion": "billion", "trillion": "trillion",
+               "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
     "units": UNITS_GB,
     "phone_words": ["phone", "telephone", "tel", "call", "mobile", "cell", "fax"],
@@ -110,10 +116,12 @@ DATA = freeze({
     "titles": {"Dr.": "Doctor", "Mr.": "Mister", "Mrs.": "Missus", "Prof.": "Professor",
                "Dr": "Doctor", "Mr": "Mister", "Mrs": "Missus"},
     "abbreviations": {"etc.": "et cetera", "e.g.": "for example", "i.e.": "that is", "vs.": "versus"},
+    "sentence_final": ["etc."],
     "number_abbreviations": {"No.": "number"},
-    "symbols": {"%": "percent", "$": "money", "£": "money", "€": "money", "°": "measure"},
+    "symbols": {"%": "percent", "$": "money", "£": "money", "€": "money", "¥": "money", "°": "measure",
+                "×": "measure"},
+    "ordinal_marks": ["st", "nd", "rd", "th"],
     "patterns": {
-        "ordinal": "[0-9]+" + _ORDINAL_MARK,
         "expression": "[0-9]+(?: ?[+−×÷=] ?[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_day_month": "([0-9][0-9]?)" + _ORDINAL_MARK + "? (?:of )?" + _MONTH + "(?:,? ([0-9][0-9][0-9][0-9]))?",
@@ -159,7 +167,10 @@ class EnglishSpeller:
         return self.rbnf[request.variety.tag].ordinal(digits, features, request)
 
     def year(self, digits: str, features: Features, request: Request) -> str:
-        return self.rbnf[request.variety.tag].year(digits, features, request)
+        """`spellout-numbering-year`, except that a year it reads with "thousand" reads as the cardinal of the
+        variety: "two thousand (and) one" for 2001 (Wikipedia, "English numerals", Dates)."""
+        words = self.rbnf[request.variety.tag].year(digits, features, request)
+        return self.cardinal(digits, features, request) if "thousand" in words else words
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", features, request)
@@ -284,18 +295,25 @@ def speak_time(span: Span, context: SpanContext) -> str:
 
 
 def speak_money(span: Span, context: SpanContext) -> str:
+    """A scale word comes between the amount and the plural currency name: "two million dollars"."""
     request = context.request
-    amount = span.fields["amount"]
-    currency = request.data["currencies"][span.fields["currency"]]
+    fields = span.fields
+    amount = FrozenMap({**fields["amount"], "sign": ""})
+    currency = request.data["currencies"][fields["currency"]]
     integer, fraction = amount["integer"] or "0", amount["fraction"]
-    if len(fraction) == 2:
+    if fields["scale"]:
+        words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
+    elif len(fraction) == 2:
         major = f"{_cardinal(integer, request)} {currency[plural_category(request, integer)]}"
         minor_digits = str(int(fraction))
         minor = f"{_cardinal(minor_digits, request)} {currency['minor'][plural_category(request, minor_digits)]}"
         if int(fraction) == 0:
-            return major
-        return minor if int(integer) == 0 else f"{major} and {minor}"
-    return f"{_amount(amount, request)} {currency[plural_category(request, _written(amount))]}"
+            words = major
+        else:
+            words = minor if int(integer) == 0 else f"{major} and {minor}"
+    else:
+        words = f"{_amount(amount, request)} {currency[plural_category(request, _written(amount))]}"
+    return _signed(words, fields["amount"]["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
@@ -303,7 +321,8 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
     unit = request.data["units"][span.fields["unit"]][plural_category(request, _written(amounts[-1]))]
-    joined = f" {request.data['dimension_word']} ".join(_amount(a, request) for a in amounts)
+    link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
+    joined = f" {link} ".join(_amount(a, request) for a in amounts)
     return f"{joined} {unit}"
 
 
@@ -333,34 +352,68 @@ def speak_idiom(span: Span, context: SpanContext) -> str:
     return context.request.data["idioms"][span.fields["key"]]
 
 
+def speak_year(span: Span, context: SpanContext) -> str:
+    return SPELLER.year(span.fields["digits"], Features(), context.request)
+
+
 def speak_color(span: Span, context: SpanContext) -> str:
+    """A colour with no name spells its digits as the text writes them (section 12)."""
     request = context.request
     name = request.data["colors"].get(span.fields["rgb"])
     if span.fields["alpha"] is not None:
         LOG.warning("unread alpha %r of colour #%s for %s", span.fields["alpha"], span.fields["rgb"], request.tag)
     if name is not None:
         return name
-    return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["rgb"])
+    return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
 
 
-def _bounded(text: str, start: int, end: int) -> bool:
-    return (start == 0 or not is_word_char(text[start - 1])) and (end == len(text) or not is_word_char(text[end]))
+def _numbers(text: str, request: Request):
+    return find_numbers(text, number_marks(request.data, request.params.decimal_mark))
 
 
 @dataclass(frozen=True)
 class Ordinal:
-    """`1st`, `22nd`, `113th`, with the suffix that the number takes."""
+    """`1st`, `22nd`, `113th`, `1,000th`: a whole number with the suffix that it takes."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in re.finditer(request.data["patterns"]["ordinal"], fold_digits(text)):
-            start, end = match.span()
-            digits = match.group()[:-2]
-            if _bounded(text, start, end) and ordinal_suffix(int(digits)) == match.group()[-2:]:
-                yield Span(start, end, Form.ORDINAL,
-                           FrozenMap({"digits": digits, "marker": match.group()[-2:], "prefix": "", "suffix": "",
-                                      "script": "Latn"}), recognizer=self.name)
+        marks = request.data["ordinal_marks"]
+        for number in _numbers(text, request):
+            marker = text[number.end:number.end + 2]
+            if (number.sign or number.fraction is not None or marker not in marks
+                    or ordinal_suffix(int(number.integer)) != marker or not is_bounded(text, number.start, number.end + 2)):
+                continue
+            yield Span(number.start, number.end + 2, Form.ORDINAL,
+                       FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
+                                  "script": number.script}), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class Year:
+    """A year from 1000 to 2099 after a year word, as in `In 1984`, and two years that a dash joins, the
+    lower one first, as in `1939-1945`. Section 4.2 lets a word mark a year."""
+    name: str = "year"
+    form: Form = Form.YEAR
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return join_ranges(self._years(text, tokens, request), text, request.data["range_word"])
+
+    def _years(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        year_words = frozenset(request.data["year_words"])
+        words = context_words(tokens)
+        years = [n for n in _numbers(text, request)
+                 if not n.sign and n.fraction is None and n.end - n.start == 4 and 1000 <= int(n.integer) <= 2099
+                 and is_bounded(text, n.start, n.end)]
+        in_range = set()
+        for first, second in zip(years, years[1:]):
+            if text[first.end:second.start] in ("-", "–") and int(first.integer) < int(second.integer):
+                in_range |= {first, second}
+        for year in years:
+            before = clause_window(text, words, year.start, year.end, -1, limit=1)
+            if year in in_range or (before and before[0].lower() in year_words):
+                yield Span(year.start, year.end, Form.YEAR, FrozenMap({"digits": year.integer, "suffix": ""}),
+                           recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -371,18 +424,16 @@ class Abbreviation:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
-        tables = (("titles", lambda rest: rest[:1].isupper()),
-                  ("number_abbreviations", lambda rest: rest[:1].isdigit()),
-                  ("abbreviations", lambda rest: True))
+        tables = (("titles", str.isupper), ("number_abbreviations", str.isdigit), ("abbreviations", lambda _: True))
+        final = frozenset(data["sentence_final"])
         for table, follows in tables:
             for key in sorted((k for k, v in data[table].items() if v is not None), key=len, reverse=True):
                 position = text.find(key)
                 while position != -1:
                     end = position + len(key)
-                    rest = text[end:].lstrip()
-                    after_ok = end == len(text) or not is_word_char(text[end])
-                    if (position == 0 or not is_word_char(text[position - 1])) and after_ok and follows(rest):
-                        sentence_end = table == "abbreviations" and key.endswith(".") and (rest == "" or rest[:1].isupper())
+                    following = next_visible(text, end)
+                    if is_bounded(text, position, end) and follows(following):
+                        sentence_end = key in final and (following == "" or following.isupper())
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
                                    trail="." if sentence_end else "", recognizer=self.name)
                     position = text.find(key, end)
@@ -398,8 +449,7 @@ class Expression:
         operators = "".join(request.data["operators"])
         for match in re.finditer(request.data["patterns"]["expression"], fold_digits(text)):
             start, end = match.span()
-            if not _bounded(text, start, end) or (end < len(text) and text[end] in ".,/:" and end + 1 < len(text)
-                                                  and text[end + 1].isdigit()):
+            if not is_bounded(text, start, end):
                 continue
             written = match.group().replace(" ", "")
             operands = tuple(re.split("[" + operators + "]", written))
@@ -416,11 +466,12 @@ class DateNamed:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         patterns = request.data["patterns"]
+        symbols = request.data["symbols"]
         folded = fold_digits(text)
         for key, order in (("date_month_day", "MDY"), ("date_day_month", "DMY"), ("date_month_year", "MY")):
             for match in re.finditer(patterns[key], folded):
                 start, end = match.span()
-                if not _bounded(text, start, end):
+                if not is_bounded(text, start, end) or (start and text[start - 1] in symbols):
                     continue
                 if order == "MY":
                     month_name, day, year = match.group(1), None, match.group(2)
@@ -450,14 +501,15 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
                  SHARED["time_clock"], SHARED["telephone"], SHARED["money"], SHARED["percent"], SHARED["measure"],
-                 Expression(), SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(), SHARED["decimal"],
-                 SHARED["cardinal"]),
+                 Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
+                 SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
+        Form.YEAR: speak_year,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},

@@ -38,7 +38,7 @@ en-036	en-GB	date	On 13/13/2024 nothing happened.	On 13/13/2024 nothing happened
 en-037	en-US	date	Opened March 12, 2024 downtown.	Opened March twelfth twenty twenty-four downtown.	Wikipedia, English numerals (fetched 2026-11-06)	unchecked
 en-038	en-GB	date	Opened 12 March 2024 downtown.	Opened the twelfth of March twenty twenty-four downtown.	Wikipedia, English numerals (fetched 2026-11-06)	unchecked
 en-039	en-US	date	In March 2024 we moved.	In March twenty twenty-four we moved.	Wikipedia, English numerals (fetched 2026-11-06)	unchecked
-en-040	en-GB	date	Founded 01/01/2001.	Founded the first of January two thousand one.	Wikipedia, English numerals (fetched 2026-11-06): two thousand (and) one	unchecked
+en-040	en-GB	date	Founded 01/01/2001.	Founded the first of January two thousand and one.	Wikipedia, English numerals (fetched 2026-11-06): two thousand (and) one	unchecked
 en-041	en-GB	date	Born 01/05/1901.	Born the first of May nineteen oh-one.	Wikipedia, English numerals (fetched 2026-11-06): nineteen oh-one	unchecked
 en-042	en-US	time	Dr. Smith paid 20% at 14:30.	Doctor Smith paid twenty percent at two thirty PM.	text2spoken-design section 15 target verbatim	unchecked
 en-043	en-GB	time	Dr. Smith paid 20% at 14:30.	Doctor Smith paid twenty per cent at two thirty PM.	Wikipedia, 12-hour clock (fetched 2026-11-06); the en-GB 12h default is unsourced model knowledge; per cent is British style, from memory, not fetched	unchecked
@@ -90,3 +90,28 @@ en-088	en-US	cardinal	Take the A-1 road.	Take the A one road.	text2spoken-design
 en-089	en-GB	telephone	Call +44 20 7946 0018 today.	Call plus four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: + reads plus, digits one by one	unchecked
 en-090	en-GB	telephone	Call 0044 20 7946 0018 today.	Call zero zero four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: a number written with 00 reads the digits as written	unchecked
 en-091	en-GB	color	The colour is #000 here.	The colour is black here.	text2spoken-design section 4.2: all digits with a colour word in the clause; seeded table	unchecked
+en-092	en-GB	year	In 1984, Orwell wrote.	In nineteen eighty-four, Orwell wrote.	Wikipedia, English numerals (fetched 2026-11-06), Dates: a year reads as two pairs of digits, 1999 nineteen ninety-nine	unchecked
+en-093	en-GB	year	Born in 2005.	Born in two thousand and five.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 2001 two thousand (and) one; British and as in its cardinals	unchecked
+en-094	en-US	year	Born in 2005.	Born in two thousand five.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 2001 two thousand (and) one; American cardinals write no and	unchecked
+en-095	en-GB	year	In 1066 the Normans came.	In ten sixty-six the Normans came.	Wikipedia, English numerals (fetched 2026-11-06), Dates: the years after 1009 until 1099 read in the same manner, 1015 ten fifteen	unchecked
+en-096	en-GB	year	The war lasted 1939-1945.	The war lasted nineteen thirty-nine to nineteen forty-five.	Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits; the range word to of design section 4.2	unchecked
+en-097	en-GB	year	Built in 1901.	Built in nineteen oh-one.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 1901 nineteen oh-one	unchecked
+en-098	en-US	year	Since 2010 it grew.	Since twenty ten it grew.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 2010 twenty ten	unchecked
+en-099	en-GB	cardinal	#20 is the room.	number twenty is the room.	text2spoken-design section 4.2: the lead # reads number, also at the start of the text	unchecked
+en-100	en-GB	cardinal	#5 trending now	number five trending now	text2spoken-design section 4.2: the lead # reads number, also at the start of the text	unchecked
+en-101	en-US	money	Profits of $2 million.	Profits of two million dollars.	text2spoken-design section 4.2: a scale word after the amount; from memory, not fetched	unchecked
+en-102	en-US	money	They raised $1m.	They raised one million dollars.	text2spoken-design section 4.2: m attached to the amount is the scale million; from memory, not fetched	unchecked
+en-103	en-GB	money	It costs ¥500.	It costs five hundred yen.	yen has no plural form, from memory, not fetched	unchecked
+en-104	en-US	money	It costs -$5.	It costs minus five dollars.	text2spoken-design section 4.2: a sign before the currency symbol	unchecked
+en-105	en-GB	measure	The box is 10 × 20 cm.	The box is ten by twenty centimetres.	text2spoken-design section 4.2: a dimension mark with a space on each side reads by	unchecked
+en-106	en-GB	measure	Temps 20-25°C today	Temps twenty to twenty-five degrees Celsius today	text2spoken-design section 4.2: a range mark between two amounts reads the range word	unchecked
+en-107	en-GB	measure	x 10°C/50°F	x ten degrees Celsius/fifty degrees Fahrenheit	text2spoken-design section 11: the output reads the same on a second pass	unchecked
+en-108	en-US	time	From 9am-5pm	From nine AM to five PM	text2spoken-design sections 2.1 and 4.2: a dash between two times reads the range word	unchecked
+en-109	en-US	telephone	Phone: (555) 123-4567.	Phone: five five five one two three four five six seven.	text2spoken-design section 4.3: a group in brackets; digit by digit	unchecked
+en-110	en-GB	abbreviation	Team A vs. Team B.	Team A versus Team B.	only etc. ends a sentence with its period, from memory, not fetched	unchecked
+en-111	en-GB	abbreviation	See e.g. London.	See for example London.	only etc. ends a sentence with its period, from memory, not fetched	unchecked
+en-112	en-GB	none	2.5+3	2.5+3	text2spoken-design section 4.2: an expression reads integers; a decimal operand stays as written	unchecked
+en-113	en-GB	ordinal	He was 1,000th.	He was one thousandth.	the group mark is part of the number; from memory, not fetched	unchecked
+en-114	en-GB	color	Text color: #333.	Text color: three three three.	text2spoken-design section 12: a colour with no name spells the digits that the text writes	unchecked
+en-115	en-GB	none	Set the aspect ratio to 16:10.	Set the aspect ratio to 16:10.	text2spoken-design section 4.2: to is no time evidence, so 16:10 stays as written	unchecked
+en-116	en-GB	none	Code 007 opens.	Code 007 opens.	text2spoken-design section 4.2: digits with a leading zero and no lead stay as written	unchecked

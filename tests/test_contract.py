@@ -8,7 +8,7 @@ from tests import contract
 from tests.contract import CLAUSES, language_files
 from text2spoken.core import language as loader
 from text2spoken.core.language import Variety
-from text2spoken.core.spans import Features, Span
+from text2spoken.core.spans import Features
 from text2spoken.core.spellers import RbnfSpeller
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, freeze
 

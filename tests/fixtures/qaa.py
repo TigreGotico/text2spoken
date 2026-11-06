@@ -5,7 +5,7 @@ Its words are a table of this file, so a test reads its expected value here and 
 from text2spoken.core.language import LanguageSpec, Variety
 from text2spoken.core.recognizers import SHARED, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.params import Form, FrozenMap, GrammaticalGender, freeze
+from text2spoken.params import Form, GrammaticalGender, freeze
 
 WORDS = {"1": {"masculine": "um", "feminine": "uma"}, "2": {"masculine": "dois", "feminine": "duas"}}
 NOUN_GENDER = {"casa": GrammaticalGender.FEMININE, "casas": GrammaticalGender.FEMININE}

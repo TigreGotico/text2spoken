@@ -266,16 +266,18 @@ def lexicon_entries(tag: str, lexicon: FrozenMap) -> FrozenMap:
 
 
 def _check_lexicon(request: Request) -> None:
+    """A lexicon value that a recognizer reads would change on a second pass (section 11). An entry that keeps
+    its key, such as `{"MIX": "MIX"}`, is allowed: its span reads the value as written."""
+    from text2spoken.core.spans import classify
     from text2spoken.core.tokens import default_tokenizer
 
     for written, spoken in lexicon_entries(request.tag, request.params.lexicon).items():
         tokens = default_tokenizer(spoken, request.tag)
-        for recognizer in request.language.recognizers:
-            claimed = next(iter(recognizer.find(spoken, tokens, request)), None)
-            if claimed is not None:
+        for claimed in classify(spoken, tokens, (), request):
+            if not (claimed.form is Form.LEXICON and claimed.fields["spoken"] == spoken[claimed.start:claimed.end]):
                 raise InvalidLexiconError(
                     f"the lexicon value {spoken!r} of {written!r} holds {spoken[claimed.start:claimed.end]!r}, "
-                    f"which the {recognizer.name} recognizer reads, so a second pass would change it")
+                    f"which the {claimed.recognizer} recognizer reads, so a second pass would change it")
 
 
 def resolve(lang: str, params: NormalizationParams) -> Request:

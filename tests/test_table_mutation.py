@@ -19,7 +19,8 @@ EN_ENTRIES = {
     "operators": "+", "time_words": "at", "day_periods": "pm", "spoken_periods": "pm", "minute_phrases": "0",
     "months": "March", "numeric_date_reading": "full", "currencies": "USD", "percent": "word", "units": "kg",
     "phone_words": "phone", "color_words": "colour", "colors": "ff0000", "titles": "Dr.", "abbreviations": "etc.",
-    "number_abbreviations": "No.", "patterns": "ordinal",
+    "number_abbreviations": "No.", "patterns": "expression", "range_marks": "-", "year_words": "in",
+    "scales": "million", "sentence_final": "etc.", "ordinal_marks": "th",
 }
 
 

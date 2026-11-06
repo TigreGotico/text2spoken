@@ -24,7 +24,7 @@ Ich habe einundzwanzig Äpfel.
 
 ## Where this fits
 
-Alone, it turns written text into spoken words with `normalize`. In the speech stack, it is the normalisation stage: a frontend or a TTS library calls it before phonemization. It calls `ovos-number-parser` and `unicode_rbnf` to spell numbers, `quebra-frases` to tokenize, and `linguatag` to read language tags.
+Alone, it turns written text into spoken words with `normalize`. In the speech stack, it is the normalisation stage: a frontend or a TTS library calls it before phonemization. It calls `unicode_rbnf` to spell numbers, `quebra-frases` to tokenize, and `linguatag` with `langcodes` to read language tags.
 
 ## The API
 
@@ -71,7 +71,7 @@ The library keeps a written form that it cannot read, and logs a WARNING on the 
 
 ## Languages
 
-Each language is one file in `text2spoken/lang/`, named by its primary subtag. `en.py` reads every form that `supports("en")` lists, with the varieties `en-GB` and `en-US`. A language with no file reads cardinal numbers through the CLDR rules of `unicode_rbnf`, and keeps all other forms as written.
+Each language is one file in `text2spoken/lang/`, named by its primary subtag. `en.py` reads the forms that `supports("en")` lists, with the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS` or `X5`, or a digit code after a word that names a code (the forms `ROMAN`, `LETTERS` and `IDENTIFIER`), and keeps them as written. A language with no file reads cardinal numbers through the CLDR rules of `unicode_rbnf`, and keeps all other forms as written.
 
 This command prints what a tag reads:
 
@@ -81,13 +81,13 @@ python -c "from text2spoken import supports; print(supports('en-US'))"
 
 `python -m text2spoken.export en` prints the data of a language file as JSON.
 
-The 85 English rows in `tests/data/en.tsv` name their source. No native speaker has checked them, and each row says so in its `checked_by` column.
+The 116 English rows in `tests/data/en.tsv` name their source. No native speaker has checked them, and each row says so in its `checked_by` column.
 
 ## Behaviour to know
 
 - The library uses no network and loads no model, so it works offline.
 - Importing the library imports no parser. The first call loads the language files.
-- A second pass changes nothing: `normalize(normalize(t, lang), lang)` returns the text of the first pass.
+- A second pass changes nothing: `normalize(normalize(t, lang), lang)` returns the text of the first pass. The tests check this over every row and over seeded random text.
 
 ## Development
 

@@ -5,8 +5,6 @@ tokenizer context, `supports` tells what a language reads, and `effective_params
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from text2spoken.core.language import Support, effective_params, resolve, supports
 from text2spoken.core.numbers import declared_marks
 from text2spoken.core.spans import Analysis, Features, Span, classify, render

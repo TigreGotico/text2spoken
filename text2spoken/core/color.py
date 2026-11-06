@@ -15,12 +15,13 @@ _DIGITS = frozenset("0123456789")
 
 
 def hex_fields(code: str) -> FrozenMap | None:
-    """`rgb` as six lowercase hex digits and `alpha` as two or None, from 3, 6 or 8 hex digits after `#`."""
+    """`rgb` as six lowercase hex digits, `alpha` as two or None, and `hex` as the digits that the text writes,
+    from 3, 6 or 8 hex digits after `#`."""
     digits = code[1:].lower()
     if len(digits) == 3:
-        return FrozenMap({"rgb": "".join(d * 2 for d in digits), "alpha": None})
+        return FrozenMap({"rgb": "".join(d * 2 for d in digits), "alpha": None, "hex": code[1:]})
     if len(digits) in (6, 8):
-        return FrozenMap({"rgb": digits[:6], "alpha": digits[6:] or None})
+        return FrozenMap({"rgb": digits[:6], "alpha": digits[6:] or None, "hex": code[1:7]})
     return None
 
 

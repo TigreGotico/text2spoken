@@ -17,8 +17,7 @@ authors = [{name = "JarbasAI", email = "jarbasai@mailfence.com"}]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "linguatag>=0.1.5a1",
-    "ovos-number-parser>=0.24.6a1",
+    "linguatag[langcodes]>=0.1.5a1",
     "unicode-rbnf>=2.4.1",
     "quebra-frases>=0.3.7",
 ]
@@ -29,7 +28,7 @@ Homepage = "https://github.com/TigreGotico/text2spoken"
 [project.optional-dependencies]
 test = [
     "pytest",
-    "langcodes>=3.5.1",
+    "ovos-number-parser>=0.24.6a1",
     "ovos-color-parser>=0.12.4a1",
 ]
 

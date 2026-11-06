@@ -40,9 +40,25 @@ def is_digit(char: str) -> bool:
     return unicodedata.category(char) == "Nd"
 
 
+def is_punctuation(char: str) -> bool:
+    return unicodedata.category(char).startswith("P")
+
+
+def next_visible(text: str, index: int) -> str:
+    """The first character at or after `index` that is not whitespace, or "" at the end of the text."""
+    while index < len(text) and text[index].isspace():
+        index += 1
+    return text[index] if index < len(text) else ""
+
+
 def is_word_char(char: str) -> bool:
     """A letter, a digit or a combining mark: the characters a word is made of."""
     return is_letter(char) or is_digit(char) or is_mark(char)
+
+
+def is_bounded(text: str, start: int, end: int) -> bool:
+    """Whether the characters on either side of text[start:end] are not word characters."""
+    return (start == 0 or not is_word_char(text[start - 1])) and (end == len(text) or not is_word_char(text[end]))
 
 
 def check_tokens(tokens: Sequence[Token], text: str) -> tuple[Token, ...]:
@@ -62,6 +78,10 @@ def check_tokens(tokens: Sequence[Token], text: str) -> tuple[Token, ...]:
     return checked
 
 
+_WORD_SEPARATORS = frozenset("\u200b")
+"""Format characters that separate words, such as the zero-width space between Thai or Khmer words."""
+
+
 def join_split_words(tokens: Sequence[Token], text: str, number_marks: frozenset[str]) -> tuple[Token, ...]:
     """Rejoin words that a tokenizer split at a combining mark, a format character or a declared number mark."""
     joined: list[Token] = []
@@ -69,7 +89,8 @@ def join_split_words(tokens: Sequence[Token], text: str, number_marks: frozenset
         if joined:
             last = joined[-1]
             gap = text[last.end:token.start]
-            marks_only = gap != "" and all(is_mark(c) or unicodedata.category(c) == "Cf" for c in gap)
+            marks_only = gap != "" and all(is_mark(c) or (unicodedata.category(c) == "Cf" and c not in _WORD_SEPARATORS)
+                                           for c in gap)
             number_join = (len(gap) == 1 and gap in number_marks
                            and is_digit(text[last.end - 1]) and is_digit(text[token.start]))
             if marks_only or number_join:

@@ -1,10 +1,9 @@
-"""Language tags and the loader (design section 6), with and without the optional langcodes package."""
-import json
-import subprocess
-import sys
+"""Language tags and the loader (design section 6). The loader needs `langcodes`, which the package requires
+through `linguatag[langcodes]`."""
+from importlib.metadata import requires
 
-import langcodes  # noqa: F401  the test extra installs it, so the in-process run is the install with langcodes
 import pytest
+from packaging.requirements import Requirement
 
 from text2spoken import InvalidLanguageTagError, normalize, supports
 from text2spoken.core.language import cldr_locale, plural_locales, rbnf_locales, select
@@ -16,6 +15,9 @@ LOADER_ROWS = [
     ("EN-us", "en-US", "en", "en-US"),
     ("en-AU", "en-AU", "en", "en-GB"),
     ("en-IN", "en-IN", "en", "en-GB"),
+    ("en-PR", "en-PR", "en", "en-US"),
+    ("en-VI", "en-VI", "en", "en-US"),
+    ("en-Latn-US", "en-US", "en", "en-US"),
     ("lb", "lb-LU", "lb", "lb-LU"),
     ("gsw", "gsw-CH", "gsw", "gsw-CH"),
     ("yue", "yue-CN", "yue", "yue-CN"),
@@ -24,30 +26,16 @@ LOADER_ROWS = [
     ("en-x-scouse", "en-GB-x-scouse", "en", "en-GB"),
 ]
 
-_PROBE = """
-import json, sys
-if sys.argv[1] == "without":
-    sys.modules["langcodes"] = None
-    try:
-        import langcodes
-        raise SystemExit("langcodes is still importable")
-    except ImportError:
-        pass
-from text2spoken.core.language import select
-rows = json.loads(sys.argv[2])
-print(json.dumps([[tag, *(lambda t, l, v: [t, l.code, v.tag])(*select(tag))] for tag in rows]))
-"""
+
+@pytest.mark.parametrize("row", LOADER_ROWS, ids=[row[0] for row in LOADER_ROWS])
+def test_loader_rows(row):
+    tag, language, variety = select(row[0])
+    assert (row[0], tag, language.code, variety.tag) == row
 
 
-def _run(install: str) -> list[list[str]]:
-    tags = json.dumps([row[0] for row in LOADER_ROWS])
-    out = subprocess.run([sys.executable, "-c", _PROBE, install, tags], capture_output=True, text=True, check=True)
-    return json.loads(out.stdout)
-
-
-@pytest.mark.parametrize("install", ["with", "without"])
-def test_loader_rows_in_both_installs(install):
-    assert _run(install) == [list(row) for row in LOADER_ROWS]
+def test_the_package_requires_langcodes_through_linguatag():
+    declared = [Requirement(r) for r in requires("text2spoken") if "extra ==" not in r]
+    assert any(r.name == "linguatag" and "langcodes" in r.extras for r in declared)
 
 
 @pytest.mark.parametrize("tag", ["not a tag", "", "x-private", "en--US", "12", "e", "en-US-", "pt PT"])

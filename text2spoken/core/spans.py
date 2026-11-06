@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import logging
 import warnings
+from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from text2spoken.core.tokens import Token, context_word, is_digit, is_word_char
+from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation, next_visible
 from text2spoken.errors import HintWarning, InvalidHintError, Text2SpokenError, UndefinedGrammaticalGender, UnreadFormError
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
 
@@ -27,8 +28,8 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.DATE: frozenset({"year", "month", "day", "written_order", "month_written", "suffix"}),
     Form.TIME: frozenset({"hour", "minute", "second", "period", "suffix"}),
     Form.YEAR: frozenset({"digits", "suffix"}),
-    Form.MONEY: frozenset({"amount", "currency", "written_symbol"}),
-    Form.MEASURE: frozenset({"amount", "unit"}),
+    Form.MONEY: frozenset({"amount", "currency", "written_symbol", "scale"}),
+    Form.MEASURE: frozenset({"amount", "relation", "unit"}),
     Form.PERCENT: frozenset({"amount", "sign_position"}),
     Form.TELEPHONE: frozenset({"country_code", "groups"}),
     Form.IDENTIFIER: frozenset({"head", "digits"}),
@@ -36,7 +37,7 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.ABBREVIATION: frozenset({"key"}),
     Form.IDIOM: frozenset({"key"}),
     Form.ROMAN: frozenset({"value", "role", "suffix"}),
-    Form.COLOR: frozenset({"rgb", "alpha"}),
+    Form.COLOR: frozenset({"rgb", "alpha", "hex"}),
 }
 """The fields of each form (section 4.4). A recognizer emits exactly these."""
 
@@ -106,33 +107,67 @@ def _inside(span: Span, blocks: Sequence[tuple[int, int]]) -> bool:
     return any(span.start < end and start < span.end for start, end in blocks)
 
 
-def _boundary_allowed(text: str, position: int, form: Form) -> bool:
+def _boundary_allowed(text: str, position: int) -> bool:
+    """A digit next to a non-digit, or a punctuation character on either side, such as the apostrophe of
+    `l'ACME` or the dash of `9am-5pm`."""
     before, after = text[position - 1], text[position]
-    if is_digit(before) != is_digit(after):
-        return True
-    return form is Form.LEXICON and (before in "'’" or after in "'’")
+    return is_digit(before) != is_digit(after) or is_punctuation(before) or is_punctuation(after)
 
 
 def splits_token(span: Span, tokens: Sequence[Token], text: str) -> bool:
     """Whether a span edge falls inside a token at a point the rule of section 2.1 refuses."""
-    for token in tokens:
-        for edge in (span.start, span.end):
-            lead_start = edge == span.start and bool(span.fields.get("lead"))
-            if token.start < edge < token.end and not (lead_start or _boundary_allowed(text, edge, span.form)):
-                return True
+    for edge in (span.start, span.end):
+        index = bisect_right(tokens, edge, key=lambda token: token.start) - 1
+        if index < 0:
+            continue
+        token = tokens[index]
+        lead_start = edge == span.start and bool(span.fields.get("lead"))
+        if token.start < edge < token.end and not (lead_start or _boundary_allowed(text, edge)):
+            return True
     return False
 
 
+def _joiner(char: str) -> bool:
+    return not (char.isspace() or is_digit(char))
+
+
+def _joined(text: str, span: Span, read: bytearray) -> bool:
+    """Whether one character that is not a digit or a space, and then a digit, touch the span on either side,
+    while no span reads them."""
+    start, end = span.start, span.end
+    left = (start >= 2 and _joiner(text[start - 1]) and not read[start - 1] and is_digit(text[start - 2])
+            and not read[start - 2])
+    right = (end + 1 < len(text) and _joiner(text[end]) and not read[end] and is_digit(text[end + 1])
+             and not read[end + 1])
+    return left or right
+
+
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
+    """The spans that the recognizers claim, in claim order, by the rules of sections 2.1 and 4.2.
+
+    A digit run joined to a span by one character stays a cluster while no span reads it. The claim loop runs
+    again until no span is added, so a span next to a neighbour that a later recognizer reads is claimed as it
+    would be on a second pass over the output.
+    """
+    candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
+                  for span in recognizer.find(text, tokens, request)
+                  if not (_inside(span, blocks) or splits_token(span, tokens, text))]
+    read = bytearray(len(text))
     claimed: list[Span] = []
-    for recognizer in request.language.recognizers:
-        if recognizer.form not in request.params.forms:
-            continue
-        for span in recognizer.find(text, tokens, request):
-            if (_inside(span, blocks) or splits_token(span, tokens, text)
-                    or any(span.start < c.end and c.start < span.end for c in claimed)):
+    added = True
+    while added:
+        added = False
+        waiting = []
+        for span in candidates:
+            if any(read[span.start:span.end]):
                 continue
+            if _joined(text, span, read):
+                waiting.append(span)
+                continue
+            read[span.start:span.end] = b"\x01" * (span.end - span.start)
             claimed.append(span)
+            added = True
+        candidates = waiting
     return tuple(sorted(claimed, key=lambda s: s.start))
 
 
@@ -160,16 +195,24 @@ def _clause_break(text: str, start: int, end: int) -> bool:
     gap = text[start:end]
     if any(c in ";!?" for c in gap):
         return True
-    return any(char == "." and text[start + i + 1:].lstrip()[:1].isupper() for i, char in enumerate(gap))
+    return any(char == "." and next_visible(text, start + i + 1).isupper() for i, char in enumerate(gap))
 
 
 def clause_window(text: str, words: Sequence[Word], start: int, end: int, direction: int,
                   limit: int = 3) -> tuple[str, ...]:
-    """Up to `limit` context words before (direction -1) or after (+1) text[start:end], within its clause."""
+    """Up to `limit` context words before (direction -1) or after (+1) text[start:end], within its clause.
+
+    The words are in text order. A word that holds the end of text[start:end] and ends its clause stops the
+    window after it.
+    """
     if direction < 0:
-        edge, candidates = start, [w for w in reversed(words) if w.end <= start]
+        index = bisect_right(words, start, key=lambda word: word.end)
+        edge, candidates = start, (words[i] for i in range(index - 1, -1, -1))
     else:
-        edge, candidates = end, [w for w in words if w.start >= end]
+        index = bisect_left(words, end, key=lambda word: word.start)
+        if index and words[index - 1].start < end <= words[index - 1].end and words[index - 1].clause_end:
+            return ()
+        edge, candidates = end, (words[i] for i in range(index, len(words)))
     found: list[str] = []
     for word in candidates:
         if len(found) == limit:
@@ -268,7 +311,3 @@ def _check_unread(analysis: Analysis, passthrough: list[tuple[int, int]]) -> Non
     for run in unread:
         LOG.warning("unread written form %r for %s", run, request.tag)
 
-
-def is_bounded(text: str, start: int, end: int) -> bool:
-    """Whether the characters on either side of text[start:end] are not word characters."""
-    return (start == 0 or not is_word_char(text[start - 1])) and (end == len(text) or not is_word_char(text[end]))
