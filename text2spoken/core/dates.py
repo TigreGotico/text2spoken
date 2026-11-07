@@ -5,8 +5,9 @@ import calendar
 
 
 def is_valid(year: int | None, month: int, day: int) -> bool:
-    """Whether the day exists in the month; with no year, 29 February counts as valid."""
-    if not 1 <= month <= 12 or day < 1:
+    """Whether the day exists in the month; with no year, 29 February counts as valid. The calendar has no year 0,
+    so `0000-01-01` is no date."""
+    if not 1 <= month <= 12 or day < 1 or (year is not None and year < 1):
         return False
     return day <= calendar.monthrange(2000 if year is None else year, month)[1]
 

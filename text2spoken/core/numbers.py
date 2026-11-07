@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import lru_cache
 
-from text2spoken.core.tokens import digit_script, fold_digits, is_digit, is_word_char
+from text2spoken.core.tokens import digit_script, fold_digits, is_digit, is_word_char, one_digit_set
 from text2spoken.params import FrozenMap
 
 SIGNS = {"-": "-", "−": "-", "+": "+"}
@@ -47,7 +46,6 @@ def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, s
     return integer, fraction
 
 
-@lru_cache(maxsize=256)
 def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
     """Every written number in the text that parses whole by the declared marks.
 
@@ -76,7 +74,7 @@ def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
                 break
         i = end
         script = digit_script(text[start:end])
-        if script is None:
+        if script is None or not one_digit_set(text[start:end]):
             continue
         decimal, group = by_script.get(script, (None, None))
         cluster = folded[start:end]

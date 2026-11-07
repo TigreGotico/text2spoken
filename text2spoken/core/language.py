@@ -73,6 +73,8 @@ class Request:
     variety: Variety
     language: LanguageSpec
     params: NormalizationParams
+    memo: dict = field(default_factory=dict, repr=False)
+    """Results computed for one call, such as the numbers of a text; a request lives for one call."""
 
     @property
     def data(self) -> FrozenMap:

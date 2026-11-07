@@ -10,8 +10,10 @@ from text2spoken import (Animacy, Features, FrozenMap, InvalidLexiconError, Norm
                          effective_params, normalize, supports)
 from text2spoken.core import language as loader
 from text2spoken.core.language import cldr_locale
-from text2spoken.core.spans import Span, _inside, check_features, splits_token
-from text2spoken.core.tokens import check_tokens, context_word, join_split_words
+from text2spoken.core.numbers import find_numbers
+from text2spoken.core.recognizers import SHARED
+from text2spoken.core.spans import Span, _inside, _joined, check_features, splits_token
+from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words
 from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form
 
@@ -192,3 +194,46 @@ def test_analyze_claims_a_year_and_a_money_scale():
         (Form.YEAR, {"digits": "1984", "suffix": ""}),
         (Form.MONEY, {"amount": amount, "currency": "USD", "written_symbol": "$", "scale": "million"}),
     ]
+
+
+def test_a_signed_number_after_a_dimension_mark_is_no_second_dimension():
+    analysis = analyze("A 10 x -5 cm hole.", "en-GB")
+    spans = SHARED["measure"].find(analysis.text, analysis.tokens, analysis.request)
+    assert [s for s in spans if isinstance(s.fields["amount"], tuple)] == []
+
+
+def test_digits_from_two_digit_sets_read_the_same_on_a_second_pass():
+    once = normalize("[[０3 12/03/2024", "en-US")
+    assert once == "[[０3 December third twenty twenty-four"
+    assert normalize(once, "en-US") == once
+
+
+def test_measures_that_slashes_chain_take_linear_time():
+    def seconds(count: int) -> float:
+        text = "x " + "/".join(f"{i}°C" for i in range(count))
+        start = time.perf_counter()
+        normalize(text, "en")
+        return time.perf_counter() - start
+
+    normalize("x 1°C/2°C", "en")
+    small, large = min(seconds(250) for _ in range(3)), min(seconds(2000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
+def test_the_numbers_of_a_text_are_kept_for_one_call_only():
+    first, second = analyze("It costs $5 at 14:30.", "en").request, analyze("It costs $5 at 14:30.", "en").request
+    assert ("numbers", "It costs $5 at 14:30.") in first.memo
+    assert second.memo is not first.memo
+    assert not hasattr(find_numbers, "cache_info") and not hasattr(fold_digits, "cache_info")
+
+
+def test_a_digit_next_to_a_span_is_no_joiner():
+    """Section 2.1: the joining character is not a space and not a digit."""
+    span = Span(0, 2, Form.CARDINAL, FrozenMap())
+    text = "ab12"
+    assert not _joined(text, span, bytearray(len(text)), [None] * len(text))
+    assert _joined("ab/2", span, bytearray(4), [None] * 4)
+
+
+def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():
+    assert normalize("Il a １2 chambres.", "fr") == "Il a １2 chambres."

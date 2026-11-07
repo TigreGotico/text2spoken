@@ -4,7 +4,6 @@ from __future__ import annotations
 import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import Protocol
 
 from text2spoken.errors import TokenizerError
@@ -131,7 +130,6 @@ def context_word(token_text: str) -> str | None:
     return token_text[start:end]
 
 
-@lru_cache(maxsize=256)
 def fold_digits(text: str) -> str:
     """The text with every decimal digit (category Nd) as its ASCII digit; the length does not change."""
     return "".join(str(unicodedata.decimal(c)) if is_digit(c) else c for c in text)
@@ -143,6 +141,12 @@ _SCRIPT_OF_DIGIT_BLOCK = {
     "KANNADA": "Knda", "MALAYALAM": "Mlym", "THAI": "Thai", "LAO": "Laoo", "TIBETAN": "Tibt", "MYANMAR": "Mymr",
     "KHMER": "Khmr", "MONGOLIAN": "Mong", "NKO": "Nkoo",
 }
+
+
+def one_digit_set(text: str) -> bool:
+    """Whether the decimal digits of the text come from one set of ten: `０3` mixes the fullwidth set and the ASCII
+    set, so it is no number, although both sets are Latin."""
+    return len({ord(c) - unicodedata.decimal(c) for c in text if is_digit(c)}) <= 1
 
 
 def digit_script(digits: str) -> str | None:

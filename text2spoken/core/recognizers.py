@@ -7,7 +7,7 @@ ASCII, which keeps every offset.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 
 from text2spoken.core.color import COLOR
@@ -17,8 +17,8 @@ from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import Features, SpanContext, Span, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark, is_word_char,
-                                     next_visible)
+from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
+                                     is_word_char, next_visible, one_digit_set)
 from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
@@ -36,8 +36,12 @@ PHONE_PLANS = FrozenMap({
 lengths of the national significant number. A partial table; a region with no plan gives no trunk evidence."""
 
 
-def _numbers(text: str, request: Request) -> tuple[Number, ...]:
-    return find_numbers(text, number_marks(request.data, request.params.decimal_mark))
+def numbers_in(text: str, request: Request) -> tuple[Number, ...]:
+    """The numbers of the text, found once for each text in one request."""
+    key = ("numbers", text)
+    if key not in request.memo:
+        request.memo[key] = find_numbers(text, number_marks(request.data, request.params.decimal_mark))
+    return request.memo[key]
 
 
 def _free_before(text: str, start: int, symbols) -> bool:
@@ -86,14 +90,16 @@ def _suffix(text: str, end: int, data) -> tuple[int, str] | None:
 def _lead(text: str, start: int, leads) -> str:
     """The longest declared lead that ends right before the digits at `start`.
 
-    No lead follows a digit. A lead with words follows no word character either, so `C#5` stays as written,
-    while a lead that stands for a space joins a word, as in `sub-23`.
+    No lead follows a digit or another lead, so `##5` stays as written. A lead with words follows no
+    word character either, so `C#5` stays as written, while a lead that stands for a space joins a word, as in
+    `sub-23`.
     """
     for lead in sorted(leads, key=len, reverse=True):
         if not text.endswith(lead, 0, start):
             continue
         before = start - len(lead) - 1
-        if before < 0 or not (is_digit(text[before]) or (leads[lead] and is_word_char(text[before]))):
+        if before < 0 or not (is_digit(text[before]) or any(text.endswith(other, 0, before + 1) for other in leads)
+                              or (leads[lead] and is_word_char(text[before]))):
             return lead
     return ""
 
@@ -147,7 +153,7 @@ class Cardinal:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         leads = request.data.get("leads", FrozenMap())
         sign_words = request.data.get("sign_words", FrozenMap())
-        for number in _numbers(text, request):
+        for number in numbers_in(text, request):
             if number.fraction is not None or (number.sign and number.sign not in sign_words):
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
@@ -173,7 +179,7 @@ class Decimal:
     form: Form = Form.DECIMAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for number in _numbers(text, request):
+        for number in numbers_in(text, request):
             if number.fraction is None:
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
@@ -209,22 +215,35 @@ def _bounded_matches(pattern: re.Pattern, text: str) -> Iterator[re.Match]:
             yield match
 
 
+def _unit_after(text: str, end: int, units: Iterable[str]) -> bool:
+    """Whether a unit of the language follows text[:end], attached or after one space."""
+    return any(text.startswith(gap + unit, end) and is_bounded(text, end + len(gap), end + len(gap) + len(unit))
+               for gap in ("", " ", " ") for unit in units)
+
+
 @dataclass(frozen=True)
 class Fraction:
     name: str = "fraction"
     form: Form = Form.FRACTION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        """A symbol of the language next to the fraction or a unit after it leaves a reading that is not clear,
+        as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets."""
+        symbols = request.data.get("symbols", FrozenMap())
+        units = request.data.get("units", FrozenMap())
         for match in _bounded_matches(_FRACTION, text):
+            start, end = match.span()
             written = match.group()
             sign = "-" if written[0] in "-−" else "+" if written[0] == "+" else ""
             numerator, denominator = written.lstrip("-+−").split("/")
-            if sign and match.start() > 0 and is_word_char(text[match.start() - 1]):
+            if sign and start > 0 and is_word_char(text[start - 1]):
                 continue
-            if 2 <= int(denominator) <= 100 and int(numerator) < int(denominator):
-                yield Span(match.start(), match.end(), Form.FRACTION,
+            unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols))
+                       or _unit_after(text, end, units) or not one_digit_set(text[start:end]))
+            if unclear or (2 <= int(denominator) <= 100 and int(numerator) < int(denominator)):
+                yield Span(start, end, Form.FRACTION,
                            FrozenMap({"numerator": numerator, "denominator": denominator, "sign": sign,
-                                      "prefix": "", "suffix": ""}), recognizer=self.name)
+                                      "prefix": "", "suffix": ""}), recognizer=self.name, keep=unclear)
 
 
 @dataclass(frozen=True)
@@ -249,10 +268,12 @@ class Range:
     form: Form = Form.RANGE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        """Digits from two digit sets keep the whole range as written."""
         for match in _bounded_matches(_RANGE, text):
             low, high = re.split("[-–]", match.group())
             yield Span(match.start(), match.end(), Form.RANGE,
-                       FrozenMap({"low": low, "high": high, "prefix": "", "suffix": ""}), recognizer=self.name)
+                       FrozenMap({"low": low, "high": high, "prefix": "", "suffix": ""}), recognizer=self.name,
+                       keep=not one_digit_set(text[match.start():match.end()]))
 
 
 @dataclass(frozen=True)
@@ -263,7 +284,8 @@ class DateNumeric:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         folded = fold_digits(text)
         for match in _DATE.finditer(folded):
-            if not _cluster_edge(text, match.start(), match.end()):
+            start, end = match.span()
+            if not (_cluster_edge(text, start, end) and one_digit_set(text[start:end])):
                 continue
             fields = tuple(re.split("[/.-]", match.group()))
             resolved = resolve_date(fields, request.params.date_order)
@@ -293,7 +315,9 @@ def _period_after(text: str, end: int, periods) -> tuple[str, int] | None:
 
 @dataclass(frozen=True)
 class TimeClock:
-    """`at 14:30`, `14:30:05`, `2:30 pm`, `9am`, with the evidence rule of section 4.2, and `9am-5pm`."""
+    """`at 14:30`, `at 14:30:05`, `2:30 pm`, `9am`, with the evidence rule of section 4.2, and `9am-5pm`.
+
+    A seconds field is no evidence, because a duration such as `1:23:45` has one."""
     name: str = "time_clock"
     form: Form = Form.TIME
 
@@ -310,7 +334,8 @@ class TimeClock:
         for pattern in (_CLOCK, _HOUR):
             for match in pattern.finditer(folded):
                 start, end = match.span()
-                if not _cluster_edge(text, start, end) or (start and is_word_char(text[start - 1])):
+                if (not _cluster_edge(text, start, end) or (start and is_word_char(text[start - 1]))
+                        or not one_digit_set(text[start:end])):
                     continue
                 parts = match.group().split(":")
                 if pattern is _CLOCK:
@@ -334,8 +359,7 @@ class TimeClock:
                 if end + len(suffix) < len(text) and is_word_char(text[end + len(suffix)]):
                     continue
                 before = clause_window(text, words, start, end, -1, limit=1)
-                if not (second is not None or period is not None or suffix
-                        or (before and before[0].lower() in time_words)):
+                if not (period is not None or suffix or (before and before[0].lower() in time_words)):
                     continue
                 yield Span(start, end + len(suffix), Form.TIME,
                            FrozenMap({"hour": hour, "minute": minute, "second": second, "period": period,
@@ -351,7 +375,7 @@ class Percent:
         percent = request.data.get("percent")
         if percent is None:
             return
-        for number in _numbers(text, request):
+        for number in numbers_in(text, request):
             if percent["position"] in ("after", "either"):
                 for sign in percent["signs"]:
                     for gap in ("", " ", " "):
@@ -377,12 +401,15 @@ class Money:
     form: Form = Form.MONEY
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return join_ranges(self._amounts(text, tokens, request), text, request.data.get("range_word"))
+
+    def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A currency symbol before or after a number. Before a symbol that comes first, a sign may stand, and
         after its number a scale word of the language, attached or after one space: `-$5`, `$2 million`, `$1m`."""
         symbols = [(symbol, code) for code, currency in request.data.get("currencies", FrozenMap()).items()
                    for symbol in currency["symbols"]]
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
-        for number in _numbers(text, request):
+        for number in numbers_in(text, request):
             if number.sign:
                 continue
             for symbol, code in sorted(symbols, key=lambda pair: len(pair[0]), reverse=True):
@@ -435,7 +462,7 @@ class Measure:
         units = sorted(data.get("units", FrozenMap()), key=len, reverse=True)
         relations = {"dimension": data.get("dimension_marks", ()), "range": data.get("range_marks", ())}
         every_mark = tuple(mark for marks in relations.values() for mark in marks)
-        numbers = _numbers(text, request)
+        numbers = numbers_in(text, request)
         by_start = {n.start: n for n in numbers}
         for index, number in enumerate(numbers):
             if not _free_before(text, number.start, symbols) or (
@@ -449,12 +476,18 @@ class Measure:
                     end = following.end
             for gap in ("", " ", " "):
                 unit = next((u for u in units if text.startswith(gap + u, end)
-                             and _free_after(text, end + len(gap) + len(u), symbols)), None)
+                             and _free_after(text, end + len(gap) + len(u), symbols)
+                             and not _per_unit(text, end + len(gap) + len(u))), None)
                 if unit is not None:
                     amount = amounts[0].amount() if len(amounts) == 1 else tuple(a.amount() for a in amounts)
                     yield Span(number.start, end + len(gap) + len(unit), Form.MEASURE,
                                FrozenMap({"amount": amount, "relation": relation, "unit": unit}), recognizer=self.name)
                     break
+
+
+def _per_unit(text: str, end: int) -> bool:
+    """Whether a slash and a letter continue a unit, as in `m/s` when the table holds only `m`."""
+    return end + 1 < len(text) and text[end] == "/" and is_letter(text[end + 1])
 
 
 def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Number]) -> Number | None:
@@ -470,7 +503,10 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
-    region in `phone_regions`, or a word before the run that names a phone."""
+    region in `phone_regions`, or a word before the run that names a phone.
+
+    A run after a phone word that fails the numbering plan, such as `911` in `Call 911 now.`, stays as written, and
+    so does a run with digits from two digit sets."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
 
@@ -483,7 +519,13 @@ class Telephone:
             written = match.group()
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
-            if not 7 <= len(digits) <= 15:
+            mixed = not one_digit_set(text[match.start():match.end()])
+            if mixed or not 7 <= len(digits) <= 15:
+                before = clause_window(text, words, match.start(), match.end(), -1, limit=1)
+                if mixed or (not written.startswith("+") and before and before[0].lower() in phone_words):
+                    yield Span(match.start(), match.end(), Form.TELEPHONE,
+                               FrozenMap({"country_code": "", "groups": tuple(groups)}), recognizer=self.name,
+                               keep=True)
                 continue
             country_code = ""
             if written.startswith("+"):

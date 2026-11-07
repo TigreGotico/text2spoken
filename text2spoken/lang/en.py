@@ -13,12 +13,12 @@ from dataclasses import dataclass
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.numbers import find_numbers, number_marks
-from text2spoken.core.recognizers import PHONE_PLANS, SHARED, join_ranges, speak_cardinal, speak_lexicon
+from text2spoken.core.numbers import Number
+from text2spoken.core.recognizers import PHONE_PLANS, SHARED, join_ranges, numbers_in, speak_cardinal, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
 from text2spoken.core.times import twelve_hour
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, next_visible
+from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
 from text2spoken.params import FrozenMap, Form, freeze
 
 LOG = logging.getLogger("text2spoken")
@@ -70,6 +70,7 @@ UNITS_GB = {
     "cm": {"one": "centimetre", "other": "centimetres"},
     "mm": {"one": "millimetre", "other": "millimetres"},
     "km/h": {"one": "kilometre per hour", "other": "kilometres per hour"},
+    "m/s": {"one": "metre per second", "other": "metres per second"},
     "mph": {"one": "mile per hour", "other": "miles per hour"},
     "ml": {"one": "millilitre", "other": "millilitres"},
     "°C": {"one": "degree Celsius", "other": "degrees Celsius"},
@@ -93,6 +94,11 @@ DATA = freeze({
     "operators": {"+": "plus", "−": "minus", "×": "times", "÷": "divided by", "=": "equals"},
     "time_words": ["at", "from", "until", "till", "since", "before", "after", "around"],
     "year_words": ["in", "since", "until", "till", "during", "circa", "year"],
+    "year_links": ["and", "or", "to"],
+    "function_words": ["a", "an", "the", "and", "or", "but", "so", "then", "to", "of", "in", "on", "at", "by",
+                       "for", "from", "with", "as", "after", "before", "until", "since", "when", "while", "where",
+                       "he", "she", "it", "we", "they", "you", "his", "her", "its", "our", "their", "this",
+                       "that", "there", "was", "were", "is", "are", "had", "has", "have", "many", "some", "all"],
     "day_periods": {"am": ["am", "a.m.", "AM", "A.M."], "pm": ["pm", "p.m.", "PM", "P.M."]},
     "spoken_periods": {"am": "AM", "pm": "PM"},
     "minute_phrases": {"0": "{hour} o'clock", "15": "quarter past {hour}", "30": "half past {hour}",
@@ -122,7 +128,7 @@ DATA = freeze({
                 "×": "measure"},
     "ordinal_marks": ["st", "nd", "rd", "th"],
     "patterns": {
-        "expression": "[0-9]+(?: ?[+−×÷=] ?[0-9]+)+",
+        "expression": "[-−]?[0-9]+(?: ?[+−×÷=] ?[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_day_month": "([0-9][0-9]?)" + _ORDINAL_MARK + "? (?:of )?" + _MONTH + "(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_month_year": _MONTH + " ([0-9][0-9][0-9][0-9])",
@@ -236,8 +242,10 @@ def speak_range(span: Span, context: SpanContext) -> str:
 
 
 def speak_expression(span: Span, context: SpanContext) -> str:
+    """The first operand may carry a sign, as in `-2+3=1`: "minus two plus three equals one"."""
     request = context.request
-    words = [_cardinal(span.fields["operands"][0], request)]
+    first = span.fields["operands"][0]
+    words = [_signed(_cardinal(first.lstrip("-−"), request), "-" if first[0] in "-−" else "", request)]
     for operator, operand in zip(span.fields["operators"], span.fields["operands"][1:]):
         words += [request.data["operators"][operator], _cardinal(operand, request)]
     return " ".join(words)
@@ -302,6 +310,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     currency = request.data["currencies"][fields["currency"]]
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
+        amount = FrozenMap({**amount, "fraction": (fraction or "").rstrip("0")})
         words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
     elif len(fraction) == 2:
         major = f"{_cardinal(integer, request)} {currency[plural_category(request, integer)]}"
@@ -353,7 +362,15 @@ def speak_idiom(span: Span, context: SpanContext) -> str:
 
 
 def speak_year(span: Span, context: SpanContext) -> str:
-    return SPELLER.year(span.fields["digits"], Features(), context.request)
+    """The short end of a year range, `45` in `1939-45`, holds the whole year and reads without the century when
+    the year reading starts with it: "nineteen thirty-nine to forty-five", "twenty ten to twelve"."""
+    request = context.request
+    digits = span.fields["digits"]
+    words = SPELLER.year(digits, Features(), request)
+    century = _cardinal(digits[:2], request) + " "
+    if span.end - span.start == 2 and words.startswith(century):
+        return words[len(century):]
+    return words
 
 
 def speak_color(span: Span, context: SpanContext) -> str:
@@ -367,10 +384,6 @@ def speak_color(span: Span, context: SpanContext) -> str:
     return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
 
 
-def _numbers(text: str, request: Request):
-    return find_numbers(text, number_marks(request.data, request.params.decimal_mark))
-
-
 @dataclass(frozen=True)
 class Ordinal:
     """`1st`, `22nd`, `113th`, `1,000th`: a whole number with the suffix that it takes."""
@@ -379,7 +392,7 @@ class Ordinal:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         marks = request.data["ordinal_marks"]
-        for number in _numbers(text, request):
+        for number in numbers_in(text, request):
             marker = text[number.end:number.end + 2]
             if (number.sign or number.fraction is not None or marker not in marks
                     or ordinal_suffix(int(number.integer)) != marker or not is_bounded(text, number.start, number.end + 2)):
@@ -391,8 +404,10 @@ class Ordinal:
 
 @dataclass(frozen=True)
 class Year:
-    """A year from 1000 to 2099 after a year word, as in `In 1984`, and two years that a dash joins, the
-    lower one first, as in `1939-1945`. Section 4.2 lets a word mark a year."""
+    """A year from 1000 to 2099 (section 4.2): after a year word, as in `In 1984`; two years that a range mark
+    joins, the lower one first, as in `1939-1945` and `1939-45`; and a number that a link joins to a year, as in
+    `In 1066 and 1215`. A count read as a year is wrong, so a lowercase word after the year that is not in
+    `function_words` blocks it: `in 1234 steps` is no year."""
     name: str = "year"
     form: Form = Form.YEAR
 
@@ -400,20 +415,50 @@ class Year:
         return join_ranges(self._years(text, tokens, request), text, request.data["range_word"])
 
     def _years(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        year_words = frozenset(request.data["year_words"])
+        data = request.data
+        year_words = frozenset(data["year_words"])
+        function_words = frozenset(data["function_words"])
+        marks = frozenset(data["range_marks"])
+        link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") |, ")
         words = context_words(tokens)
-        years = [n for n in _numbers(text, request)
-                 if not n.sign and n.fraction is None and n.end - n.start == 4 and 1000 <= int(n.integer) <= 2099
-                 and is_bounded(text, n.start, n.end)]
-        in_range = set()
-        for first, second in zip(years, years[1:]):
-            if text[first.end:second.start] in ("-", "–") and int(first.integer) < int(second.integer):
-                in_range |= {first, second}
-        for year in years:
-            before = clause_window(text, words, year.start, year.end, -1, limit=1)
-            if year in in_range or (before and before[0].lower() in year_words):
-                yield Span(year.start, year.end, Form.YEAR, FrozenMap({"digits": year.integer, "suffix": ""}),
-                           recognizer=self.name)
+        numbers = [n for n in numbers_in(text, request) if not n.sign and n.fraction is None
+                   and n.end - n.start in (2, 4) and is_bounded(text, n.start, n.end)]
+
+        def year(number: Number) -> bool:
+            return number.end - number.start == 4 and 1000 <= int(number.integer) <= 2099
+
+        def free(end: int) -> bool:
+            start = end
+            while start < len(text) and text[start].isspace():
+                start += 1
+            if start == end:
+                return True
+            stop = start
+            while stop < len(text) and is_letter(text[stop]):
+                stop += 1
+            follower = text[start:stop]
+            return not follower.islower() or follower in function_words
+
+        claimed = {}
+        for first, second in zip(numbers, numbers[1:]):
+            if not (year(first) and text[first.end:second.start] in marks and free(second.end)):
+                continue
+            if year(second) and int(first.integer) < int(second.integer):
+                claimed |= {first: first.integer, second: second.integer}
+            elif second.end - second.start == 2 and int(first.integer) % 100 < int(second.integer):
+                claimed |= {first: first.integer, second: first.integer[:2] + second.integer}
+        previous = None
+        for number in numbers:
+            if year(number) and number not in claimed and free(number.end):
+                before = clause_window(text, words, number.start, number.end, -1, limit=1)
+                if ((before and before[0].lower() in year_words)
+                        or (previous is not None and link.fullmatch(text[previous.end:number.start]))):
+                    claimed[number] = number.integer
+            if number in claimed:
+                previous = number
+        for number, digits in claimed.items():
+            yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": digits, "suffix": ""}),
+                       recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -441,7 +486,8 @@ class Abbreviation:
 
 @dataclass(frozen=True)
 class Expression:
-    """`5+3`, `2 × 2 = 4`: operators between integers, with no letter on either side."""
+    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. The first
+    integer may carry a minus sign."""
     name: str = "expression"
     form: Form = Form.EXPRESSION
 
@@ -449,7 +495,7 @@ class Expression:
         operators = "".join(request.data["operators"])
         for match in re.finditer(request.data["patterns"]["expression"], fold_digits(text)):
             start, end = match.span()
-            if not is_bounded(text, start, end):
+            if not (is_bounded(text, start, end) and one_digit_set(text[start:end])):
                 continue
             written = match.group().replace(" ", "")
             operands = tuple(re.split("[" + operators + "]", written))
@@ -471,7 +517,8 @@ class DateNamed:
         for key, order in (("date_month_day", "MDY"), ("date_day_month", "DMY"), ("date_month_year", "MY")):
             for match in re.finditer(patterns[key], folded):
                 start, end = match.span()
-                if not is_bounded(text, start, end) or (start and text[start - 1] in symbols):
+                if (not is_bounded(text, start, end) or (start and text[start - 1] in symbols)
+                        or not one_digit_set(text[start:end])):
                     continue
                 if order == "MY":
                     month_name, day, year = match.group(1), None, match.group(2)

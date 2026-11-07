@@ -81,12 +81,13 @@ python -c "from text2spoken import supports; print(supports('en-US'))"
 
 `python -m text2spoken.export en` prints the data of a language file as JSON.
 
-The 116 English rows in `tests/data/en.tsv` name their source. No native speaker has checked them, and each row says so in its `checked_by` column.
+The 165 English rows in `tests/data/en.tsv` name their source. No native speaker has checked them, and each row says so in its `checked_by` column.
 
 ## Behaviour to know
 
 - The library uses no network and loads no model, so it works offline.
 - Importing the library imports no parser. The first call loads the language files.
+- A digit run that the library cannot read for sure stays as written: the duration `1:23:45`, the short number in `Call 911 now.`, and `3/4 kg`. A count after a lowercase noun reads as a number, not a year, so `in 1234 steps` reads "one thousand two hundred and thirty-four steps".
 - A second pass changes nothing: `normalize(normalize(t, lang), lang)` returns the text of the first pass. The tests check this over every row and over seeded random text.
 
 ## Development

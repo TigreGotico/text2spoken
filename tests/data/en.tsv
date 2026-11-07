@@ -115,3 +115,52 @@ en-113	en-GB	ordinal	He was 1,000th.	He was one thousandth.	the group mark is pa
 en-114	en-GB	color	Text color: #333.	Text color: three three three.	text2spoken-design section 12: a colour with no name spells the digits that the text writes	unchecked
 en-115	en-GB	none	Set the aspect ratio to 16:10.	Set the aspect ratio to 16:10.	text2spoken-design section 4.2: to is no time evidence, so 16:10 stays as written	unchecked
 en-116	en-GB	none	Code 007 opens.	Code 007 opens.	text2spoken-design section 4.2: digits with a leading zero and no lead stay as written	unchecked
+en-117	en-GB	none	It took 1:23:45.	It took 1:23:45.	text2spoken-design section 4.2: a seconds field is no clock evidence, so a duration stays as written	unchecked
+en-118	en-GB	none	The lap took 0:45:10 in all.	The lap took 0:45:10 in all.	text2spoken-design section 4.2: a seconds field is no clock evidence, so a duration stays as written	unchecked
+en-119	en-US	none	Call 911 now.	Call 911 now.	text2spoken-design section 4.3: a run after a phone word that fails the numbering plan stays as written	unchecked
+en-120	en-US	none	Phone: 911.	Phone: 911.	text2spoken-design section 4.3: a run after a phone word that fails the numbering plan stays as written	unchecked
+en-121	en-GB	none	Tel 999	Tel 999	text2spoken-design section 4.3: a run after a phone word that fails the numbering plan stays as written	unchecked
+en-122	en-GB	cardinal	We won in 1234 steps.	We won in one thousand two hundred and thirty-four steps.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
+en-123	en-GB	cardinal	It fits in 2048 bytes.	It fits in two thousand and forty-eight bytes.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
+en-124	en-GB	cardinal	She played in 1999 games.	She played in one thousand nine hundred and ninety-nine games.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
+en-125	en-GB	range	The buffer holds 1024-2048 bytes.	The buffer holds one thousand and twenty-four to two thousand and forty-eight bytes.	text2spoken-design section 4.2: the follower rule blocks a year range, and the range reads cardinals	unchecked
+en-126	en-GB	cardinal	There were 2005 people.	There were two thousand and five people.	text2spoken-design section 4.2: a year needs a year word; Wikipedia, English numerals (fetched 2026-11-06): British and	unchecked
+en-127	en-GB	cardinal	Room 1999 is shut.	Room one thousand nine hundred and ninety-nine is shut.	text2spoken-design section 4.2: room is no year word; Wikipedia, English numerals (fetched 2026-11-06): British and	unchecked
+en-128	en-GB	cardinal	It ran in 2000 ms.	It ran in two thousand ms.	text2spoken-design section 4.2: ms blocks a year, and the table holds no unit ms	unchecked
+en-129	en-GB	year	In 1066 and 1215.	In ten sixty-six and twelve fifteen.	text2spoken-design section 4.2: a number that a link joins to a year is a year; Wikipedia, English numerals (fetched 2026-11-06), Dates: 1015 ten fifteen	unchecked
+en-130	en-GB	year	In 1985, 1986 and 1987 it rained.	In nineteen eighty-five, nineteen eighty-six and nineteen eighty-seven it rained.	text2spoken-design section 4.2: a number that a comma or a link joins to a year is a year; Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits	unchecked
+en-131	en-GB	year	It ran during 1939-45.	It ran during nineteen thirty-nine to forty-five.	text2spoken-design section 4.2: the short end of a year range reads without the century; Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits	unchecked
+en-132	en-US	year	Prices rose during 2010-12.	Prices rose during twenty ten to twelve.	text2spoken-design section 4.2: the short end of a year range reads without the century; Wikipedia, English numerals (fetched 2026-11-06), Dates: 2010 twenty ten	unchecked
+en-133	en-GB	year	Prices rose during 2010-12.	Prices rose during twenty ten to twelve.	text2spoken-design section 5.4: en-GB reads 2010 by spellout-numbering-year, twenty ten; the short end reads without the century	unchecked
+en-134	en-GB	year	It ran during 2005-07.	It ran during two thousand and five to two thousand and seven.	text2spoken-design section 4.2: a year that reads with thousand has no century words to drop, so the short end reads the whole year	unchecked
+en-135	en-GB	year	It was built 1905-07.	It was built nineteen oh-five to oh-seven.	text2spoken-design section 4.2: the short end reads without the century; Wikipedia, English numerals (fetched 2026-11-06), Dates: 1901 nineteen oh-one	unchecked
+en-136	en-GB	range	The 2024-25 season ended.	The two thousand and twenty-four to twenty-five season ended.	text2spoken-design section 4.2: season blocks a year range; a year read as a cardinal is acceptable, a count read as a year is not	unchecked
+en-137	en-GB	cardinal	Born in 2150.	Born in two thousand one hundred and fifty.	text2spoken-design section 4.2: a year is from 1000 to 2099; Wikipedia, English numerals (fetched 2026-11-06): British and	unchecked
+en-138	en-GB	range	Pages 1200-1100.	Pages one thousand two hundred to one thousand one hundred.	text2spoken-design section 4.2: a year range has the lower year first; Wikipedia, English numerals (fetched 2026-11-06): British and	unchecked
+en-139	en-GB	none	Load: 5 kg/2.	Load: 5 kg/2.	text2spoken-design section 2.1: a waiting span blocks the spans inside it; the reading is not clear, so it stays as written	unchecked
+en-140	en-GB	none	Add 3/4 kg of flour.	Add 3/4 kg of flour.	text2spoken-design section 4.2: a unit after a fraction leaves the reading not clear, so it stays as written	unchecked
+en-141	en-US	none	Each $5/6 share.	Each $5/6 share.	text2spoken-design section 4.2: a symbol next to a fraction leaves the reading not clear, so it stays as written	unchecked
+en-142	en-GB	measure	Wind at 5 m/s.	Wind at five metres per second.	SI unit names (BIPM SI Brochure, en-GB spelling): a solidus between unit symbols forms metre per second, from memory	unchecked
+en-143	en-US	measure	Wind at 5 m/s.	Wind at five meters per second.	SI unit names (NIST spelling for en-US): a solidus between unit symbols forms meter per second, from memory	unchecked
+en-144	en-US	none	Open from 9am-5.	Open from 9am-5.	text2spoken-design section 4.2: 5 has no clock evidence, so the range stays as written	unchecked
+en-145	en-US	time	From 9am–5pm	From nine AM to five PM	text2spoken-design sections 2.1 and 4.2: an en dash between two times reads the range word	unchecked
+en-146	en-US	money	Tickets cost $5-$10.	Tickets cost five dollars to ten dollars.	text2spoken-design section 4.2: a range mark between two amounts reads the range word	unchecked
+en-147	en-US	money	It raised $5.50m.	It raised five point five million dollars.	text2spoken-design section 4.2: a scaled amount is a decimal number, so its trailing zeros do not read	unchecked
+en-148	en-GB	money	It costs $5 more.	It costs five dollars more.	text2spoken-design section 4.2: a scale word ends at a word boundary, so more is no m scale	unchecked
+en-149	en-GB	expression	-2+3=1	minus two plus three equals one	text2spoken-design section 4.4: the first operand may carry a sign	unchecked
+en-150	en-GB	none	0000-01-01	0000-01-01	the Gregorian calendar has no year zero, so 0000 is no date	unchecked
+en-151	en-GB	none	##5	##5	text2spoken-design section 4.2: no lead follows another lead	unchecked
+en-152	en-GB	none	０3 December	０3 December	text2spoken-design section 5.3: digits from two digit sets are no number	unchecked
+en-153	en-GB	none	The 1stly item.	The 1stly item.	text2spoken-design section 4.2: an ordinal suffix that a letter continues is no ordinal	unchecked
+en-154	en-GB	none	１+2=3	１+2=3	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-155	en-GB	none	Meet at １4:30.	Meet at １4:30.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-156	en-GB	none	Add １/2 cup.	Add １/2 cup.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-157	en-GB	none	Ages １8-25.	Ages １8-25.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-158	en-GB	none	It has １2 rooms.	It has １2 rooms.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-159	en-GB	none	On 1２/03/2024 we met.	On 1２/03/2024 we met.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-160	en-GB	none	Call +351 9１2 345 678.	Call +351 9１2 345 678.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-161	en-GB	none	x-2+3	x-2+3	text2spoken-design section 4.2: an expression has no letter on either side, so it stays as written	unchecked
+en-162	en-GB	none	It ran during 1945-39.	It ran during 1945-39.	text2spoken-design section 4.2: the short end of a year range is later in the century than the first year	unchecked
+en-163	en-GB	none	Ages １8–25.	Ages １8–25.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-164	en-GB	none	The 1st5 item.	The 1st5 item.	text2spoken-design section 4.2: an ordinal suffix that a letter or a digit continues is no ordinal	unchecked
+en-165	en-GB	cardinal	Flow of 5 m/min.	Flow of five m/min.	text2spoken-design section 4.2: a unit that a slash and a letter continue is no unit, and the table holds no m/min	unchecked

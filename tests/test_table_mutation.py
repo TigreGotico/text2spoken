@@ -20,7 +20,8 @@ EN_ENTRIES = {
     "months": "March", "numeric_date_reading": "full", "currencies": "USD", "percent": "word", "units": "kg",
     "phone_words": "phone", "color_words": "colour", "colors": "ff0000", "titles": "Dr.", "abbreviations": "etc.",
     "number_abbreviations": "No.", "patterns": "expression", "range_marks": "-", "year_words": "in",
-    "scales": "million", "sentence_final": "etc.", "ordinal_marks": "th",
+    "scales": "million", "sentence_final": "etc.", "ordinal_marks": "th", "year_links": "and",
+    "function_words": "the",
 }
 
 

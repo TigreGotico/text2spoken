@@ -1,6 +1,7 @@
 """Spans, features, the field schemas, and the classify and render loops (design sections 4.4, 5.1, 5.5)."""
 from __future__ import annotations
 
+import heapq
 import logging
 import warnings
 from bisect import bisect_left, bisect_right
@@ -51,6 +52,8 @@ class Span:
     lead: str = ""
     trail: str = ""
     recognizer: str = ""
+    keep: bool = False
+    """A span that keeps its text as written: it claims its characters, so that no other span reads them."""
 
 
 @dataclass(frozen=True)
@@ -131,43 +134,54 @@ def _joiner(char: str) -> bool:
     return not (char.isspace() or is_digit(char))
 
 
-def _joined(text: str, span: Span, read: bytearray) -> bool:
-    """Whether one character that is not a digit or a space, and then a digit, touch the span on either side,
-    while no span reads them."""
-    start, end = span.start, span.end
-    left = (start >= 2 and _joiner(text[start - 1]) and not read[start - 1] and is_digit(text[start - 2])
-            and not read[start - 2])
-    right = (end + 1 < len(text) and _joiner(text[end]) and not read[end] and is_digit(text[end + 1])
-             and not read[end + 1])
-    return left or right
+def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None]) -> bool:
+    """Whether one character that is not a digit or a space joins the span, on either side, to a digit that no
+    span reads, or to a character of a waiting span of another form. A joiner that a waiting span of the same
+    form holds is no joiner: the two spans are one range, as in `$5-$10`."""
+    def side(joiner: int, beyond: int) -> bool:
+        if not (0 <= beyond < len(text) and _joiner(text[joiner]) and not read[joiner] and not read[beyond]):
+            return False
+        partner = holder[joiner]
+        if partner is not None and partner.form is span.form:
+            return False
+        waiting = holder[beyond]
+        return is_digit(text[beyond]) or (waiting is not None and waiting.form is not span.form)
+    return side(span.start - 1, span.start - 2) or side(span.end, span.end + 1)
 
 
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
     """The spans that the recognizers claim, in claim order, by the rules of sections 2.1 and 4.2.
 
-    A digit run joined to a span by one character stays a cluster while no span reads it. The claim loop runs
-    again until no span is added, so a span next to a neighbour that a later recognizer reads is claimed as it
-    would be on a second pass over the output.
+    A span that one character joins to a digit run waits while no span reads that run, and no other span claims a
+    character of a waiting span. A claimed span wakes the waiting spans next to it, which are checked again in
+    claim order, as they would be on a second pass over the output. A `keep` span claims its characters and
+    stays out of the result, so its text stays as written.
     """
     candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
                   for span in recognizer.find(text, tokens, request)
                   if not (_inside(span, blocks) or splits_token(span, tokens, text))]
     read = bytearray(len(text))
+    holder: list[Span | None] = [None] * len(text)
+    neighbours: dict[int, list[int]] = {}
     claimed: list[Span] = []
-    added = True
-    while added:
-        added = False
-        waiting = []
-        for span in candidates:
-            if any(read[span.start:span.end]):
-                continue
-            if _joined(text, span, read):
-                waiting.append(span)
-                continue
-            read[span.start:span.end] = b"\x01" * (span.end - span.start)
+    queue = list(range(len(candidates)))
+    while queue:
+        index = heapq.heappop(queue)
+        span = candidates[index]
+        if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
+            continue
+        if _joined(text, span, read, holder):
+            for position in range(span.start, span.end):
+                holder[position] = span
+            for position in (span.start - 2, span.start - 1, span.end, span.end + 1):
+                neighbours.setdefault(position, []).append(index)
+            continue
+        read[span.start:span.end] = b"\x01" * (span.end - span.start)
+        if not span.keep:
             claimed.append(span)
-            added = True
-        candidates = waiting
+        for position in range(span.start, span.end):
+            for waiting in neighbours.pop(position, ()):
+                heapq.heappush(queue, waiting)
     return tuple(sorted(claimed, key=lambda s: s.start))
 
 
