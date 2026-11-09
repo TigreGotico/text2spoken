@@ -160,3 +160,31 @@ def test_a_speller_that_declines_in_strict_mode_raises_chained(monkeypatch):
     with pytest.raises(UnreadFormError) as raised:
         normalize("ko 3 la.", "qac", NormalizationParams(strict=True))
     assert isinstance(raised.value.__cause__, NotImplementedError)
+
+
+class _OutOfRange:
+    def cardinal(self, digits, features, request):
+        from text2spoken import DeclinedReading
+
+        raise DeclinedReading(f"no word for {digits}")
+
+
+def test_a_speller_that_raises_declined_reading_keeps_the_written_form_and_logs(monkeypatch, caplog):
+    _qac_with(monkeypatch, spellers={Form.CARDINAL: _OutOfRange()})
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize("ko 3 la.", "qac") == "ko 3 la."
+    assert any("unread cardinal span '3'" in r.message and "no word for 3" in r.message for r in caplog.records)
+    with pytest.raises(UnreadFormError) as raised:
+        normalize("ko 3 la.", "qac", NormalizationParams(strict=True))
+    assert type(raised.value.__cause__).__name__ == "DeclinedReading"
+
+
+def test_rbnf_declines_a_number_outside_its_range_through_declined_reading():
+    from unicode_rbnf.engine import NoRuleForNumberError
+
+    from text2spoken import DeclinedReading
+
+    with pytest.raises(UnreadFormError) as raised:
+        normalize("It is 1000000000000000000000 now.", "en", NormalizationParams(strict=True))
+    assert isinstance(raised.value.__cause__, DeclinedReading)
+    assert isinstance(raised.value.__cause__.__cause__, NoRuleForNumberError)

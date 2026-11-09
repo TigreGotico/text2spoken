@@ -10,9 +10,9 @@ from text2spoken.core.numbers import declared_marks
 from text2spoken.core.spans import Analysis, Features, Span, classify, render
 from text2spoken.core.tokens import (Token, Tokenizer, check_tokens, default_tokenizer, join_split_words,
                                      protect_blocks)
-from text2spoken.errors import (HintWarning, InvalidHintError, InvalidLanguageTagError, InvalidLexiconError,
-                                ParameterNotHonouredWarning, Text2SpokenError, Text2SpokenWarning, TokenizerError,
-                                UndefinedGrammaticalGender, UnreadFormError, UnsupportedParameterError)
+from text2spoken.errors import (DeclinedReading, HintWarning, InvalidHintError, InvalidLanguageTagError,
+                                InvalidLexiconError, ParameterNotHonouredWarning, Text2SpokenError, Text2SpokenWarning,
+                                TokenizerError, UndefinedGrammaticalGender, UnreadFormError, UnsupportedParameterError)
 from text2spoken.params import Animacy, Form, FrozenMap, GrammaticalGender, NormalizationParams
 
 __all__ = [
@@ -20,7 +20,7 @@ __all__ = [
     "Form", "GrammaticalGender", "Animacy", "NormalizationParams", "FrozenMap", "Features", "Span", "Analysis",
     "Support", "Token", "Tokenizer", "default_tokenizer",
     "Text2SpokenError", "InvalidLanguageTagError", "TokenizerError", "InvalidHintError", "UnsupportedParameterError",
-    "InvalidLexiconError", "UndefinedGrammaticalGender", "UnreadFormError", "Text2SpokenWarning",
+    "InvalidLexiconError", "UndefinedGrammaticalGender", "UnreadFormError", "DeclinedReading", "Text2SpokenWarning",
     "ParameterNotHonouredWarning", "HintWarning",
 ]
 
