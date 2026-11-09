@@ -347,10 +347,11 @@ class DateNumeric:
             if resolved is None or bounds is None:
                 continue
             year, month, day, order = resolved
-            start, end, _, suffix = bounds
+            start, end, prefix, suffix = bounds
             yield Span(start, end, Form.DATE,
                        FrozenMap({"year": year, "month": month, "day": day, "written_order": order,
-                                  "month_written": "digits", "suffix": suffix}), recognizer=self.name)
+                                  "month_written": "digits", "prefix": prefix, "suffix": suffix}),
+                       recognizer=self.name)
 
 
 def _period_after(text: str, end: int, periods) -> tuple[str, int] | None:
