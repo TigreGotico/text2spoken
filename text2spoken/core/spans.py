@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import heapq
 import logging
+import sys
 import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -284,6 +285,15 @@ def _unread_runs(segment: str, symbols: frozenset[str], read_digits: bool) -> li
     return runs
 
 
+def _declined(error: Exception) -> bool:
+    """Whether a speller declines the span (design section 10): it does not offer the method of the form, or the
+    number is outside its range, as a number of 10^21 or more in RBNF. Any other error is a defect, and it raises."""
+    if isinstance(error, NotImplementedError):
+        return True
+    rbnf = sys.modules.get("unicode_rbnf.engine")
+    return rbnf is not None and isinstance(error, rbnf.NoRuleForNumberError)
+
+
 def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> str:
     request = analysis.request
     language = request.language
@@ -307,6 +317,10 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
         except Text2SpokenError:
             raise
         except Exception as error:
+            if not _declined(error):
+                error.add_note(f"text2spoken: the {language.code} verbalizer of {span.form} fails on {written!r} "
+                               f"at {span.start}")
+                raise
             if request.params.strict:
                 raise UnreadFormError((written,), f"{span.form}: {error}") from error
             LOG.warning("unread %s span %r at %d: %s", span.form, written, span.start, error)

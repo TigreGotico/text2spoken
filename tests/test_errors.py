@@ -101,3 +101,62 @@ def test_an_unread_alpha_logs(caplog):
 def test_a_colour_with_no_table_entry_spells_its_digits():
     assert normalize("The colour is #12ab34.", "en") == "The colour is one two A B three four."
 
+
+
+def _qac_with(monkeypatch, **changes):
+    """The stub language `qac` with `changes`, as the one file that the loader reads."""
+    from dataclasses import replace
+
+    from tests.fixtures import qac
+    from text2spoken.core import language
+
+    spec = replace(qac.LANGUAGE, **changes)
+    monkeypatch.setattr(language, "_registry", lambda: {"qac": spec})
+
+
+def _raises(error: Exception):
+    def verbalizer(span, context):
+        raise error
+    return verbalizer
+
+
+@pytest.mark.parametrize("error", [KeyError("digit_words"), ImportError("no module named ovos_number_parser"),
+                                   AttributeError("x"), TypeError("x"), ValueError("x")],
+                         ids=lambda e: type(e).__name__)
+@pytest.mark.parametrize("strict", [False, True])
+def test_a_verbalizer_defect_raises_with_the_language_and_the_form(monkeypatch, error, strict):
+    _qac_with(monkeypatch, verbalizers={Form.CARDINAL: _raises(error)})
+    with pytest.raises(type(error)) as raised:
+        normalize("ko 3 la.", "qac", NormalizationParams(strict=strict))
+    assert raised.value is error and not isinstance(raised.value, UnreadFormError)
+    assert any("qac" in note and "cardinal" in note and "'3'" in note for note in raised.value.__notes__)
+
+
+def test_a_missing_data_key_raises_and_does_not_stay_as_written(monkeypatch):
+    # speak_cardinal reads digit_words for a leading zero after a lead, as in `#007`.
+    from tests.fixtures import qac
+    from text2spoken.params import freeze, thaw
+
+    data = freeze({k: v for k, v in thaw(qac.LANGUAGE.data).items() if k != "digit_words"})
+    _qac_with(monkeypatch, data=data)
+    with pytest.raises(KeyError, match="digit_words"):
+        normalize("ko #007 la.", "qac")
+
+
+class _Declines:
+    def cardinal(self, digits, features, request):
+        raise NotImplementedError("this speller reads no cardinal")
+
+
+def test_a_speller_that_declines_keeps_the_written_form_and_logs(monkeypatch, caplog):
+    _qac_with(monkeypatch, spellers={Form.CARDINAL: _Declines()})
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize("ko 3 la.", "qac") == "ko 3 la."
+    assert any("unread cardinal span '3'" in r.message for r in caplog.records)
+
+
+def test_a_speller_that_declines_in_strict_mode_raises_chained(monkeypatch):
+    _qac_with(monkeypatch, spellers={Form.CARDINAL: _Declines()})
+    with pytest.raises(UnreadFormError) as raised:
+        normalize("ko 3 la.", "qac", NormalizationParams(strict=True))
+    assert isinstance(raised.value.__cause__, NotImplementedError)
