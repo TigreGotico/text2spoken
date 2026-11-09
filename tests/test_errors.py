@@ -47,6 +47,41 @@ def test_a_lexicon_value_that_a_recognizer_claims_raises(value):
         normalize("hello", "en", lexicon(en=entries))
 
 
+def test_the_lexicon_check_runs_once_for_one_lexicon(monkeypatch):
+    """Ten calls with one lexicon check its values once: one `classify` of each value, not ten (section 11)."""
+    from text2spoken.core import spans
+
+    checked, classify = [], spans.classify
+
+    def counted(text, *args):
+        checked.append(text)
+        return classify(text, *args)
+
+    monkeypatch.setattr(spans, "classify", counted)
+    params = lexicon(en={"ACME": "acme corp", "NHS": "N H S", "Ltd": "limited"})
+    for _ in range(10):
+        assert normalize("ACME Ltd and the NHS.", "en", params) == "acme corp limited and the N H S."
+    assert sorted(checked) == ["N H S", "acme corp", "limited"]
+
+
+def test_a_lexicon_that_one_call_admits_still_raises_for_params_that_read_its_value():
+    """The check depends on the params: `costs $5` holds money only when the params read money. A lexicon that
+    passes with money off still raises with money on, on every call."""
+    entries = {"x": "costs $5"}
+    off = lexicon(en=entries).without(Form.MONEY, Form.CARDINAL)
+    assert normalize("x", "en", off) == "costs $5"
+    for _ in range(2):
+        with pytest.raises(InvalidLexiconError):
+            normalize("x", "en", lexicon(en=entries))
+
+
+@pytest.mark.parametrize("text,expected", [("New York and New Delhi", "N Y and new delhi"),
+                                           ("Newark", "Newark"), ("York", "the city")])
+def test_the_longest_lexicon_key_that_starts_at_a_position_wins(text, expected):
+    params = lexicon(en={"New York": "N Y", "New": "new", "New Delhi": "new delhi", "York": "the city"})
+    assert normalize(text, "en", params) == expected
+
+
 def test_a_lexicon_key_that_is_not_a_tag_raises():
     with pytest.raises(InvalidLanguageTagError):
         normalize("hello", "en", lexicon(**{"not a tag": {"a": "b"}}))
