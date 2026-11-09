@@ -10,13 +10,13 @@ import pytest
 from tests import contract
 from tests.conftest import rows
 from tests.contract import CLAUSES, language_files
-from tests.data_keys import READERS, SHAPES
+from tests.data_keys import OPTIONAL, READERS, SHAPES
 from tests.fixtures import qac
 from text2spoken.core import language as loader
 from text2spoken.core.language import Request, Variety, select
 from text2spoken.core.recognizers import SHARED
 from text2spoken.core.spans import Features
-from text2spoken.core.spellers import RbnfSpeller
+from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, NormalizationParams, freeze, thaw
 
@@ -134,6 +134,38 @@ def test_clause_6_checks_the_shape_of_each_key_the_core_reads(key, value):
     variety = Variety("qac", freeze({key: value}))
     with pytest.raises(AssertionError, match=key):
         contract.clause_6("qac", replace(STUB, varieties=(variety,)))
+
+
+def test_clause_6_requires_the_keys_of_each_shared_recognizer():
+    """The stub lists the shared percent and telephone recognizers, gives no `percent`, and writes `phone_word`."""
+    data = freeze({**thaw(STUB.data), "phone_word": ["ligue"]})
+    spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, SHARED["percent"], SHARED["telephone"]))
+    with pytest.raises(AssertionError, match="which its shared recognizers read") as error:
+        contract.clause_6("qac", spec)
+    assert "'percent'" in str(error.value) and "'phone_words'" in str(error.value)
+
+
+def test_clause_6_requires_the_keys_of_a_subclass_of_a_shared_recognizer(en):
+    telephone = next(r for r in en.recognizers if r.name == "telephone")
+    assert type(telephone) is not type(SHARED["telephone"])
+    with pytest.raises(AssertionError, match="'phone_words'"):
+        contract.clause_6("qac", replace(STUB, recognizers=(*STUB.recognizers, telephone)))
+
+
+def test_clause_6_requires_the_keys_in_each_variety():
+    percent = freeze({"percent": {"signs": ["%"], "position": "after"}, "range_word": "al"})
+    varieties = (Variety("qac", percent), Variety("qac-AA"))
+    spec = replace(STUB, varieties=varieties, recognizers=(*STUB.recognizers, SHARED["percent"]))
+    with pytest.raises(AssertionError, match="qac-AA: no"):
+        contract.clause_6("qac", spec)
+
+
+def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
+    data = freeze({**thaw(STUB.data), "range_word": "al", "time_words": ["je"], "day_periods": {"am": ["am"]}})
+    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"])
+    spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers))
+    assert OPTIONAL <= set().union(*(READERS[r.name] for r in readers)) and not OPTIONAL & set(spec.data)
+    contract.clause_6("qac", spec)
 
 
 def _data_reads(source: str) -> set[str]:
@@ -280,6 +312,36 @@ def test_clause_12_admits_no_other_extra():
         contract.clause_12("qac", STUB, source=source, requirements=['tugalex; extra == "test"'])
     with pytest.raises(AssertionError, match="does not hold"):
         contract.clause_12("qac", STUB, source="import linguatag\n", requirements=['linguatag; extra == "qac"'])
+
+
+OVOS_SOURCE = "from text2spoken.core.spellers import OvosNumberSpeller\nSPELLER = OvosNumberSpeller({})\n"
+
+
+def test_clause_12_checks_the_dependency_of_each_core_speller():
+    """The stub names OvosNumberSpeller, so the import of ovos_number_parser lives in the core, not in the file."""
+    spec = replace(STUB, spellers={Form.CARDINAL: OvosNumberSpeller({})})
+    with pytest.raises(AssertionError, match="ovos-number-parser"):
+        contract.clause_12("qac", spec, source=OVOS_SOURCE)
+    with pytest.raises(AssertionError, match="ovos-number-parser"):
+        contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "pt"'])
+    contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "qac"'])
+
+
+class _ByVariety:
+    def __init__(self, speller):
+        self.spellers = {"qac": speller}
+
+
+RBNF = RbnfSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"})
+
+
+@pytest.mark.parametrize(("speller", "distribution"), [(OvosNumberSpeller({}), "ovos-number-parser"),
+                                                       (RBNF, "unicode-rbnf")])
+def test_clause_12_finds_a_core_speller_inside_a_speller(speller, distribution):
+    spec = replace(STUB, spellers={Form.CARDINAL: _ByVariety(speller)})
+    with pytest.raises(AssertionError, match=distribution):
+        contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=[])
+    contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=[distribution])
 
 
 def test_clause_12_admits_a_lazy_extra(en):

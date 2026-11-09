@@ -14,6 +14,7 @@ DATA = freeze({
     "digit_words": ["ze", "wa", "tu", "ri", "fo", "fa", "si", "se", "ei", "ni"],
     "sign_words": {"-": "minu"},
     "leads": {"#": "numo"},
+    "symbols": {},
 })
 
 

@@ -17,12 +17,13 @@ import linguatag
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from tests.data_keys import SHAPES
+from tests.data_keys import OPTIONAL, READERS, SHAPES
 from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
 from text2spoken.core.spans import FIELDS, Span
-from text2spoken.core.spellers import RbnfSpeller, rbnf_engine
+from text2spoken.core.recognizers import SHARED
+from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import OPTIONS, Form, FrozenMap
 
@@ -37,6 +38,8 @@ DISTRIBUTIONS = {"linguatag": "linguatag", "ovos_number_parser": "ovos-number-pa
                  "ovos_date_parser": "ovos-date-parser", "ovos_color_parser": "ovos-color-parser",
                  "unicode_rbnf": "unicode-rbnf", "quebra_frases": "quebra-frases", "tugalex": "tugalex"}
 """The distribution that installs each allowed import."""
+SPELLER_DISTRIBUTIONS = {OvosNumberSpeller: "ovos-number-parser", RbnfSpeller: "unicode-rbnf"}
+"""The distribution that each core speller imports when it speaks."""
 PATTERN_REFUSED = re.compile(r"\\[dDwWsSbB1-9]|\(\?(?!:)")
 
 
@@ -136,14 +139,24 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
             shape(data[key], f"{where}.{key}")
 
 
+def required_keys(spec: LanguageSpec) -> set[str]:
+    """The keys that the shared recognizers of the file read, by class, so that a subclass counts too."""
+    used = {name for name, shared in SHARED.items() for r in spec.recognizers if isinstance(r, type(shared))}
+    return set().union(*(READERS[name] for name in used)) - OPTIONAL
+
+
 def clause_6(name: str, spec: LanguageSpec) -> None:
     from text2spoken.params import freeze, thaw
 
     for where, data in (("data", spec.data), *((v.tag, v.data) for v in spec.varieties)):
         _json_only(data, where)
         assert freeze(json.loads(json.dumps(thaw(data)))) == data, f"{where} does not round-trip through JSON"
+    required = required_keys(spec)
     for index, variety in enumerate(spec.varieties):
-        check_data_keys(request_for(spec, index).data, variety.tag)
+        data = request_for(spec, index).data
+        check_data_keys(data, variety.tag)
+        missing = required - set(data)
+        assert not missing, f"{variety.tag}: no {sorted(missing)}, which its shared recognizers read"
 
 
 def check_pattern(pattern: str) -> None:
@@ -203,14 +216,17 @@ def clause_10(name: str, spec: LanguageSpec) -> None:
         assert normalize(row["text"], row["tag"], tokenizer=lambda text, lang: ()) == row["expected"], row["id"]
 
 
-def _rbnf_spellers(spec: LanguageSpec) -> list[RbnfSpeller]:
+def _spellers(spec: LanguageSpec) -> list:
+    """Each speller that the file names, and each speller that one of them holds, alone or in a dict."""
     found = []
     for speller in spec.spellers.values():
-        candidates = [speller, *vars(speller).values()]
-        for candidate in candidates:
-            nested = candidate.values() if isinstance(candidate, dict) else (candidate,)
-            found += [s for s in nested if isinstance(s, RbnfSpeller)]
+        for candidate in (speller, *vars(speller).values()):
+            found += candidate.values() if isinstance(candidate, dict) else (candidate,)
     return found
+
+
+def _rbnf_spellers(spec: LanguageSpec) -> list[RbnfSpeller]:
+    return [s for s in _spellers(spec) if isinstance(s, RbnfSpeller)]
 
 
 def clause_11(name: str, spec: LanguageSpec) -> None:
@@ -265,6 +281,15 @@ def check_declared(source: str, code: str, requirements: list[str] | None = None
         assert not missing, f"imports {sorted(missing)}, which an install of {install} does not hold"
 
 
+def check_speller_dependencies(spec: LanguageSpec, requirements: list[str] | None = None) -> None:
+    """Each core speller that the file names imports a distribution of the package or of the language extra."""
+    requirements = requires("text2spoken") if requirements is None else requirements
+    wanted = {canonicalize_name(SPELLER_DISTRIBUTIONS[type(s)]) for s in _spellers(spec)
+              if type(s) in SPELLER_DISTRIBUTIONS}
+    missing = wanted - declared(requirements, spec.code)
+    assert not missing, f"its spellers import {sorted(missing)}, which text2spoken[{spec.code}] does not hold"
+
+
 _SANDBOX = """
 import socket, sys
 import text2spoken.core.recognizers, text2spoken.core.spellers, text2spoken.core.color
@@ -295,6 +320,7 @@ def clause_12(name: str, spec: LanguageSpec, source: str | None = None, requirem
     text = source if path is None else path.read_text(encoding="utf-8")
     check_imports(text)
     check_declared(text, spec.code, requirements)
+    check_speller_dependencies(spec, requirements)
     if path is not None:
         events, added = sandbox_import(f"text2spoken.lang.{name}", str(path.parent))
         foreign = [m for m in added if not m.startswith("text2spoken.lang")]

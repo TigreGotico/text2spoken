@@ -124,3 +124,6 @@ READERS: dict[str, frozenset[str]] = {
 }
 """The keys that each shared recognizer reads, by its name in `SHARED`, and the keys that the shared verbalizer
 `speak_cardinal`, the unread check of `render` and the option defaults of `effective_params` read."""
+
+OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes"})
+"""Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
