@@ -134,36 +134,64 @@ def test_the_clauses_give_the_clause_window_with_no_limit(every):
     assert compared > 10000
 
 
-def test_a_clause_window_from_clauses_takes_the_same_steps_for_a_short_and_a_long_clause():
-    """`Clauses.around` looks the clause up, and does not walk it: the lines that run inside it, counted by a trace,
-    stay the same when the clause grows from 100 to 4000 words, apart from the two binary searches."""
+def _lines_run_in_spans(call):
+    """The lines of spans.py that run during call(), counted by a tracer; the tracer set before stays set after."""
     import sys
 
+    count, previous = 0, sys.gettrace()
+
+    def trace(frame, event, arg):
+        nonlocal count
+        if frame.f_code.co_filename.endswith("spans.py"):
+            count += event == "line"
+            return trace
+        return None
+
+    sys.settrace(trace)
+    try:
+        call()
+    finally:
+        sys.settrace(previous)
+    return count
+
+
+@pytest.mark.parametrize("span_first", [False, True], ids=["span after the clause", "span before the clause"])
+def test_a_clause_window_from_clauses_takes_the_same_steps_for_a_short_and_a_long_clause(span_first):
+    """`Clauses.around` looks the clause up, and does not walk it, back or ahead: the lines that run inside it stay
+    the same when the clause grows from 100 to 4000 words, apart from the two binary searches."""
     from text2spoken.core.spans import Clauses
 
     def lines_run(size):
-        text = " ".join(["word"] * size) + " #fff"
+        words = " ".join(["word"] * size)
+        text = f"#fff {words}" if span_first else f"{words} #fff"
+        start = 0 if span_first else len(text) - 4
         found = context_words(default_tokenizer(text, "en"))
         clauses = Clauses(found, clause_breaks(text))
-        count = 0
-
-        def trace(frame, event, arg):
-            nonlocal count
-            if frame.f_code.co_filename.endswith("spans.py"):
-                count += event == "line"
-                return trace
-            return None
-
-        sys.settrace(trace)
-        try:
-            back, ahead = clauses.around(len(text) - 4, len(text))
-        finally:
-            sys.settrace(None)
-        assert len(back) == size and len(ahead) == 0
+        windows = []
+        count = _lines_run_in_spans(lambda: windows.extend(clauses.around(start, start + 4)))
+        back, ahead = windows
+        assert (len(back), len(ahead)) == ((0, size) if span_first else (size, 0))
         return count
 
     # Each of the two binary searches runs its key once per halving step.
     assert lines_run(4000) - lines_run(100) <= 2 * ((4000).bit_length() - (100).bit_length() + 1)
+
+
+def test_the_line_count_keeps_the_tracer_that_was_set_before():
+    """A coverage tool or a debugger traces with `sys.settrace`; the guard above must not switch it off."""
+    import sys
+
+    def outer(frame, event, arg):
+        return None
+
+    previous = sys.gettrace()
+    sys.settrace(outer)
+    try:
+        _lines_run_in_spans(lambda: None)
+        kept = sys.gettrace()
+    finally:
+        sys.settrace(previous)
+    assert kept is outer
 
 
 def test_the_clause_breaks_are_the_marks_and_the_periods_before_a_capital():

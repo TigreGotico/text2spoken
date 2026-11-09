@@ -41,14 +41,22 @@ DIGIT_BOUND = 308
 """The longest run of digits that a speller reads. A float holds an integer part of 308 digits, so the decimal path
 reads no more. RBNF reads at most 17 digits in `en`, and ovos-number-parser names numbers up to 312 digits in `en`.
 The bound is below 640, the lowest integer string limit that Python lets a process set, so `int()` reads every run
-under the bound in every environment, and the output does not depend on `sys.int_max_str_digits`."""
+under the bound in every environment, and the output does not depend on `sys.int_max_str_digits`. Leading zeros do
+not count: they are stripped before the check and before `int()`."""
+
+
+def _significant(digits: str) -> str:
+    """The digits with no leading zeros; a run of zeros keeps one, and an empty string stays empty."""
+    return digits.lstrip("0") or digits[-1:]
 
 
 def _integer(digits: str) -> int:
-    """The value of a run of digits; a run longer than DIGIT_BOUND declines. Text that is not digits raises."""
-    if len(digits) > DIGIT_BOUND:
-        raise DeclinedReading(f"{len(digits)} digits pass the bound of {DIGIT_BOUND} digits that a speller reads")
-    return int(digits)
+    """The value of a run of digits; a run of more than DIGIT_BOUND significant digits declines. Text that is not
+    digits raises."""
+    significant = _significant(digits)
+    if len(significant) > DIGIT_BOUND:
+        raise DeclinedReading(f"{len(significant)} digits pass the bound of {DIGIT_BOUND} digits that a speller reads")
+    return int(significant)
 
 
 class OvosNumberSpeller:
@@ -106,8 +114,9 @@ class OvosNumberSpeller:
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         from ovos_number_parser import pronounce_number
 
-        if len(integer) > DIGIT_BOUND:
-            raise DeclinedReading(f"{len(integer)} integer digits pass the bound of {DIGIT_BOUND} digits that a "
+        significant = len(_significant(integer))
+        if significant > DIGIT_BOUND:
+            raise DeclinedReading(f"{significant} integer digits pass the bound of {DIGIT_BOUND} digits that a "
                                   "speller reads")
         value = float(f"{integer or '0'}.{fraction}")
         kwargs = self._kwargs(features, request)

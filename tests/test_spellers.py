@@ -1,4 +1,5 @@
 """Spellers, CLDR locales and plural categories (design sections 5.3 and 5.4)."""
+import json
 import subprocess
 import sys
 from dataclasses import replace
@@ -88,6 +89,30 @@ def test_a_long_run_reads_the_same_whatever_the_integer_string_limit_of_python()
     runs = [subprocess.run([sys.executable, *flags, "-c", LONG_RUN_PROBE], capture_output=True, text=True,
                            check=True).stdout for flags in ([], ["-X", "int_max_str_digits=0"])]
     assert runs[0] == runs[1] == "declined: 4301 digits pass the bound of 308 digits that a speller reads\n" * 2
+
+
+LEADING_ZEROS_PROBE = """
+import json, logging
+logging.disable(logging.CRITICAL)
+from text2spoken import normalize
+
+Z = "0" * 320
+texts = [f"It is {Z}1.5 now.", f"Pay ${Z}5 now.", f"It is {Z}1/2 now.", f"the {Z}1st one", f"{Z}10%", f"{Z}5 km"]
+print(json.dumps([normalize(text, tag) for tag in ("en-GB", "en-US") for text in texts]))
+"""
+
+
+def test_leading_zeros_do_not_count_against_the_digit_bound_under_any_integer_limit():
+    """320 leading zeros do not make a number long: each text reads as it did before the bound, and the same under
+    the default limit of `int()`, the lowest limit Python allows and no limit."""
+    expected = ["It is one point five now.", "Pay five dollars now.", "It is one-half now.", "the first one",
+                "ten per cent", "five kilometres",
+                "It is one point five now.", "Pay five dollars now.", "It is one-half now.", "the first one",
+                "ten percent", "five kilometers"]
+    for flags in ([], ["-X", "int_max_str_digits=640"], ["-X", "int_max_str_digits=0"]):
+        run = subprocess.run([sys.executable, *flags, "-c", LEADING_ZEROS_PROBE], capture_output=True, text=True,
+                             check=True)
+        assert json.loads(run.stdout) == expected, flags
 
 
 def test_the_digit_bound_reads_308_digits_and_declines_309(gendered):
