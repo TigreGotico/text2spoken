@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a14](https://github.com/TigreGotico/text2spoken/tree/0.0.2a14) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a13...0.0.2a14)
+
+**Merged pull requests:**
+
+- fix: follow-ups to the digit bound and the clause guard [\#27](https://github.com/TigreGotico/text2spoken/pull/27) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a13](https://github.com/TigreGotico/text2spoken/tree/0.0.2a13) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a12...0.0.2a13)
