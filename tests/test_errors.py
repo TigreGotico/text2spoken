@@ -1,10 +1,13 @@
 """The failure policy (design section 10) and the lexicon (sections 2.2 and 11)."""
 import logging
+from dataclasses import replace
 
 import pytest
 
 from text2spoken import (Features, Form, FrozenMap, HintWarning, InvalidHintError, InvalidLanguageTagError,
                          InvalidLexiconError, NormalizationParams, UnreadFormError, analyze, normalize, render)
+from text2spoken.core import language as loader
+from text2spoken.core.spellers import OvosNumberSpeller
 
 
 def lexicon(**by_tag):
@@ -69,6 +72,22 @@ def test_a_speller_that_raises_keeps_the_written_form_and_logs(caplog):
     with caplog.at_level(logging.WARNING, logger="text2spoken"):
         assert normalize("It is 1000000000000000000000 now.", "en") == "It is 1000000000000000000000 now."
     assert any("unread cardinal" in r.message for r in caplog.records)
+
+
+def test_an_ovos_speller_that_declines_keeps_the_written_form_and_logs_the_reason(gendered, monkeypatch, caplog):
+    """A run of digits past the integer string limit of Python stays as written, with one warning that names the
+    form, the span and the reason (design section 10)."""
+    speller = OvosNumberSpeller({})
+    cardinal = {Form.CARDINAL: lambda span, context: speller.cardinal(span.fields["digits"], Features(),
+                                                                       context.request)}
+    spec = replace(gendered.LANGUAGE, verbalizers={**gendered.LANGUAGE.verbalizers, **cardinal})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    text = f"x {'9' * 4301} y"
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize(text, "qaa") == text
+    [warning] = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+    assert warning.startswith("unread cardinal span '999") and warning.endswith(
+        "at 2: 4301 digits pass the integer string limit of Python")
 
 
 def test_a_speller_that_raises_in_strict_mode_raises_chained():
