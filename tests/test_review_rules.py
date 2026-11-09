@@ -385,3 +385,30 @@ def test_a_proclitic_before_a_numeric_date_stays_in_the_reading(gendered, monkey
     monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
     assert [span.fields["prefix"] for span in analyze("x بـ10/6/2026 y", "qaa").spans] == ["بـ"]
     assert normalize("x بـ10/6/2026 y", "qaa") == "x بـ<date> y"
+
+
+def test_a_clock_mark_of_the_language_reads_a_time(gendered, monkeypatch):
+    """A language whose `clock_marks` table holds `h` with no evidence needed reads `14h30` as a time, as
+    Portuguese writes it. The table, not the core, names the marks (design section 4.2)."""
+    data = freeze({"defaults": {}, "time_words": [], "day_periods": {}, "range_word": "às",
+                   "clock_marks": [{"mark": "h", "seconds": False, "needs": "none"}]})
+    spec = replace(gendered.LANGUAGE, data=data, recognizers=(SHARED["time_clock"],),
+                   verbalizers={Form.TIME: lambda span, context: f"{span.fields['hour']} e {span.fields['minute']}"})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    assert normalize("A loja abre às 14h30.", "qaa") == "A loja abre às 14 e 30."
+
+
+def test_the_join_range_hook_of_the_language_joins_a_range(gendered, monkeypatch):
+    """A mark of `range_marks` between two spans joins them through the `join_range` hook of the language, so a
+    language can place its range words or endings by its own grammar."""
+    data = freeze({"defaults": {}, "number_marks": {"Latn": [{"decimal": ",", "group": "."}]}, "range_word": "to",
+                   "range_marks": ["–"], "percent": {"signs": ["%"], "position": "after"}})
+
+    def between(span, following, range_word):
+        return replace(span, end=following.start, trail=" eta ")
+
+    spec = replace(gendered.LANGUAGE, data=data, recognizers=(SHARED["percent"],), join_range=between,
+                   verbalizers={Form.PERCENT: lambda span, context: f"{span.fields['amount']['integer']} ehuneko"})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    assert normalize("10%–20%", "qaa") == "10 ehuneko eta 20 ehuneko"
+    assert normalize("10%-20%", "qaa") == "10 ehuneko-20 ehuneko"

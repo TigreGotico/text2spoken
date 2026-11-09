@@ -10,7 +10,7 @@ import pytest
 from tests.conftest import language_names, registry_with_stubs, rows
 from text2spoken import NormalizationParams, UnreadFormError, normalize
 from text2spoken.core import language as loader
-from text2spoken.params import FrozenMap
+from text2spoken.params import FrozenMap, freeze
 
 EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
@@ -27,6 +27,9 @@ EN_ENTRIES = {
     "number_abbreviations": "No.", "patterns": "expression", "range_marks": "-", "year_words": "in",
     "scales": "million", "sentence_final": "etc.", "ordinal_marks": "th", "year_links": "and",
     "function_words": "the", "list_links": "or", "short_codes": "911", "phone_shapes": "[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}",
+    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
+    "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
 }
 ENTRIES = {
     "en": EN_ENTRIES,

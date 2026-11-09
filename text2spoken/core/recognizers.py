@@ -130,22 +130,25 @@ def _sentence_period(text: str, end: int) -> bool:
     return following == "" or following.isupper()
 
 
-def join_ranges(spans: Iterator[Span], text: str, range_word: str | None) -> Iterator[Span]:
-    """The spans, where a dash alone between two of them joins them as a range: the first span takes the dash
-    and a trail of the range word, as in `9am-5pm` and `1939-1945`.
+def join_ranges(spans: Iterator[Span], text: str, request: Request) -> Iterator[Span]:
+    """The spans, where a mark of the `range_marks` table alone between two of them joins them as a range, as in
+    `9am-5pm` and `1939-1945`. The `join_range` hook of the language gives the joined span: by default the first
+    span takes the mark and a trail of the `range_word`.
 
-    Spans that dashes chain join as one run, as in `9am-5pm-7pm`. A joiner and a digit after the last span of
-    the chain, as in `1990-91-92`, keep every span of it apart: they wait, and the run stays as written."""
+    Spans that range marks chain join as one run, as in `9am-5pm-7pm`. A joiner and a digit after the last span
+    of the chain, as in `1990-91-92`, keep every span of it apart: they wait, and the run stays as written."""
+    range_word = request.data.get("range_word")
+    marks = request.data.get("range_marks", ())
     chains: list[list[Span]] = []
     for span in sorted(spans, key=lambda span: span.start):
-        if chains and text[chains[-1][-1].end:span.start] in ("-", "–"):
+        if chains and text[chains[-1][-1].end:span.start] in marks:
             chains[-1].append(span)
         else:
             chains.append([span])
     for chain in chains:
         joined = bool(range_word) and not _continued(text, chain[-1].end)
         for span, following in zip(chain, chain[1:]):
-            yield replace(span, end=following.start, trail=f" {range_word} ") if joined and not span.trail else span
+            yield request.language.join_range(span, following, range_word) if joined and not span.trail else span
         yield chain[-1]
 
 
@@ -219,12 +222,9 @@ class Decimal:
 
 _FRACTION = re.compile("[-+−]?[0-9]+/[0-9]+")
 _DATE = re.compile("[0-9]+/[0-9]+/[0-9]+|[0-9]+-[0-9]+-[0-9]+|[0-9]+[.][0-9]+[.][0-9]+")
-_CLOCK = re.compile("[0-9][0-9]?:[0-9][0-9](?::[0-9][0-9])?")
-_DOTTED_CLOCK = re.compile("[0-9][0-9]?[.][0-9][0-9]")
 _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
 _PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ .-][0-9]+)*")
-_RANGE = re.compile("[0-9]+[-–][0-9]+")
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
 
 
@@ -240,21 +240,6 @@ def _cluster_edge(text: str, start: int, end: int) -> bool:
 def _edge(text: str, start: int, end: int) -> bool:
     """Whether no word character, digit or cluster mark continues text[start:end] on either side."""
     return _cluster_edge(text, start, end) and is_bounded(text, start, end)
-
-
-def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_words: frozenset[str]) -> bool:
-    """Whether a space and a day period, or a space and a lowercase word that is no function word, follow
-    text[:end], as `8 am` and `24 hours a day` follow a phone number."""
-    if not text.startswith(" ", end):
-        return False
-    if any(text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period))
-           for period in day_periods):
-        return True
-    stop = end + 1
-    while stop < len(text) and is_letter(text[stop]):
-        stop += 1
-    word = text[end + 1:stop]
-    return word.islower() and word not in function_words
 
 
 def _affixed_matches(pattern: re.Pattern, text: str, data) -> Iterator[tuple[re.Match, int, int, str, str]]:
@@ -321,10 +306,15 @@ class Range:
     form: Form = Form.RANGE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        """A pair that does not go up, as in `2024-25`, and digits from two digit sets keep the whole range as
-        written."""
-        for match, start, end, prefix, suffix in _affixed_matches(_RANGE, text, request.data):
-            low, high = re.split("[-–]", match.group())
+        """Two numbers that a mark of the `range_marks` table joins. A pair that does not go up, as in `2024-25`,
+        and digits from two digit sets keep the whole range as written."""
+        marks = request.data.get("range_marks", ())
+        if not marks:
+            return
+        mark = "|".join(map(re.escape, marks))
+        for match, start, end, prefix, suffix in _affixed_matches(re.compile(f"[0-9]+(?:{mark})[0-9]+"), text,
+                                                                  request.data):
+            low, high = re.split(mark, match.group())
             yield Span(start, end, Form.RANGE,
                        FrozenMap({"low": low, "high": high, "prefix": prefix, "suffix": suffix}), recognizer=self.name,
                        keep=int(low) >= int(high) or not one_digit_set(text[match.start():match.end()]))
@@ -372,13 +362,16 @@ def _period_after(text: str, end: int, periods) -> tuple[str, int] | None:
 class TimeClock:
     """`at 14:30`, `at 14:30:05`, `2:30 pm`, `9am`, with the evidence rule of section 4.2, and `9am-5pm`.
 
-    A seconds field is no evidence, because a duration such as `1:23:45` has one. A full stop between the hour and
-    the minutes, as in `9.30 am`, reads only with a written day period, because `9.30` alone is a decimal."""
+    The `clock_marks` table gives each mark between the hour and the minutes, whether a seconds field may follow
+    with the same mark, and the evidence that the time needs: `evidence` (a time word, a time suffix or a day
+    period), `day_period` (a written day period, as for `9.30 am` in English, where `9.30` alone is a decimal) or
+    `none` (the mark itself, as for `14h30` in Portuguese). A seconds field is no evidence, because a duration
+    such as `1:23:45` has one. An hour with no minutes needs a written day period, as in `9am`."""
     name: str = "time_clock"
     form: Form = Form.TIME
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return join_ranges(self._times(text, tokens, request), text, request.data.get("range_word"))
+        return join_ranges(self._times(text, tokens, request), text, request)
 
     def _times(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
@@ -388,17 +381,20 @@ class TimeClock:
         periods = data.get("day_periods", FrozenMap())
         suffixes = data.get("time_suffixes", ())
         folded = fold_digits(text)
-        for pattern in (_CLOCK, _DOTTED_CLOCK, _HOUR):
+        clocks = [(re.compile(f"[0-9][0-9]?{re.escape(clock['mark'])}[0-9][0-9]"
+                              + (f"(?:{re.escape(clock['mark'])}[0-9][0-9])?" if clock["seconds"] else "")),
+                   clock["mark"], clock["needs"]) for clock in data.get("clock_marks", ())]
+        for pattern, mark, needs in (*clocks, (_HOUR, "", "day_period")):
             for match in pattern.finditer(folded):
                 start, end = match.span()
                 if (not _cluster_edge(text, start, end) or (start and is_word_char(text[start - 1]))
                         or not one_digit_set(text[start:end])):
                     continue
-                parts = re.split("[:.]", match.group())
-                if pattern is not _HOUR:
+                if mark:
+                    parts = match.group().split(mark)
                     fields = clock_fields(parts[0], parts[1], parts[2] if len(parts) == 3 else None)
                 else:
-                    fields = (int(parts[0]), 0, None)
+                    fields = (int(match.group()), 0, None)
                 if fields is None:
                     continue
                 hour, minute, second = fields
@@ -410,13 +406,14 @@ class TimeClock:
                         continue
                     if text[end - 1] == "." and _sentence_period(text, end):
                         trail = "."
-                elif pattern is not _CLOCK:
+                elif needs == "day_period":
                     continue
                 suffix = next((s for s in suffixes if text.startswith(s, end)), "")
                 if end + len(suffix) < len(text) and is_word_char(text[end + len(suffix)]):
                     continue
                 before = clause_window(text, words, start, end, -1, limit=1, breaks=breaks)
-                if not (period is not None or suffix or (before and before[0].lower() in time_words)):
+                if not (needs == "none" or period is not None or suffix
+                        or (before and before[0].lower() in time_words)):
                     continue
                 yield Span(start, end + len(suffix), Form.TIME,
                            FrozenMap({"hour": hour, "minute": minute, "second": second, "period": period,
@@ -431,7 +428,7 @@ class Percent:
     form: Form = Form.PERCENT
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return join_ranges(self._percents(text, request), text, request.data.get("range_word"))
+        return join_ranges(self._percents(text, request), text, request)
 
     def _percents(self, text: str, request: Request) -> Iterator[Span]:
         percent = request.data.get("percent")
@@ -465,7 +462,7 @@ class Money:
     form: Form = Form.MONEY
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return join_ranges(self._amounts(text, tokens, request), text, request.data.get("range_word"))
+        return join_ranges(self._amounts(text, tokens, request), text, request)
 
     def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A currency symbol before or after a number. Before a symbol that comes first, a sign may stand, and
@@ -585,18 +582,19 @@ class Telephone:
     chain to it, but not a group that a letter continues. Such a run is never named further back, so
     `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written.
 
-    A language file that writes phone numbers by its own conventions subclasses this recognizer and replaces the
-    methods `trimmed`, `shaped`, `window`, `names_back`, `one_unit` and `kept`, as `EnglishTelephone` does."""
+    Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
+    matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
+    `phone_kept_shapes` matches whole stays as written when it has no phone reading. A run that a shape of
+    `no_phone_shapes` matches whole has no phone shape.
+
+    A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
+    methods `trimmed`, `window` and `names_back`, as `EnglishTelephone` does."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
 
     def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
         """The run that `_PHONE` matched at `start`, less a last group that the language reads apart."""
         return written
-
-    def shaped(self, written: str, digits: str) -> bool:
-        """Whether the run has the shape of a phone number: a group separator, or a leading `0` or `+`."""
-        return written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written)
 
     def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                request: Request) -> range:
@@ -609,19 +607,14 @@ class Telephone:
         """Whether a phone word of the window that is not right before the run names it."""
         return False
 
-    def one_unit(self, written: str, groups: Sequence[str]) -> bool:
-        """Whether the groups read digit by digit as one unit with no other evidence."""
-        return False
-
-    def kept(self, written: str) -> bool:
-        """Whether a run with no phone reading stays as written."""
-        return False
-
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         words = context_words(tokens)
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
+        unit_shapes = [re.compile(shape) for shape in request.data.get("phone_unit_shapes", ())]
+        kept_shapes = [re.compile(shape) for shape in request.data.get("phone_kept_shapes", ())]
+        no_shapes = [re.compile(shape) for shape in request.data.get("no_phone_shapes", ())]
         short_codes = frozenset(request.data.get("short_codes", ()))
         codes = sorted((plan["country_code"] for plan in PHONE_PLANS.values()), key=len, reverse=True)
         plans = [PHONE_PLANS[r] for r in sorted(request.params.phone_regions or ()) if r in PHONE_PLANS]
@@ -646,7 +639,8 @@ class Telephone:
                 glued, prefix, suffix = False, bounds[2], bounds[3]
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
-            shaped = self.shaped(written, digits)
+            shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
+                written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
             phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
                           if words[i].text.lower() in phone_words]
             direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))
@@ -676,7 +670,7 @@ class Telephone:
             if glued or not one_digit_set(text[start:end]) or (direct and (len(digits) > 15 or unknown_code)):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
                 continue
-            if self.one_unit(written, groups):
+            if any(shape.fullmatch(written) for shape in unit_shapes):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name)
                 continue
             if unknown_code or len(digits) > 15:
@@ -692,7 +686,7 @@ class Telephone:
                 yield Span(first, last, Form.TELEPHONE,
                            FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
                                       "suffix": suffix}), recognizer=self.name)
-            elif self.kept(written):
+            elif any(shape.fullmatch(written) for shape in kept_shapes):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
 
 
