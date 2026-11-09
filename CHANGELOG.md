@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.2a11](https://github.com/TigreGotico/text2spoken/tree/0.0.2a11) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a10...0.0.2a11)
+
+**Merged pull requests:**
+
+- fix: decline long digit runs at a fixed bound, not at Python's int limit [\#23](https://github.com/TigreGotico/text2spoken/pull/23) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- refactor: make the public API keyword-only and exact [\#22](https://github.com/TigreGotico/text2spoken/pull/22) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a10](https://github.com/TigreGotico/text2spoken/tree/0.0.2a10) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a9...0.0.2a10)
+
 ## [0.0.2a9](https://github.com/TigreGotico/text2spoken/tree/0.0.2a9) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a8...0.0.2a9)
