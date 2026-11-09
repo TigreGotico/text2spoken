@@ -3,7 +3,7 @@ from dataclasses import replace
 
 import pytest
 
-from text2spoken import Features, GrammaticalGender, NormalizationParams
+from text2spoken import DeclinedReading, Features, GrammaticalGender, NormalizationParams
 from text2spoken.core.language import Request, Variety, plural_category
 from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
 
@@ -34,6 +34,56 @@ def test_ovos_speller_maps_the_gender(gendered):
 def test_ovos_speller_passes_places_equal_to_the_written_digits(gendered):
     speller = OvosNumberSpeller(OVOS_GENDER)
     assert speller.decimal("1", "2345", Features(), request(gendered, "en")) == "one point two three four five"
+
+
+def test_ovos_speller_declines_a_language_it_does_not_read(gendered):
+    # ovos-number-parser raises NotImplementedError for a language that it does not read.
+    with pytest.raises(DeclinedReading, match="reads no cardinal of 1 digits in qaa") as declined:
+        OvosNumberSpeller(OVOS_GENDER).cardinal("7", Features(), request(gendered, "qaa"))
+    assert type(declined.value.__cause__) is NotImplementedError
+
+
+def test_ovos_speller_declines_a_number_too_large_to_read(gendered, monkeypatch):
+    """A run past the integer string limit of Python, an integer part past the range of a float, which
+    ovos-number-parser reads as "infinity", and an OverflowError of the library, as for a Kabyle number past 9999."""
+    import ovos_number_parser
+
+    speller, en = OvosNumberSpeller(OVOS_GENDER), request(gendered, "en")
+    with pytest.raises(DeclinedReading, match="4301 digits pass the integer string limit") as declined:
+        speller.cardinal("9" * 4301, Features(), en)
+    assert type(declined.value.__cause__) is ValueError
+    with pytest.raises(DeclinedReading, match="400 integer digits pass the range of a float"):
+        speller.decimal("9" * 400, "5", Features(), en)
+
+    def overflow(number, lang, **kwargs):
+        raise OverflowError("Kabyle pronunciation is supported up to 9999")
+
+    monkeypatch.setattr(ovos_number_parser, "pronounce_number", overflow)
+    with pytest.raises(DeclinedReading, match="up to 9999") as declined:
+        speller.cardinal("10000", Features(), request(gendered, "kab"))
+    assert type(declined.value.__cause__) is OverflowError
+
+
+@pytest.mark.parametrize("reading", ["", 0, " , "])
+def test_ovos_speller_declines_an_empty_reading(gendered, monkeypatch, reading):
+    # The ordinal of 0 is "" in sl and the integer 0 in et.
+    import ovos_number_parser
+
+    monkeypatch.setattr(ovos_number_parser, "pronounce_ordinal", lambda number, lang, **kwargs: reading)
+    with pytest.raises(DeclinedReading, match="empty ordinal of 1 digits in sl"):
+        OvosNumberSpeller(OVOS_GENDER).ordinal("0", Features(), request(gendered, "sl"))
+
+
+@pytest.mark.parametrize("error", [ValueError("Greek ordinals start at 1"), KeyError(2000000)])
+def test_ovos_speller_raises_any_other_error_of_the_library(gendered, monkeypatch, error):
+    import ovos_number_parser
+
+    def fail(number, lang, **kwargs):
+        raise error
+
+    monkeypatch.setattr(ovos_number_parser, "pronounce_ordinal", fail)
+    with pytest.raises(type(error)):
+        OvosNumberSpeller(OVOS_GENDER).ordinal("0", Features(), request(gendered, "el"))
 
 
 def test_rbnf_speller_falls_back_case_then_animacy_then_numeral_system_then_bare(gendered):

@@ -5,7 +5,8 @@ its file. A speller returns words separated by single spaces, with no space at e
 """
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+import math
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from functools import lru_cache
 from typing import TYPE_CHECKING, Protocol
@@ -37,8 +38,19 @@ class NumberSpeller(Protocol):
 SPELLER_METHODS = ("cardinal", "ordinal", "year", "decimal", "fraction")
 
 
+def _integer(digits: str) -> int:
+    try:
+        return int(digits)
+    except ValueError as error:
+        raise DeclinedReading(f"{len(digits)} digits pass the integer string limit of Python") from error
+
+
 class OvosNumberSpeller:
-    """ovos-number-parser, for a language and form where its output is right."""
+    """ovos-number-parser, for a language and form where its output is right.
+
+    The refusals of ovos-number-parser decline the span (design section 5.4): a language or a form that it does
+    not read (`NotImplementedError`), a number too large for it (`OverflowError`) and an empty reading. A number
+    that Python cannot convert, as an integer or as a finite float, also declines. Any other error raises."""
 
     def __init__(self, gender_arg: Mapping[GrammaticalGender, str]):
         self.gender_arg = dict(gender_arg)
@@ -55,15 +67,32 @@ class OvosNumberSpeller:
             kwargs["case"] = features.case
         return kwargs
 
+    @staticmethod
+    def _read(form: str, size: str, request: Request, pronounce: Callable[[], str]) -> str:
+        try:
+            text = pronounce()
+        except NotImplementedError as error:
+            raise DeclinedReading(f"ovos-number-parser reads no {form} of {size} in {request.tag}: {error}") from error
+        except OverflowError as error:
+            raise DeclinedReading(f"ovos-number-parser reads no {form} of {size}: {error}") from error
+        spoken = words(text) if text else ""
+        if not spoken:
+            raise DeclinedReading(f"ovos-number-parser gives an empty {form} of {size} in {request.tag}")
+        return spoken
+
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         from ovos_number_parser import pronounce_number
 
-        return words(pronounce_number(int(digits), request.tag, **self._kwargs(features, request)))
+        number, kwargs = _integer(digits), self._kwargs(features, request)
+        return self._read("cardinal", f"{len(digits)} digits", request,
+                          lambda: pronounce_number(number, request.tag, **kwargs))
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         from ovos_number_parser import pronounce_ordinal
 
-        return words(pronounce_ordinal(int(digits), request.tag, **self._kwargs(features, request)))
+        number, kwargs = _integer(digits), self._kwargs(features, request)
+        return self._read("ordinal", f"{len(digits)} digits", request,
+                          lambda: pronounce_ordinal(number, request.tag, **kwargs))
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         return self.cardinal(digits, features, request)
@@ -72,14 +101,20 @@ class OvosNumberSpeller:
         from ovos_number_parser import pronounce_number
 
         value = float(f"{integer or '0'}.{fraction}")
-        return words(pronounce_number(value, request.tag, places=len(fraction), **self._kwargs(features, request)))
+        if math.isinf(value):
+            raise DeclinedReading(f"{len(integer)} integer digits pass the range of a float")
+        kwargs = self._kwargs(features, request)
+        return self._read("decimal", f"{len(integer)}.{len(fraction)} digits", request,
+                          lambda: pronounce_number(value, request.tag, places=len(fraction), **kwargs))
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         from ovos_number_parser import pronounce_fraction
         from ovos_number_parser.util import Scale
 
         scale = Scale(request.params.scale) if request.params.scale is not None else None
-        return words(pronounce_fraction(f"{int(numerator)}/{int(denominator)}", request.tag, scale=scale))
+        written = f"{_integer(numerator)}/{_integer(denominator)}"
+        return self._read("fraction", f"{len(numerator)}/{len(denominator)} digits", request,
+                          lambda: pronounce_fraction(written, request.tag, scale=scale))
 
 
 def _rbnf_key(features: Features) -> Features:
