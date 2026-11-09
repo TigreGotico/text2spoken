@@ -81,7 +81,7 @@ python -c "from text2spoken import supports; print(supports('en-US'))"
 
 `python -m text2spoken.export en` prints the data of a language file as JSON.
 
-The 165 English rows in `tests/data/en.tsv` name their source. No native speaker has checked them, and each row says so in its `checked_by` column.
+The 212 English rows in `tests/data/en.tsv` name their source. No native speaker has checked them, and each row says so in its `checked_by` column.
 
 ## Behaviour to know
 

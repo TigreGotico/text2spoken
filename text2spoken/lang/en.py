@@ -15,7 +15,7 @@ from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import Number
 from text2spoken.core.recognizers import PHONE_PLANS, SHARED, join_ranges, numbers_in, speak_cardinal, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
+from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
@@ -75,6 +75,10 @@ UNITS_GB = {
     "ml": {"one": "millilitre", "other": "millilitres"},
     "°C": {"one": "degree Celsius", "other": "degrees Celsius"},
     "°F": {"one": "degree Fahrenheit", "other": "degrees Fahrenheit"},
+    "MHz": {"one": "megahertz", "other": "megahertz"},
+    "GHz": {"one": "gigahertz", "other": "gigahertz"},
+    "MB": {"one": "megabyte", "other": "megabytes"},
+    "GB": {"one": "gigabyte", "other": "gigabytes"},
 }
 
 DATA = freeze({
@@ -95,7 +99,7 @@ DATA = freeze({
     "time_words": ["at", "from", "until", "till", "since", "before", "after", "around"],
     "year_words": ["in", "since", "until", "till", "during", "circa", "year"],
     "year_links": ["and", "or", "to"],
-    "function_words": ["a", "an", "the", "and", "or", "but", "so", "then", "to", "of", "in", "on", "at", "by",
+    "function_words": ["a", "an", "the", "and", "or", "but", "so", "then", "to", "in", "on", "at", "by",
                        "for", "from", "with", "as", "after", "before", "until", "since", "when", "while", "where",
                        "he", "she", "it", "we", "they", "you", "his", "her", "its", "our", "their", "this",
                        "that", "there", "was", "were", "is", "are", "had", "has", "have", "many", "some", "all"],
@@ -116,7 +120,8 @@ DATA = freeze({
                "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
     "units": UNITS_GB,
-    "phone_words": ["phone", "telephone", "tel", "call", "mobile", "cell", "fax"],
+    "phone_words": ["phone", "telephone", "tel", "call", "dial", "mobile", "cell", "fax"],
+    "list_links": ["and", "or"],
     "color_words": ["color", "colour", "colors", "colours"],
     "colors": COLORS,
     "titles": {"Dr.": "Doctor", "Mr.": "Mister", "Mrs.": "Missus", "Prof.": "Professor",
@@ -405,9 +410,14 @@ class Ordinal:
 @dataclass(frozen=True)
 class Year:
     """A year from 1000 to 2099 (section 4.2): after a year word, as in `In 1984`; two years that a range mark
-    joins, the lower one first, as in `1939-1945` and `1939-45`; and a number that a link joins to a year, as in
-    `In 1066 and 1215`. A count read as a year is wrong, so a lowercase word after the year that is not in
-    `function_words` blocks it: `in 1234 steps` is no year."""
+    joins, the lower one first, as in `1939-1945`, or a year and a higher two-digit end after a year word, as in
+    `during 1939-45`; and a number that a link joins to a year, as in `In 1066 and 1215`. A comma alone links
+    only inside a list that a link word ends, as in `In 1066, 1215 and 1415`.
+
+    A count read as a year is wrong, so the follower of a linked list decides for all its years, and a range is
+    one link of a list. A lowercase word that is not in `function_words` blocks them, as in `in 1234 steps`, and
+    so do a unit of the units table in any case, an operator and a dimension mark, as in `in 2048 MB` and
+    `in 1920 × 1080`."""
     name: str = "year"
     form: Form = Form.YEAR
 
@@ -419,43 +429,68 @@ class Year:
         year_words = frozenset(data["year_words"])
         function_words = frozenset(data["function_words"])
         marks = frozenset(data["range_marks"])
-        link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") |, ")
+        units = frozenset(unit.lower() for unit in data["units"])
+        signs = frozenset(data["operators"]) | frozenset(data["dimension_marks"]) | {"*", "/"}
+        word_link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") ")
         words = context_words(tokens)
+        breaks = clause_breaks(text)
         numbers = [n for n in numbers_in(text, request) if not n.sign and n.fraction is None
                    and n.end - n.start in (2, 4) and is_bounded(text, n.start, n.end)]
 
         def year(number: Number) -> bool:
             return number.end - number.start == 4 and 1000 <= int(number.integer) <= 2099
 
+        def after_year_word(number: Number) -> bool:
+            before = clause_window(text, words, number.start, number.end, -1, limit=1, breaks=breaks)
+            return bool(before) and before[0].lower() in year_words
+
         def free(end: int) -> bool:
             start = end
             while start < len(text) and text[start].isspace():
                 start += 1
-            if start == end:
+            if start in (end, len(text)):
                 return True
+            stop = start
+            while stop < len(text) and not text[stop].isspace():
+                stop += 1
+            follower = text[start:stop]
+            if follower[0] in signs or follower.rstrip(".,;:!?)").lower() in units:
+                return False
             stop = start
             while stop < len(text) and is_letter(text[stop]):
                 stop += 1
-            follower = text[start:stop]
-            return not follower.islower() or follower in function_words
+            word = text[start:stop]
+            return not word.islower() or word in function_words
 
         claimed = {}
+        partners = {}
         for first, second in zip(numbers, numbers[1:]):
-            if not (year(first) and text[first.end:second.start] in marks and free(second.end)):
+            if not (year(first) and text[first.end:second.start] in marks):
                 continue
             if year(second) and int(first.integer) < int(second.integer):
                 claimed |= {first: first.integer, second: second.integer}
-            elif second.end - second.start == 2 and int(first.integer) % 100 < int(second.integer):
+                partners |= {first: second, second: first}
+            elif (second.end - second.start == 2 and int(first.integer) % 100 < int(second.integer)
+                  and after_year_word(first)):
                 claimed |= {first: first.integer, second: first.integer[:2] + second.integer}
-        previous = None
+                partners |= {first: second, second: first}
+        chains: list[list[Number]] = []
         for number in numbers:
-            if year(number) and number not in claimed and free(number.end):
-                before = clause_window(text, words, number.start, number.end, -1, limit=1)
-                if ((before and before[0].lower() in year_words)
-                        or (previous is not None and link.fullmatch(text[previous.end:number.start]))):
-                    claimed[number] = number.integer
-            if number in claimed:
-                previous = number
+            if not (year(number) or number in claimed):
+                continue
+            gap = text[chains[-1][-1].end:number.start] if chains else ""
+            if chains and (gap == ", " or word_link.fullmatch(gap) or partners.get(number) is chains[-1][-1]):
+                chains[-1].append(number)
+            elif number in claimed or after_year_word(number):
+                chains.append([number])
+        for chain in chains:
+            while len(chain) > 1 and text[chain[-2].end:chain[-1].start] == ", ":
+                chain.pop()
+            if free(chain[-1].end):
+                claimed |= {number: number.integer for number in chain if number not in claimed}
+            else:
+                for number in chain:
+                    claimed.pop(number, None)
         for number, digits in claimed.items():
             yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": digits, "suffix": ""}),
                        recognizer=self.name)
@@ -487,15 +522,20 @@ class Abbreviation:
 @dataclass(frozen=True)
 class Expression:
     """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. The first
-    integer may carry a minus sign."""
+    integer may carry a minus sign.
+
+    An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
+    written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator."""
     name: str = "expression"
     form: Form = Form.EXPRESSION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         operators = "".join(request.data["operators"])
+        open_operator = re.compile(f" ?[{re.escape(operators)}]")
         for match in re.finditer(request.data["patterns"]["expression"], fold_digits(text)):
             start, end = match.span()
-            if not (is_bounded(text, start, end) and one_digit_set(text[start:end])):
+            if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
+                    or open_operator.match(text, end)):
                 continue
             written = match.group().replace(" ", "")
             operands = tuple(re.split("[" + operators + "]", written))

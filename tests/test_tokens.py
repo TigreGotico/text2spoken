@@ -5,7 +5,7 @@ import pytest
 
 from tests.fixtures import quebra_frases_pr25
 from text2spoken import Token, TokenizerError, analyze, normalize
-from text2spoken.core.spans import clause_window, context_words
+from text2spoken.core.spans import clause_breaks, clause_window, context_words
 from text2spoken.core.tokens import (check_tokens, default_tokenizer, digit_script, fold_digits, join_split_words,
                                      protect_blocks)
 
@@ -98,6 +98,11 @@ def test_the_window_stops_at_a_clause_mark_and_holds_three_words(text, before):
     found = context_words(default_tokenizer(text, "en"))
     start = text.index("14:30")
     assert clause_window(text, found, start, start + 5, -1) == before
+
+
+def test_the_clause_breaks_are_the_marks_and_the_periods_before_a_capital():
+    text = "Go. At e.g. b; x! y? Z.  Q"
+    assert clause_breaks(text) == (2, 13, 16, 19, 22)
 
 
 def test_inline_blocks():

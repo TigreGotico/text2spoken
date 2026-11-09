@@ -6,7 +6,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
 from text2spoken.core.language import Request
-from text2spoken.core.spans import Span, clause_window, context_words
+from text2spoken.core.spans import Span, clause_breaks, clause_window, context_words
 from text2spoken.core.tokens import Token, is_word_char
 from text2spoken.params import FrozenMap, Form
 
@@ -37,6 +37,7 @@ class Color:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         color_words = frozenset(w.lower() for w in request.data.get("color_words", ()))
         words = context_words(tokens)
+        breaks = clause_breaks(text)
         for match in _HEX.finditer(text):
             start, end = match.span()
             if (start and is_word_char(text[start - 1])) or (end < len(text) and is_word_char(text[end])):
@@ -47,8 +48,8 @@ class Color:
             digits = set(match.group()[1:])
             mixed = bool(digits & _DIGITS) and bool(digits - _DIGITS)
             if not mixed:
-                clause = (clause_window(text, words, start, end, -1, limit=len(words))
-                          + clause_window(text, words, start, end, 1, limit=len(words)))
+                clause = (clause_window(text, words, start, end, -1, limit=len(words), breaks=breaks)
+                          + clause_window(text, words, start, end, 1, limit=len(words), breaks=breaks))
                 if not _has_color_word(clause, color_words):
                     continue
             yield Span(start, end, Form.COLOR, fields, recognizer=self.name)

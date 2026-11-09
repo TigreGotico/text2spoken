@@ -7,6 +7,7 @@ ASCII, which keeps every offset.
 from __future__ import annotations
 
 import re
+from bisect import bisect_right
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 
@@ -14,7 +15,7 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
-from text2spoken.core.spans import Features, SpanContext, Span, clause_window, context_words
+from text2spoken.core.spans import Features, SpanContext, Span, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
@@ -90,18 +91,25 @@ def _suffix(text: str, end: int, data) -> tuple[int, str] | None:
 def _lead(text: str, start: int, leads) -> str:
     """The longest declared lead that ends right before the digits at `start`.
 
-    No lead follows a digit or another lead, so `##5` stays as written. A lead with words follows no
-    word character either, so `C#5` stays as written, while a lead that stands for a space joins a word, as in
-    `sub-23`.
+    No lead follows a digit or a lead with words, so `##5` stays as written, while `#1-#5` reads both numbers.
+    A lead with words follows no word character either, so `C#5` stays as written, while a lead that stands for
+    a space joins a word, as in `sub-23`.
     """
     for lead in sorted(leads, key=len, reverse=True):
         if not text.endswith(lead, 0, start):
             continue
         before = start - len(lead) - 1
-        if before < 0 or not (is_digit(text[before]) or any(text.endswith(other, 0, before + 1) for other in leads)
+        if before < 0 or not (is_digit(text[before])
+                              or any(leads[other] and text.endswith(other, 0, before + 1) for other in leads)
                               or (leads[lead] and is_word_char(text[before]))):
             return lead
     return ""
+
+
+def _continued(text: str, end: int) -> bool:
+    """Whether one character that is not a space or a digit, and then a digit, follow text[:end]."""
+    return (end + 1 < len(text) and not text[end].isspace() and not is_digit(text[end])
+            and is_digit(text[end + 1]))
 
 
 def _sentence_period(text: str, end: int) -> bool:
@@ -112,11 +120,18 @@ def _sentence_period(text: str, end: int) -> bool:
 
 def join_ranges(spans: Iterator[Span], text: str, range_word: str | None) -> Iterator[Span]:
     """The spans, where a dash alone between two of them joins them as a range: the first span takes the dash
-    and a trail of the range word, as in `9am-5pm` and `1939-1945`."""
+    and a trail of the range word, as in `9am-5pm` and `1939-1945`.
+
+    A pair with a joiner and a digit after its second span, as in `1990-91-92`, does not join: both spans wait,
+    and the run stays as written. A dash to a third span joins on, as in `9am-5pm-7pm`."""
     ordered = sorted(spans, key=lambda span: span.start)
-    for span, following in zip(ordered, ordered[1:] + [None]):
-        if (range_word and following is not None and not span.trail
-                and text[span.end:following.start] in ("-", "–")):
+
+    def dashed(left: Span | None, right: Span | None) -> bool:
+        return left is not None and right is not None and text[left.end:right.start] in ("-", "–")
+
+    for span, following, after in zip(ordered, [*ordered[1:], None], [*ordered[2:], None, None]):
+        if (range_word and dashed(span, following) and not span.trail
+                and (dashed(following, after) or not _continued(text, following.end))):
             span = replace(span, end=following.start, trail=f" {range_word} ")
         yield span
 
@@ -268,12 +283,13 @@ class Range:
     form: Form = Form.RANGE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        """Digits from two digit sets keep the whole range as written."""
+        """A pair that does not go up, as in `2024-25`, and digits from two digit sets keep the whole range as
+        written."""
         for match in _bounded_matches(_RANGE, text):
             low, high = re.split("[-–]", match.group())
             yield Span(match.start(), match.end(), Form.RANGE,
                        FrozenMap({"low": low, "high": high, "prefix": "", "suffix": ""}), recognizer=self.name,
-                       keep=not one_digit_set(text[match.start():match.end()]))
+                       keep=int(low) >= int(high) or not one_digit_set(text[match.start():match.end()]))
 
 
 @dataclass(frozen=True)
@@ -327,6 +343,7 @@ class TimeClock:
     def _times(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
         words = context_words(tokens)
+        breaks = clause_breaks(text)
         time_words = frozenset(w.lower() for w in data.get("time_words", ()))
         periods = data.get("day_periods", FrozenMap())
         suffixes = data.get("time_suffixes", ())
@@ -358,7 +375,7 @@ class TimeClock:
                 suffix = next((s for s in suffixes if text.startswith(s, end)), "")
                 if end + len(suffix) < len(text) and is_word_char(text[end + len(suffix)]):
                     continue
-                before = clause_window(text, words, start, end, -1, limit=1)
+                before = clause_window(text, words, start, end, -1, limit=1, breaks=breaks)
                 if not (period is not None or suffix or (before and before[0].lower() in time_words)):
                     continue
                 yield Span(start, end + len(suffix), Form.TIME,
@@ -368,14 +385,21 @@ class TimeClock:
 
 @dataclass(frozen=True)
 class Percent:
+    """`20%`, and `10%-20%`, where a dash alone between two percentages reads the range word. A dash right after
+    a percent sign is no minus sign."""
     name: str = "percent"
     form: Form = Form.PERCENT
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return join_ranges(self._percents(text, request), text, request.data.get("range_word"))
+
+    def _percents(self, text: str, request: Request) -> Iterator[Span]:
         percent = request.data.get("percent")
         if percent is None:
             return
         for number in numbers_in(text, request):
+            if number.sign and any(text.endswith(sign, 0, number.start) for sign in percent["signs"]):
+                number = replace(number, start=number.start + 1, sign="")
             if percent["position"] in ("after", "either"):
                 for sign in percent["signs"]:
                     for gap in ("", " ", " "):
@@ -503,26 +527,40 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
-    region in `phone_regions`, or a word before the run that names a phone.
+    region in `phone_regions`, or a word before the run that names a phone, with no other digit between them.
 
-    A run after a phone word that fails the numbering plan, such as `911` in `Call 911 now.`, stays as written, and
-    so does a run with digits from two digit sets."""
+    A run of three or more digits after a phone word that fails the numbering plan, such as `911` in
+    `Call 911 now.` or `+1 911` in `Call +1 911.`, stays as written. A run that a word of `list_links` or a comma
+    joins to such a kept run counts as named by the same phone word, as `112` in `Call 999 or 112.` Only a kept
+    run starts a list, because a run that reads has no digits left to start one on a second pass. A run with
+    digits from two digit sets stays as written."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         words = context_words(tokens)
+        breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         codes = sorted((plan["country_code"] for plan in PHONE_PLANS.values()), key=len, reverse=True)
         plans = [PHONE_PLANS[r] for r in sorted(request.params.phone_regions or ()) if r in PHONE_PLANS]
+        links = "|".join(map(re.escape, request.data.get("list_links", ())))
+        listed = re.compile(f",? (?:{links}) |, " if links else ", ")
+        named_end = None
         for match in _bounded_matches(_PHONE, text):
             written = match.group()
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
+            before = clause_window(text, words, match.start(), match.end(), -1, limit=1, breaks=breaks)
+            word_end = words[bisect_right(words, match.start(), key=lambda word: word.end) - 1].end if before else 0
+            named = ((before and before[0].lower() in phone_words
+                      and not any(map(is_digit, text[word_end:match.start()])))
+                     or (named_end is not None and listed.fullmatch(text[named_end:match.start()]) is not None))
             mixed = not one_digit_set(text[match.start():match.end()])
-            if mixed or not 7 <= len(digits) <= 15:
-                before = clause_window(text, words, match.start(), match.end(), -1, limit=1)
-                if mixed or (not written.startswith("+") and before and before[0].lower() in phone_words):
+            short = not 7 <= len(digits) <= 15
+            kept = named and short and len(digits) >= 3
+            named_end = match.end() if kept else None
+            if mixed or short:
+                if mixed or kept:
                     yield Span(match.start(), match.end(), Form.TELEPHONE,
                                FrozenMap({"country_code": "", "groups": tuple(groups)}), recognizer=self.name,
                                keep=True)
@@ -542,8 +580,7 @@ class Telephone:
             else:
                 trunk = any(plan["trunk"] and digits.startswith(plan["trunk"])
                             and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans)
-                before = clause_window(text, words, match.start(), match.end(), -1, limit=1)
-                if not (trunk or (before and before[0].lower() in phone_words)):
+                if not (trunk or named):
                     continue
             yield Span(match.start(), match.end(), Form.TELEPHONE,
                        FrozenMap({"country_code": country_code, "groups": tuple(groups)}), recognizer=self.name)

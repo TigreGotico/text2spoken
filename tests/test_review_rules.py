@@ -237,3 +237,27 @@ def test_a_digit_next_to_a_span_is_no_joiner():
 
 def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():
     assert normalize("Il a １2 chambres.", "fr") == "Il a １2 chambres."
+
+
+@pytest.mark.parametrize("space", [" ", "\t", "\n"])
+def test_a_year_at_the_end_of_the_text_before_a_space_reads(space):
+    assert normalize(f"In 1999{space}", "en-GB") == f"In nineteen ninety-nine{space}"
+
+
+def test_a_phone_word_names_no_run_behind_another_number():
+    once = normalize("Call 45./999 now.", "en-GB")
+    assert once == "Call forty-five./nine hundred and ninety-nine now."
+    assert normalize(once, "en-GB") == once
+
+
+def test_render_gives_a_verbalizer_the_words_of_its_clause_only(monkeypatch):
+    seen = []
+
+    def spy(span, context):
+        seen.append((context.before, context.after))
+        return "N"
+
+    spec = replace(EN, verbalizers={**EN.verbalizers, Form.CARDINAL: spy})
+    monkeypatch.setattr(loader, "_registry", lambda: {"en": spec})
+    assert normalize("We left. Then 5 came; all went.", "en") == "We left. Then N came; all went."
+    assert seen == [(("Then",), ("came",))]

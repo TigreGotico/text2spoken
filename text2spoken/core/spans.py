@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation, next_visible
+from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation
 from text2spoken.errors import HintWarning, InvalidHintError, Text2SpokenError, UndefinedGrammaticalGender, UnreadFormError
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
 
@@ -204,21 +204,34 @@ def context_words(tokens: Sequence[Token]) -> tuple[Word, ...]:
     return tuple(found)
 
 
-def _clause_break(text: str, start: int, end: int) -> bool:
-    """Whether the text between two words ends a clause: `;`, `!` or `?`, or `.` before a capital letter."""
-    gap = text[start:end]
-    if any(c in ";!?" for c in gap):
-        return True
-    return any(char == "." and next_visible(text, start + i + 1).isupper() for i, char in enumerate(gap))
+def clause_breaks(text: str) -> tuple[int, ...]:
+    """The positions in text that end a clause: `;`, `!` or `?`, or `.` before a capital letter."""
+    breaks: list[int] = []
+    visible = ""
+    for index in range(len(text) - 1, -1, -1):
+        char = text[index]
+        if char in ";!?" or (char == "." and visible.isupper()):
+            breaks.append(index)
+        if not char.isspace():
+            visible = char
+    return tuple(reversed(breaks))
+
+
+def _clause_break(breaks: Sequence[int], start: int, end: int) -> bool:
+    """Whether a clause ends in text[start:end]."""
+    index = bisect_left(breaks, start)
+    return index < len(breaks) and breaks[index] < end
 
 
 def clause_window(text: str, words: Sequence[Word], start: int, end: int, direction: int,
-                  limit: int = 3) -> tuple[str, ...]:
+                  limit: int = 3, breaks: Sequence[int] | None = None) -> tuple[str, ...]:
     """Up to `limit` context words before (direction -1) or after (+1) text[start:end], within its clause.
 
     The words are in text order. A word that holds the end of text[start:end] and ends its clause stops the
-    window after it.
+    window after it. `breaks` are the clause_breaks of text, for a caller that looks up many windows.
     """
+    if breaks is None:
+        breaks = clause_breaks(text)
     if direction < 0:
         index = bisect_right(words, start, key=lambda word: word.end)
         edge, candidates = start, (words[i] for i in range(index - 1, -1, -1))
@@ -232,11 +245,11 @@ def clause_window(text: str, words: Sequence[Word], start: int, end: int, direct
         if len(found) == limit:
             break
         if direction < 0:
-            if word.clause_end or _clause_break(text, word.end, edge):
+            if word.clause_end or _clause_break(breaks, word.end, edge):
                 break
             edge = word.start
         else:
-            if _clause_break(text, edge, word.start):
+            if _clause_break(breaks, edge, word.start):
                 break
             edge = word.end
         found.append(word.text)
@@ -276,14 +289,16 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
     language = request.language
     hints = check_hints(hints or {}, analysis)
     words = context_words(analysis.tokens) if language.context_words else ()
+    breaks = clause_breaks(analysis.text)
     out: list[str] = []
     passthrough: list[tuple[int, int]] = []
     position = 0
     for span in analysis.spans:
         out.append(analysis.text[position:span.start])
         passthrough.append((position, span.start))
-        context = SpanContext(request, clause_window(analysis.text, words, span.start, span.end, -1),
-                              clause_window(analysis.text, words, span.start, span.end, 1), hints.get(span.start))
+        context = SpanContext(request, clause_window(analysis.text, words, span.start, span.end, -1, breaks=breaks),
+                              clause_window(analysis.text, words, span.start, span.end, 1, breaks=breaks),
+                              hints.get(span.start))
         written = analysis.text[span.start:span.end]
         try:
             spoken = language.verbalizers[span.form](span, context)
