@@ -105,6 +105,25 @@ def test_the_colour_search_grows_linearly_with_the_hex_codes(monkeypatch):
     assert search(2000) <= 2.2 * search(1000)
 
 
+def test_the_colour_search_reads_each_word_once(monkeypatch):
+    """Each context word is tested as a colour word once per call, however many hex codes the text holds."""
+    from text2spoken.core import color
+    from text2spoken.core.spans import context_words
+
+    tested, is_color_word = 0, color._is_color_word
+
+    def counted(*args):
+        nonlocal tested
+        tested += 1
+        return is_color_word(*args)
+
+    monkeypatch.setattr(color, "_is_color_word", counted)
+    text = " ".join(["#abc and"] * 500) + " in this colour."
+    analysis = analyze(text, "en")
+    assert sum(span.form is Form.COLOR for span in analysis.spans) == 500
+    assert tested == len(context_words(analysis.tokens))
+
+
 def test_tokens_that_overlap_by_one_character_raise():
     with pytest.raises(TokenizerError):
         check_tokens((Token(0, 3, "abc"), Token(2, 5, "cde")), "abcde")

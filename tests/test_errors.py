@@ -75,8 +75,8 @@ def test_a_speller_that_raises_keeps_the_written_form_and_logs(caplog):
 
 
 def test_an_ovos_speller_that_declines_keeps_the_written_form_and_logs_the_reason(gendered, monkeypatch, caplog):
-    """A run of digits past the integer string limit of Python stays as written, with one warning that names the
-    form, the span and the reason (design section 10)."""
+    """A run of digits past the digit bound stays as written, with one warning that names the form, the span and
+    the reason (design section 10)."""
     speller = OvosNumberSpeller({})
     cardinal = {Form.CARDINAL: lambda span, context: speller.cardinal(span.fields["digits"], Features(),
                                                                        context.request)}
@@ -87,7 +87,7 @@ def test_an_ovos_speller_that_declines_keeps_the_written_form_and_logs_the_reaso
         assert normalize(text, "qaa") == text
     [warning] = [r.message for r in caplog.records if r.levelno == logging.WARNING]
     assert warning.startswith("unread cardinal span '999") and warning.endswith(
-        "at 2: 4301 digits pass the integer string limit of Python")
+        "at 2: 4301 digits pass the bound of 308 digits that a speller reads")
 
 
 def test_a_speller_that_raises_in_strict_mode_raises_chained():
@@ -212,34 +212,24 @@ def test_rbnf_declines_a_number_outside_its_range_through_declined_reading():
 LONG_RUNS = ["9" * 309, "9" * 4301, "$" + "9" * 400, "9" * 400 + ".5"]
 
 
-@pytest.fixture
-def int_limit():
-    """The default integer string limit of Python, so that 4301 digits pass it whatever the environment sets."""
-    import sys
-
-    limit = sys.get_int_max_str_digits()
-    sys.set_int_max_str_digits(4300)
-    yield
-    sys.set_int_max_str_digits(limit)
-
-
 @pytest.mark.parametrize("tag", ["en", "de"])
 @pytest.mark.parametrize("run", LONG_RUNS, ids=["309 nines", "4301 nines", "$ and 400 nines", "400 nines .5"])
-def test_a_number_that_rbnf_cannot_read_stays_as_written(int_limit, tag, run):
+def test_a_number_that_rbnf_cannot_read_stays_as_written(tag, run):
     text = f"It is {run} now."
     assert normalize(text, tag) == text
     with pytest.raises(UnreadFormError):
         normalize(text, tag, NormalizationParams(strict=True))
 
 
-@pytest.mark.parametrize(("run", "cause"), [("9" * 309, OverflowError), ("9" * 4301, ValueError)])
-def test_rbnf_declines_an_overflow_and_the_integer_string_limit(int_limit, run, cause):
+@pytest.mark.parametrize(("run", "cause"), [("9" * 308, "NoRuleForNumberError"), ("9" * 309, "NoneType"),
+                                            ("9" * 4301, "NoneType")])
+def test_rbnf_declines_a_number_with_no_rule_and_a_run_past_the_digit_bound(run, cause):
     from text2spoken import DeclinedReading
 
     with pytest.raises(UnreadFormError) as raised:
         normalize(f"It is {run} now.", "en", NormalizationParams(strict=True))
     assert isinstance(raised.value.__cause__, DeclinedReading)
-    assert type(raised.value.__cause__.__cause__) is cause
+    assert type(raised.value.__cause__.__cause__).__name__ == cause
 
 
 def test_a_value_error_of_the_rbnf_library_still_raises(monkeypatch):

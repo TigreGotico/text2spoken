@@ -134,6 +134,38 @@ def test_the_clauses_give_the_clause_window_with_no_limit(every):
     assert compared > 10000
 
 
+def test_a_clause_window_from_clauses_takes_the_same_steps_for_a_short_and_a_long_clause():
+    """`Clauses.around` looks the clause up, and does not walk it: the lines that run inside it, counted by a trace,
+    stay the same when the clause grows from 100 to 4000 words, apart from the two binary searches."""
+    import sys
+
+    from text2spoken.core.spans import Clauses
+
+    def lines_run(size):
+        text = " ".join(["word"] * size) + " #fff"
+        found = context_words(default_tokenizer(text, "en"))
+        clauses = Clauses(found, clause_breaks(text))
+        count = 0
+
+        def trace(frame, event, arg):
+            nonlocal count
+            if frame.f_code.co_filename.endswith("spans.py"):
+                count += event == "line"
+                return trace
+            return None
+
+        sys.settrace(trace)
+        try:
+            back, ahead = clauses.around(len(text) - 4, len(text))
+        finally:
+            sys.settrace(None)
+        assert len(back) == size and len(ahead) == 0
+        return count
+
+    # Each of the two binary searches runs its key once per halving step.
+    assert lines_run(4000) - lines_run(100) <= 2 * ((4000).bit_length() - (100).bit_length() + 1)
+
+
 def test_the_clause_breaks_are_the_marks_and_the_periods_before_a_capital():
     text = "Go. At e.g. b; x! y? Z.  Q"
     assert clause_breaks(text) == (2, 13, 16, 19, 22)
