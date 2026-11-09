@@ -22,7 +22,7 @@ from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
 from text2spoken.core.spans import FIELDS, Span
-from text2spoken.core.recognizers import SHARED
+from text2spoken.core.recognizers import SHARED, speak_cardinal, speak_lexicon
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import OPTIONS, Form, FrozenMap
@@ -139,9 +139,15 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
             shape(data[key], f"{where}.{key}")
 
 
+SHARED_VERBALIZERS = {"speak_cardinal": speak_cardinal, "speak_lexicon": speak_lexicon}
+"""The verbalizers of the core that a file can name, by their name in `READERS`."""
+
+
 def required_keys(spec: LanguageSpec) -> set[str]:
-    """The keys that the shared recognizers of the file read, by class, so that a subclass counts too."""
+    """The keys that the shared recognizers of the file read, by class, so that a subclass counts too, and the keys
+    that the shared verbalizers of the file read."""
     used = {name for name, shared in SHARED.items() for r in spec.recognizers if isinstance(r, type(shared))}
+    used |= {name for name, verbalizer in SHARED_VERBALIZERS.items() if verbalizer in spec.verbalizers.values()}
     return set().union(*(READERS[name] for name in used)) - OPTIONAL
 
 
@@ -156,7 +162,7 @@ def clause_6(name: str, spec: LanguageSpec) -> None:
         data = request_for(spec, index).data
         check_data_keys(data, variety.tag)
         missing = required - set(data)
-        assert not missing, f"{variety.tag}: no {sorted(missing)}, which its shared recognizers read"
+        assert not missing, f"{variety.tag}: no {sorted(missing)}, which its shared recognizers and verbalizers read"
 
 
 def check_pattern(pattern: str) -> None:

@@ -140,7 +140,7 @@ def test_clause_6_requires_the_keys_of_each_shared_recognizer():
     """The stub lists the shared percent and telephone recognizers, gives no `percent`, and writes `phone_word`."""
     data = freeze({**thaw(STUB.data), "phone_word": ["ligue"]})
     spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, SHARED["percent"], SHARED["telephone"]))
-    with pytest.raises(AssertionError, match="which its shared recognizers read") as error:
+    with pytest.raises(AssertionError, match="which its shared recognizers and verbalizers read") as error:
         contract.clause_6("qac", spec)
     assert "'percent'" in str(error.value) and "'phone_words'" in str(error.value)
 
@@ -158,6 +158,20 @@ def test_clause_6_requires_the_keys_in_each_variety():
     spec = replace(STUB, varieties=varieties, recognizers=(*STUB.recognizers, SHARED["percent"]))
     with pytest.raises(AssertionError, match="qac-AA: no"):
         contract.clause_6("qac", spec)
+
+
+def test_clause_6_requires_the_keys_of_each_shared_verbalizer():
+    """The stub reads cardinals with leads through `speak_cardinal`, which reads `digit_words` for a leading zero."""
+    data = freeze({k: v for k, v in thaw(STUB.data).items() if k != "digit_words"})
+    assert STUB.verbalizers[Form.CARDINAL] is contract.speak_cardinal and "leads" in data
+    with pytest.raises(AssertionError, match="'digit_words'"):
+        contract.clause_6("qac", replace(STUB, data=data))
+
+
+def test_clause_6_requires_no_key_of_a_verbalizer_that_the_file_replaces():
+    data = freeze({k: v for k, v in thaw(STUB.data).items() if k != "digit_words"})
+    own = {**STUB.verbalizers, Form.CARDINAL: lambda span, context: span.fields["digits"]}
+    contract.clause_6("qac", replace(STUB, data=data, verbalizers=own))
 
 
 def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
@@ -192,7 +206,7 @@ def test_the_declared_keys_are_the_keys_the_core_reads():
 
 
 def test_each_reader_is_a_shared_recognizer_or_a_named_core_reader():
-    assert set(READERS) - {"speak_cardinal", "render", "effective_params"} == set(SHARED)
+    assert set(READERS) - {*contract.SHARED_VERBALIZERS, "render", "effective_params"} == set(SHARED)
 
 
 class _Recorder(FrozenMap):
