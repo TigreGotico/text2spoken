@@ -270,6 +270,7 @@ def _effective(tag: str, language: LanguageSpec, variety: Variety, params: Norma
     return replace(params, **changes)
 
 
+@lru_cache(maxsize=128)
 def lexicon_entries(tag: str, lexicon: FrozenMap) -> FrozenMap:
     """The entries of the primary subtag, then those of the full tag, which replace them key by key."""
     by_tag = {check_tag(key): entries for key, entries in lexicon.items()}
@@ -278,10 +279,20 @@ def lexicon_entries(tag: str, lexicon: FrozenMap) -> FrozenMap:
 
 def _check_lexicon(request: Request) -> None:
     """A lexicon value that a recognizer reads would change on a second pass (section 11). An entry that keeps
-    its key, such as `{"MIX": "MIX"}`, is allowed: its span reads the value as written."""
+    its key, such as `{"MIX": "MIX"}`, is allowed: its span reads the value as written.
+
+    The check depends on the tag, the language, the variety and the params, so it runs once for each of them. A
+    check that raises is not cached, so each call with that lexicon raises again."""
+    if request.params.lexicon:
+        _check_lexicon_once(request.tag, request.variety, request.language, request.params)
+
+
+@lru_cache(maxsize=128)
+def _check_lexicon_once(tag: str, variety: Variety, language: LanguageSpec, params: NormalizationParams) -> None:
     from text2spoken.core.spans import classify
     from text2spoken.core.tokens import default_tokenizer
 
+    request = Request(tag, variety, language, params)
     for written, spoken in lexicon_entries(request.tag, request.params.lexicon).items():
         tokens = default_tokenizer(spoken, request.tag)
         for claimed in classify(spoken, tokens, (), request):

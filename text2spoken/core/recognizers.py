@@ -11,6 +11,7 @@ import unicodedata
 from bisect import bisect_right
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
+from functools import lru_cache
 
 from text2spoken.core.color import COLOR
 from text2spoken.core.dates import resolve as resolve_date
@@ -165,10 +166,10 @@ class Lexicon:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         entries = lexicon_entries(request.tag, request.params.lexicon)
-        keys = sorted(entries, key=len, reverse=True)
+        by_first = _keys_by_first_character(entries)
         position = 0
         while position < len(text):
-            key = next((k for k in keys if text.startswith(k, position)
+            key = next((k for k in by_first.get(text[position], ()) if text.startswith(k, position)
                         and _lexicon_limit(text, position - 1) and _lexicon_limit(text, position + len(k))), None)
             if key is None:
                 position += 1
@@ -176,6 +177,16 @@ class Lexicon:
             yield Span(position, position + len(key), Form.LEXICON, FrozenMap({"spoken": entries[key]}),
                        recognizer=self.name)
             position += len(key)
+
+
+@lru_cache(maxsize=128)
+def _keys_by_first_character(entries: FrozenMap) -> dict[str, tuple[str, ...]]:
+    """The lexicon keys by their first character, the longest first, so that a lookup tries only the keys that
+    can start at a position, in the order of the whole table."""
+    by_first: dict[str, list[str]] = {}
+    for key in sorted(entries, key=len, reverse=True):
+        by_first.setdefault(key[0], []).append(key)
+    return {first: tuple(keys) for first, keys in by_first.items()}
 
 
 def _lexicon_limit(text: str, index: int) -> bool:
