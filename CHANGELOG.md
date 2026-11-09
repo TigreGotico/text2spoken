@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a7](https://github.com/TigreGotico/text2spoken/tree/0.0.2a7) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a6...0.0.2a7)
+
+**Merged pull requests:**
+
+- fix: raise a verbalizer defect instead of leaving the span as written [\#14](https://github.com/TigreGotico/text2spoken/pull/14) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a6](https://github.com/TigreGotico/text2spoken/tree/0.0.2a6) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a5...0.0.2a6)
