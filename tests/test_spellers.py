@@ -1,11 +1,14 @@
 """Spellers, CLDR locales and plural categories (design sections 5.3 and 5.4)."""
+import subprocess
+import sys
 from dataclasses import replace
 
 import pytest
 
 from text2spoken import DeclinedReading, Features, GrammaticalGender, NormalizationParams
 from text2spoken.core.language import Request, Variety, plural_category
-from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
+from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, rbnf_engine,
+                                       words)
 
 F, M = GrammaticalGender.FEMININE, GrammaticalGender.MASCULINE
 OVOS_GENDER = {M: "masculine", F: "feminine", GrammaticalGender.NEUTER: "neutral"}
@@ -44,15 +47,14 @@ def test_ovos_speller_declines_a_language_it_does_not_read(gendered):
 
 
 def test_ovos_speller_declines_a_number_too_large_to_read(gendered, monkeypatch):
-    """A run past the integer string limit of Python, an integer part past the range of a float, which
-    ovos-number-parser reads as "infinity", and an OverflowError of the library, as for a Kabyle number past 9999."""
+    """A run past the digit bound, an integer part past it, which ovos-number-parser reads as "infinity" past 308
+    digits, and an OverflowError of the library, as for a Kabyle number past 9999."""
     import ovos_number_parser
 
     speller, en = OvosNumberSpeller(OVOS_GENDER), request(gendered, "en")
-    with pytest.raises(DeclinedReading, match="4301 digits pass the integer string limit") as declined:
+    with pytest.raises(DeclinedReading, match="4301 digits pass the bound of 308 digits"):
         speller.cardinal("9" * 4301, Features(), en)
-    assert type(declined.value.__cause__) is ValueError
-    with pytest.raises(DeclinedReading, match="400 integer digits pass the range of a float"):
+    with pytest.raises(DeclinedReading, match="400 integer digits pass the bound of 308 digits"):
         speller.decimal("9" * 400, "5", Features(), en)
 
     def overflow(number, lang, **kwargs):
@@ -62,6 +64,51 @@ def test_ovos_speller_declines_a_number_too_large_to_read(gendered, monkeypatch)
     with pytest.raises(DeclinedReading, match="up to 9999") as declined:
         speller.cardinal("10000", Features(), request(gendered, "kab"))
     assert type(declined.value.__cause__) is OverflowError
+
+
+LONG_RUN_PROBE = """
+from text2spoken import DeclinedReading, Features, NormalizationParams
+from text2spoken.core.language import Request, Variety
+from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller
+from text2spoken.lang.en import LANGUAGE
+
+request = Request(tag="en", variety=Variety("en"), language=LANGUAGE, params=NormalizationParams())
+rbnf = RbnfSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"})
+for speller in (OvosNumberSpeller({}), rbnf):
+    try:
+        print(speller.cardinal("9" * 4301, Features(), request))
+    except DeclinedReading as error:
+        print("declined:", error)
+"""
+
+
+def test_a_long_run_reads_the_same_whatever_the_integer_string_limit_of_python():
+    """The design forbids output that depends on the environment. `-X int_max_str_digits=0` lifts the limit of
+    `int()`, and the run of 4301 digits must still decline in both spellers, with the same reason."""
+    runs = [subprocess.run([sys.executable, *flags, "-c", LONG_RUN_PROBE], capture_output=True, text=True,
+                           check=True).stdout for flags in ([], ["-X", "int_max_str_digits=0"])]
+    assert runs[0] == runs[1] == "declined: 4301 digits pass the bound of 308 digits that a speller reads\n" * 2
+
+
+def test_the_digit_bound_reads_308_digits_and_declines_309(gendered):
+    en = request(gendered, "en")
+    ovos = OvosNumberSpeller(OVOS_GENDER)
+    rbnf = RbnfSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"})
+    assert ovos.cardinal("9" * 308, Features(), en).endswith("nine hundred and ninety nine")
+    for speller in (ovos, rbnf):
+        with pytest.raises(DeclinedReading, match="^309 digits pass the bound of 308 digits that a speller reads$"):
+            speller.cardinal("9" * 309, Features(), en)
+
+
+@pytest.mark.parametrize("written", ["1,000", "", "12a"])
+def test_text_that_is_not_digits_raises_and_does_not_decline(gendered, written):
+    """Only a run past the digit bound declines. A ValueError of `int()` for text that is not digits is a defect of
+    the caller, so it raises."""
+    rbnf = RbnfSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"})
+    for read in (_integer, lambda digits: rbnf.cardinal(digits, Features(), request(gendered, "en"))):
+        with pytest.raises(ValueError) as raised:
+            read(written)
+        assert not isinstance(raised.value, DeclinedReading)
 
 
 @pytest.mark.parametrize("reading", ["", 0, " , "])

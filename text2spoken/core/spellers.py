@@ -5,7 +5,6 @@ its file. A speller returns words separated by single spaces, with no space at e
 """
 from __future__ import annotations
 
-import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from functools import lru_cache
@@ -38,11 +37,18 @@ class NumberSpeller(Protocol):
 SPELLER_METHODS = ("cardinal", "ordinal", "year", "decimal", "fraction")
 
 
+DIGIT_BOUND = 308
+"""The longest run of digits that a speller reads. A float holds an integer part of 308 digits, so the decimal path
+reads no more. RBNF reads at most 17 digits in `en`, and ovos-number-parser names numbers up to 312 digits in `en`.
+The bound is below 640, the lowest integer string limit that Python lets a process set, so `int()` reads every run
+under the bound in every environment, and the output does not depend on `sys.int_max_str_digits`."""
+
+
 def _integer(digits: str) -> int:
-    try:
-        return int(digits)
-    except ValueError as error:
-        raise DeclinedReading(f"{len(digits)} digits pass the integer string limit of Python") from error
+    """The value of a run of digits; a run longer than DIGIT_BOUND declines. Text that is not digits raises."""
+    if len(digits) > DIGIT_BOUND:
+        raise DeclinedReading(f"{len(digits)} digits pass the bound of {DIGIT_BOUND} digits that a speller reads")
+    return int(digits)
 
 
 class OvosNumberSpeller:
@@ -100,9 +106,10 @@ class OvosNumberSpeller:
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         from ovos_number_parser import pronounce_number
 
+        if len(integer) > DIGIT_BOUND:
+            raise DeclinedReading(f"{len(integer)} integer digits pass the bound of {DIGIT_BOUND} digits that a "
+                                  "speller reads")
         value = float(f"{integer or '0'}.{fraction}")
-        if math.isinf(value):
-            raise DeclinedReading(f"{len(integer)} integer digits pass the range of a float")
         kwargs = self._kwargs(features, request)
         return self._read("decimal", f"{len(integer)}.{len(fraction)} digits", request,
                           lambda: pronounce_number(value, request.tag, places=len(fraction), **kwargs))
@@ -164,10 +171,7 @@ class RbnfSpeller:
     def _format(self, digits: str, name: str, request: Request) -> str:
         from unicode_rbnf.engine import NoRuleForNumberError
 
-        try:
-            number = int(digits)
-        except ValueError as error:
-            raise DeclinedReading(f"{len(digits)} digits pass the integer string limit of Python") from error
+        number = _integer(digits)
         try:
             result = self.engine(request).format_number(number, ruleset_names=[name])
         except (NoRuleForNumberError, OverflowError) as error:
