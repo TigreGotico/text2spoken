@@ -7,6 +7,7 @@ import pytest
 from text2spoken import (Features, Form, FrozenMap, HintWarning, InvalidHintError, InvalidLanguageTagError,
                          InvalidLexiconError, NormalizationParams, UnreadFormError, analyze, normalize, render)
 from text2spoken.core import language as loader
+from text2spoken.core.recognizers import _keys_by_first_character
 from text2spoken.core.spellers import OvosNumberSpeller
 
 
@@ -285,3 +286,11 @@ def test_the_note_of_a_defect_holds_a_fixed_length_of_the_text(monkeypatch):
         normalize("ko " + "1" * 6000 + " la.", "qac")
     note = raised.value.__notes__[-1]
     assert len(note) < 200 and "6000 characters" in note
+
+
+def test_the_cached_index_of_lexicon_keys_is_read_only():
+    """The cache hands one index to every call with the lexicon, so a caller cannot change it for the others."""
+    index = _keys_by_first_character(FrozenMap({"New York": "N Y", "Newark": "Newark", "York": "the city"}))
+    assert dict(index) == {"N": ("New York", "Newark"), "Y": ("York",)}
+    with pytest.raises(TypeError):
+        index["N"] = ()

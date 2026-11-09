@@ -9,16 +9,17 @@ from __future__ import annotations
 import re
 import unicodedata
 from bisect import bisect_right
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
+from types import MappingProxyType
 
 from text2spoken.core.color import COLOR
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import Features, SpanContext, Span, Word, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import DigitSpeller
+from text2spoken.core.spellers import DigitSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
                                      is_word_char, next_visible, one_digit_set)
@@ -180,13 +181,13 @@ class Lexicon:
 
 
 @lru_cache(maxsize=128)
-def _keys_by_first_character(entries: FrozenMap) -> dict[str, tuple[str, ...]]:
+def _keys_by_first_character(entries: FrozenMap) -> Mapping[str, tuple[str, ...]]:
     """The lexicon keys by their first character, the longest first, so that a lookup tries only the keys that
-    can start at a position, in the order of the whole table."""
+    can start at a position, in the order of the whole table. The cache shares the result, so it is read-only."""
     by_first: dict[str, list[str]] = {}
     for key in sorted(entries, key=len, reverse=True):
         by_first.setdefault(key[0], []).append(key)
-    return {first: tuple(keys) for first, keys in by_first.items()}
+    return MappingProxyType({first: tuple(keys) for first, keys in by_first.items()})
 
 
 def _lexicon_limit(text: str, index: int) -> bool:
@@ -293,7 +294,8 @@ class Fraction:
                 continue
             unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols))
                        or _unit_after(text, end, units) or not one_digit_set(text[match.start():match.end()]))
-            if unclear or (2 <= int(denominator) <= 100 and int(numerator) < int(denominator)):
+            top, bottom = bounded_integer(numerator), bounded_integer(denominator)
+            if unclear or (bottom is not None and 2 <= bottom <= 100 and top is not None and top < bottom):
                 yield Span(start, end, Form.FRACTION,
                            FrozenMap({"numerator": numerator, "denominator": denominator, "sign": sign,
                                       "prefix": prefix, "suffix": suffix}), recognizer=self.name, keep=unclear)
@@ -332,9 +334,11 @@ class Range:
         for match, start, end, prefix, suffix in _affixed_matches(re.compile(f"[0-9]+(?:{mark})[0-9]+"), text,
                                                                   request.data):
             low, high = re.split(mark, match.group())
+            low_value, high_value = bounded_integer(low), bounded_integer(high)
+            descending = high_value is not None and (low_value is None or low_value >= high_value)
             yield Span(start, end, Form.RANGE,
                        FrozenMap({"low": low, "high": high, "prefix": prefix, "suffix": suffix}), recognizer=self.name,
-                       keep=int(low) >= int(high) or not one_digit_set(text[match.start():match.end()]))
+                       keep=descending or not one_digit_set(text[match.start():match.end()]))
 
 
 @dataclass(frozen=True)

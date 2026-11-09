@@ -473,7 +473,8 @@ class Ordinal:
         for number in numbers_in(text, request):
             marker = text[number.end:number.end + 2]
             if (number.sign or number.fraction is not None or marker not in marks
-                    or ordinal_suffix(int(number.integer)) != marker or not is_bounded(text, number.start, number.end + 2)):
+                    or ordinal_suffix(int(number.integer[-2:])) != marker
+                    or not is_bounded(text, number.start, number.end + 2)):
                 continue
             yield Span(number.start, number.end + 2, Form.ORDINAL,
                        FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",

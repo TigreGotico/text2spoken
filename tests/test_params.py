@@ -66,3 +66,19 @@ def test_options_name_every_field_but_forms_lexicon_and_strict():
 
 def test_enum_values_follow_universal_dependencies_names():
     assert [g.value for g in GrammaticalGender] == ["masculine", "feminine", "neuter", "common"]
+
+
+def test_a_frozen_map_hashes_its_items_once():
+    """A FrozenMap keys the lexicon and data caches, so each lookup hashes it: the hash of its items is kept."""
+    calls = []
+
+    class Counted:
+        def __hash__(self):
+            calls.append(1)
+            return 7
+
+    table = FrozenMap({"a": Counted()})
+    expected = hash((("a", Counted()),))
+    calls.clear()
+    assert [hash(table) for _ in range(3)] == [expected] * 3
+    assert len(calls) == 1

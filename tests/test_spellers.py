@@ -115,6 +115,44 @@ def test_leading_zeros_do_not_count_against_the_digit_bound_under_any_integer_li
         assert json.loads(run.stdout) == expected, flags
 
 
+LONG_RUN_IN_RECOGNIZERS_PROBE = """
+import json, logging
+from text2spoken import normalize
+
+warnings = []
+handler = logging.Handler(logging.WARNING)
+handler.emit = lambda record: warnings.append(record.getMessage()[:40])
+logging.getLogger("text2spoken").addHandler(handler)
+logging.getLogger("text2spoken").propagate = False
+N, O = "9" * 4400, "1" * 4400
+texts = [f"the {N}th one", f"the 1,{N}th one", f"the {N}th of May", f"take 1/{N} now", f"take {N}/2 now",
+         f"take {O}/{N} now", f"pages 1-{N} now", f"pages {N}-5 now", f"pages {O}-{N} now", f"pages {N}-{O} now",
+         f"5-{N} km"]
+runs = []
+for tag in ("en-GB", "en-US"):
+    for text in texts:
+        warnings.clear()
+        runs.append([normalize(text, tag) == text, warnings[:]])
+print(json.dumps(runs))
+"""
+
+
+def test_a_long_run_in_an_ordinal_a_fraction_or_a_range_stays_as_written_under_any_integer_limit():
+    """The ordinal, fraction and range recognizers compare the numbers they find. A run of 4400 digits passes the
+    default limit of `int()`, so a raw `int()` raised before the speller bound. Each text stays as written with a
+    WARNING, and the same under the default limit, the lowest limit Python allows and no limit."""
+    runs = []
+    for flags in ([], ["-X", "int_max_str_digits=640"], ["-X", "int_max_str_digits=0"]):
+        run = subprocess.run([sys.executable, *flags, "-c", LONG_RUN_IN_RECOGNIZERS_PROBE], capture_output=True,
+                             text=True)
+        assert run.returncode == 0, (flags, run.stderr[-300:])
+        runs.append(json.loads(run.stdout))
+    assert runs[0] == runs[1] == runs[2]
+    assert len(runs[0]) == 22
+    for as_written, warnings in runs[0]:
+        assert as_written and len(warnings) == 1 and warnings[0].startswith("unread ")
+
+
 def test_the_digit_bound_reads_308_digits_and_declines_309(gendered):
     en = request(gendered, "en")
     ovos = OvosNumberSpeller(OVOS_GENDER)

@@ -10,13 +10,14 @@ from typing import Any, Literal
 class FrozenMap(Mapping):
     """An immutable, hashable mapping: key and value pairs sorted by key, with unique keys."""
 
-    __slots__ = ("_items", "_index")
+    __slots__ = ("_items", "_index", "_hash")
 
     def __init__(self, items: Mapping | Iterable[tuple[Any, Any]] = ()):
         pairs = items.items() if isinstance(items, Mapping) else items
         index = dict(pairs)
         self._items = tuple(sorted(index.items(), key=lambda pair: pair[0]))
         self._index = index
+        self._hash: int | None = None
 
     def __getitem__(self, key):
         return self._index[key]
@@ -28,7 +29,9 @@ class FrozenMap(Mapping):
         return len(self._items)
 
     def __hash__(self) -> int:
-        return hash(self._items)
+        if self._hash is None:
+            self._hash = hash(self._items)
+        return self._hash
 
     def __eq__(self, other) -> bool:
         if isinstance(other, FrozenMap):
