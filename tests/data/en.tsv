@@ -1,0 +1,285 @@
+id	tag	form	text	expected	source	checked_by
+en-001	en-US	cardinal	There are 101 rooms.	There are one hundred one rooms.	Wikipedia, English numerals (fetched 2026-11-06): US writes no and in the whole part	unchecked
+en-002	en-GB	cardinal	There are 101 rooms.	There are one hundred and one rooms.	Wikipedia, English numerals (fetched 2026-11-06): A hundred and one (British)	unchecked
+en-003	en-GB	cardinal	That is 125 oranges.	That is one hundred and twenty-five oranges.	Wikipedia, English numerals (fetched 2026-11-06): verbatim British example	unchecked
+en-004	en-US	cardinal	That is 125 oranges.	That is one hundred twenty-five oranges.	Wikipedia, English numerals (fetched 2026-11-06): verbatim US example	unchecked
+en-005	en-US	cardinal	We sold 1,234 tickets.	We sold one thousand two hundred thirty-four tickets.	Wikipedia, English numerals (fetched 2026-11-06): US rule; 1234 = 1000 + 234 by hand	unchecked
+en-006	en-GB	cardinal	It weighs 21 tonnes.	It weighs twenty-one tonnes.	Wikipedia, English numerals (fetched 2026-11-06): compound numbers take a hyphen	unchecked
+en-007	en-GB	cardinal	The temperature fell to -5 overnight.	The temperature fell to minus five overnight.	Wikipedia, English numerals (fetched 2026-11-06): negative numbers read minus	unchecked
+en-008	en-GB	cardinal	The index rose 1000000 points.	The index rose one million points.	Wikipedia, English numerals (fetched 2026-11-06): 1,000,000 is one million	unchecked
+en-009	en-GB	decimal	Pi is about 3.1416 here.	Pi is about three point one four one six here.	Wikipedia, English numerals (fetched 2026-11-06): verbatim decimal example	unchecked
+en-010	en-GB	decimal	The rate is .5 today.	The rate is zero point five today.	text2spoken-design section 15 target	unchecked
+en-011	en-GB	decimal	It is 1.2345 exactly.	It is one point two three four five exactly.	text2spoken-design section 15 target	unchecked
+en-012	en-GB	decimal	A drop of -5.2 degrees.	A drop of minus five point two degrees.	Wikipedia, English numerals (fetched 2026-11-06): verbatim minus five point two	unchecked
+en-013	en-GB	decimal	The value was 3.50 today.	The value was three point five zero today.	Wikipedia, English numerals (fetched 2026-11-06): the digits after the point read one by one, as written	unchecked
+en-014	en-US	ordinal	She finished 2nd and he was 23rd.	She finished second and he was twenty-third.	Wikipedia, English numerals (fetched 2026-11-06): ordinal suffixes and the compound hyphen	unchecked
+en-015	en-GB	ordinal	It came at the 11th hour.	It came at the eleventh hour.	Wikipedia, English numerals (fetched 2026-11-06): th when the tens digit is 1	unchecked
+en-016	en-GB	ordinal	the 1th place	the 1th place	Wikipedia, English numerals (fetched 2026-11-06): 1 takes st, so 1th is not an ordinal and stays	unchecked
+en-017	en-GB	ordinal	It was the 101st time.	It was the one hundred and first time.	Wikipedia, English numerals (fetched 2026-11-06): British and in the whole part	unchecked
+en-018	en-GB	fraction	Add 1/2 cup of milk.	Add one-half cup of milk.	Wikipedia, English numerals (fetched 2026-11-06): fraction table	unchecked
+en-019	en-GB	fraction	About 2/3 of voters agreed.	About two-thirds of voters agreed.	Wikipedia, English numerals (fetched 2026-11-06): fraction table	unchecked
+en-020	en-GB	fraction	Fill 3/4 of the jar.	Fill three-quarters of the jar.	Wikipedia, English numerals (fetched 2026-11-06): fraction table	unchecked
+en-021	en-GB	fraction	Use 5/8 of an inch.	Use five-eighths of an inch.	Wikipedia, English numerals (fetched 2026-11-06): fraction table	unchecked
+en-022	en-GB	fraction	It is 1/100 of the total.	It is one one-hundredth of the total.	Wikipedia, English numerals (fetched 2026-11-06): fraction table	unchecked
+en-023	en-GB	fraction	Only 15/16 remained.	Only fifteen-sixteenths remained.	Wikipedia, English numerals (fetched 2026-11-06): fraction table	unchecked
+en-024	en-GB	fraction	It has a 3/2 ratio.	It has a 3/2 ratio.	text2spoken-design section 4.2 rule: 3/2 needs a unit or a counted noun	unchecked
+en-025	en-GB	idiom	We are open 24/7 now.	We are open twenty-four seven now.	text2spoken-design section 15 target; spoken form from memory, not fetched	unchecked
+en-026	en-GB	idiom	It was a 50/50 split.	It was a fifty-fifty split.	Wiktionary 50/50: alternative form of fifty-fifty (fetched 2026-11-06)	unchecked
+en-027	en-US	range	Read pages 10-20 tonight.	Read pages ten to twenty tonight.	text2spoken-design section 4.2 rule: the en range word is to	unchecked
+en-028	en-US	none	The match ended 3-2.	The match ended 3-2.	text2spoken-design section 4.2: a range whose second number is not higher stays as written	unchecked
+en-029	en-GB	expression	5+3 is 8.	five plus three is eight.	text2spoken-design section 15 target	unchecked
+en-030	en-GB	expression	We know 2 × 2 = 4.	We know two times two equals four.	operator words from memory, not fetched	unchecked
+en-031	en-GB	date	Born 12/03/2024.	Born the twelfth of March twenty twenty-four.	text2spoken-design section 15 target: day first for en-GB; Wikipedia, English numerals (fetched 2026-11-06): years after 2009 read twenty fourteen	unchecked
+en-032	en-US	date	Born 12/03/2024.	Born December third twenty twenty-four.	design section 2.2: en-US reads an ambiguous date month first; Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-033	en-US	date	Due 2024-03-12 at noon.	Due March twelfth twenty twenty-four at noon.	design section 5.3: the four-digit field is the year; Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-034	en-GB	date	On 25/12/1999 it snowed.	On the twenty-fifth of December nineteen ninety-nine it snowed.	design section 5.3: a field above 12 is the day; Wikipedia, English numerals (fetched 2026-11-06): twelve thirty-four for 1234	unchecked
+en-035	en-US	date	On 25/12/1999 it snowed.	On December twenty-fifth nineteen ninety-nine it snowed.	design section 5.3: a field above 12 is the day; Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-036	en-GB	date	On 13/13/2024 nothing happened.	On 13/13/2024 nothing happened.	text2spoken-design section 4.2 rule	unchecked
+en-037	en-US	date	Opened March 12, 2024 downtown.	Opened March twelfth twenty twenty-four downtown.	Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-038	en-GB	date	Opened 12 March 2024 downtown.	Opened the twelfth of March twenty twenty-four downtown.	Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-039	en-US	date	In March 2024 we moved.	In March twenty twenty-four we moved.	Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-040	en-GB	date	Founded 01/01/2001.	Founded the first of January two thousand and one.	Wikipedia, English numerals (fetched 2026-11-06): two thousand (and) one	unchecked
+en-041	en-GB	date	Born 01/05/1901.	Born the first of May nineteen oh-one.	Wikipedia, English numerals (fetched 2026-11-06): nineteen oh-one	unchecked
+en-042	en-US	time	Dr. Smith paid 20% at 14:30.	Doctor Smith paid twenty percent at two thirty PM.	text2spoken-design section 15 target verbatim	unchecked
+en-043	en-GB	time	Dr. Smith paid 20% at 14:30.	Doctor Smith paid twenty per cent at two thirty PM.	Wikipedia, 12-hour clock (fetched 2026-11-06); the en-GB 12h default is unsourced model knowledge; per cent is British style, from memory, not fetched	unchecked
+en-044	en-US	time	Wake me at 6:02 tomorrow.	Wake me at six oh two tomorrow.	Wikipedia, 12-hour clock (fetched 2026-11-06): six oh two	unchecked
+en-045	en-US	time	The train leaves at 9am.	The train leaves at nine AM.	Wikipedia, 12-hour clock (fetched 2026-11-06): AM and PM	unchecked
+en-046	en-US	time	It starts at 10 p.m. sharp.	It starts at ten PM sharp.	Wikipedia, 12-hour clock (fetched 2026-11-06)	unchecked
+en-047	en-US	time	It ends at 11 p.m.	It ends at eleven PM.	Wikipedia, 12-hour clock (fetched 2026-11-06); the sentence period stays	unchecked
+en-048	en-US	time	Meet at 10:00 today.	Meet at ten o'clock today.	Wikipedia, 12-hour clock (fetched 2026-11-06): ten o'clock	unchecked
+en-049	en-US	time	The alarm rang at 00:30 again.	The alarm rang at twelve thirty AM again.	Wikipedia, 12-hour clock (fetched 2026-11-06): 00:00 is 12:00 a.m.	unchecked
+en-050	en-GB	time	The ratio is 16:9 here.	The ratio is 16:9 here.	text2spoken-design section 4.2 rule	unchecked
+en-051	en-GB	time	Read John 3:16 again.	Read John 3:16 again.	text2spoken-design section 4.2 rule	unchecked
+en-052	en-GB	time	The lap took 05:12 overall.	The lap took 05:12 overall.	text2spoken-design section 4.2 rule: a leading zero is not evidence	unchecked
+en-053	en-GB	money	It costs $5.	It costs five dollars.	text2spoken-design section 15 target	unchecked
+en-054	en-GB	money	Lunch was $5.50 today.	Lunch was five dollars and fifty cents today.	two decimals are the minor unit, design section 7.1; from memory, not fetched	unchecked
+en-055	en-GB	money	Only $1 left.	Only one dollar left.	CLDR plural rules for en: one is i = 1 and v = 0	unchecked
+en-056	en-GB	money	It cost £2.01 there.	It cost two pounds and one penny there.	CLDR plural rules for en: one is i = 1 and v = 0	unchecked
+en-057	en-GB	money	Gum costs $0.99 now.	Gum costs ninety-nine cents now.	from memory, not fetched	unchecked
+en-058	en-GB	money	Tickets are €20 each.	Tickets are twenty euros each.	CLDR plural rules for en: one is i = 1 and v = 0	unchecked
+en-059	en-US	percent	Sales grew 4.5% this year.	Sales grew four point five percent this year.	Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-060	en-GB	measure	It weighs 10kg in total.	It weighs ten kilograms in total.	SI unit names (BIPM SI Brochure, en-GB spelling; NIST spelling for en-US), from memory	unchecked
+en-061	en-GB	measure	It is 25°C outside.	It is twenty-five degrees Celsius outside.	SI unit names (BIPM SI Brochure, en-GB spelling; NIST spelling for en-US), from memory	unchecked
+en-062	en-US	measure	Drive 5 km/h here.	Drive five kilometers per hour here.	SI unit names (BIPM SI Brochure, en-GB spelling; NIST spelling for en-US), from memory	unchecked
+en-063	en-GB	measure	A 15x8 cm card.	A fifteen by eight centimetres card.	text2spoken-design section 4.2 rule; SI unit names (BIPM SI Brochure, en-GB spelling; NIST spelling for en-US), from memory; gap: an attributive unit reads its plural form, where English says a fifteen-by-eight-centimetre card, a named lead for a separate change	unchecked
+en-064	en-GB	measure	Add 1 kg of flour.	Add one kilogram of flour.	CLDR plural rules for en: one is i = 1 and v = 0; SI unit names (BIPM SI Brochure, en-GB spelling; NIST spelling for en-US), from memory	unchecked
+en-065	en-GB	measure	Add 1.5 kg of flour.	Add one point five kilograms of flour.	CLDR plural rules for en: one is i = 1 and v = 0: 1.5 is other; SI unit names (BIPM SI Brochure, en-GB spelling; NIST spelling for en-US), from memory	unchecked
+en-066	en-GB	measure	Add 1.0 kg of flour.	Add one point zero kilograms of flour.	CLDR plural rules for en: one is i = 1 and v = 0: 1.0 has v = 1, so other	unchecked
+en-067	en-GB	telephone	Call +44 20 7946 0018 today.	Call plus four four two zero seven nine four six zero zero one eight today.	design section 4.3: + and a country code; digit by digit	unchecked
+en-068	en-GB	telephone	Try 02079460018 now.	Try zero two zero seven nine four six zero zero one eight now.	design section 4.3: the trunk prefix 0 of GB and 10 national digits	unchecked
+en-069	en-GB	telephone	My phone: 555 0123 4567.	My phone: five five five zero one two three four five six seven.	design section 4.3: a word before the run names a phone	unchecked
+en-070	en-US	abbreviation	Dr. Smith is here.	Doctor Smith is here.	from memory, not fetched	unchecked
+en-071	en-GB	abbreviation	Dr Smith is here.	Doctor Smith is here.	British style writes Dr with no period, from memory, not fetched	unchecked
+en-072	en-US	abbreviation	Dr Smith is here.	Dr Smith is here.	American style writes Dr., from memory, not fetched	unchecked
+en-073	en-GB	abbreviation	Bring pens, paper, etc. Then go.	Bring pens, paper, et cetera. Then go.	from memory, not fetched	unchecked
+en-074	en-GB	abbreviation	Fruit, e.g. apples.	Fruit, for example apples.	from memory, not fetched	unchecked
+en-075	en-GB	abbreviation	See item No. 5 below.	See item number five below.	from memory, not fetched	unchecked
+en-076	en-GB	abbreviation	Say No. Then leave.	Say No. Then leave.	No. reads number only before a number	unchecked
+en-077	en-US	color	The colour is #FF0000 today.	The colour is red today.	seeded table, ovos-color-parser en-US/dot-net-colors.json	unchecked
+en-078	en-US	color	background-color: #fff;	background-color: white;	text2spoken-design section 4.2 rule	unchecked
+en-079	en-GB	color	Use #808080 as the colour.	Use grey as the colour.	seeded table; British spelling grey, from memory, not fetched	unchecked
+en-080	en-US	color	Use #808080 as the color.	Use gray as the color.	seeded table	unchecked
+en-081	en-GB	color	We love #decade today.	We love #decade today.	text2spoken-design section 4.2 rule	unchecked
+en-082	en-GB	color	We love #ace today.	We love #ace today.	text2spoken-design section 4.2 rule	unchecked
+en-083	en-GB	cardinal	Room #000 is shut.	Room number zero zero zero is shut.	text2spoken-design section 4.2: no colour word, so not a colour; a leading zero after a lead reads digit by digit	unchecked
+en-084	en-GB	none	I can't go, I'd say.	I can't go, I'd say.	design section 1: no contraction is expanded	unchecked
+en-085	en-GB	cardinal	The city has 1,234,567 people.	The city has one million two hundred and thirty-four thousand five hundred and sixty-seven people.	Wikipedia, English numerals (fetched 2026-11-06): British and in the whole part; 1234567 = 1000000 + 234000 + 567 by hand; a comma is written style	unchecked
+en-086	en-GB	cardinal	The sub-23 team won.	The sub twenty-three team won.	text2spoken-design section 4.2: the lead - reads as a space; twenty-three from Wikipedia, English numerals (fetched 2026-11-06)	unchecked
+en-087	en-GB	cardinal	Room #20 is shut.	Room number twenty is shut.	text2spoken-design section 4.2: the lead # reads number	unchecked
+en-088	en-US	cardinal	Take the A-1 road.	Take the A one road.	text2spoken-design section 4.2: the lead - reads as a space	unchecked
+en-089	en-GB	telephone	Call +44 20 7946 0018 today.	Call plus four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: + reads plus, digits one by one	unchecked
+en-090	en-GB	telephone	Call 0044 20 7946 0018 today.	Call zero zero four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: a number written with 00 reads the digits as written	unchecked
+en-091	en-GB	color	The colour is #000 here.	The colour is black here.	text2spoken-design section 4.2: all digits with a colour word in the clause; seeded table	unchecked
+en-092	en-GB	year	In 1984, Orwell wrote.	In nineteen eighty-four, Orwell wrote.	Wikipedia, English numerals (fetched 2026-11-06), Dates: a year reads as two pairs of digits, 1999 nineteen ninety-nine	unchecked
+en-093	en-GB	year	Born in 2005.	Born in two thousand and five.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 2001 two thousand (and) one; British and as in its cardinals	unchecked
+en-094	en-US	year	Born in 2005.	Born in two thousand five.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 2001 two thousand (and) one; American cardinals write no and	unchecked
+en-095	en-GB	year	In 1066 the Normans came.	In ten sixty-six the Normans came.	Wikipedia, English numerals (fetched 2026-11-06), Dates: the years after 1009 until 1099 read in the same manner, 1015 ten fifteen	unchecked
+en-096	en-GB	year	The war lasted 1939-1945.	The war lasted nineteen thirty-nine to nineteen forty-five.	Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits; the range word to of design section 4.2	unchecked
+en-097	en-GB	year	Built in 1901.	Built in nineteen oh-one.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 1901 nineteen oh-one	unchecked
+en-098	en-US	year	Since 2010 it grew.	Since twenty ten it grew.	Wikipedia, English numerals (fetched 2026-11-06), Dates: 2010 twenty ten	unchecked
+en-099	en-GB	cardinal	#20 is the room.	number twenty is the room.	text2spoken-design section 4.2: the lead # reads number, also at the start of the text	unchecked
+en-100	en-GB	cardinal	#5 trending now	number five trending now	text2spoken-design section 4.2: the lead # reads number, also at the start of the text	unchecked
+en-101	en-US	money	Profits of $2 million.	Profits of two million dollars.	text2spoken-design section 4.2: a scale word after the amount; from memory, not fetched	unchecked
+en-102	en-US	money	They raised $1m.	They raised one million dollars.	text2spoken-design section 4.2: m attached to the amount is the scale million; from memory, not fetched	unchecked
+en-103	en-GB	money	It costs ¥500.	It costs five hundred yen.	yen has no plural form, from memory, not fetched	unchecked
+en-104	en-US	money	It costs -$5.	It costs minus five dollars.	text2spoken-design section 4.2: a sign before the currency symbol	unchecked
+en-105	en-GB	measure	The box is 10 × 20 cm.	The box is ten by twenty centimetres.	text2spoken-design section 4.2: a dimension mark with a space on each side reads by	unchecked
+en-106	en-GB	measure	Temps 20-25°C today	Temps twenty to twenty-five degrees Celsius today	text2spoken-design section 4.2: a range mark between two amounts reads the range word	unchecked
+en-107	en-GB	measure	x 10°C/50°F	x ten degrees Celsius/fifty degrees Fahrenheit	text2spoken-design section 11: the output reads the same on a second pass	unchecked
+en-108	en-US	time	From 9am-5pm	From nine AM to five PM	text2spoken-design sections 2.1 and 4.2: a dash between two times reads the range word	unchecked
+en-109	en-US	telephone	Phone: (555) 123-4567.	Phone: five five five one two three four five six seven.	text2spoken-design section 4.3: a group in brackets; digit by digit	unchecked
+en-110	en-GB	abbreviation	Team A vs. Team B.	Team A versus Team B.	only etc. ends a sentence with its period, from memory, not fetched	unchecked
+en-111	en-GB	abbreviation	See e.g. London.	See for example London.	only etc. ends a sentence with its period, from memory, not fetched	unchecked
+en-112	en-GB	none	2.5+3	2.5+3	text2spoken-design section 4.2: an expression reads integers; a decimal operand stays as written	unchecked
+en-113	en-GB	ordinal	He was 1,000th.	He was one thousandth.	the group mark is part of the number; from memory, not fetched	unchecked
+en-114	en-GB	color	Text color: #333.	Text color: three three three.	text2spoken-design section 12: a colour with no name spells the digits that the text writes	unchecked
+en-115	en-GB	none	Set the aspect ratio to 16:10.	Set the aspect ratio to 16:10.	text2spoken-design section 4.2: to is no time evidence, so 16:10 stays as written	unchecked
+en-116	en-GB	none	Code 007 opens.	Code 007 opens.	text2spoken-design section 4.2: digits with a leading zero and no lead stay as written	unchecked
+en-117	en-GB	none	It took 1:23:45.	It took 1:23:45.	text2spoken-design section 4.2: a seconds field is no clock evidence, so a duration stays as written	unchecked
+en-118	en-GB	none	The lap took 0:45:10 in all.	The lap took 0:45:10 in all.	text2spoken-design section 4.2: a seconds field is no clock evidence, so a duration stays as written	unchecked
+en-119	en-US	telephone	Call 911 now.	Call nine one one now.	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, N11 code (fetched 2026-11-09): 911 is the emergency number	unchecked
+en-120	en-US	telephone	Phone: 911.	Phone: nine one one.	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, N11 code (fetched 2026-11-09): 911 is the emergency number	unchecked
+en-121	en-GB	telephone	Tel 999	Tel nine nine nine	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, Emergency telephone number (fetched 2026-11-09): 999 in the United Kingdom	unchecked
+en-122	en-GB	cardinal	We won in 1234 steps.	We won in one thousand two hundred and thirty-four steps.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
+en-123	en-GB	cardinal	It fits in 2048 bytes.	It fits in two thousand and forty-eight bytes.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
+en-124	en-GB	cardinal	She played in 1999 games.	She played in one thousand nine hundred and ninety-nine games.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
+en-125	en-GB	range	The buffer holds 1024-2048 bytes.	The buffer holds one thousand and twenty-four to two thousand and forty-eight bytes.	text2spoken-design section 4.2: the follower rule blocks a year range, and the range reads cardinals	unchecked
+en-126	en-GB	cardinal	There were 2005 people.	There were two thousand and five people.	text2spoken-design section 4.2: a year needs a year word; Wikipedia, English numerals (fetched 2026-11-06): British and	unchecked
+en-127	en-GB	cardinal	Room 1999 is shut.	Room one thousand nine hundred and ninety-nine is shut.	text2spoken-design section 4.2: room is no year word; Wikipedia, English numerals (fetched 2026-11-06): British and	unchecked
+en-128	en-GB	cardinal	It ran in 2000 ms.	It ran in two thousand ms.	text2spoken-design section 4.2: ms blocks a year, and the table holds no unit ms	unchecked
+en-129	en-GB	year	In 1066 and 1215.	In ten sixty-six and twelve fifteen.	text2spoken-design section 4.2: a number that a link joins to a year is a year; Wikipedia, English numerals (fetched 2026-11-06), Dates: 1015 ten fifteen	unchecked
+en-130	en-GB	year	In 1985, 1986 and 1987 it rained.	In nineteen eighty-five, nineteen eighty-six and nineteen eighty-seven it rained.	text2spoken-design section 4.2: a number that a link joins to a year is a year, and a comma links inside a list that a link word ends; Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits	unchecked
+en-131	en-GB	year	It ran during 1939-45.	It ran during nineteen thirty-nine to forty-five.	text2spoken-design section 4.2: the short end of a year range reads without the century; Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits	unchecked
+en-132	en-US	year	Prices rose during 2010-12.	Prices rose during twenty ten to twelve.	text2spoken-design section 4.2: the short end of a year range reads without the century; Wikipedia, English numerals (fetched 2026-11-06), Dates: 2010 twenty ten	unchecked
+en-133	en-GB	year	Prices rose during 2010-12.	Prices rose during twenty ten to twelve.	text2spoken-design section 5.4: en-GB reads 2010 by spellout-numbering-year, twenty ten; the short end reads without the century	unchecked
+en-134	en-GB	year	It ran during 2005-07.	It ran during two thousand and five to two thousand and seven.	text2spoken-design section 4.2: a year that reads with thousand has no century words to drop, so the short end reads the whole year	unchecked
+en-135	en-GB	none	It was built 1905-07.	It was built 1905-07.	text2spoken-design section 4.2: a year range with a short end needs a year word before it	unchecked
+en-136	en-GB	none	The 2024-25 season ended.	The 2024-25 season ended.	text2spoken-design section 4.2: a year range with a short end needs a year word before it, and a range that does not go up stays as written	unchecked
+en-137	en-GB	cardinal	Born in 2150.	Born in two thousand one hundred and fifty.	text2spoken-design section 4.2: a year is from 1000 to 2099; Wikipedia, English numerals (fetched 2026-11-06): British and	unchecked
+en-138	en-GB	none	Pages 1200-1100.	Pages 1200-1100.	text2spoken-design section 4.2: a year range has the lower year first, and a range that does not go up stays as written	unchecked
+en-139	en-GB	none	Load: 5 kg/2.	Load: 5 kg/2.	text2spoken-design section 2.1: a waiting span blocks the spans inside it; the reading is not clear, so it stays as written	unchecked
+en-140	en-GB	none	Add 3/4 kg of flour.	Add 3/4 kg of flour.	text2spoken-design section 4.2: a unit after a fraction leaves the reading not clear, so it stays as written	unchecked
+en-141	en-US	none	Each $5/6 share.	Each $5/6 share.	text2spoken-design section 4.2: a symbol next to a fraction leaves the reading not clear, so it stays as written	unchecked
+en-142	en-GB	measure	Wind at 5 m/s.	Wind at five metres per second.	BIPM SI Brochure, 9th edition, section 5.2, p. 142: division by a solidus, m/s = m s−1; section 2.1, p. 123: metre per second	unchecked
+en-143	en-US	measure	Wind at 5 m/s.	Wind at five meters per second.	BIPM SI Brochure, 9th edition, section 5.2, p. 142: division by a solidus, m/s = m s−1; section 2.1, p. 123: metre per second; NIST SP 811 spelling meter for en-US	unchecked
+en-144	en-US	none	Open from 9am-5.	Open from 9am-5.	text2spoken-design section 4.2: 5 has no clock evidence, so the range stays as written	unchecked
+en-145	en-US	time	From 9am–5pm	From nine AM to five PM	text2spoken-design sections 2.1 and 4.2: an en dash between two times reads the range word	unchecked
+en-146	en-US	money	Tickets cost $5-$10.	Tickets cost five dollars to ten dollars.	text2spoken-design section 4.2: a range mark between two amounts reads the range word	unchecked
+en-147	en-US	money	It raised $5.50m.	It raised five point five million dollars.	text2spoken-design section 4.2: a scaled amount is a decimal number, so its trailing zeros do not read	unchecked
+en-148	en-GB	money	It costs $5 more.	It costs five dollars more.	text2spoken-design section 4.2: a scale word ends at a word boundary, so more is no m scale	unchecked
+en-149	en-GB	expression	-2+3=1	minus two plus three equals one	text2spoken-design section 4.4: the first operand may carry a sign	unchecked
+en-150	en-GB	none	0000-01-01	0000-01-01	the Gregorian calendar has no year zero, so 0000 is no date	unchecked
+en-151	en-GB	none	##5	##5	text2spoken-design section 4.2: no lead follows another lead	unchecked
+en-152	en-GB	none	０3 December	０3 December	text2spoken-design section 5.3: digits from two digit sets are no number	unchecked
+en-153	en-GB	none	The 1stly item.	The 1stly item.	text2spoken-design section 4.2: an ordinal suffix that a letter continues is no ordinal	unchecked
+en-154	en-GB	none	１+2=3	１+2=3	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-155	en-GB	none	Meet at １4:30.	Meet at １4:30.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-156	en-GB	none	Add １/2 cup.	Add １/2 cup.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-157	en-GB	none	Ages １8-25.	Ages １8-25.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-158	en-GB	none	It has １2 rooms.	It has １2 rooms.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-159	en-GB	none	On 1２/03/2024 we met.	On 1２/03/2024 we met.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-160	en-GB	none	Call +351 9１2 345 678.	Call +351 9１2 345 678.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-161	en-GB	none	x-2+3	x-2+3	text2spoken-design section 4.2: an expression has no letter on either side, so it stays as written	unchecked
+en-162	en-GB	none	It ran during 1945-39.	It ran during 1945-39.	text2spoken-design section 4.2: the short end of a year range is later in the century than the first year	unchecked
+en-163	en-GB	none	Ages １8–25.	Ages １8–25.	text2spoken-design section 5.3: digits from two digit sets are no number, so the run stays as written	unchecked
+en-164	en-GB	none	The 1st5 item.	The 1st5 item.	text2spoken-design section 4.2: an ordinal suffix that a letter or a digit continues is no ordinal	unchecked
+en-165	en-GB	cardinal	Flow of 5 m/min.	Flow of five m/min.	text2spoken-design section 4.2: a unit that a slash and a letter continue is no unit, and the table holds no m/min	unchecked
+en-166	en-GB	none	Seasons 1990-91-92.	Seasons 1990-91-92.	text2spoken-design section 4.2: a joiner and a digit after a range make a run of three parts, so it stays as written	unchecked
+en-167	en-GB	none	In 2000-02-30	In 2000-02-30	text2spoken-design section 4.2: a joiner and a digit after a range make a run of three parts, so it stays as written	unchecked
+en-168	en-GB	none	Code 2005-07-45.	Code 2005-07-45.	text2spoken-design section 4.2: a joiner and a digit after a range make a run of three parts, so it stays as written	unchecked
+en-169	en-GB	none	Ref 2005-07+351	Ref 2005-07+351	text2spoken-design section 4.2: a joiner and a digit after a range make a run of three parts, so it stays as written	unchecked
+en-170	en-GB	cardinal	#1-#5	number one-number five	text2spoken-design section 4.2: only a lead with words blocks a lead after it, so the - lead blocks nothing	unchecked
+en-171	en-GB	cardinal	Issues #12-#15 fixed.	Issues number twelve-number fifteen fixed.	text2spoken-design section 4.2: only a lead with words blocks a lead after it, so the - lead blocks nothing	unchecked
+en-172	en-GB	cardinal	No. 5-#7	number five-number seven	text2spoken-design section 4.2: only a lead with words blocks a lead after it, so the - lead blocks nothing	unchecked
+en-173	en-GB	none	See pp. 1234-56.	See pp. 1234-56.	text2spoken-design section 4.2: a year range with a short end needs a year word before it, and a range that does not go up stays as written	unchecked
+en-174	en-GB	none	Released 2024-06.	Released 2024-06.	text2spoken-design section 4.2: a range that does not go up stays as written	unchecked
+en-175	en-GB	year	In 2010, 1999 of them died.	In twenty ten, one thousand nine hundred and ninety-nine of them died.	text2spoken-design section 4.2: a comma alone links only inside a list that a link word ends, and of blocks a year; text2spoken-design section 5.4: en-GB reads 2010 as twenty ten	unchecked
+en-176	en-GB	cardinal	Found in 1024 of 2048 files.	Found in one thousand and twenty-four of two thousand and forty-eight files.	text2spoken-design section 4.2: of is no function word, so it blocks a year; Wikipedia, English numerals (fetched 2026-11-06): A hundred and one (British)	unchecked
+en-177	en-GB	cardinal	Seen in 1999 of the samples.	Seen in one thousand nine hundred and ninety-nine of the samples.	text2spoken-design section 4.2: of is no function word, so it blocks a year; Wikipedia, English numerals (fetched 2026-11-06): A hundred and one (British)	unchecked
+en-178	en-GB	cardinal	Scores in 1999 and 2000 games.	Scores in one thousand nine hundred and ninety-nine and two thousand games.	text2spoken-design section 4.2: the follower of the last year of a linked list decides for the whole list	unchecked
+en-179	en-GB	year	In 1066, 1215 and 1415.	In ten sixty-six, twelve fifteen and fourteen fifteen.	text2spoken-design section 4.2: a comma links inside a list that a link word ends; Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits	unchecked
+en-180	en-GB	measure	It runs in 2048 MB.	It runs in two thousand and forty-eight megabytes.	text2spoken-design section 4.2: a unit of the units table blocks a year; NIST, Prefixes for binary multiples (fetched 2026-11-07): 1 MB = 10^6 B, one megabyte	unchecked
+en-181	en-US	measure	It runs in 2048 MB.	It runs in two thousand forty-eight megabytes.	text2spoken-design section 4.2: a unit of the units table blocks a year; NIST, Prefixes for binary multiples (fetched 2026-11-07): 1 MB = 10^6 B, one megabyte	unchecked
+en-182	en-GB	measure	It works in 1800 MHz.	It works in one thousand eight hundred megahertz.	text2spoken-design section 4.2: a unit of the units table blocks a year; NIST SP 811, section 9.2 (fetched 2026-11-07): the plural of hertz is hertz	unchecked
+en-183	en-GB	measure	Ran in 1500 KM.	Ran in one thousand five hundred KM.	text2spoken-design section 4.2: a unit of the units table in any case blocks a year; the measure reads only the case the table writes, so KM stays	unchecked
+en-184	en-GB	expression	Shown in 1920 × 1080 pixels.	Shown in one thousand nine hundred and twenty times one thousand and eighty pixels.	text2spoken-design section 4.2: an operator blocks a year; operator words from memory, not fetched	unchecked
+en-185	en-GB	year	In 1999 Smith won.	In nineteen ninety-nine Smith won.	text2spoken-design section 4.2: a capitalised word does not block a year	unchecked
+en-186	en-GB	telephone	Call 999 or 112.	Call nine nine nine or one one two.	text2spoken-design section 4.3: a run that or joins to a named run is named, and a named short code reads digit by digit	unchecked
+en-187	en-GB	telephone	Call 999, 112 or 911.	Call nine nine nine, one one two or nine one one.	text2spoken-design section 4.3: a list of runs after a phone word is named, and each run reads digit by digit	unchecked
+en-188	en-GB	telephone	Dial 999 now.	Dial nine nine nine now.	text2spoken-design section 4.3: dial is a phone word, and a named short code reads digit by digit	unchecked
+en-189	en-GB	cardinal	Call me in 5 minutes.	Call me in five minutes.	text2spoken-design section 4.2: a phone word names only the run right after it	unchecked
+en-190	en-GB	cardinal	Call 2 friends.	Call two friends.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-191	en-GB	cardinal	Fax 3 pages.	Fax three pages.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-192	en-GB	cardinal	Sit in cell 5.	Sit in cell five.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-193	en-GB	telephone	Call +1 911.	Call plus one nine one one.	text2spoken-design section 4.3: + reads plus, the country code and the named run read digit by digit	unchecked
+en-194	en-GB	date	From 12/03/2024-March 15, 2025.	From the twelfth of March twenty twenty-four-March fifteenth twenty twenty-five.	text2spoken-design section 2.1: a waiting span wakes when the span on its left is claimed; section 4.2: en-GB numeric dates are DMY	unchecked
+en-195	en-GB	percent	Rates of 10%-20% apply.	Rates of ten per cent to twenty per cent apply.	text2spoken-design section 4.2: a dash alone between two percentages reads the range word, and a dash right after a percent sign is no minus sign	unchecked
+en-196	en-GB	cardinal	In 1939-1945 and 1950 games.	In one thousand nine hundred and thirty-nine to one thousand nine hundred and forty-five and one thousand nine hundred and fifty games.	text2spoken-design section 4.2: the follower of the last year of a linked list decides for the whole list, its range too	unchecked
+en-197	en-US	time	Shifts run 9am-5pm-7pm.	Shifts run nine AM to five PM to seven PM.	text2spoken-design section 4.2: a dash to a third span joins on, so each dash reads the range word	unchecked
+en-198	en-GB	cardinal	Turn the dial 3 times.	Turn the dial three times.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-199	en-GB	cardinal	Scaled in 1920 * 1080 pixels.	Scaled in one thousand nine hundred and twenty * one thousand and eighty pixels.	text2spoken-design section 4.2: an operator blocks a year; the * has no word, so it stays as written	unchecked
+en-200	en-GB	cardinal	Split in 1920 / 1080 parts.	Split in one thousand nine hundred and twenty / one thousand and eighty parts.	text2spoken-design section 4.2: an operator blocks a year; a spaced / is no fraction, so it stays as written	unchecked
+en-201	en-GB	none	It ended 2-2.	It ended 2-2.	text2spoken-design section 4.2: a range whose second number is not higher stays as written	unchecked
+en-202	en-GB	cardinal	Call 20 people now.	Call twenty people now.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-203	en-GB	cardinal	Book room 101 or 102.	Book room one hundred and one or one hundred and two.	text2spoken-design section 4.2: only a run that a phone word names starts a list of phone runs	unchecked
+en-204	en-GB	year	Wars came 1939-1945 and 1950.	Wars came nineteen thirty-nine to nineteen forty-five and nineteen fifty.	text2spoken-design section 4.2: a list of years may start at a year range; Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits	unchecked
+en-205	en-GB	measure	It has 4 MB of memory.	It has four megabytes of memory.	NIST, Prefixes for binary multiples (fetched 2026-11-07): 1 MB = 10^6 B, one megabyte	unchecked
+en-206	en-GB	measure	It runs at 3 GHz.	It runs at three gigahertz.	NIST SP 811, section 9.2 (fetched 2026-11-07): the plural of hertz is hertz	unchecked
+en-207	en-GB	percent	So 1+1 × 10% now.	So 1+1 × ten per cent now.	text2spoken-design section 4.2: an operator right after the last integer keeps the expression as written	unchecked
+en-208	en-GB	telephone	Call 25 or 999.	Call twenty-five or nine nine nine.	text2spoken-design section 4.3: a count reads as a cardinal and does not end the list, and the named short code reads digit by digit	unchecked
+en-209	en-GB	cardinal	In 1066 and 1939-1945 games.	In one thousand and sixty-six and one thousand nine hundred and thirty-nine to one thousand nine hundred and forty-five games.	text2spoken-design section 4.2: a range is one link of a list of years, and the follower of the last member decides for the whole list	unchecked
+en-210	en-GB	range	In 1939-1945 games.	In one thousand nine hundred and thirty-nine to one thousand nine hundred and forty-five games.	text2spoken-design section 4.2: the follower of a year range decides for both ends, and the first end alone is no year	unchecked
+en-211	en-GB	none	In 1999-12 it ended.	In 1999-12 it ended.	text2spoken-design section 4.2: a year that a range mark joins to digits that no span reads waits, and a range that does not go up stays as written	unchecked
+en-212	en-GB	none	We sold in 2010-12 units.	We sold in 2010-12 units.	text2spoken-design section 4.2: the follower of a short-end year range decides for both ends, and a range that does not go up stays as written	unchecked
+en-213	en-GB	none	Team GB won 29 GB golds.	Team GB won twenty-nine GB golds.	text2spoken-design section 4.2: GB is not a unit symbol, since it names Great Britain as often as gigabytes	unchecked
+en-214	en-GB	cardinal	The 2012 GB squad won.	The two thousand and twelve GB squad won.	text2spoken-design section 4.2: GB is not a unit symbol, and a number with no year word before it reads as a count	unchecked
+en-215	en-GB	year	In 2012 GB won 29 golds.	In twenty twelve GB won twenty-nine golds.	text2spoken-design section 4.2: GB is not a unit, so it does not block the year reading	unchecked
+en-216	en-GB	telephone	Call 020 7946 0018 or 999 now.	Call zero two zero seven nine four six zero zero one eight or nine nine nine now.	text2spoken-design section 4.3: a run that or joins to a named run is named, and a named short code reads digit by digit	unchecked
+en-217	en-GB	telephone	Call us on 0800 123 456.	Call us on zero eight zero zero one two three four five six.	text2spoken-design section 4.3: a phone word up to three words before a run with group separators names it	unchecked
+en-218	en-GB	telephone	Call me at 555 1234.	Call me at five five five one two three four.	text2spoken-design section 4.3: a phone word up to three words before a run with group separators names it	unchecked
+en-219	en-GB	telephone	Ring 999 now.	Ring nine nine nine now.	text2spoken-design section 4.3: ring is a phone word	unchecked
+en-220	en-US	telephone	Text 911.	Text nine one one.	text2spoken-design section 4.3: text is a phone word	unchecked
+en-221	en-GB	cardinal	Text 2 pages.	Text two pages.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-222	en-GB	telephone	Call 999 or 112 or 2 friends.	Call nine nine nine or one one two or two friends.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-223	en-GB	telephone	Dial 25 and 999.	Dial twenty-five and nine nine nine.	text2spoken-design section 4.3: a count does not end the list of runs a phone word names	unchecked
+en-224	en-GB	none	Open 9am-5pm-7pm‍9	Open 9am-5pm-7pm‍nine	text2spoken-design section 4.2: a format character after the last span of a dash chain continues the run, so no pair of the chain joins	unchecked
+en-225	en-GB	expression	Shown in 1920 ×1080 pixels.	Shown in one thousand nine hundred and twenty times one thousand and eighty pixels.	text2spoken-design section 4.2: a symbol sign blocks a year as the first character of the follower	unchecked
+en-226	en-GB	cardinal	In 1999 xenophobia rose.	In one thousand nine hundred and ninety-nine xenophobia rose.	text2spoken-design section 4.2: a lowercase word that is not a function word blocks a year reading	unchecked
+en-227	en-GB	year	In 1999 xUnit spread.	In nineteen ninety-nine xUnit spread.	text2spoken-design section 4.2: a letter sign blocks a year only as the whole follower	unchecked
+en-228	en-GB	telephone	Try 00 44 20 7946 0018 today.	Try zero zero four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: a number written with 00 reads its digits as written, and 00 is evidence before the country code of a numbering plan	unchecked
+en-229	en-GB	cardinal	Call 100 customers.	Call one hundred customers.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-230	en-GB	cardinal	Phone 300 people today.	Phone three hundred people today.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-231	en-GB	cardinal	Text 500 friends.	Text five hundred friends.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-232	en-GB	cardinal	Ring 100 times.	Ring one hundred times.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count	unchecked
+en-233	en-GB	cardinal	Phone 2005 sales rose.	Phone two thousand and five sales rose.	text2spoken-design section 4.3: a short run after a phone word that is no short code reads as a count, and a number with no year word before it is no year	unchecked
+en-234	en-GB	telephone	Call 911 and 300 people came.	Call nine one one and three hundred people came.	text2spoken-design section 4.3: a named short code reads digit by digit, and a count that a list joins to it reads as a cardinal	unchecked
+en-235	en-GB	telephone	Call the police on 999.	Call the police on nine nine nine.	text2spoken-design section 4.3: a phone word up to three words before a short code names it, and a function word does not count; Wikipedia, Emergency telephone number (fetched 2026-11-09): 999 in the United Kingdom	unchecked
+en-236	en-GB	telephone	Call 000 now.	Call zero zero zero now.	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, Emergency telephone number (fetched 2026-11-09): 000 is the primary emergency number of Australia	unchecked
+en-237	en-US	telephone	Call 988 tonight.	Call nine eight eight tonight.	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, Emergency telephone number (fetched 2026-11-09): 988 is the Suicide & Crisis Lifeline	unchecked
+en-238	en-GB	telephone	Ring 101 to report it.	Ring one zero one to report it.	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, 101 (telephone number) (fetched 2026-11-09): the police single non-emergency number in the United Kingdom	unchecked
+en-239	en-GB	telephone	Ring 111 for advice.	Ring one one one for advice.	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, NHS 111 (fetched 2026-11-09): a non-emergency medical helpline in England, Scotland and Wales	unchecked
+en-240	en-US	telephone	Call 211 for help.	Call two one one for help.	text2spoken-design section 4.3: a short code of short_codes that a phone word names reads digit by digit; Wikipedia, N11 code (fetched 2026-11-09): 211 is community services and information	unchecked
+en-241	en-GB	cardinal	Phone sales hit 2500000 units.	Phone sales hit two million five hundred thousand units.	text2spoken-design section 4.3: a run with no group separator and no leading 0 or + is named only right after a phone word	unchecked
+en-242	en-GB	cardinal	Mobile users reached 3500000.	Mobile users reached three million five hundred thousand.	text2spoken-design section 4.3: a run with no group separator and no leading 0 or + is named only right after a phone word	unchecked
+en-243	en-GB	cardinal	The phone has 12000000 pixels.	The phone has twelve million pixels.	text2spoken-design section 4.3: a run with no group separator and no leading 0 or + is named only right after a phone word	unchecked
+en-244	en-GB	cardinal	The text has 1500000 words.	The text has one million five hundred thousand words.	text2spoken-design section 4.3: a run with no group separator and no leading 0 or + is named only right after a phone word	unchecked
+en-245	en-GB	cardinal	Call volume hit 1200000 last year.	Call volume hit one million two hundred thousand last year.	text2spoken-design section 4.3: a run with no group separator and no leading 0 or + is named only right after a phone word	unchecked
+en-246	en-GB	telephone	Call 0800 123 456 8am to 8pm.	Call zero eight zero zero one two three four five six eight AM to eight PM.	text2spoken-design section 4.3: a run that ends inside a word tries its longest prefix that ends at a run edge	unchecked
+en-247	en-GB	telephone	Call 020 7946 0018 9am-5pm.	Call zero two zero seven nine four six zero zero one eight nine AM to five PM.	text2spoken-design section 4.3: a run that ends inside a word tries its longest prefix that ends at a run edge	unchecked
+en-248	en-GB	telephone	Call 020 7946 0018 24/7.	Call zero two zero seven nine four six zero zero one eight twenty-four seven.	text2spoken-design section 4.3: a run that a joiner and a digit continue tries its longest prefix that ends at a run edge	unchecked
+en-249	en-GB	telephone	Call us on 0800 123 456 8am-8pm, Monday to Friday.	Call us on zero eight zero zero one two three four five six eight AM to eight PM, Monday to Friday.	text2spoken-design section 4.3: a run that ends inside a word tries its longest prefix that ends at a run edge	unchecked
+en-250	en-GB	telephone	Lines: 0800 123 456 (8am-8pm).	Lines: zero eight zero zero one two three four five six (eight AM to eight PM).	text2spoken-design section 4.3: space-separated groups of which one starts with 0 read digit by digit as one unit	unchecked
+en-251	en-GB	none	Call 0800 123 456/7.	Call 0800 123 456/7.	text2spoken-design section 4.3: a run that a joiner and a digit continue stays as written right after a phone word	unchecked
+en-252	en-GB	none	Tel: 020 7946 0018/9	Tel: 020 7946 0018/9	text2spoken-design section 4.3: a run that a joiner and a digit continue stays as written right after a phone word	unchecked
+en-253	en-GB	none	Text 0800 123 456–00 44	Text 0800 123 456–00 44	text2spoken-design section 4.3: a run that a joiner and a digit continue stays as written right after a phone word, with the digits that the joiners chain to it	unchecked
+en-254	en-US	telephone	My number is 020 7946 0018.	My number is zero two zero seven nine four six zero zero one eight.	text2spoken-design section 4.3: space-separated groups of which one starts with 0 read digit by digit as one unit in every variety	unchecked
+en-255	en-GB	expression	Dial 20% or 112+1 now.	Dial twenty per cent or one hundred and twelve plus one now.	text2spoken-design section 4.3: an operator and a digit after a run keep a phone word further back from naming it	unchecked
+en-256	en-GB	expression	Call 911 or 112+1.	Call nine one one or one hundred and twelve plus one.	text2spoken-design section 4.3: a list names no run that an operator and a digit continue	unchecked
+en-257	en-GB	none	Call 112+1.	Call 112+1.	text2spoken-design section 4.3: a run that an operator and a digit continue stays as written right after a phone word	unchecked
+en-258	en-GB	telephone	Call 5551234, 5559876 or 5550000.	Call five five five one two three four, five five five nine eight seven six or five five five zero zero zero zero.	text2spoken-design section 4.3: a comma or a link word joins a run to a named run	unchecked
+en-259	en-GB	telephone	Call 1, 2, 3 or 999.	Call one, two, three or nine nine nine.	text2spoken-design section 4.3: a count in a phone list reads as a cardinal and does not end the list; 999, Wikipedia "Emergency telephone number"	unchecked
+en-260	en-GB	ordinal	Call 2nd-line support.	Call second-line support.	text2spoken-design section 4.3: a run of fewer than three digits that a letter continues is no phone run; the ordinal reading from memory, not fetched	unchecked
+en-261	en-US	telephone	My number is (0161) 496 0000.	My number is zero one six one four nine six zero zero zero zero.	text2spoken-design section 4.3: space-separated groups of which one starts with 0, the first one perhaps in brackets, read digit by digit as one unit in every variety	unchecked
+en-262	en-GB	telephone	Call 0800 123 456 8 am to 8 pm.	Call zero eight zero zero one two three four five six eight AM to eight PM.	text2spoken-design section 4.3: a trailing group of one or two digits before a day period is the hour, not a phone group	unchecked
+en-263	en-GB	telephone	Call 020 7946 0018 9 a.m. to 5 p.m.	Call zero two zero seven nine four six zero zero one eight nine AM to five PM.	text2spoken-design section 4.3: a trailing group of one or two digits before a day period is the hour	unchecked
+en-264	en-US	telephone	Call 1 800 555 0199 8 a.m. to 5 p.m.	Call one eight zero zero five five five zero one nine nine eight AM to five PM.	text2spoken-design section 4.3: a trailing group of one or two digits before a day period is the hour	unchecked
+en-265	en-US	telephone	Call 1-800-555-0199 8 a.m. to 5 p.m.	Call one eight zero zero five five five zero one nine nine eight AM to five PM.	text2spoken-design section 4.3: a trailing group of one or two digits before a day period is the hour	unchecked
+en-266	en-GB	telephone	Call 0800 123 456 9.30 am to 5 pm.	Call zero eight zero zero one two three four five six nine thirty AM to five PM.	text2spoken-design section 4.3: a trailing group that a full stop and two digits follow is the hour; Wikipedia "Date and time notation in the United Kingdom": the full stop format (1.45 p.m.) is in common usage	unchecked
+en-267	en-GB	telephone	Ring 0800 123 456 24 hours a day.	Ring zero eight zero zero one two three four five six twenty-four hours a day.	text2spoken-design section 4.3: a trailing group of one or two digits before a lowercase word that is no function word is a count	unchecked
+en-268	en-GB	telephone	Call 0800 123 456 7 days a week.	Call zero eight zero zero one two three four five six seven days a week.	text2spoken-design section 4.3: a trailing group of one or two digits before a lowercase word that is no function word is a count	unchecked
+en-269	en-GB	time	Meet at 9.30 am.	Meet at nine thirty AM.	text2spoken-design section 4.2; Wikipedia "Date and time notation in the United Kingdom": for 12-hour time the full stop format (1.45 p.m.) is in common usage	unchecked
+en-270	en-GB	none	The town has 10 000 people.	The town has 10 000 people.	text2spoken-design section 4.3: space-separated groups whose first group does not start with 0 are no phone unit; thousands grouped with a space stay as written	unchecked
+en-271	en-GB	none	Between 100 000 and 200 000 fans came.	Between 100 000 and 200 000 fans came.	text2spoken-design section 4.3: thousands grouped with a space stay as written	unchecked
+en-272	en-GB	year	Mobile sales grew from 2010-2020.	Mobile sales grew from twenty ten to twenty twenty.	text2spoken-design section 4.3: a run that the year rules read as a range has no phone shape; section 4.2 year range	unchecked
+en-273	en-GB	year	Phone prices rose in 1999-2005.	Phone prices rose in nineteen ninety-nine to two thousand and five.	text2spoken-design section 4.3: a run that the year rules read as a range has no phone shape; section 4.2 year range	unchecked
+en-274	en-GB	cardinal	Call 100,000 customers.	Call one hundred thousand customers.	text2spoken-design section 4.3: a glued keep needs a phone shape, a short code or 7 or more digits	unchecked
+en-275	en-GB	range	Phone 100–200 people.	Phone one hundred to two hundred people.	text2spoken-design section 4.3: a glued keep needs a phone shape, a short code or 7 or more digits	unchecked
+en-276	en-GB	time	Call 0800 123 456/7 8am-8pm.	Call 0800 123 456/7 eight AM to eight PM.	text2spoken-design section 4.3: a glued keep drops a chained group that a letter continues	unchecked
+en-277	en-GB	cardinal	The phone rang 101 times.	The phone rang one hundred and one times.	text2spoken-design section 4.3: the window names a short code only when it ends its clause or a function word or a list link follows it	unchecked
+en-278	en-GB	cardinal	Call centres handled 999 complaints.	Call centres handled nine hundred and ninety-nine complaints.	text2spoken-design section 4.3: the window names a short code only when it ends its clause or a function word or a list link follows it	unchecked
+en-279	en-GB	cardinal	Phone the office at 211 Main Street.	Phone the office at two hundred and eleven Main Street.	text2spoken-design section 4.3: the window names a short code only when it ends its clause or a function word or a list link follows it	unchecked
+en-280	en-GB	telephone	Call the police on 999 now.	Call the police on nine nine nine now.	text2spoken-design section 4.3: now is a function word, so the window names the code; 999, Wikipedia "Emergency telephone number"	unchecked
+en-281	en-US	telephone	Contact us at (212) 555-0123.	Contact us at two one two five five five zero one two three.	text2spoken-design section 4.3: the NANP shape is phone evidence; Wikipedia "North American Numbering Plan": NANP telephone numbers are formally rendered as NPA-NXX-XXXX, but (NPA) NXX-XXXX is common, and N is any of the digits 2-9	unchecked
+en-282	en-GB	telephone	Contact us at 212-555-0123.	Contact us at two one two five five five zero one two three.	text2spoken-design section 4.3: the NANP shape is phone evidence in every English variety; Wikipedia "North American Numbering Plan": NANP telephone numbers are formally rendered as NPA-NXX-XXXX	unchecked
+en-283	en-GB	telephone	Call the office on 555-1234.	Call the office on five five five one two three four.	text2spoken-design section 4.3: a dash gives a run the phone shape, so the window names it	unchecked
+en-284	en-GB	decimal	Shares closed at 9.30 today.	Shares closed at nine point three zero today.	text2spoken-design section 4.2: a full stop between hour and minutes reads as a time only with a written day period	unchecked

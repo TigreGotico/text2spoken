@@ -1,75 +1,171 @@
 # text2spoken
 
-text2spoken rewrites written text into the words a voice speaks. It expands numbers, dates, times, units, titles and contractions. A phonemizer then reads words, not digits or symbols.
-
-## Quickstart
-
-```bash
-pip install --pre text2spoken
-```
+text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours and abbreviations. The rest of the text stays as it is, character for character.
 
 ```python
 from text2spoken import normalize
 
-print(normalize("Dr. Smith paid 3/4 of the bill at 25°C.", "en"))
-print(normalize("O Sr. Silva pagou 10kg às 14h30.", "pt-PT"))
+normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB")
+# 'Doctor Smith paid three pounds and fifty pence for two tickets on the fourteenth of March twenty twenty-four.'
 ```
 
-```text
-Doctor Smith paid three quarters of the bill at twenty five degrees celsius.
-O Senhor Silva pagou dez quilogramas às catorze e trinta.
+## Install
+
+```bash
+uv pip install --prerelease=allow text2spoken
 ```
 
-## Where this fits
+The library needs Python 3.11 or later. It uses no network and loads no model.
 
-Alone: it turns written text into spoken words, with `from text2spoken import normalize`.
-In the stack: it is the normalisation stage. A frontend or a TTS library calls it before phonemization, and it calls `ovos-number-parser`, `ovos-date-parser` and `unicode_rbnf`.
-Through scriptconv: scriptconv has no `normalize` extra. Install `text2spoken` directly.
+## Uses
 
-## What `normalize` does
+### Text to speech
 
-`normalize(text, lang)` runs four passes in this order:
+A voice speaks words, not digits or symbols. Normalise the text before you send it to the voice:
 
-1. It expands dates and times, such as `03/08/2025` and `14h30`.
-2. It splits a word from a digit that a hyphen joins, such as `sub-23`. A range such as `3-2` stays as it is.
-3. It expands units and ordinal indicators, such as `10kg`, `25°C` and `1º`.
-4. It reads each word, and expands contractions, titles, fractions and numbers.
+```python
+normalize("Meet on 03/04/2025 at 7:30 pm.", "en-US")
+# 'Meet on March fourth twenty twenty-five at seven thirty PM.'
+```
 
-Each pass is also a plain function, so a frontend can compose them and add its own rules. See [docs/api.md](docs/api.md).
+The language tag selects the reading. `en-US` reads `03/04/2025` as month, day, year. `en-GB` reads it as day, month, year.
 
-The language tag selects the rules. The tables use the part before the first hyphen, so `pt-BR` and `pt-PT` share one table. `en-US` reads an ambiguous date as month first, and every other tag reads it as day first.
+### Phonemizers
+
+A grapheme-to-phoneme model or a rule set expects words. A digit or a symbol has no pronunciation of its own, so the phonemizer drops it or spells it wrongly. Normalise first, then phonemize:
+
+```python
+words = normalize("It is 5 km away.", "en-GB")
+# 'It is five kilometres away.'
+phonemes = my_phonemizer(words)
+```
+
+### Word error rate
+
+An ASR system writes "ten thirty" where a reference transcript writes "10:30". The two texts say the same thing, but a word error rate counts each difference as an error. Normalise the reference and the hypothesis with the same tag and the same params:
+
+```python
+ref = normalize("The train leaves at 10:30 on 3 May from platform 2.", "en-GB")
+hyp = normalize("the train leaves at ten thirty on the third of may from platform two", "en-GB")
+# ref: 'The train leaves at ten thirty on the third of May from platform two.'
+# hyp: 'the train leaves at ten thirty on the third of may from platform two'
+```
+
+Text that is already in words does not change. The library does not change case or punctuation, so lowercase both texts and remove punctuation before you score them.
+
+## How it reads text
+
+The library finds each written form that it can read, and replaces it with words. It does not guess. A form that it cannot read for sure stays as written, and the library logs a WARNING on the `text2spoken` logger:
+
+```python
+normalize("The run took 1:23:45.", "en-GB")
+# 'The run took 1:23:45.'  (a duration, not a clock time)
+```
+
+A second pass changes nothing: `normalize(normalize(text, lang), lang)` gives the same text as one pass. Output depends only on the text, the tag and the params.
+
+## The API
+
+| Function | Returns |
+| --- | --- |
+| `normalize(text, lang, params=None, tokenizer=None)` | The spoken text |
+| `analyze(text, lang, params=None, tokenizer=None)` | An `Analysis` with the tokens and the spans that the library found |
+| `render(analysis, hints=None)` | The spoken text of an `Analysis` |
+| `supports(lang)` | A `Support` record: the forms, genders and option values of a tag |
+| `effective_params(lang, params=None)` | The params of a call, with the language defaults filled in |
+
+`lang` is a BCP 47 tag, for example `en`, `en-GB` or `pt-PT`. A tag that is not valid raises `InvalidLanguageTagError`.
+
+### Grammatical agreement
+
+In many languages a number agrees with its noun. `analyze` and `render` let the caller give that information. `hints` maps the start offset of a span to `Features`, for example a grammatical gender:
+
+```python
+from text2spoken import analyze, render
+
+analysis = analyze("Gate 7 opens at 9:15.", "en-US")
+[(span.start, span.end, span.form) for span in analysis.spans]
+# [(5, 6, <Form.CARDINAL: 'cardinal'>), (16, 20, <Form.TIME: 'time'>)]
+render(analysis)
+# 'Gate seven opens at nine fifteen.'
+```
+
+### Params
+
+`NormalizationParams` is a frozen dataclass. A field that is `None` takes the default of the language variety.
+
+| Field | Values |
+| --- | --- |
+| `forms` | The `Form` values to read. `params.only(Form.CARDINAL)` and `params.without(Form.TIME)` give a changed copy |
+| `date_order` | `DMY`, `MDY`, `YMD` |
+| `clock` | `12h`, `24h` |
+| `minute_style` | `number`, `phrase` |
+| `decimal_mark` | The decimal mark of the written numbers |
+| `scale` | `short`, `long` |
+| `default_gender` | A `FrozenMap` of language code to `GrammaticalGender` |
+| `register` | `formal`, `colloquial` |
+| `phone_regions` | ISO 3166 region codes for telephone number plans |
+| `lexicon` | A `FrozenMap` of language tag to a `FrozenMap` of written form to spoken words |
+| `strict` | `True` raises an error where the default mode logs a warning |
+
+A lexicon entry reads a form your way:
+
+```python
+from text2spoken import FrozenMap, NormalizationParams
+
+params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"NHS": "N H S"})}))
+normalize("Ask the NHS today.", "en-GB", params)
+# 'Ask the N H S today.'
+```
+
+To read only some forms, select them:
+
+```python
+from text2spoken import Form
+
+normalize("Pay $5 on 12/03/2024 for 3 items.", "en-US", NormalizationParams().only(Form.CARDINAL))
+# 'Pay $5 on 12/03/2024 for three items.'
+```
+
+### Errors and warnings
+
+| Case | Default mode | `strict=True` |
+| --- | --- | --- |
+| A form that the library cannot read | Stays as written, WARNING logged | `UnreadFormError` |
+| A param value that the language cannot produce | Language default, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
+| A gender that the language does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |
+| A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
+| A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
+| A token whose text does not match its offsets | `TokenizerError` | `TokenizerError` |
+
+Every error is a subclass of `Text2SpokenError`, and every warning is a subclass of `Text2SpokenWarning`.
+
+### Your own tokenizer
+
+The `tokenizer` argument takes a callable `(text, lang)` that returns a sequence of `Token(start, end, text)`. Give it when your pipeline already splits text into tokens, so that the spans and the context words follow your tokens. With no tokenizer, the library uses its default.
 
 ## Languages
 
-These languages have tables in `text2spoken/tables.py`:
+Each language is one file in `text2spoken/lang/`, named by its primary language subtag. A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written.
 
-| Table | Languages |
-| --- | --- |
-| `CONTRACTIONS` | en |
-| `TITLES` | ca, de, en, es, fr, gl, it, nl, pt |
-| `UNITS` | de, en, es, fr, pt |
-
-This command prints the same list from the installed package:
+To see what a tag reads:
 
 ```bash
-python -c "from text2spoken import CONTRACTIONS, TITLES, UNITS; [print(sorted(t)) for t in (CONTRACTIONS, TITLES, UNITS)]"
+python -c "from text2spoken import supports; print(supports('en-US'))"
 ```
 
-Numbers, dates and times come from `ovos-number-parser` and `ovos-date-parser`, so those packages set their language coverage.
+To print the data of a language file as JSON:
 
-To add a language, add its entries to `text2spoken/tables.py`. A new language needs no code change.
+```bash
+python -m text2spoken.export en
+```
 
-## Behaviour to know
-
-- The library uses no network and loads no model, so it works offline.
-- A language that the parsers do not support keeps its digits. The library logs an error and returns the text.
-- A `text` or `lang` value of the wrong type raises `TypeError` or `AttributeError` from the code that reads it.
-- Importing the library imports `ovos-date-parser`, which sets the import time.
-- `ovos-config`, a dependency of `ovos-date-parser`, creates `~/.config/mycroft` at import.
+English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
 ## Development
 
 ```bash
+uv venv
 uv pip install --prerelease=allow -e ".[test]"
 pytest tests
 ```
