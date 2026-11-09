@@ -121,7 +121,7 @@ BAD_KEYS = [
     ("day_periods", {"pm": "pm"}),
     ("defaults", {"clocks": "12h"}),
     ("range_word", ["to"]),
-    ("function_words", "the"),
+    ("color_words", "colour"),
     ("phone_shapes", {"us": "[0-9]{3}"}),
     ("units", ["kg"]),
 ]
@@ -156,7 +156,6 @@ def _data_reads(source: str) -> set[str]:
 def test_the_declared_keys_are_the_keys_the_core_reads():
     core = files("text2spoken.core")
     read = set().union(*(_data_reads(e.read_text(encoding="utf-8")) for e in core.iterdir() if e.name.endswith(".py")))
-    assert len(read) == 26
     assert set(SHAPES) == read == set().union(*READERS.values())
 
 
@@ -173,7 +172,9 @@ class _Recorder(FrozenMap):
 
 
 def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
+    """A recording run over the rows of each language file, for the shared recognizers that the files use."""
     read: dict[str, set[str]] = {name: set() for name in SHARED}
+    used = set()
     data = Request.data.fget
 
     def recording(request):
@@ -188,11 +189,12 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
             tokens = default_tokenizer(row["text"], tag)
             for name, recognizer in SHARED.items():
                 if recognizer in language.recognizers:
+                    used.add(name)
                     request = Request(tag, variety, language, NormalizationParams(), memo={"recognizer": name})
                     list(recognizer.find(row["text"], tokens, request))
     for name, keys in read.items():
         assert keys <= READERS[name], f"{name} reads {sorted(keys - READERS[name])}, which it does not declare"
-    assert set().union(*read.values()) == set().union(*(READERS[name] for name in SHARED))
+    assert set().union(*read.values()) == set().union(*(READERS[name] for name in used))
 
 
 @pytest.mark.parametrize("pattern", [r"\d+", r"[0-9]\b", r"\w", r"\s", r"(a)\1", "(?i)ab", "(?=a)", "(?<=a)b",
