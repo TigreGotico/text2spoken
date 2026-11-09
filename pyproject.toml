@@ -28,6 +28,7 @@ Homepage = "https://github.com/TigreGotico/text2spoken"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "packaging",
     "ovos-number-parser>=0.24.6a1",
     "ovos-color-parser>=0.12.4a1",
 ]
