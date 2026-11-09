@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a3](https://github.com/TigreGotico/text2spoken/tree/0.0.2a3) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a2...0.0.2a3)
+
+**Merged pull requests:**
+
+- refactor: move the English phone rules into EnglishTelephone [\#6](https://github.com/TigreGotico/text2spoken/pull/6) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a2](https://github.com/TigreGotico/text2spoken/tree/0.0.2a2) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a1...0.0.2a2)
