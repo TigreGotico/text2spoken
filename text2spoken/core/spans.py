@@ -318,8 +318,8 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
         except Text2SpokenError:
             raise
         except Exception as error:
-            error.add_note(f"text2spoken: the {language.code} verbalizer of {span.form} fails on {written!r} "
-                           f"at {span.start}")
+            error.add_note(f"text2spoken: the {language.code} verbalizer of {span.form} fails on {written[:80]!r} "
+                           f"({len(written)} characters) at {span.start}")
             raise
         position = span.end
     out.append(analysis.text[position:])

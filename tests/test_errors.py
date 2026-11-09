@@ -188,3 +188,56 @@ def test_rbnf_declines_a_number_outside_its_range_through_declined_reading():
         normalize("It is 1000000000000000000000 now.", "en", NormalizationParams(strict=True))
     assert isinstance(raised.value.__cause__, DeclinedReading)
     assert isinstance(raised.value.__cause__.__cause__, NoRuleForNumberError)
+
+
+LONG_RUNS = ["9" * 309, "9" * 4301, "$" + "9" * 400, "9" * 400 + ".5"]
+
+
+@pytest.fixture
+def int_limit():
+    """The default integer string limit of Python, so that 4301 digits pass it whatever the environment sets."""
+    import sys
+
+    limit = sys.get_int_max_str_digits()
+    sys.set_int_max_str_digits(4300)
+    yield
+    sys.set_int_max_str_digits(limit)
+
+
+@pytest.mark.parametrize("tag", ["en", "de"])
+@pytest.mark.parametrize("run", LONG_RUNS, ids=["309 nines", "4301 nines", "$ and 400 nines", "400 nines .5"])
+def test_a_number_that_rbnf_cannot_read_stays_as_written(int_limit, tag, run):
+    text = f"It is {run} now."
+    assert normalize(text, tag) == text
+    with pytest.raises(UnreadFormError):
+        normalize(text, tag, NormalizationParams(strict=True))
+
+
+@pytest.mark.parametrize(("run", "cause"), [("9" * 309, OverflowError), ("9" * 4301, ValueError)])
+def test_rbnf_declines_an_overflow_and_the_integer_string_limit(int_limit, run, cause):
+    from text2spoken import DeclinedReading
+
+    with pytest.raises(UnreadFormError) as raised:
+        normalize(f"It is {run} now.", "en", NormalizationParams(strict=True))
+    assert isinstance(raised.value.__cause__, DeclinedReading)
+    assert type(raised.value.__cause__.__cause__) is cause
+
+
+def test_a_value_error_of_the_rbnf_library_still_raises(monkeypatch):
+    from text2spoken.core.spellers import RbnfSpeller
+
+    class Broken:
+        def format_number(self, number, ruleset_names):
+            raise ValueError("a defect in the library")
+
+    monkeypatch.setattr(RbnfSpeller, "engine", staticmethod(lambda request: Broken()))
+    with pytest.raises(ValueError, match="a defect in the library"):
+        normalize("It is 5 now.", "en")
+
+
+def test_the_note_of_a_defect_holds_a_fixed_length_of_the_text(monkeypatch):
+    _qac_with(monkeypatch, verbalizers={Form.CARDINAL: _raises(KeyError("x"))})
+    with pytest.raises(KeyError) as raised:
+        normalize("ko " + "1" * 6000 + " la.", "qac")
+    note = raised.value.__notes__[-1]
+    assert len(note) < 200 and "6000 characters" in note

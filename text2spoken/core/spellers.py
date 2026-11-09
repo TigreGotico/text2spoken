@@ -130,9 +130,13 @@ class RbnfSpeller:
         from unicode_rbnf.engine import NoRuleForNumberError
 
         try:
-            result = self.engine(request).format_number(int(digits), ruleset_names=[name])
-        except NoRuleForNumberError as error:
-            raise DeclinedReading(f"no rule of {name} reads {digits}") from error
+            number = int(digits)
+        except ValueError as error:
+            raise DeclinedReading(f"{len(digits)} digits pass the integer string limit of Python") from error
+        try:
+            result = self.engine(request).format_number(number, ruleset_names=[name])
+        except (NoRuleForNumberError, OverflowError) as error:
+            raise DeclinedReading(f"no rule of {name} reads a number of {len(digits)} digits") from error
         return words(result.text_by_ruleset[name])
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
