@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a9](https://github.com/TigreGotico/text2spoken/tree/0.0.2a9) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a8...0.0.2a9)
+
+**Merged pull requests:**
+
+- perf: make Color.find linear [\#19](https://github.com/TigreGotico/text2spoken/pull/19) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix: OvosNumberSpeller declines what ovos-number-parser cannot read [\#18](https://github.com/TigreGotico/text2spoken/pull/18) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a8](https://github.com/TigreGotico/text2spoken/tree/0.0.2a8) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a7...0.0.2a8)
