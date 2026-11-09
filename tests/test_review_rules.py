@@ -195,7 +195,8 @@ def test_analyze_claims_a_year_and_a_money_scale():
     amount = {"integer": "2", "fraction": "", "sign": "", "prefix": "", "suffix": "", "script": "Latn"}
     assert [(s.form, s.fields) for s in spans] == [
         (Form.YEAR, {"digits": "1984", "suffix": ""}),
-        (Form.MONEY, {"amount": amount, "currency": "USD", "written_symbol": "$", "scale": "million"}),
+        (Form.MONEY, {"amount": amount, "currency": "USD", "written_symbol": "$", "scale": "million", "prefix": "",
+                      "suffix": ""}),
     ]
 
 
@@ -353,3 +354,20 @@ def test_the_core_telephone_holds_no_english_rule(gendered, monkeypatch):
                                 Form.TELEPHONE: lambda span, context: " ".join(span.fields["groups"])})
     monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
     assert normalize("A vila tem 10 000 pessoas.", "qaa") == "A vila tem dez mil pessoas."
+
+
+def test_a_case_ending_joins_every_form_that_holds_a_number(gendered, monkeypatch):
+    """A language with case endings reads `20%ko`, `5€ko` and `943 123 456ra` as one span each, with the ending in
+    the `suffix` field of the form (design section 4.4)."""
+    data = freeze({"defaults": {}, "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
+                   "case_suffixes": ["ko", "ra"], "percent": {"signs": ["%"], "position": "after"},
+                   "currencies": {"EUR": {"symbols": ["€"]}}, "phone_words": ["deitu"]})
+    spec = replace(gendered.LANGUAGE, data=data,
+                   recognizers=(SHARED["telephone"], SHARED["money"], SHARED["percent"], SHARED["cardinal"]))
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    for text, form, written, suffix in (("Prezioaren 20%ko igoera.", Form.PERCENT, "20%ko", "ko"),
+                                        ("5€ko sarrera.", Form.MONEY, "5€ko", "ko"),
+                                        ("Deitu 943 123 456ra.", Form.TELEPHONE, "943 123 456ra", "ra")):
+        spans = analyze(text, "qaa").spans
+        assert [(text[s.start:s.end], s.form, s.fields["suffix"], s.keep) for s in spans] == [(written, form, suffix,
+                                                                                                False)]

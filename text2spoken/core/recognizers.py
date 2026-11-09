@@ -59,32 +59,42 @@ def _free_after(text: str, end: int, symbols) -> bool:
     return end == len(text) or not (is_word_char(text[end]) or text[end] in symbols)
 
 
-def _affixes(text: str, start: int, end: int, data) -> tuple[int, int, str, str] | None:
+def _affixes(text: str, start: int, end: int, data, symbols=None) -> tuple[int, int, str, str] | None:
     """The span with a declared proclitic before it and a declared case ending after it, or None when a
-    letter that is neither touches the number."""
-    symbols = data.get("symbols", FrozenMap())
+    letter that is neither touches it.
+
+    `symbols` are the characters that may not touch the span. By default they are the `symbols` table of the
+    language."""
+    before = _prefix(text, start, data, symbols)
+    after = _suffix(text, end, data, symbols)
+    if before is None or after is None:
+        return None
+    return before[0], after[0], before[1], after[1]
+
+
+def _prefix(text: str, start: int, data, symbols=None) -> tuple[int, str] | None:
+    """The start of the span with a declared proclitic before text[start:], or None when other letters touch it."""
+    symbols = data.get("symbols", FrozenMap()) if symbols is None else symbols
     prefix = next((p for p in sorted(data.get("proclitics", ()), key=len, reverse=True)
                    if start >= len(p) and text[start - len(p):start] == p
                    and _free_before(text, start - len(p), symbols)), "")
     if prefix:
-        start -= len(prefix)
-    elif not _free_before(text, start, symbols):
+        return start - len(prefix), prefix
+    if not _free_before(text, start, symbols):
         return None
-    after = _suffix(text, end, data)
-    if after is None:
-        return None
-    return start, after[0], prefix, after[1]
+    return start, ""
 
 
-def _suffix(text: str, end: int, data) -> tuple[int, str] | None:
+def _suffix(text: str, end: int, data, symbols=None) -> tuple[int, str] | None:
     """The end of the span with a declared case ending after text[:end], or None when other letters touch it."""
+    symbols = data.get("symbols", FrozenMap()) if symbols is None else symbols
     letters = end
     while letters < len(text) and (is_letter(text[letters]) or is_mark(text[letters])):
         letters += 1
     suffix = text[end:letters]
     if suffix and suffix not in data.get("case_suffixes", ()):
         return None
-    if not _free_after(text, letters, data.get("symbols", FrozenMap())):
+    if not _free_after(text, letters, symbols):
         return None
     return letters, suffix
 
@@ -247,11 +257,14 @@ def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_word
     return word.islower() and word not in function_words
 
 
-def _bounded_matches(pattern: re.Pattern, text: str) -> Iterator[re.Match]:
-    """Matches in the folded text that no word character, digit or cluster mark continues on either side."""
+def _affixed_matches(pattern: re.Pattern, text: str, data) -> Iterator[tuple[re.Match, int, int, str, str]]:
+    """Matches in the folded text, each with its declared affixes, the start and the end of the span, that no
+    word character, digit or cluster mark continues on either side."""
     for match in pattern.finditer(fold_digits(text)):
-        if _edge(text, *match.span()):
-            yield match
+        bounds = _affixes(text, *match.span(), data)
+        start, end, prefix, suffix = bounds if bounds is not None else (*match.span(), "", "")
+        if _edge(text, start, end):
+            yield match, start, end, prefix, suffix
 
 
 def _unit_after(text: str, end: int, units: Iterable[str]) -> bool:
@@ -270,19 +283,18 @@ class Fraction:
         as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets."""
         symbols = request.data.get("symbols", FrozenMap())
         units = request.data.get("units", FrozenMap())
-        for match in _bounded_matches(_FRACTION, text):
-            start, end = match.span()
+        for match, start, end, prefix, suffix in _affixed_matches(_FRACTION, text, request.data):
             written = match.group()
             sign = "-" if written[0] in "-−" else "+" if written[0] == "+" else ""
             numerator, denominator = written.lstrip("-+−").split("/")
-            if sign and start > 0 and is_word_char(text[start - 1]):
+            if sign and match.start() > 0 and is_word_char(text[match.start() - 1]):
                 continue
             unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols))
-                       or _unit_after(text, end, units) or not one_digit_set(text[start:end]))
+                       or _unit_after(text, end, units) or not one_digit_set(text[match.start():match.end()]))
             if unclear or (2 <= int(denominator) <= 100 and int(numerator) < int(denominator)):
                 yield Span(start, end, Form.FRACTION,
                            FrozenMap({"numerator": numerator, "denominator": denominator, "sign": sign,
-                                      "prefix": "", "suffix": ""}), recognizer=self.name, keep=unclear)
+                                      "prefix": prefix, "suffix": suffix}), recognizer=self.name, keep=unclear)
 
 
 @dataclass(frozen=True)
@@ -295,9 +307,11 @@ class Idiom:
             position = text.find(key)
             while position != -1:
                 end = position + len(key)
-                if _free_before(text, position, ()) and _free_after(text, end, ()) \
-                        and not (end < len(text) and text[end] == "/"):
-                    yield Span(position, end, Form.IDIOM, FrozenMap({"key": key}), recognizer=self.name)
+                bounds = _affixes(text, position, end, request.data, ())
+                if bounds is not None and not (bounds[1] < len(text) and text[bounds[1]] == "/"):
+                    start, stop, prefix, suffix = bounds
+                    yield Span(start, stop, Form.IDIOM, FrozenMap({"key": key, "prefix": prefix, "suffix": suffix}),
+                               recognizer=self.name)
                 position = text.find(key, end)
 
 
@@ -309,10 +323,10 @@ class Range:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A pair that does not go up, as in `2024-25`, and digits from two digit sets keep the whole range as
         written."""
-        for match in _bounded_matches(_RANGE, text):
+        for match, start, end, prefix, suffix in _affixed_matches(_RANGE, text, request.data):
             low, high = re.split("[-–]", match.group())
-            yield Span(match.start(), match.end(), Form.RANGE,
-                       FrozenMap({"low": low, "high": high, "prefix": "", "suffix": ""}), recognizer=self.name,
+            yield Span(start, end, Form.RANGE,
+                       FrozenMap({"low": low, "high": high, "prefix": prefix, "suffix": suffix}), recognizer=self.name,
                        keep=int(low) >= int(high) or not one_digit_set(text[match.start():match.end()]))
 
 
@@ -429,19 +443,19 @@ class Percent:
                 for sign in percent["signs"]:
                     for gap in ("", " ", " "):
                         end = number.end + len(gap) + len(sign)
-                        if text.startswith(gap + sign, number.end) and _free_after(text, end, ()) \
-                                and _free_before(text, number.start, ()):
-                            yield Span(number.start, end, Form.PERCENT,
-                                       FrozenMap({"amount": number.amount(), "sign_position": "after"}),
-                                       recognizer=self.name)
+                        if text.startswith(gap + sign, number.end) \
+                                and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
+                            yield Span(bounds[0], bounds[1], Form.PERCENT,
+                                       FrozenMap({"amount": number.amount(), "sign_position": "after",
+                                                  "prefix": bounds[2], "suffix": bounds[3]}), recognizer=self.name)
             if percent["position"] in ("before", "either"):
                 for sign in percent["signs"]:
                     start = number.start - len(sign)
-                    if start >= 0 and text[start:number.start] == sign and _free_after(text, number.end, ()) \
-                            and _free_before(text, start, ()):
-                        yield Span(start, number.end, Form.PERCENT,
-                                   FrozenMap({"amount": number.amount(), "sign_position": "before"}),
-                                   recognizer=self.name)
+                    if start >= 0 and text[start:number.start] == sign \
+                            and (bounds := _affixes(text, start, number.end, request.data, ())) is not None:
+                        yield Span(bounds[0], bounds[1], Form.PERCENT,
+                                   FrozenMap({"amount": number.amount(), "sign_position": "before",
+                                              "prefix": bounds[2], "suffix": bounds[3]}), recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -472,19 +486,21 @@ class Money:
                         else:
                             sign = ""
                         scale, end = _scale(text, number.end, scales)
-                        if _free_before(text, start, ()) and _free_after(text, end, ()):
-                            found = (start, end, sign, scale)
+                        bounds = _affixes(text, start, end, request.data, ())
+                        if bounds is not None:
+                            found = (bounds, sign, scale)
                             break
                     end = number.end + len(gap) + len(symbol)
-                    if text.startswith(gap + symbol, number.end) and _free_after(text, end, ()) \
-                            and _free_before(text, number.start, ()):
-                        found = (number.start, end, "", "")
+                    if text.startswith(gap + symbol, number.end) \
+                            and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
+                        found = (bounds, "", "")
                         break
                 if found:
-                    start, end, sign, scale = found
+                    (start, end, prefix, suffix), sign, scale = found
                     yield Span(start, end, Form.MONEY,
                                FrozenMap({"amount": FrozenMap({**number.amount(), "sign": sign}), "currency": code,
-                                          "written_symbol": symbol, "scale": scale}), recognizer=self.name)
+                                          "written_symbol": symbol, "scale": scale, "prefix": prefix,
+                                          "suffix": suffix}), recognizer=self.name)
                     break
 
 
@@ -507,15 +523,14 @@ class Measure:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
-        symbols = data.get("symbols", FrozenMap())
         units = sorted(data.get("units", FrozenMap()), key=len, reverse=True)
         relations = {"dimension": data.get("dimension_marks", ()), "range": data.get("range_marks", ())}
         every_mark = tuple(mark for marks in relations.values() for mark in marks)
         numbers = numbers_in(text, request)
         by_start = {n.start: n for n in numbers}
         for index, number in enumerate(numbers):
-            if not _free_before(text, number.start, symbols) or (
-                    index and _linked(text, numbers[index - 1].end, every_mark, by_start) is number):
+            before = _prefix(text, number.start, data)
+            if before is None or (index and _linked(text, numbers[index - 1].end, every_mark, by_start) is number):
                 continue
             amounts, end, relation = [number], number.end, ""
             for kind, marks in relations.items():
@@ -525,12 +540,14 @@ class Measure:
                     end = following.end
             for gap in ("", " ", " "):
                 unit = next((u for u in units if text.startswith(gap + u, end)
-                             and _free_after(text, end + len(gap) + len(u), symbols)
+                             and _suffix(text, end + len(gap) + len(u), data) is not None
                              and not _per_unit(text, end + len(gap) + len(u))), None)
                 if unit is not None:
+                    stop, suffix = _suffix(text, end + len(gap) + len(unit), data)
                     amount = amounts[0].amount() if len(amounts) == 1 else tuple(a.amount() for a in amounts)
-                    yield Span(number.start, end + len(gap) + len(unit), Form.MEASURE,
-                               FrozenMap({"amount": amount, "relation": relation, "unit": unit}), recognizer=self.name)
+                    yield Span(before[0], stop, Form.MEASURE,
+                               FrozenMap({"amount": amount, "relation": relation, "unit": unit,
+                                          "prefix": before[1], "suffix": suffix}), recognizer=self.name)
                     break
 
 
@@ -621,12 +638,17 @@ class Telephone:
             written = self.trimmed(text, start, match.group(), request)
             end = start + len(written)
             glued = not _edge(text, start, end) or operand.match(folded, end) is not None
+            prefix = suffix = ""
+            if glued and (bounds := _affixes(text, start, end, request.data)) is not None \
+                    and (bounds[2] or bounds[3]) and _edge(text, bounds[0], bounds[1]) \
+                    and operand.match(folded, bounds[1]) is None:
+                glued, prefix, suffix = False, bounds[2], bounds[3]
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
             shaped = self.shaped(written, digits)
             phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
                           if words[i].text.lower() in phone_words]
-            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start]))
+            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
@@ -639,7 +661,7 @@ class Telephone:
                      or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
                                                                request))
                      or (named_end is not None and listed.fullmatch(text[named_end:start]) is not None))
-            named_end = end if named else None
+            named_end = end + len(suffix) if named else None
             unknown_code = written.startswith("+") and not country_code
             if glued:
                 if not (direct and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
@@ -648,13 +670,13 @@ class Telephone:
                 if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
                     chained = re.sub("[ /:.,–-]?[0-9]+$", "", chained)
                 end = kept_end = named_end = end + len(chained)
+            first, last = start - len(prefix), end + len(suffix)
+            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
             if glued or not one_digit_set(text[start:end]) or (direct and (len(digits) > 15 or unknown_code)):
-                yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
-                           recognizer=self.name, keep=True)
+                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
                 continue
             if self.one_unit(written, groups):
-                yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
-                           recognizer=self.name)
+                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name)
                 continue
             if unknown_code or len(digits) > 15:
                 reads = False
@@ -666,11 +688,11 @@ class Telephone:
             else:
                 reads = named and short_code
             if reads:
-                yield Span(start, end, Form.TELEPHONE,
-                           FrozenMap({"country_code": country_code, "groups": tuple(groups)}), recognizer=self.name)
+                yield Span(first, last, Form.TELEPHONE,
+                           FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
+                                      "suffix": suffix}), recognizer=self.name)
             elif self.kept(written):
-                yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
-                           recognizer=self.name, keep=True)
+                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
 
 
 def speak_lexicon(span: Span, context: SpanContext) -> str:
