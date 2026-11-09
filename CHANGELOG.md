@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a6](https://github.com/TigreGotico/text2spoken/tree/0.0.2a6) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a5...0.0.2a6)
+
+**Merged pull requests:**
+
+- refactor: give every form that holds a number a prefix and a suffix [\#8](https://github.com/TigreGotico/text2spoken/pull/8) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a5](https://github.com/TigreGotico/text2spoken/tree/0.0.2a5) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a4...0.0.2a5)
