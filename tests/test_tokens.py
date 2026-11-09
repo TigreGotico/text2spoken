@@ -1,11 +1,14 @@
 """The tokenizer hook, the token checks, the word joins and the context words (design section 2.1)."""
+import csv
 import unicodedata
+from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
 from tests.fixtures import quebra_frases_pr25
 from text2spoken import Token, TokenizerError, analyze, normalize
-from text2spoken.core.spans import clause_breaks, clause_window, context_words
+from text2spoken.core.spans import Clauses, clause_breaks, clause_window, context_words
 from text2spoken.core.tokens import (check_tokens, default_tokenizer, digit_script, fold_digits, join_split_words,
                                      protect_blocks)
 
@@ -98,6 +101,37 @@ def test_the_window_stops_at_a_clause_mark_and_holds_three_words(text, before):
     found = context_words(default_tokenizer(text, "en"))
     start = text.index("14:30")
     assert clause_window(text, found, start, start + 5, -1) == before
+
+
+CLAUSE_TEXTS = [
+    "Use #fff now colour", "the #fff colour; #000 here", "Go. At #abc! then #123 is? x y. Z #eee colour",
+    "background-color: #fff; color: #000", "e.g. b #fff c. D e", "a-b-c #FFF x-colour", "#fff", "", "; ; #fff ;",
+]
+
+
+@pytest.mark.parametrize("every", [0, 2, 3])
+def test_the_clauses_give_the_clause_window_with_no_limit(every):
+    """`Clauses.around` against `clause_window` with no limit, at each start and three span lengths, in the texts
+    above and the rows of en.tsv, where every n-th token ends its clause."""
+    with open(Path(__file__).parent / "data" / "en.tsv", encoding="utf-8") as rows:
+        texts = CLAUSE_TEXTS + [row["text"] for row in csv.DictReader(rows, delimiter="\t")]
+    compared = 0
+    for text in texts:
+        tokens = default_tokenizer(text, "en")
+        if every:
+            tokens = tuple(replace(t, clause_end=t.clause_end or i % every == 0) for i, t in enumerate(tokens))
+        found = context_words(tokens)
+        breaks = clause_breaks(text)
+        clauses = Clauses(found, breaks)
+        for start in range(len(text) + 1):
+            for end in {start, min(start + 1, len(text)), min(start + 4, len(text))}:
+                back, ahead = clauses.around(start, end)
+                assert tuple(found[i].text for i in back) == clause_window(text, found, start, end, -1,
+                                                                           limit=len(found), breaks=breaks)
+                assert tuple(found[i].text for i in ahead) == clause_window(text, found, start, end, 1,
+                                                                            limit=len(found), breaks=breaks)
+                compared += 1
+    assert compared > 10000
 
 
 def test_the_clause_breaks_are_the_marks_and_the_periods_before_a_capital():
