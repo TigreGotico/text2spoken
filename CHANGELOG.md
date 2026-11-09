@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a8](https://github.com/TigreGotico/text2spoken/tree/0.0.2a8) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a7...0.0.2a8)
+
+**Merged pull requests:**
+
+- refactor: make clock marks, range marks and phone shapes language data [\#15](https://github.com/TigreGotico/text2spoken/pull/15) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a7](https://github.com/TigreGotico/text2spoken/tree/0.0.2a7) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a6...0.0.2a7)
