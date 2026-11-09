@@ -16,7 +16,7 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
-from text2spoken.core.spans import Features, SpanContext, Span, clause_breaks, clause_window, context_words
+from text2spoken.core.spans import Features, SpanContext, Span, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
@@ -216,9 +216,6 @@ _JOINERS = "/:.,-–"
 _PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ .-][0-9]+)*")
 _RANGE = re.compile("[0-9]+[-–][0-9]+")
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
-_TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
-_THOUSANDS = re.compile("[1-9][0-9]{0,2}(?: [0-9]{3})+")
-_YEAR_RANGE = re.compile("(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})")
 
 
 def _cluster_edge(text: str, start: int, end: int) -> bool:
@@ -555,19 +552,12 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
-    region in `phone_regions`, a shape of the `phone_shapes` table, as in `(212) 555-0123`, a phone word that names
-    the run, or space-separated groups of which the first starts with `0`, perhaps in brackets, which read digit by
-    digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Thousands that spaces group, as in `10 000`,
-    stay as written.
+    region in `phone_regions`, a shape of the `phone_shapes` table, as in `(212) 555-0123`, or a phone word that
+    names the run.
 
-    A phone word names the run right after it, with no letter or digit between them. It also names a run up to
-    three words back, where a function word does not count, when the run has the shape of a phone number: a group
-    separator, or a leading `0` or `+`, as in `Call us on 0800 123 456.` Two years that a dash joins, as in
-    `1999-2005`, have no phone shape. The same window names a short code of `short_codes` that ends its clause or
-    that a function word follows, as in `Call the police on 999 now.`, and not the count in `The phone rang 101
-    times.` A run that a word of `list_links` or a comma joins to a named run is named too, as `112` in
-    `Call 999 or 112.` Readings only add words before a run, so a run that a first pass leaves unnamed stays
-    unnamed on a second pass.
+    A phone word names the run right after it, with no letter or digit between them. A run that a word of
+    `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only add
+    words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
 
     A named run of 7 to 15 digits reads digit by digit. A shorter named run reads digit by digit only when it is a
     short code, so `Call 100 customers.` reads a count. A run right after a phone word that no plan reads stays as
@@ -575,21 +565,44 @@ class Telephone:
     phone-shaped run, a short code or a run of 7 or more digits that a letter, or a joiner or an operator and a
     digit, continue, as in `Call 0800 123 456/7.` and `Call 112+1.` The kept run takes the digits that joiners
     chain to it, but not a group that a letter continues. Such a run is never named further back, so
-    `Call 911 or 112+1.` reads the expression.
+    `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written.
 
-    A last group of one or two digits is the hour or a count, not a phone group, when the run ends inside a word,
-    when a full stop and two digits complete it, or when a space and a day period or a lowercase word that is no
-    function word follow it, so `Call 0800 123 456 8 am to 8 pm.` and `Ring 0800 123 456 24 hours a day.` read
-    the number and the hour. A run with digits from two digit sets stays as written."""
+    A language file that writes phone numbers by its own conventions subclasses this recognizer and replaces the
+    methods `trimmed`, `shaped`, `window`, `names_back`, `one_unit` and `kept`, as `EnglishTelephone` does."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
+
+    def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
+        """The run that `_PHONE` matched at `start`, less a last group that the language reads apart."""
+        return written
+
+    def shaped(self, written: str, digits: str) -> bool:
+        """Whether the run has the shape of a phone number: a group separator, or a leading `0` or `+`."""
+        return written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written)
+
+    def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
+               request: Request) -> range:
+        """The indices of the words that may hold a phone word for the run: the word right before it."""
+        index = bisect_right(words, start, key=lambda word: word.end)
+        return range(index - len(clause_window(text, words, start, end, -1, limit=1, breaks=breaks)), index)
+
+    def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
+                   shaped: bool, short_code: bool, request: Request) -> bool:
+        """Whether a phone word of the window that is not right before the run names it."""
+        return False
+
+    def one_unit(self, written: str, groups: Sequence[str]) -> bool:
+        """Whether the groups read digit by digit as one unit with no other evidence."""
+        return False
+
+    def kept(self, written: str) -> bool:
+        """Whether a run with no phone reading stays as written."""
+        return False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         words = context_words(tokens)
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
-        function_words = frozenset(request.data.get("function_words", ()))
-        day_periods = [period for periods in request.data.get("day_periods", {}).values() for period in periods]
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
         short_codes = frozenset(request.data.get("short_codes", ()))
         codes = sorted((plan["country_code"] for plan in PHONE_PLANS.values()), key=len, reverse=True)
@@ -604,23 +617,15 @@ class Telephone:
         for match in _PHONE.finditer(folded):
             if match.start() < kept_end:
                 continue
-            start, written = match.start(), match.group()
-            cut, after = written.rfind(" "), start + len(written)
-            if cut != -1 and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
-                    "." in written[cut:] or not _edge(text, start, after)
-                    or _hour_follows(text, after, day_periods, function_words)):
-                written = written[:cut]
+            start = match.start()
+            written = self.trimmed(text, start, match.group(), request)
             end = start + len(written)
             glued = not _edge(text, start, end) or operand.match(folded, end) is not None
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
-            shaped = not _YEAR_RANGE.fullmatch(written) and (written.startswith("+") or digits.startswith("0")
-                                                             or any(c in " .()-" for c in written))
-            index = bisect_right(words, start, key=lambda word: word.end)
-            before = clause_window(text, words, start, end, -1, limit=8, breaks=breaks)
-            counted = [i for i in range(index - len(before), index) if words[i].text.lower() not in function_words]
-            window = range(counted[-3] if len(counted) >= 3 else index - len(before), index)
-            phone_ends = [words[i].end for i in window if words[i].text.lower() in phone_words]
+            shaped = self.shaped(written, digits)
+            phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
+                          if words[i].text.lower() in phone_words]
             direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start]))
             country_code = ""
             if written.startswith("+"):
@@ -630,9 +635,9 @@ class Telephone:
                     country_code = next((c for c in codes if groups[0].startswith(c)), "")
                     groups[0] = groups[0][len(country_code):]
             short_code = "".join(groups) in short_codes
-            following = clause_window(text, words, start, end, 1, limit=1, breaks=breaks) if short_code else ()
-            code_ends = short_code and all(word.lower() in function_words for word in following)
-            named = (direct or (bool(phone_ends) and (shaped or code_ends))
+            named = (direct
+                     or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
+                                                               request))
                      or (named_end is not None and listed.fullmatch(text[named_end:start]) is not None))
             named_end = end if named else None
             unknown_code = written.startswith("+") and not country_code
@@ -647,7 +652,7 @@ class Telephone:
                 yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
                            recognizer=self.name, keep=True)
                 continue
-            if re.fullmatch("(?:[(][0-9]+[)]|[0-9]+)(?: [0-9]+)+", written) and groups[0].startswith("0"):
+            if self.one_unit(written, groups):
                 yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
                            recognizer=self.name)
                 continue
@@ -663,7 +668,7 @@ class Telephone:
             if reads:
                 yield Span(start, end, Form.TELEPHONE,
                            FrozenMap({"country_code": country_code, "groups": tuple(groups)}), recognizer=self.name)
-            elif _THOUSANDS.fullmatch(written):
+            elif self.kept(written):
                 yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
                            recognizer=self.name, keep=True)
 
