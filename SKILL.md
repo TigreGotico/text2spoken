@@ -1,11 +1,11 @@
 ---
 name: text2spoken
-description: Rewrite written text into the words a speaker says. Use to read numbers, dates, times, money, measures, telephone numbers and abbreviations before phonemization or TTS.
+description: Rewrite written text into the words a speaker says. Use to read numbers, dates, times, money, measures, telephone numbers and abbreviations before phonemization, TTS or a word error rate score.
 ---
 
 # text2spoken
 
-Use this library when text must reach a phonemizer as words, with no digits or symbols.
+Use this library when text must reach a phonemizer or a voice as words, with no digits or symbols, and to normalise a reference and a hypothesis before a word error rate score.
 
 ## Install
 
@@ -26,7 +26,7 @@ The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 ## Control
 
 - Pass `NormalizationParams` to set the date order, the clock, the forms to read and a lexicon.
-- Pass `tokenizer=` to use the tokens of your own frontend. The default is `quebra-frases`.
+- Pass `tokenizer=` to use the tokens of your own frontend.
 - Call `supports(lang)` to see what a tag reads, and `effective_params(lang, params)` to see the params that apply.
 - Call `analyze` and then `render(analysis, hints)` to give a number the gender of its noun.
 

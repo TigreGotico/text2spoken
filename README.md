@@ -1,99 +1,172 @@
 # text2spoken
 
-text2spoken rewrites written text into the words that a speaker says. It reads numbers, dates, times, money, measures, telephone numbers, colours, titles and abbreviations. A phonemizer then gets words, not digits or symbols.
+text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours and abbreviations. The rest of the text stays as it is, character for character.
 
-## Quickstart
+```python
+from text2spoken import normalize
+
+normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB")
+# 'Doctor Smith paid three pounds and fifty pence for two tickets on the fourteenth of March twenty twenty-four.'
+```
+
+## Install
 
 ```bash
 uv pip install --prerelease=allow text2spoken
 ```
 
+The library needs Python 3.11 or later. It uses no network and loads no model.
+
+## Uses
+
+### Text to speech
+
+A voice speaks words, not digits or symbols. Normalise the text before you send it to the voice:
+
 ```python
-from text2spoken import normalize
-
-print(normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB"))
-print(normalize("Meet on 03/04/2025 at 7:30 pm.", "en-US"))
-print(normalize("Ich habe 21 Äpfel.", "de"))
+normalize("Meet on 03/04/2025 at 7:30 pm.", "en-US")
+# 'Meet on March fourth twenty twenty-five at seven thirty PM.'
 ```
 
-```text
-Doctor Smith paid three pounds and fifty pence for two tickets on the fourteenth of March twenty twenty-four.
-Meet on March fourth twenty twenty-five at seven thirty PM.
-Ich habe einundzwanzig Äpfel.
+The language tag selects the reading. `en-US` reads `03/04/2025` as month, day, year. `en-GB` reads it as day, month, year.
+
+### Phonemizers
+
+A grapheme-to-phoneme model or a rule set expects words. A digit or a symbol has no pronunciation of its own, so the phonemizer drops it or spells it wrongly. Normalise first, then phonemize:
+
+```python
+words = normalize("It is 5 km away.", "en-GB")
+# 'It is five kilometres away.'
+phonemes = my_phonemizer(words)
 ```
 
-## Where this fits
+### Word error rate
 
-Alone, it turns written text into spoken words with `normalize`. In the speech stack, it is the normalisation stage: a frontend or a TTS library calls it before phonemization. It calls `unicode_rbnf` to spell numbers, `quebra-frases` to tokenize, and `linguatag` with `langcodes` to read language tags.
+An ASR system writes "ten thirty" where a reference transcript writes "10:30". The two texts say the same thing, but a word error rate counts each difference as an error. Normalise the reference and the hypothesis with the same tag and the same params:
+
+```python
+ref = normalize("The train leaves at 10:30 on 3 May from platform 2.", "en-GB")
+hyp = normalize("the train leaves at ten thirty on the third of may from platform two", "en-GB")
+# ref: 'The train leaves at ten thirty on the third of May from platform two.'
+# hyp: 'the train leaves at ten thirty on the third of may from platform two'
+```
+
+Text that is already in words does not change. The library does not change case or punctuation, so lowercase both texts and remove punctuation before you score them.
+
+## How it reads text
+
+The library finds each written form that it can read, and replaces it with words. It does not guess. A form that it cannot read for sure stays as written, and the library logs a WARNING on the `text2spoken` logger:
+
+```python
+normalize("The run took 1:23:45.", "en-GB")
+# 'The run took 1:23:45.'  (a duration, not a clock time)
+```
+
+A second pass changes nothing: `normalize(normalize(text, lang), lang)` gives the same text as one pass. Output depends only on the text, the tag and the params.
 
 ## The API
 
-`normalize(text, lang, params=None, tokenizer=None)` returns the spoken text. `lang` is a BCP 47 tag. A tag that is not valid BCP 47 raises `InvalidLanguageTagError`.
+| Function | Returns |
+| --- | --- |
+| `normalize(text, lang, params=None, tokenizer=None)` | The spoken text |
+| `analyze(text, lang, params=None, tokenizer=None)` | An `Analysis` with the tokens and the spans that the library found |
+| `render(analysis, hints=None)` | The spoken text of an `Analysis` |
+| `supports(lang)` | A `Support` record: the forms, genders and option values of a tag |
+| `effective_params(lang, params=None)` | The params of a call, with the language defaults filled in |
 
-`analyze` and `render` split the same work in two. `analyze` returns an `Analysis` that holds the tokens and the spans it found. `render(analysis, hints)` speaks it, and `hints` maps a span start to `Features`, such as a grammatical gender. A frontend that knows the noun after a number uses the hint to make the number agree.
+`lang` is a BCP 47 tag, for example `en`, `en-GB` or `pt-PT`. A tag that is not valid raises `InvalidLanguageTagError`.
 
-`supports(lang)` returns a `Support` record. It tells which file reads the tag, which forms that file reads, which genders it has, and which values each option takes. `effective_params(lang, params)` returns the params that apply to a call after the language defaults fill the empty fields.
+### Grammatical agreement
+
+In many languages a number agrees with its noun. `analyze` and `render` let the caller give that information. `hints` maps the start offset of a span to `Features`, for example a grammatical gender:
+
+```python
+from text2spoken import analyze, render
+
+analysis = analyze("Gate 7 opens at 9:15.", "en-US")
+[(span.start, span.end, span.form) for span in analysis.spans]
+# [(5, 6, <Form.CARDINAL: 'cardinal'>), (16, 20, <Form.TIME: 'time'>)]
+render(analysis)
+# 'Gate seven opens at nine fifteen.'
+```
 
 ### Params
 
-`NormalizationParams` is a frozen dataclass. Each field that is `None` takes the default of the language variety.
+`NormalizationParams` is a frozen dataclass. A field that is `None` takes the default of the language variety.
 
 | Field | Values |
 | --- | --- |
-| `forms` | the `Form` values to read; `params.only(Form.CARDINAL)` and `params.without(Form.TIME)` change it |
+| `forms` | The `Form` values to read. `params.only(Form.CARDINAL)` and `params.without(Form.TIME)` give a changed copy |
 | `date_order` | `DMY`, `MDY`, `YMD` |
 | `clock` | `12h`, `24h` |
 | `minute_style` | `number`, `phrase` |
-| `decimal_mark` | the decimal mark of the written numbers |
+| `decimal_mark` | The decimal mark of the written numbers |
 | `scale` | `short`, `long` |
-| `default_gender` | a `FrozenMap` of language file code to `GrammaticalGender` |
+| `default_gender` | A `FrozenMap` of language code to `GrammaticalGender` |
 | `register` | `formal`, `colloquial` |
-| `phone_regions` | ISO 3166 region codes for telephone plans |
-| `lexicon` | a `FrozenMap` of language tag to a `FrozenMap` of written form to spoken words |
-| `strict` | `True` raises where the default mode warns or keeps the written form |
+| `phone_regions` | ISO 3166 region codes for telephone number plans |
+| `lexicon` | A `FrozenMap` of language tag to a `FrozenMap` of written form to spoken words |
+| `strict` | `True` raises an error where the default mode logs a warning |
+
+A lexicon entry reads a form your way:
 
 ```python
-from text2spoken import FrozenMap, NormalizationParams, normalize
+from text2spoken import FrozenMap, NormalizationParams
 
 params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"NHS": "N H S"})}))
-print(normalize("Ask the NHS today.", "en-GB", params))  # Ask the N H S today.
+normalize("Ask the NHS today.", "en-GB", params)
+# 'Ask the N H S today.'
 ```
 
-A value that a language cannot produce gives a `ParameterNotHonouredWarning`, and the language default applies. In strict mode it raises `UnsupportedParameterError`. A gender that a language does not have raises `UndefinedGrammaticalGender` in both modes.
+To read only some forms, select them:
 
-### The tokenizer hook
+```python
+from text2spoken import Form
 
-The tokenizer is a callable `(text, lang)` that returns a sequence of `Token(start, end, text)`. The default is `quebra-frases`. A frontend that has its own tokenizer passes it as `tokenizer=`, so that the spans and the context words follow its tokens. A token whose text does not match the text at its offsets raises `TokenizerError`.
+normalize("Pay $5 on 12/03/2024 for 3 items.", "en-US", NormalizationParams().only(Form.CARDINAL))
+# 'Pay $5 on 12/03/2024 for three items.'
+```
 
-### Written forms that stay
+### Errors and warnings
 
-The library keeps a written form that it cannot read, and logs a WARNING on the `text2spoken` logger. In strict mode it raises `UnreadFormError` instead.
+| Case | Default mode | `strict=True` |
+| --- | --- | --- |
+| A form that the library cannot read | Stays as written, WARNING logged | `UnreadFormError` |
+| A param value that the language cannot produce | Language default, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
+| A gender that the language does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |
+| A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
+| A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
+| A token whose text does not match its offsets | `TokenizerError` | `TokenizerError` |
+
+Every error is a subclass of `Text2SpokenError`, and every warning is a subclass of `Text2SpokenWarning`.
+
+### Your own tokenizer
+
+The `tokenizer` argument takes a callable `(text, lang)` that returns a sequence of `Token(start, end, text)`. Give it when your pipeline already splits text into tokens, so that the spans and the context words follow your tokens. With no tokenizer, the library uses its default.
 
 ## Languages
 
-Each language is one file in `text2spoken/lang/`, named by its primary subtag. `en.py` reads the forms that `supports("en")` lists, with the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS` or `X5`, or a digit code after a word that names a code (the forms `ROMAN`, `LETTERS` and `IDENTIFIER`), and keeps them as written. A language with no file reads cardinal numbers through the CLDR rules of `unicode_rbnf`, and keeps all other forms as written.
+Each language is one file in `text2spoken/lang/`, named by its primary language subtag. A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written.
 
-This command prints what a tag reads:
+To see what a tag reads:
 
 ```bash
 python -c "from text2spoken import supports; print(supports('en-US'))"
 ```
 
-`python -m text2spoken.export en` prints the data of a language file as JSON.
+To print the data of a language file as JSON:
 
-The 261 English rows in `tests/data/en.tsv` name their source. No native speaker has checked them, and each row says so in its `checked_by` column.
+```bash
+python -m text2spoken.export en
+```
 
-## Behaviour to know
-
-- The library uses no network and loads no model, so it works offline.
-- Importing the library imports no parser. The first call loads the language files.
-- A digit run that the library cannot read for sure stays as written: the duration `1:23:45`, the short number in `Call 911 now.`, and `3/4 kg`. A count after a lowercase noun reads as a number, not a year, so `in 1234 steps` reads "one thousand two hundred and thirty-four steps".
-- A second pass changes nothing: `normalize(normalize(t, lang), lang)` returns the text of the first pass. The tests check this over every row and over seeded random text.
+English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
 ## Development
 
 ```bash
-uv venv && uv pip install --prerelease=allow -e ".[test]"
+uv venv
+uv pip install --prerelease=allow -e ".[test]"
 pytest tests
 ```
 

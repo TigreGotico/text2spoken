@@ -223,6 +223,18 @@ def test_measures_that_slashes_chain_take_linear_time():
     assert large < 20 * small, (small, large)
 
 
+def test_short_groups_after_a_letter_take_linear_time():
+    def seconds(count: int) -> float:
+        text = "x" + "1 " * count + "1"
+        start = time.perf_counter()
+        normalize(text, "en")
+        return time.perf_counter() - start
+
+    normalize("x1 1", "en")
+    small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
 def test_the_numbers_of_a_text_are_kept_for_one_call_only():
     first, second = analyze("It costs $5 at 14:30.", "en").request, analyze("It costs $5 at 14:30.", "en").request
     assert ("numbers", "It costs $5 at 14:30.") in first.memo
@@ -276,8 +288,8 @@ def test_the_window_names_only_a_phone_shaped_run_or_a_short_code():
     assert normalize("Call me at 100.", "en-GB") == "Call me at one hundred."
     assert normalize("Phone sales hit 2500000 units.", "en-GB") == \
         "Phone sales hit two million five hundred thousand units."
-    assert normalize("Call the office staff today at 555 1234.", "en-GB") == \
-        "Call the office staff today at five hundred and fifty-five one thousand two hundred and thirty-four."
+    assert normalize("Call the office staff later at 555 1234.", "en-GB") == \
+        "Call the office staff later at five hundred and fifty-five one thousand two hundred and thirty-four."
 
 
 @pytest.mark.parametrize("text", ["Dial 25 and 999.", "Call 25 or 999.", "Call 999 or 112 or 2 friends.",
@@ -313,6 +325,11 @@ def test_a_run_with_a_letter_attached_stays_as_written_only_right_after_a_phone_
     assert normalize("Text 020 7946 0018pages now.", "en-GB") == "Text 020 7946 0018pages now."
     assert normalize("Use 020 7946 0018pages now.", "en-GB") == \
         "Use 020 seven thousand nine hundred and forty-six 0018pages now."
+
+
+def test_the_window_counts_three_content_words_within_eight_words():
+    assert normalize("Call the team at the office on 555 1234.", "en-GB") == \
+        "Call the team at the office on five five five one two three four."
 
 
 def test_the_window_names_a_run_that_starts_with_a_zero():
