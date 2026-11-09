@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation
-from text2spoken.errors import HintWarning, InvalidHintError, Text2SpokenError, UndefinedGrammaticalGender, UnreadFormError
+from text2spoken.errors import (DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
+                                UndefinedGrammaticalGender, UnreadFormError)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
 
 if TYPE_CHECKING:
@@ -284,6 +285,11 @@ def _unread_runs(segment: str, symbols: frozenset[str], read_digits: bool) -> li
     return runs
 
 
+DECLINED = (DeclinedReading, NotImplementedError)
+"""The errors with which a speller declines a span (design sections 5.4 and 10): it cannot read the number, or it
+does not offer the method of the form. Any other error of a verbalizer is a defect, and it raises."""
+
+
 def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> str:
     request = analysis.request
     language = request.language
@@ -304,13 +310,17 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
             spoken = language.verbalizers[span.form](span, context)
             spoken = language.attach(spoken, span.fields.get("prefix", ""), span.fields.get("suffix", ""))
             out.append(span.lead + spoken + span.trail)
-        except Text2SpokenError:
-            raise
-        except Exception as error:
+        except DECLINED as error:
             if request.params.strict:
                 raise UnreadFormError((written,), f"{span.form}: {error}") from error
             LOG.warning("unread %s span %r at %d: %s", span.form, written, span.start, error)
             out.append(written)
+        except Text2SpokenError:
+            raise
+        except Exception as error:
+            error.add_note(f"text2spoken: the {language.code} verbalizer of {span.form} fails on {written[:80]!r} "
+                           f"({len(written)} characters) at {span.start}")
+            raise
         position = span.end
     out.append(analysis.text[position:])
     passthrough.append((position, len(analysis.text)))

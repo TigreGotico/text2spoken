@@ -36,6 +36,10 @@ class UndefinedGrammaticalGender(UnsupportedParameterError):
         super().__init__(f"{lang!r} does not define {value!r}; it defines {sorted(defined)}")
 
 
+class DeclinedReading(Text2SpokenError):
+    """A speller cannot read this number, so the span stays as written (design section 10)."""
+
+
 class UnreadFormError(Text2SpokenError):
     """Strict mode: a written form stays in the output."""
 

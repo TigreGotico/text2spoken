@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from text2spoken.core.language import cldr_locale, rbnf_locales
 from text2spoken.core.spans import Features
+from text2spoken.errors import DeclinedReading
 from text2spoken.params import GrammaticalGender
 
 if TYPE_CHECKING:
@@ -126,7 +127,17 @@ class RbnfSpeller:
         return rbnf_engine(locale)
 
     def _format(self, digits: str, name: str, request: Request) -> str:
-        return words(self.engine(request).format_number(int(digits), ruleset_names=[name]).text_by_ruleset[name])
+        from unicode_rbnf.engine import NoRuleForNumberError
+
+        try:
+            number = int(digits)
+        except ValueError as error:
+            raise DeclinedReading(f"{len(digits)} digits pass the integer string limit of Python") from error
+        try:
+            result = self.engine(request).format_number(number, ruleset_names=[name])
+        except (NoRuleForNumberError, OverflowError) as error:
+            raise DeclinedReading(f"no rule of {name} reads a number of {len(digits)} digits") from error
+        return words(result.text_by_ruleset[name])
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._format(digits, self.rule_set(self.cardinal_sets, features), request)
