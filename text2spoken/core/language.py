@@ -25,10 +25,12 @@ def concatenate(spoken: str, prefix: str, suffix: str) -> str:
     return prefix + spoken + suffix
 
 
-def infix_range(span: Span, following: Span, range_word: str) -> Span:
+def infix_range(span: Span, following: Span, range_word: str) -> tuple[Span, Span]:
     """The core range join: the first span takes the mark between the two spans and a trail of the range word,
-    so the range word stands between the two readings."""
-    return replace(span, end=following.start, trail=f" {range_word} ")
+    so the range word stands between the two readings. With no range word, the pair stays as written."""
+    if not range_word:
+        return span, following
+    return replace(span, end=following.start, trail=f" {range_word} "), following
 
 
 @dataclass(frozen=True)
@@ -56,7 +58,7 @@ class LanguageSpec:
     options: Mapping[str, frozenset[str]]
     not_applicable: frozenset[str]
     attach: Callable[[str, str, str], str] = concatenate
-    join_range: Callable[[Span, Span, str], Span] = infix_range
+    join_range: Callable[[Span, Span, str], tuple[Span, Span]] = infix_range
 
 
 def _merge(base, override):

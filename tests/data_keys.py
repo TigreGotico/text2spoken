@@ -66,13 +66,17 @@ def map_of(key: Shape, value: Shape) -> Shape:
     return check
 
 
-def record(**fields: Shape) -> Shape:
-    """An object that holds at least these fields; the language file may add its own."""
+def record(optional: dict[str, Shape] | None = None, **fields: Shape) -> Shape:
+    """An object that holds at least these fields, and the optional fields in their shape when it holds them; the
+    language file may add its own."""
     def check(table, where: str) -> None:
         assert isinstance(table, FrozenMap), f"{where}: {table!r} is not an object"
         for name, field in fields.items():
             assert name in table, f"{where}: no {name!r}"
             field(table[name], f"{where}.{name}")
+        for name, field in (optional or {}).items():
+            if name in table:
+                field(table[name], f"{where}.{name}")
     return check
 
 
@@ -80,7 +84,8 @@ WORDS = list_of(word)
 
 SHAPES: dict[str, Shape] = {
     "case_suffixes": WORDS,
-    "clock_marks": list_of(record(mark=word, seconds=boolean, needs=one_of("evidence", "day_period", "none"))),
+    "clock_marks": list_of(record(mark=word, seconds=boolean, needs=one_of("evidence", "day_period", "none"),
+                                  optional={"closes_hour": boolean})),
     "color_words": WORDS,
     "currencies": map_of(word, record(symbols=list_of(word, minimum=1))),
     "day_periods": map_of(word, WORDS),

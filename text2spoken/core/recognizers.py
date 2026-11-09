@@ -132,12 +132,14 @@ def _sentence_period(text: str, end: int) -> bool:
 
 def join_ranges(spans: Iterator[Span], text: str, request: Request) -> Iterator[Span]:
     """The spans, where a mark of the `range_marks` table alone between two of them joins them as a range, as in
-    `9am-5pm` and `1939-1945`. The `join_range` hook of the language gives the joined span: by default the first
-    span takes the mark and a trail of the `range_word`.
+    `9am-5pm` and `1939-1945`. The `join_range` hook of the language takes the pair and the `range_word`, which
+    is empty when the language has none, and gives the joined pair: by default the first span takes the mark and a
+    trail of the range word. A language that marks a range with case endings gives each span its ending.
 
-    Spans that range marks chain join as one run, as in `9am-5pm-7pm`. A joiner and a digit after the last span
-    of the chain, as in `1990-91-92`, keep every span of it apart: they wait, and the run stays as written."""
-    range_word = request.data.get("range_word")
+    Spans that range marks chain join as one run, as in `9am-5pm-7pm`: the second span of each pair, as the hook
+    gives it, is the first of the next pair. A joiner and a digit after the last span of the chain, as in
+    `1990-91-92`, keep every span of it apart: they wait, and the run stays as written."""
+    range_word = request.data.get("range_word", "")
     marks = request.data.get("range_marks", ())
     chains: list[list[Span]] = []
     for span in sorted(spans, key=lambda span: span.start):
@@ -146,10 +148,14 @@ def join_ranges(spans: Iterator[Span], text: str, request: Request) -> Iterator[
         else:
             chains.append([span])
     for chain in chains:
-        joined = bool(range_word) and not _continued(text, chain[-1].end)
-        for span, following in zip(chain, chain[1:]):
-            yield request.language.join_range(span, following, range_word) if joined and not span.trail else span
-        yield chain[-1]
+        joined = not _continued(text, chain[-1].end)
+        span = chain[0]
+        for following in chain[1:]:
+            if joined and not span.trail:
+                span, following = request.language.join_range(span, following, range_word)
+            yield span
+            span = following
+        yield span
 
 
 @dataclass(frozen=True)
@@ -365,8 +371,9 @@ class TimeClock:
     The `clock_marks` table gives each mark between the hour and the minutes, whether a seconds field may follow
     with the same mark, and the evidence that the time needs: `evidence` (a time word, a time suffix or a day
     period), `day_period` (a written day period, as for `9.30 am` in English, where `9.30` alone is a decimal) or
-    `none` (the mark itself, as for `14h30` in Portuguese). A seconds field is no evidence, because a duration
-    such as `1:23:45` has one. An hour with no minutes needs a written day period, as in `9am`."""
+    `none` (the mark itself, as for `14h30` in Portuguese). A mark with `closes_hour` may also close an hour with
+    no minutes, as for `14h` in Portuguese. A seconds field is no evidence, because a duration such as `1:23:45`
+    has one. Any other hour with no minutes needs a written day period, as in `9am`."""
     name: str = "time_clock"
     form: Form = Form.TIME
 
@@ -381,9 +388,13 @@ class TimeClock:
         periods = data.get("day_periods", FrozenMap())
         suffixes = data.get("time_suffixes", ())
         folded = fold_digits(text)
-        clocks = [(re.compile(f"[0-9][0-9]?{re.escape(clock['mark'])}[0-9][0-9]"
-                              + (f"(?:{re.escape(clock['mark'])}[0-9][0-9])?" if clock["seconds"] else "")),
-                   clock["mark"], clock["needs"]) for clock in data.get("clock_marks", ())]
+        clocks = []
+        for clock in data.get("clock_marks", ()):
+            mark = re.escape(clock["mark"])
+            minutes = "[0-9][0-9]" + (f"(?:{mark}[0-9][0-9])?" if clock["seconds"] else "")
+            if clock.get("closes_hour", False):
+                minutes = f"(?:{minutes})?"
+            clocks.append((re.compile(f"[0-9][0-9]?{mark}{minutes}"), clock["mark"], clock["needs"]))
         for pattern, mark, needs in (*clocks, (_HOUR, "", "day_period")):
             for match in pattern.finditer(folded):
                 start, end = match.span()
@@ -392,7 +403,7 @@ class TimeClock:
                     continue
                 if mark:
                     parts = match.group().split(mark)
-                    fields = clock_fields(parts[0], parts[1], parts[2] if len(parts) == 3 else None)
+                    fields = clock_fields(parts[0], parts[1] or "00", parts[2] if len(parts) == 3 else None)
                 else:
                     fields = (int(match.group()), 0, None)
                 if fields is None:
