@@ -119,11 +119,13 @@ READERS: dict[str, frozenset[str]] = {
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "short_codes", "list_links", "operators"}),
     "color": frozenset({"color_words"}),
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
+    "speak_lexicon": frozenset(),
     "render": frozenset({"symbols"}),
     "effective_params": frozenset({"defaults"}),
 }
-"""The keys that each shared recognizer reads, by its name in `SHARED`, and the keys that the shared verbalizer
-`speak_cardinal`, the unread check of `render` and the option defaults of `effective_params` read."""
+"""The keys that each shared recognizer reads, by its name in `SHARED`. Then the keys that the shared verbalizers
+`speak_cardinal` and `speak_lexicon` read, and the keys of the unread check of `render` and of the option defaults
+of `effective_params`."""
 
 OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes"})
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
