@@ -8,12 +8,16 @@ import json
 import re
 import subprocess
 import sys
+from importlib.metadata import requires
 from importlib.resources import files
 from importlib.util import find_spec
 from pathlib import Path
 
 import linguatag
+from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 
+from tests.data_keys import SHAPES
 from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
@@ -29,6 +33,10 @@ METHOD_ARGS = {"cardinal": ("2",), "ordinal": ("2",), "year": ("2024",), "decima
 ALLOWED_IMPORTS = {"linguatag", "ovos_number_parser", "ovos_date_parser", "ovos_color_parser", "unicode_rbnf",
                    "quebra_frases"}
 LAZY_ONLY = {"tugalex"}
+DISTRIBUTIONS = {"linguatag": "linguatag", "ovos_number_parser": "ovos-number-parser",
+                 "ovos_date_parser": "ovos-date-parser", "ovos_color_parser": "ovos-color-parser",
+                 "unicode_rbnf": "unicode-rbnf", "quebra_frases": "quebra-frases", "tugalex": "tugalex"}
+"""The distribution that installs each allowed import."""
 PATTERN_REFUSED = re.compile(r"\\[dDwWsSbB1-9]|\(\?(?!:)")
 
 
@@ -121,12 +129,21 @@ def _json_only(value, where: str) -> None:
         assert value is None or type(value) in (str, int, float, bool), f"{where}: {value!r} is not a JSON value"
 
 
+def check_data_keys(data: FrozenMap, where: str) -> None:
+    """Each key of `data` that the core reads has the shape that `tests/data_keys.py` declares."""
+    for key, shape in SHAPES.items():
+        if key in data:
+            shape(data[key], f"{where}.{key}")
+
+
 def clause_6(name: str, spec: LanguageSpec) -> None:
     from text2spoken.params import freeze, thaw
 
     for where, data in (("data", spec.data), *((v.tag, v.data) for v in spec.varieties)):
         _json_only(data, where)
         assert freeze(json.loads(json.dumps(thaw(data)))) == data, f"{where} does not round-trip through JSON"
+    for index, variety in enumerate(spec.varieties):
+        check_data_keys(request_for(spec, index).data, variety.tag)
 
 
 def check_pattern(pattern: str) -> None:
@@ -136,8 +153,9 @@ def check_pattern(pattern: str) -> None:
 
 
 def clause_7(name: str, spec: LanguageSpec) -> None:
-    for where, data in (("data", spec.data), *((v.tag, v.data) for v in spec.varieties)):
-        for pattern in data.get("patterns", FrozenMap()).values():
+    """Every table that holds regexes: `patterns`, and `phone_shapes`, which the core compiles."""
+    for data in (spec.data, *(v.data for v in spec.varieties)):
+        for pattern in (*data.get("patterns", FrozenMap()).values(), *data.get("phone_shapes", ())):
             check_pattern(pattern)
 
 
@@ -225,6 +243,28 @@ def check_imports(source: str) -> None:
     assert nested <= stdlib | ALLOWED_IMPORTS | LAZY_ONLY | {"text2spoken"}, f"imports {sorted(nested)}"
 
 
+def declared(requirements: list[str], extra: str) -> set[str]:
+    """The distributions that an install of the package with `extra` holds; "" is an install with no extra."""
+    found = set()
+    for line in requirements:
+        requirement = Requirement(line)
+        if requirement.marker is None or requirement.marker.evaluate({"extra": extra}):
+            found.add(canonicalize_name(requirement.name))
+    return found
+
+
+def check_declared(source: str, code: str, requirements: list[str] | None = None) -> None:
+    """A top-level import is a dependency of the package, and a lazy import is one too or one of the extra named
+    after the language code. The `test` extra counts for neither."""
+    requirements = requires("text2spoken") if requirements is None else requirements
+    top, nested = _imports(source)
+    for imports, extra in ((top, ""), (nested, code)):
+        wanted = {canonicalize_name(DISTRIBUTIONS[m]) for m in imports if m in DISTRIBUTIONS}
+        missing = wanted - declared(requirements, extra)
+        install = f"text2spoken[{extra}]" if extra else "text2spoken"
+        assert not missing, f"imports {sorted(missing)}, which an install of {install} does not hold"
+
+
 _SANDBOX = """
 import socket, sys
 import text2spoken.core.recognizers, text2spoken.core.spellers, text2spoken.core.color
@@ -250,10 +290,12 @@ def sandbox_import(module: str, allowed_dir: str, path: str = "") -> tuple[list[
     return ast.literal_eval(out.strip().splitlines()[-1])
 
 
-def clause_12(name: str, spec: LanguageSpec, source: str | None = None) -> None:
-    path = Path(find_spec(f"text2spoken.lang.{name}").origin)
-    check_imports(path.read_text(encoding="utf-8") if source is None else source)
-    if source is None:
+def clause_12(name: str, spec: LanguageSpec, source: str | None = None, requirements: list[str] | None = None) -> None:
+    path = Path(find_spec(f"text2spoken.lang.{name}").origin) if source is None else None
+    text = source if path is None else path.read_text(encoding="utf-8")
+    check_imports(text)
+    check_declared(text, spec.code, requirements)
+    if path is not None:
         events, added = sandbox_import(f"text2spoken.lang.{name}", str(path.parent))
         foreign = [m for m in added if not m.startswith("text2spoken.lang")]
         assert not events and not foreign, f"importing {name}: {events} {foreign}"
