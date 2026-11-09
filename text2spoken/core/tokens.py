@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unicodedata
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import KW_ONLY, dataclass
 from typing import Protocol
 
 from text2spoken.errors import TokenizerError
@@ -14,6 +14,7 @@ class Token:
     start: int
     end: int
     text: str
+    _: KW_ONLY
     clause_end: bool = False
 
 
@@ -93,7 +94,7 @@ def join_split_words(tokens: Sequence[Token], text: str, number_marks: frozenset
             number_join = (len(gap) == 1 and gap in number_marks
                            and is_digit(text[last.end - 1]) and is_digit(text[token.start]))
             if marks_only or number_join:
-                joined[-1] = Token(last.start, token.end, text[last.start:token.end], token.clause_end)
+                joined[-1] = Token(last.start, token.end, text[last.start:token.end], clause_end=token.clause_end)
                 continue
         joined.append(token)
     extended = []
@@ -101,7 +102,8 @@ def join_split_words(tokens: Sequence[Token], text: str, number_marks: frozenset
         end = token.end
         while end < len(text) and is_mark(text[end]):
             end += 1
-        extended.append(token if end == token.end else Token(token.start, end, text[token.start:end], token.clause_end))
+        extended.append(token if end == token.end
+                        else Token(token.start, end, text[token.start:end], clause_end=token.clause_end))
     return tuple(extended)
 
 

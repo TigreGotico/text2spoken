@@ -1,15 +1,21 @@
 """Core parts with values worked out by hand: numbers, dates, times, Roman numerals, token splits, regexes."""
+import ast
 import importlib
 import pkgutil
 import re
+import types
+from dataclasses import fields
+from pathlib import Path
 
 import pytest
 
 import text2spoken
 from tests.contract import check_pattern
-from text2spoken.core import dates, numbers, roman, times
+from text2spoken.core import color, dates, numbers, roman, times
+from text2spoken import Features, GrammaticalGender, NormalizationParams, analyze, supports
 from text2spoken.core.spans import Span, splits_token
 from text2spoken.core.tokens import Token
+from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form, FrozenMap
 
 EN_MARKS = (("Latn", ".", ","),)
@@ -87,6 +93,57 @@ def _patterns():
 def test_every_compiled_regex_of_the_package_is_portable(name, pattern):
     check_pattern(pattern.pattern)
     assert pattern.flags == re.UNICODE, f"{name} compiles with flags"
+
+
+def _literal_patterns(node):
+    """The whole string constants of a `re.compile` argument, through `x if c else y` and `x or y`."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        yield node.value
+    elif isinstance(node, ast.IfExp):
+        yield from _literal_patterns(node.body)
+        yield from _literal_patterns(node.orelse)
+    elif isinstance(node, ast.BoolOp):
+        for value in node.values:
+            yield from _literal_patterns(value)
+
+
+def test_every_literal_regex_that_the_package_compiles_is_portable():
+    """Each string literal passed to `re.compile` anywhere in the package, also one compiled inside a function."""
+    found = []
+    for path in sorted(Path(text2spoken.__file__).parent.rglob("*.py")):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "compile"
+                    and isinstance(node.func.value, ast.Name) and node.func.value.id == "re" and node.args):
+                found += [(f"{path.name}:{node.lineno}", pattern) for pattern in _literal_patterns(node.args[0])]
+    patterns = {pattern for _, pattern in found}
+    assert color._HEX.pattern in patterns and ", " in patterns
+    for where, pattern in found:
+        try:
+            check_pattern(pattern)
+        except AssertionError as error:
+            raise AssertionError(f"{where}: {error}") from None
+
+
+def test_the_package_namespace_is_exactly_all():
+    public = {name for name in dir(text2spoken)
+              if not name.startswith("__") and not isinstance(getattr(text2spoken, name), types.ModuleType)}
+    assert public == set(text2spoken.__all__) and len(text2spoken.__all__) == len(public)
+
+
+@pytest.mark.parametrize("value,positional", [
+    (NormalizationParams(clock="24h", strict=True), 0), (Features(gender=GrammaticalGender.FEMININE, case="dative"), 0),
+    (Token(0, 1, "a", clause_end=True), 3), (Span(0, 1, Form.CARDINAL, FrozenMap({"digits": "1"}), trail="."), 4),
+    (analyze("Gate 7 opens.", "en"), 0), (supports("en-GB"), 0), (EN, 0),
+], ids=lambda value: type(value).__name__ if not isinstance(value, int) else str(value))
+def test_a_public_dataclass_takes_its_later_fields_by_keyword(value, positional):
+    """A new field never shifts a positional caller: past the first `positional` fields, each field is a keyword."""
+    names = [field.name for field in fields(value)]
+    values = [getattr(value, name) for name in names]
+    kind = type(value)
+    with pytest.raises(TypeError):
+        kind(*values)
+    rebuilt = kind(*values[:positional], **dict(zip(names[positional:], values[positional:])))
+    assert all(getattr(rebuilt, name) == getattr(value, name) for name in names)
 
 
 def test_a_lead_missing_from_the_table_stays_written(monkeypatch):

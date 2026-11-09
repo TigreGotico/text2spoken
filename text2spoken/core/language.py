@@ -39,7 +39,7 @@ class Variety:
     data: FrozenMap = field(default_factory=FrozenMap)
 
 
-@dataclass(frozen=True, eq=False)
+@dataclass(frozen=True, eq=False, kw_only=True)
 class LanguageSpec:
     code: str
     serves: tuple[str, ...]
@@ -90,7 +90,7 @@ class Request:
         return merged_data(self.language.data, self.variety.data)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Support:
     tag: str
     code: str

@@ -632,7 +632,7 @@ class Telephone:
         links = "|".join(map(re.escape, request.data.get("list_links", ())))
         listed = re.compile(f",? (?:{links}) |, " if links else ", ")
         operators = "".join(request.data.get("operators", ()))
-        operand = re.compile(f"[{re.escape(operators)}][0-9]" if operators else "(?!)")
+        operand = re.compile(f"[{re.escape(operators)}][0-9]") if operators else None
         named_end = None
         folded = fold_digits(text)
         kept_end = 0
@@ -642,11 +642,11 @@ class Telephone:
             start = match.start()
             written = self.trimmed(text, start, match.group(), request)
             end = start + len(written)
-            glued = not _edge(text, start, end) or operand.match(folded, end) is not None
+            glued = not _edge(text, start, end) or (operand is not None and operand.match(folded, end) is not None)
             prefix = suffix = ""
             if glued and (bounds := _affixes(text, start, end, request.data)) is not None \
                     and (bounds[2] or bounds[3]) and _edge(text, bounds[0], bounds[1]) \
-                    and operand.match(folded, bounds[1]) is None:
+                    and (operand is None or operand.match(folded, bounds[1]) is None):
                 glued, prefix, suffix = False, bounds[2], bounds[3]
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
