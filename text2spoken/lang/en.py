@@ -8,14 +8,16 @@ from __future__ import annotations
 
 import logging
 import re
+from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import Number
-from text2spoken.core.recognizers import PHONE_PLANS, SHARED, join_ranges, numbers_in, speak_cardinal, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, _hour_follows, join_ranges, numbers_in,
+                                          speak_cardinal, speak_lexicon)
+from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
@@ -27,6 +29,10 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
           "November", "December"]
 _MONTH = "(" + "|".join(MONTHS) + ")"
 _ORDINAL_MARK = "(?:st|nd|rd|th)"
+_TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
+_THOUSANDS = re.compile("[1-9][0-9]{0,2}(?: [0-9]{3})+")
+_YEAR_RANGE = re.compile("(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})")
+_GROUPS = re.compile("(?:[(][0-9]+[)]|[0-9]+)(?: [0-9]+)+")
 
 COLORS = {
     "000000": "black", "0000cd": "medium blue", "0000ff": "blue", "006400": "dark green", "008000": "green",
@@ -391,6 +397,62 @@ def speak_color(span: Span, context: SpanContext) -> str:
     return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
 
 
+class EnglishTelephone(Telephone):
+    """The shared telephone recognizer with the English conventions of design section 4.3.
+
+    A phone word also names a run up to three words back, where a function word does not count, when the run has
+    the shape of a phone number, as in `Call us on 0800 123 456.` Two years that a dash joins, as in `1999-2005`,
+    have no phone shape. The same window names a short code of `short_codes` that ends its clause or that a
+    function word follows, as in `Call the police on 999 now.`, and not the count in `The phone rang 101 times.`
+
+    Space-separated groups of which the first starts with `0`, perhaps in brackets, read digit by digit as one
+    unit, as in `020 7946 0018` and `(0161) 496 0000`. Thousands that spaces group, as in `10 000`, stay as
+    written.
+
+    A last group of one or two digits is the hour or a count, not a phone group, when the run ends inside a word,
+    when a full stop and two digits complete it, or when a space and a day period or a lowercase word that is no
+    function word follow it, so `Call 0800 123 456 8 am to 8 pm.` and `Ring 0800 123 456 24 hours a day.` read
+    the number and the hour."""
+
+    def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
+        function_words = frozenset(request.data.get("function_words", ()))
+        day_periods = [period for periods in request.data.get("day_periods", {}).values() for period in periods]
+        cut, after = written.rfind(" "), start + len(written)
+        if cut != -1 and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
+                "." in written[cut:] or not _edge(text, start, after)
+                or _hour_follows(text, after, day_periods, function_words)):
+            return written[:cut]
+        return written
+
+    def shaped(self, written: str, digits: str) -> bool:
+        return not _YEAR_RANGE.fullmatch(written) and super().shaped(written, digits)
+
+    def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
+               request: Request) -> range:
+        """Three content words back, within eight words of the clause."""
+        function_words = frozenset(request.data.get("function_words", ()))
+        index = bisect_right(words, start, key=lambda word: word.end)
+        before = clause_window(text, words, start, end, -1, limit=8, breaks=breaks)
+        counted = [i for i in range(index - len(before), index) if words[i].text.lower() not in function_words]
+        return range(counted[-3] if len(counted) >= 3 else index - len(before), index)
+
+    def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
+                   shaped: bool, short_code: bool, request: Request) -> bool:
+        if shaped:
+            return True
+        if not short_code:
+            return False
+        function_words = frozenset(request.data.get("function_words", ()))
+        following = clause_window(text, words, start, end, 1, limit=1, breaks=breaks)
+        return all(word.lower() in function_words for word in following)
+
+    def one_unit(self, written: str, groups: Sequence[str]) -> bool:
+        return _GROUPS.fullmatch(written) is not None and groups[0].startswith("0")
+
+    def kept(self, written: str) -> bool:
+        return _THOUSANDS.fullmatch(written) is not None
+
+
 @dataclass(frozen=True)
 class Ordinal:
     """`1st`, `22nd`, `113th`, `1,000th`: a whole number with the suffix that it takes."""
@@ -589,7 +651,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 SHARED["time_clock"], SHARED["telephone"], SHARED["money"], SHARED["percent"], SHARED["measure"],
+                 SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"], SHARED["measure"],
                  Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={

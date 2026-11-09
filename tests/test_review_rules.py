@@ -15,7 +15,7 @@ from text2spoken.core.recognizers import SHARED
 from text2spoken.core.spans import Span, _inside, _joined, check_features, splits_token
 from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words
 from text2spoken.lang.en import LANGUAGE as EN
-from text2spoken.params import Form
+from text2spoken.params import Form, freeze
 
 
 def words_of(text: str, clause_end_after: frozenset[str] = frozenset()) -> list[Token]:
@@ -340,3 +340,16 @@ def test_the_window_names_a_run_that_starts_with_a_zero():
 def test_a_kept_run_that_a_joiner_continues_starts_a_phone_list():
     assert normalize("Call 0800 123 456/7 or 5551234.", "en-GB") == \
         "Call 0800 123 456/7 or five five five one two three four."
+
+
+def test_the_core_telephone_holds_no_english_rule(gendered, monkeypatch):
+    """A language whose group mark is a space and that uses the shared telephone recognizer reads `10 000` as
+    one number. The thousands keep is a rule of `EnglishTelephone` in `en.py`, and the core holds none."""
+    words = {"10000": "dez mil"}
+    spec = replace(gendered.LANGUAGE, data=freeze({"defaults": {},
+                                                   "number_marks": {"Latn": [{"decimal": ",", "group": " "}]}}),
+                   recognizers=(SHARED["telephone"], SHARED["cardinal"]),
+                   verbalizers={Form.CARDINAL: lambda span, context: words[span.fields["digits"]],
+                                Form.TELEPHONE: lambda span, context: " ".join(span.fields["groups"])})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    assert normalize("A vila tem 10 000 pessoas.", "qaa") == "A vila tem dez mil pessoas."
