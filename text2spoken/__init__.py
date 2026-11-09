@@ -3,13 +3,10 @@
 `normalize(text, lang, params)` is the one API for a caller. `analyze` and `render` serve a frontend with
 tokenizer context, `supports` tells what a language reads, and `effective_params` gives the params that apply.
 """
-from __future__ import annotations
-
-from text2spoken.core.language import Support, effective_params, resolve, supports
-from text2spoken.core.numbers import declared_marks
-from text2spoken.core.spans import Analysis, Features, Span, classify, render
-from text2spoken.core.tokens import (Token, Tokenizer, check_tokens, default_tokenizer, join_split_words,
-                                     protect_blocks)
+from text2spoken.core.language import Support, effective_params, supports
+from text2spoken.core.pipeline import analyze, normalize
+from text2spoken.core.spans import Analysis, Features, Span, render
+from text2spoken.core.tokens import Token, Tokenizer, default_tokenizer
 from text2spoken.errors import (DeclinedReading, HintWarning, InvalidHintError, InvalidLanguageTagError,
                                 InvalidLexiconError, ParameterNotHonouredWarning, Text2SpokenError, Text2SpokenWarning,
                                 TokenizerError, UndefinedGrammaticalGender, UnreadFormError, UnsupportedParameterError)
@@ -24,25 +21,3 @@ __all__ = [
     "ParameterNotHonouredWarning", "HintWarning",
 ]
 
-
-def _require(value, name: str, kind: type) -> None:
-    if not isinstance(value, kind):
-        raise TypeError(f"{name} must be {kind.__name__}, not {type(value).__name__}")
-
-
-def analyze(text: str, lang: str, params: NormalizationParams | None = None,
-            tokenizer: Tokenizer | None = None) -> Analysis:
-    _require(text, "text", str)
-    _require(lang, "lang", str)
-    if params is not None:
-        _require(params, "params", NormalizationParams)
-    request = resolve(lang, params or NormalizationParams())
-    raw = (tokenizer or default_tokenizer)(text, request.tag)
-    tokens = join_split_words(check_tokens(raw, text), text, declared_marks(request.data))
-    blocks = protect_blocks(text)
-    return Analysis(text, blocks, tokens, classify(text, tokens, blocks, request), request)
-
-
-def normalize(text: str, lang: str, params: NormalizationParams | None = None,
-              tokenizer: Tokenizer | None = None) -> str:
-    return render(analyze(text, lang, params, tokenizer))

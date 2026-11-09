@@ -6,7 +6,7 @@ import logging
 import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation
@@ -50,6 +50,7 @@ class Span:
     end: int
     form: Form
     fields: FrozenMap
+    _: KW_ONLY
     lead: str = ""
     trail: str = ""
     recognizer: str = ""
@@ -57,7 +58,7 @@ class Span:
     """A span that keeps its text as written: it claims its characters, so that no other span reads them."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Features:
     gender: GrammaticalGender | None = None
     animacy: Animacy | None = None
@@ -68,7 +69,7 @@ class Features:
     definite: bool | None = None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Analysis:
     text: str
     blocks: tuple[tuple[int, int], ...]

@@ -22,7 +22,7 @@ def words_of(text: str, clause_end_after: frozenset[str] = frozenset()) -> list[
     """A tokenizer that splits at spaces and ends the clause after each word in `clause_end_after`."""
     tokens, position = [], 0
     for word in text.split(" "):
-        tokens.append(Token(position, position + len(word), word, word in clause_end_after))
+        tokens.append(Token(position, position + len(word), word, clause_end=word in clause_end_after))
         position += len(word) + 1
     return tokens
 
@@ -112,8 +112,8 @@ def test_tokens_that_overlap_by_one_character_raise():
 
 def test_a_joined_token_keeps_the_clause_end_of_its_last_part():
     text = "cafe\u0301s"
-    joined = join_split_words((Token(0, 4, "cafe"), Token(5, 6, "s", True)), text, frozenset())
-    assert joined == (Token(0, 6, text, True),)
+    joined = join_split_words((Token(0, 4, "cafe"), Token(5, 6, "s", clause_end=True)), text, frozenset())
+    assert joined == (Token(0, 6, text, clause_end=True),)
 
 
 def test_a_zero_width_space_separates_words():

@@ -106,7 +106,7 @@ OPTIONS = ("date_order", "clock", "minute_style", "decimal_mark", "scale", "defa
 """The options that a language file declares in `options` or `not_applicable`."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NormalizationParams:
     forms: frozenset[Form] = frozenset(Form)
     date_order: Literal["DMY", "MDY", "YMD"] | None = None
