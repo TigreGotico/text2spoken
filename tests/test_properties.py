@@ -1,20 +1,38 @@
-"""Properties of section 13: determinism, blocks, text outside spans, independent params, and the import."""
+"""Properties of section 13: determinism, blocks, text outside spans, independent params, and the import.
+
+The tests over rows run on every language file that the loader finds, and on the stubs of tests/fixtures."""
 import json
 import subprocess
 import sys
+from pathlib import Path
 
-from tests.conftest import rows
+import pytest
+
+from tests.conftest import STUBS, language_names, rows
 from text2spoken import Form, NormalizationParams, analyze, normalize
 
+ROOT = Path(__file__).parent.parent
+LANGUAGES = language_names()
 TEXTS = [(r["text"], r["tag"]) for r in rows("en")]
 
 
-def test_deterministic_across_two_processes():
-    script = ("import json, sys; from text2spoken import normalize; "
+def texts(code: str) -> list[tuple[str, str]]:
+    return [(r["text"], r["tag"]) for r in rows(code)]
+
+
+def test_the_row_tests_run_on_each_stub():
+    assert set(STUBS) <= set(LANGUAGES)
+
+
+@pytest.mark.parametrize("code", LANGUAGES)
+def test_deterministic_across_two_processes(stubs, code):
+    script = ("import json, sys; from text2spoken.core import language; "
+              "from tests.conftest import registry_with_stubs; registry = registry_with_stubs(); "
+              "language._registry = lambda: registry; from text2spoken import normalize; "
               "print(json.dumps([normalize(t, l) for t, l in json.loads(sys.stdin.read())]))")
-    runs = [subprocess.run([sys.executable, "-c", script], input=json.dumps(TEXTS), capture_output=True, text=True,
-                           check=True).stdout for _ in range(2)]
-    assert runs[0] == runs[1] and json.loads(runs[0]) == [normalize(t, l) for t, l in TEXTS]
+    runs = [subprocess.run([sys.executable, "-c", script], input=json.dumps(texts(code)), capture_output=True,
+                           text=True, check=True, cwd=ROOT).stdout for _ in range(2)]
+    assert runs[0] == runs[1] and json.loads(runs[0]) == [normalize(t, l) for t, l in texts(code)]
 
 
 def test_text_outside_spans_stays_byte_for_byte():
@@ -41,13 +59,15 @@ def test_two_params_in_one_process_do_not_affect_each_other():
     assert normalize(text, "en-GB", b) != first
 
 
-def test_a_form_outside_forms_stays_as_written_on_every_row():
-    for text, tag in TEXTS:
+@pytest.mark.parametrize("code", LANGUAGES)
+def test_a_form_outside_forms_stays_as_written_on_every_row(stubs, code):
+    for text, tag in texts(code):
         assert normalize(text, tag, NormalizationParams(forms=frozenset())) == text
 
 
-def test_spans_are_in_order_with_no_overlap():
-    for text, tag in TEXTS:
+@pytest.mark.parametrize("code", LANGUAGES)
+def test_spans_are_in_order_with_no_overlap(stubs, code):
+    for text, tag in texts(code):
         spans = analyze(text, tag).spans
         assert all(a.end <= b.start for a, b in zip(spans, spans[1:]))
 
