@@ -259,6 +259,40 @@ def clause_window(text: str, words: Sequence[Word], start: int, end: int, direct
     return tuple(reversed(found)) if direction < 0 else tuple(found)
 
 
+class Clauses:
+    """The clauses of the context words, for a caller that reads the whole clause around many spans. `around`
+    gives the words of `clause_window` with no limit, after one pass over the words.
+
+    Two neighbouring words are in one clause when the first does not end its clause and no clause ends between
+    them. The windows before and after a span step over the words by this same rule."""
+
+    def __init__(self, words: Sequence[Word], breaks: Sequence[int]):
+        self.words, self.breaks = words, breaks
+        joined = [not a.clause_end and not _clause_break(breaks, a.end, b.start) for a, b in zip(words, words[1:])]
+        self.first = list(range(len(words)))
+        for index, join in enumerate(joined, 1):
+            if join:
+                self.first[index] = self.first[index - 1]
+        self.stop = list(range(1, len(words) + 1))
+        for index in range(len(joined) - 1, -1, -1):
+            if joined[index]:
+                self.stop[index] = self.stop[index + 1]
+
+    def around(self, start: int, end: int) -> tuple[range, range]:
+        """The indexes of the words that `clause_window` with no limit gives before and after text[start:end]."""
+        words, breaks = self.words, self.breaks
+        before = bisect_right(words, start, key=lambda word: word.end)
+        after = bisect_left(words, end, key=lambda word: word.start)
+        back = ahead = range(0)
+        if before and not words[before - 1].clause_end and not _clause_break(breaks, words[before - 1].end, start):
+            back = range(self.first[before - 1], before)
+        holder = words[after - 1] if after else None
+        if (after < len(words) and not _clause_break(breaks, end, words[after].start)
+                and not (holder and holder.start < end <= holder.end and holder.clause_end)):
+            ahead = range(after, self.stop[after])
+        return back, ahead
+
+
 def check_hints(hints: Mapping[int, Features], analysis: Analysis) -> dict[int, Features]:
     request = analysis.request
     starts = {span.start for span in analysis.spans}

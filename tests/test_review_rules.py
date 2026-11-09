@@ -81,6 +81,30 @@ def test_clause_end_on_the_word_that_holds_the_span_stops_the_after_window():
     assert normalize(text, "en", tokenizer=lambda t, lang: words_of(t, frozenset({"#fff"}))) == text
 
 
+def test_the_colour_search_grows_linearly_with_the_hex_codes(monkeypatch):
+    """Each hex code that holds only letters or only digits looks for a colour word in its whole clause. The clause
+    steps must grow with the text, not with its square: twice the codes take about twice the steps."""
+    from text2spoken.core import spans
+
+    steps, clause_break = 0, spans._clause_break
+
+    def counted(*args):
+        nonlocal steps
+        steps += 1
+        return clause_break(*args)
+
+    monkeypatch.setattr(spans, "_clause_break", counted)
+
+    def search(count):
+        nonlocal steps
+        steps = 0
+        text = " ".join(["#abc and"] * count) + " in this colour."
+        assert sum(span.form is Form.COLOR for span in analyze(text, "en").spans) == count
+        return steps
+
+    assert search(2000) <= 2.2 * search(1000)
+
+
 def test_tokens_that_overlap_by_one_character_raise():
     with pytest.raises(TokenizerError):
         check_tokens((Token(0, 3, "abc"), Token(2, 5, "cde")), "abcde")

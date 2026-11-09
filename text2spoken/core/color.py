@@ -4,9 +4,10 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
+from itertools import accumulate
 
 from text2spoken.core.language import Request
-from text2spoken.core.spans import Span, clause_breaks, clause_window, context_words
+from text2spoken.core.spans import Clauses, Span, clause_breaks, context_words
 from text2spoken.core.tokens import Token, is_word_char
 from text2spoken.params import FrozenMap, Form
 
@@ -25,8 +26,8 @@ def hex_fields(code: str) -> FrozenMap | None:
     return None
 
 
-def _has_color_word(words: tuple[str, ...], color_words: frozenset[str]) -> bool:
-    return any(word.lower() in color_words or word.lower().rsplit("-", 1)[-1] in color_words for word in words)
+def _is_color_word(word: str, color_words: frozenset[str]) -> bool:
+    return word.lower() in color_words or word.lower().rsplit("-", 1)[-1] in color_words
 
 
 @dataclass(frozen=True)
@@ -37,7 +38,8 @@ class Color:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         color_words = frozenset(w.lower() for w in request.data.get("color_words", ()))
         words = context_words(tokens)
-        breaks = clause_breaks(text)
+        clauses = Clauses(words, clause_breaks(text))
+        colored = list(accumulate((_is_color_word(word.text, color_words) for word in words), initial=0))
         for match in _HEX.finditer(text):
             start, end = match.span()
             if (start and is_word_char(text[start - 1])) or (end < len(text) and is_word_char(text[end])):
@@ -47,11 +49,8 @@ class Color:
                 continue
             digits = set(match.group()[1:])
             mixed = bool(digits & _DIGITS) and bool(digits - _DIGITS)
-            if not mixed:
-                clause = (clause_window(text, words, start, end, -1, limit=len(words), breaks=breaks)
-                          + clause_window(text, words, start, end, 1, limit=len(words), breaks=breaks))
-                if not _has_color_word(clause, color_words):
-                    continue
+            if not mixed and not any(colored[side.stop] > colored[side.start] for side in clauses.around(start, end)):
+                continue
             yield Span(start, end, Form.COLOR, fields, recognizer=self.name)
 
 
