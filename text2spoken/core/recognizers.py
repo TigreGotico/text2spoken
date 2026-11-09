@@ -214,6 +214,7 @@ _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
 _PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ .-][0-9]+)*")
 _RANGE = re.compile("[0-9]+[-–][0-9]+")
+_GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
 
 
 def _cluster_edge(text: str, start: int, end: int) -> bool:
@@ -225,11 +226,15 @@ def _cluster_edge(text: str, start: int, end: int) -> bool:
     return before_ok and after_ok
 
 
+def _edge(text: str, start: int, end: int) -> bool:
+    """Whether no word character, digit or cluster mark continues text[start:end] on either side."""
+    return _cluster_edge(text, start, end) and is_bounded(text, start, end)
+
+
 def _bounded_matches(pattern: re.Pattern, text: str) -> Iterator[re.Match]:
     """Matches in the folded text that no word character, digit or cluster mark continues on either side."""
     for match in pattern.finditer(fold_digits(text)):
-        start, end = match.span()
-        if _cluster_edge(text, start, end) and is_bounded(text, start, end):
+        if _edge(text, *match.span()):
             yield match
 
 
@@ -530,18 +535,25 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
-    region in `phone_regions`, or a phone word before the run.
+    region in `phone_regions`, a phone word that names the run, or space-separated groups of which one starts
+    with `0`, the first one perhaps in brackets, which read digit by digit as one unit, as in `020 7946 0018` and
+    `(0161) 496 0000`.
 
-    A phone word names a run of 7 to 15 digits up to three words before it, as in `Call us on 0800 123 456.`, and
-    a shorter run only right after it, with no letter or digit between them. Readings only add words before a run,
-    so a run that a first pass leaves unnamed stays unnamed on a second pass. A named run of three or more digits
-    that fails the numbering plan reads digit by digit, as `911` in `Call 911 now.` and `+1 911` in `Call +1 911.`
-    A run right after a phone word that no plan reads stays as written: a run after `+` with no known country
-    code, as in `Call +999.`, a run of more than 15 digits, and a run of three or more digits with a letter
-    attached. A keep needs the phone word right before the run, because a first pass can push a phone word out
-    of the window or end a list, and a second pass must not read what the first kept. A shorter named run is a
-    count, as in `Call 2 friends.` A run that a word of `list_links` or a comma joins to a named run is named too,
-    as `112` in `Call 999 or 112.` A run with digits from two digit sets stays as written."""
+    A phone word names the run right after it, with no letter or digit between them. It also names a run up to
+    three words back, where a function word does not count, when the run has the shape of a phone number: a group
+    separator, or a leading `0` or `+`, as in `Call us on 0800 123 456.` The same window names a short code of
+    `short_codes`, as in `Call the police on 999.` A run that a word of `list_links` or a comma joins to a named run
+    is named too, as `112` in `Call 999 or 112.` Readings only add words before a run, so a run that a first pass
+    leaves unnamed stays unnamed on a second pass.
+
+    A named run of 7 to 15 digits reads digit by digit. A shorter named run reads digit by digit only when it is a
+    short code, so `Call 100 customers.` reads a count. A run right after a phone word that no plan reads stays as
+    written: a run after `+` with no known country code, as in `Call +999.`, a run of more than 15 digits, and a run
+    of three or more digits that a letter, or a joiner or an operator and a digit, continue, as in
+    `Call 0800 123 456/7.` and `Call 112+1.` Such a run is never named further back, so `Call 911 or 112+1.` reads
+    the expression. A run that ends inside a word tries its longest prefix that ends at a run edge, dropping groups
+    of one or two digits, so `Call 0800 123 456 8am to 8pm.` reads the number and the time. A run with digits from
+    two digit sets stays as written."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
 
@@ -549,32 +561,34 @@ class Telephone:
         words = context_words(tokens)
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
+        function_words = frozenset(request.data.get("function_words", ()))
+        short_codes = frozenset(request.data.get("short_codes", ()))
         codes = sorted((plan["country_code"] for plan in PHONE_PLANS.values()), key=len, reverse=True)
         plans = [PHONE_PLANS[r] for r in sorted(request.params.phone_regions or ()) if r in PHONE_PLANS]
         links = "|".join(map(re.escape, request.data.get("list_links", ())))
         listed = re.compile(f",? (?:{links}) |, " if links else ", ")
+        operators = "".join(request.data.get("operators", ()))
+        operand = re.compile(f"[{re.escape(operators)}][0-9]" if operators else "(?!)")
         named_end = None
-        for match in _PHONE.finditer(fold_digits(text)):
-            if not _cluster_edge(text, match.start(), match.end()):
+        folded = fold_digits(text)
+        kept_end = 0
+        for match in _PHONE.finditer(folded):
+            if match.start() < kept_end:
                 continue
-            glued = not is_bounded(text, match.start(), match.end())
-            written = match.group()
+            start, written = match.start(), match.group()
+            while not _edge(text, start, start + len(written)) and re.search(" [0-9]{1,2}$", written):
+                written = written[:written.rindex(" ")]
+            end = start + len(written)
+            glued = not _edge(text, start, end) or operand.match(folded, end) is not None
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
-            planned = 7 <= len(digits) <= 15
-            before = clause_window(text, words, match.start(), match.end(), -1, limit=3, breaks=breaks)
-            index = bisect_right(words, match.start(), key=lambda word: word.end)
-            phone_ends = [word.end for word in words[index - len(before):index] if word.text.lower() in phone_words]
-            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:match.start()]))
-            named = ((bool(phone_ends) and (planned or direct))
-                     or (named_end is not None and listed.fullmatch(text[named_end:match.start()]) is not None))
-            named_end = match.end() if named else None
-            if glued:
-                if direct and len(digits) >= 3:
-                    yield Span(match.start(), match.end(), Form.TELEPHONE,
-                               FrozenMap({"country_code": "", "groups": tuple(groups)}), recognizer=self.name,
-                               keep=True)
-                continue
+            shaped = written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written)
+            index = bisect_right(words, start, key=lambda word: word.end)
+            before = clause_window(text, words, start, end, -1, limit=8, breaks=breaks)
+            counted = [i for i in range(index - len(before), index) if words[i].text.lower() not in function_words]
+            window = range(counted[-3] if len(counted) >= 3 else index - len(before), index)
+            phone_ends = [words[i].end for i in window if words[i].text.lower() in phone_words]
+            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start]))
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
@@ -582,21 +596,36 @@ class Telephone:
                 else:
                     country_code = next((c for c in codes if groups[0].startswith(c)), "")
                     groups[0] = groups[0][len(country_code):]
+            short_code = "".join(groups) in short_codes
+            named = (direct or (bool(phone_ends) and (shaped or short_code))
+                     or (named_end is not None and listed.fullmatch(text[named_end:start]) is not None))
+            named_end = end if named else None
             unknown_code = written.startswith("+") and not country_code
-            if not one_digit_set(text[match.start():match.end()]) or (direct and (len(digits) > 15 or unknown_code)):
-                yield Span(match.start(), match.end(), Form.TELEPHONE,
-                           FrozenMap({"country_code": "", "groups": tuple(groups)}), recognizer=self.name, keep=True)
-                continue
-            if unknown_code or len(digits) > 15 or not (planned or (named and len(digits) >= 3)):
-                continue
-            if not (named or written.startswith("+")):
-                if digits.startswith("00"):
-                    if not any(digits[2:].startswith(code) for code in codes):
-                        continue
-                elif not any(plan["trunk"] and digits.startswith(plan["trunk"])
-                             and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans):
+            if glued:
+                if not (direct and len(digits) >= 3):
                     continue
-            yield Span(match.start(), match.end(), Form.TELEPHONE,
+                end = kept_end = named_end = _GLUED.match(folded, end).end()
+            if glued or not one_digit_set(text[start:end]) or (direct and (len(digits) > 15 or unknown_code)):
+                yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
+                           recognizer=self.name, keep=True)
+                continue
+            if re.fullmatch("(?:[(][0-9]+[)]|[0-9]+)(?: [0-9]+)+", written) and any(group.startswith("0") for group in groups):
+                yield Span(start, end, Form.TELEPHONE, FrozenMap({"country_code": "", "groups": tuple(groups)}),
+                           recognizer=self.name)
+                continue
+            if unknown_code or len(digits) > 15:
+                continue
+            if 7 <= len(digits):
+                if not (named or country_code):
+                    if digits.startswith("00"):
+                        if not any(digits[2:].startswith(code) for code in codes):
+                            continue
+                    elif not any(plan["trunk"] and digits.startswith(plan["trunk"])
+                                 and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans):
+                        continue
+            elif not (named and short_code):
+                continue
+            yield Span(start, end, Form.TELEPHONE,
                        FrozenMap({"country_code": country_code, "groups": tuple(groups)}), recognizer=self.name)
 
 

@@ -120,6 +120,7 @@ DATA = freeze({
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
     "units": UNITS_GB,
     "phone_words": ["phone", "telephone", "tel", "call", "dial", "ring", "text", "mobile", "cell", "fax"],
+    "short_codes": ["000", "101", "111", "112", "211", "311", "411", "511", "611", "711", "811", "911", "988", "999"],
     "list_links": ["and", "or"],
     "color_words": ["color", "colour", "colors", "colours"],
     "colors": COLORS,

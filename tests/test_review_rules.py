@@ -142,8 +142,6 @@ def test_a_phone_number_has_at_most_fifteen_digits():
     assert normalize("Call 1234567890123456 now.", "en-GB") == "Call 1234567890123456 now."
     assert not any(span.form is Form.TELEPHONE for span in analyze("See +44 1234 5678 9012 3456 78.", "en-GB").spans)
     assert not any(span.form is Form.TELEPHONE for span in analyze("Call 25 or 1234567890123456.", "en-GB").spans)
-    assert normalize("Call me at 0123456789012345 or 999.", "en-GB") == \
-        "Call me at 0123456789012345 or nine hundred and ninety-nine."
 
 
 def test_a_unit_after_a_currency_symbol_is_no_measure():
@@ -249,9 +247,9 @@ def test_a_year_at_the_end_of_the_text_before_a_space_reads(space):
     assert normalize(f"In 1999{space}", "en-GB") == f"In nineteen ninety-nine{space}"
 
 
-def test_a_phone_word_names_no_run_behind_another_number():
+def test_a_short_code_behind_another_number_reads_the_same_on_a_second_pass():
     once = normalize("Call 45./999 now.", "en-GB")
-    assert once == "Call forty-five./nine hundred and ninety-nine now."
+    assert once == "Call forty-five./nine nine nine now."
     assert normalize(once, "en-GB") == once
 
 
@@ -273,15 +271,19 @@ def test_a_named_run_with_no_known_country_code_stays_as_written():
     assert normalize("Call +9 now.", "en-GB") == "Call +9 now."
 
 
-def test_a_phone_word_three_words_back_names_only_a_planned_run():
-    assert normalize("Call me at 999.", "en-GB") == "Call me at nine hundred and ninety-nine."
-    assert normalize("Call all of us at 555 1234.", "en-GB") == \
-        "Call all of us at five hundred and fifty-five one thousand two hundred and thirty-four."
+def test_the_window_names_only_a_phone_shaped_run_or_a_short_code():
+    assert normalize("Call me at 999.", "en-GB") == "Call me at nine nine nine."
+    assert normalize("Call me at 100.", "en-GB") == "Call me at one hundred."
+    assert normalize("Phone sales hit 2500000 units.", "en-GB") == \
+        "Phone sales hit two million five hundred thousand units."
+    assert normalize("Call the office staff today at 555 1234.", "en-GB") == \
+        "Call the office staff today at five hundred and fifty-five one thousand two hundred and thirty-four."
 
 
 @pytest.mark.parametrize("text", ["Dial 25 and 999.", "Call 25 or 999.", "Call 999 or 112 or 2 friends.",
                                   "Call 0099 1234 5678 now.", "Ring Dial \u0663--0700", "Tel 2, +999.",
-                                  "Phone: cell 0099 now020 7946 0018"])
+                                  "Phone: cell 0099 now020 7946 0018", "Call 911 or 1234567890123456.",
+                                  "Call 999 or +999."])
 def test_a_digit_reading_of_a_named_run_reads_the_same_on_a_second_pass(text):
     once = normalize(text, "en-GB")
     assert once != text
@@ -311,3 +313,13 @@ def test_a_run_with_a_letter_attached_stays_as_written_only_right_after_a_phone_
     assert normalize("Text 020 7946 0018pages now.", "en-GB") == "Text 020 7946 0018pages now."
     assert normalize("Use 020 7946 0018pages now.", "en-GB") == \
         "Use 020 seven thousand nine hundred and forty-six 0018pages now."
+
+
+def test_the_window_names_a_run_that_starts_with_a_zero():
+    assert normalize("Call us on 02079460018.", "en-US") == \
+        "Call us on zero two zero seven nine four six zero zero one eight."
+
+
+def test_a_kept_run_that_a_joiner_continues_starts_a_phone_list():
+    assert normalize("Call 0800 123 456/7 or 5551234.", "en-GB") == \
+        "Call 0800 123 456/7 or five five five one two three four."
