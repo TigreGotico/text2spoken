@@ -115,8 +115,9 @@ def test_a_lead_with_words_after_a_letter_is_no_lead():
     assert normalize("Play #5 now.", "en-GB") == "Play number five now."
 
 
-@pytest.mark.parametrize("text,spans", [("Dial 0044 20 7946 0018 now.", 1), ("Dial 0099 20 7946 0018 now.", 0)])
-def test_a_number_written_with_00_needs_a_country_code(text, spans):
+@pytest.mark.parametrize("text,spans", [("Use 0044 20 7946 0018 now.", 1), ("Use 0099 20 7946 0018 now.", 0),
+                                        ("Dial 0099 20 7946 0018 now.", 1)])
+def test_a_number_written_with_00_needs_a_country_code_or_a_phone_word(text, spans):
     from text2spoken import analyze
 
     assert sum(span.form is Form.TELEPHONE for span in analyze(text, "en-GB").spans) == spans

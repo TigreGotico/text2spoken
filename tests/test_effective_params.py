@@ -66,8 +66,8 @@ def test_date_order_decides_only_an_ambiguous_date():
 
 
 def test_phone_regions_give_trunk_evidence():
-    text = "Ring 020 7946 0018 now."
-    spoken = "Ring zero two zero seven nine four six zero zero one eight now."
+    text = "Try 020 7946 0018 now."
+    spoken = "Try zero two zero seven nine four six zero zero one eight now."
     assert normalize(text, "en-US", NormalizationParams(phone_regions=frozenset({"GB"}))) == spoken
     assert normalize(text, "en-GB", NormalizationParams(phone_regions=frozenset({"US"}))) != spoken
 

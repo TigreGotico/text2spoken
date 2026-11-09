@@ -78,7 +78,6 @@ UNITS_GB = {
     "MHz": {"one": "megahertz", "other": "megahertz"},
     "GHz": {"one": "gigahertz", "other": "gigahertz"},
     "MB": {"one": "megabyte", "other": "megabytes"},
-    "GB": {"one": "gigabyte", "other": "gigabytes"},
 }
 
 DATA = freeze({
@@ -120,7 +119,7 @@ DATA = freeze({
                "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
     "units": UNITS_GB,
-    "phone_words": ["phone", "telephone", "tel", "call", "dial", "mobile", "cell", "fax"],
+    "phone_words": ["phone", "telephone", "tel", "call", "dial", "ring", "text", "mobile", "cell", "fax"],
     "list_links": ["and", "or"],
     "color_words": ["color", "colour", "colors", "colours"],
     "colors": COLORS,
@@ -453,8 +452,8 @@ class Year:
             stop = start
             while stop < len(text) and not text[stop].isspace():
                 stop += 1
-            follower = text[start:stop]
-            if follower[0] in signs or follower.rstrip(".,;:!?)").lower() in units:
+            follower = text[start:stop].rstrip(".,;:!?)")
+            if (text[start] in signs and not is_letter(text[start])) or follower.lower() in units:
                 return False
             stop = start
             while stop < len(text) and is_letter(text[stop]):

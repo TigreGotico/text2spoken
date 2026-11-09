@@ -139,6 +139,11 @@ def test_a_phone_number_has_at_most_fifteen_digits():
     assert normalize("Call 012345678901234 now.", "en-GB") == \
         "Call zero one two three four five six seven eight nine zero one two three four now."
     assert normalize("Call 0123456789012345 now.", "en-GB") == "Call 0123456789012345 now."
+    assert normalize("Call 1234567890123456 now.", "en-GB") == "Call 1234567890123456 now."
+    assert not any(span.form is Form.TELEPHONE for span in analyze("See +44 1234 5678 9012 3456 78.", "en-GB").spans)
+    assert not any(span.form is Form.TELEPHONE for span in analyze("Call 25 or 1234567890123456.", "en-GB").spans)
+    assert normalize("Call me at 0123456789012345 or 999.", "en-GB") == \
+        "Call me at 0123456789012345 or nine hundred and ninety-nine."
 
 
 def test_a_unit_after_a_currency_symbol_is_no_measure():
@@ -261,3 +266,48 @@ def test_render_gives_a_verbalizer_the_words_of_its_clause_only(monkeypatch):
     monkeypatch.setattr(loader, "_registry", lambda: {"en": spec})
     assert normalize("We left. Then 5 came; all went.", "en") == "We left. Then N came; all went."
     assert seen == [(("Then",), ("came",))]
+
+
+def test_a_named_run_with_no_known_country_code_stays_as_written():
+    assert normalize("Call +999.", "en-GB") == "Call +999."
+    assert normalize("Call +9 now.", "en-GB") == "Call +9 now."
+
+
+def test_a_phone_word_three_words_back_names_only_a_planned_run():
+    assert normalize("Call me at 999.", "en-GB") == "Call me at nine hundred and ninety-nine."
+    assert normalize("Call all of us at 555 1234.", "en-GB") == \
+        "Call all of us at five hundred and fifty-five one thousand two hundred and thirty-four."
+
+
+@pytest.mark.parametrize("text", ["Dial 25 and 999.", "Call 25 or 999.", "Call 999 or 112 or 2 friends.",
+                                  "Call 0099 1234 5678 now.", "Ring Dial \u0663--0700", "Tel 2, +999.",
+                                  "Phone: cell 0099 now020 7946 0018"])
+def test_a_digit_reading_of_a_named_run_reads_the_same_on_a_second_pass(text):
+    once = normalize(text, "en-GB")
+    assert once != text
+    assert normalize(once, "en-GB") == once
+
+
+def test_a_letter_sign_blocks_a_year_only_as_the_whole_follower():
+    assert normalize("In 1999 x 2 rose.", "en-GB") == "In one thousand nine hundred and ninety-nine x two rose."
+    assert normalize("In 1999 xUnit spread.", "en-GB") == "In nineteen ninety-nine xUnit spread."
+
+
+def test_a_lexicon_key_that_starts_with_a_full_stop_sees_the_words_before_it(monkeypatch):
+    seen = []
+
+    def spy(span, context):
+        seen.append(context.before)
+        return span.fields["spoken"]
+
+    spec = replace(EN, verbalizers={**EN.verbalizers, Form.LEXICON: spy})
+    monkeypatch.setattr(loader, "_registry", lambda: {"en": spec})
+    params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({".NET": "dot net"})}))
+    assert normalize("Use .NET now.", "en", params) == "Use dot net now."
+    assert seen == [("Use",)]
+
+
+def test_a_run_with_a_letter_attached_stays_as_written_only_right_after_a_phone_word():
+    assert normalize("Text 020 7946 0018pages now.", "en-GB") == "Text 020 7946 0018pages now."
+    assert normalize("Use 020 7946 0018pages now.", "en-GB") == \
+        "Use 020 seven thousand nine hundred and forty-six 0018pages now."

@@ -66,7 +66,7 @@ en-064	en-GB	measure	Add 1 kg of flour.	Add one kilogram of flour.	CLDR plural r
 en-065	en-GB	measure	Add 1.5 kg of flour.	Add one point five kilograms of flour.	CLDR plural rules for en: one is i = 1 and v = 0: 1.5 is other; SI unit names (BIPM SI Brochure, en-GB spelling; NIST spelling for en-US), from memory	unchecked
 en-066	en-GB	measure	Add 1.0 kg of flour.	Add one point zero kilograms of flour.	CLDR plural rules for en: one is i = 1 and v = 0: 1.0 has v = 1, so other	unchecked
 en-067	en-GB	telephone	Call +44 20 7946 0018 today.	Call plus four four two zero seven nine four six zero zero one eight today.	design section 4.3: + and a country code; digit by digit	unchecked
-en-068	en-GB	telephone	Ring 020 7946 0018 now.	Ring zero two zero seven nine four six zero zero one eight now.	design section 4.3: the trunk prefix 0 of GB and 10 national digits	unchecked
+en-068	en-GB	telephone	Try 020 7946 0018 now.	Try zero two zero seven nine four six zero zero one eight now.	design section 4.3: the trunk prefix 0 of GB and 10 national digits	unchecked
 en-069	en-GB	telephone	My phone: 555 0123 4567.	My phone: five five five zero one two three four five six seven.	design section 4.3: a word before the run names a phone	unchecked
 en-070	en-US	abbreviation	Dr. Smith is here.	Doctor Smith is here.	from memory, not fetched	unchecked
 en-071	en-GB	abbreviation	Dr Smith is here.	Doctor Smith is here.	British style writes Dr with no period, from memory, not fetched	unchecked
@@ -117,9 +117,9 @@ en-115	en-GB	none	Set the aspect ratio to 16:10.	Set the aspect ratio to 16:10.	
 en-116	en-GB	none	Code 007 opens.	Code 007 opens.	text2spoken-design section 4.2: digits with a leading zero and no lead stay as written	unchecked
 en-117	en-GB	none	It took 1:23:45.	It took 1:23:45.	text2spoken-design section 4.2: a seconds field is no clock evidence, so a duration stays as written	unchecked
 en-118	en-GB	none	The lap took 0:45:10 in all.	The lap took 0:45:10 in all.	text2spoken-design section 4.2: a seconds field is no clock evidence, so a duration stays as written	unchecked
-en-119	en-US	none	Call 911 now.	Call 911 now.	text2spoken-design section 4.3: a run after a phone word that fails the numbering plan stays as written	unchecked
-en-120	en-US	none	Phone: 911.	Phone: 911.	text2spoken-design section 4.3: a run after a phone word that fails the numbering plan stays as written	unchecked
-en-121	en-GB	none	Tel 999	Tel 999	text2spoken-design section 4.3: a run after a phone word that fails the numbering plan stays as written	unchecked
+en-119	en-US	telephone	Call 911 now.	Call nine one one now.	text2spoken-design section 4.3: a run of three or more digits after a phone word reads digit by digit	unchecked
+en-120	en-US	telephone	Phone: 911.	Phone: nine one one.	text2spoken-design section 4.3: a run of three or more digits after a phone word reads digit by digit	unchecked
+en-121	en-GB	telephone	Tel 999	Tel nine nine nine	text2spoken-design section 4.3: a run of three or more digits after a phone word reads digit by digit	unchecked
 en-122	en-GB	cardinal	We won in 1234 steps.	We won in one thousand two hundred and thirty-four steps.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
 en-123	en-GB	cardinal	It fits in 2048 bytes.	It fits in two thousand and forty-eight bytes.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
 en-124	en-GB	cardinal	She played in 1999 games.	She played in one thousand nine hundred and ninety-nine games.	text2spoken-design section 4.2: a lowercase word after the number that is no function word blocks a year; Wikipedia, English numerals (fetched 2026-11-06): British and before the last part	unchecked
@@ -184,14 +184,14 @@ en-182	en-GB	measure	It works in 1800 MHz.	It works in one thousand eight hundre
 en-183	en-GB	measure	Ran in 1500 KM.	Ran in one thousand five hundred KM.	text2spoken-design section 4.2: a unit of the units table in any case blocks a year; the measure reads only the case the table writes, so KM stays	unchecked
 en-184	en-GB	expression	Shown in 1920 × 1080 pixels.	Shown in one thousand nine hundred and twenty times one thousand and eighty pixels.	text2spoken-design section 4.2: an operator blocks a year; operator words from memory, not fetched	unchecked
 en-185	en-GB	year	In 1999 Smith won.	In nineteen ninety-nine Smith won.	text2spoken-design section 4.2: a capitalised word does not block a year	unchecked
-en-186	en-GB	none	Call 999 or 112.	Call 999 or 112.	text2spoken-design section 4.2: a run that or joins to a run after a phone word counts as named, and a short run after a phone word stays as written	unchecked
-en-187	en-GB	none	Call 999, 112 or 911.	Call 999, 112 or 911.	text2spoken-design section 4.2: a list of runs after a phone word counts as named, and a short run after a phone word stays as written	unchecked
-en-188	en-GB	none	Dial 999 now.	Dial 999 now.	text2spoken-design section 4.2: dial is a phone word, and a short run after a phone word stays as written	unchecked
+en-186	en-GB	telephone	Call 999 or 112.	Call nine nine nine or one one two.	text2spoken-design section 4.3: a run that or joins to a named run is named, and a named run of three or more digits reads digit by digit	unchecked
+en-187	en-GB	telephone	Call 999, 112 or 911.	Call nine nine nine, one one two or nine one one.	text2spoken-design section 4.3: a list of runs after a phone word is named, and each run reads digit by digit	unchecked
+en-188	en-GB	telephone	Dial 999 now.	Dial nine nine nine now.	text2spoken-design section 4.3: dial is a phone word, and a named run of three or more digits reads digit by digit	unchecked
 en-189	en-GB	cardinal	Call me in 5 minutes.	Call me in five minutes.	text2spoken-design section 4.2: a phone word names only the run right after it	unchecked
 en-190	en-GB	cardinal	Call 2 friends.	Call two friends.	text2spoken-design section 4.2: a run after a phone word stays as written only from three digits	unchecked
 en-191	en-GB	cardinal	Fax 3 pages.	Fax three pages.	text2spoken-design section 4.2: a run after a phone word stays as written only from three digits	unchecked
 en-192	en-GB	cardinal	Sit in cell 5.	Sit in cell five.	text2spoken-design section 4.2: a run after a phone word stays as written only from three digits	unchecked
-en-193	en-GB	none	Call +1 911.	Call +1 911.	text2spoken-design section 4.2: a short run after a phone word stays as written with its country code	unchecked
+en-193	en-GB	telephone	Call +1 911.	Call plus one nine one one.	text2spoken-design section 4.3: + reads plus, the country code and the named run read digit by digit	unchecked
 en-194	en-GB	date	From 12/03/2024-March 15, 2025.	From the twelfth of March twenty twenty-four-March fifteenth twenty twenty-five.	text2spoken-design section 2.1: a waiting span wakes when the span on its left is claimed; section 4.2: en-GB numeric dates are DMY	unchecked
 en-195	en-GB	percent	Rates of 10%-20% apply.	Rates of ten per cent to twenty per cent apply.	text2spoken-design section 4.2: a dash alone between two percentages reads the range word, and a dash right after a percent sign is no minus sign	unchecked
 en-196	en-GB	cardinal	In 1939-1945 and 1950 games.	In one thousand nine hundred and thirty-nine to one thousand nine hundred and forty-five and one thousand nine hundred and fifty games.	text2spoken-design section 4.2: the follower of the last year of a linked list decides for the whole list, its range too	unchecked
@@ -203,11 +203,27 @@ en-201	en-GB	none	It ended 2-2.	It ended 2-2.	text2spoken-design section 4.2: a 
 en-202	en-GB	cardinal	Call 20 people now.	Call twenty people now.	text2spoken-design section 4.2: a run after a phone word stays as written only from three digits	unchecked
 en-203	en-GB	cardinal	Book room 101 or 102.	Book room one hundred and one or one hundred and two.	text2spoken-design section 4.2: only a run that a phone word names starts a list of phone runs	unchecked
 en-204	en-GB	year	Wars came 1939-1945 and 1950.	Wars came nineteen thirty-nine to nineteen forty-five and nineteen fifty.	text2spoken-design section 4.2: a list of years may start at a year range; Wikipedia, English numerals (fetched 2026-11-06), Dates: pairs of digits	unchecked
-en-205	en-GB	measure	It has 4 GB of memory.	It has four gigabytes of memory.	NIST, Prefixes for binary multiples (fetched 2026-11-07): 1 GB = 10^9 B, one gigabyte	unchecked
+en-205	en-GB	measure	It has 4 MB of memory.	It has four megabytes of memory.	NIST, Prefixes for binary multiples (fetched 2026-11-07): 1 MB = 10^6 B, one megabyte	unchecked
 en-206	en-GB	measure	It runs at 3 GHz.	It runs at three gigahertz.	NIST SP 811, section 9.2 (fetched 2026-11-07): the plural of hertz is hertz	unchecked
 en-207	en-GB	percent	So 1+1 × 10% now.	So 1+1 × ten per cent now.	text2spoken-design section 4.2: an operator right after the last integer keeps the expression as written	unchecked
-en-208	en-GB	cardinal	Call 25 or 999.	Call twenty-five or nine hundred and ninety-nine.	text2spoken-design section 4.3: only a run that stays as written starts a list of phone runs, so a second pass reads the same	unchecked
+en-208	en-GB	telephone	Call 25 or 999.	Call twenty-five or nine nine nine.	text2spoken-design section 4.3: a run below three digits reads as a count and does not end the list, and the named run of three digits reads digit by digit	unchecked
 en-209	en-GB	cardinal	In 1066 and 1939-1945 games.	In one thousand and sixty-six and one thousand nine hundred and thirty-nine to one thousand nine hundred and forty-five games.	text2spoken-design section 4.2: a range is one link of a list of years, and the follower of the last member decides for the whole list	unchecked
 en-210	en-GB	range	In 1939-1945 games.	In one thousand nine hundred and thirty-nine to one thousand nine hundred and forty-five games.	text2spoken-design section 4.2: the follower of a year range decides for both ends, and the first end alone is no year	unchecked
 en-211	en-GB	none	In 1999-12 it ended.	In 1999-12 it ended.	text2spoken-design section 4.2: a year that a range mark joins to digits that no span reads waits, and a range that does not go up stays as written	unchecked
 en-212	en-GB	none	We sold in 2010-12 units.	We sold in 2010-12 units.	text2spoken-design section 4.2: the follower of a short-end year range decides for both ends, and a range that does not go up stays as written	unchecked
+en-213	en-GB	none	Team GB won 29 GB golds.	Team GB won twenty-nine GB golds.	text2spoken-design section 4.2: GB is not a unit symbol, since it names Great Britain as often as gigabytes	unchecked
+en-214	en-GB	cardinal	The 2012 GB squad won.	The two thousand and twelve GB squad won.	text2spoken-design section 4.2: GB is not a unit symbol, and a number with no year word before it reads as a count	unchecked
+en-215	en-GB	year	In 2012 GB won 29 golds.	In twenty twelve GB won twenty-nine golds.	text2spoken-design section 4.2: GB is not a unit, so it does not block the year reading	unchecked
+en-216	en-GB	telephone	Call 020 7946 0018 or 999 now.	Call zero two zero seven nine four six zero zero one eight or nine nine nine now.	text2spoken-design section 4.3: a run that or joins to a named run is named, and a named run of three or more digits reads digit by digit	unchecked
+en-217	en-GB	telephone	Call us on 0800 123 456.	Call us on zero eight zero zero one two three four five six.	text2spoken-design section 4.3: a phone word up to three words before a run of 7 to 15 digits names it	unchecked
+en-218	en-GB	telephone	Call me at 555 1234.	Call me at five five five one two three four.	text2spoken-design section 4.3: a phone word up to three words before a run of 7 to 15 digits names it	unchecked
+en-219	en-GB	telephone	Ring 999 now.	Ring nine nine nine now.	text2spoken-design section 4.3: ring is a phone word	unchecked
+en-220	en-US	telephone	Text 911.	Text nine one one.	text2spoken-design section 4.3: text is a phone word	unchecked
+en-221	en-GB	cardinal	Text 2 pages.	Text two pages.	text2spoken-design section 4.3: a named run below three digits reads as a count	unchecked
+en-222	en-GB	telephone	Call 999 or 112 or 2 friends.	Call nine nine nine or one one two or two friends.	text2spoken-design section 4.3: a run below three digits reads as a count	unchecked
+en-223	en-GB	telephone	Dial 25 and 999.	Dial twenty-five and nine nine nine.	text2spoken-design section 4.3: a run below three digits does not end the list of runs a phone word names	unchecked
+en-224	en-GB	none	Open 9am-5pm-7pm‍9	Open 9am-5pm-7pm‍nine	text2spoken-design section 4.2: a format character after the last span of a dash chain continues the run, so no pair of the chain joins	unchecked
+en-225	en-GB	expression	Shown in 1920 ×1080 pixels.	Shown in one thousand nine hundred and twenty times one thousand and eighty pixels.	text2spoken-design section 4.2: a symbol sign blocks a year as the first character of the follower	unchecked
+en-226	en-GB	cardinal	In 1999 xenophobia rose.	In one thousand nine hundred and ninety-nine xenophobia rose.	text2spoken-design section 4.2: a lowercase word that is not a function word blocks a year reading	unchecked
+en-227	en-GB	year	In 1999 xUnit spread.	In nineteen ninety-nine xUnit spread.	text2spoken-design section 4.2: a letter sign blocks a year only as the whole follower	unchecked
+en-228	en-GB	telephone	Try 00 44 20 7946 0018 today.	Try zero zero four four two zero seven nine four six zero zero one eight today.	text2spoken-design section 4.3: a number written with 00 reads its digits as written, and 00 is evidence before the country code of a numbering plan	unchecked

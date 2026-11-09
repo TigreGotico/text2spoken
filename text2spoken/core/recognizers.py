@@ -7,6 +7,7 @@ ASCII, which keeps every offset.
 from __future__ import annotations
 
 import re
+import unicodedata
 from bisect import bisect_right
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
@@ -107,9 +108,10 @@ def _lead(text: str, start: int, leads) -> str:
 
 
 def _continued(text: str, end: int) -> bool:
-    """Whether one character that is not a space or a digit, and then a digit, follow text[:end]."""
-    return (end + 1 < len(text) and not text[end].isspace() and not is_digit(text[end])
-            and is_digit(text[end + 1]))
+    """Whether the run goes on after text[:end]: a format character, such as the zero-width joiner of
+    `7pm\u200d9`, or one character that is not a space or a digit and then a digit."""
+    return end < len(text) and (unicodedata.category(text[end]) == "Cf" or (
+        end + 1 < len(text) and not text[end].isspace() and not is_digit(text[end]) and is_digit(text[end + 1])))
 
 
 def _sentence_period(text: str, end: int) -> bool:
@@ -122,18 +124,19 @@ def join_ranges(spans: Iterator[Span], text: str, range_word: str | None) -> Ite
     """The spans, where a dash alone between two of them joins them as a range: the first span takes the dash
     and a trail of the range word, as in `9am-5pm` and `1939-1945`.
 
-    A pair with a joiner and a digit after its second span, as in `1990-91-92`, does not join: both spans wait,
-    and the run stays as written. A dash to a third span joins on, as in `9am-5pm-7pm`."""
-    ordered = sorted(spans, key=lambda span: span.start)
-
-    def dashed(left: Span | None, right: Span | None) -> bool:
-        return left is not None and right is not None and text[left.end:right.start] in ("-", "–")
-
-    for span, following, after in zip(ordered, [*ordered[1:], None], [*ordered[2:], None, None]):
-        if (range_word and dashed(span, following) and not span.trail
-                and (dashed(following, after) or not _continued(text, following.end))):
-            span = replace(span, end=following.start, trail=f" {range_word} ")
-        yield span
+    Spans that dashes chain join as one run, as in `9am-5pm-7pm`. A joiner and a digit after the last span of
+    the chain, as in `1990-91-92`, keep every span of it apart: they wait, and the run stays as written."""
+    chains: list[list[Span]] = []
+    for span in sorted(spans, key=lambda span: span.start):
+        if chains and text[chains[-1][-1].end:span.start] in ("-", "–"):
+            chains[-1].append(span)
+        else:
+            chains.append([span])
+    for chain in chains:
+        joined = bool(range_word) and not _continued(text, chain[-1].end)
+        for span, following in zip(chain, chain[1:]):
+            yield replace(span, end=following.start, trail=f" {range_word} ") if joined and not span.trail else span
+        yield chain[-1]
 
 
 @dataclass(frozen=True)
@@ -527,13 +530,18 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
-    region in `phone_regions`, or a word before the run that names a phone, with no other digit between them.
+    region in `phone_regions`, or a phone word before the run.
 
-    A run of three or more digits after a phone word that fails the numbering plan, such as `911` in
-    `Call 911 now.` or `+1 911` in `Call +1 911.`, stays as written. A run that a word of `list_links` or a comma
-    joins to such a kept run counts as named by the same phone word, as `112` in `Call 999 or 112.` Only a kept
-    run starts a list, because a run that reads has no digits left to start one on a second pass. A run with
-    digits from two digit sets stays as written."""
+    A phone word names a run of 7 to 15 digits up to three words before it, as in `Call us on 0800 123 456.`, and
+    a shorter run only right after it, with no letter or digit between them. Readings only add words before a run,
+    so a run that a first pass leaves unnamed stays unnamed on a second pass. A named run of three or more digits
+    that fails the numbering plan reads digit by digit, as `911` in `Call 911 now.` and `+1 911` in `Call +1 911.`
+    A run right after a phone word that no plan reads stays as written: a run after `+` with no known country
+    code, as in `Call +999.`, a run of more than 15 digits, and a run of three or more digits with a letter
+    attached. A keep needs the phone word right before the run, because a first pass can push a phone word out
+    of the window or end a list, and a second pass must not read what the first kept. A shorter named run is a
+    count, as in `Call 2 friends.` A run that a word of `list_links` or a comma joins to a named run is named too,
+    as `112` in `Call 999 or 112.` A run with digits from two digit sets stays as written."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
 
@@ -546,21 +554,23 @@ class Telephone:
         links = "|".join(map(re.escape, request.data.get("list_links", ())))
         listed = re.compile(f",? (?:{links}) |, " if links else ", ")
         named_end = None
-        for match in _bounded_matches(_PHONE, text):
+        for match in _PHONE.finditer(fold_digits(text)):
+            if not _cluster_edge(text, match.start(), match.end()):
+                continue
+            glued = not is_bounded(text, match.start(), match.end())
             written = match.group()
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
-            before = clause_window(text, words, match.start(), match.end(), -1, limit=1, breaks=breaks)
-            word_end = words[bisect_right(words, match.start(), key=lambda word: word.end) - 1].end if before else 0
-            named = ((before and before[0].lower() in phone_words
-                      and not any(map(is_digit, text[word_end:match.start()])))
+            planned = 7 <= len(digits) <= 15
+            before = clause_window(text, words, match.start(), match.end(), -1, limit=3, breaks=breaks)
+            index = bisect_right(words, match.start(), key=lambda word: word.end)
+            phone_ends = [word.end for word in words[index - len(before):index] if word.text.lower() in phone_words]
+            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:match.start()]))
+            named = ((bool(phone_ends) and (planned or direct))
                      or (named_end is not None and listed.fullmatch(text[named_end:match.start()]) is not None))
-            mixed = not one_digit_set(text[match.start():match.end()])
-            short = not 7 <= len(digits) <= 15
-            kept = named and short and len(digits) >= 3
-            named_end = match.end() if kept else None
-            if mixed or short:
-                if mixed or kept:
+            named_end = match.end() if named else None
+            if glued:
+                if direct and len(digits) >= 3:
                     yield Span(match.start(), match.end(), Form.TELEPHONE,
                                FrozenMap({"country_code": "", "groups": tuple(groups)}), recognizer=self.name,
                                keep=True)
@@ -572,15 +582,19 @@ class Telephone:
                 else:
                     country_code = next((c for c in codes if groups[0].startswith(c)), "")
                     groups[0] = groups[0][len(country_code):]
-                if not country_code:
-                    continue
-            elif digits.startswith("00"):
-                if not any(digits[2:].startswith(code) for code in codes):
-                    continue
-            else:
-                trunk = any(plan["trunk"] and digits.startswith(plan["trunk"])
-                            and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans)
-                if not (trunk or named):
+            unknown_code = written.startswith("+") and not country_code
+            if not one_digit_set(text[match.start():match.end()]) or (direct and (len(digits) > 15 or unknown_code)):
+                yield Span(match.start(), match.end(), Form.TELEPHONE,
+                           FrozenMap({"country_code": "", "groups": tuple(groups)}), recognizer=self.name, keep=True)
+                continue
+            if unknown_code or len(digits) > 15 or not (planned or (named and len(digits) >= 3)):
+                continue
+            if not (named or written.startswith("+")):
+                if digits.startswith("00"):
+                    if not any(digits[2:].startswith(code) for code in codes):
+                        continue
+                elif not any(plan["trunk"] and digits.startswith(plan["trunk"])
+                             and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans):
                     continue
             yield Span(match.start(), match.end(), Form.TELEPHONE,
                        FrozenMap({"country_code": country_code, "groups": tuple(groups)}), recognizer=self.name)
