@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2a13](https://github.com/TigreGotico/text2spoken/tree/0.0.2a13) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a12...0.0.2a13)
+
+**Merged pull requests:**
+
+- perf: cache the lexicon check [\#26](https://github.com/TigreGotico/text2spoken/pull/26) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a12](https://github.com/TigreGotico/text2spoken/tree/0.0.2a12) (2026-11-09)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a11...0.0.2a12)
+
 ## [0.0.2a11](https://github.com/TigreGotico/text2spoken/tree/0.0.2a11) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a10...0.0.2a11)
