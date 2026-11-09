@@ -33,6 +33,10 @@ def script(value, where: str) -> None:
         f"{where}: {value!r} is not an ISO 15924 script code such as 'Latn'"
 
 
+def boolean(value, where: str) -> None:
+    assert type(value) is bool, f"{where}: {value!r} is not true or false"
+
+
 def anything(value, where: str) -> None:
     pass
 
@@ -62,13 +66,17 @@ def map_of(key: Shape, value: Shape) -> Shape:
     return check
 
 
-def record(**fields: Shape) -> Shape:
-    """An object that holds at least these fields; the language file may add its own."""
+def record(optional: dict[str, Shape] | None = None, **fields: Shape) -> Shape:
+    """An object that holds at least these fields, and the optional fields in their shape when it holds them; the
+    language file may add its own."""
     def check(table, where: str) -> None:
         assert isinstance(table, FrozenMap), f"{where}: {table!r} is not an object"
         for name, field in fields.items():
             assert name in table, f"{where}: no {name!r}"
             field(table[name], f"{where}.{name}")
+        for name, field in (optional or {}).items():
+            if name in table:
+                field(table[name], f"{where}.{name}")
     return check
 
 
@@ -76,6 +84,8 @@ WORDS = list_of(word)
 
 SHAPES: dict[str, Shape] = {
     "case_suffixes": WORDS,
+    "clock_marks": list_of(record(mark=word, seconds=boolean, needs=one_of("evidence", "day_period", "none"),
+                                  optional={"closes_hour": boolean})),
     "color_words": WORDS,
     "currencies": map_of(word, record(symbols=list_of(word, minimum=1))),
     "day_periods": map_of(word, WORDS),
@@ -88,7 +98,10 @@ SHAPES: dict[str, Shape] = {
     "number_marks": map_of(script, list_of(record(decimal=word, group=text), minimum=1)),
     "operators": map_of(character, word),
     "percent": record(signs=list_of(word, minimum=1), position=one_of("after", "before", "either")),
+    "no_phone_shapes": WORDS,
+    "phone_kept_shapes": WORDS,
     "phone_shapes": WORDS,
+    "phone_unit_shapes": WORDS,
     "phone_words": WORDS,
     "proclitics": WORDS,
     "range_marks": WORDS,
@@ -110,15 +123,17 @@ READERS: dict[str, frozenset[str]] = {
     "decimal": frozenset({"number_marks", "symbols", "proclitics", "case_suffixes"}),
     "fraction": frozenset({"symbols", "units", "proclitics", "case_suffixes"}),
     "idiom": frozenset({"idioms", "proclitics", "case_suffixes"}),
-    "range": frozenset({"symbols", "proclitics", "case_suffixes"}),
+    "range": frozenset({"range_marks", "symbols", "proclitics", "case_suffixes"}),
     "date_numeric": frozenset({"symbols", "proclitics", "case_suffixes"}),
-    "time_clock": frozenset({"range_word", "time_words", "day_periods", "time_suffixes"}),
-    "percent": frozenset({"number_marks", "percent", "range_word", "proclitics", "case_suffixes"}),
-    "money": frozenset({"number_marks", "currencies", "scales", "range_word", "proclitics", "case_suffixes"}),
+    "time_clock": frozenset({"range_word", "range_marks", "clock_marks", "time_words", "day_periods", "time_suffixes"}),
+    "percent": frozenset({"number_marks", "percent", "range_word", "range_marks", "proclitics", "case_suffixes"}),
+    "money": frozenset({"number_marks", "currencies", "scales", "range_word", "range_marks", "proclitics",
+                      "case_suffixes"}),
     "measure": frozenset({"number_marks", "symbols", "units", "dimension_marks", "range_marks", "proclitics",
                         "case_suffixes"}),
-    "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "short_codes", "list_links", "operators",
-                          "symbols", "proclitics", "case_suffixes"}),
+    "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
+                          "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
+                          "case_suffixes"}),
     "color": frozenset({"color_words"}),
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
@@ -129,5 +144,8 @@ READERS: dict[str, frozenset[str]] = {
 `speak_cardinal` and `speak_lexicon` read, and the keys of the unread check of `render` and of the option defaults
 of `effective_params`."""
 
-OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes"})
+PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
+"""The tables of regexes that the shared telephone recognizer compiles."""
+
+OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks"})
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""

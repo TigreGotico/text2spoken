@@ -17,7 +17,7 @@ import linguatag
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from tests.data_keys import OPTIONAL, READERS, SHAPES
+from tests.data_keys import OPTIONAL, PHONE_SHAPE_KEYS, READERS, SHAPES
 from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
@@ -172,9 +172,10 @@ def check_pattern(pattern: str) -> None:
 
 
 def clause_7(name: str, spec: LanguageSpec) -> None:
-    """Every table that holds regexes: `patterns`, and `phone_shapes`, which the core compiles."""
+    """Every table that holds regexes: `patterns`, and the phone shape tables, which the core compiles."""
     for data in (spec.data, *(v.data for v in spec.varieties)):
-        for pattern in (*data.get("patterns", FrozenMap()).values(), *data.get("phone_shapes", ())):
+        for pattern in (*data.get("patterns", FrozenMap()).values(),
+                        *(shape for key in PHONE_SHAPE_KEYS for shape in data.get(key, ()))):
             check_pattern(pattern)
 
 

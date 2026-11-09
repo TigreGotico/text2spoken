@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import Number
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, _hour_follows, join_ranges, numbers_in,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, join_ranges, numbers_in,
                                           speak_cardinal, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
@@ -30,9 +30,6 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
 _MONTH = "(" + "|".join(MONTHS) + ")"
 _ORDINAL_MARK = "(?:st|nd|rd|th)"
 _TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
-_THOUSANDS = re.compile("[1-9][0-9]{0,2}(?: [0-9]{3})+")
-_YEAR_RANGE = re.compile("(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})")
-_GROUPS = re.compile("(?:[(][0-9]+[)]|[0-9]+)(?: [0-9]+)+")
 
 COLORS = {
     "000000": "black", "0000cd": "medium blue", "0000ff": "blue", "006400": "dark green", "008000": "green",
@@ -98,6 +95,8 @@ DATA = freeze({
     "idioms": {"24/7": "twenty-four seven", "50/50": "fifty-fifty"},
     "range_word": "to",
     "range_marks": ["-", "–"],
+    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
+                    {"mark": ".", "seconds": False, "needs": "day_period"}],
     "dimension_marks": ["x", "×"],
     "dimension_word": "by",
     "operators": {"+": "plus", "−": "minus", "×": "times", "÷": "divided by", "=": "equals"},
@@ -130,6 +129,9 @@ DATA = freeze({
     "short_codes": ["000", "101", "111", "112", "211", "311", "411", "511", "611", "711", "811", "911", "988", "999"],
     "list_links": ["and", "or"],
     "phone_shapes": ["[(][2-9][0-9]{2}[)] [2-9][0-9]{2}[- ][0-9]{4}", "[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}"],
+    "phone_unit_shapes": ["(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+"],
+    "phone_kept_shapes": ["[1-9][0-9]{0,2}(?: [0-9]{3})+"],
+    "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
     "color_words": ["color", "colour", "colors", "colours"],
     "colors": COLORS,
     "titles": {"Dr.": "Doctor", "Mr.": "Mister", "Mrs.": "Missus", "Prof.": "Professor",
@@ -397,17 +399,33 @@ def speak_color(span: Span, context: SpanContext) -> str:
     return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
 
 
+def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_words: frozenset[str]) -> bool:
+    """Whether a space and a day period, or a space and a lowercase word that is no function word, follow
+    text[:end], as `8 am` and `24 hours a day` follow a phone number."""
+    if not text.startswith(" ", end):
+        return False
+    if any(text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period))
+           for period in day_periods):
+        return True
+    stop = end + 1
+    while stop < len(text) and is_letter(text[stop]):
+        stop += 1
+    word = text[end + 1:stop]
+    return word.islower() and word not in function_words
+
+
 class EnglishTelephone(Telephone):
     """The shared telephone recognizer with the English conventions of design section 4.3.
 
     A phone word also names a run up to three words back, where a function word does not count, when the run has
-    the shape of a phone number, as in `Call us on 0800 123 456.` Two years that a dash joins, as in `1999-2005`,
-    have no phone shape. The same window names a short code of `short_codes` that ends its clause or that a
-    function word follows, as in `Call the police on 999 now.`, and not the count in `The phone rang 101 times.`
+    the shape of a phone number, as in `Call us on 0800 123 456.` The same window names a short code of
+    `short_codes` that ends its clause or that a function word follows, as in `Call the police on 999 now.`, and
+    not the count in `The phone rang 101 times.`
 
-    Space-separated groups of which the first starts with `0`, perhaps in brackets, read digit by digit as one
-    unit, as in `020 7946 0018` and `(0161) 496 0000`. Thousands that spaces group, as in `10 000`, stay as
-    written.
+    The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
+    brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
+    `phone_kept_shapes` keep thousands that spaces group, as in `10 000`, as written, and its `no_phone_shapes`
+    take the phone shape from two years that a dash joins.
 
     A last group of one or two digits is the hour or a count, not a phone group, when the run ends inside a word,
     when a full stop and two digits complete it, or when a space and a day period or a lowercase word that is no
@@ -423,9 +441,6 @@ class EnglishTelephone(Telephone):
                 or _hour_follows(text, after, day_periods, function_words)):
             return written[:cut]
         return written
-
-    def shaped(self, written: str, digits: str) -> bool:
-        return not _YEAR_RANGE.fullmatch(written) and super().shaped(written, digits)
 
     def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                request: Request) -> range:
@@ -445,12 +460,6 @@ class EnglishTelephone(Telephone):
         function_words = frozenset(request.data.get("function_words", ()))
         following = clause_window(text, words, start, end, 1, limit=1, breaks=breaks)
         return all(word.lower() in function_words for word in following)
-
-    def one_unit(self, written: str, groups: Sequence[str]) -> bool:
-        return _GROUPS.fullmatch(written) is not None and groups[0].startswith("0")
-
-    def kept(self, written: str) -> bool:
-        return _THOUSANDS.fullmatch(written) is not None
 
 
 @dataclass(frozen=True)
@@ -486,7 +495,7 @@ class Year:
     form: Form = Form.YEAR
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return join_ranges(self._years(text, tokens, request), text, request.data["range_word"])
+        return join_ranges(self._years(text, tokens, request), text, request)
 
     def _years(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data

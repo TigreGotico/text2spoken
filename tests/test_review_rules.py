@@ -385,3 +385,65 @@ def test_a_proclitic_before_a_numeric_date_stays_in_the_reading(gendered, monkey
     monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
     assert [span.fields["prefix"] for span in analyze("x بـ10/6/2026 y", "qaa").spans] == ["بـ"]
     assert normalize("x بـ10/6/2026 y", "qaa") == "x بـ<date> y"
+
+
+def test_a_clock_mark_of_the_language_reads_a_time(gendered, monkeypatch):
+    """A language whose `clock_marks` table holds `h` with no evidence needed reads `14h30` as a time, as
+    Portuguese writes it. The table, not the core, names the marks (design section 4.2)."""
+    data = freeze({"defaults": {}, "time_words": [], "day_periods": {}, "range_word": "às",
+                   "clock_marks": [{"mark": "h", "seconds": False, "needs": "none"}]})
+    spec = replace(gendered.LANGUAGE, data=data, recognizers=(SHARED["time_clock"],),
+                   verbalizers={Form.TIME: lambda span, context: f"{span.fields['hour']} e {span.fields['minute']}"})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    assert normalize("A loja abre às 14h30.", "qaa") == "A loja abre às 14 e 30."
+
+
+def test_a_clock_mark_that_closes_an_hour_reads_a_bare_hour(gendered, monkeypatch):
+    """A mark with `closes_hour` closes an hour with no minutes, so `às 14h` and `das 9h às 18h` read as times, as
+    Portuguese writes them. A mark without it leaves the bare hour as written (design section 4.2)."""
+    def use(clock):
+        data = freeze({"defaults": {}, "time_words": [], "day_periods": {}, "range_word": "às",
+                       "clock_marks": [{"mark": "h", "seconds": False, "needs": "none", **clock}]})
+        verbalizers = {Form.TIME: lambda span, context: f"<{span.fields['hour']}:{span.fields['minute']:02}>"}
+        spec = replace(gendered.LANGUAGE, data=data, recognizers=(SHARED["time_clock"],), verbalizers=verbalizers)
+        monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+
+    use({"closes_hour": True})
+    assert normalize("A loja abre às 14h.", "qaa") == "A loja abre às <14:00>."
+    assert normalize("Aberto das 9h às 18h30.", "qaa") == "Aberto das <9:00> às <18:30>."
+    assert normalize("Abre às 25h.", "qaa") == "Abre às 25h."
+    use({})
+    assert normalize("A loja abre às 14h.", "qaa") == "A loja abre às 14h."
+
+
+def test_the_join_range_hook_of_the_language_joins_a_range(gendered, monkeypatch):
+    """A mark of `range_marks` between two spans joins them through the `join_range` hook of the language, so a
+    language can place its range words or endings by its own grammar."""
+    data = freeze({"defaults": {}, "number_marks": {"Latn": [{"decimal": ",", "group": "."}]}, "range_word": "to",
+                   "range_marks": ["–"], "percent": {"signs": ["%"], "position": "after"}})
+
+    def between(span, following, range_word):
+        return replace(span, end=following.start, trail=" eta "), following
+
+    spec = replace(gendered.LANGUAGE, data=data, recognizers=(SHARED["percent"],), join_range=between,
+                   verbalizers={Form.PERCENT: lambda span, context: f"{span.fields['amount']['integer']} ehuneko"})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    assert normalize("10%–20%", "qaa") == "10 ehuneko eta 20 ehuneko"
+    assert normalize("10%-20%", "qaa") == "10 ehuneko-20 ehuneko"
+
+
+def test_the_join_range_hook_puts_an_ending_on_each_reading(gendered, monkeypatch):
+    """A language that marks a range with case endings has no range word. Its `join_range` hook still runs, and
+    gives each span of the pair its ending through the `suffix` field, which `attach` joins to the reading: the
+    first takes the ablative and the second the allative, as Basque writes `10%-20%`."""
+    data = freeze({"defaults": {}, "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
+                   "range_marks": ["-"], "percent": {"signs": ["%"], "position": "after"}})
+
+    def endings(span, following, range_word):
+        return (replace(span, end=following.start, trail=" ", fields=FrozenMap({**span.fields, "suffix": "etik"})),
+                replace(following, fields=FrozenMap({**following.fields, "suffix": "ra"})))
+
+    spec = replace(gendered.LANGUAGE, data=data, recognizers=(SHARED["percent"],), join_range=endings,
+                   verbalizers={Form.PERCENT: lambda span, context: f"{span.fields['amount']['integer']} ehuneko"})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    assert normalize("10%-20%", "qaa") == "10 ehunekoetik 20 ehunekora"

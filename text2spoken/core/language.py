@@ -16,13 +16,21 @@ from text2spoken.errors import (InvalidLanguageTagError, InvalidLexiconError, Pa
 from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams
 
 if TYPE_CHECKING:
-    from text2spoken.core.spans import Recognizer, Verbalizer
+    from text2spoken.core.spans import Recognizer, Span, Verbalizer
     from text2spoken.core.spellers import NumberSpeller
 
 
 def concatenate(spoken: str, prefix: str, suffix: str) -> str:
     """The core attachment: the prefix joins the first spoken word and the suffix joins the last."""
     return prefix + spoken + suffix
+
+
+def infix_range(span: Span, following: Span, range_word: str) -> tuple[Span, Span]:
+    """The core range join: the first span takes the mark between the two spans and a trail of the range word,
+    so the range word stands between the two readings. With no range word, the pair stays as written."""
+    if not range_word:
+        return span, following
+    return replace(span, end=following.start, trail=f" {range_word} "), following
 
 
 @dataclass(frozen=True)
@@ -50,6 +58,7 @@ class LanguageSpec:
     options: Mapping[str, frozenset[str]]
     not_applicable: frozenset[str]
     attach: Callable[[str, str, str], str] = concatenate
+    join_range: Callable[[Span, Span, str], tuple[Span, Span]] = infix_range
 
 
 def _merge(base, override):
