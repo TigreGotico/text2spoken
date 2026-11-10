@@ -158,11 +158,13 @@ To see what a tag reads:
 python -c "from text2spoken import supports; print(supports('en-US'))"
 ```
 
-To print the data of a language file as JSON:
+To print the data of a language file as JSON, give a BCP 47 tag. The command prints the language file that `normalize` selects for that tag:
 
 ```bash
 python -m text2spoken.export en
 ```
+
+If the tag is not valid, or if no language file reads the tag, the command writes one error line and exits with code 1.
 
 English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
