@@ -10,8 +10,8 @@ from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation
-from text2spoken.errors import (DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
-                                UndefinedGrammaticalGender, UnreadFormError)
+from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
+                                UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
 
 if TYPE_CHECKING:
@@ -303,7 +303,7 @@ def check_hints(hints: Mapping[int, Features], analysis: Analysis) -> dict[int, 
     checked = {}
     for key, features in hints.items():
         if not isinstance(features, Features):
-            raise TypeError(f"a hint must be Features, not {type(features).__name__}")
+            raise ArgumentTypeError(f"a hint must be Features, not {type(features).__name__}")
         check_features(features, request.language, request.tag)
         if key not in starts:
             message = f"no span starts at offset {key!r}"
@@ -329,6 +329,9 @@ does not offer the method of the form. Any other error of a verbalizer is a defe
 
 
 def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> str:
+    require_type(analysis, "analysis", Analysis)
+    if hints is not None:
+        require_type(hints, "hints", Mapping)
     request = analysis.request
     language = request.language
     hints = check_hints(hints or {}, analysis)

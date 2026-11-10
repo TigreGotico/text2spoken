@@ -6,12 +6,21 @@ class Text2SpokenError(ValueError):
     """The base of every text2spoken error."""
 
 
+class ArgumentTypeError(Text2SpokenError, TypeError):
+    """An argument, a param field or a hint of the wrong type."""
+
+
+class InvalidParameterError(Text2SpokenError):
+    """A param value that no language takes, such as `date_order="mdy"`."""
+
+
 class InvalidLanguageTagError(Text2SpokenError):
     """The tag does not parse as BCP 47."""
 
 
 class TokenizerError(Text2SpokenError):
-    """A token does not match the text, is out of order, or overlaps another."""
+    """A tokenizer returns no sequence of tokens, or a token does not match the text, is out of order, or overlaps
+    another."""
 
 
 class InvalidHintError(Text2SpokenError):
@@ -46,6 +55,11 @@ class UnreadFormError(Text2SpokenError):
     def __init__(self, unread: tuple[str, ...], reason: str = ""):
         self.unread = unread
         super().__init__(f"unread: {list(unread)}" + (f" ({reason})" if reason else ""))
+
+
+def require_type(value, name: str, kind: type) -> None:
+    if not isinstance(value, kind):
+        raise ArgumentTypeError(f"{name} must be {kind.__name__}, not {type(value).__name__}")
 
 
 class Text2SpokenWarning(UserWarning):

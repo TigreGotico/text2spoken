@@ -6,6 +6,8 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from typing import Any, Literal
 
+from text2spoken.errors import ArgumentTypeError, InvalidParameterError
+
 
 class FrozenMap(Mapping):
     """An immutable, hashable mapping: key and value pairs sorted by key, with unique keys."""
@@ -128,28 +130,29 @@ class NormalizationParams:
 
     def __post_init__(self):
         if not isinstance(self.forms, frozenset) or not all(isinstance(f, Form) for f in self.forms):
-            raise TypeError("forms must be a frozenset of Form")
+            raise ArgumentTypeError("forms must be a frozenset of Form")
         for name, choices in _CHOICES.items():
             value = getattr(self, name)
             if value is not None and value not in choices:
-                raise ValueError(f"{name} must be one of {sorted(choices)} or None, not {value!r}")
+                raise InvalidParameterError(f"{name} must be one of {sorted(choices)} or None, not {value!r}")
         if self.decimal_mark is not None and (not isinstance(self.decimal_mark, str) or len(self.decimal_mark) != 1):
-            raise ValueError(f"decimal_mark must be one character or None, not {self.decimal_mark!r}")
+            raise InvalidParameterError(f"decimal_mark must be one character or None, not {self.decimal_mark!r}")
         if not isinstance(self.default_gender, FrozenMap) or not all(
                 isinstance(code, str) and isinstance(gender, GrammaticalGender)
                 for code, gender in self.default_gender.items()):
-            raise TypeError("default_gender must be a FrozenMap of language code to GrammaticalGender")
+            raise ArgumentTypeError("default_gender must be a FrozenMap of language code to GrammaticalGender")
         if self.phone_regions is not None and (
                 not isinstance(self.phone_regions, frozenset)
                 or not all(isinstance(region, str) for region in self.phone_regions)):
-            raise TypeError("phone_regions must be a frozenset of ISO 3166 region codes or None")
+            raise ArgumentTypeError("phone_regions must be a frozenset of ISO 3166 region codes or None")
         if not isinstance(self.lexicon, FrozenMap) or not all(
                 isinstance(tag, str) and isinstance(entries, FrozenMap)
                 and all(isinstance(k, str) and k and isinstance(v, str) for k, v in entries.items())
                 for tag, entries in self.lexicon.items()):
-            raise TypeError("lexicon must be a FrozenMap of language tag to a FrozenMap of written form to spoken words")
+            raise ArgumentTypeError(
+                "lexicon must be a FrozenMap of language tag to a FrozenMap of written form to spoken words")
         if not isinstance(self.strict, bool):
-            raise TypeError("strict must be a bool")
+            raise ArgumentTypeError("strict must be a bool")
 
     def only(self, *forms: Form) -> NormalizationParams:
         return replace(self, forms=frozenset(forms))

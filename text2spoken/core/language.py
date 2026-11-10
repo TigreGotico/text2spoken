@@ -12,7 +12,7 @@ from importlib.resources import files
 from typing import TYPE_CHECKING
 
 from text2spoken.errors import (InvalidLanguageTagError, InvalidLexiconError, ParameterNotHonouredWarning,
-                                UndefinedGrammaticalGender, UnsupportedParameterError)
+                                UndefinedGrammaticalGender, UnsupportedParameterError, require_type)
 from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams
 
 if TYPE_CHECKING:
@@ -324,5 +324,7 @@ def supports(lang: str) -> Support:
 
 
 def effective_params(lang: str, params: NormalizationParams | None = None) -> NormalizationParams:
+    if params is not None:
+        require_type(params, "params", NormalizationParams)
     tag, language, variety = select(lang)
     return _effective(tag, language, variety, params or NormalizationParams())

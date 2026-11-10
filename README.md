@@ -131,14 +131,18 @@ normalize("Pay $5 on 12/03/2024 for 3 items.", "en-US", NormalizationParams().on
 
 | Case | Default mode | `strict=True` |
 | --- | --- | --- |
+| An argument, a param field or a hint of the wrong type | `ArgumentTypeError` | `ArgumentTypeError` |
+| A param value that no language takes, such as `date_order="mdy"` | `InvalidParameterError` | `InvalidParameterError` |
 | A form that the library cannot read | Stays as written, WARNING logged | `UnreadFormError` |
 | A param value that the language cannot produce | Language default, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
-| A gender that the language does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |
+| A gender that a language with genders does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |
 | A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
 | A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
-| A token whose text does not match its offsets | `TokenizerError` | `TokenizerError` |
+| A tokenizer result that is not a sequence of tokens that match the text | `TokenizerError` | `TokenizerError` |
 
-Every error is a subclass of `Text2SpokenError`, and every warning is a subclass of `Text2SpokenWarning`.
+A language with no genders ignores a gender in a hint or in `default_gender`. English and every language with no file have no genders.
+
+Every error in this table is a subclass of `Text2SpokenError`, and so of `ValueError`. `ArgumentTypeError` is also a subclass of `TypeError`. Every warning is a subclass of `Text2SpokenWarning`. A defect in a speller or a verbalizer raises its own error, with a note that names the language, the form and the text.
 
 ### Your own tokenizer
 

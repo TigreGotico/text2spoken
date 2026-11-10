@@ -5,20 +5,18 @@ from text2spoken.core.language import resolve
 from text2spoken.core.numbers import declared_marks
 from text2spoken.core.spans import Analysis, classify, render
 from text2spoken.core.tokens import Tokenizer, check_tokens, default_tokenizer, join_split_words, protect_blocks
+from text2spoken.errors import ArgumentTypeError, require_type
 from text2spoken.params import NormalizationParams
-
-
-def _require(value, name: str, kind: type) -> None:
-    if not isinstance(value, kind):
-        raise TypeError(f"{name} must be {kind.__name__}, not {type(value).__name__}")
 
 
 def analyze(text: str, lang: str, params: NormalizationParams | None = None,
             tokenizer: Tokenizer | None = None) -> Analysis:
-    _require(text, "text", str)
-    _require(lang, "lang", str)
+    require_type(text, "text", str)
+    require_type(lang, "lang", str)
     if params is not None:
-        _require(params, "params", NormalizationParams)
+        require_type(params, "params", NormalizationParams)
+    if tokenizer is not None and not callable(tokenizer):
+        raise ArgumentTypeError(f"tokenizer must be callable, not {type(tokenizer).__name__}")
     request = resolve(lang, params or NormalizationParams())
     raw = (tokenizer or default_tokenizer)(text, request.tag)
     tokens = join_split_words(check_tokens(raw, text), text, declared_marks(request.data))

@@ -5,7 +5,8 @@ from dataclasses import replace
 import pytest
 
 from text2spoken import (Features, Form, FrozenMap, HintWarning, InvalidHintError, InvalidLanguageTagError,
-                         InvalidLexiconError, NormalizationParams, UnreadFormError, analyze, normalize, render)
+                         InvalidLexiconError, NormalizationParams, UnreadFormError, analyze, default_tokenizer,
+                         effective_params, normalize, render)
 from text2spoken.core import language as loader
 from text2spoken.core.recognizers import SHARED, _keys_by_first_character
 from text2spoken.core.spellers import OvosNumberSpeller
@@ -313,3 +314,42 @@ def test_the_cached_index_of_lexicon_keys_is_read_only():
     assert dict(index) == {"N": ("New York", "Newark"), "Y": ("York",)}
     with pytest.raises(TypeError):
         index["N"] = ()
+
+
+def _analysis():
+    return analyze("Gate 7 opens.", "en-US")
+
+
+# README: "Every error is a subclass of `Text2SpokenError`." A type error stays a TypeError and a bad value stays a
+# ValueError, so a caller that catches the built-in class still catches it.
+BAD_ARGUMENTS = {
+    "text None": (lambda: normalize(None, "en-GB"), TypeError, "ArgumentTypeError"),
+    "lang None": (lambda: normalize("x", None), TypeError, "ArgumentTypeError"),
+    "params str": (lambda: normalize("x", "en", "strict"), TypeError, "ArgumentTypeError"),
+    "analyze text None": (lambda: analyze(None, "en"), TypeError, "ArgumentTypeError"),
+    "tokenizer not callable": (lambda: normalize("x 5", "en", tokenizer=5), TypeError, "ArgumentTypeError"),
+    "tokenizer returns None": (lambda: normalize("x 5", "en", tokenizer=lambda text, lang: None), ValueError,
+                               "TokenizerError"),
+    "render None": (lambda: render(None), TypeError, "ArgumentTypeError"),
+    "render hints str": (lambda: render(_analysis(), "feminine"), TypeError, "ArgumentTypeError"),
+    "render hint str": (lambda: render(_analysis(), {5: "feminine"}), TypeError, "ArgumentTypeError"),
+    "effective_params str": (lambda: effective_params("en-GB", "x"), TypeError, "ArgumentTypeError"),
+    "default_tokenizer None": (lambda: default_tokenizer(None, "en"), TypeError, "ArgumentTypeError"),
+    "date_order mdy": (lambda: NormalizationParams(date_order="mdy"), ValueError, "InvalidParameterError"),
+    "clock 25h": (lambda: NormalizationParams(clock="25h"), ValueError, "InvalidParameterError"),
+    "decimal_mark two": (lambda: NormalizationParams(decimal_mark=".."), ValueError, "InvalidParameterError"),
+    "lexicon dict": (lambda: NormalizationParams(lexicon={"en": {"a": "b"}}), TypeError, "ArgumentTypeError"),
+    "strict int": (lambda: NormalizationParams(strict=1), TypeError, "ArgumentTypeError"),
+    "only str": (lambda: NormalizationParams().only("cardinal"), TypeError, "ArgumentTypeError"),
+}
+
+
+@pytest.mark.parametrize("case", BAD_ARGUMENTS)
+def test_a_bad_argument_raises_a_text2spoken_error_that_keeps_its_builtin_class(case):
+    import text2spoken
+
+    call, builtin, name = BAD_ARGUMENTS[case]
+    with pytest.raises(text2spoken.Text2SpokenError) as raised:
+        call()
+    assert isinstance(raised.value, builtin)
+    assert type(raised.value) is getattr(text2spoken, name) and name in text2spoken.__all__
