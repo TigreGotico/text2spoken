@@ -1,12 +1,19 @@
 # Changelog
 
+## [0.0.2a20](https://github.com/TigreGotico/text2spoken/tree/0.0.2a20) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a19...0.0.2a20)
+
+**Merged pull requests:**
+
+- fix: raise Text2SpokenError subclasses for bad arguments [\#36](https://github.com/TigreGotico/text2spoken/pull/36) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a19](https://github.com/TigreGotico/text2spoken/tree/0.0.2a19) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a18...0.0.2a19)
 
 **Merged pull requests:**
 
-- fix: raise Text2SpokenError subclasses for bad arguments [\#36](https://github.com/TigreGotico/text2spoken/pull/36) ([JarbasAl](https://github.com/JarbasAl))
 - fix: languages with no file keep money, percent and dates as written [\#35](https://github.com/TigreGotico/text2spoken/pull/35) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a18](https://github.com/TigreGotico/text2spoken/tree/0.0.2a18) (2026-11-10)
