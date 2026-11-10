@@ -229,18 +229,41 @@ def _starts_with_digit_run(items: list) -> bool:
             and list(items[0][1][2]) == DIGIT_RUN)
 
 
+def _ends_at_a_run_end(items: list) -> bool:
+    """Whether each match of the parsed items ends at the end of a digit run or after a character that is no digit.
+    The helper tries one match for each digit run, so a match that ends inside a run hides the next match there. An
+    item that can match nothing passes the question on to the item before it."""
+    for op, arg in reversed(items):
+        if op in REPEATS and arg[0] == 0:
+            if not _ends_at_a_run_end(list(arg[2])):
+                return False
+        elif op is _parser.MAX_REPEAT and arg[1] == _parser.MAXREPEAT and list(arg[2]) == DIGIT_RUN:
+            return True
+        elif op in REPEATS:
+            return _ends_at_a_run_end(list(arg[2]))
+        elif op is _parser.BRANCH:
+            return all(_ends_at_a_run_end(list(branch)) for branch in arg[1])
+        elif op is _parser.SUBPATTERN:
+            return _ends_at_a_run_end(list(arg[3]))
+        else:
+            return _no_digit_character([(op, arg)])
+    return False
+
+
 @cache
 def has_digit_run_shape(pattern: re.Pattern | str) -> bool:
     """`digit_run_matches` gives the matches of `finditer` only for a pattern that starts with an optional character
-    that is no digit and then `[0-9]+`, or for an alternation of such patterns. The check reads the parsed pattern."""
+    that is no digit and then `[0-9]+`, or for an alternation of such patterns, and whose every match ends at the end
+    of a digit run or after a character that is no digit. The check reads the parsed pattern."""
     pattern = re.compile(pattern)
-    return _starts_with_digit_run(list(_parser.parse(pattern.pattern, pattern.flags)))
+    items = list(_parser.parse(pattern.pattern, pattern.flags))
+    return _starts_with_digit_run(items) and _ends_at_a_run_end(items)
 
 
 def check_digit_run_pattern(pattern: re.Pattern | str) -> None:
     assert has_digit_run_shape(pattern), (
         f"{re.compile(pattern).pattern!r} reaches digit_run_matches, and does not start with an optional character"
-        " that is no digit and then a greedy [0-9]+")
+        " that is no digit and then a greedy [0-9]+, or can end a match inside a digit run")
 
 
 def clause_7(name: str, spec: LanguageSpec) -> None:

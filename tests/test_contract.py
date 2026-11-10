@@ -23,6 +23,7 @@ from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, NormalizationParams, freeze, thaw
 
 FILES = language_files()
+HELPER = digit_run_matches
 STUB = qac.LANGUAGE
 
 
@@ -271,7 +272,8 @@ def test_clause_7_admits_the_subset(pattern):
 MISREAD = ["[0-9]{2}/[0-9]+", "[0-9][.,][0-9]+", "(?:minus )?[0-9]+/[0-9]+", "[-−]{0,2}[0-9]+/[0-9]+",
            "(?: -)?[0-9]+/[0-9]+", "(?:[A-Z][A-Z][A-Z] )?[0-9]+(?: ?[+−×÷=] ?[0-9]+)+", "(?:[A-Z]{3} )?[0-9]+/[0-9]+",
            "(?:[a-z][a-z])?[0-9]+/[0-9]+", "(?:[a-z]+ )?[0-9]+/[0-9]+", "(?:[(] )?[0-9]+/[0-9]+",
-           "[-−]?[0-9]+?(?:[.,][0-9]+)?", "[$€]?[0-9]+?", "[0-9]+?(?: ?[+−×÷=] ?[0-9]+)*", "[-+−]?[0-9]+?(?:/[0-9]+)?"]
+           "[-−]?[0-9]+?(?:[.,][0-9]+)?", "[$€]?[0-9]+?", "[0-9]+?(?: ?[+−×÷=] ?[0-9]+)*", "[-+−]?[0-9]+?(?:/[0-9]+)?",
+           "[0-9]+0|[0-9]+", "[0-9]+[05]|[0-9]+", "[0-9]+0x?|[0-9]+"]
 """Patterns in the portable subset that `digit_run_matches` misreads."""
 
 
@@ -284,16 +286,16 @@ def test_clause_7_bites_on_a_pattern_that_digit_run_matches_misreads(en, pattern
 
 
 @pytest.mark.parametrize("pattern", ["[0-9-]?[0-9]+/[0-9]+", "[^a]?[0-9]+/[0-9]+", ".?[0-9]+/[0-9]+", "[0-9]*/[0-9]+",
-                                     "[0-9]+/[0-9]+|/[0-9]+", "[-−]?[0-9]+?/[0-9]+"])
+                                     "[0-9]+/[0-9]+|/[0-9]+", "[-−]?[0-9]+?/[0-9]+", "[-+]?[0-9]+/[0-9]"])
 def test_clause_7_holds_a_pattern_to_the_shape_that_the_helper_documents(pattern):
     """The helper reads these patterns right, but they start with something other than an optional character that
-    is no digit and then a greedy `[0-9]+`."""
+    is no digit and then a greedy `[0-9]+`, or a match of theirs can end inside a digit run."""
     with pytest.raises(AssertionError, match=re.escape(repr(pattern))):
         contract.check_digit_run_pattern(pattern)
 
 
 @pytest.mark.parametrize("pattern", ["[-+−]?[0-9]+/[0-9]+", "[$€]?[0-9]+(?:[.,][0-9]+)?",
-                                     "[-+]?[0-9]+/[0-9]", "(?:[-−])?[0-9]+", "[a-z]?[0-9]+", "x??[0-9]+",
+                                     "(?:[-−])?[0-9]+", "[a-z]?[0-9]+", "x??[0-9]+", "[0-9]+x??",
                                      "[0-9]+/[0-9]+|[0-9]+-[0-9]+", _DATE, _FRACTION])
 def test_clause_7_admits_a_digit_run_pattern(pattern):
     contract.check_digit_run_pattern(pattern)
@@ -324,6 +326,23 @@ def test_clause_7_reads_a_pattern_that_any_recognizer_passes_to_the_helper(en):
     with pytest.raises(AssertionError, match=re.escape(repr("(?:AD )?[0-9]+"))):
         contract.clause_7("en", spec)
     assert digit_run_matches is recognizers.digit_run_matches
+
+
+@dataclass(frozen=True)
+class _Raises:
+    name: str = "raises"
+    form: Form = Form.CARDINAL
+
+    def find(self, text, tokens, request):
+        list(digit_run_matches("[0-9]+", text))
+        raise RuntimeError("a recognizer fails")
+
+
+def test_clause_7_gives_the_helper_back_when_a_recognizer_raises(en):
+    with pytest.raises(RuntimeError, match="a recognizer fails"):
+        contract.clause_7("en", replace(en, recognizers=(*en.recognizers, _Raises())))
+    assert recognizers.digit_run_matches is HELPER
+    assert import_module("text2spoken.lang.en").digit_run_matches is HELPER
 
 
 def test_clause_8_bites(en):
