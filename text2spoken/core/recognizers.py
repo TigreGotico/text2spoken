@@ -527,13 +527,11 @@ class Money:
                    for symbol in currency["symbols"]]
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         for number in numbers_in(text, request):
-            if number.sign:
-                continue
             for symbol, code in sorted(symbols, key=lambda pair: len(pair[0]), reverse=True):
                 found = None
                 for gap in GAPS:
                     start = number.start - len(gap) - len(symbol)
-                    if start >= 0 and text[start:number.start] == symbol + gap:
+                    if not number.sign and start >= 0 and text[start:number.start] == symbol + gap:
                         sign = SIGNS.get(text[start - 1], "") if start else ""
                         if sign and _free_before(text, start - 1, ()):
                             start -= 1
@@ -547,7 +545,7 @@ class Money:
                     end = number.end + len(gap) + len(symbol)
                     if text.startswith(gap + symbol, number.end) \
                             and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
-                        found = (bounds, "", "")
+                        found = (bounds, number.sign, "")
                         break
                 if found:
                     (start, end, prefix, suffix), sign, scale = found

@@ -75,6 +75,19 @@ def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, s
     return integer, fraction
 
 
+def _grouped(text: str, start: int, end: int) -> bool:
+    """Whether the space at text[end] groups the digits of a number that starts at `start`: three digits follow it
+    and no more, and the digits before it are one to three at the start of the number, else exactly three. So
+    `1 000` is one number and `70 90 80` is three."""
+    after = text[end + 1:end + 4]
+    if len(after) < 3 or not all(map(is_digit, after)) or (end + 4 < len(text) and is_digit(text[end + 4])):
+        return False
+    first = end
+    while first > start and is_digit(text[first - 1]):
+        first -= 1
+    return end - first <= 3 if first == start else end - first == 3
+
+
 def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
     """Every written number in the text that parses whole by the declared marks.
 
@@ -100,6 +113,8 @@ def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
             if is_digit(text[end]):
                 end += 1
             elif text[end] in joiners and end + 1 < len(text) and is_digit(text[end + 1]):
+                if text[end].isspace() and not _grouped(text, start, end):
+                    break
                 end += 1
             else:
                 break
