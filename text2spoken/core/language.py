@@ -315,6 +315,7 @@ def resolve(lang: str, params: NormalizationParams) -> Request:
 
 
 def supports(lang: str) -> Support:
+    require_type(lang, "lang", str)
     tag, language, _ = select(lang)
     forms = frozenset(r.form for r in language.recognizers) & frozenset(language.verbalizers)
     return Support(tag=tag, code=language.code, forms=forms, genders=language.genders, animacies=language.animacies,
@@ -324,6 +325,7 @@ def supports(lang: str) -> Support:
 
 
 def effective_params(lang: str, params: NormalizationParams | None = None) -> NormalizationParams:
+    require_type(lang, "lang", str)
     if params is not None:
         require_type(params, "params", NormalizationParams)
     tag, language, variety = select(lang)

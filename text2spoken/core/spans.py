@@ -304,6 +304,8 @@ def check_hints(hints: Mapping[int, Features], analysis: Analysis) -> dict[int, 
     starts = {span.start for span in analysis.spans}
     checked = {}
     for key, features in hints.items():
+        if not isinstance(key, int):
+            raise ArgumentTypeError(f"a hint key must be an int offset, not {type(key).__name__}")
         if not isinstance(features, Features):
             raise ArgumentTypeError(f"a hint must be Features, not {type(features).__name__}")
         check_features(features, request.language, request.tag)
