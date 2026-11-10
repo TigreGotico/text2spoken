@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a16](https://github.com/TigreGotico/text2spoken/tree/0.0.2a16) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a15...0.0.2a16)
+
+**Merged pull requests:**
+
+- fix: read decimals exactly, without float [\#32](https://github.com/TigreGotico/text2spoken/pull/32) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a15](https://github.com/TigreGotico/text2spoken/tree/0.0.2a15) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a14...0.0.2a15)
