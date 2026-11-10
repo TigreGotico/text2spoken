@@ -176,9 +176,38 @@ def _clock_edge(text: str, start: int, end: int) -> bool:
     return before and after
 
 
-def _et(words: str) -> str:
-    """The traditional spelling: "vingt et un", not CLDR's "vingt-et-un"."""
-    return words.replace("-et-", " et ")
+SCALE_NOUNS = frozenset({"million", "millions", "milliard", "milliards", "billion", "billions", "billiard", "billiards",
+                         "trillion", "trillions"})
+"""The nouns that count a scale of a thousand: a number before them takes the plural of "cent" and "vingt"."""
+MULTIPLIERS = frozenset({"deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"})
+
+
+UNIT_STARTS = frozenset({"un", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze",
+                         "douze", "treize", "quatorze", "quinze", "seize"})
+
+
+def _spell(words: str) -> str:
+    """The traditional spelling of CLDR's cardinal, with the agreement rules that CLDR misses.
+
+    "vingt et un", not "vingt-et-un". "Cent" and "quatre-vingt" take an "s" before a noun that counts millions, as
+    in "deux cents millions" and "quatre-vingts millions", where CLDR gives "deux cent millions" and, for France,
+    "quatre-vingt millions". "Quatre-vingt" takes none before "mille", and a hyphen before a unit, as in
+    "quatre-vingt-un", where the CLDR rules of Belgium give "quatre-vingts mille" and "quatre-vingt un"
+    (Académie française, "Les nombres")."""
+    parts = words.replace("-et-", " et ").split(" ")
+    out: list[str] = []
+    for index, word in enumerate(parts):
+        following = parts[index + 1] if index + 1 < len(parts) else ""
+        if word == "quatre-vingts" and following == "mille":
+            word = "quatre-vingt"
+        if following in SCALE_NOUNS and (word == "quatre-vingt" or (
+                word == "cent" and index and parts[index - 1] in MULTIPLIERS)):
+            word += "s"
+        if out and out[-1] == "quatre-vingt" and word.split("-")[0] in UNIT_STARTS:
+            out[-1] += "-" + word
+        else:
+            out.append(word)
+    return " ".join(out)
 
 
 class FrenchSpeller:
@@ -191,7 +220,7 @@ class FrenchSpeller:
         self.rbnf = RbnfSpeller(cardinal=cardinal, ordinal={Features(): "spellout-ordinal-masculine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        return _et(self.rbnf.cardinal(digits, features, request))
+        return _spell(self.rbnf.cardinal(digits, features, request))
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         """The ordinal of a cardinal: "premier", "deuxième", "vingt et unième", "quatre-vingt-unième", "centième",
@@ -572,7 +601,8 @@ class Abbreviation:
         while stop < len(text) and (is_letter(text[stop]) or text[stop] == "'"):
             stop += 1
         word = text[index:stop]
-        if word.lower() in particles or (word.endswith("'") and word.lower() in particles):
+        elided = word[:word.find("'") + 1] if "'" in word else word
+        if word.lower() in particles or elided.lower() in particles:
             return stop < len(text)
         return text[index].isupper() and not (len(word) == 1 and text.startswith(".", stop))
 
