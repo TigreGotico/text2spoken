@@ -73,6 +73,8 @@ class Features:
 class Analysis:
     text: str
     blocks: tuple[tuple[int, int], ...]
+    """The protected blocks as (start, end) offsets, sorted, with no overlap. `render` relies on this order, so an
+    Analysis built by hand keeps it."""
     tokens: tuple[Token, ...]
     spans: tuple[Span, ...]
     request: Request
