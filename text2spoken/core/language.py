@@ -220,7 +220,12 @@ def core_language(code: str) -> LanguageSpec:
     cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering") if n in names)
     ordinal = next((n for n in ("spellout-ordinal", "spellout-ordinal-masculine") if n in names), cardinal)
     speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): ordinal})
-    return replace(bare, recognizers=(recognizers.LEXICON, recognizers.CARDINAL),
+    own_ordinal = any("digits-ordinal" in rbnf_engine(name).rulesets
+                      for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
+    shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
+              recognizers.SHARED["date_numeric"], recognizers.OrdinalStop(bare_stop=not own_ordinal))
+    return replace(bare, data=recognizers.written_shapes(),
+                   recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), recognizers.CARDINAL),
                    verbalizers={Form.LEXICON: recognizers.speak_lexicon, Form.CARDINAL: recognizers.speak_cardinal},
                    spellers={Form.CARDINAL: speller})
 
