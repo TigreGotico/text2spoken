@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import KW_ONLY, dataclass
 from typing import Protocol
 
-from text2spoken.errors import TokenizerError
+from text2spoken.errors import TokenizerError, require_type
 
 
 @dataclass(frozen=True)
@@ -25,6 +25,7 @@ class Tokenizer(Protocol):
 def default_tokenizer(text: str, lang: str) -> tuple[Token, ...]:
     import quebra_frases
 
+    require_type(text, "text", str)
     return tuple(Token(start, end, word) for start, end, word in quebra_frases.span_indexed_word_tokenize(text))
 
 
@@ -63,6 +64,8 @@ def is_bounded(text: str, start: int, end: int) -> bool:
 
 def check_tokens(tokens: Sequence[Token], text: str) -> tuple[Token, ...]:
     """The tokens, in order, after the checks of section 2.1; a tokenizer that breaks one raises."""
+    if not isinstance(tokens, Iterable):
+        raise TokenizerError(f"a tokenizer must return a sequence of Token values, not {type(tokens).__name__}")
     checked = tuple(tokens)
     previous_end = 0
     for token in checked:
