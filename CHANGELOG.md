@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a24](https://github.com/TigreGotico/text2spoken/tree/0.0.2a24) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a23...0.0.2a24)
+
+**Merged pull requests:**
+
+- fix: export command takes a BCP 47 tag and reports errors in one line [\#47](https://github.com/TigreGotico/text2spoken/pull/47) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a23](https://github.com/TigreGotico/text2spoken/tree/0.0.2a23) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a22...0.0.2a23)
