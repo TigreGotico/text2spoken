@@ -244,6 +244,7 @@ _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
 _PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ .-][0-9]+)*")
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
+_DIGIT_RUN = re.compile("[0-9]+")
 
 
 def _cluster_edge(text: str, start: int, end: int) -> bool:
@@ -260,10 +261,29 @@ def _edge(text: str, start: int, end: int) -> bool:
     return _cluster_edge(text, start, end) and is_bounded(text, start, end)
 
 
+def digit_run_matches(pattern: re.Pattern | str, folded: str) -> Iterator[re.Match]:
+    """The matches of `pattern.finditer(folded)`, for a pattern that starts with an optional character that is no
+    digit and then `[0-9]+`, as `[-+−]?[0-9]+/[0-9]+`.
+
+    `finditer` tries each start inside a digit run, and each try reads to the end of the run, so one long run takes
+    quadratic time. A match that starts inside a run also starts one digit earlier, so the scan tries only the
+    character before each run and its first digit, and takes linear time."""
+    pattern = re.compile(pattern)
+    end = 0
+    for run in _DIGIT_RUN.finditer(folded):
+        if run.end() <= end:
+            continue
+        for start in (end,) if run.start() < end else (run.start() - 1, run.start()):
+            if start >= end and (match := pattern.match(folded, start)) is not None:
+                yield match
+                end = match.end()
+                break
+
+
 def _affixed_matches(pattern: re.Pattern, text: str, data) -> Iterator[tuple[re.Match, int, int, str, str]]:
     """Matches in the folded text, each with its declared affixes, the start and the end of the span, that no
     word character, digit or cluster mark continues on either side."""
-    for match in pattern.finditer(fold_digits(text)):
+    for match in digit_run_matches(pattern, fold_digits(text)):
         bounds = _affixes(text, *match.span(), data)
         start, end, prefix, suffix = bounds if bounds is not None else (*match.span(), "", "")
         if _edge(text, start, end):
@@ -348,7 +368,7 @@ class DateNumeric:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         folded = fold_digits(text)
-        for match in _DATE.finditer(folded):
+        for match in digit_run_matches(_DATE, folded):
             start, end = match.span()
             if not (_cluster_edge(text, start, end) and one_digit_set(text[start:end])):
                 continue

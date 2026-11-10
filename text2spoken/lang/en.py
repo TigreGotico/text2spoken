@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import Number
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, join_ranges, numbers_in,
-                                          speak_cardinal, speak_lexicon)
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, digit_run_matches, join_ranges,
+                                          numbers_in, speak_cardinal, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import twelve_hour
@@ -607,7 +607,7 @@ class Expression:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         operators = "".join(request.data["operators"])
         open_operator = re.compile(f" ?[{re.escape(operators)}]")
-        for match in re.finditer(request.data["patterns"]["expression"], fold_digits(text)):
+        for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
             start, end = match.span()
             if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
                     or open_operator.match(text, end)):
