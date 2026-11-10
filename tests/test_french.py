@@ -588,3 +588,10 @@ def test_a_second_pass_changes_nothing_in_any_region(tag):
 ])
 def test_the_plural_of_cent_and_quatre_vingt_before_a_noun_that_counts_millions(tag, written, spoken):
     assert normalize(written, tag) == spoken
+
+
+def test_the_examples_of_the_readme():
+    assert normalize("Rendez-vous le 10/11/2026 à 14 h 30, pour 3,50 € ou 21 h 5.", "fr") == (
+        "Rendez-vous le dix novembre deux mille vingt-six à quatorze heures trente, pour trois euros cinquante "
+        "ou vingt et une heures cinq.")
+    assert normalize("Il a 71 ans et 6 °C.", "fr-BE") == "Il a septante et un ans et six degrés Celsius."
