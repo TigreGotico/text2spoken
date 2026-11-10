@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
+from decimal import Decimal
 from functools import lru_cache
 from typing import TYPE_CHECKING, Protocol
 
@@ -71,8 +72,9 @@ class OvosNumberSpeller:
     """ovos-number-parser, for a language and form where its output is right.
 
     The refusals of ovos-number-parser decline the span (design section 5.4): a language or a form that it does
-    not read (`NotImplementedError`), a number too large for it (`OverflowError`) and an empty reading. A number
-    that Python cannot convert, as an integer or as a finite float, also declines. Any other error raises."""
+    not read (`NotImplementedError`), a number too large for it (`OverflowError`) and an empty reading. A run past
+    DIGIT_BOUND also declines, and so does a decimal that a float does not hold exactly, because ovos-number-parser
+    reads a decimal from a float. Any other error raises."""
 
     def __init__(self, gender_arg: Mapping[GrammaticalGender, str]):
         self.gender_arg = dict(gender_arg)
@@ -126,7 +128,13 @@ class OvosNumberSpeller:
         if significant > DIGIT_BOUND:
             raise DeclinedReading(f"{significant} integer digits pass the bound of {DIGIT_BOUND} digits that a "
                                   "speller reads")
-        value = float(f"{integer or '0'}.{fraction}")
+        written = f"{integer or '0'}.{fraction}"
+        value = float(written)
+        # ovos-number-parser rounds a float through str(value), and its shared engine reads int(value) as the
+        # integer part, so both must give the written number.
+        if Decimal(str(value)) != Decimal(written) or int(value) != _integer(integer or "0"):
+            raise DeclinedReading("ovos-number-parser reads a float, and no float holds the decimal of "
+                                  f"{len(integer)}.{len(fraction)} digits exactly")
         kwargs = self._kwargs(features, request)
         return self._read("decimal", f"{len(integer)}.{len(fraction)} digits", request,
                           lambda: pronounce_number(value, request.tag, places=len(fraction), **kwargs))
