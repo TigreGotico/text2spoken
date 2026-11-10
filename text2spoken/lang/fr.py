@@ -257,7 +257,7 @@ COLORS = {
     "ffffff": "blanc",
 }
 """The sixteen HTML 4 colour names and orange and pink, from the ovos-color-parser palette `fr-FR/dot-net-colors.json`
-(`scripts/seed_colors.py fr`). The rest of that palette is machine-translated and is left out. Any other colour reads as
+. The rest of that palette is machine-translated and is left out. Any other colour reads as
 its digits."""
 
 DATA = freeze(
