@@ -575,3 +575,28 @@ def test_the_join_range_hook_puts_an_ending_on_each_reading(gendered, monkeypatc
                    verbalizers={Form.PERCENT: lambda span, context: f"{span.fields['amount']['integer']} ehuneko"})
     monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
     assert normalize("10%-20%", "qaa") == "10 ehunekoetik 20 ehunekora"
+
+
+@pytest.mark.parametrize("text, operands, operators", [
+    ("−3+3", ("−3", "3"), ("+",)),
+    ("−3−3", ("−3", "3"), ("−",)),
+    ("−3 − 3", ("−3", "3"), ("−",)),
+    ("-3−3", ("-3", "3"), ("−",)),
+    ("3−3", ("3", "3"), ("−",)),
+    ("−12 × 3 ÷ 4 = 9", ("−12", "3", "4", "9"), ("×", "÷", "=")),
+])
+def test_a_leading_sign_binds_to_the_first_operand(text, operands, operators):
+    span = next(s for s in analyze(text, "en").spans if s.form is Form.EXPRESSION)
+    assert (span.fields["operands"], span.fields["operators"]) == (operands, operators)
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("−3+3", "minus three plus three"),
+    ("−3−3", "minus three minus three"),
+    ("−3 − 3", "minus three minus three"),
+    ("−12÷3", "minus twelve divided by three"),
+    ("−3 ×3", "minus three times three"),
+])
+@pytest.mark.parametrize("strict", [False, True])
+def test_a_leading_minus_sign_reads_in_both_modes(text, expected, strict):
+    assert normalize(text, "en-GB", NormalizationParams(strict=strict)) == expected
