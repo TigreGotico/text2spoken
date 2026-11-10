@@ -633,6 +633,10 @@ class Telephone:
     chain to it, but not a group that a letter continues. Such a run is never named further back, so
     `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written.
 
+    When the whole run has no reading and no keep, and the run after its first space reads, the part before that
+    space drops and reads on its own. So `Room 4 07946001800` reads `4` as a count and the rest as a telephone
+    number in `en-GB`, on the first pass and on the second. Only one group drops, so a run takes linear time.
+
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
     `phone_kept_shapes` matches whole stays as written when it has no phone reading. A run that a shape of
@@ -679,66 +683,75 @@ class Telephone:
         for match in _PHONE.finditer(folded):
             if match.start() < kept_end:
                 continue
-            start = match.start()
-            written = self.trimmed(text, start, match.group(), request)
-            end = start + len(written)
-            glued = not _edge(text, start, end) or (operand is not None and operand.match(folded, end) is not None)
-            prefix = suffix = ""
-            if glued and (bounds := _affixes(text, start, end, request.data)) is not None \
-                    and (bounds[2] or bounds[3]) and _edge(text, bounds[0], bounds[1]) \
-                    and (operand is None or operand.match(folded, bounds[1]) is None):
-                glued, prefix, suffix = False, bounds[2], bounds[3]
-            groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
-            digits = "".join(groups)
-            shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
-                written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
-            phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
-                          if words[i].text.lower() in phone_words]
-            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))
-            country_code = ""
-            if written.startswith("+"):
-                if len(groups) > 1 and len(groups[0]) <= 3:
-                    country_code, groups = groups[0], groups[1:]
+            runs = [(match.start(), match.group())]
+            if (cut := match.group().find(" ")) != -1:
+                runs.append((match.start() + cut + 1, match.group()[cut + 1:]))
+            for start, run in runs:
+                whole = start == match.start()
+                written = self.trimmed(text, start, run, request)
+                end = start + len(written)
+                glued = not _edge(text, start, end) or (operand is not None and operand.match(folded, end) is not None)
+                prefix = suffix = ""
+                if glued and (bounds := _affixes(text, start, end, request.data)) is not None \
+                        and (bounds[2] or bounds[3]) and _edge(text, bounds[0], bounds[1]) \
+                        and (operand is None or operand.match(folded, bounds[1]) is None):
+                    glued, prefix, suffix = False, bounds[2], bounds[3]
+                groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
+                digits = "".join(groups)
+                shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
+                    written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
+                phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
+                              if words[i].text.lower() in phone_words]
+                direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))
+                country_code = ""
+                if written.startswith("+"):
+                    if len(groups) > 1 and len(groups[0]) <= 3:
+                        country_code, groups = groups[0], groups[1:]
+                    else:
+                        country_code = next((c for c in codes if groups[0].startswith(c)), "")
+                        groups[0] = groups[0][len(country_code):]
+                short_code = "".join(groups) in short_codes
+                named = (direct
+                         or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
+                                                                   request))
+                         or (named_end is not None and listed.fullmatch(text[named_end:start]) is not None))
+                if whole:
+                    named_end = end + len(suffix) if named else None
+                unknown_code = written.startswith("+") and not country_code
+                if glued:
+                    if not (direct and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
+                        continue
+                    chained = _GLUED.match(folded, end).group()
+                    if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
+                        chained = re.sub("[ /:.,–-]?[0-9]+$", "", chained)
+                    end = kept_end = named_end = end + len(chained)
+                first, last = start - len(prefix), end + len(suffix)
+                written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix,
+                                          "suffix": suffix})
+                if glued or not one_digit_set(text[start:end]) or (direct and (len(digits) > 15 or unknown_code)):
+                    if whole:
+                        yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
+                    break
+                if any(shape.fullmatch(written) for shape in unit_shapes):
+                    yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name)
+                    break
+                if unknown_code or len(digits) > 15:
+                    reads = False
+                elif 7 <= len(digits):
+                    reads = (named or bool(country_code) or any(shape.fullmatch(written) for shape in shapes)
+                             or (any(digits[2:].startswith(code) for code in codes) if digits.startswith("00")
+                                 else any(plan["trunk"] and digits.startswith(plan["trunk"])
+                                          and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans)))
                 else:
-                    country_code = next((c for c in codes if groups[0].startswith(c)), "")
-                    groups[0] = groups[0][len(country_code):]
-            short_code = "".join(groups) in short_codes
-            named = (direct
-                     or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
-                                                               request))
-                     or (named_end is not None and listed.fullmatch(text[named_end:start]) is not None))
-            named_end = end + len(suffix) if named else None
-            unknown_code = written.startswith("+") and not country_code
-            if glued:
-                if not (direct and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
-                    continue
-                chained = _GLUED.match(folded, end).group()
-                if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
-                    chained = re.sub("[ /:.,–-]?[0-9]+$", "", chained)
-                end = kept_end = named_end = end + len(chained)
-            first, last = start - len(prefix), end + len(suffix)
-            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
-            if glued or not one_digit_set(text[start:end]) or (direct and (len(digits) > 15 or unknown_code)):
-                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
-                continue
-            if any(shape.fullmatch(written) for shape in unit_shapes):
-                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name)
-                continue
-            if unknown_code or len(digits) > 15:
-                reads = False
-            elif 7 <= len(digits):
-                reads = (named or bool(country_code) or any(shape.fullmatch(written) for shape in shapes)
-                         or (any(digits[2:].startswith(code) for code in codes) if digits.startswith("00")
-                             else any(plan["trunk"] and digits.startswith(plan["trunk"])
-                                      and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans)))
-            else:
-                reads = named and short_code
-            if reads:
-                yield Span(first, last, Form.TELEPHONE,
-                           FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
-                                      "suffix": suffix}), recognizer=self.name)
-            elif any(shape.fullmatch(written) for shape in kept_shapes):
-                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
+                    reads = named and short_code
+                if reads:
+                    yield Span(first, last, Form.TELEPHONE,
+                               FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
+                                          "suffix": suffix}), recognizer=self.name)
+                    break
+                if whole and any(shape.fullmatch(written) for shape in kept_shapes):
+                    yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
+                    break
 
 
 def speak_lexicon(span: Span, context: SpanContext) -> str:

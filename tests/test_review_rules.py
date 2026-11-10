@@ -483,6 +483,52 @@ def test_a_kept_run_that_a_joiner_continues_starts_a_phone_list():
         "Call 0800 123 456/7 or five five five one two three four."
 
 
+@pytest.mark.parametrize("text, lang, expected", [
+    ("Room 4 07946001800", "en-GB", "Room four zero seven nine four six zero zero one eight zero zero"),
+    ("Room (4) 07946001800", "en-GB", "Room (four) zero seven nine four six zero zero one eight zero zero"),
+    ("Room 1.2 07946001800", "en-GB", "Room one point two zero seven nine four six zero zero one eight zero zero"),
+    ("Room 4 12125550123", "en-US", "Room four one two one two five five five zero one two three"),
+    ("Room 12 020 7946 0018", "en-GB", "Room twelve zero two zero seven nine four six zero zero one eight"),
+    ("Room 12 020 7946 0018", "en-US", "Room twelve zero two zero seven nine four six zero zero one eight")])
+def test_a_first_group_drops_when_only_the_rest_of_the_run_reads(text, lang, expected):
+    assert normalize(text, lang) == expected
+    assert normalize(expected, lang) == expected
+
+
+def test_a_first_group_drops_only_for_a_plan_of_the_tag_and_only_at_a_space():
+    assert normalize("Room 4 07946001800", "en-GB") == \
+        "Room four zero seven nine four six zero zero one eight zero zero"
+    assert normalize("Room 4 07946001800", "en-US") == "Room four 07946001800"
+    assert normalize("Room 4 12125550123", "en-GB") == \
+        "Room four twelve billion one hundred and twenty-five million five hundred and fifty thousand one " \
+        "hundred and twenty-three"
+    assert normalize("Room 4.07946001800", "en-GB") == \
+        "Room four point zero seven nine four six zero zero one eight zero zero"
+
+
+@pytest.mark.parametrize("lang, and_", [("en-GB", "and "), ("en-US", "")])
+def test_a_phone_word_right_before_the_run_decides_for_the_whole_run(lang, and_):
+    """The keep and the named reading of the whole run come first. Only a run with neither drops its first
+    group, and the window then names the rest."""
+    assert normalize("Call 1234567 07946001800.", lang) == "Call 1234567 07946001800."
+    assert normalize("Call 12 07946001800.", lang) == \
+        "Call one two zero seven nine four six zero zero one eight zero zero."
+    assert normalize("Call 4 5 or 999 people.", lang) == "Call four five or nine nine nine people."
+    once = normalize("Call us on 1234567 07946001800.", lang)
+    assert once == f"Call us on one million two hundred {and_}thirty-four thousand five hundred {and_}sixty-seven " \
+        "zero seven nine four six zero zero one eight zero zero."
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize("lang", ["en-GB", "en-US"])
+@pytest.mark.parametrize("text, expected", [
+    ("Call 1/2 2024-01-02-1", "Call one-half two zero two four zero one zero two one"),
+    ("Call 3/4 10794600180-1", "Call three-quarters one zero seven nine four six zero zero one eight zero one")])
+def test_a_glued_first_group_drops_and_the_window_names_the_rest(text, expected, lang):
+    assert normalize(text, lang) == expected
+    assert normalize(expected, lang) == expected
+
+
 def test_the_core_telephone_holds_no_english_rule(gendered, monkeypatch):
     """A language whose group mark is a space and that uses the shared telephone recognizer reads `10 000` as
     one number. The thousands keep is a rule of `EnglishTelephone` in `en.py`, and the core holds none."""
