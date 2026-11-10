@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a15](https://github.com/TigreGotico/text2spoken/tree/0.0.2a15) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a14...0.0.2a15)
+
+**Merged pull requests:**
+
+- fix: bound digit runs in recognizers before int\(\) [\#30](https://github.com/TigreGotico/text2spoken/pull/30) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a14](https://github.com/TigreGotico/text2spoken/tree/0.0.2a14) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a13...0.0.2a14)
