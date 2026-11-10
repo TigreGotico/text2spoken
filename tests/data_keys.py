@@ -116,6 +116,10 @@ SHAPES: dict[str, Shape] = {
     "cued_time_words": WORDS,
     "time_cue_words": WORDS,
     "units": map_of(word, anything),
+    "year_words": WORDS,
+    "year_links": WORDS,
+    "function_words": WORDS,
+    "patterns": map_of(word, word),
 }
 """Each key that the core reads, with its shape. A shape names only what the core reads: the value of a unit is
 for the verbalizers of the file, so the core reads the unit names only."""
@@ -140,6 +144,10 @@ READERS: dict[str, frozenset[str]] = {
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes"}),
     "color": frozenset({"color_words"}),
+    "year": frozenset({"number_marks", "year_words", "function_words", "year_links", "units", "operators", "dimension_marks",
+                       "range_marks",
+                       "range_word"}),
+    "expression": frozenset({"number_marks", "patterns", "operators", "symbols"}),
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
     "render": frozenset({"symbols"}),
