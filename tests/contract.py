@@ -5,6 +5,7 @@ runs them over every file in `text2spoken/lang/`, and over broken specs to show 
 """
 import ast
 import json
+import random
 import re
 import subprocess
 import sys
@@ -22,7 +23,7 @@ from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
 from text2spoken.core.spans import FIELDS, Span
-from text2spoken.core.recognizers import SHARED, speak_cardinal, speak_lexicon
+from text2spoken.core.recognizers import SHARED, digit_run_matches, speak_cardinal, speak_lexicon
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import OPTIONS, Form, FrozenMap
@@ -41,6 +42,10 @@ DISTRIBUTIONS = {"linguatag": "linguatag", "ovos_number_parser": "ovos-number-pa
 SPELLER_DISTRIBUTIONS = {OvosNumberSpeller: "ovos-number-parser", RbnfSpeller: "unicode-rbnf"}
 """The distribution that each core speller imports when it speaks."""
 PATTERN_REFUSED = re.compile(r"\\[dDwWsSbB1-9]|\(\?(?!:)")
+DIGIT_RUN_KEYS = ("expression",)
+"""The `patterns` keys that a recognizer of a language file passes to `digit_run_matches`."""
+LITERAL_RUN = re.compile(r"[^][()?*+{}|\\^$.0-9]+")
+"""A run of a pattern source with no regex syntax and no digit."""
 
 
 def language_files() -> list[str]:
@@ -171,12 +176,47 @@ def check_pattern(pattern: str) -> None:
     re.compile(pattern)
 
 
+def digit_run_patterns(spec: LanguageSpec) -> set[str]:
+    """Each pattern of the file that reaches `digit_run_matches`, in each variety: the `patterns` entries of
+    `DIGIT_RUN_KEYS`, and the range pattern that the core builds from `range_marks`."""
+    found = set()
+    for index in range(len(spec.varieties)):
+        data = request_for(spec, index).data
+        patterns = data.get("patterns", FrozenMap())
+        found |= {patterns[key] for key in DIGIT_RUN_KEYS if key in patterns}
+        if marks := data.get("range_marks"):
+            found.add("[0-9]+(?:" + "|".join(map(re.escape, marks)) + ")[0-9]+")
+    return found
+
+
+def check_digit_run_pattern(pattern: str, texts: int = 1000) -> None:
+    """`digit_run_matches` gives the matches of `finditer` only for a pattern that starts with an optional character
+    that is no digit and then `[0-9]+`. Seeded texts of digit runs, joined by punctuation and by the literal runs of
+    the pattern, show a pattern of another shape."""
+    rng = random.Random(0)
+    literals = LITERAL_RUN.findall(pattern)
+    marks = sorted({" ", "/", ".", ",", "-", "−", "+", ":", *literals,
+                    *(c for run in literals for c in run if not c.isalpha())})
+    for _ in range(texts):
+        text = ""
+        for _ in range(rng.randint(1, 5)):
+            text += "".join(rng.choice(marks) for _ in range(rng.randint(0, 2)))
+            text += rng.choice(["1", "12", "007", "1" * 30])
+        text += "".join(rng.choice(marks) for _ in range(rng.randint(0, 2)))
+        expected = [m.span() for m in re.finditer(pattern, text)]
+        found = [m.span() for m in digit_run_matches(pattern, text)]
+        assert found == expected, f"digit_run_matches gives {found} for {pattern!r} on {text!r}, finditer {expected}"
+
+
 def clause_7(name: str, spec: LanguageSpec) -> None:
-    """Every table that holds regexes: `patterns`, and the phone shape tables, which the core compiles."""
+    """Every table that holds regexes: `patterns`, and the phone shape tables, which the core compiles. A pattern
+    that reaches `digit_run_matches` also has the shape that the helper reads."""
     for data in (spec.data, *(v.data for v in spec.varieties)):
         for pattern in (*data.get("patterns", FrozenMap()).values(),
                         *(shape for key in PHONE_SHAPE_KEYS for shape in data.get(key, ()))):
             check_pattern(pattern)
+    for pattern in digit_run_patterns(spec):
+        check_digit_run_pattern(pattern)
 
 
 def clause_8(name: str, spec: LanguageSpec) -> None:
