@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a17](https://github.com/TigreGotico/text2spoken/tree/0.0.2a17) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a16...0.0.2a17)
+
+**Merged pull requests:**
+
+- fix: linear time with many inline blocks [\#34](https://github.com/TigreGotico/text2spoken/pull/34) ([JarbasAl](https://github.com/JarbasAl))
+- fix: linear time on long digit runs [\#33](https://github.com/TigreGotico/text2spoken/pull/33) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a16](https://github.com/TigreGotico/text2spoken/tree/0.0.2a16) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a15...0.0.2a16)
