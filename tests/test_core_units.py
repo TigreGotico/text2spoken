@@ -263,3 +263,29 @@ def test_a_weak_time_word_is_evidence_for_hours_and_minutes_only_and_for_needs_a
     from text2spoken import normalize
 
     assert normalize(text, "en-GB") == spoken
+
+
+@pytest.mark.parametrize("before", ["", " ", " ", " ", "(", "\n", "à "])
+@pytest.mark.parametrize("mark", [",", "."])
+def test_a_leading_decimal_mark_reads_after_a_space_a_bracket_or_at_the_start(before, mark):
+    found = numbers.find_numbers(f"{before}{mark}5", FR_MARKS)
+    assert [(n.integer, n.fraction, n.start) for n in found] == [("", "5", len(before))]
+
+
+@pytest.mark.parametrize("text", ["1.,5", "1,.5", "x,5", "a.5", "1.5.,5"])
+def test_a_mark_that_continues_a_cluster_or_a_word_is_no_leading_mark(text):
+    assert all(n.integer for n in numbers.find_numbers(text, FR_MARKS))
+
+
+@pytest.mark.parametrize("tag,text,spoken", [
+    ("fr", "Il a ,5 de moyenne.", "Il a zéro virgule cinq de moyenne."),
+    ("fr", "Il a .5 de moyenne.", "Il a zéro virgule cinq de moyenne."),
+    ("fr", f"Il a{chr(0xa0)},5 de moyenne.", f"Il a{chr(0xa0)}zéro virgule cinq de moyenne."),
+    ("fr", f"Il a{chr(0x202f)},5 de moyenne.", f"Il a{chr(0x202f)}zéro virgule cinq de moyenne."),
+    ("fr", "(,5)", "(zéro virgule cinq)"), ("fr", ",5", "zéro virgule cinq"),
+    ("en-US", "It is .5 now.", "It is zero point five now."),
+])
+def test_a_leading_decimal_mark_reads_in_a_sentence(tag, text, spoken):
+    from text2spoken import normalize
+
+    assert normalize(text, tag) == spoken

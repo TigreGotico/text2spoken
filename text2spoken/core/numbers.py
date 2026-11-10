@@ -103,7 +103,8 @@ def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
     i = 0
     while i < len(text):
         leading_mark = (text[i] in leading and i + 1 < len(text) and is_digit(text[i + 1])
-                        and (i == 0 or not (is_word_char(text[i - 1]) or text[i - 1] in joiners)))
+                        and (i == 0 or text[i - 1].isspace()
+                             or not (is_word_char(text[i - 1]) or text[i - 1] in joiners)))
         if not (is_digit(text[i]) or leading_mark):
             i += 1
             continue
