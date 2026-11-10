@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.2a22](https://github.com/TigreGotico/text2spoken/tree/0.0.2a22) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a21...0.0.2a22)
+
+**Merged pull requests:**
+
+- test: strict-mode unread check with a block at offset 0 [\#44](https://github.com/TigreGotico/text2spoken/pull/44) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.0.2a21](https://github.com/TigreGotico/text2spoken/tree/0.0.2a21) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a20...0.0.2a21)
+
+**Merged pull requests:**
+
+- test: contract clause for digit-run patterns [\#43](https://github.com/TigreGotico/text2spoken/pull/43) ([JarbasAl](https://github.com/JarbasAl))
+- fix: minus sign as operator in expressions [\#42](https://github.com/TigreGotico/text2spoken/pull/42) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a20](https://github.com/TigreGotico/text2spoken/tree/0.0.2a20) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a19...0.0.2a20)
