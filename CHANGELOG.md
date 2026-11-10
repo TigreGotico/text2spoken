@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a25](https://github.com/TigreGotico/text2spoken/tree/0.0.2a25) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a24...0.0.2a25)
+
+**Merged pull requests:**
+
+- fix: keep an expression as written when a later operand has a sign or a symbol touches it [\#51](https://github.com/TigreGotico/text2spoken/pull/51) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a24](https://github.com/TigreGotico/text2spoken/tree/0.0.2a24) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a23...0.0.2a24)
