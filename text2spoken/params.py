@@ -133,10 +133,17 @@ class NormalizationParams:
             raise ArgumentTypeError("forms must be a frozenset of Form")
         for name, choices in _CHOICES.items():
             value = getattr(self, name)
-            if value is not None and value not in choices:
+            if value is None:
+                continue
+            if not isinstance(value, str):
+                raise ArgumentTypeError(f"{name} must be str or None, not {type(value).__name__}")
+            if value not in choices:
                 raise InvalidParameterError(f"{name} must be one of {sorted(choices)} or None, not {value!r}")
-        if self.decimal_mark is not None and (not isinstance(self.decimal_mark, str) or len(self.decimal_mark) != 1):
-            raise InvalidParameterError(f"decimal_mark must be one character or None, not {self.decimal_mark!r}")
+        if self.decimal_mark is not None:
+            if not isinstance(self.decimal_mark, str):
+                raise ArgumentTypeError(f"decimal_mark must be str or None, not {type(self.decimal_mark).__name__}")
+            if len(self.decimal_mark) != 1:
+                raise InvalidParameterError(f"decimal_mark must be one character or None, not {self.decimal_mark!r}")
         if not isinstance(self.default_gender, FrozenMap) or not all(
                 isinstance(code, str) and isinstance(gender, GrammaticalGender)
                 for code, gender in self.default_gender.items()):
@@ -155,8 +162,15 @@ class NormalizationParams:
             raise ArgumentTypeError("strict must be a bool")
 
     def only(self, *forms: Form) -> NormalizationParams:
-        return replace(self, forms=frozenset(forms))
+        return replace(self, forms=_form_set(forms))
 
     def without(self, *forms: Form) -> NormalizationParams:
-        return replace(self, forms=self.forms - frozenset(forms))
+        return replace(self, forms=self.forms - _form_set(forms))
+
+
+def _form_set(forms: tuple) -> frozenset[Form]:
+    for form in forms:
+        if not isinstance(form, Form):
+            raise ArgumentTypeError(f"a form must be a Form, not {type(form).__name__}")
+    return frozenset(forms)
 

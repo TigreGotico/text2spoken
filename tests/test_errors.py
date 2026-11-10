@@ -6,7 +6,7 @@ import pytest
 
 from text2spoken import (Features, Form, FrozenMap, HintWarning, InvalidHintError, InvalidLanguageTagError,
                          InvalidLexiconError, NormalizationParams, UnreadFormError, analyze, default_tokenizer,
-                         effective_params, normalize, render)
+                         effective_params, normalize, render, supports)
 from text2spoken.core import language as loader
 from text2spoken.core.recognizers import SHARED, _keys_by_first_character
 from text2spoken.core.spellers import OvosNumberSpeller
@@ -341,6 +341,23 @@ BAD_ARGUMENTS = {
     "lexicon dict": (lambda: NormalizationParams(lexicon={"en": {"a": "b"}}), TypeError, "ArgumentTypeError"),
     "strict int": (lambda: NormalizationParams(strict=1), TypeError, "ArgumentTypeError"),
     "only str": (lambda: NormalizationParams().only("cardinal"), TypeError, "ArgumentTypeError"),
+    "only list": (lambda: NormalizationParams().only([Form.CARDINAL]), TypeError, "ArgumentTypeError"),
+    "without None": (lambda: NormalizationParams().without(None), TypeError, "ArgumentTypeError"),
+    "without str": (lambda: NormalizationParams().without("cardinal"), TypeError, "ArgumentTypeError"),
+    "without list": (lambda: NormalizationParams().without([Form.CARDINAL]), TypeError, "ArgumentTypeError"),
+    "date_order dict": (lambda: NormalizationParams(date_order={}), TypeError, "ArgumentTypeError"),
+    "clock list": (lambda: NormalizationParams(clock=["12h"]), TypeError, "ArgumentTypeError"),
+    "clock int": (lambda: NormalizationParams(clock=12), TypeError, "ArgumentTypeError"),
+    "minute_style set": (lambda: NormalizationParams(minute_style={"phrase"}), TypeError, "ArgumentTypeError"),
+    "scale bytes": (lambda: NormalizationParams(scale=b"long"), TypeError, "ArgumentTypeError"),
+    "register list": (lambda: NormalizationParams(register=["formal"]), TypeError, "ArgumentTypeError"),
+    "decimal_mark int": (lambda: NormalizationParams(decimal_mark=5), TypeError, "ArgumentTypeError"),
+    "decimal_mark list": (lambda: NormalizationParams(decimal_mark=[","]), TypeError, "ArgumentTypeError"),
+    "decimal_mark empty": (lambda: NormalizationParams(decimal_mark=""), ValueError, "InvalidParameterError"),
+    "supports None": (lambda: supports(None), TypeError, "ArgumentTypeError"),
+    "supports bytes": (lambda: supports(b"en"), TypeError, "ArgumentTypeError"),
+    "effective_params lang None": (lambda: effective_params(None), TypeError, "ArgumentTypeError"),
+    "render hint key str": (lambda: render(_analysis(), {"5": Features()}), TypeError, "ArgumentTypeError"),
 }
 
 
