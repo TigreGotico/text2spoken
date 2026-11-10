@@ -30,6 +30,7 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
 _MONTH = "(" + "|".join(MONTHS) + ")"
 _ORDINAL_MARK = "(?:st|nd|rd|th)"
 _TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
+_SIGNS = "-−+"
 
 COLORS = {
     "000000": "black", "0000cd": "medium blue", "0000ff": "blue", "006400": "dark green", "008000": "green",
@@ -143,7 +144,7 @@ DATA = freeze({
                 "×": "measure"},
     "ordinal_marks": ["st", "nd", "rd", "th"],
     "patterns": {
-        "expression": "[-−]?[0-9]+(?: ?[+−×÷=] ?[-−]?[0-9]+)+",
+        "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_day_month": "([0-9][0-9]?)" + _ORDINAL_MARK + "? (?:of )?" + _MONTH + "(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_month_year": _MONTH + " ([0-9][0-9][0-9][0-9])",
@@ -257,13 +258,19 @@ def speak_range(span: Span, context: SpanContext) -> str:
     return f"{_cardinal(span.fields['low'], request)} {request.data['range_word']} {_cardinal(span.fields['high'], request)}"
 
 
+def _signed_operand(operand: str, request: Request) -> str:
+    sign = {"−": "-"}.get(operand[0], operand[0]) if operand[0] in _SIGNS else ""
+    return _signed(_cardinal(operand.lstrip(_SIGNS), request), sign, request)
+
+
 def speak_expression(span: Span, context: SpanContext) -> str:
-    """The first operand may carry a sign, as in `-2+3=1`: "minus two plus three equals one"."""
+    """Each operand may carry a sign, as in `-2+3=1` and `3 − −3`: "minus two plus three equals one", "three minus
+    minus three"."""
     request = context.request
-    first = span.fields["operands"][0]
-    words = [_signed(_cardinal(first.lstrip("-−"), request), "-" if first[0] in "-−" else "", request)]
-    for operator, operand in zip(span.fields["operators"], span.fields["operands"][1:]):
-        words += [request.data["operators"][operator], _cardinal(operand, request)]
+    operands = span.fields["operands"]
+    words = [_signed_operand(operands[0], request)]
+    for operator, operand in zip(span.fields["operators"], operands[1:]):
+        words += [request.data["operators"][operator], _signed_operand(operand, request)]
     return " ".join(words)
 
 
@@ -596,15 +603,15 @@ class Abbreviation:
 
 @dataclass(frozen=True)
 class Expression:
-    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. The first
-    integer may carry a minus sign. `−` is both that sign and an operator: `−3−3` is "minus three minus three".
+    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. Each integer may
+    carry one sign, `-`, `−` or `+`, right before its digits. `−` and `+` are both signs and operators: `−3−3` is
+    "minus three minus three", and `3 − −3` is "three minus minus three".
 
     An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
     written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator.
 
-    Only the first integer may carry a sign, and no form reads a number next to a symbol of the `symbols` table.
-    So a signed later operand, as in `3 − −3`, and a symbol next to the expression, as in `$−3+3`, keep the
-    expression as written."""
+    Two signs before one integer, as in `--3+3` and `3+--3`, keep the expression as written. So does a symbol of
+    the `symbols` table next to the expression, as in `$−3+3`, because no form reads a number next to one."""
     name: str = "expression"
     form: Form = Form.EXPRESSION
 
@@ -618,10 +625,15 @@ class Expression:
                     or open_operator.match(text, end)):
                 continue
             written = match.group().replace(" ", "")
-            first = re.match("[-−]?[0-9]+", written).group()
-            signs, others = zip(*re.findall(f"([{operators}])([-−]?[0-9]+)", written[len(first):]))
-            unclear = (any(not operand[0].isdigit() for operand in others)
-                       or (start > 0 and text[start - 1] in symbols) or (end < len(text) and text[end] in symbols))
+            first = re.match(f"[{_SIGNS}]?[0-9]+", written).group()
+            pairs = re.findall(f"([{operators}])([{_SIGNS}]*[0-9]+)", written[len(first):])
+            if not pairs:
+                continue
+            signs, others = zip(*pairs)
+            unclear = (any(len(operand) - len(operand.lstrip(_SIGNS)) > 1 for operand in others)
+                       or (start > 0 and (text[start - 1] in symbols
+                                          or (text[start - 1] in _SIGNS and not first[0].isdigit())))
+                       or (end < len(text) and text[end] in symbols))
             yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": (first, *others), "operators": signs}),
                        recognizer=self.name, keep=unclear)
 
