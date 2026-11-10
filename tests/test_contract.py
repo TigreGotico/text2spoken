@@ -1,7 +1,7 @@
 """Section 5.2: every language file passes each clause, and each clause check fails on a broken file."""
 import ast
 import re
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from importlib import import_module
 from importlib.metadata import requires
 from importlib.resources import files
@@ -14,8 +14,9 @@ from tests.contract import CLAUSES, language_files
 from tests.data_keys import OPTIONAL, READERS, SHAPES
 from tests.fixtures import qac
 from text2spoken.core import language as loader
+from text2spoken.core import recognizers
 from text2spoken.core.language import Request, Variety, select
-from text2spoken.core.recognizers import SHARED
+from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_matches
 from text2spoken.core.spans import Features
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller
 from text2spoken.core.tokens import default_tokenizer
@@ -267,8 +268,13 @@ def test_clause_7_admits_the_subset(pattern):
     contract.check_pattern(pattern)
 
 
-@pytest.mark.parametrize("pattern", ["[0-9]{2}/[0-9]+", "[0-9][.,][0-9]+", "(?:minus )?[0-9]+/[0-9]+",
-                                     "[-−]{0,2}[0-9]+/[0-9]+", "(?: -)?[0-9]+/[0-9]+"])
+MISREAD = ["[0-9]{2}/[0-9]+", "[0-9][.,][0-9]+", "(?:minus )?[0-9]+/[0-9]+", "[-−]{0,2}[0-9]+/[0-9]+",
+           "(?: -)?[0-9]+/[0-9]+", "(?:[A-Z][A-Z][A-Z] )?[0-9]+(?: ?[+−×÷=] ?[0-9]+)+", "(?:[A-Z]{3} )?[0-9]+/[0-9]+",
+           "(?:[a-z][a-z])?[0-9]+/[0-9]+", "(?:[a-z]+ )?[0-9]+/[0-9]+", "(?:[(] )?[0-9]+/[0-9]+"]
+"""Patterns in the portable subset that `digit_run_matches` misreads."""
+
+
+@pytest.mark.parametrize("pattern", MISREAD)
 def test_clause_7_bites_on_a_pattern_that_digit_run_matches_misreads(en, pattern):
     contract.check_pattern(pattern)
     patterns = {**en.data["patterns"], "expression": pattern}
@@ -276,8 +282,18 @@ def test_clause_7_bites_on_a_pattern_that_digit_run_matches_misreads(en, pattern
         contract.clause_7("en", replace(en, data=freeze({**thaw(en.data), "patterns": patterns})))
 
 
+@pytest.mark.parametrize("pattern", ["[0-9-]?[0-9]+/[0-9]+", "[^a]?[0-9]+/[0-9]+", ".?[0-9]+/[0-9]+", "[0-9]*/[0-9]+",
+                                     "[0-9]+/[0-9]+|/[0-9]+"])
+def test_clause_7_holds_a_pattern_to_the_shape_that_the_helper_documents(pattern):
+    """The helper reads these patterns right, but they start with something other than an optional character that
+    is no digit and then `[0-9]+`."""
+    with pytest.raises(AssertionError, match=re.escape(repr(pattern))):
+        contract.check_digit_run_pattern(pattern)
+
+
 @pytest.mark.parametrize("pattern", ["[-+−]?[0-9]+/[0-9]+", "[-−]?[0-9]+?/[0-9]+", "[$€]?[0-9]+(?:[.,][0-9]+)?",
-                                     "[-+]?[0-9]+/[0-9]"])
+                                     "[-+]?[0-9]+/[0-9]", "(?:[-−])?[0-9]+", "[a-z]?[0-9]+", "x??[0-9]+",
+                                     "[0-9]+/[0-9]+|[0-9]+-[0-9]+", _DATE, _FRACTION])
 def test_clause_7_admits_a_digit_run_pattern(pattern):
     contract.check_digit_run_pattern(pattern)
 
@@ -286,7 +302,27 @@ def test_clause_7_reads_the_digit_run_patterns_of_each_variety(en):
     data = freeze({**thaw(en.varieties[1].data), "patterns": {"expression": "[0-9]{2}/[0-9]+"}})
     with pytest.raises(AssertionError, match="digit_run_matches"):
         contract.clause_7("en", replace(en, varieties=(en.varieties[0], Variety(en.varieties[1].tag, data))))
-    assert contract.digit_run_patterns(en) == {en.data["patterns"]["expression"], r"[0-9]+(?:\-|–)[0-9]+"}
+    assert {p.pattern for p in contract.routed_patterns("en", en)} == {
+        en.data["patterns"]["expression"], r"[0-9]+(?:\-|–)[0-9]+", _FRACTION.pattern, _DATE.pattern}
+
+
+@dataclass(frozen=True)
+class _ReadsYear:
+    name: str = "reads_year"
+    form: Form = Form.CARDINAL
+
+    def find(self, text, tokens, request):
+        list(digit_run_matches(request.data["patterns"]["year"], text))
+        return iter(())
+
+
+def test_clause_7_reads_a_pattern_that_any_recognizer_passes_to_the_helper(en):
+    patterns = {**en.data["patterns"], "year": "(?:AD )?[0-9]+"}
+    spec = replace(en, data=freeze({**thaw(en.data), "patterns": patterns}),
+                   recognizers=(*en.recognizers, _ReadsYear()))
+    with pytest.raises(AssertionError, match=re.escape(repr("(?:AD )?[0-9]+"))):
+        contract.clause_7("en", spec)
+    assert digit_run_matches is recognizers.digit_run_matches
 
 
 def test_clause_8_bites(en):
