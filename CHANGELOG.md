@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a27](https://github.com/TigreGotico/text2spoken/tree/0.0.2a27) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a26...0.0.2a27)
+
+**Merged pull requests:**
+
+- test: check the parsed start of each pattern that reaches digit\_run\_matches [\#52](https://github.com/TigreGotico/text2spoken/pull/52) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a26](https://github.com/TigreGotico/text2spoken/tree/0.0.2a26) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a25...0.0.2a26)
