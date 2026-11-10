@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a26](https://github.com/TigreGotico/text2spoken/tree/0.0.2a26) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a25...0.0.2a26)
+
+**Merged pull requests:**
+
+- fix: read a signed fraction after a mark as on a second pass [\#54](https://github.com/TigreGotico/text2spoken/pull/54) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a25](https://github.com/TigreGotico/text2spoken/tree/0.0.2a25) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a24...0.0.2a25)
