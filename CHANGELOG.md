@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a23](https://github.com/TigreGotico/text2spoken/tree/0.0.2a23) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a22...0.0.2a23)
+
+**Merged pull requests:**
+
+- fix: raise ArgumentTypeError for a value of the wrong type [\#48](https://github.com/TigreGotico/text2spoken/pull/48) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a22](https://github.com/TigreGotico/text2spoken/tree/0.0.2a22) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a21...0.0.2a22)
