@@ -1,0 +1,270 @@
+id	tag	form	text	expected	source	checked_by
+fr-001	fr-FR	cardinal	Il y a 21 pommes.	Il y a vingt et une pommes.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-002	fr-FR	cardinal	Il a 21 ans.	Il a vingt et un ans.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-003	fr-FR	cardinal	Il a 71 ans.	Il a soixante et onze ans.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-004	fr-FR	cardinal	Ils sont 80.	Ils sont quatre-vingts.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-005	fr-FR	cardinal	Il y a 81 chevaux.	Il y a quatre-vingt-un chevaux.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-006	fr-FR	cardinal	Il y a 91 jours.	Il y a quatre-vingt-onze jours.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-007	fr-FR	cardinal	Il y a 100 places.	Il y a cent places.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-008	fr-FR	cardinal	Il y a 101 places.	Il y a cent une places.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-009	fr-FR	cardinal	Il y a 200 places.	Il y a deux cents places.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-010	fr-FR	cardinal	Il y a 201 chiens.	Il y a deux cent un chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-011	fr-FR	cardinal	Il y a 1000 chiens.	Il y a mille chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-012	fr-FR	cardinal	Il y a 2000 chiens.	Il y a deux mille chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-013	fr-FR	cardinal	Il y a 80 000 chiens.	Il y a quatre-vingt mille chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-014	fr-FR	cardinal	Il y a 1 500 chiens.	Il y a mille cinq cents chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-015	fr-FR	cardinal	Il y a 1 234 chiens.	Il y a mille deux cent trente-quatre chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-016	fr-FR	cardinal	Il y a 12 345 chiens.	Il y a douze mille trois cent quarante-cinq chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-017	fr-FR	cardinal	Il y a 12 345 chiens.	Il y a douze mille trois cent quarante-cinq chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-018	fr-FR	cardinal	Il y a 1 000 000 de chiens.	Il y a un million de chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-019	fr-FR	cardinal	Il y a 2 000 000 de chiens.	Il y a deux millions de chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-020	fr-FR	cardinal	Il y a 1.000.000 de chiens.	Il y a un million de chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-021	fr-CH	cardinal	Il y a 1'000 chiens.	Il y a mille chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-022	fr-CH	cardinal	Il y a 1’000 chiens.	Il y a mille chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-023	fr-FR	cardinal	Il fait -5 là-bas.	Il fait moins cinq là-bas.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-024	fr-FR	cardinal	Il y a 0 chien.	Il y a zéro chien.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-025	fr-FR	cardinal	Le COVID-19 est là.	Le COVID dix-neuf est là.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-026	fr-FR	cardinal	Il a 70 ans.	Il a soixante-dix ans.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-027	fr-FR	cardinal	Il a 90 ans.	Il a quatre-vingt-dix ans.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-028	fr-FR	cardinal	Il a 99 ans.	Il a quatre-vingt-dix-neuf ans.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-029	fr-CA	cardinal	Il a 90 ans.	Il a quatre-vingt-dix ans.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-030	fr-BE	cardinal	Il a 70 ans.	Il a septante ans.	CLDR RBNF fr, fr_BE and fr_CH via unicode-rbnf: septante, nonante, huitante	unchecked
+fr-031	fr-BE	cardinal	Il a 71 ans.	Il a septante et un ans.	CLDR RBNF fr, fr_BE and fr_CH via unicode-rbnf: septante, nonante, huitante	unchecked
+fr-032	fr-BE	cardinal	Il a 90 ans.	Il a nonante ans.	CLDR RBNF fr, fr_BE and fr_CH via unicode-rbnf: septante, nonante, huitante	unchecked
+fr-033	fr-BE	cardinal	Il a 80 ans.	Il a quatre-vingts ans.	CLDR RBNF fr, fr_BE and fr_CH via unicode-rbnf: septante, nonante, huitante	unchecked
+fr-034	fr-CH	cardinal	Il a 70 ans.	Il a septante ans.	CLDR RBNF fr, fr_BE and fr_CH via unicode-rbnf: septante, nonante, huitante	unchecked
+fr-035	fr-CH	cardinal	Il a 80 ans.	Il a huitante ans.	CLDR RBNF fr, fr_BE and fr_CH via unicode-rbnf: septante, nonante, huitante	unchecked
+fr-036	fr-CH	cardinal	Il a 90 ans.	Il a nonante ans.	CLDR RBNF fr, fr_BE and fr_CH via unicode-rbnf: septante, nonante, huitante	unchecked
+fr-037	fr-FR	decimal	Pi vaut environ 3,14.	Pi vaut environ trois virgule quatorze.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-038	fr-FR	decimal	La moyenne est 3,5.	La moyenne est trois virgule cinq.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-039	fr-FR	decimal	Le taux est 0,05 ici.	Le taux est zéro virgule zéro cinq ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-040	fr-FR	decimal	Le taux est 0,5 ici.	Le taux est zéro virgule cinq ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-041	fr-FR	decimal	La valeur est 3,141 ici.	La valeur est trois virgule un quatre un ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-042	fr-CA	decimal	La moyenne est 3.5.	La moyenne est trois virgule cinq.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-043	fr-FR	decimal	Une chute de -5,2 ici.	Une chute de moins cinq virgule deux ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-044	fr-FR	decimal	Il y a 1 234,5 ici.	Il y a mille deux cent trente-quatre virgule cinq ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-045	fr-FR	decimal	La valeur est 3,10 ici.	La valeur est trois virgule dix ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-046	fr-FR	percent	Un taux de 50 % ici.	Un taux de cinquante pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-047	fr-FR	percent	Un taux de 3,5 % ici.	Un taux de trois virgule cinq pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-048	fr-FR	percent	Un taux de 100 % ici.	Un taux de cent pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-049	fr-FR	percent	Un taux de 1 % ici.	Un taux de un pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-050	fr-FR	percent	Un taux de 50 % ici.	Un taux de cinquante pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-051	fr-FR	percent	Un taux de 50 % ici.	Un taux de cinquante pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-052	fr-FR	percent	Un taux de 50% ici.	Un taux de cinquante pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-053	fr-FR	percent	Un taux de -10 % ici.	Un taux de moins dix pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-054	fr-FR	percent	Entre 10 %-20 % ici.	Entre dix pour cent à vingt pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-055	fr-FR	money	Cela coûte 3,50 € ici.	Cela coûte trois euros cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-056	fr-FR	money	Cela coûte 3,05 € ici.	Cela coûte trois euros cinq ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-057	fr-FR	money	Cela coûte 0,50 € ici.	Cela coûte cinquante centimes ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-058	fr-FR	money	Cela coûte 0,01 € ici.	Cela coûte un centime ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-059	fr-FR	money	Cela coûte 1 € ici.	Cela coûte un euro ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-060	fr-FR	money	Cela coûte 2 € ici.	Cela coûte deux euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-061	fr-FR	money	Cela coûte 21 € ici.	Cela coûte vingt et un euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-062	fr-FR	money	Cela coûte 1,01 € ici.	Cela coûte un euro un ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-063	fr-FR	money	Cela coûte 12,5 € ici.	Cela coûte douze euros cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-064	fr-FR	money	Cela coûte 12,00 € ici.	Cela coûte douze euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-065	fr-FR	money	Cela coûte 12 $ ici.	Cela coûte douze dollars ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-066	fr-FR	money	Cela coûte 3,50 $ ici.	Cela coûte trois dollars cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-067	fr-FR	money	Cela coûte 5 £ ici.	Cela coûte cinq livres ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-068	fr-FR	money	Cela coûte 1 £ ici.	Cela coûte une livre ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-069	fr-FR	money	Cela coûte 21 £ ici.	Cela coûte vingt et une livres ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-070	fr-FR	money	Cela coûte 1 000 000 € ici.	Cela coûte un million d'euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-071	fr-FR	money	Cela coûte 2 500 000 € ici.	Cela coûte deux millions cinq cent mille euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-072	fr-FR	money	Cela coûte 1 500 € ici.	Cela coûte mille cinq cents euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-073	fr-FR	money	Cela coûte 12,50€ ici.	Cela coûte douze euros cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-074	fr-FR	money	Cela coûte 12 € ici.	Cela coûte douze euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-075	fr-FR	money	Cela coûte 12 € ici.	Cela coûte douze euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-076	fr-FR	money	Cela coûte 3,141 € ici.	Cela coûte trois virgule un quatre un euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-077	fr-FR	money	Cela coûte 12 CHF ici.	Cela coûte douze francs suisses ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-078	fr-FR	money	Cela coûte 12 CA$ ici.	Cela coûte douze dollars canadiens ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-079	fr-BE	money	Cela coûte € 12,50 ici.	Cela coûte douze euros cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-080	fr-BE	money	Cela coûte 1 000 000 000 € ici.	Cela coûte un milliard d'euros ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-081	fr-CH	money	Cela coûte 12 CHF ici.	Cela coûte douze francs suisses ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-082	fr-CH	money	Cela coûte Fr. 12.50 ici.	Cela coûte douze francs suisses cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-083	fr-CH	money	Cela coûte CHF 1'200.50 ici.	Cela coûte mille deux cents francs suisses cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-084	fr-CH	money	Cela coûte 0,05 CHF ici.	Cela coûte cinq centimes ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-085	fr-CA	money	Cela coûte 5 $ ici.	Cela coûte cinq dollars ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-086	fr-CA	money	Cela coûte 3,50 $ ici.	Cela coûte trois dollars cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-087	fr-CA	money	Cela coûte 1 $ ici.	Cela coûte un dollar ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-088	fr-CA	money	Cela coûte 0,25 $ ici.	Cela coûte vingt-cinq cents ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-089	fr-CA	money	Cela coûte 5 US$ ici.	Cela coûte cinq dollars américains ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-090	fr-CA	money	Cela coûte 5 CA$ ici.	Cela coûte cinq dollars ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-091	fr-CA	money	Cela coûte 2 000 000 $ ici.	Cela coûte deux millions de dollars ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
+fr-092	fr-FR	time	Rendez-vous à 14h30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-093	fr-FR	time	Rendez-vous à 14 h 30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-094	fr-FR	time	Rendez-vous à 14 h 30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-095	fr-FR	time	Rendez-vous à 14 h30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-096	fr-CA	time	Rendez-vous à 14 h 30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-097	fr-FR	time	Rendez-vous à 21 h ici.	Rendez-vous à vingt et une heures ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-098	fr-FR	time	Rendez-vous à 21h ici.	Rendez-vous à vingt et une heures ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-099	fr-FR	time	Rendez-vous à 7 h 15 ici.	Rendez-vous à sept heures quinze ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-100	fr-FR	time	Rendez-vous à 7 h 05 ici.	Rendez-vous à sept heures cinq ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-101	fr-FR	time	Rendez-vous à 1 h ici.	Rendez-vous à une heure ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-102	fr-FR	time	Rendez-vous à 1 h 01 ici.	Rendez-vous à une heure une ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-103	fr-FR	time	Rendez-vous à 21 h 31 ici.	Rendez-vous à vingt et une heures trente et une ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-104	fr-FR	time	Rendez-vous à 12 h ici.	Rendez-vous à midi ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-105	fr-FR	time	Rendez-vous à 12 h 00 ici.	Rendez-vous à midi ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-106	fr-FR	time	Rendez-vous à 12 h 30 ici.	Rendez-vous à midi trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-107	fr-FR	time	Rendez-vous à 0 h ici.	Rendez-vous à minuit ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-108	fr-FR	time	Rendez-vous à 24 h ici.	Rendez-vous à minuit ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-109	fr-FR	time	Rendez-vous à 0 h 05 ici.	Rendez-vous à minuit cinq ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-110	fr-FR	time	Rendez-vous à 00:05 ici.	Rendez-vous à minuit cinq ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-111	fr-FR	time	Rendez-vous à 14:30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-112	fr-BE	time	Rendez-vous à 14:30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-113	fr-CH	time	Rendez-vous à 7:05 ici.	Rendez-vous à sept heures cinq ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-114	fr-FR	time	Rendez-vous à 14:30:05 ici.	Rendez-vous à quatorze heures trente minutes et cinq secondes ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-115	fr-FR	time	Rendez-vous à 9h-17h ici.	Rendez-vous à neuf heures à dix-sept heures ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-116	fr-FR	time	Rendez-vous de 9 h à 17 h ici.	Rendez-vous de neuf heures à dix-sept heures ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-117	fr-FR	time	Rendez-vous pendant 12 h ici.	Rendez-vous pendant douze heures ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-118	fr-FR	time	Rendez-vous pendant 24 h ici.	Rendez-vous pendant vingt-quatre heures ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-119	fr-FR	time	Rendez-vous pendant 0 h ici.	Rendez-vous pendant zéro heure ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-120	fr-FR	time	Rendez-vous pendant 100 h ici.	Rendez-vous pendant cent heures ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-121	fr-FR	time	Rendez-vous pendant 1 h 30 min ici.	Rendez-vous pendant une heure trente minutes ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-122	fr-FR	none	Rendez-vous à 25 h 99 ici.	Rendez-vous à 25 h 99 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-123	fr-FR	none	Rendez-vous à 12 h 60 ici.	Rendez-vous à 12 h 60 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-124	fr-FR	none	Rendez-vous à 24 h 30 ici.	Rendez-vous à 24 h 30 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-125	fr-FR	date	Rendez-vous le 10 novembre 2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-126	fr-FR	date	Rendez-vous le 1er novembre 2026 ici.	Rendez-vous le premier novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-127	fr-FR	date	Rendez-vous le 1 novembre ici.	Rendez-vous le premier novembre ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-128	fr-FR	date	Rendez-vous le 15 août ici.	Rendez-vous le quinze août ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-129	fr-FR	date	Rendez-vous le 29 février 2024 ici.	Rendez-vous le vingt-neuf février deux mille vingt-quatre ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-130	fr-FR	date	Rendez-vous le 5 mars 1900 ici.	Rendez-vous le cinq mars mille neuf cent ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-131	fr-FR	date	Rendez-vous en mai 2026 ici.	Rendez-vous en mai deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-132	fr-FR	date	Rendez-vous le 10/11/2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-133	fr-FR	date	Rendez-vous le 1/12/2026 ici.	Rendez-vous le premier décembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-134	fr-FR	date	Rendez-vous le 31/12/2026 ici.	Rendez-vous le trente et un décembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-135	fr-FR	date	Rendez-vous le 10.11.2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-136	fr-FR	date	Rendez-vous le 10-11-2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-137	fr-CA	date	Rendez-vous le 2026-11-10 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-138	fr-CA	date	Rendez-vous le 10 novembre 2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-139	fr-BE	date	Rendez-vous le 10/11/2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-140	fr-CH	date	Rendez-vous le 10 novembre 2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
+fr-141	fr-FR	ordinal	C'est le 1er ici.	C'est le premier ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-142	fr-FR	ordinal	C'est le 1re ici.	C'est le première ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-143	fr-FR	ordinal	C'est le 1ère ici.	C'est le première ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-144	fr-FR	ordinal	C'est le 2e ici.	C'est le deuxième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-145	fr-FR	ordinal	C'est le 3ème ici.	C'est le troisième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-146	fr-FR	ordinal	C'est le 4e ici.	C'est le quatrième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-147	fr-FR	ordinal	C'est le 5e ici.	C'est le cinquième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-148	fr-FR	ordinal	C'est le 9e ici.	C'est le neuvième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-149	fr-FR	ordinal	C'est le 11e ici.	C'est le onzième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-150	fr-FR	ordinal	C'est le 12e ici.	C'est le douzième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-151	fr-FR	ordinal	C'est le 16e ici.	C'est le seizième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-152	fr-FR	ordinal	C'est le 20e ici.	C'est le vingtième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-153	fr-FR	ordinal	C'est le 21e ici.	C'est le vingt et unième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-154	fr-FR	ordinal	C'est le 31e ici.	C'est le trente et unième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-155	fr-FR	ordinal	C'est le 70e ici.	C'est le soixante-dixième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-156	fr-FR	ordinal	C'est le 71e ici.	C'est le soixante et onzième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-157	fr-FR	ordinal	C'est le 80e ici.	C'est le quatre-vingtième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-158	fr-FR	ordinal	C'est le 81e ici.	C'est le quatre-vingt-unième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-159	fr-FR	ordinal	C'est le 90e ici.	C'est le quatre-vingt-dixième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-160	fr-FR	ordinal	C'est le 100e ici.	C'est le centième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-161	fr-FR	ordinal	C'est le 101e ici.	C'est le cent unième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-162	fr-FR	ordinal	C'est le 200e ici.	C'est le deux centième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-163	fr-FR	ordinal	C'est le 1000e ici.	C'est le millième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-164	fr-FR	ordinal	C'est le 1 000 000e ici.	C'est le millionième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-165	fr-FR	ordinal	C'est le 1ers ici.	C'est le premiers ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-166	fr-FR	ordinal	C'est le 1res ici.	C'est le premières ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-167	fr-FR	ordinal	C'est le 2es ici.	C'est le deuxièmes ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-168	fr-FR	ordinal	C'est le 3èmes ici.	C'est le troisièmes ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-169	fr-FR	ordinal	C'est le 2nd ici.	C'est le second ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-170	fr-FR	ordinal	C'est le 2nde ici.	C'est le seconde ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-171	fr-BE	ordinal	C'est le 71e ici.	C'est le septante et unième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-172	fr-CH	ordinal	C'est le 80e ici.	C'est le huitantième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-173	fr-FR	none	C'est le 21er ici.	C'est le 21er ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-174	fr-FR	none	C'est le 2er ici.	C'est le 2er ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-175	fr-FR	none	C'est le 1e ici.	C'est le 1e ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-176	fr-FR	measure	Il fait 2 kg ici.	Il fait deux kilogrammes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-177	fr-FR	measure	Il fait 1 kg ici.	Il fait un kilogramme ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-178	fr-FR	measure	Il fait 21 kg ici.	Il fait vingt et un kilogrammes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-179	fr-FR	measure	Il fait 1,5 kg ici.	Il fait un virgule cinq kilogramme ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-180	fr-FR	measure	Il fait 2,5 kg ici.	Il fait deux virgule cinq kilogrammes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-181	fr-FR	measure	Il fait 0 kg ici.	Il fait zéro kilogramme ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-182	fr-FR	measure	Il fait 250 g ici.	Il fait deux cent cinquante grammes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-183	fr-FR	measure	Il fait 3 km ici.	Il fait trois kilomètres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-184	fr-FR	measure	Il fait 10 m ici.	Il fait dix mètres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-185	fr-FR	measure	Il fait 5 cm ici.	Il fait cinq centimètres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-186	fr-FR	measure	Il fait 7 mm ici.	Il fait sept millimètres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-187	fr-FR	measure	Il fait 50 km/h ici.	Il fait cinquante kilomètres par heure ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-188	fr-FR	measure	Il fait 1 km/h ici.	Il fait un kilomètre par heure ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-189	fr-FR	measure	Il fait 3 m/s ici.	Il fait trois mètres par seconde ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-190	fr-FR	measure	Il fait 2 l ici.	Il fait deux litres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-191	fr-FR	measure	Il fait 0,5 L ici.	Il fait zéro virgule cinq litre ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-192	fr-FR	measure	Il fait 33 cl ici.	Il fait trente-trois centilitres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-193	fr-FR	measure	Il fait 250 ml ici.	Il fait deux cent cinquante millilitres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-194	fr-FR	measure	Il fait 30 min ici.	Il fait trente minutes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-195	fr-FR	measure	Il fait 21 min ici.	Il fait vingt et une minutes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-196	fr-FR	measure	Il fait 1 min ici.	Il fait une minute ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-197	fr-FR	measure	Il fait 45 s ici.	Il fait quarante-cinq secondes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-198	fr-FR	measure	Il fait 1 s ici.	Il fait une seconde ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-199	fr-FR	measure	Il fait 6 °C ici.	Il fait six degrés Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-200	fr-FR	measure	Il fait 6°C ici.	Il fait six degrés Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-201	fr-FR	measure	Il fait 6 °C ici.	Il fait six degrés Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-202	fr-FR	measure	Il fait 6 °C ici.	Il fait six degrés Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-203	fr-FR	measure	Il fait -3° ici.	Il fait moins trois degrés ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-204	fr-FR	measure	Il fait -3 °C ici.	Il fait moins trois degrés Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-205	fr-FR	measure	Il fait 1 °C ici.	Il fait un degré Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-206	fr-FR	measure	Il fait 21 °C ici.	Il fait vingt et un degrés Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-207	fr-FR	measure	Il fait 70 °F ici.	Il fait soixante-dix degrés Fahrenheit ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-208	fr-FR	measure	Il fait 10-15 kg ici.	Il fait dix à quinze kilogrammes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-209	fr-FR	measure	Il fait 15 x 8 cm ici.	Il fait quinze par huit centimètres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-210	fr-FR	measure	Il fait 2 000 000 km ici.	Il fait deux millions de kilomètres ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-211	fr-FR	measure	Il fait 5 m² ici.	Il fait cinq mètres carrés ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-212	fr-FR	measure	Il fait 3 Go ici.	Il fait trois gigaoctets ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-213	fr-FR	measure	Il fait 100 Hz ici.	Il fait cent hertz ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-214	fr-CA	measure	Il fait -20 °C ici.	Il fait moins vingt degrés Celsius ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-215	fr-BE	measure	Il fait 71 kg ici.	Il fait septante et un kilogrammes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-216	fr-CH	measure	Il fait 80 kg ici.	Il fait huitante kilogrammes ici.	SI unit names in French (BIPM brochure, SI) and the plural rule of the Académie française; from memory	unchecked
+fr-217	fr-FR	fraction	Il reste 1/2 ici.	Il reste un demi ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-218	fr-FR	fraction	Il reste 1/3 ici.	Il reste un tiers ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-219	fr-FR	fraction	Il reste 2/3 ici.	Il reste deux tiers ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-220	fr-FR	fraction	Il reste 1/4 ici.	Il reste un quart ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-221	fr-FR	fraction	Il reste 3/4 ici.	Il reste trois quarts ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-222	fr-FR	fraction	Il reste 1/5 ici.	Il reste un cinquième ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-223	fr-FR	fraction	Il reste 2/5 ici.	Il reste deux cinquièmes ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-224	fr-FR	fraction	Il reste 5/8 ici.	Il reste cinq huitièmes ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-225	fr-FR	fraction	Il reste 1/10 ici.	Il reste un dixième ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-226	fr-FR	fraction	Il reste 1/21 ici.	Il reste un vingt et unième ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-227	fr-FR	fraction	Il reste 1/100 ici.	Il reste un centième ici.	Fractions in French (Wikipédia, Numéraux français): un demi, un tiers, un quart, then the ordinal; from memory	unchecked
+fr-228	fr-FR	none	Un rapport de 3/2 ici.	Un rapport de 3/2 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-229	fr-FR	range	Il faut 5-8 personnes ici.	Il faut cinq à huit personnes ici.	Plages en français: de cinq à huit (rule from memory, not fetched)	unchecked
+fr-230	fr-FR	range	Il faut 1-2 heures ici.	Il faut une à deux heures ici.	Plages en français: de cinq à huit (rule from memory, not fetched)	unchecked
+fr-231	fr-FR	range	Il faut 10–20 ans ici.	Il faut dix à vingt ans ici.	Plages en français: de cinq à huit (rule from memory, not fetched)	unchecked
+fr-232	fr-FR	range	Il faut de 5 à 8 jours ici.	Il faut de cinq à huit jours ici.	Plages en français: de cinq à huit (rule from memory, not fetched)	unchecked
+fr-233	fr-FR	none	Le match a fini 3-2 ici.	Le match a fini 3-2 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-234	fr-FR	abbreviation	Voir M. Dupont ici.	Voir Monsieur Dupont ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-235	fr-FR	abbreviation	Voir M. le maire ici.	Voir Monsieur le maire ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-236	fr-FR	abbreviation	Voir Mme Martin ici.	Voir Madame Martin ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-237	fr-FR	abbreviation	Voir Mlle Durand ici.	Voir Mademoiselle Durand ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-238	fr-FR	abbreviation	Voir MM. Dupont et Martin ici.	Voir Messieurs Dupont et Martin ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-239	fr-FR	abbreviation	Voir Mmes Dupont ici.	Voir Mesdames Dupont ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-240	fr-FR	abbreviation	Voir Dr Martin ici.	Voir Docteur Martin ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-241	fr-FR	abbreviation	Voir Dr. Martin ici.	Voir Docteur Martin ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-242	fr-FR	abbreviation	Voir Pr Martin ici.	Voir Professeur Martin ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-243	fr-FR	abbreviation	Voir St-Denis ici.	Voir Saint-Denis ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-244	fr-FR	abbreviation	Voir Ste Anne ici.	Voir Sainte Anne ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-245	fr-FR	abbreviation	Voir Ste-Anne ici.	Voir Sainte-Anne ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-246	fr-FR	abbreviation	Voir n° 5 ici.	Voir numéro cinq ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-247	fr-FR	abbreviation	Voir n°5 ici.	Voir numéro cinq ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-248	fr-FR	abbreviation	Voir N° 12 ici.	Voir numéro douze ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-249	fr-FR	abbreviation	Voir pommes, poires, etc. Il ici.	Voir pommes, poires, et cetera. Il ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-250	fr-FR	abbreviation	Voir (pommes, etc.) ici.	Voir (pommes, et cetera) ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-251	fr-FR	abbreviation	Voir pommes, etc. ici ici.	Voir pommes, et cetera ici ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-252	fr-FR	abbreviation	Voir pommes, etc... ici.	Voir pommes, et cetera... ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-253	fr-FR	abbreviation	Voir c.-à-d. ceci ici.	Voir c'est-à-dire ceci ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-254	fr-FR	abbreviation	Voir p. ex. ceci ici.	Voir par exemple ceci ici.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
+fr-255	fr-FR	none	Voir M. J. Dupont ici.	Voir M. J. Dupont ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-256	fr-FR	none	Voir m. dupont ici.	Voir m. dupont ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-257	fr-FR	idiom	Ouvert 24h/24 ici.	Ouvert vingt-quatre heures sur vingt-quatre ici.	Expressions courantes (Wiktionnaire), from memory	unchecked
+fr-258	fr-FR	idiom	Ouvert 24 h/24 ici.	Ouvert vingt-quatre heures sur vingt-quatre ici.	Expressions courantes (Wiktionnaire), from memory	unchecked
+fr-259	fr-FR	idiom	Ouvert 7j/7 ici.	Ouvert sept jours sur sept ici.	Expressions courantes (Wiktionnaire), from memory	unchecked
+fr-260	fr-FR	idiom	Ouvert 50/50 ici.	Ouvert cinquante-cinquante ici.	Expressions courantes (Wiktionnaire), from memory	unchecked
+fr-261	fr-FR	none	Le format 16:9 reste.	Le format 16:9 reste.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-262	fr-FR	none	Voir Jean 3:16 ici.	Voir Jean 3:16 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-263	fr-FR	none	Le mot #decade reste.	Le mot #decade reste.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-264	fr-FR	none	La date 13/13/2024 reste.	La date 13/13/2024 reste.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-265	fr-FR	none	La version 1.500 reste.	La version 1.500 reste.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-266	fr-FR	time	Rendez-vous à 14:30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-267	fr-FR	time	Il est 7:30 ici.	Il est sept heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-268	fr-FR	none	Le score final 7:30 ici.	Le score final 7:30 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
+fr-269	fr-FR	abbreviation	J'ai des pommes, etc.	J'ai des pommes, et cetera.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
