@@ -16,9 +16,10 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"fr": {"day_periods", "scales", "day_part_words", "minute_phrases"}}
+NO_ROW = {"fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+                 "no_phone_shapes"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
-(`day_periods`, `scales`), or a row reads it only with a param other than the default (the 12-hour clock and the
+(the phone shape tables), or a row reads it only with a param other than the default (the 12-hour clock and the
 phrase style of French, which tests/test_french.py checks)."""
 
 # One entry of each table of a language file; DELETE removes a table that holds one value.
@@ -42,6 +43,10 @@ FR_ENTRIES = {
     "units": "kg", "titles": "M.", "name_particles": "le", "abbreviations": "etc.", "sentence_final": "etc.",
     "number_abbreviations": "n°", "ordinal_marks": "masculine", "feminine_nouns": "pommes", "patterns": "date_day_month",
     "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
+    "operators": "+", "colors": "ff0000", "color_words": "couleur", "year_words": "en", "year_links": "et",
+    "function_words": "il", "phone_words": "composez", "short_codes": "112", "list_links": "et",
+    "phone_unit_shapes": "0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}", "phone_reading": DELETE, "roman_headings": "chapitre",
+    "roman_names": "Louis", "scales": "M", "day_periods": "pm",
 }
 ENTRIES = {
     "en": EN_ENTRIES,

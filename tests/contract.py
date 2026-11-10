@@ -339,7 +339,7 @@ def check_speller_dependencies(spec: LanguageSpec, requirements: list[str] | Non
 
 _SANDBOX = """
 import socket, sys
-import text2spoken.core.recognizers, text2spoken.core.spellers, text2spoken.core.color
+import text2spoken.core.recognizers, text2spoken.core.spellers, text2spoken.core.color, text2spoken.core.roman
 before = set(sys.modules)
 events = []
 def hook(event, args):

@@ -31,6 +31,8 @@ test = [
     "packaging",
     "ovos-number-parser>=0.24.6a1",
     "ovos-color-parser>=0.12.4a1",
+    "num2words",
+    "babel",
 ]
 
 [tool.setuptools.dynamic]
