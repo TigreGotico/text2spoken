@@ -41,6 +41,11 @@ PHONE_PLANS = FrozenMap({
 lengths of the national significant number. A partial table; a region with no plan gives no trunk evidence."""
 
 
+GAPS = ("", " ", "\u00a0", "\u202f")
+"""The gaps that may stand between a number and its unit, symbol or day period: none, a space, a no-break space and
+a narrow no-break space, which French typography puts before `%`, `€` and units."""
+
+
 def numbers_in(text: str, request: Request) -> tuple[Number, ...]:
     """The numbers of the text, found once for each text in one request."""
     key = ("numbers", text)
@@ -298,7 +303,7 @@ def _affixed_matches(pattern: re.Pattern, text: str, data) -> Iterator[tuple[re.
 def _unit_after(text: str, end: int, units: Iterable[str]) -> bool:
     """Whether a unit of the language follows text[:end], attached or after one space."""
     return any(text.startswith(gap + unit, end) and is_bounded(text, end + len(gap), end + len(gap) + len(unit))
-               for gap in ("", " ", " ") for unit in units)
+               for gap in GAPS for unit in units)
 
 
 @dataclass(frozen=True)
@@ -490,7 +495,7 @@ class Percent:
                 number = replace(number, start=number.start + 1, sign="")
             if percent["position"] in ("after", "either"):
                 for sign in percent["signs"]:
-                    for gap in ("", " ", " "):
+                    for gap in GAPS:
                         end = number.end + len(gap) + len(sign)
                         if text.startswith(gap + sign, number.end) \
                                 and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
@@ -526,7 +531,7 @@ class Money:
                 continue
             for symbol, code in sorted(symbols, key=lambda pair: len(pair[0]), reverse=True):
                 found = None
-                for gap in ("", " ", " "):
+                for gap in GAPS:
                     start = number.start - len(gap) - len(symbol)
                     if start >= 0 and text[start:number.start] == symbol + gap:
                         sign = SIGNS.get(text[start - 1], "") if start else ""
@@ -555,7 +560,7 @@ class Money:
 
 def _scale(text: str, end: int, scales: Sequence[str]) -> tuple[str, int]:
     """The scale word written after text[:end], attached or after one space, and the end of the span."""
-    for gap in ("", " ", " "):
+    for gap in GAPS:
         for scale in scales:
             stop = end + len(gap) + len(scale)
             if text.startswith(gap + scale, end) and (stop == len(text) or not is_word_char(text[stop])):
@@ -587,10 +592,11 @@ class Measure:
                     relation = kind
                     amounts.append(following)
                     end = following.end
-            for gap in ("", " ", " "):
+            for gap in GAPS:
                 unit = next((u for u in units if text.startswith(gap + u, end)
                              and _suffix(text, end + len(gap) + len(u), data) is not None
-                             and not _per_unit(text, end + len(gap) + len(u))), None)
+                             and not _per_unit(text, end + len(gap) + len(u))
+                             and not _elided(text, end + len(gap) + len(u))), None)
                 if unit is not None:
                     stop, suffix = _suffix(text, end + len(gap) + len(unit), data)
                     amount = amounts[0].amount() if len(amounts) == 1 else tuple(a.amount() for a in amounts)
@@ -603,6 +609,12 @@ class Measure:
 def _per_unit(text: str, end: int) -> bool:
     """Whether a slash and a letter continue a unit, as in `m/s` when the table holds only `m`."""
     return end + 1 < len(text) and text[end] == "/" and is_letter(text[end + 1])
+
+
+def _elided(text: str, end: int) -> bool:
+    """Whether an apostrophe and a letter continue a unit, as in `l'eau` after `3 l`: the unit is a word that
+    elides, not a symbol."""
+    return end + 1 < len(text) and text[end] in "'\u2019" and is_letter(text[end + 1])
 
 
 def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Number]) -> Number | None:

@@ -31,6 +31,39 @@ def test_numbers_parse_by_the_declared_marks(text, expected):
     assert [(n.sign, n.integer, n.fraction) for n in found] == expected
 
 
+FR_MARKS = (("Latn", ",.", " \u00a0\u202f'\u2019"),)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("1 234,5", [("", "1234", "5")]), ("3,5", [("", "3", "5")]), ("3.5", [("", "3", "5")]),
+    ("12\u00a0345", [("", "12345", None)]), ("12\u202f345", [("", "12345", None)]),
+    ("1'000", [("", "1000", None)]), ("1\u2019000", [("", "1000", None)]), ("1 000 000", [("", "1000000", None)]),
+    ("1.000.000", [("", "1000000", None)]), ("1.234,5", [("", "1234", "5")]), ("1 234.5", [("", "1234", "5")]),
+    ("-3,5", [("-", "3", "5")]), (",5", [("", "", "5")]), (".5", [("", "", "5")]),
+    ("1.500", []), ("10.000", []), ("1.5.2", []), ("12 34", []), ("7 8", []), ("1,5,2", []), ("16:9", []),
+])
+def test_several_decimal_and_group_marks_read_one_number_or_none(text, expected):
+    found = numbers.find_numbers(text, FR_MARKS)
+    assert [(n.sign, n.integer, n.fraction) for n in found] == expected
+
+
+def test_a_lone_other_decimal_mark_with_three_digits_is_neither_decimal_nor_group():
+    assert numbers.find_numbers("3.141", FR_MARKS) == ()
+    assert [n.fraction for n in numbers.find_numbers("3.14", FR_MARKS)] == ["14"]
+    assert numbers.find_numbers("3.1415", FR_MARKS)[0].fraction == "1415"
+
+
+def test_a_space_group_leaves_a_quote_before_a_number_alone():
+    assert [(n.integer, n.start) for n in numbers.find_numbers("dit '5' fois", FR_MARKS)] == [("5", 5)]
+
+
+def test_the_entry_of_the_decimal_mark_starts_with_it_and_a_space_is_no_token_mark():
+    data = FrozenMap({"number_marks": FrozenMap({"Latn": ({"decimal": ".,", "group": " '"}, {"decimal": ",.", "group": " '"})})})
+    assert numbers.number_marks(data, ",") == (("Latn", ",.", " '"),)
+    assert numbers.number_marks(data, None) == (("Latn", ".,", " '"),)
+    assert numbers.declared_marks(data) == {".", ",", "'"}
+
+
 def test_an_undeclared_script_reads_integers_only():
     assert [(n.integer, n.fraction) for n in numbers.find_numbers("١٢٫٥", EN_MARKS)] == [("12", None), ("5", None)]
     assert [(n.integer, n.fraction) for n in numbers.find_numbers("١٢٫٥", (("Arab", "٫", "٬"),))] == [("12", "5")]
@@ -191,3 +224,10 @@ def test_a_proclitic_wins_over_a_lead(monkeypatch):
     monkeypatch.setattr(language, "_registry", lambda: {"en": replace(en.LANGUAGE, data=data)})
     assert normalize("Go ab-5 now.", "en-GB") == "Go ab-five now."
     assert normalize("Go cd-5 now.", "en-GB") == "Go cd five now."
+
+
+@pytest.mark.parametrize("gap", ["", " ", " ", " "])
+def test_a_narrow_no_break_space_gap_joins_a_number_to_its_symbol_and_unit(gap):
+    from text2spoken import normalize
+
+    assert normalize(f"Take 50{gap}% of 5{gap}kg.", "en-US") == "Take fifty percent of five kilograms."
