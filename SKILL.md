@@ -33,5 +33,6 @@ The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 ## Limits
 
 - `en` reads every form except `ROMAN`, `LETTERS` and `IDENTIFIER`, which stay as written. `supports("en")` lists the forms. A language with no file reads cardinal numbers only.
+- `fr` reads times, dates, money, measures, percentages, ordinals, decimals, fractions, ranges and abbreviations for every `fr-*` tag, with *septante* and *nonante* for `fr-BE` and `fr-CH`. It reads no telephone number, colour or Roman numeral. Give a gender hint, or `default_gender`, when a number agrees with a noun that the library does not know.
 - A form that the library cannot read stays as written, with a WARNING log. `strict=True` raises `UnreadFormError`.
 - The English test rows name their source, and no native speaker has checked them.

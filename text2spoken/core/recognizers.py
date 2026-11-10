@@ -28,7 +28,10 @@ from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
     "AE": FrozenMap({"country_code": "971", "trunk": "0", "lengths": (8, 9)}),
+    "BE": FrozenMap({"country_code": "32", "trunk": "0", "lengths": (8, 9)}),
     "BR": FrozenMap({"country_code": "55", "trunk": "0", "lengths": (10, 11)}),
+    "CA": FrozenMap({"country_code": "1", "trunk": "1", "lengths": (10,)}),
+    "CH": FrozenMap({"country_code": "41", "trunk": "0", "lengths": (9,)}),
     "EG": FrozenMap({"country_code": "20", "trunk": "0", "lengths": (9, 10)}),
     "ES": FrozenMap({"country_code": "34", "trunk": "", "lengths": (9,)}),
     "FR": FrozenMap({"country_code": "33", "trunk": "0", "lengths": (9,)}),
@@ -39,6 +42,11 @@ PHONE_PLANS = FrozenMap({
 })
 """Numbering plans by ISO 3166 region: the country calling code (ITU-T E.164), the trunk prefix and the
 lengths of the national significant number. A partial table; a region with no plan gives no trunk evidence."""
+
+
+GAPS = ("", " ", "\u00a0", "\u202f")
+"""The gaps that may stand between a number and its unit, symbol or day period: none, a space, a no-break space and
+a narrow no-break space, which French typography puts before `%`, `€` and units."""
 
 
 def numbers_in(text: str, request: Request) -> tuple[Number, ...]:
@@ -243,7 +251,7 @@ _FRACTION = re.compile("[-+−]?[0-9]+/[0-9]+")
 _DATE = re.compile("[0-9]+/[0-9]+/[0-9]+|[0-9]+-[0-9]+-[0-9]+|[0-9]+[.][0-9]+[.][0-9]+")
 _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
-_PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ .-][0-9]+)*")
+_PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ \u00a0\u202f.-][0-9]+)*")
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
 _DIGIT_RUN = re.compile("[0-9]+")
 
@@ -298,7 +306,7 @@ def _affixed_matches(pattern: re.Pattern, text: str, data) -> Iterator[tuple[re.
 def _unit_after(text: str, end: int, units: Iterable[str]) -> bool:
     """Whether a unit of the language follows text[:end], attached or after one space."""
     return any(text.startswith(gap + unit, end) and is_bounded(text, end + len(gap), end + len(gap) + len(unit))
-               for gap in ("", " ", " ") for unit in units)
+               for gap in GAPS for unit in units)
 
 
 @dataclass(frozen=True)
@@ -413,7 +421,12 @@ class TimeClock:
     period), `day_period` (a written day period, as for `9.30 am` in English, where `9.30` alone is a decimal) or
     `none` (the mark itself, as for `14h30` in Portuguese). A mark with `closes_hour` may also close an hour with
     no minutes, as for `14h` in Portuguese. A seconds field is no evidence, because a duration such as `1:23:45`
-    has one. Any other hour with no minutes needs a written day period, as in `9am`."""
+    has one. Any other hour with no minutes needs a written day period, as in `9am`.
+
+    A word of `weak_time_words`, such as `by` in `by 5:45`, is evidence for hours and minutes only: `ran by
+    1:23:45` has a seconds field, so it stays a duration. A word of `cued_time_words`, such as `for`, is evidence
+    for hours and minutes only when one of `time_cue_words` stands within three words of the time in its clause,
+    as `tomorrow` does in `set for 7:30 tomorrow morning`: `bake for 1:30` is a duration."""
     name: str = "time_clock"
     form: Form = Form.TIME
 
@@ -425,6 +438,9 @@ class TimeClock:
         words = context_words(tokens)
         breaks = clause_breaks(text)
         time_words = frozenset(w.lower() for w in data.get("time_words", ()))
+        weak_words = frozenset(w.lower() for w in data.get("weak_time_words", ()))
+        cued_words = frozenset(w.lower() for w in data.get("cued_time_words", ()))
+        cue_words = frozenset(w.lower() for w in data.get("time_cue_words", ()))
         periods = data.get("day_periods", FrozenMap())
         suffixes = data.get("time_suffixes", ())
         folded = fold_digits(text)
@@ -463,8 +479,13 @@ class TimeClock:
                 if end + len(suffix) < len(text) and is_word_char(text[end + len(suffix)]):
                     continue
                 before = clause_window(text, words, start, end, -1, limit=1, breaks=breaks)
+                weak = second is None and bool(before) and (
+                    before[0].lower() in weak_words
+                    or (before[0].lower() in cued_words and any(
+                        word.lower() in cue_words for direction in (-1, 1) for word in clause_window(
+                            text, words, start, end, direction, limit=3, breaks=breaks))))
                 if not (needs == "none" or period is not None or suffix
-                        or (before and before[0].lower() in time_words)):
+                        or (before and before[0].lower() in time_words) or weak):
                     continue
                 yield Span(start, end + len(suffix), Form.TIME,
                            FrozenMap({"hour": hour, "minute": minute, "second": second, "period": period,
@@ -490,7 +511,7 @@ class Percent:
                 number = replace(number, start=number.start + 1, sign="")
             if percent["position"] in ("after", "either"):
                 for sign in percent["signs"]:
-                    for gap in ("", " ", " "):
+                    for gap in GAPS:
                         end = number.end + len(gap) + len(sign)
                         if text.startswith(gap + sign, number.end) \
                                 and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
@@ -522,13 +543,11 @@ class Money:
                    for symbol in currency["symbols"]]
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         for number in numbers_in(text, request):
-            if number.sign:
-                continue
             for symbol, code in sorted(symbols, key=lambda pair: len(pair[0]), reverse=True):
                 found = None
-                for gap in ("", " ", " "):
+                for gap in GAPS:
                     start = number.start - len(gap) - len(symbol)
-                    if start >= 0 and text[start:number.start] == symbol + gap:
+                    if not number.sign and start >= 0 and text[start:number.start] == symbol + gap:
                         sign = SIGNS.get(text[start - 1], "") if start else ""
                         if sign and _free_before(text, start - 1, ()):
                             start -= 1
@@ -542,7 +561,7 @@ class Money:
                     end = number.end + len(gap) + len(symbol)
                     if text.startswith(gap + symbol, number.end) \
                             and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
-                        found = (bounds, "", "")
+                        found = (bounds, number.sign, "")
                         break
                 if found:
                     (start, end, prefix, suffix), sign, scale = found
@@ -555,7 +574,7 @@ class Money:
 
 def _scale(text: str, end: int, scales: Sequence[str]) -> tuple[str, int]:
     """The scale word written after text[:end], attached or after one space, and the end of the span."""
-    for gap in ("", " ", " "):
+    for gap in GAPS:
         for scale in scales:
             stop = end + len(gap) + len(scale)
             if text.startswith(gap + scale, end) and (stop == len(text) or not is_word_char(text[stop])):
@@ -587,10 +606,11 @@ class Measure:
                     relation = kind
                     amounts.append(following)
                     end = following.end
-            for gap in ("", " ", " "):
+            for gap in GAPS:
                 unit = next((u for u in units if text.startswith(gap + u, end)
                              and _suffix(text, end + len(gap) + len(u), data) is not None
-                             and not _per_unit(text, end + len(gap) + len(u))), None)
+                             and not _per_unit(text, end + len(gap) + len(u))
+                             and not _elided(text, end + len(gap) + len(u))), None)
                 if unit is not None:
                     stop, suffix = _suffix(text, end + len(gap) + len(unit), data)
                     amount = amounts[0].amount() if len(amounts) == 1 else tuple(a.amount() for a in amounts)
@@ -603,6 +623,12 @@ class Measure:
 def _per_unit(text: str, end: int) -> bool:
     """Whether a slash and a letter continue a unit, as in `m/s` when the table holds only `m`."""
     return end + 1 < len(text) and text[end] == "/" and is_letter(text[end + 1])
+
+
+def _elided(text: str, end: int) -> bool:
+    """Whether an apostrophe and a letter continue a unit, as in `l'eau` after `3 l`: the unit is a word that
+    elides, not a symbol."""
+    return end + 1 < len(text) and text[end] in "'\u2019" and is_letter(text[end + 1])
 
 
 def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Number]) -> Number | None:
@@ -688,10 +714,10 @@ class Telephone:
                     and (bounds[2] or bounds[3]) and _edge(text, bounds[0], bounds[1]) \
                     and (operand is None or operand.match(folded, bounds[1]) is None):
                 glued, prefix, suffix = False, bounds[2], bounds[3]
-            groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
+            groups = [group for group in re.split("[ \u00a0\u202f.()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
-                written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
+                written.startswith("+") or digits.startswith("0") or any(c in " \u00a0\u202f.()-" for c in written))
             phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
                           if words[i].text.lower() in phone_words]
             direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))
@@ -826,8 +852,129 @@ def written_shapes() -> FrozenMap:
     })
 
 
+@dataclass(frozen=True)
+class Year:
+    """A year from 1000 to 2099 (section 4.2): after a year word, as in `In 1984`; two years that a range mark
+    joins, the lower one first, as in `1939-1945`, or a year and a higher two-digit end after a year word, as in
+    `during 1939-45`; and a number that a link joins to a year, as in `In 1066 and 1215`. A comma alone links
+    only inside a list that a link word ends, as in `In 1066, 1215 and 1415`.
+
+    A count read as a year is wrong, so the follower of a linked list decides for all its years, and a range is
+    one link of a list. A lowercase word that is not in `function_words` blocks them, as in `in 1234 steps`, and
+    so do a unit of the units table in any case, an operator and a dimension mark, as in `in 2048 MB` and
+    `in 1920 × 1080`."""
+    name: str = "year"
+    form: Form = Form.YEAR
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return join_ranges(self._years(text, tokens, request), text, request)
+
+    def _years(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        year_words = frozenset(data["year_words"])
+        function_words = frozenset(data["function_words"])
+        marks = frozenset(data["range_marks"])
+        units = frozenset(unit.lower() for unit in data["units"])
+        signs = frozenset(data["operators"]) | frozenset(data["dimension_marks"]) | {"*", "/"}
+        word_link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") ")
+        words = context_words(tokens)
+        breaks = clause_breaks(text)
+        numbers = [n for n in numbers_in(text, request) if not n.sign and n.fraction is None
+                   and n.end - n.start in (2, 4) and is_bounded(text, n.start, n.end)]
+
+        def year(number: Number) -> bool:
+            return number.end - number.start == 4 and 1000 <= int(number.integer) <= 2099
+
+        def after_year_word(number: Number) -> bool:
+            before = clause_window(text, words, number.start, number.end, -1, limit=1, breaks=breaks)
+            return bool(before) and before[0].lower() in year_words
+
+        def free(end: int) -> bool:
+            start = end
+            while start < len(text) and text[start].isspace():
+                start += 1
+            if start in (end, len(text)):
+                return True
+            stop = start
+            while stop < len(text) and not text[stop].isspace():
+                stop += 1
+            follower = text[start:stop].rstrip(".,;:!?)")
+            if (text[start] in signs and not is_letter(text[start])) or follower.lower() in units:
+                return False
+            stop = start
+            while stop < len(text) and is_letter(text[stop]):
+                stop += 1
+            word = text[start:stop]
+            return not word.islower() or word in function_words
+
+        claimed = {}
+        partners = {}
+        for first, second in zip(numbers, numbers[1:]):
+            if not (year(first) and text[first.end:second.start] in marks):
+                continue
+            if year(second) and int(first.integer) < int(second.integer):
+                claimed |= {first: first.integer, second: second.integer}
+                partners |= {first: second, second: first}
+            elif (second.end - second.start == 2 and int(first.integer) % 100 < int(second.integer)
+                  and after_year_word(first)):
+                claimed |= {first: first.integer, second: first.integer[:2] + second.integer}
+                partners |= {first: second, second: first}
+        chains: list[list[Number]] = []
+        for number in numbers:
+            if not (year(number) or number in claimed):
+                continue
+            gap = text[chains[-1][-1].end:number.start] if chains else ""
+            if chains and (gap == ", " or word_link.fullmatch(gap) or partners.get(number) is chains[-1][-1]):
+                chains[-1].append(number)
+            elif number in claimed or after_year_word(number):
+                chains.append([number])
+        for chain in chains:
+            while len(chain) > 1 and text[chain[-2].end:chain[-1].start] == ", ":
+                chain.pop()
+            if free(chain[-1].end):
+                claimed |= {number: number.integer for number in chain if number not in claimed}
+            else:
+                for number in chain:
+                    claimed.pop(number, None)
+        for number, digits in claimed.items():
+            yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": digits, "suffix": ""}),
+                       recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class Expression:
+    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. The first
+    integer may carry a minus sign. `−` is both that sign and an operator: `−3−3` is "minus three minus three".
+
+    An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
+    written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator.
+
+    Only the first integer may carry a sign, and no form reads a number next to a symbol of the `symbols` table.
+    So a signed later operand, as in `3 − −3`, and a symbol next to the expression, as in `$−3+3`, keep the
+    expression as written."""
+    name: str = "expression"
+    form: Form = Form.EXPRESSION
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        operators = re.escape("".join(request.data["operators"]))
+        open_operator = re.compile(f" ?[{operators}]")
+        symbols = request.data["symbols"]
+        for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
+            start, end = match.span()
+            if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
+                    or open_operator.match(text, end)):
+                continue
+            written = match.group().replace(" ", "")
+            first = re.match("[-−]?[0-9]+", written).group()
+            signs, others = zip(*re.findall(f"([{operators}])([-−]?[0-9]+)", written[len(first):]))
+            unclear = (any(not operand[0].isdigit() for operand in others)
+                       or (start > 0 and text[start - 1] in symbols) or (end < len(text) and text[end] in symbols))
+            yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": (first, *others), "operators": signs}),
+                       recognizer=self.name, keep=unclear)
+
+
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), COLOR)}
+                              Percent(), Money(), Measure(), Telephone(), COLOR, Year(), Expression())}
 """The shared recognizers by name."""

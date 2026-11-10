@@ -112,7 +112,14 @@ SHAPES: dict[str, Shape] = {
     "symbols": map_of(word, one_of(*Form)),
     "time_suffixes": WORDS,
     "time_words": WORDS,
+    "weak_time_words": WORDS,
+    "cued_time_words": WORDS,
+    "time_cue_words": WORDS,
     "units": map_of(word, anything),
+    "year_words": WORDS,
+    "year_links": WORDS,
+    "function_words": WORDS,
+    "patterns": map_of(word, word),
 }
 """Each key that the core reads, with its shape. A shape names only what the core reads: the value of a unit is
 for the verbalizers of the file, so the core reads the unit names only."""
@@ -125,7 +132,9 @@ READERS: dict[str, frozenset[str]] = {
     "idiom": frozenset({"idioms", "proclitics", "case_suffixes"}),
     "range": frozenset({"range_marks", "symbols", "proclitics", "case_suffixes"}),
     "date_numeric": frozenset({"symbols", "proclitics", "case_suffixes"}),
-    "time_clock": frozenset({"range_word", "range_marks", "clock_marks", "time_words", "day_periods", "time_suffixes"}),
+    "time_clock": frozenset({"range_word", "range_marks", "clock_marks", "time_words", "weak_time_words", "cued_time_words",
+                           "time_cue_words", "day_periods",
+                           "time_suffixes"}),
     "percent": frozenset({"number_marks", "percent", "range_word", "range_marks", "proclitics", "case_suffixes"}),
     "money": frozenset({"number_marks", "currencies", "scales", "range_word", "range_marks", "proclitics",
                       "case_suffixes"}),
@@ -135,6 +144,10 @@ READERS: dict[str, frozenset[str]] = {
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes"}),
     "color": frozenset({"color_words"}),
+    "year": frozenset({"number_marks", "year_words", "function_words", "year_links", "units", "operators", "dimension_marks",
+                       "range_marks",
+                       "range_word"}),
+    "expression": frozenset({"number_marks", "patterns", "operators", "symbols"}),
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
     "render": frozenset({"symbols"}),
@@ -147,5 +160,6 @@ of `effective_params`."""
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 
-OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks"})
+OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks", "weak_time_words",
+                      "cued_time_words", "time_cue_words"})
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""

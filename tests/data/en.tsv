@@ -289,3 +289,7 @@ en-287	en-US	expression	Work out −12 ÷ 3 now.	Work out minus twelve divided b
 en-288	en-GB	expression	Is −3=3 true?	Is minus three equals three true?	text2spoken-design section 4.4: the first operand may start with - or −; section 4.2: the first integer may carry a minus sign, which reads the sign word	unchecked
 en-289	en-GB	none	So 3 − −3 is 6.	So 3 − −3 is six.	text2spoken-design section 4.4: only the first operand may start with - or −, so a signed later operand keeps the expression as written	unchecked
 en-290	en-US	none	The sum $−3+3 is shown.	The sum $−3+3 is shown.	text2spoken-design section 4.2: no other form claims a number next to a symbol of the symbols table, so the expression stays as written	unchecked
+en-291	en-US	time	Your next alarm is set for 7:30 tomorrow morning.	Your next alarm is set for seven thirty tomorrow morning.	The time word before H:MM is the evidence of a clock time; "for" needs a day-part word near the time, as "morning"	unchecked
+en-292	en-GB	time	Be there by 17:45.	Be there by five forty-five PM.	The time word before H:MM is the evidence of a clock time; "by" joins the list; the en-GB 12h default is unsourced model knowledge	unchecked
+en-293	en-US	time	Pack the car for 7:30 tomorrow.	Pack the car for seven thirty tomorrow.	The time word before H:MM is the evidence of a clock time; "for" needs a day-part word near the time, as "tomorrow"	unchecked
+en-294	en-US	none	Bake for 1:30.	Bake for 1:30.	"for" before H:MM with no day-part word is a duration, so it stays as written	unchecked

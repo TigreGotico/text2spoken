@@ -14,10 +14,9 @@ from dataclasses import dataclass
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.numbers import Number
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, digit_run_matches, join_ranges,
-                                          numbers_in, speak_cardinal, speak_lexicon)
-from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, numbers_in,
+                                          speak_cardinal, speak_lexicon)
+from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_window
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
@@ -101,6 +100,9 @@ DATA = freeze({
     "dimension_word": "by",
     "operators": {"+": "plus", "−": "minus", "×": "times", "÷": "divided by", "=": "equals"},
     "time_words": ["at", "from", "until", "till", "since", "before", "after", "around"],
+    "weak_time_words": ["by"],
+    "cued_time_words": ["for"],
+    "time_cue_words": ["morning", "afternoon", "evening", "night", "tomorrow", "today", "tonight", "noon", "midnight"],
     "year_words": ["in", "since", "until", "till", "during", "circa", "year"],
     "year_links": ["and", "or", "to"],
     "function_words": ["a", "an", "the", "and", "or", "but", "so", "then", "to", "in", "on", "at", "by",
@@ -483,95 +485,6 @@ class Ordinal:
 
 
 @dataclass(frozen=True)
-class Year:
-    """A year from 1000 to 2099 (section 4.2): after a year word, as in `In 1984`; two years that a range mark
-    joins, the lower one first, as in `1939-1945`, or a year and a higher two-digit end after a year word, as in
-    `during 1939-45`; and a number that a link joins to a year, as in `In 1066 and 1215`. A comma alone links
-    only inside a list that a link word ends, as in `In 1066, 1215 and 1415`.
-
-    A count read as a year is wrong, so the follower of a linked list decides for all its years, and a range is
-    one link of a list. A lowercase word that is not in `function_words` blocks them, as in `in 1234 steps`, and
-    so do a unit of the units table in any case, an operator and a dimension mark, as in `in 2048 MB` and
-    `in 1920 × 1080`."""
-    name: str = "year"
-    form: Form = Form.YEAR
-
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return join_ranges(self._years(text, tokens, request), text, request)
-
-    def _years(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        data = request.data
-        year_words = frozenset(data["year_words"])
-        function_words = frozenset(data["function_words"])
-        marks = frozenset(data["range_marks"])
-        units = frozenset(unit.lower() for unit in data["units"])
-        signs = frozenset(data["operators"]) | frozenset(data["dimension_marks"]) | {"*", "/"}
-        word_link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") ")
-        words = context_words(tokens)
-        breaks = clause_breaks(text)
-        numbers = [n for n in numbers_in(text, request) if not n.sign and n.fraction is None
-                   and n.end - n.start in (2, 4) and is_bounded(text, n.start, n.end)]
-
-        def year(number: Number) -> bool:
-            return number.end - number.start == 4 and 1000 <= int(number.integer) <= 2099
-
-        def after_year_word(number: Number) -> bool:
-            before = clause_window(text, words, number.start, number.end, -1, limit=1, breaks=breaks)
-            return bool(before) and before[0].lower() in year_words
-
-        def free(end: int) -> bool:
-            start = end
-            while start < len(text) and text[start].isspace():
-                start += 1
-            if start in (end, len(text)):
-                return True
-            stop = start
-            while stop < len(text) and not text[stop].isspace():
-                stop += 1
-            follower = text[start:stop].rstrip(".,;:!?)")
-            if (text[start] in signs and not is_letter(text[start])) or follower.lower() in units:
-                return False
-            stop = start
-            while stop < len(text) and is_letter(text[stop]):
-                stop += 1
-            word = text[start:stop]
-            return not word.islower() or word in function_words
-
-        claimed = {}
-        partners = {}
-        for first, second in zip(numbers, numbers[1:]):
-            if not (year(first) and text[first.end:second.start] in marks):
-                continue
-            if year(second) and int(first.integer) < int(second.integer):
-                claimed |= {first: first.integer, second: second.integer}
-                partners |= {first: second, second: first}
-            elif (second.end - second.start == 2 and int(first.integer) % 100 < int(second.integer)
-                  and after_year_word(first)):
-                claimed |= {first: first.integer, second: first.integer[:2] + second.integer}
-                partners |= {first: second, second: first}
-        chains: list[list[Number]] = []
-        for number in numbers:
-            if not (year(number) or number in claimed):
-                continue
-            gap = text[chains[-1][-1].end:number.start] if chains else ""
-            if chains and (gap == ", " or word_link.fullmatch(gap) or partners.get(number) is chains[-1][-1]):
-                chains[-1].append(number)
-            elif number in claimed or after_year_word(number):
-                chains.append([number])
-        for chain in chains:
-            while len(chain) > 1 and text[chain[-2].end:chain[-1].start] == ", ":
-                chain.pop()
-            if free(chain[-1].end):
-                claimed |= {number: number.integer for number in chain if number not in claimed}
-            else:
-                for number in chain:
-                    claimed.pop(number, None)
-        for number, digits in claimed.items():
-            yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": digits, "suffix": ""}),
-                       recognizer=self.name)
-
-
-@dataclass(frozen=True)
 class Abbreviation:
     """A title before a capitalised name, `No.` before a number, and the abbreviations of the table."""
     name: str = "abbreviation"
@@ -592,38 +505,6 @@ class Abbreviation:
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
                                    trail="." if sentence_end else "", recognizer=self.name)
                     position = text.find(key, end)
-
-
-@dataclass(frozen=True)
-class Expression:
-    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. The first
-    integer may carry a minus sign. `−` is both that sign and an operator: `−3−3` is "minus three minus three".
-
-    An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
-    written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator.
-
-    Only the first integer may carry a sign, and no form reads a number next to a symbol of the `symbols` table.
-    So a signed later operand, as in `3 − −3`, and a symbol next to the expression, as in `$−3+3`, keep the
-    expression as written."""
-    name: str = "expression"
-    form: Form = Form.EXPRESSION
-
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        operators = re.escape("".join(request.data["operators"]))
-        open_operator = re.compile(f" ?[{operators}]")
-        symbols = request.data["symbols"]
-        for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
-            start, end = match.span()
-            if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
-                    or open_operator.match(text, end)):
-                continue
-            written = match.group().replace(" ", "")
-            first = re.match("[-−]?[0-9]+", written).group()
-            signs, others = zip(*re.findall(f"([{operators}])([-−]?[0-9]+)", written[len(first):]))
-            unclear = (any(not operand[0].isdigit() for operand in others)
-                       or (start > 0 and text[start - 1] in symbols) or (end < len(text) and text[end] in symbols))
-            yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": (first, *others), "operators": signs}),
-                       recognizer=self.name, keep=unclear)
 
 
 @dataclass(frozen=True)
@@ -670,7 +551,7 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
                  SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"], SHARED["measure"],
-                 Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
+                 SHARED["year"], SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,

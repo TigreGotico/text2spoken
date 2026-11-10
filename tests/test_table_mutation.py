@@ -16,12 +16,17 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
+NO_ROW = {"fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+                 "no_phone_shapes"}}
+"""Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
+(the phone shape tables), or a row reads it only with a param other than the default (the 12-hour clock and the
+phrase style of French, which tests/test_french.py checks)."""
 
 # One entry of each table of a language file; DELETE removes a table that holds one value.
 EN_ENTRIES = {
     "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero", "leads": "#",
     "fraction_names": "2", "idioms": "24/7", "range_word": DELETE, "dimension_marks": "x", "dimension_word": DELETE,
-    "operators": "+", "time_words": "at", "day_periods": "pm", "spoken_periods": "pm", "minute_phrases": "0",
+    "operators": "+", "time_words": "at", "weak_time_words": "by", "cued_time_words": "for", "time_cue_words": "tomorrow", "day_periods": "pm", "spoken_periods": "pm", "minute_phrases": "0",
     "months": "March", "numeric_date_reading": "full", "currencies": "USD", "percent": "word", "units": "kg",
     "phone_words": "phone", "color_words": "colour", "colors": "ff0000", "titles": "Dr.", "abbreviations": "etc.",
     "number_abbreviations": "No.", "patterns": "expression", "range_marks": "-", "year_words": "in",
@@ -31,8 +36,21 @@ EN_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
 }
+FR_ENTRIES = {
+    "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zéro",
+    "leads": "-", "idioms": "24h/24", "range_word": DELETE, "range_marks": "-", "dimension_marks": "x",
+    "dimension_word": DELETE, "time_words": "à", "months": "novembre", "currencies": "EUR", "percent": "word",
+    "units": "kg", "titles": "M.", "name_particles": "le", "abbreviations": "etc.", "sentence_final": "etc.",
+    "number_abbreviations": "n°", "ordinal_marks": "masculine", "feminine_nouns": "pommes", "patterns": "date_day_month",
+    "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
+    "operators": "+", "colors": "ff0000", "color_words": "couleur", "year_words": "en", "year_links": "et",
+    "function_words": "il", "phone_words": "composez", "short_codes": "112", "list_links": "et",
+    "phone_unit_shapes": "0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}", "phone_reading": DELETE, "roman_headings": "chapitre",
+    "roman_names": "Louis", "scales": "M", "day_periods": "pm",
+}
 ENTRIES = {
     "en": EN_ENTRIES,
+    "fr": FR_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
 }
 TABLES = [(code, table) for code in language_names() for table in sorted(ENTRIES.get(code, ()))]
@@ -51,7 +69,7 @@ def drop(data: FrozenMap, table: str, entry) -> FrozenMap:
 @pytest.mark.parametrize("code", language_names())
 def test_every_table_has_an_entry_to_drop(code):
     data = registry_with_stubs()[code].data
-    assert set(ENTRIES.get(code, ())) | (ROW_SILENT & set(data)) == set(data)
+    assert set(ENTRIES.get(code, ())) | (ROW_SILENT & set(data)) | NO_ROW.get(code, set()) == set(data)
 
 
 def _fails(row) -> bool:

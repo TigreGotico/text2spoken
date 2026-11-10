@@ -30,12 +30,41 @@ Marks = tuple[tuple[str, str, str], ...]
 """(script, decimal mark, group mark) for each script that a language declares."""
 
 
+def _separators(cluster: str, decimal: str | None, group: str | None) -> tuple[str | None, str] | None:
+    """The decimal mark and the group marks that read `cluster`, or None when the marks do not say.
+
+    `decimal` and `group` are runs of alternative marks. The first decimal mark is the canonical one, and the
+    others are also accepted, as the dot is in French beside the comma. When the canonical mark and another mark
+    both appear, the other one groups, as in `1.234,5`. A lone other mark with exactly three digits after it, as in
+    `1.500`, could be a decimal or a group, so it reads as neither. A lone other mark with any other count of
+    digits after it is a decimal mark, and one that repeats is a group, as in `1.000.000`."""
+    decimal, group = decimal or "", group or ""
+    if len(decimal) <= 1:
+        return (decimal or None), group
+    canonical, others = decimal[0], [mark for mark in decimal[1:] if mark in cluster]
+    if canonical in cluster:
+        return canonical, group + "".join(others)
+    if not others:
+        return canonical, group
+    if len(others) > 1:
+        return None
+    mark = others[0]
+    if cluster.count(mark) > 1:
+        return None, group + mark
+    tail = cluster.partition(mark)[2]
+    return (None, group) if len(tail) == 3 and tail.isdigit() else (mark, group)
+
+
 def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, str | None] | None:
-    integer, _, fraction = cluster.partition(decimal) if decimal and decimal in cluster else (cluster, "", None)
+    separators = _separators(cluster, decimal, group)
+    if separators is None:
+        return None
+    mark, group = separators
+    integer, _, fraction = cluster.partition(mark) if mark and mark in cluster else (cluster, "", None)
     if fraction is not None and (fraction == "" or not fraction.isdigit()):
         return None
-    if group and group in integer:
-        head, *rest = integer.split(group)
+    if group and any(m in integer for m in group):
+        head, *rest = integer.translate({ord(m): group[0] for m in group}).split(group[0])
         if not (1 <= len(head) <= 3 and head.isdigit() and all(len(g) == 3 and g.isdigit() for g in rest)):
             return None
         integer = head + "".join(rest)
@@ -46,6 +75,19 @@ def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, s
     return integer, fraction
 
 
+def _grouped(text: str, start: int, end: int) -> bool:
+    """Whether the space at text[end] groups the digits of a number that starts at `start`: three digits follow it
+    and no more, and the digits before it are one to three at the start of the number, else exactly three. So
+    `1 000` is one number and `70 90 80` is three."""
+    after = text[end + 1:end + 4]
+    if len(after) < 3 or not all(map(is_digit, after)) or (end + 4 < len(text) and is_digit(text[end + 4])):
+        return False
+    first = end
+    while first > start and is_digit(text[first - 1]):
+        first -= 1
+    return end - first <= 3 if first == start else end - first == 3
+
+
 def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
     """Every written number in the text that parses whole by the declared marks.
 
@@ -54,12 +96,15 @@ def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
     """
     folded = fold_digits(text)
     by_script = {script: (decimal, group) for script, decimal, group in marks}
-    joiners = _CLUSTER_JOINERS | {mark for _, decimal, group in marks for mark in (decimal, group) if mark}
+    joiners = _CLUSTER_JOINERS | {mark for _, decimal, group in marks for mark in decimal + group}
+    leading = _CLUSTER_JOINERS | {mark for _, decimal, group in marks
+                                  for mark in decimal + (group if len(group) == 1 else "")}
     numbers = []
     i = 0
     while i < len(text):
-        leading_mark = (text[i] in joiners and i + 1 < len(text) and is_digit(text[i + 1])
-                        and (i == 0 or not (is_word_char(text[i - 1]) or text[i - 1] in joiners)))
+        leading_mark = (text[i] in leading and i + 1 < len(text) and is_digit(text[i + 1])
+                        and (i == 0 or text[i - 1].isspace()
+                             or not (is_word_char(text[i - 1]) or text[i - 1] in joiners)))
         if not (is_digit(text[i]) or leading_mark):
             i += 1
             continue
@@ -69,6 +114,8 @@ def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
             if is_digit(text[end]):
                 end += 1
             elif text[end] in joiners and end + 1 < len(text) and is_digit(text[end + 1]):
+                if text[end].isspace() and not _grouped(text, start, end):
+                    break
                 end += 1
             else:
                 break
@@ -90,15 +137,18 @@ def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
 
 
 def number_marks(data, decimal_mark: str | None) -> Marks:
-    """The marks of each declared script: the entry whose decimal mark is `decimal_mark`, else the first entry."""
+    """The marks of each declared script: the entry whose decimal marks start with `decimal_mark`, else the first
+    entry. An entry may give several decimal marks, and several group marks: the first decimal mark is the
+    canonical one, and each other mark is accepted too."""
     marks = []
     for script, entries in data.get("number_marks", {}).items():
-        entry = next((e for e in entries if e["decimal"] == decimal_mark), entries[0])
+        entry = next((e for e in entries if e["decimal"][:1] == decimal_mark), entries[0])
         marks.append((script, entry["decimal"], entry["group"]))
     return tuple(marks)
 
 
 def declared_marks(data) -> frozenset[str]:
-    """Every decimal and group mark that the language declares, for the tokenizer join."""
+    """Every decimal and group mark that the language declares, for the tokenizer join. A space is no mark here,
+    so the tokenizer keeps `1 000` as two tokens."""
     return frozenset(mark for entries in data.get("number_marks", {}).values() for entry in entries
-                     for mark in (entry["decimal"], entry["group"]))
+                     for mark in entry["decimal"] + entry["group"] if not mark.isspace())
