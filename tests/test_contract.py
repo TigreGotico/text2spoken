@@ -1,5 +1,6 @@
 """Section 5.2: every language file passes each clause, and each clause check fails on a broken file."""
 import ast
+import re
 from dataclasses import replace
 from importlib import import_module
 from importlib.metadata import requires
@@ -264,6 +265,28 @@ def test_clause_7_checks_phone_shapes(pattern):
 @pytest.mark.parametrize("pattern", ["[0-9]+", "(?:ab)+", "(a|b)", "[0-9٠-٩]"])
 def test_clause_7_admits_the_subset(pattern):
     contract.check_pattern(pattern)
+
+
+@pytest.mark.parametrize("pattern", ["[0-9]{2}/[0-9]+", "[0-9][.,][0-9]+", "(?:minus )?[0-9]+/[0-9]+",
+                                     "[-−]{0,2}[0-9]+/[0-9]+", "(?: -)?[0-9]+/[0-9]+"])
+def test_clause_7_bites_on_a_pattern_that_digit_run_matches_misreads(en, pattern):
+    contract.check_pattern(pattern)
+    patterns = {**en.data["patterns"], "expression": pattern}
+    with pytest.raises(AssertionError, match=re.escape(repr(pattern))):
+        contract.clause_7("en", replace(en, data=freeze({**thaw(en.data), "patterns": patterns})))
+
+
+@pytest.mark.parametrize("pattern", ["[-+−]?[0-9]+/[0-9]+", "[-−]?[0-9]+?/[0-9]+", "[$€]?[0-9]+(?:[.,][0-9]+)?",
+                                     "[-+]?[0-9]+/[0-9]"])
+def test_clause_7_admits_a_digit_run_pattern(pattern):
+    contract.check_digit_run_pattern(pattern)
+
+
+def test_clause_7_reads_the_digit_run_patterns_of_each_variety(en):
+    data = freeze({**thaw(en.varieties[1].data), "patterns": {"expression": "[0-9]{2}/[0-9]+"}})
+    with pytest.raises(AssertionError, match="digit_run_matches"):
+        contract.clause_7("en", replace(en, varieties=(en.varieties[0], Variety(en.varieties[1].tag, data))))
+    assert contract.digit_run_patterns(en) == {en.data["patterns"]["expression"], r"[0-9]+(?:\-|–)[0-9]+"}
 
 
 def test_clause_8_bites(en):
