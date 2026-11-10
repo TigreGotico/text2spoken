@@ -1,5 +1,6 @@
 """Rules of design sections 2.1, 4.2, 6 and 11 with values worked out by hand, one test for each rule."""
 import random
+import re
 import time
 from dataclasses import replace
 
@@ -11,7 +12,7 @@ from text2spoken import (Animacy, Features, FrozenMap, InvalidLexiconError, Norm
 from text2spoken.core import language as loader
 from text2spoken.core.language import cldr_locale
 from text2spoken.core.numbers import find_numbers
-from text2spoken.core.recognizers import SHARED
+from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_matches
 from text2spoken.core.spans import Span, _inside, _joined, check_features, splits_token
 from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words
 from text2spoken.lang.en import LANGUAGE as EN
@@ -277,6 +278,44 @@ def test_short_groups_after_a_letter_take_linear_time():
     normalize("x1 1", "en")
     small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
     assert large < 20 * small, (small, large)
+
+
+def test_a_long_digit_run_takes_linear_time():
+    def seconds(count: int) -> float:
+        start = time.perf_counter()
+        normalize("1" * count, "en")
+        return time.perf_counter() - start
+
+    normalize("1/2 1-2 1+2 12/03/2024", "en")
+    small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
+@pytest.mark.parametrize("name", ["fraction", "range", "date_numeric", "expression"])
+def test_a_long_digit_run_takes_linear_time_in_each_recognizer(name):
+    recognizer = next(r for r in EN.recognizers if r.name == name)
+    request = analyze("1", "en").request
+
+    def seconds(count: int) -> float:
+        start = time.perf_counter()
+        list(recognizer.find("1" * count, (), request))
+        return time.perf_counter() - start
+
+    small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
+@pytest.mark.parametrize("pattern", [_FRACTION, _DATE, EN.data["patterns"]["expression"],
+                                     "[0-9]+(?:" + "|".join(map(re.escape, EN.data["range_marks"])) + ")[0-9]+",
+                                     "[-+]?[0-9]+/[0-9]", "[-+]?[0-9]+[-+]"])
+@pytest.mark.parametrize("seed", range(20))
+def test_matches_from_digit_runs_are_the_matches_of_finditer(pattern, seed):
+    rng = random.Random(seed)
+    pieces = ["1", "12", "007", "1" * 30, "/", "-", "–", "+", "−", "=", " ", ".", "x", ":"]
+    for _ in range(200):
+        text = "".join(rng.choice(pieces) for _ in range(rng.randint(1, 12)))
+        expected = [m.span() for m in re.finditer(pattern, text)]
+        assert [m.span() for m in digit_run_matches(pattern, text)] == expected, text
 
 
 def test_the_numbers_of_a_text_are_kept_for_one_call_only():
