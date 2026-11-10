@@ -17,7 +17,7 @@ from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_mat
 from text2spoken.core.spans import Span, _inside, _joined, check_features, splits_token
 from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words, protect_blocks
 from text2spoken.lang.en import LANGUAGE as EN
-from text2spoken.params import Form, freeze
+from text2spoken.params import Form, freeze, thaw
 
 
 def words_of(text: str, clause_end_after: frozenset[str] = frozenset()) -> list[Token]:
@@ -596,6 +596,10 @@ def test_the_join_range_hook_puts_an_ending_on_each_reading(gendered, monkeypatc
     ("-3−3", ("-3", "3"), ("−",)),
     ("3−3", ("3", "3"), ("−",)),
     ("−12 × 3 ÷ 4 = 9", ("−12", "3", "4", "9"), ("×", "÷", "=")),
+    ("+3+3", ("+3", "3"), ("+",)),
+    ("3 − −3", ("3", "−3"), ("−",)),
+    ("3++3", ("3", "+3"), ("+",)),
+    ("2 − 5 = −3", ("2", "5", "−3"), ("−", "=")),
 ])
 def test_a_leading_sign_binds_to_the_first_operand(text, operands, operators):
     span = next(s for s in analyze(text, "en").spans if s.form is Form.EXPRESSION)
@@ -614,13 +618,42 @@ def test_a_leading_minus_sign_reads_in_both_modes(text, expected, strict):
     assert normalize(text, "en-GB", NormalizationParams(strict=strict)) == expected
 
 
+@pytest.mark.parametrize("text, expected", [
+    ("-2+3=1", "minus two plus three equals one"),
+    ("2−5=−3", "two minus five equals minus three"),
+    ("2 − 5 = −3", "two minus five equals minus three"),
+    ("+3+3", "plus three plus three"),
+    ("3 − −3", "three minus minus three"),
+    ("3−−3", "three minus minus three"),
+    ("3++3", "three plus plus three"),
+    ("3+-3", "three plus minus three"),
+    ("−3 × −3", "minus three times minus three"),
+    ("Score: −3 − −3 = 0", "Score: minus three minus minus three equals zero"),
+    ("Pages 12−15", "Pages twelve minus fifteen"),
+])
+@pytest.mark.parametrize("strict", [False, True])
+def test_each_operand_reads_its_sign(text, expected, strict):
+    """Section 4.2: each integer may carry one sign, `-`, `−` or `+`, right before its digits, and the sign reads as
+    its sign word. A sign on a later integer follows an operator."""
+    assert normalize(text, "en-GB", NormalizationParams(strict=strict)) == expected
+
+
+def test_an_operators_table_without_an_operator_of_the_pattern_reads_no_expression():
+    """The pattern and the `operators` table can disagree in a variety; the match then has no operator to read."""
+    recognizer = next(r for r in EN.recognizers if r.name == "expression")
+    request = analyze("1", "en").request
+    operators = {k: v for k, v in EN.data["operators"].items() if k != "÷"}
+    language = replace(EN, data=freeze({**thaw(EN.data), "operators": operators}))
+    assert list(recognizer.find("3÷3", (), replace(request, language=language))) == []
+
+
 @pytest.mark.parametrize("tag, text", [
-    ("en-GB", "3 − −3"),
-    ("en-GB", "3−−3"),
-    ("en-GB", "3+-3"),
-    ("en-GB", "−3 = −3"),
-    ("en-GB", "−3 × −3"),
-    ("en-GB", "Score: −3 − −3 = 0"),
+    ("en-GB", "--3+3"),
+    ("en-GB", "+-3+3"),
+    ("en-GB", "−−3 × 3"),
+    ("en-GB", "3+--3"),
+    ("en-GB", "3−−−3"),
+    ("en-GB", "So 3 − +−3 now."),
     ("en-US", "$−3+3"),
     ("en-US", "$-3+3"),
     ("en-GB", "£−3+3"),
@@ -628,8 +661,8 @@ def test_a_leading_minus_sign_reads_in_both_modes(text, expected, strict):
     ("en-GB", "×3+3"),
     ("en-GB", "3+3°"),
 ])
-def test_an_expression_with_a_signed_later_operand_or_a_symbol_next_to_it_stays_as_written(tag, text, caplog):
-    """Section 4.4: only the first operand may start with `-` or `−`. Section 4.2: no other form claims a number
+def test_an_expression_with_two_signs_on_one_operand_or_a_symbol_next_to_it_stays_as_written(tag, text, caplog):
+    """Section 4.2: two signs before one integer keep the expression as written, and no other form claims a number
     next to a symbol of the `symbols` table. Section 10: the unread run gives a WARNING, and an error when strict."""
     with caplog.at_level(logging.WARNING, logger="text2spoken"):
         assert normalize(text, tag) == text

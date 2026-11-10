@@ -287,5 +287,8 @@ en-285	en-GB	expression	−3+3	minus three plus three	text2spoken-design section
 en-286	en-GB	expression	So −3 − 3 is −6.	So minus three minus three is minus six.	text2spoken-design section 4.4: the first operand may start with - or −; section 4.2: the first integer may carry a minus sign, which reads the sign word	unchecked
 en-287	en-US	expression	Work out −12 ÷ 3 now.	Work out minus twelve divided by three now.	text2spoken-design section 4.4: the first operand may start with - or −; section 4.2: the first integer may carry a minus sign, which reads the sign word	unchecked
 en-288	en-GB	expression	Is −3=3 true?	Is minus three equals three true?	text2spoken-design section 4.4: the first operand may start with - or −; section 4.2: the first integer may carry a minus sign, which reads the sign word	unchecked
-en-289	en-GB	none	So 3 − −3 is 6.	So 3 − −3 is six.	text2spoken-design section 4.4: only the first operand may start with - or −, so a signed later operand keeps the expression as written	unchecked
+en-289	en-GB	expression	So 3 − −3 is 6.	So three minus minus three is six.	text2spoken-design section 4.2: a sign on a later integer follows an operator, so 3 − −3 reads three minus minus three	unchecked
 en-290	en-US	none	The sum $−3+3 is shown.	The sum $−3+3 is shown.	text2spoken-design section 4.2: no other form claims a number next to a symbol of the symbols table, so the expression stays as written	unchecked
+en-291	en-GB	expression	Is 2 − 5 = −3 true?	Is two minus five equals minus three true?	text2spoken-design section 4.2: each integer may carry one sign, which reads as its sign word	unchecked
+en-292	en-GB	expression	So +3+3 is 6.	So plus three plus three is six.	text2spoken-design section 4.2: the sign + reads as its sign word, plus three plus three	unchecked
+en-293	en-GB	none	So --3+3 is 0.	So --3+3 is zero.	text2spoken-design section 4.2: two signs before one integer keep the expression as written	unchecked
