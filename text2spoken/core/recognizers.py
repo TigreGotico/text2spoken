@@ -28,7 +28,10 @@ from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
     "AE": FrozenMap({"country_code": "971", "trunk": "0", "lengths": (8, 9)}),
+    "BE": FrozenMap({"country_code": "32", "trunk": "0", "lengths": (8, 9)}),
     "BR": FrozenMap({"country_code": "55", "trunk": "0", "lengths": (10, 11)}),
+    "CA": FrozenMap({"country_code": "1", "trunk": "1", "lengths": (10,)}),
+    "CH": FrozenMap({"country_code": "41", "trunk": "0", "lengths": (9,)}),
     "EG": FrozenMap({"country_code": "20", "trunk": "0", "lengths": (9, 10)}),
     "ES": FrozenMap({"country_code": "34", "trunk": "", "lengths": (9,)}),
     "FR": FrozenMap({"country_code": "33", "trunk": "0", "lengths": (9,)}),

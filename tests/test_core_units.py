@@ -289,3 +289,22 @@ def test_a_leading_decimal_mark_reads_in_a_sentence(tag, text, spoken):
     from text2spoken import normalize
 
     assert normalize(text, tag) == spoken
+
+
+@pytest.mark.parametrize("gap", [" ", " "])
+def test_a_phone_number_may_be_grouped_with_no_break_spaces(gap):
+    from text2spoken import normalize
+
+    assert normalize(f"Call 020{gap}7946{gap}0018 now.", "en-GB") == (
+        "Call zero two zero seven nine four six zero zero one eight now.")
+
+
+@pytest.mark.parametrize("text,regions,spoken", [
+    ("Call 0475 12 34 56 now.", {"BE"}, "Call zero four seven five one two three four five six now."),
+    ("Call 079 123 45 67 now.", {"CH"}, "Call zero seven nine one two three four five six seven now."),
+    ("Call 1 514 555 1234 now.", {"CA"}, "Call one five one four five five five one two three four now."),
+])
+def test_the_belgian_swiss_and_canadian_plans_give_trunk_evidence(text, regions, spoken):
+    from text2spoken import NormalizationParams, normalize
+
+    assert normalize(text, "en", NormalizationParams(phone_regions=frozenset(regions))) == spoken
