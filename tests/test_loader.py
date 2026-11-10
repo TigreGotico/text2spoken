@@ -5,7 +5,8 @@ from importlib.metadata import requires
 import pytest
 from packaging.requirements import Requirement
 
-from text2spoken import InvalidLanguageTagError, normalize, supports
+from text2spoken import (Form, InvalidLanguageTagError, NormalizationParams, UnreadFormError, normalize,
+                         supports)
 from text2spoken.core.language import cldr_locale, plural_locales, rbnf_locales, select
 
 # (input tag, standardized tag with region, file code, variety): design section 6 and loader_probe.out.txt.
@@ -71,6 +72,35 @@ def test_a_language_with_no_file_reads_cardinals_through_rbnf():
     # German writes a number below one million as one word (Duden, from memory, not fetched).
     assert normalize("Ich habe 21 Äpfel.", "de") == "Ich habe einundzwanzig Äpfel."
     assert supports("de").code == "de" and set(supports("de").forms) == {"lexicon", "cardinal"}
+
+
+# README: "A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms
+# as written." Each text holds one form other than a cardinal, so it stays whole.
+WRITTEN_FORMS = [
+    ("fr-FR", "Il a payé £5."), ("fr-FR", "Il a payé 5 €."), ("fr-FR", "Il a payé 5\u00a0€."), ("fr-FR", "50%"),
+    ("fr-FR", "C'est 25 % moins cher."), ("de-DE", "Es kostet $5."), ("de-DE", "Es kostet 50%."),
+    ("de-DE", "Es wiegt 5 kg."), ("de-DE", "Es hat 25°."), ("de-DE", "Wir fahren 50 km/h."), ("de-DE", "am 3. Mai"),
+    ("de-DE", "Er wurde 2. Sieger."), ("pt-PT", "Price: $5."), ("pt-PT", "Custa R$5."), ("es-ES", "el 1.º de mayo"),
+    ("es-ES", "la 2.ª vez"), ("it-IT", "Costa 5 € al giorno."), ("it-IT", "Il 12/03/2024 alle 7:30."),
+    ("tr-TR", "%50 indirim"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text"), WRITTEN_FORMS)
+def test_a_language_with_no_file_keeps_the_forms_it_cannot_read_as_written(tag, text, caplog):
+    assert normalize(text, tag) == text
+    assert normalize(text, tag, NormalizationParams().only(Form.CARDINAL)) == text
+    assert "unread written form" in caplog.text
+    with pytest.raises(UnreadFormError):
+        normalize(text, tag, NormalizationParams(strict=True))
+
+
+def test_a_language_with_no_file_reads_the_cardinals_next_to_a_kept_form():
+    assert normalize("Il a payé £5 et 5 € pour 3 pommes.", "fr-FR") == "Il a payé £5 et 5 € pour trois pommes."
+    assert normalize("Am 3. Mai kaufte ich 3.", "de-DE") == "Am 3. Mai kaufte ich drei."
+    # CLDR `digits-ordinal` writes 3e in French and 3.º in Portuguese, so a full stop and a space end a sentence.
+    assert normalize("J'en ai 3. Il pleut.", "fr-FR") == "J'en ai trois. Il pleut."
+    assert normalize("Tenho 3. Ele tem 2.", "pt-PT") == "Tenho três. Ele tem dois."
 
 
 def test_a_language_with_no_file_and_no_rbnf_reads_only_the_lexicon():

@@ -18,7 +18,8 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
-from text2spoken.core.spans import Features, SpanContext, Span, Word, clause_breaks, clause_window, context_words
+from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
+                                    context_words)
 from text2spoken.core.spellers import DigitSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
@@ -737,6 +738,68 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         lead = request.data["leads"][fields["lead"]]
         words = f"{lead} {words}" if lead else f" {words}"
     return words
+
+
+@dataclass(frozen=True)
+class OrdinalStop:
+    """A digit run and a full stop that a letter follows, as in `1.º` and `1.er`. With `bare_stop`, also a full
+    stop that a space and more text follow, as in `am 3. Mai`: the CLDR root rule `digits-ordinal`, `=#,##0=.`,
+    writes an ordinal as the number and a full stop, and a locale with no rule of its own keeps it. There, the
+    stop does not tell an ordinal from the end of a sentence."""
+    bare_stop: bool = False
+    name: str = "ordinal_stop"
+    form: Form = Form.ORDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for number in numbers_in(text, request):
+            stop = number.end
+            if number.fraction is not None or not text.startswith(".", stop) \
+                    or not _cluster_edge(text, number.start, stop):
+                continue
+            end = stop + 1
+            while end < len(text) and (is_letter(text[end]) or is_mark(text[end])):
+                end += 1
+            if end > stop + 1 or (self.bare_stop and text[end:end + 1].isspace() and next_visible(text, end)):
+                yield Span(number.start, end, Form.ORDINAL,
+                           FrozenMap({"digits": number.integer, "marker": text[stop:end], "prefix": "", "suffix": "",
+                                      "script": number.script}), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class Written:
+    """The spans of a shape recognizer, kept as written. A language with no file reads no money, percent,
+    measure, numeric date or ordinal, so these spans claim the digits of each such form before the cardinal
+    recognizer reads them (section 6.1). The form is `CARDINAL`, the reading that the spans guard."""
+    shape: Recognizer
+    form: Form = Form.CARDINAL
+
+    @property
+    def name(self) -> str:
+        return self.shape.name
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return (replace(span, keep=True) for span in self.shape.find(text, tokens, request))
+
+
+UNIT_SYMBOLS = ("km", "cm", "mm", "µm", "nm", "kg", "mg", "µg", "ml", "mL", "cl", "cL", "dl", "dL", "km/h", "m/s",
+                "m²", "m³", "km²", "cm²", "cm³", "mm²", "kWh", "Wh", "kW", "MW", "GW", "mAh", "Hz", "kHz", "MHz",
+                "GHz", "kJ", "kPa", "hPa", "°C", "°")
+"""Unit symbols that every language writes the same way. A one-letter symbol is a word in some language, as `s`
+and `v` are in Slovene, so none is here."""
+
+
+@lru_cache(maxsize=1)
+def written_shapes() -> FrozenMap:
+    """The tables of the shape recognizers for a language with no file: every currency symbol of the Unicode
+    Basic Multilingual Plane, the percent and per mille signs, and the unit symbols."""
+    currencies = tuple(char for char in map(chr, range(0x10000)) if unicodedata.category(char) == "Sc")
+    percent = ("%", "٪", "‰")
+    return FrozenMap({
+        "currencies": FrozenMap({"Sc": FrozenMap({"symbols": currencies})}),
+        "percent": FrozenMap({"signs": percent, "position": "either"}),
+        "units": FrozenMap((unit, FrozenMap()) for unit in UNIT_SYMBOLS),
+        "symbols": FrozenMap({**{c: "money" for c in currencies}, **{s: "percent" for s in percent}, "°": "measure"}),
+    })
 
 
 LEXICON = Lexicon()
