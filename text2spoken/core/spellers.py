@@ -50,13 +50,21 @@ def _significant(digits: str) -> str:
     return digits.lstrip("0") or digits[-1:]
 
 
-def _integer(digits: str) -> int:
-    """The value of a run of digits; a run of more than DIGIT_BOUND significant digits declines. Text that is not
-    digits raises."""
+def bounded_integer(digits: str) -> int | None:
+    """The value of a run of digits, or None for a run of more than DIGIT_BOUND significant digits. An `int()` of a
+    run from the input goes through this check, or reads a run that a pattern or a length test holds to a few
+    digits, so its result does not depend on `sys.int_max_str_digits`. Text that is not digits raises."""
     significant = _significant(digits)
-    if len(significant) > DIGIT_BOUND:
-        raise DeclinedReading(f"{len(significant)} digits pass the bound of {DIGIT_BOUND} digits that a speller reads")
-    return int(significant)
+    return int(significant) if len(significant) <= DIGIT_BOUND else None
+
+
+def _integer(digits: str) -> int:
+    """The value of a run of digits; a run of more than DIGIT_BOUND significant digits declines."""
+    value = bounded_integer(digits)
+    if value is None:
+        raise DeclinedReading(f"{len(_significant(digits))} digits pass the bound of {DIGIT_BOUND} digits that a "
+                              "speller reads")
+    return value
 
 
 class OvosNumberSpeller:

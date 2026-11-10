@@ -18,7 +18,7 @@ from text2spoken.core.numbers import Number
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, join_ranges, numbers_in,
                                           speak_cardinal, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
+from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
 from text2spoken.params import FrozenMap, Form, freeze
@@ -200,8 +200,9 @@ class EnglishSpeller:
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """One-half, two-thirds, three-quarters, one one-hundredth (Wikipedia, "English numerals")."""
         top = self.cardinal(numerator, features, request)
-        plural = int(numerator) != 1
-        names = request.data["fraction_names"].get(str(int(denominator)))
+        plural = bounded_integer(numerator) != 1
+        value = bounded_integer(denominator)
+        names = None if value is None else request.data["fraction_names"].get(str(value))
         if names is not None:
             bottom = names[plural]
         else:
@@ -334,7 +335,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
         if int(fraction) == 0:
             words = major
         else:
-            words = minor if int(integer) == 0 else f"{major} and {minor}"
+            words = minor if bounded_integer(integer) == 0 else f"{major} and {minor}"
     else:
         words = f"{_amount(amount, request)} {currency[plural_category(request, _written(amount))]}"
     return _signed(words, fields["amount"]["sign"], request)
@@ -473,7 +474,8 @@ class Ordinal:
         for number in numbers_in(text, request):
             marker = text[number.end:number.end + 2]
             if (number.sign or number.fraction is not None or marker not in marks
-                    or ordinal_suffix(int(number.integer)) != marker or not is_bounded(text, number.start, number.end + 2)):
+                    or ordinal_suffix(int(number.integer[-2:])) != marker
+                    or not is_bounded(text, number.start, number.end + 2)):
                 continue
             yield Span(number.start, number.end + 2, Form.ORDINAL,
                        FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",

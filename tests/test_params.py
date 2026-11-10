@@ -1,4 +1,7 @@
 """NormalizationParams and FrozenMap (design section 2.2)."""
+import os
+import subprocess
+import sys
 from dataclasses import fields
 
 import pytest
@@ -66,3 +69,48 @@ def test_options_name_every_field_but_forms_lexicon_and_strict():
 
 def test_enum_values_follow_universal_dependencies_names():
     assert [g.value for g in GrammaticalGender] == ["masculine", "feminine", "neuter", "common"]
+
+
+def test_a_frozen_map_hashes_its_items_once():
+    """A FrozenMap keys the lexicon and data caches, so each lookup hashes it: the hash of its items is kept."""
+    calls = []
+
+    class Counted:
+        def __hash__(self):
+            calls.append(1)
+            return 7
+
+    table = FrozenMap({"a": Counted()})
+    expected = hash((("a", Counted()),))
+    calls.clear()
+    assert [hash(table) for _ in range(3)] == [expected] * 3
+    assert len(calls) == 1
+
+
+PICKLE_DUMP = """
+import pickle, sys
+from text2spoken import FrozenMap, NormalizationParams
+table = FrozenMap({"New York": "N Y", "acme": "Acme"})
+params = NormalizationParams(lexicon=FrozenMap({"en": table}))
+hash(table), hash(params)
+sys.stdout.write(pickle.dumps((table, params)).hex())
+"""
+
+PICKLE_LOAD = """
+import json, pickle, sys
+from text2spoken import FrozenMap, NormalizationParams
+fresh = FrozenMap({"New York": "N Y", "acme": "Acme"})
+fresh_params = NormalizationParams(lexicon=FrozenMap({"en": fresh}))
+for loaded, new in zip(pickle.loads(bytes.fromhex(sys.stdin.read())), (fresh, fresh_params)):
+    print(json.dumps([loaded == new, hash(loaded) == hash(new), loaded in {new}]))
+"""
+
+
+def test_a_frozen_map_from_a_pickle_hashes_as_a_fresh_one_under_another_hash_seed():
+    """The hash of a string changes with the hash seed of each process, such as a spawned worker, so a pickle does
+    not carry the kept hash: the loaded map and the params that hold it hash as fresh ones."""
+    dumped = subprocess.run([sys.executable, "-c", PICKLE_DUMP], capture_output=True, text=True, check=True,
+                            env={**os.environ, "PYTHONHASHSEED": "1"}).stdout
+    loaded = subprocess.run([sys.executable, "-c", PICKLE_LOAD], input=dumped, capture_output=True, text=True,
+                            check=True, env={**os.environ, "PYTHONHASHSEED": "2"}).stdout
+    assert loaded == "[true, true, true]\n" * 2
