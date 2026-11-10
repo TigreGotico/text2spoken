@@ -51,9 +51,9 @@ def _significant(digits: str) -> str:
 
 
 def bounded_integer(digits: str) -> int | None:
-    """The value of a run of digits, or None for a run of more than DIGIT_BOUND significant digits. Every `int()` of
-    a run from the input goes through this check, so its result does not depend on `sys.int_max_str_digits`. Text
-    that is not digits raises."""
+    """The value of a run of digits, or None for a run of more than DIGIT_BOUND significant digits. An `int()` of a
+    run from the input goes through this check, or reads a run that a pattern or a length test holds to a few
+    digits, so its result does not depend on `sys.int_max_str_digits`. Text that is not digits raises."""
     significant = _significant(digits)
     return int(significant) if len(significant) <= DIGIT_BOUND else None
 

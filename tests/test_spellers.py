@@ -121,26 +121,37 @@ from text2spoken import normalize
 
 warnings = []
 handler = logging.Handler(logging.WARNING)
-handler.emit = lambda record: warnings.append(record.getMessage()[:40])
+handler.emit = lambda record: warnings.append(record.getMessage().split(" '")[0])
 logging.getLogger("text2spoken").addHandler(handler)
 logging.getLogger("text2spoken").propagate = False
-N, O = "9" * 4400, "1" * 4400
-texts = [f"the {N}th one", f"the 1,{N}th one", f"the {N}th of May", f"take 1/{N} now", f"take {N}/2 now",
-         f"take {O}/{N} now", f"pages 1-{N} now", f"pages {N}-5 now", f"pages {O}-{N} now", f"pages {N}-{O} now",
-         f"5-{N} km"]
-runs = []
+N, O, Z = "9" * 4400, "1" * 4400, "0" * 4400
+long_runs = [f"the {N}th one", f"the 1,{N}th one", f"the {N}th of May", f"take 1/{N} now", f"take {N}/2 now",
+             f"take {O}/{N} now", f"pages 1-{N} now", f"pages {N}-5 now", f"pages {O}-{N} now",
+             f"pages {N}-{O} now", f"5-{N} km"]
+zeros = [f"It is {Z}1/2 now.", f"It is 1/{Z}2 now.", f"Pay ${Z}5.50 now.", f"Pay ${Z}0.50 now.", f"the {Z}11th hour",
+         f"pages {Z}1-{Z}5 now", f"{Z}5-{Z}9 km", f"{Z}10%"]
+runs = {}
 for tag in ("en-GB", "en-US"):
-    for text in texts:
+    for text in long_runs:
         warnings.clear()
-        runs.append([normalize(text, tag) == text, warnings[:]])
+        runs.setdefault("long", []).append([normalize(text, tag) == text, warnings[:]])
+    runs.setdefault("zeros", []).extend(normalize(text, tag) for text in zeros)
 print(json.dumps(runs))
 """
 
+UNREAD_WRITTEN, UNREAD_ORDINAL = ["unread written form"], ["unread ordinal span"]
+UNREAD_RANGE, UNREAD_MEASURE = ["unread range span"], ["unread measure span"]
 
-def test_a_long_run_in_an_ordinal_a_fraction_or_a_range_stays_as_written_under_any_integer_limit():
-    """The ordinal, fraction and range recognizers compare the numbers they find. A run of 4400 digits passes the
-    default limit of `int()`, so a raw `int()` raised before the speller bound. Each text stays as written with a
-    WARNING, and the same under the default limit, the lowest limit Python allows and no limit."""
+
+def test_a_long_run_in_a_recognizer_stays_as_written_under_any_integer_limit():
+    """The ordinal, fraction and range recognizers compare the numbers they find, and the speller compares them
+    again. A run of 4400 digits passes the default limit of `int()`, so a raw `int()` raised before the speller
+    bound. The output is the same under the default limit, the lowest limit Python allows and no limit.
+
+    A long run stays as written with one WARNING. A span that a recognizer claims declines in the speller; a run
+    that no recognizer claims stays unread. Two runs past the bound do not count as a descending range, so that
+    range is read and declines. Leading zeros do not change a value, so a run of 4400 zeros before a short number
+    reads as that number."""
     runs = []
     for flags in ([], ["-X", "int_max_str_digits=640"], ["-X", "int_max_str_digits=0"]):
         run = subprocess.run([sys.executable, *flags, "-c", LONG_RUN_IN_RECOGNIZERS_PROBE], capture_output=True,
@@ -148,9 +159,13 @@ def test_a_long_run_in_an_ordinal_a_fraction_or_a_range_stays_as_written_under_a
         assert run.returncode == 0, (flags, run.stderr[-300:])
         runs.append(json.loads(run.stdout))
     assert runs[0] == runs[1] == runs[2]
-    assert len(runs[0]) == 22
-    for as_written, warnings in runs[0]:
-        assert as_written and len(warnings) == 1 and warnings[0].startswith("unread ")
+    warnings = [UNREAD_ORDINAL, UNREAD_WRITTEN, UNREAD_ORDINAL, UNREAD_WRITTEN, UNREAD_WRITTEN, UNREAD_WRITTEN,
+                UNREAD_RANGE, UNREAD_WRITTEN, UNREAD_RANGE, UNREAD_RANGE, UNREAD_MEASURE]
+    assert runs[0]["long"] == [[True, kind] for kind in warnings * 2]
+    readings = ["It is one-half now.", "It is one-half now.", "Pay five dollars and fifty cents now.",
+                "Pay fifty cents now.", "the eleventh hour", "pages one to five now"]
+    assert runs[0]["zeros"] == [*readings, "five to nine kilometres", "ten per cent",
+                                *readings, "five to nine kilometers", "ten percent"]
 
 
 def test_the_digit_bound_reads_308_digits_and_declines_309(gendered):

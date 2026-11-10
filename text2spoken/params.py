@@ -28,6 +28,9 @@ class FrozenMap(Mapping):
     def __len__(self) -> int:
         return len(self._items)
 
+    def __reduce__(self):
+        return FrozenMap, (self._items,)
+
     def __hash__(self) -> int:
         if self._hash is None:
             self._hash = hash(self._items)
