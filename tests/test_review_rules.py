@@ -636,3 +636,18 @@ def test_an_expression_with_a_signed_later_operand_or_a_symbol_next_to_it_stays_
     assert any("unread written form" in r.message for r in caplog.records)
     with pytest.raises(UnreadFormError):
         normalize(text, tag, NormalizationParams(strict=True))
+
+
+@pytest.mark.parametrize("lang, left, mark, right", [
+    ("en-US", "$12", ".", "-1/2"), ("en-US", "$12", ".", "+1/2"), ("en-GB", "£5", ",", "−1/4"),
+    ("en-US", "12/03/2024", ":", "+1/2"), ("en-GB", "12/03/2024", ":", "+1/2")])
+def test_a_signed_fraction_after_a_mark_reads_once_the_number_before_the_mark_reads(lang, left, mark, right):
+    once = normalize(left + mark + right, lang)
+    assert once == normalize(left, lang) + mark + normalize(right, lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize("text", ["12:-1/2", "1,-1/2", "(1,-1/2)", "5.−1/2"])
+def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(text, caplog):
+    assert normalize(text, "en-GB") == text
+    assert "unread written form" in caplog.text
