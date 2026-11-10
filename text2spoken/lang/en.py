@@ -597,7 +597,7 @@ class Abbreviation:
 @dataclass(frozen=True)
 class Expression:
     """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. The first
-    integer may carry a minus sign.
+    integer may carry a minus sign. `−` is both that sign and an operator: `−3−3` is "minus three minus three".
 
     An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
     written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator."""
@@ -613,8 +613,11 @@ class Expression:
                     or open_operator.match(text, end)):
                 continue
             written = match.group().replace(" ", "")
-            operands = tuple(re.split("[" + operators + "]", written))
-            signs = tuple(c for c in written if c in operators)
+            sign = "" if written[0].isdigit() else written[0]
+            body = written[len(sign):]
+            first, *others = re.split(f"[{re.escape(operators)}]", body)
+            operands = (sign + first, *others)
+            signs = tuple(c for c in body if c in operators)
             yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": operands, "operators": signs}),
                        recognizer=self.name)
 
