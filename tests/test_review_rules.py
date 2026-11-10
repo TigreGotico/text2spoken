@@ -1,4 +1,5 @@
 """Rules of design sections 2.1, 4.2, 6 and 11 with values worked out by hand, one test for each rule."""
+import logging
 import random
 import re
 import time
@@ -611,3 +612,27 @@ def test_a_leading_sign_binds_to_the_first_operand(text, operands, operators):
 @pytest.mark.parametrize("strict", [False, True])
 def test_a_leading_minus_sign_reads_in_both_modes(text, expected, strict):
     assert normalize(text, "en-GB", NormalizationParams(strict=strict)) == expected
+
+
+@pytest.mark.parametrize("tag, text", [
+    ("en-GB", "3 − −3"),
+    ("en-GB", "3−−3"),
+    ("en-GB", "3+-3"),
+    ("en-GB", "−3 = −3"),
+    ("en-GB", "−3 × −3"),
+    ("en-GB", "Score: −3 − −3 = 0"),
+    ("en-US", "$−3+3"),
+    ("en-US", "$-3+3"),
+    ("en-GB", "£−3+3"),
+    ("en-GB", "€−3 × 3"),
+    ("en-GB", "×3+3"),
+    ("en-GB", "3+3°"),
+])
+def test_an_expression_with_a_signed_later_operand_or_a_symbol_next_to_it_stays_as_written(tag, text, caplog):
+    """Section 4.4: only the first operand may start with `-` or `−`. Section 4.2: no other form claims a number
+    next to a symbol of the `symbols` table. Section 10: the unread run gives a WARNING, and an error when strict."""
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize(text, tag) == text
+    assert any("unread written form" in r.message for r in caplog.records)
+    with pytest.raises(UnreadFormError):
+        normalize(text, tag, NormalizationParams(strict=True))

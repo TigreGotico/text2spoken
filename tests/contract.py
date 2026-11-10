@@ -8,6 +8,7 @@ import json
 import re
 import subprocess
 import sys
+from functools import cache
 from importlib.metadata import requires
 from importlib.resources import files
 from importlib.util import find_spec
@@ -47,6 +48,7 @@ PATTERN_REFUSED = re.compile(r"\\[dDwWsSbB1-9]|\(\?(?!:)")
 DIGIT_RUN = [(_parser.IN, [(_parser.RANGE, (ord("0"), ord("9")))])]
 """`[0-9]`, as the parser reads it."""
 REPEATS = (_parser.MAX_REPEAT, _parser.MIN_REPEAT)
+"""A greedy or a lazy repeat, as the parser reads it."""
 
 
 def language_files() -> list[str]:
@@ -179,13 +181,14 @@ def check_pattern(pattern: str) -> None:
 
 def routed_patterns(name: str, spec: LanguageSpec) -> set[re.Pattern]:
     """Each pattern that reaches `digit_run_matches` while the recognizers of the file read its samples, in each
-    variety. For the run, each module that holds the helper holds a recording wrapper in its place."""
+    variety. For the run, each module that holds the helper holds a recording wrapper in its place. The wrapper
+    gives no matches for a pattern without the shape, so no recognizer reads a match that the helper misreads."""
     helper = recognizers.digit_run_matches
     routed = set()
 
     def recording(pattern, folded):
         routed.add(re.compile(pattern))
-        return helper(pattern, folded)
+        return helper(pattern, folded) if has_digit_run_shape(pattern) else iter(())
 
     holders = [vars(m) for m in list(sys.modules.values())
                if isinstance(m, ModuleType) and vars(m).get("digit_run_matches") is helper]
@@ -215,23 +218,29 @@ def _no_digit_character(items: list) -> bool:
 
 
 def _starts_with_digit_run(items: list) -> bool:
-    """Whether the parsed items start with an optional character that is no digit and then `[0-9]+`, or with an
-    alternation whose every branch does."""
+    """Whether the parsed items start with an optional character that is no digit and then a greedy `[0-9]+`, or
+    with an alternation whose every branch does. A lazy run can end a match inside a digit run, and the helper
+    tries one match for each run."""
     if items and items[0][0] is _parser.BRANCH:
         return all(_starts_with_digit_run(list(branch)) for branch in items[0][1][1])
     if items and items[0][0] in REPEATS and items[0][1][:2] == (0, 1) and _no_digit_character(list(items[0][1][2])):
         items = items[1:]
-    return (bool(items) and items[0][0] in REPEATS and items[0][1][:2] == (1, _parser.MAXREPEAT)
+    return (bool(items) and items[0][0] is _parser.MAX_REPEAT and items[0][1][:2] == (1, _parser.MAXREPEAT)
             and list(items[0][1][2]) == DIGIT_RUN)
 
 
-def check_digit_run_pattern(pattern: re.Pattern | str) -> None:
+@cache
+def has_digit_run_shape(pattern: re.Pattern | str) -> bool:
     """`digit_run_matches` gives the matches of `finditer` only for a pattern that starts with an optional character
     that is no digit and then `[0-9]+`, or for an alternation of such patterns. The check reads the parsed pattern."""
     pattern = re.compile(pattern)
-    assert _starts_with_digit_run(list(_parser.parse(pattern.pattern, pattern.flags))), (
-        f"{pattern.pattern!r} reaches digit_run_matches, and does not start with an optional character that is no digit"
-        " and then [0-9]+")
+    return _starts_with_digit_run(list(_parser.parse(pattern.pattern, pattern.flags)))
+
+
+def check_digit_run_pattern(pattern: re.Pattern | str) -> None:
+    assert has_digit_run_shape(pattern), (
+        f"{re.compile(pattern).pattern!r} reaches digit_run_matches, and does not start with an optional character"
+        " that is no digit and then a greedy [0-9]+")
 
 
 def clause_7(name: str, spec: LanguageSpec) -> None:

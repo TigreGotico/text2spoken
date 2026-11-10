@@ -270,7 +270,8 @@ def test_clause_7_admits_the_subset(pattern):
 
 MISREAD = ["[0-9]{2}/[0-9]+", "[0-9][.,][0-9]+", "(?:minus )?[0-9]+/[0-9]+", "[-−]{0,2}[0-9]+/[0-9]+",
            "(?: -)?[0-9]+/[0-9]+", "(?:[A-Z][A-Z][A-Z] )?[0-9]+(?: ?[+−×÷=] ?[0-9]+)+", "(?:[A-Z]{3} )?[0-9]+/[0-9]+",
-           "(?:[a-z][a-z])?[0-9]+/[0-9]+", "(?:[a-z]+ )?[0-9]+/[0-9]+", "(?:[(] )?[0-9]+/[0-9]+"]
+           "(?:[a-z][a-z])?[0-9]+/[0-9]+", "(?:[a-z]+ )?[0-9]+/[0-9]+", "(?:[(] )?[0-9]+/[0-9]+",
+           "[-−]?[0-9]+?(?:[.,][0-9]+)?", "[$€]?[0-9]+?", "[0-9]+?(?: ?[+−×÷=] ?[0-9]+)*", "[-+−]?[0-9]+?(?:/[0-9]+)?"]
 """Patterns in the portable subset that `digit_run_matches` misreads."""
 
 
@@ -283,15 +284,15 @@ def test_clause_7_bites_on_a_pattern_that_digit_run_matches_misreads(en, pattern
 
 
 @pytest.mark.parametrize("pattern", ["[0-9-]?[0-9]+/[0-9]+", "[^a]?[0-9]+/[0-9]+", ".?[0-9]+/[0-9]+", "[0-9]*/[0-9]+",
-                                     "[0-9]+/[0-9]+|/[0-9]+"])
+                                     "[0-9]+/[0-9]+|/[0-9]+", "[-−]?[0-9]+?/[0-9]+"])
 def test_clause_7_holds_a_pattern_to_the_shape_that_the_helper_documents(pattern):
     """The helper reads these patterns right, but they start with something other than an optional character that
-    is no digit and then `[0-9]+`."""
+    is no digit and then a greedy `[0-9]+`."""
     with pytest.raises(AssertionError, match=re.escape(repr(pattern))):
         contract.check_digit_run_pattern(pattern)
 
 
-@pytest.mark.parametrize("pattern", ["[-+−]?[0-9]+/[0-9]+", "[-−]?[0-9]+?/[0-9]+", "[$€]?[0-9]+(?:[.,][0-9]+)?",
+@pytest.mark.parametrize("pattern", ["[-+−]?[0-9]+/[0-9]+", "[$€]?[0-9]+(?:[.,][0-9]+)?",
                                      "[-+]?[0-9]+/[0-9]", "(?:[-−])?[0-9]+", "[a-z]?[0-9]+", "x??[0-9]+",
                                      "[0-9]+/[0-9]+|[0-9]+-[0-9]+", _DATE, _FRACTION])
 def test_clause_7_admits_a_digit_run_pattern(pattern):
