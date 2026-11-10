@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a28](https://github.com/TigreGotico/text2spoken/tree/0.0.2a28) (2026-11-10)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a27...0.0.2a28)
+
+**Merged pull requests:**
+
+- fix: read the sign of each expression operand [\#58](https://github.com/TigreGotico/text2spoken/pull/58) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a27](https://github.com/TigreGotico/text2spoken/tree/0.0.2a27) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a26...0.0.2a27)
