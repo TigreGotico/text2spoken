@@ -249,9 +249,13 @@ _DIGIT_RUN = re.compile("[0-9]+")
 
 
 def _cluster_edge(text: str, start: int, end: int) -> bool:
-    """Whether no digit, and no cluster mark before a digit, continues text[start:end] on either side."""
+    """Whether no digit, and no cluster mark between two digits, continues text[start:end] on either side.
+
+    A mark before a sign joins no two digits, so `-1/2` in `$12.-1/2` has an edge. `classify` holds it until a
+    span reads `12`, as on a second pass."""
     before_ok = start == 0 or not (is_digit(text[start - 1])
-                                   or (text[start - 1] in _JOINERS and start > 1 and is_digit(text[start - 2])))
+                                   or (text[start - 1] in _JOINERS and start > 1 and is_digit(text[start - 2])
+                                       and is_digit(text[start])))
     after_ok = end == len(text) or not (is_digit(text[end])
                                         or (text[end] in _JOINERS and end + 1 < len(text) and is_digit(text[end + 1])))
     return before_ok and after_ok
