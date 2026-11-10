@@ -40,6 +40,47 @@ def test_ovos_speller_passes_places_equal_to_the_written_digits(gendered):
     assert speller.decimal("1", "2345", Features(), request(gendered, "en")) == "one point two three four five"
 
 
+def test_ovos_speller_reads_a_decimal_that_a_float_holds_exactly(gendered):
+    """The integer part, the decimal word, then the fraction: Portuguese composes the digits after the leading zeros,
+    and Spanish reads them one by one. Each expected value comes from ovos-number-parser on exact integers. A
+    written trailing zero is not spoken, because a float does not hold it (design section 5.4). 16 digits that a
+    float holds still read."""
+    from ovos_number_parser import pronounce_number
+
+    speller = OvosNumberSpeller(OVOS_GENDER)
+    pt, es = request(gendered, "pt-PT"), request(gendered, "es-ES")
+    assert speller.decimal("1", "05", Features(), pt) == "um vírgula zero cinco"
+    assert speller.decimal("1", "05", Features(), es) == "uno coma cero cinco"
+    assert speller.decimal("2", "50", Features(), pt) == "dois vírgula cinco"
+    assert speller.decimal("2", "50", Features(), es) == "dos coma cinco"
+    assert speller.decimal("0", "1", Features(), pt) == "zero vírgula um"
+    assert speller.decimal("12345678901234", "56", Features(), pt) == (
+        f"{pronounce_number(12345678901234, 'pt-PT')} vírgula cinquenta e seis")
+    assert speller.decimal("12345678901234", "56", Features(), es) == (
+        f"{pronounce_number(12345678901234, 'es-ES')} coma cinco seis")
+    assert speller.decimal("0", "1234567890123456", Features(), pt) == (
+        f"zero vírgula {pronounce_number(1234567890123456, 'pt-PT')}")
+    assert speller.decimal("0", "000000000000000012", Features(), pt) == "zero vírgula " + "zero " * 16 + "doze"
+
+
+@pytest.mark.parametrize("tag", ["pt-PT", "es-ES"])
+@pytest.mark.parametrize(("integer", "fraction"), [
+    ("123456789012345678", "5"),         # the float is 123456789012345680.0
+    ("1", "1234567890123456789"),        # the float is 1.1234567890123457
+    ("1", "000000000000000005"),         # the float is 1.0
+    ("12345678901234567", "50"),         # the float is 12345678901234568.0
+    ("9007199254740993", "5"),           # the float is 9007199254740994.0
+    ("100000000000000000000000", "0"),   # the float prints as 1e+23, and its integer part is 99999999999999991611392
+    ("1", "9" * 400),                    # the float is 2.0
+])
+def test_ovos_speller_declines_a_decimal_that_no_float_holds(gendered, tag, integer, fraction):
+    """ovos-number-parser reads a float. A decimal that no float holds declines: the float gives other digits,
+    drops the fraction or changes the integer part, and the parser gives no error."""
+    with pytest.raises(DeclinedReading, match=f"no float holds the decimal of {len(integer)}.{len(fraction)} "
+                                              "digits exactly"):
+        OvosNumberSpeller(OVOS_GENDER).decimal(integer, fraction, Features(), request(gendered, tag))
+
+
 def test_ovos_speller_declines_a_language_it_does_not_read(gendered):
     # ovos-number-parser raises NotImplementedError for a language that it does not read.
     with pytest.raises(DeclinedReading, match="reads no cardinal of 1 digits in qaa") as declined:
@@ -89,6 +130,34 @@ def test_a_long_run_reads_the_same_whatever_the_integer_string_limit_of_python()
     runs = [subprocess.run([sys.executable, *flags, "-c", LONG_RUN_PROBE], capture_output=True, text=True,
                            check=True).stdout for flags in ([], ["-X", "int_max_str_digits=0"])]
     assert runs[0] == runs[1] == "declined: 4301 digits pass the bound of 308 digits that a speller reads\n" * 2
+
+
+LONG_DECIMAL_PROBE = """
+from text2spoken import DeclinedReading, Features, NormalizationParams
+from text2spoken.core.language import Request, Variety
+from text2spoken.core.spellers import OvosNumberSpeller
+from text2spoken.lang.en import LANGUAGE
+
+request = Request(tag="pt-PT", variety=Variety("pt-PT"), language=LANGUAGE, params=NormalizationParams())
+for integer, fraction in (("9" * 4301, "5"), ("9" * 309, "5"), ("9" * 308, "5"), ("1", "9" * 5000), ("2", "5")):
+    try:
+        print(OvosNumberSpeller({}).decimal(integer, fraction, Features(), request))
+    except DeclinedReading as error:
+        print("declined:", error)
+"""
+
+
+def test_a_long_decimal_reads_the_same_whatever_the_integer_string_limit_of_python():
+    """An integer part past the digit bound declines before `int()`, and a decimal that no float holds declines,
+    under the default limit of `int()`, the lowest limit Python allows and no limit."""
+    runs = [subprocess.run([sys.executable, *flags, "-c", LONG_DECIMAL_PROBE], capture_output=True, text=True,
+                           check=True).stdout
+            for flags in ([], ["-X", "int_max_str_digits=640"], ["-X", "int_max_str_digits=0"])]
+    no_float = "declined: ovos-number-parser reads a float, and no float holds the decimal of {} digits exactly\n"
+    assert runs[0] == runs[1] == runs[2] == "".join([
+        "declined: 4301 integer digits pass the bound of 308 digits that a speller reads\n",
+        "declined: 309 integer digits pass the bound of 308 digits that a speller reads\n",
+        no_float.format("308.1"), no_float.format("1.5000"), "dois vírgula cinco\n"])
 
 
 LEADING_ZEROS_PROBE = """

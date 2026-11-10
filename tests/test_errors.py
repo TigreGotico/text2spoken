@@ -7,8 +7,10 @@ import pytest
 from text2spoken import (Features, Form, FrozenMap, HintWarning, InvalidHintError, InvalidLanguageTagError,
                          InvalidLexiconError, NormalizationParams, UnreadFormError, analyze, normalize, render)
 from text2spoken.core import language as loader
-from text2spoken.core.recognizers import _keys_by_first_character
+from text2spoken.core.recognizers import SHARED, _keys_by_first_character
 from text2spoken.core.spellers import OvosNumberSpeller
+from text2spoken.lang.en import LANGUAGE as EN
+from text2spoken.params import freeze
 
 
 def lexicon(**by_tag):
@@ -126,6 +128,23 @@ def test_an_ovos_speller_that_declines_keeps_the_written_form_and_logs_the_reaso
         "at 2: 4301 digits pass the bound of 308 digits that a speller reads")
 
 
+def test_a_decimal_that_no_float_holds_keeps_the_written_form_and_logs_the_reason(gendered, monkeypatch, caplog):
+    """A float of 123456789012345678.5 is 123456789012345680.0. The span stays as written, with one warning."""
+    speller = OvosNumberSpeller({})
+    decimal = {Form.DECIMAL: lambda span, context: speller.decimal(span.fields["integer"], span.fields["fraction"],
+                                                                     Features(), context.request)}
+    spec = replace(gendered.LANGUAGE, data=freeze({"defaults": {}, "number_marks": EN.data["number_marks"]}),
+                   recognizers=(*gendered.LANGUAGE.recognizers, SHARED["decimal"]),
+                   verbalizers={**gendered.LANGUAGE.verbalizers, **decimal})
+    monkeypatch.setattr(loader, "_registry", lambda: {"qaa": spec})
+    text = "x 123456789012345678.5 y"
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize(text, "qaa") == text
+    [warning] = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+    assert warning == ("unread decimal span '123456789012345678.5' at 2: ovos-number-parser reads a float, and no "
+                       "float holds the decimal of 18.1 digits exactly")
+
+
 def test_a_speller_that_raises_in_strict_mode_raises_chained():
     with pytest.raises(UnreadFormError) as raised:
         normalize("It is 1000000000000000000000 now.", "en", NormalizationParams(strict=True))
@@ -190,7 +209,7 @@ def test_a_verbalizer_defect_raises_with_the_language_and_the_form(monkeypatch, 
 def test_a_missing_data_key_raises_and_does_not_stay_as_written(monkeypatch):
     # speak_cardinal reads digit_words for a leading zero after a lead, as in `#007`.
     from tests.fixtures import qac
-    from text2spoken.params import freeze, thaw
+    from text2spoken.params import thaw
 
     data = freeze({k: v for k, v in thaw(qac.LANGUAGE.data).items() if k != "digit_words"})
     _qac_with(monkeypatch, data=data)
