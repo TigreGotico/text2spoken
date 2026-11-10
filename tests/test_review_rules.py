@@ -7,14 +7,14 @@ from dataclasses import replace
 import pytest
 
 from text2spoken import (Animacy, Features, FrozenMap, InvalidLexiconError, NormalizationParams,
-                         ParameterNotHonouredWarning, Token, TokenizerError, UndefinedGrammaticalGender, analyze,
-                         effective_params, normalize, supports)
+                         ParameterNotHonouredWarning, Token, TokenizerError, UndefinedGrammaticalGender,
+                         UnreadFormError, analyze, effective_params, normalize, render, supports)
 from text2spoken.core import language as loader
 from text2spoken.core.language import cldr_locale
 from text2spoken.core.numbers import find_numbers
 from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_matches
 from text2spoken.core.spans import Span, _inside, _joined, check_features, splits_token
-from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words
+from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words, protect_blocks
 from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form, freeze
 
@@ -46,6 +46,52 @@ def test_the_longest_lead_wins(monkeypatch):
     spec = replace(EN, data=FrozenMap({**EN.data, "leads": leads}))
     monkeypatch.setattr(loader, "_registry", lambda: {"en": spec})
     assert normalize("Room N#5 is shut.", "en") == "Room number five is shut."
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_a_span_is_inside_the_blocks_that_it_overlaps(seed):
+    rng = random.Random(seed)
+    for _ in range(200):
+        text = "".join(rng.choice(["[[", "]]", "a", " ", "5"]) for _ in range(rng.randint(1, 30)))
+        blocks = protect_blocks(text)
+        for start in range(len(text)):
+            for end in range(start + 1, len(text) + 1):
+                span = Span(start, end, Form.CARDINAL, FrozenMap())
+                expected = any(start < block_end and block_start < end for block_start, block_end in blocks)
+                assert _inside(span, blocks) == expected, (text, start, end)
+
+
+def test_the_block_check_takes_linear_time():
+    def seconds(count: int) -> float:
+        blocks = tuple((8 * i, 8 * i + 5) for i in range(count))
+        spans = [Span(8 * i + 6, 8 * i + 7, Form.CARDINAL, FrozenMap()) for i in range(count)]
+        start = time.perf_counter()
+        for span in spans:
+            _inside(span, blocks)
+        return time.perf_counter() - start
+
+    small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
+def test_the_unread_check_takes_linear_time_in_the_blocks():
+    params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"ACME": "acme"})}))
+
+    def seconds(count: int) -> float:
+        analysis = analyze("[[x]] ACME " * count, "en", params)
+        start = time.perf_counter()
+        render(analysis)
+        return time.perf_counter() - start
+
+    render(analyze("[[x]] ACME", "en", params))
+    small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
+def test_unread_digits_between_blocks_are_reported_once_each():
+    with pytest.raises(UnreadFormError) as raised:
+        normalize("05 [[01]] 06 [[02]][[03]] 07 [[04]]", "en", NormalizationParams(strict=True))
+    assert raised.value.unread == ("05", "06", "07")
 
 
 def test_two_digit_tokens_join_over_one_declared_mark_only():

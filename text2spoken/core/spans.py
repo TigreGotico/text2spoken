@@ -109,7 +109,10 @@ def check_features(features: Features, language: LanguageSpec, lang: str) -> Non
 
 
 def _inside(span: Span, blocks: Sequence[tuple[int, int]]) -> bool:
-    return any(span.start < end and start < span.end for start, end in blocks)
+    """Whether the span overlaps a block. The blocks are in text order and do not overlap, so only the first block
+    that ends after the span start can overlap it."""
+    index = bisect_right(blocks, span.start, key=lambda block: block[1])
+    return index < len(blocks) and blocks[index][0] < span.end
 
 
 def _boundary_allowed(text: str, position: int) -> bool:
@@ -369,13 +372,15 @@ def _check_unread(analysis: Analysis, passthrough: list[tuple[int, int]]) -> Non
                         if Form(form) in request.params.forms)
     read_digits = Form.CARDINAL in request.params.forms
     unread: list[str] = []
+    blocks = analysis.blocks
     for start, end in passthrough:
         cursor = start
-        for block_start, block_end in analysis.blocks:
-            if block_end <= cursor or block_start >= end:
-                continue
+        index = bisect_right(blocks, start, key=lambda block: block[1])
+        while index < len(blocks) and blocks[index][0] < end:
+            block_start, block_end = blocks[index]
             unread += _unread_runs(analysis.text[cursor:block_start], symbols, read_digits)
             cursor = block_end
+            index += 1
         if cursor < end:
             unread += _unread_runs(analysis.text[cursor:end], symbols, read_digits)
     if not unread:
