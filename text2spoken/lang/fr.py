@@ -248,9 +248,11 @@ class FrenchSpeller:
         return f"{head} {ordinal}" if head else ordinal
 
     def year(self, digits: str, features: Features, request: Request) -> str:
-        """A year reads as a cardinal, and "cent" stays singular at its end: "mille neuf cent"."""
+        """A year reads as a cardinal in which "cent" and "vingt" stay singular at its end, as numerals that
+        stand for an ordinal do: "mille neuf cent", "mille neuf cent quatre-vingt", "deux mille quatre-vingt"
+        (Académie française, "Les nombres")."""
         words = self.cardinal(digits, Features(), request)
-        return words[:-1] if words.endswith("cents") else words
+        return words[:-1] if words.endswith(("cents", "quatre-vingts")) else words
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         """"trois virgule cinq", "trois virgule quatorze", "trois virgule zéro cinq". A fraction of three digits or

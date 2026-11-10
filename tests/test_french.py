@@ -595,3 +595,44 @@ def test_the_examples_of_the_readme():
         "Rendez-vous le dix novembre deux mille vingt-six à quatorze heures trente, pour trois euros cinquante "
         "ou vingt et une heures cinq.")
     assert normalize("Il a 71 ans et 6 °C.", "fr-BE") == "Il a septante et un ans et six degrés Celsius."
+
+
+@pytest.mark.parametrize("year,spoken", [
+    (1980, "mille neuf cent quatre-vingt"), (2080, "deux mille quatre-vingt"), (1780, "mille sept cent quatre-vingt"),
+    (1880, "mille huit cent quatre-vingt"), (1981, "mille neuf cent quatre-vingt-un"),
+    (1900, "mille neuf cent"), (2000, "deux mille"), (1200, "mille deux cent"), (1700, "mille sept cent"),
+    (1100, "mille cent"), (1000, "mille"), (1500, "mille cinq cent"), (2200, "deux mille deux cent"),
+    (1999, "mille neuf cent quatre-vingt-dix-neuf"),
+    (2026, "deux mille vingt-six"),
+])
+def test_a_year_in_a_date_keeps_cent_and_quatre_vingt_singular_after_a_month(year, spoken):
+    assert normalize(f"Le 10 mars {year}", "fr") == f"Le dix mars {spoken}"
+
+
+@pytest.mark.parametrize("tag", ["fr", "fr-BE", "fr-CA"])
+@pytest.mark.parametrize("written,spoken", [
+    ("10/11/1980", "dix novembre mille neuf cent quatre-vingt"), ("1980-11-10", "dix novembre mille neuf cent quatre-vingt"),
+    ("le 5 mai 2080", "le cinq mai deux mille quatre-vingt"), ("mai 1980", "mai mille neuf cent quatre-vingt"),
+    ("10/11/1900", "dix novembre mille neuf cent"), ("10/11/1200", "dix novembre mille deux cent"),
+])
+def test_a_year_in_a_date_keeps_cent_and_quatre_vingt_singular(tag, written, spoken):
+    assert normalize(written, tag) == spoken
+
+
+@pytest.mark.parametrize("tag", ["fr", "fr-BE", "fr-CA"])
+@pytest.mark.parametrize("year,spoken", [
+    ("80", "quatre-vingt"), ("100", "cent"), ("200", "deux cent"), ("300", "trois cent"), ("900", "neuf cent"),
+    ("1980", "mille neuf cent quatre-vingt"), ("1200", "mille deux cent"), ("1700", "mille sept cent"),
+    ("2000", "deux mille"), ("1000", "mille"), ("2080", "deux mille quatre-vingt"),
+    ("1981", "mille neuf cent quatre-vingt-un"),
+])
+def test_the_year_speller_keeps_cent_and_quatre_vingt_singular(tag, year, spoken):
+    from text2spoken.core.language import resolve
+    from text2spoken.lang.fr import SPELLER
+
+    assert SPELLER.year(year, Features(), resolve(tag, NormalizationParams())) == spoken
+
+
+def test_a_swiss_year_says_huitante():
+    assert normalize("10/11/1980 et le 5 mai 2080", "fr-CH") == (
+        "dix novembre mille neuf cent huitante et le cinq mai deux mille huitante")
