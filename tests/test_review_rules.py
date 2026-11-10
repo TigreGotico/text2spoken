@@ -94,6 +94,17 @@ def test_unread_digits_between_blocks_are_reported_once_each():
     assert raised.value.unread == ("05", "06", "07")
 
 
+@pytest.mark.parametrize("text, expected", [
+    ("[[5]] apples", "[[5]] apples"),
+    ("[[5]][[6]] apples", "[[5]][[6]] apples"),
+    ("[[5]] 6 apples", "[[5]] six apples"),
+    ("5[[6]] apples", "five[[6]] apples"),
+    ("Pay $5[[6]] now.", "Pay five dollars[[6]] now."),
+])
+def test_a_block_at_the_start_of_a_passthrough_segment_is_not_unread(text, expected):
+    assert normalize(text, "en-GB", NormalizationParams(strict=True)) == expected
+
+
 def test_two_digit_tokens_join_over_one_declared_mark_only():
     text = "1, 5"
     tokens = (Token(0, 1, "1"), Token(3, 4, "5"))
