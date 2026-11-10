@@ -25,7 +25,7 @@ phrase style of French, which tests/test_french.py checks)."""
 EN_ENTRIES = {
     "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero", "leads": "#",
     "fraction_names": "2", "idioms": "24/7", "range_word": DELETE, "dimension_marks": "x", "dimension_word": DELETE,
-    "operators": "+", "time_words": "at", "day_periods": "pm", "spoken_periods": "pm", "minute_phrases": "0",
+    "operators": "+", "time_words": "at", "weak_time_words": "by", "cued_time_words": "for", "time_cue_words": "tomorrow", "day_periods": "pm", "spoken_periods": "pm", "minute_phrases": "0",
     "months": "March", "numeric_date_reading": "full", "currencies": "USD", "percent": "word", "units": "kg",
     "phone_words": "phone", "color_words": "colour", "colors": "ff0000", "titles": "Dr.", "abbreviations": "etc.",
     "number_abbreviations": "No.", "patterns": "expression", "range_marks": "-", "year_words": "in",

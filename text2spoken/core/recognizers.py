@@ -248,7 +248,7 @@ _FRACTION = re.compile("[-+−]?[0-9]+/[0-9]+")
 _DATE = re.compile("[0-9]+/[0-9]+/[0-9]+|[0-9]+-[0-9]+-[0-9]+|[0-9]+[.][0-9]+[.][0-9]+")
 _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
-_PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ .-][0-9]+)*")
+_PHONE = re.compile("[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[ \u00a0\u202f.-][0-9]+)*")
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
 _DIGIT_RUN = re.compile("[0-9]+")
 
@@ -418,7 +418,12 @@ class TimeClock:
     period), `day_period` (a written day period, as for `9.30 am` in English, where `9.30` alone is a decimal) or
     `none` (the mark itself, as for `14h30` in Portuguese). A mark with `closes_hour` may also close an hour with
     no minutes, as for `14h` in Portuguese. A seconds field is no evidence, because a duration such as `1:23:45`
-    has one. Any other hour with no minutes needs a written day period, as in `9am`."""
+    has one. Any other hour with no minutes needs a written day period, as in `9am`.
+
+    A word of `weak_time_words`, such as `by` in `by 5:45`, is evidence for hours and minutes only: `ran by
+    1:23:45` has a seconds field, so it stays a duration. A word of `cued_time_words`, such as `for`, is evidence
+    for hours and minutes only when one of `time_cue_words` stands within three words of the time in its clause,
+    as `tomorrow` does in `set for 7:30 tomorrow morning`: `bake for 1:30` is a duration."""
     name: str = "time_clock"
     form: Form = Form.TIME
 
@@ -430,6 +435,9 @@ class TimeClock:
         words = context_words(tokens)
         breaks = clause_breaks(text)
         time_words = frozenset(w.lower() for w in data.get("time_words", ()))
+        weak_words = frozenset(w.lower() for w in data.get("weak_time_words", ()))
+        cued_words = frozenset(w.lower() for w in data.get("cued_time_words", ()))
+        cue_words = frozenset(w.lower() for w in data.get("time_cue_words", ()))
         periods = data.get("day_periods", FrozenMap())
         suffixes = data.get("time_suffixes", ())
         folded = fold_digits(text)
@@ -468,8 +476,13 @@ class TimeClock:
                 if end + len(suffix) < len(text) and is_word_char(text[end + len(suffix)]):
                     continue
                 before = clause_window(text, words, start, end, -1, limit=1, breaks=breaks)
+                weak = second is None and bool(before) and (
+                    before[0].lower() in weak_words
+                    or (before[0].lower() in cued_words and any(
+                        word.lower() in cue_words for direction in (-1, 1) for word in clause_window(
+                            text, words, start, end, direction, limit=3, breaks=breaks))))
                 if not (needs == "none" or period is not None or suffix
-                        or (before and before[0].lower() in time_words)):
+                        or (before and before[0].lower() in time_words) or weak):
                     continue
                 yield Span(start, end + len(suffix), Form.TIME,
                            FrozenMap({"hour": hour, "minute": minute, "second": second, "period": period,
@@ -698,10 +711,10 @@ class Telephone:
                     and (bounds[2] or bounds[3]) and _edge(text, bounds[0], bounds[1]) \
                     and (operand is None or operand.match(folded, bounds[1]) is None):
                 glued, prefix, suffix = False, bounds[2], bounds[3]
-            groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
+            groups = [group for group in re.split("[ \u00a0\u202f.()-]", written.lstrip("+")) if group]
             digits = "".join(groups)
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
-                written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
+                written.startswith("+") or digits.startswith("0") or any(c in " \u00a0\u202f.()-" for c in written))
             phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
                           if words[i].text.lower() in phone_words]
             direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))

@@ -243,3 +243,23 @@ def test_a_sign_before_a_number_with_its_symbol_after_stays_in_the_amount(text, 
     from text2spoken import normalize
 
     assert normalize(text, "en-US") == spoken
+
+
+@pytest.mark.parametrize("text,spoken", [
+    ("Your next alarm is set for 7:30 tomorrow morning.", "Your next alarm is set for seven thirty tomorrow morning."),
+    ("Set an alarm for 6:05 tonight.", "Set an alarm for six oh five tonight."),
+    ("The meeting is for 3:15 this afternoon.", "The meeting is for three fifteen this afternoon."),
+    ("Be there by 17:45.", "Be there by five forty-five PM."),
+    ("Be there by 5:30 sharp.", "Be there by five thirty sharp."),
+    ("Bake for 1:30.", "Bake for 1:30."),
+    ("Practice for 0:45.", "Practice for 0:45."),
+    ("Wait for 2:00.", "Wait for 2:00."),
+    ("He ran for 1:23:45.", "He ran for 1:23:45."),
+    ("Be there by 5:45:10.", "Be there by 5:45:10."),
+    ("The score was 7:30.", "The score was 7:30."),
+    ("It is set for 16:9.", "It is set for 16:9."),
+])
+def test_a_weak_time_word_is_evidence_for_hours_and_minutes_only_and_for_needs_a_day_part_cue(text, spoken):
+    from text2spoken import normalize
+
+    assert normalize(text, "en-GB") == spoken
