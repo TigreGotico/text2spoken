@@ -143,7 +143,7 @@ DATA = freeze({
                 "×": "measure"},
     "ordinal_marks": ["st", "nd", "rd", "th"],
     "patterns": {
-        "expression": "[-−]?[0-9]+(?: ?[+−×÷=] ?[0-9]+)+",
+        "expression": "[-−]?[0-9]+(?: ?[+−×÷=] ?[-−]?[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_day_month": "([0-9][0-9]?)" + _ORDINAL_MARK + "? (?:of )?" + _MONTH + "(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_month_year": _MONTH + " ([0-9][0-9][0-9][0-9])",
@@ -600,26 +600,30 @@ class Expression:
     integer may carry a minus sign. `−` is both that sign and an operator: `−3−3` is "minus three minus three".
 
     An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
-    written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator."""
+    written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator.
+
+    Only the first integer may carry a sign, and no form reads a number next to a symbol of the `symbols` table.
+    So a signed later operand, as in `3 − −3`, and a symbol next to the expression, as in `$−3+3`, keep the
+    expression as written."""
     name: str = "expression"
     form: Form = Form.EXPRESSION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        operators = "".join(request.data["operators"])
-        open_operator = re.compile(f" ?[{re.escape(operators)}]")
+        operators = re.escape("".join(request.data["operators"]))
+        open_operator = re.compile(f" ?[{operators}]")
+        symbols = request.data["symbols"]
         for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
             start, end = match.span()
             if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
                     or open_operator.match(text, end)):
                 continue
             written = match.group().replace(" ", "")
-            sign = "" if written[0].isdigit() else written[0]
-            body = written[len(sign):]
-            first, *others = re.split(f"[{re.escape(operators)}]", body)
-            operands = (sign + first, *others)
-            signs = tuple(c for c in body if c in operators)
-            yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": operands, "operators": signs}),
-                       recognizer=self.name)
+            first = re.match("[-−]?[0-9]+", written).group()
+            signs, others = zip(*re.findall(f"([{operators}])([-−]?[0-9]+)", written[len(first):]))
+            unclear = (any(not operand[0].isdigit() for operand in others)
+                       or (start > 0 and text[start - 1] in symbols) or (end < len(text) and text[end] in symbols))
+            yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": (first, *others), "operators": signs}),
+                       recognizer=self.name, keep=unclear)
 
 
 @dataclass(frozen=True)
