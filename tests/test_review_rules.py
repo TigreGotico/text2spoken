@@ -338,6 +338,18 @@ def test_short_groups_after_a_letter_take_linear_time():
     assert large < 20 * small, (small, large)
 
 
+def test_phone_numbers_after_a_letter_take_linear_time():
+    def seconds(count: int) -> float:
+        text = "x" + " ".join(["07946001800"] * count)
+        start = time.perf_counter()
+        normalize(text, "en-GB")
+        return time.perf_counter() - start
+
+    normalize("x07946001800 07946001800", "en-GB")
+    small, large = min(seconds(1000) for _ in range(2)), min(seconds(8000) for _ in range(2))
+    assert large < 16 * small, (small, large)
+
+
 def test_a_long_digit_run_takes_linear_time():
     def seconds(count: int) -> float:
         start = time.perf_counter()
@@ -527,6 +539,54 @@ def test_a_phone_word_right_before_the_run_decides_for_the_whole_run(lang, and_)
 def test_a_glued_first_group_drops_and_the_window_names_the_rest(text, expected, lang):
     assert normalize(text, lang) == expected
     assert normalize(expected, lang) == expected
+
+
+@pytest.mark.parametrize("text, lang, expected", [
+    ("My number is 07946001800 212-555-0123.", "en-GB",
+     "My number is zero seven nine four six zero zero one eight zero zero two one two five five five zero one two "
+     "three."),
+    ("My number is 12125550123 212-555-0123.", "en-US",
+     "My number is one two one two five five five zero one two three two one two five five five zero one two "
+     "three."),
+    ("Room 4 5 07946001800", "en-GB", "Room four five zero seven nine four six zero zero one eight zero zero"),
+    ("Room 4 5 12125550123", "en-US", "Room four five one two one two five five five zero one two three"),
+    ("Room 4 07946001800 212-555-0123", "en-GB",
+     "Room four zero seven nine four six zero zero one eight zero zero two one two five five five zero one two "
+     "three")])
+def test_the_dropped_groups_read_as_a_run_of_their_own(text, lang, expected):
+    assert normalize(text, lang) == expected
+    assert normalize(expected, lang) == expected
+
+
+@pytest.mark.parametrize("lang", ["en-GB", "en-US"])
+@pytest.mark.parametrize("text, expected", [
+    ("07946001800 07946 001800-1",
+     "zero seven nine four six zero zero one eight zero zero zero seven nine four six zero zero one eight zero zero "
+     "one"),
+    ("10 000 000 000 000 000 212-555-0123", "10 000 000 000 000 000 two one two five five five zero one two three")])
+def test_dropped_groups_of_more_than_15_digits_read_by_a_shape(lang, text, expected):
+    assert normalize(text, lang) == expected
+    assert normalize(expected, lang) == expected
+
+
+@pytest.mark.parametrize("lang", ["en-GB", "en-US"])
+@pytest.mark.parametrize("text, expected", [
+    ("Room 4 0800 212-555-0123", "Room four 0800 two one two five five five zero one two three"),
+    ("Suite 200 0800 212-555-0123", "Suite two hundred 0800 two one two five five five zero one two three"),
+    ("(4) 07946 001800-1", "(four) 07946 zero zero one eight zero zero one")])
+def test_leading_groups_drop_until_a_rest_reads(text, expected, lang):
+    assert normalize(text, lang) == expected
+    assert normalize(expected, lang) == expected
+
+
+@pytest.mark.parametrize("lang, date", [("en-GB", "the second of January twenty twenty-four"),
+                                        ("en-US", "January second twenty twenty-four")])
+def test_a_rest_reads_when_a_date_takes_the_start_of_a_kept_run(lang, date):
+    expected = f"Call {date} zero seven nine four six zero zero one eight zero zero one"
+    assert normalize("Call 2024-01-02 07946 001800-1", lang) == expected
+    assert normalize(expected, lang) == expected
+    assert normalize("Room 4 0800 123 456 8 am", lang) == \
+        "Room four zero eight zero zero one two three four five six eight AM"
 
 
 def test_the_core_telephone_holds_no_english_rule(gendered, monkeypatch):
