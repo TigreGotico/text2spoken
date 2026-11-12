@@ -64,7 +64,8 @@ DATA = freeze({
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
     "time_words": ["às", "as", "à", "pelas", "das", "até", "desde"],
     "time_suffixes": ["h"],
-    "time_units": {"h": {"one": "hora", "other": "horas"}, "min": {"one": "minuto", "other": "minutos"}},
+    "time_units": {"h": {"one": "hora", "other": "horas"}, "min": {"one": "minuto", "other": "minutos"},
+                   "s": {"one": "segundo", "other": "segundos"}},
     "range_articles": {"da": {"one": "à", "other": "às"}, "das": {"one": "à", "other": "às"}},
     "day_periods": {"am": ["a.m."], "pm": ["p.m."]},
     "dimension_marks": ["x", "×"],
@@ -87,8 +88,8 @@ DATA = freeze({
                        "8": "oitavo", "9": "nono", "10": "décimo", "100": "centésimo"},
     "fraction_word": "avos",
     "units": UNITS_PT,
-    "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "fax", "contacto", "contato",
-                    "celular"],
+    "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
+                    "contacto", "contato", "celular"],
     "short_codes": ["112", "190", "192", "193", "199"],
     "list_links": ["e", "ou"],
     "phone_shapes": ["[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}"],
@@ -110,8 +111,8 @@ DATA = freeze({
     "regnal_titles": ["D", "Dom", "Dona", "rei", "rainha", "papa", "imperador", "imperatriz", "príncipe",
                       "princesa", "infante", "infanta"],
     "century_words": ["século", "séculos"],
-    "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine",
-                    "os": "masculine", "dos": "masculine", "nos": "masculine", "pelos": "masculine"},
+    "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine", "às": "feminine",
+                    "à": "feminine", "os": "masculine", "dos": "masculine", "nos": "masculine", "pelos": "masculine"},
     "noun_gender": {
         "dia": "masculine", "dias": "masculine", "mapa": "masculine", "mapas": "masculine",
         "problema": "masculine", "problemas": "masculine", "sistema": "masculine", "sistemas": "masculine",
@@ -145,23 +146,7 @@ VARIETIES = (
     })),
 )
 
-_FEMININE_WORDS = {"um": "uma", "dois": "duas"}
 _SCALE_WORD = re.compile("[a-z]+(?:ão|ões)")
-
-
-def feminine(words: str) -> str:
-    """The feminine of a masculine number reading. A scale word from `milhão` up is a masculine noun, so only the
-    words after the last one change: `um` and `dois`, and the hundreds from `duzentos` to `novecentos`
-    (Priberam, "duas", "uma")."""
-    parts = words.split()
-    last_scale = max((i for i, word in enumerate(parts) if _SCALE_WORD.fullmatch(word)), default=-1)
-    for index in range(last_scale + 1, len(parts)):
-        word = parts[index]
-        if word in _FEMININE_WORDS:
-            parts[index] = _FEMININE_WORDS[word]
-        elif word.endswith("entos"):
-            parts[index] = word[:-len("entos")] + "entas"
-    return " ".join(parts)
 
 
 def at_variety(request: Request) -> Request:
@@ -171,22 +156,18 @@ def at_variety(request: Request) -> Request:
 
 
 class PortugueseSpeller:
-    """ovos-number-parser, read with the variety tag. The feminine comes from the masculine reading, because
-    ovos-number-parser drops the gender of a number from 1000 up (`mil e um` for a feminine 1001)."""
+    """ovos-number-parser, read with the variety tag and the gender of the noun."""
 
     def __init__(self):
         self.ovos = OvosNumberSpeller({MASCULINE: "masculine", FEMININE: "feminine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        words = self.ovos.cardinal(digits, Features(), at_variety(request))
-        return feminine(words) if features.gender is FEMININE else words
+        gender = FEMININE if features.gender is FEMININE else MASCULINE
+        return self.ovos.cardinal(digits, Features(gender=gender), at_variety(request))
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """An ordinal to 1999. ovos-number-parser reads 2022 as `dois milésimo vigésimo segundo`, and no cited
-        grammar passage gives the form of an ordinal from 2000 up, so such an ordinal stays as written."""
-        number = bounded_integer(digits)
-        if number is None or number >= 2000:
-            raise DeclinedReading(f"no Portuguese ordinal reading of {len(digits)} digits from 2000 up")
+        """From 2000 up, the first element is a cardinal: `2022.º` reads `dois milésimo vigésimo segundo`
+        (Teyssier, Manual de Língua Portuguesa, p. 183, as the owner of ovos-number-parser reports it)."""
         gender = FEMININE if features.gender is FEMININE else MASCULINE
         return self.ovos.ordinal(digits, Features(gender=gender), at_variety(request))
 
@@ -242,6 +223,7 @@ def _written(amount: FrozenMap) -> str:
 
 
 _LEXICON_GENDERS = {"m": "masculine", "f": "feminine"}
+_PARTITIVES = ("das", "dos")
 
 
 def _lexicon_gender(word: str) -> str | None:
@@ -272,6 +254,10 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     """The gender of a number (design section 5.6): the hint, the noun after the number, a determiner before it,
     then the `default_gender` of the params, then the language default.
 
+    A written `mil` after the number is not the noun: `mil` has two genders (Priberam, "mil": "quantificador
+    numeral cardinal de dois géneros"), so `2 mil pessoas` takes the gender of `pessoas`, as `2000 pessoas` does. A
+    partitive `das` or `dos` right after the number gives the gender, as in `1 das casas`.
+
     The `noun_gender` table names a noun first. When tugalex knows the word after the number, a determiner comes
     before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
     a noun"), and that word can be an adjective with no noun, as in `as 2 melhores`. A noun of two genders, such as
@@ -281,8 +267,13 @@ def agreement(context: SpanContext) -> GrammaticalGender:
         return context.hint.gender
     request = context.request
     data = request.data
-    noun = context.after[0] if context.after else ""
-    determiner = data["determiners"].get(context.before[-1].lower()) if context.before and noun else None
+    after = list(context.after)
+    if after and after[0].lower() == "mil":
+        after = after[1:]
+    noun = after[0] if after else ""
+    if noun.lower() in _PARTITIVES:
+        return GrammaticalGender(data["determiners"][noun.lower()])
+    determiner = data["determiners"].get(context.before[-1].lower()) if context.before else None
     listed = data["noun_gender"].get(noun) or data["noun_gender"].get(noun.lower())
     code = _lexicon_gender(noun) if noun and listed is None and noun not in data["function_words"] else None
     if code is None:
@@ -351,9 +342,10 @@ def speak_range(span: Span, context: SpanContext) -> str:
 
 
 def _day(day: int, request: Request) -> str:
-    """The first day of a month reads `primeiro`, and every other day a cardinal: "nas referências aos dias do mês
-    usam-se os cardinais, salvo na designação do primeiro dia, em que é de regra o uso do numeral ordinal" (Cunha
-    and Cintra, Nova Gramática do Português Contemporâneo, p. 374). A written `1.º` is an ordinal span."""
+    """The first day of a month reads `primeiro`, and every other day a cardinal. Ciberdúvidas 32700 gives this
+    rule, paraphrasing Cunha and Cintra, Nova Gramática do Português Contemporâneo, p. 374: in the days of the
+    month the cardinals are used, except for the first day, where the ordinal is the rule. A written `1.º` is an
+    ordinal span."""
     if day == 1:
         return SPELLER.ordinal("1", Features(gender=MASCULINE), request)
     return _cardinal(str(day), request)
@@ -372,7 +364,9 @@ def speak_date(span: Span, context: SpanContext) -> str:
 def speak_time(span: Span, context: SpanContext) -> str:
     """`catorze e trinta` for `14:30`, `catorze horas`, `uma hora`. The hour counts `hora`, a feminine noun
     (Priberam, "hora"). A time that writes the hour symbol `h` reads its units, so `17h30` reads `dezassete horas e
-    trinta minutos` (Ciberdúvidas 14648; Ciberdúvidas 3267: "às onze horas e trinta minutos"). A written `a.m.` or
+    trinta minutos` (Ciberdúvidas 14648; Ciberdúvidas 3267: "às onze horas e trinta minutos"). Seconds read as in
+    Ciberdúvidas 14586: "em 20 h 30 m 24 s, é claro que se quer dizer vinte horas, trinta minutos e vinte e quatro
+    segundos". A written `a.m.` or
     `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.": "antes do meio-dia"; "p.m.": "depois do
     meio-dia")."""
     request = context.request
@@ -382,13 +376,16 @@ def speak_time(span: Span, context: SpanContext) -> str:
     if fields["period"] is not None:
         hour = hour % 12 + (12 if fields["period"] == "pm" else 0)
     hour_words = _cardinal(str(hour), request, FEMININE)
-    if minute == 0:
+    second = fields["second"]
+    if minute == 0 and not second:
         return f"{hour_words} {_counted(units['h'], request, str(hour))}"
-    minute_words = _cardinal(str(minute), request)
-    if fields["suffix"]:
-        return (f"{hour_words} {_counted(units['h'], request, str(hour))} e {minute_words} "
-                f"{_counted(units['min'], request, str(minute))}")
-    return f"{hour_words} e {minute_words}"
+    if not fields["suffix"]:
+        return f"{hour_words} e {_cardinal(str(minute), request)}"
+    parts = [f"{hour_words} {_counted(units['h'], request, str(hour))}"]
+    for value, unit in ((minute, "min"), (second, "s")):
+        if value:
+            parts.append(f"{_cardinal(str(value), request)} {_counted(units[unit], request, str(value))}")
+    return ", ".join(parts[:-1]) + " e " + parts[-1]
 
 
 def speak_money(span: Span, context: SpanContext) -> str:
@@ -454,10 +451,6 @@ def speak_telephone(span: Span, context: SpanContext) -> str:
     if span.fields["country_code"]:
         groups.insert(0, f"{request.data['sign_words']['+']} {_digits(span.fields['country_code'], request)}")
     return " ".join(groups)
-
-
-def _with_case(words: str, written: str) -> str:
-    return words[0].upper() + words[1:] if written[0].isupper() else words
 
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
@@ -536,13 +529,18 @@ class PortugueseTelephone(Telephone):
 
 @dataclass(frozen=True)
 class Clock(TimeClock):
-    """The times of the core, and two Portuguese forms that it leaves. One is the spaced symbols of the SI, as in
-    `19 h 30 min` (Ciberdúvidas 3267: "às 17 h 34 min 25 s"). The other is two times that a range mark joins, as in
-    `das 9h-17h` and `das 9:00-17:00`, where the second time takes the article of the first (Ciberdúvidas 22241:
-    "das cinco às seis horas"). A time that writes `h` keeps it in the `suffix` field, so it reads its units."""
+    """The times of the core, and two Portuguese forms that it leaves. One is the unit symbols `h`, `min` and `s`
+    around the digits, spaced or not: `17 h`, `17h30 min`, `17h30min`, `17:30 h` (Ciberdúvidas 14648: "17h30 min";
+    "Considero perfeitamente aceitável 17:30 h") and `17 h 34 min 25 s` (Ciberdúvidas 3267). The other is two times
+    that a range mark joins, as in `das 9h-17h` and `das 9:00-17:00`, where the second time takes the article of the
+    first (Ciberdúvidas 22241: "das cinco às seis horas"). A chain of three times or more stays as written. A time
+    that writes `h` keeps it in the `suffix` field, so it reads its units."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        own = list(self._ranges(text, tokens, request)) + list(self._spaced(text, request))
+        own = list(self._ranges(text, tokens, request))
+        for span in self._symbols(text, request):
+            if not any(span.start < other.end and other.start < span.end for other in own):
+                own.append(span)
         for span in super().find(text, tokens, request):
             if not any(span.start < other.end and other.start < span.end for other in own):
                 own.append(self._with_symbol(span, text))
@@ -554,18 +552,25 @@ class Clock(TimeClock):
             return span
         return replace(span, fields=FrozenMap({**span.fields, "suffix": "h"}))
 
-    def _time(self, start: int, hour: str, minute: str | None, symbol: str) -> Span | None:
-        fields = clock_fields(hour, minute or "00", None)
+    def _time(self, start: int, hour: str, minute: str | None, symbol: str, second: str | None = None) -> Span | None:
+        fields = clock_fields(hour, minute or "00", second)
         if fields is None:
             return None
-        return Span(start, start, Form.TIME, FrozenMap({"hour": fields[0], "minute": fields[1], "second": None,
+        return Span(start, start, Form.TIME, FrozenMap({"hour": fields[0], "minute": fields[1], "second": fields[2],
                                                         "period": None, "suffix": symbol}), recognizer=self.name)
 
-    def _spaced(self, text: str, request: Request) -> Iterator[Span]:
-        hour, minute = (re.escape(unit) for unit in request.data["time_units"])
-        pattern = re.compile(f"([0-9][0-9]?) {hour} ([0-9][0-9]) {minute}")
+    def _symbols(self, text: str, request: Request) -> Iterator[Span]:
+        """`17 h`, `17h30 min`, `17h 30min`, `17 h 34 min 25 s` and `17:30 h`. Minutes after a space take `min`.
+        The core reads `17h`, `17h30` and `17:30h`, so they are left to it."""
+        hour, minute, second = (re.escape(unit) + "(?![^\\W\\d_])" for unit in ("h", "min", "s"))
+        minutes = f"(?:([0-9][0-9])(?: ?{minute})?| ([0-9][0-9]) ?{minute})(?: ([0-9][0-9]) ?{second})?"
+        pattern = re.compile(f"([0-9][0-9]?)(?: ?{hour}(?:{minutes})?|:([0-9][0-9]) {hour})")
+        core_form = re.compile(f"[0-9][0-9]?{hour}(?:[0-9][0-9])?")
         for match in pattern.finditer(text):
-            if is_bounded(text, *match.span()) and (span := self._time(match.start(), *match.groups(), "h")):
+            h, glued, spaced, seconds, colon = match.groups()
+            if core_form.fullmatch(match.group()) or not is_bounded(text, *match.span()):
+                continue
+            if span := self._time(match.start(), h, glued or spaced or colon, "h", seconds):
                 yield replace(span, end=match.end())
 
     def _ranges(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
@@ -574,8 +579,15 @@ class Clock(TimeClock):
         marks = "|".join(map(re.escape, data["range_marks"]))
         words = context_words(tokens)
         time_words = frozenset(word.lower() for word in data["time_words"])
-        for match in re.finditer(f"{time}(?:{marks}){time}", text):
-            if not is_bounded(text, *match.span()):
+        pair = re.compile(f"{time}(?:{marks}){time}")
+        for chain in re.finditer(f"{time}(?:(?:{marks}){time})+", text):
+            if not is_bounded(text, *chain.span()):
+                continue
+            match = pair.fullmatch(text, *chain.span())
+            if match is None:
+                h, m, c = re.match(time, text[chain.start():]).groups()
+                if first := self._time(chain.start(), h, m or c, "h" if c is None else ""):
+                    yield replace(first, end=chain.end(), keep=True)
                 continue
             h1, m1, c1, h2, m2, c2 = match.groups()
             before = clause_window(text, words, match.start(), match.end(), -1, limit=1)
@@ -686,7 +698,8 @@ class DateNamed:
 class Roman:
     """A Roman numeral after a name or after `século`: `D. Maria II`, `Luís XIV`, `século XIX`.
 
-    After a name, a value from 1 to 30 reads when a regnal title comes right before the name, as in `D. João V`
+    A numeral right after a title, as in `D. XIV` or `Dom XIV`, has no name and stays as written. After a name, a
+    value from 1 to 30 reads when a regnal title comes right before the name, as in `D. João V`
     and `papa Pio X`, or when the numeral has two letters or more and a value from 11, which reads as a cardinal with
     no gender, as in `Luís XIV`. A short numeral after another capitalised word, as in `Malcolm X` or `Classe II`,
     stays as written."""
@@ -698,6 +711,7 @@ class Roman:
 
         data = request.data
         titles = frozenset(data["regnal_titles"])
+        not_names = titles | {key.rstrip(".") for key in data["titles"]} | frozenset(data["titles"].values())
         centuries = frozenset(data["century_words"])
         words = context_words(tokens)
         breaks = clause_breaks(text)
@@ -710,6 +724,8 @@ class Roman:
             if not before:
                 continue
             index = bisect_right(words, start, key=lambda word: word.end)
+            if index >= 1 and words[index - 1].text in not_names:
+                continue
             title = index >= 2 and words[index - 2].text in titles \
                 and text[words[index - 2].end:words[index - 1].start] in (" ", ". ")
             if before[-1].lower() in centuries:
