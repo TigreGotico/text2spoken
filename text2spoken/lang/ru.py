@@ -129,11 +129,14 @@ genitive plural, takes the collective numeral in the nominative and the accusati
 Грамматика-80 § 1369, п. 4; the genitive forms "суток", "ножниц", "ворот" in § 1201). The other collective numerals
 are rare, so "пять суток" takes the cardinal (Розенталь § 165, п. 1). The nouns of `collective_persons` take the
 collective numeral in the nominative: "двое детей, трое ребят, трое молодых людей" (Розенталь § 165, п. 1, 3;
-Грамматика-80 § 1369, п. 2: "четверо детей, трое людей"). Their accusative is "двоих детей", which this file does
-not read, and a reader cannot tell it from the nominative where a verb comes before the number: "Я видел 2 детей".
-So the collective numeral reads only where the number is the subject: at the start of its clause, after a form of
-`copulas` ("Нас было двое", § 1369, п. 3) and after a word of `owner_prepositions` and its owner ("У меня жена, двое
-девочек", § 1369, п. 1). In any other place, and after a preposition, the number stays as written. An adjective in
+Грамматика-80 § 1369, п. 2: "четверо детей, трое людей"). Their accusative is "двоих детей" (Розенталь § 165, п. 3:
+"мать троих детей"), which this file does not read. With no preposition, a reader cannot tell it from the
+nominative where a verb comes before the number: "Я видел 2 детей". So with no preposition the collective numeral
+reads only where the number is the subject: at the start of its clause, after a form of `copulas` ("Нас было двое",
+§ 1369, п. 3) and after a word of `owner_prepositions` and its owner ("У меня жена, двое девочек", § 1369, п. 1).
+In any other place, and after a preposition that governs the accusative, the number stays as written. A preposition
+of another case takes the cardinal in that case, which agrees with the noun: "для двух детей" (Грамматика-80
+§ 1366: "двух столов, двум столам"; § 1371: "не было и трех взрослых людей"). An adjective in
 the genitive plural, in -ых or -их (Грамматика-80 § 1216: "выходных, рабочих"), may stand between the number and
 the noun: "пятеро известных лиц" (§ 1369, п. 2). A sign reads "плюс" or "минус", words that do not decline before a
 number (Грамматика-80 § 1834: "плюс-минус единица", "равен минус единице"). `в течение` governs the genitive
@@ -484,11 +487,11 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         noun = next((word.lower() for word in context.after if not _adjectival(word.lower())), "")
         collective = data["collective_numerals"].get(digits)
         nominative = features.case in (None, "nominative")
-        if collective and noun in data["collective_persons"]:
-            if not (nominative and _subject_place(context)):
-                raise DeclinedReading(f"no reading of {digits} before {noun} as an object or after a preposition")
-            words = collective
-        elif collective and noun in data["pluralia_tantum"] and (nominative or features.case == "accusative"):
+        persons = collective and noun in data["collective_persons"]
+        if persons and (features.case == "accusative" or (nominative and not _subject_place(context))):
+            raise DeclinedReading(f"no accusative reading of {digits} before {noun}")
+        if (persons and nominative) or (collective and noun in data["pluralia_tantum"]
+                                        and (nominative or features.case == "accusative")):
             words = collective
         else:
             words = SPELLER.cardinal(digits, features, request)
