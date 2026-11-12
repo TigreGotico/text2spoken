@@ -25,7 +25,8 @@ from text2spoken.core.recognizers import SHARED, DateNumeric, numbers_in, speak_
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
+from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_letter, is_word_char, next_visible,
+                                     one_digit_set)
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, freeze
 
@@ -58,9 +59,9 @@ DATA = freeze({
     "zero_minutes": "ноль-ноль",
     "copulas": ["был", "была", "было", "будет", "есть"],
     "onset_verbs": ["наступил", "наступила", "наступило", "наступит"],
-    "date_adverbs": ["вот", "и", "наконец", "уже", "тогда", "скоро", "сегодня", "завтра", "вчера", "послезавтра",
-                     "позавчера"],
-    "owner_prepositions": ["у"],
+    "date_adverbs": ["вот", "и", "а", "но", "ведь", "же", "ну", "ещё", "не", "ли", "наконец", "уже", "тогда", "скоро",
+                     "сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
+    "owner_prepositions": ["у", "в", "во"],
     "collective_numerals": {"2": "двое", "3": "трое", "4": "четверо"},
     "pluralia_tantum": ["суток", "саней", "ножниц", "брюк", "ворот"],
     "collective_persons": ["детей", "ребят", "людей"],
@@ -126,21 +127,22 @@ names are those of the International System of Units in Russian (ru.wikipedia.or
 (Правила-2006, Графические сокращения, before § 209). After 2, 3 and 4 a noun of `pluralia_tantum`, written in the
 genitive plural, takes the collective numeral in the nominative and the accusative: "двое саней, трое ножниц, четверо
 суток", "двое брюк", and in the other cases the cardinal: "около четырех суток" (Розенталь § 165, п. 1, п. 3;
-Грамматика-80 § 1369, п. 4; the genitive forms "суток", "ножниц", "ворот" in § 1201). The other collective numerals
-are rare, so "пять суток" takes the cardinal (Розенталь § 165, п. 1). The nouns of `collective_persons` take the
-collective numeral in the nominative: "двое детей, трое ребят, трое молодых людей" (Розенталь § 165, п. 1, 3;
-Грамматика-80 § 1369, п. 2: "четверо детей, трое людей"). Their accusative is "двоих детей" (Розенталь § 165, п. 3:
-"мать троих детей"), which this file does not read. With no preposition, a reader cannot tell it from the
-nominative where a verb comes before the number: "Я видел 2 детей". So with no preposition the collective numeral
-reads only where the number is the subject: at the start of its clause, after a form of `copulas` ("Нас было двое",
-§ 1369, п. 3) and after a word of `owner_prepositions` and its owner ("У меня жена, двое девочек", § 1369, п. 1).
-In any other place, and after a preposition that governs the accusative, the number stays as written. A preposition
-of another case takes the cardinal in that case, which agrees with the noun: "для двух детей" (Грамматика-80
-§ 1366: "двух столов, двум столам"; § 1371: "не было и трех взрослых людей"). An adjective in
-the genitive plural, in -ых or -их (Грамматика-80 § 1216: "выходных, рабочих"), may stand between the number and
-the noun: "пятеро известных лиц" (§ 1369, п. 2). A sign reads "плюс" or "минус", words that do not decline before a
-number (Грамматика-80 § 1834: "плюс-минус единица", "равен минус единице"). `в течение` governs the genitive
-(Грамматика-80 § 1790, § 2710: "в течение двух недель"; Розенталь § 164, п. 3: "в течение двадцати двух суток")."""
+Грамматика-80 § 1369, п. 4; the genitive forms "суток", "ножниц", "ворот" in § 1201). The other collective numerals are
+rare, so "пять суток" takes the cardinal (Розенталь § 165, п. 1). The nouns of `collective_persons` take the collective
+numeral in the nominative: "двое детей, трое ребят, трое молодых людей" (Розенталь § 165, п. 1, 3; Грамматика-80 § 1369,
+п. 2: "четверо детей, трое людей"). Their accusative is "двоих детей" (Розенталь § 165, п. 3: "мать троих детей"), which
+this file does not read. With no preposition, a reader cannot tell it from the nominative where a verb comes before the
+number: "Я видел 2 детей". So with no preposition the collective numeral reads only where the number is the subject: at
+the start of its clause, after a form of `copulas` ("Нас было двое", § 1369, п. 3) and after a word of
+`owner_prepositions` and the owner or the place: "У меня жена, двое девочек" (§ 1369, п. 1), "У соседа трое сыновей", "у
+страны / в стране" (§ 2455), "В комнате - ничего лишнего" (§ 2477). A word in an adjectival ending of § 1216 may stand
+before the owner: "у моей сестры". In any other place, and after a preposition that governs the accusative, the number
+stays as written. A preposition of another case takes the cardinal in that case, which agrees with the noun: "для двух
+детей" (Грамматика-80 § 1366: "двух столов, двум столам"; § 1371: "не было и трех взрослых людей"). An adjective in the
+genitive plural, in -ых or -их (Грамматика-80 § 1216: "выходных, рабочих"), may stand between the number and the noun:
+"пятеро известных лиц" (§ 1369, п. 2). A sign reads "плюс" or "минус", words that do not decline before a number
+(Грамматика-80 § 1834: "плюс-минус единица", "равен минус единице"). `в течение` governs the genitive (Грамматика-80 §
+1790, § 2710: "в течение двух недель"; Розенталь § 164, п. 3: "в течение двадцати двух суток")."""
 
 VARIETIES = (Variety("ru-RU"),)
 
@@ -467,11 +469,19 @@ def _adjectival(word: str) -> bool:
     return len(word) > 2 and word.endswith(("ых", "их"))
 
 
+_MODIFIER_ENDINGS = ("ого", "его", "ой", "ей", "ом", "ем", "ых", "их")
+"""The endings of the oblique cases of an adjective in Грамматика-80 § 1216: "выходн-ого, рабоч-его, о выходн-ом,
+запят-ой, заведующ-ей, выходн-ых, рабоч-их"."""
+
+
 def _subject_place(context: SpanContext) -> bool:
     """Whether a number with no preposition before it stands where the subject of its clause stands: first in the
-    clause, after a form of `copulas`, or after a word of `owner_prepositions` and its owner."""
+    clause, after a form of `copulas`, or after a word of `owner_prepositions` and the owner or the place, which one
+    modifier may come before: "у сестры", "у моей сестры", "в семье"."""
     data, words = context.request.data, [word.lower() for word in context.before]
-    return not words or words[-1] in data["copulas"] or (len(words) > 1 and words[-2] in data["owner_prepositions"])
+    owner = data["owner_prepositions"]
+    return (not words or words[-1] in data["copulas"] or (len(words) > 1 and words[-2] in owner)
+            or (len(words) > 2 and words[-3] in owner and len(words[-2]) > 2 and words[-2].endswith(_MODIFIER_ENDINGS)))
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
@@ -578,19 +588,21 @@ def date_case(span: Span, context: SpanContext) -> str:
     The second is where the date is the subject of a form of `copulas` or of `onset_verbs`: "Было шесть часов вечера,
     конец мая" (§ 2536), "Сегодня воскресенье" (§ 2539), "Наступила осень" (§ 2681). There the clause holds no word
     before the date but those verbs and the words of `date_adverbs`: "Вот и наступило первое сентября", "Сегодня уже
-    первое мая", and a date alone in its clause. A date closes its clause when only "года" and a mark of `_CLOSING`
-    or the end of the clause follow it. Every other date says when something happens and reads in the genitive:
-    "встреча пятого мая" (§ 1168), "Лето наступило первого июня", "Было первого мая подписано соглашение". A
-    pronoun "это" before the copula is the subject (Розенталь § 189, п. 3: "это была хрестоматия"), so "Это было
-    первого мая" says when something happened."""
+    первое мая", and a date alone in its clause. A date closes its clause when only "года", closing quotes and a mark
+    or the end of the clause follow it, as `_FINAL_MARKS` and `_INNER_MARKS` say. Every other date says when
+    something happens and reads in the genitive: "встреча пятого мая" (§ 1168), "Лето наступило первого июня",
+    "Было первого мая подписано соглашение". A pronoun "это" before the copula is the subject (Розенталь § 189,
+    п. 3: "это была хрестоматия"), so "Это было первого мая" says when something happened. The particle "ли" asks a
+    question and leaves the subject in the nominative: "Падают ли овцы?" (§ 1693, § 1949)."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
     after = context.after[1:] if context.after and context.after[0].lower() in data["year_noun"] else context.after
-    closed = span.trail in _CLOSING or not after
+    words = [word.lower() for word in context.before]
+    mark = span.trail[-1:]
+    closed = not after or mark in _FINAL_MARKS or (mark in _INNER_MARKS and bool(span.lead or words))
     if span.lead == ":" and closed:
         return "nominative"
-    words = [word.lower() for word in context.before]
     before = words[-1] if words else ""
     if before in data["governed_cases"] or " ".join(words[-2:]) in data["governed_cases"] \
             or before in data["case_choices"]:
@@ -684,15 +696,21 @@ def attach(spoken: str, prefix: str, suffix: str) -> str:
     return prefix + spoken + ("" if suffix.lstrip() == "г." else suffix)
 
 
-_CLOSING = (",", ".", ";", ":", "!", "?", ")", "…")
-"""The marks that close a date in its clause for `date_case`."""
+_FINAL_MARKS = (".", "!", "?", "…")
+_INNER_MARKS = (",", ";", ":", ")")
+_CLOSING_QUOTES = ("»", "”", '"', ")")
+"""A date closes its clause before a mark of `_FINAL_MARKS`. It closes before a mark of `_INNER_MARKS` only where a
+word comes before it in the clause: a comma often opens a parenthesis, and the clause goes on after it ("Первого
+мая, в субботу, мы поехали на дачу"). Closing quotes may stand between the date and the mark."""
 
 
 def _framed(text: str, span: Span, request: Request) -> Span:
     """The date span with the punctuation around it that `date_case` reads. A colon of a label before it, as in
-    `Дата: 9 мая`, is the lead, and the one space after the colon is in the span. A mark of `_CLOSING` after the
-    date, or after "года" after its year, is the trail, and the span holds that "года" too. The lead and the trail
-    hold only punctuation (design section 5.1)."""
+    `Дата: 9 мая`, is the lead, and the one space after the colon is in the span. The closing quotes and the mark
+    after the date, or after "года" after its year, are the trail, and the span holds that "года" too. A mark that a
+    letter or a digit follows is no trail, so that a second pass reads the text the same way. A date right after a
+    comma is in a parenthesis, and only a mark of `_FINAL_MARKS` closes it: "Тогда, первого мая, мы уехали". The lead
+    and the trail hold only punctuation (design section 5.1)."""
     if text[max(0, span.start - 2):span.start] == ": ":
         span = replace(span, start=span.start - 2, lead=":")
     if span.trail:
@@ -701,7 +719,16 @@ def _framed(text: str, span: Span, request: Request) -> Span:
     if span.fields["year"] is not None and not span.fields["suffix"] and text[end:end + 1] in (" ", "\u00a0") \
             and text.startswith(noun, end + 1):
         end += 1 + len(noun)
-    return replace(span, end=end + 1, trail=text[end]) if text[end:end + 1] in _CLOSING else span
+    stop = end
+    while text[stop:stop + 1] in _CLOSING_QUOTES:
+        stop += 1
+    marks = _FINAL_MARKS if text[:span.start].rstrip().endswith(",") else _FINAL_MARKS + _INNER_MARKS
+    following = text[stop + 1:stop + 2]
+    if text[stop:stop + 1] in marks and not (following and is_word_char(following)):
+        stop += 1
+    elif not (stop > end and text[stop - 1] == ")" and ")" in marks):
+        return span
+    return replace(span, end=stop, trail=text[end:stop])
 
 
 def _sentence_end(text: str, end: int) -> bool:

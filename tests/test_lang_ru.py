@@ -1,4 +1,6 @@
 """Russian hints and the default gender. The expected words come from the cited grammar, not from a run."""
+import pytest
+
 from text2spoken import Features, FrozenMap, GrammaticalGender, NormalizationParams, analyze, normalize, render
 
 
@@ -18,3 +20,10 @@ def test_the_default_gender_reads_a_number_with_no_noun():
     params = NormalizationParams(default_gender=FrozenMap({"ru": GrammaticalGender.FEMININE}))
     assert normalize("Итого: 2.", "ru-RU", params) == "Итого: две."
     assert normalize("Итого: 2.", "ru-RU") == "Итого: два."
+
+
+@pytest.mark.parametrize("text", ["1 мая 2024,2 мая", "Было 1 мая 2024,2 мая", "Было 1 мая,2 мая",
+                                  "«Сегодня 1 мая»,2 мая"])
+def test_a_second_pass_reads_a_date_before_a_glued_mark_the_same_way(text):
+    once = normalize(text, "ru-RU")
+    assert normalize(once, "ru-RU") == once
