@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a29](https://github.com/TigreGotico/text2spoken/tree/0.0.2a29) (2026-11-12)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a28...0.0.2a29)
+
+**Merged pull requests:**
+
+- feat\(ru\): Russian language file [\#62](https://github.com/TigreGotico/text2spoken/pull/62) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a28](https://github.com/TigreGotico/text2spoken/tree/0.0.2a28) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a27...0.0.2a28)

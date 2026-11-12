@@ -26,6 +26,7 @@ dependencies = [
 Homepage = "https://github.com/TigreGotico/text2spoken"
 
 [project.optional-dependencies]
+ru = ["ovos-number-parser>=0.24.35a1"]
 test = [
     "pytest",
     "packaging",
