@@ -168,6 +168,17 @@ If the tag is not valid, or if no language file reads the tag, the command write
 
 English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
+Basque reads the variety `eu-ES`, the standard language (batua) of the Euskaltzaindia norms. The test rows in `tests/data/eu.tsv` quote their page of the norm, and no native speaker has checked them. These forms stay as written in Basque:
+
+- A number with spaces between its groups, as in `30 000`, because the group mark of the file is the full stop.
+- A range of percentages, amounts or measures, as in `10%-20%` and `5 €-10 €`. Basque marks a range with the endings `-tik` and `-ra`, and the file has no rule for them.
+- An amount with the currency symbol first and a case ending, as in `€5eko`.
+- A code of letters, a hyphen and digits, as in `COVID-19`. One capital letter before the hyphen reads as a sigla and a number: `A-8` reads "A zortzi".
+- A Roman numeral of one letter, unless a noun of the `roman_nouns` table follows it, as in `V. mendean`, or it is `I`, `V` or `X` with a case ending after a name, as in `Elisabet I.a`. So `B. eta C. aukerak` and `I. eranskina` stay as written.
+- A clock time with no case ending and no day period, as in a timetable.
+
+The file reads `00:00ak` as "gaueko hamabiak" and `01:00ak` as "goizeko ordu bata", with the day period. Araua 203, page 53, reads `01:00` as "gaueko ordu bata". The abbreviation `or.` always reads "orrialdea" and `pl.` "plaza", although the norm also lists other readings. The file has no variety for a dialect, so a tag such as `eu-x-zuberera` reads the standard language.
+
 ## Development
 
 ```bash

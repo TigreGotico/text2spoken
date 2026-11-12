@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import Number
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, digit_run_matches, join_ranges,
-                                          numbers_in, speak_cardinal, speak_lexicon)
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, join_ranges, numbers_in,
+                                          speak_cardinal, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import twelve_hour
@@ -602,43 +602,6 @@ class Abbreviation:
 
 
 @dataclass(frozen=True)
-class Expression:
-    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. Each integer may
-    carry one sign, `-`, `−` or `+`, right before its digits. `−` and `+` are both signs and operators: `−3−3` is
-    "minus three minus three", and `3 − −3` is "three minus minus three".
-
-    An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
-    written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator.
-
-    Two signs before one integer, as in `--3+3` and `3+--3`, keep the expression as written. So does a symbol of
-    the `symbols` table next to the expression, as in `$−3+3`, because no form reads a number next to one."""
-    name: str = "expression"
-    form: Form = Form.EXPRESSION
-
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        operators = re.escape("".join(request.data["operators"]))
-        open_operator = re.compile(f" ?[{operators}]")
-        symbols = request.data["symbols"]
-        for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
-            start, end = match.span()
-            if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
-                    or open_operator.match(text, end)):
-                continue
-            written = match.group().replace(" ", "")
-            first = re.match(f"[{_SIGNS}]?[0-9]+", written).group()
-            pairs = re.findall(f"([{operators}])([{_SIGNS}]*[0-9]+)", written[len(first):])
-            if not pairs:
-                continue
-            signs, others = zip(*pairs)
-            unclear = (any(len(operand) - len(operand.lstrip(_SIGNS)) > 1 for operand in others)
-                       or (start > 0 and (text[start - 1] in symbols
-                                          or (text[start - 1] in _SIGNS and not first[0].isdigit())))
-                       or (end < len(text) and text[end] in symbols))
-            yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": (first, *others), "operators": signs}),
-                       recognizer=self.name, keep=unclear)
-
-
-@dataclass(frozen=True)
 class DateNamed:
     """`March 12, 2024`, `12th of March 2024`, `March 2024`: a date with a month name."""
     name: str = "date_named"
@@ -682,7 +645,7 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
                  SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"], SHARED["measure"],
-                 Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
+                 Year(), SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,

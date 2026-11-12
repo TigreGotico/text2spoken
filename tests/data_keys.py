@@ -97,6 +97,7 @@ SHAPES: dict[str, Shape] = {
     "list_links": WORDS,
     "number_marks": map_of(script, list_of(record(decimal=word, group=text), minimum=1)),
     "operators": map_of(character, word),
+    "patterns": map_of(word, word),
     "percent": record(signs=list_of(word, minimum=1), position=one_of("after", "before", "either")),
     "no_phone_shapes": WORDS,
     "phone_kept_shapes": WORDS,
@@ -134,6 +135,7 @@ READERS: dict[str, frozenset[str]] = {
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes"}),
+    "expression": frozenset({"operators", "patterns", "symbols"}),
     "color": frozenset({"color_words"}),
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
@@ -147,5 +149,7 @@ of `effective_params`."""
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 
-OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks"})
-"""Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
+OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word"})
+"""Keys whose absence means that the language has none, so a file that uses their reader may leave them out.
+Design section 4.2 lets a language have no range word: "A language that marks a range with case endings has no
+range word", and "With no range word the default leaves the pair as written"."""

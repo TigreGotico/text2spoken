@@ -179,7 +179,7 @@ def test_clause_6_requires_no_key_of_a_verbalizer_that_the_file_replaces():
 
 
 def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
-    data = freeze({**thaw(STUB.data), "range_word": "al", "time_words": ["je"], "day_periods": {"am": ["am"]},
+    data = freeze({**thaw(STUB.data), "time_words": ["je"], "day_periods": {"am": ["am"]},
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
                                    {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}]})
     readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"])
@@ -342,7 +342,7 @@ def test_clause_7_gives_the_helper_back_when_a_recognizer_raises(en):
     with pytest.raises(RuntimeError, match="a recognizer fails"):
         contract.clause_7("en", replace(en, recognizers=(*en.recognizers, _Raises())))
     assert recognizers.digit_run_matches is HELPER
-    assert import_module("text2spoken.lang.en").digit_run_matches is HELPER
+    assert digit_run_matches is HELPER
 
 
 def test_clause_8_bites(en):
@@ -387,17 +387,22 @@ def test_clause_11_bites(en):
 
 
 @pytest.mark.parametrize("source", ["import requests\n", "import tugalex\n", "from orthography2ipa import x\n",
-                                    "def f():\n    import scriptconv\n"])
+                                    "def f():\n    import scriptconv\n",
+                                    "from text2spoken.lang.en import Expression\n"])
 def test_clause_12_bites(en, source):
     with pytest.raises(AssertionError):
         contract.clause_12("en", en, source=source)
+
+
+NO_PARSERS = ["linguatag[langcodes]>=0.1.5a1", "unicode-rbnf>=2.4.1", "quebra-frases>=0.3.7"]
+"""The requirements of an install that holds none of the parsers."""
 
 
 @pytest.mark.parametrize("source", ["def f():\n    import ovos_number_parser\n", "def f():\n    import tugalex\n",
                                     "import ovos_color_parser\n", "def f():\n    from ovos_date_parser import x\n"])
 def test_clause_12_bites_on_an_undeclared_dependency(source):
     with pytest.raises(AssertionError, match="does not hold"):
-        contract.clause_12("qac", STUB, source=source)
+        contract.clause_12("qac", STUB, source=source, requirements=NO_PARSERS)
 
 
 def test_clause_12_admits_no_other_extra():
@@ -417,7 +422,7 @@ def test_clause_12_checks_the_dependency_of_each_core_speller():
     """The stub names OvosNumberSpeller, so the import of ovos_number_parser lives in the core, not in the file."""
     spec = replace(STUB, spellers={Form.CARDINAL: OvosNumberSpeller({})})
     with pytest.raises(AssertionError, match="ovos-number-parser"):
-        contract.clause_12("qac", spec, source=OVOS_SOURCE)
+        contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=NO_PARSERS)
     with pytest.raises(AssertionError, match="ovos-number-parser"):
         contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "pt"'])
     contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "qac"'])

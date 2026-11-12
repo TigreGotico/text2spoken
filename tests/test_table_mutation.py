@@ -37,7 +37,8 @@ ENTRIES = {
     "eu": {
         "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero",
         "leads": "-", "case_suffixes": "ko", "time_suffixes": "etan", "time_words": "arratsaldeko",
-        "day_period_words": "15", "hour_words": "1", "months": "martxoaren", "ordinal_words": "1",
+        "day_periods": "pm", "day_period_words": "15", "hour_words": "1", "months": "martxoaren", "roman_nouns": "urte",
+        "code_nouns": "Lege", "ordinal_words": "1",
         "ordinal_suffix": DELETE, "fraction_names": "2", "fraction_word": DELETE, "percent": "word",
         "currencies": "EUR", "units": "kg", "operators": "+", "patterns": "expression", "abbreviations": "etab.",
         "sentence_final": "etab.",
