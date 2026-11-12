@@ -1,0 +1,90 @@
+id	tag	form	text	expected	source	checked_by
+de-001	de-DE	cardinal	Ich habe 1 Frau und 1 Kind.	Ich habe eine Frau und ein Kind.	Wikipedia, German declension (fetched): indefinite article table: accusative feminine eine, neuter ein; de.wikipedia Genus: -e feminine, Kind neuter	unchecked
+de-002	de-DE	cardinal	Für 1 Tag bleibe ich.	Für einen Tag bleibe ich.	Wikipedia, German declension (fetched): indefinite article table: accusative masculine einen; de.wikipedia, Präposition, section Rektion (fetched): für takes the accusative	unchecked
+de-003	de-DE	cardinal	Mit 1 Frau gehe ich.	Mit einer Frau gehe ich.	Wikipedia, German declension (fetched): indefinite article table: dative feminine einer; de.wikipedia, Präposition, section Rektion (fetched): mit takes the dative	unchecked
+de-004	de-DE	cardinal	Mit 1 Kind gehe ich.	Mit einem Kind gehe ich.	Wikipedia, German declension (fetched): indefinite article table: dative neuter einem; de.wikipedia, Präposition, section Rektion (fetched): mit takes the dative	unchecked
+de-005	de-DE	cardinal	Schlagen Sie Seite 1 auf.	Schlagen Sie Seite eins auf.	Duden, Uhr (fetched): es ist ein Uhr, aber es ist eins; a number with no noun after it reads eins	unchecked
+de-006	de-DE	cardinal	Es sind 30 Leute.	Es sind dreißig Leute.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 25: ß after a long vowel or diphthong	unchecked
+de-007	de-CH	cardinal	Es sind 30 Leute.	Es sind dreissig Leute.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 25 E2: In der Schweiz kann man immer ss schreiben	unchecked
+de-008	de-AT	cardinal	Es sind 30 Leute.	Es sind dreißig Leute.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 25 E2: only Switzerland writes ss for ß	unchecked
+de-009	de-DE	cardinal	Es sind 21 Gäste.	Es sind einundzwanzig Gäste.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 36 (1.6): neunzehnhundertneunundachtzig, units before tens, one word	unchecked
+de-010	de-DE	cardinal	Es ist -5 draußen.	Es ist minus fünf draußen.	Duden, Grad (fetched): minus 5 Grad	unchecked
+de-011	de-DE	cardinal	das -5 Wetter	das minus fünf Wetter	Duden, Grad (fetched): minus 5 Grad; phoonnx-shim-diff de row	unchecked
+de-012	de-DE	decimal	Pi ist 3,14.	Pi ist drei Komma eins vier.	de.wikipedia Dezimaltrennzeichen (fetched): Komma-Länder list Germany; digits one by one silver: from memory, not fetched	unchecked
+de-013	de-CH	decimal	Pi ist 3.14.	Pi ist drei Komma eins vier.	de.wikipedia Dezimaltrennzeichen, section Schweiz (fetched): beide werden üblicherweise immer als Komma gelesen; digits one by one silver: from memory, not fetched	unchecked
+de-014	de-DE	ordinal	Er kam im 20. Jh. an.	Er kam im zwanzigsten Jahrhundert an.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 101: Jh. (= Jahrhundert); § 104: der 2. Weltkrieg; Wikipedia, German declension (fetched): adjective table: weak dative -en	unchecked
+de-015	de-DE	ordinal	Der 2. Weltkrieg endete.	Der zweite Weltkrieg endete.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 104: der 2. Weltkrieg; Wikipedia, German declension (fetched): adjective table: weak nominative -e	unchecked
+de-016	de-DE	ordinal	Das 3. Mal klappte es.	Das dritte Mal klappte es.	Wikipedia, German declension (fetched): adjective table: weak nominative neuter -e	unchecked
+de-017	de-DE	ordinal	Ein 2. Versuch folgt.	Ein zweiter Versuch folgt.	Wikipedia, German declension (fetched): adjective table: mixed nominative masculine -er	unchecked
+de-018	de-DE	ordinal	Es war in der 3. Woche.	Es war in der dritten Woche.	Wikipedia, German declension (fetched): adjective table: weak dative feminine -en; de.wikipedia, Präposition, section Rektion (fetched): in takes the dative for a place	unchecked
+de-019	de-CH	ordinal	Der 30. Läufer kam an.	Der dreissigste Läufer kam an.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 25 E2: In der Schweiz kann man immer ss schreiben; Wikipedia, German declension (fetched): adjective table: weak nominative -e	unchecked
+de-020	de-DE	none	Er wurde 2. Sieger.	Er wurde 2. Sieger.	text2spoken-design section 4.2: with no determiner a number and a full stop stay as written	unchecked
+de-021	de-DE	fraction	Es fehlen 3/4 der Strecke.	Es fehlen drei Viertel der Strecke.	de.wikipedia Bruchrechnung (fetched): drei Viertel plus ein Viertel	unchecked
+de-022	de-DE	fraction	Es fehlt 1/4 der Strecke.	Es fehlt ein Viertel der Strecke.	de.wikipedia Bruchrechnung (fetched): drei Viertel plus ein Viertel	unchecked
+de-023	de-DE	fraction	Es fehlt 1/3 der Strecke.	Es fehlt ein Drittel der Strecke.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 58 E5: ein Drittel	unchecked
+de-024	de-DE	fraction	Es fehlen 9/10 der Strecke.	Es fehlen neun Zehntel der Strecke.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 58 E5: neun Zehntel	unchecked
+de-025	de-DE	fraction	Rechne 1/2 plus 1/4.	Rechne ein halb plus ein Viertel.	ein halb: silver: from memory, not fetched; ein Viertel: de.wikipedia Bruchrechnung (fetched)	unchecked
+de-026	de-CH	fraction	Es fehlt 1/30 der Strecke.	Es fehlt ein Dreissigstel der Strecke.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 58 E5: ein Drittel, neun Zehntel; § 25 E2: ss in Switzerland	unchecked
+de-027	de-DE	range	Es dauert 10-20 Minuten.	Es dauert zehn bis zwanzig Minuten.	bis for a range mark: silver: from memory, not fetched	unchecked
+de-028	de-DE	measure	Es hat 20-25 °C.	Es hat zwanzig bis fünfundzwanzig Grad Celsius.	Duden, Grad (fetched): 20 Grad Celsius (20 °C); bis: silver: from memory, not fetched	unchecked
+de-029	de-DE	expression	Es gilt 5+3=8.	Es gilt fünf plus drei gleich acht.	Duden, plus (fetched): fünf plus drei [ist] gleich acht	unchecked
+de-030	de-DE	expression	Es gilt 2 × 3 = 6.	Es gilt zwei mal drei gleich sechs.	gleich: Duden, plus (fetched); mal: silver: from memory, not fetched	unchecked
+de-031	de-DE	date	Am 12.03.2024 regnet es.	Am zwölften März zweitausendvierundzwanzig regnet es.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 36 (1.6): der siebzehnte Oktober; Wikipedia, German declension (fetched): adjective table: weak dative -en; CLDR de months	unchecked
+de-032	de-DE	date	Am 12/03/2024 regnet es.	Am zwölften März zweitausendvierundzwanzig regnet es.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 36 (1.6): der siebzehnte Oktober; Wikipedia, German declension (fetched): adjective table: weak dative -en; CLDR de months	unchecked
+de-033	de-DE	date	Am 3. Mai kaufte ich 3.	Am dritten Mai kaufte ich drei.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 36 (1.6): der siebzehnte Oktober; § 105: one full stop ends the sentence	unchecked
+de-034	de-DE	date	Montag, den 12. März 2024 kam er.	Montag, den zwölften März zweitausendvierundzwanzig kam er.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 36 (1.6): der siebzehnte Oktober; Wikipedia, German declension (fetched): adjective table: weak accusative masculine -en	unchecked
+de-035	de-AT	date	Am 3.1.2024 kam er.	Am dritten Jänner zweitausendvierundzwanzig kam er.	CLDR de-AT gregorian months: Jänner; Amtliches Regelwerk 2018 § 36 (1.6)	unchecked
+de-036	de-AT	date	Am 3. Januar 2024 kam er.	Am dritten Jänner zweitausendvierundzwanzig kam er.	CLDR de-AT gregorian months: Jänner	unchecked
+de-037	de-DE	date	Am 13/13/2024 kam er.	Am 13/13/2024 kam er.	text2spoken-design section 4.2: an impossible date stays as written	unchecked
+de-038	de-DE	time	Wir treffen uns um 14:30 Uhr.	Wir treffen uns um vierzehn Uhr dreißig.	Duden, Uhr (fetched): 6:30 Uhr (gesprochen sechs Uhr dreißig)	unchecked
+de-039	de-DE	time	Um 6:30 Uhr stehe ich auf.	Um sechs Uhr dreißig stehe ich auf.	Duden, Uhr (fetched): 6:30 Uhr (gesprochen sechs Uhr dreißig)	unchecked
+de-040	de-DE	time	Es ist 1 Uhr.	Es ist ein Uhr.	Duden, Uhr (fetched): es ist ein Uhr, aber es ist eins	unchecked
+de-041	de-DE	time	Es ist 11:07 Uhr.	Es ist elf Uhr sieben.	Duden, Uhr (fetched): elf Uhr sieben/11:07 Uhr	unchecked
+de-042	de-DE	time	Das Format ist 16:9.	Das Format ist 16:9.	text2spoken-design section 4.2: a ratio with no clock evidence stays as written	unchecked
+de-043	de-DE	none	Lies Johannes 3:16.	Lies Johannes 3:16.	text2spoken-design section 4.2: a verse reference with no clock evidence stays as written	unchecked
+de-044	de-CH	time	Wir treffen uns um 14.30 Uhr.	Wir treffen uns um vierzehn Uhr dreissig.	Duden, Uhr (fetched): sechs Uhr dreißig; Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 25 E2: ss in Switzerland	unchecked
+de-045	de-DE	time	Wir treffen uns um 14:30.	Wir treffen uns um vierzehn Uhr dreißig.	Duden, Uhr (fetched): 6:30 Uhr (gesprochen sechs Uhr dreißig)	unchecked
+de-046	de-DE	time	Es beginnt um 14:00 Uhr.	Es beginnt um vierzehn Uhr.	Duden, Uhr (fetched): es ist ein Uhr	unchecked
+de-047	de-DE	year	Im Jahr 1989 fiel die Mauer.	Im Jahr neunzehnhundertneunundachtzig fiel die Mauer.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 36 (1.6): neunzehnhundertneunundachtzig	unchecked
+de-048	de-DE	year	Im Jahr 2024 kam er.	Im Jahr zweitausendvierundzwanzig kam er.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF), Zahlen: 2000 € zweitausend Euro; § 36 (1.6): one word	unchecked
+de-049	de-DE	money	Das kostet 2000 €.	Das kostet zweitausend Euro.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF): 2000 € zweitausend Euro	unchecked
+de-050	de-DE	money	Das kostet 2,50 €.	Das kostet zwei Euro fünfzig.	silver: from memory, not fetched	unchecked
+de-051	de-DE	money	Das kostet 0,99 €.	Das kostet neunundneunzig Cent.	silver: from memory, not fetched	unchecked
+de-052	de-DE	money	Das kostet 1 €.	Das kostet ein Euro.	Wikipedia, German declension (fetched): indefinite article table: nominative masculine ein; der Euro silver: from memory, not fetched	unchecked
+de-053	de-DE	money	Das kostet $5.	Das kostet fünf Dollar.	silver: from memory, not fetched	unchecked
+de-054	de-DE	money	Das kostet £3.	Das kostet drei Pfund.	silver: from memory, not fetched	unchecked
+de-055	de-CH	money	Das kostet Fr. 3.50.	Das kostet drei Franken fünfzig.	silver: from memory, not fetched	unchecked
+de-056	de-CH	money	Das kostet CHF 2 Mio.	Das kostet zwei Millionen Franken.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 101: Mio. (= Million(en)); § 103: one full stop after an abbreviation at the end of a sentence	unchecked
+de-057	de-DE	measure	Es wiegt 1,5 kg.	Es wiegt eins Komma fünf Kilogramm.	de.wikipedia Dezimaltrennzeichen (fetched): Komma; silver: from memory, not fetched for eins before Komma	unchecked
+de-058	de-DE	measure	Er fährt 50 km/h.	Er fährt fünfzig Kilometer pro Stunde.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 102: km/h (= Kilometer pro Stunde)	unchecked
+de-059	de-DE	measure	Es hat -5 °C.	Es hat minus fünf Grad Celsius.	Duden, Grad (fetched): minus 5 Grad; 20 Grad Celsius (20 °C)	unchecked
+de-060	de-DE	measure	Es hat 20 °C.	Es hat zwanzig Grad Celsius.	Duden, Grad (fetched): 20 Grad Celsius (20 °C)	unchecked
+de-061	de-DE	measure	Der Raum misst 3x4 m.	Der Raum misst drei mal vier Meter.	mal for a dimension mark: silver: from memory, not fetched	unchecked
+de-062	de-CH	measure	Es wiegt 2'250 kg.	Es wiegt zweitausendzweihundertfünfzig Kilogramm.	de.wikipedia Dezimaltrennzeichen, section Schweiz (fetched): Apostroph als Tausendertrennzeichen	unchecked
+de-063	de-DE	percent	Es sind 5 % mehr.	Es sind fünf Prozent mehr.	Duden, Prozent (fetched): 5 Prozent oder 5 %	unchecked
+de-064	de-DE	percent	das 20% Wetter	das zwanzig Prozent Wetter	Duden, Prozent (fetched): 5 Prozent oder 5 %; phoonnx-shim-diff de row	unchecked
+de-065	de-DE	percent	das 20%.	das zwanzig Prozent.	Duden, Prozent (fetched): 5 Prozent oder 5 %; phoonnx-shim-diff de row	unchecked
+de-066	de-DE	telephone	Tel. 030 1234567	Telefon null drei null eins zwei drei vier fünf sechs sieben	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 101: Tel. (= Telefon); digits one by one silver: from memory, not fetched	unchecked
+de-067	de-DE	telephone	Tel. 030 12345-67	Telefon null drei null eins zwei drei vier fünf sechs sieben	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 101: Tel. (= Telefon); DIN 5008 dash before the extension and digits one by one silver: from memory, not fetched	unchecked
+de-068	de-DE	telephone	Ruf den Notruf 112 an.	Ruf den Notruf eins eins zwei an.	silver: from memory, not fetched	unchecked
+de-069	de-DE	telephone	Ruf +49 30 1234567 an.	Ruf plus vier neun drei null eins zwei drei vier fünf sechs sieben an.	silver: from memory, not fetched	unchecked
+de-070	de-DE	abbreviation	Dr. Das Wetter.	Doktor Das Wetter.	Duden, Doktor (fetched): Abkürzung Dr.; phoonnx-shim-diff de row	unchecked
+de-071	de-DE	abbreviation	Er kommt z. B. heute.	Er kommt zum Beispiel heute.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 101: z. B. (= zum Beispiel)	unchecked
+de-072	de-DE	abbreviation	Er kommt, d. h. heute.	Er kommt, das heißt heute.	silver: from memory, not fetched	unchecked
+de-073	de-CH	abbreviation	Er kommt, d. h. heute.	Er kommt, das heisst heute.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 25 E2: ss in Switzerland; d. h. silver: from memory, not fetched	unchecked
+de-074	de-DE	abbreviation	Äpfel, Birnen usw.	Äpfel, Birnen und so weiter.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 103: one full stop after an abbreviation at the end of a sentence; usw. silver: from memory, not fetched	unchecked
+de-075	de-DE	abbreviation	Lies Nr. 5 vor.	Lies Nummer fünf vor.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 101: lfd. Nr.; Nr. = Nummer silver: from memory, not fetched	unchecked
+de-076	de-DE	abbreviation	Lies #5 vor.	Lies Nummer fünf vor.	silver: from memory, not fetched	unchecked
+de-077	de-DE	abbreviation	Er las Bd. 2.	Er las Band zwei.	Amtliches Regelwerk 2018 (rechtschreibrat.com PDF) § 101: Bd.; Bd. = Band silver: from memory, not fetched	unchecked
+de-078	de-DE	idiom	Wir sind 24/7 offen.	Wir sind vierundzwanzig sieben offen.	silver: from memory, not fetched	unchecked
+de-079	de-DE	color	Die Farbe #ff0000 ist rot.	Die Farbe F F null null null null ist rot.	silver: from memory, not fetched: no colour table is seeded, so the hex digits are spelled	unchecked
+de-080	de-DE	none	Der Tag #decade beginnt.	Der Tag #decade beginnt.	text2spoken-design section 4.2: a hashtag stays as written	unchecked
+de-081	de-DE	money	$5 1/2 5+3 das	fünf Dollar ein halb fünf plus drei das	phoonnx-shim-diff de row; Duden, plus (fetched); ein halb and Dollar silver: from memory, not fetched	unchecked
+de-082	de-DE	color	Die Farbe #ffffff ist weiß.	Die Farbe F F F F F F ist weiß.	silver: from memory, not fetched: no colour table is seeded, so the hex digits are spelled	unchecked
+de-083	de-DE	telephone	Wähle den Notruf 110 oder 112.	Wähle den Notruf eins eins null oder eins eins zwei.	silver: from memory, not fetched	unchecked
+de-084	de-DE	year	Das Telefon war 1990-2000 grau.	Das Telefon war neunzehnhundertneunzig bis zweitausend grau.	Amtliches Regelwerk 2018 § 36 (1.6): neunzehnhundertneunundachtzig; bis silver: from memory, not fetched	unchecked
+de-085	de-DE	telephone	Ruf 030 12345-67 an.	Ruf null drei null eins zwei drei vier fünf sechs sieben an.	DIN 5008 phone shape and digits one by one silver: from memory, not fetched	unchecked
+de-086	de-DE	telephone	Ruf 030 1234567 an.	Ruf null drei null eins zwei drei vier fünf sechs sieben an.	digits one by one silver: from memory, not fetched	unchecked
+de-087	de-DE	none	Es sind 10 000 Leute.	Es sind 10 000 Leute.	text2spoken-design section 4.3: a run of space-separated thousands groups, as in 10 000, stays as written	unchecked
+de-088	de-DE	cardinal	Ich bleibe 1 Woche.	Ich bleibe eine Woche.	Wikipedia, German declension (fetched): indefinite article table: accusative feminine eine; de.wikipedia Genus: -e feminine	unchecked
+de-089	de-DE	cardinal	Mit 1 Auge sieht er.	Mit einem Auge sieht er.	Wikipedia, German declension (fetched): indefinite article table: dative neuter einem; de.wikipedia, Präposition, section Rektion (fetched): mit takes the dative; das Auge silver: from memory, not fetched	unchecked

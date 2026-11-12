@@ -152,6 +152,8 @@ The `tokenizer` argument takes a callable `(text, lang)` that returns a sequence
 
 Each language is one file in `text2spoken/lang/`, named by its primary language subtag. A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written.
 
+`de` serves every German tag. `de-DE` is the default. `de-AT` says `Jänner` for January. `de-CH` writes `ss` for `ß` and takes `.` as the decimal mark. A German number takes the gender and the case of its noun, as in `für einen Tag` and `mit einer Frau`.
+
 To see what a tag reads:
 
 ```bash
