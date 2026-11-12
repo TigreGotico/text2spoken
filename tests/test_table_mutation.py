@@ -34,6 +34,14 @@ EN_ENTRIES = {
 ENTRIES = {
     "en": EN_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
+    "ru": {
+        "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",
+        "range_word": DELETE, "range_marks": "-", "dimension_marks": "×", "dimension_word": DELETE, "time_words": "в",
+        "zero_minutes": DELETE, "months": "марта", "year_noun": "года", "whole": DELETE, "fraction_endings": "one",
+        "decimal_denominators": "десят", "governed_cases": "до", "case_choices": "в", "plural_endings": "ах",
+        "ordinal_endings": "м", "percent": "noun", "currencies": "USD", "scales": "млн", "scale_nouns": "миллион",
+        "units": "кг", "titles": "проф.", "abbreviations": "р-н",
+    },
 }
 TABLES = [(code, table) for code in language_names() for table in sorted(ENTRIES.get(code, ()))]
 
