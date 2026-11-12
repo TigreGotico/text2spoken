@@ -826,8 +826,49 @@ def written_shapes() -> FrozenMap:
     })
 
 
+_OPERAND_SIGNS = "-−+"
+"""The signs that an operand of an expression may carry."""
+
+
+@dataclass(frozen=True)
+class Expression:
+    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side. Each integer may
+    carry one sign, `-`, `−` or `+`, right before its digits. `−` and `+` are both signs and operators: `−3−3` is
+    "minus three minus three", and `3 − −3` is "three minus minus three".
+
+    An operator right after the last integer stays with the expression, so `1+1 × 10%` keeps `1+1 ×` as
+    written: the percentage claims `10`, and a second pass finds `1+1 × ten` with the same open operator.
+
+    Two signs before one integer, as in `--3+3` and `3+--3`, keep the expression as written. So does a symbol of
+    the `symbols` table next to the expression, as in `$−3+3`, because no form reads a number next to one."""
+    name: str = "expression"
+    form: Form = Form.EXPRESSION
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        operators = re.escape("".join(request.data["operators"]))
+        open_operator = re.compile(f" ?[{operators}]")
+        symbols = request.data["symbols"]
+        for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
+            start, end = match.span()
+            if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
+                    or open_operator.match(text, end)):
+                continue
+            written = match.group().replace(" ", "")
+            first = re.match(f"[{_OPERAND_SIGNS}]?[0-9]+", written).group()
+            pairs = re.findall(f"([{operators}])([{_OPERAND_SIGNS}]*[0-9]+)", written[len(first):])
+            if not pairs:
+                continue
+            signs, others = zip(*pairs)
+            unclear = (any(len(operand) - len(operand.lstrip(_OPERAND_SIGNS)) > 1 for operand in others)
+                       or (start > 0 and (text[start - 1] in symbols
+                                          or (text[start - 1] in _OPERAND_SIGNS and not first[0].isdigit())))
+                       or (end < len(text) and text[end] in symbols))
+            yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": (first, *others), "operators": signs}),
+                       recognizer=self.name, keep=unclear)
+
+
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), COLOR)}
+                              Percent(), Money(), Measure(), Telephone(), Expression(), COLOR)}
 """The shared recognizers by name."""

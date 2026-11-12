@@ -358,6 +358,13 @@ def _imports(source: str) -> tuple[set[str], set[str]]:
 
 
 def check_imports(source: str) -> None:
+    """The file imports the core, the standard library and the allowed dependencies. Another language file is
+    none of these, so a change to it would change this language too."""
+    nodes = list(ast.walk(ast.parse(source)))
+    modules = {node.module or "" for node in nodes if isinstance(node, ast.ImportFrom)}
+    modules |= {alias.name for node in nodes if isinstance(node, ast.Import) for alias in node.names}
+    languages = sorted(m for m in modules if m == "text2spoken.lang" or m.startswith("text2spoken.lang."))
+    assert not languages, f"imports the language files {languages}"
     top, nested = _imports(source)
     stdlib = set(sys.stdlib_module_names) | {"__future__"}
     assert top <= stdlib | ALLOWED_IMPORTS | {"text2spoken"}, f"imports {sorted(top - stdlib - ALLOWED_IMPORTS)}"
