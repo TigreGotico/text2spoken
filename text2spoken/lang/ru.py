@@ -56,8 +56,11 @@ DATA = freeze({
     "dimension_word": "на",
     "time_words": ["в", "во", "к", "ко", "до", "с", "со", "после", "по", "от"],
     "zero_minutes": "ноль-ноль",
-    "nominative_dates": ["сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
-    "date_copulas": ["был", "была", "было", "будет", "наступило"],
+    "copulas": ["был", "была", "было", "будет", "есть"],
+    "onset_verbs": ["наступил", "наступила", "наступило", "наступит"],
+    "date_adverbs": ["вот", "и", "наконец", "уже", "тогда", "скоро", "сегодня", "завтра", "вчера", "послезавтра",
+                     "позавчера"],
+    "owner_prepositions": ["у"],
     "collective_numerals": {"2": "двое", "3": "трое", "4": "четверо"},
     "pluralia_tantum": ["суток", "саней", "ножниц", "брюк", "ворот"],
     "collective_persons": ["детей", "ребят", "людей"],
@@ -126,10 +129,15 @@ genitive plural, takes the collective numeral in the nominative and the accusati
 Грамматика-80 § 1369, п. 4; the genitive forms "суток", "ножниц", "ворот" in § 1201). The other collective numerals
 are rare, so "пять суток" takes the cardinal (Розенталь § 165, п. 1). The nouns of `collective_persons` take the
 collective numeral in the nominative: "двое детей, трое ребят, трое молодых людей" (Розенталь § 165, п. 1, 3;
-Грамматика-80 § 1369, п. 2: "четверо детей, трое людей"). Their accusative is the genitive "двоих", which this file
-does not read, so it takes the cardinal. A sign reads "плюс" or "минус", words that do not decline before a number
-(Грамматика-80 § 1834: "плюс-минус единица", "равен минус единице"). `в течение` governs the genitive (Грамматика-80
-§ 1790, § 2710: "в течение двух недель"; Розенталь § 164, п. 3: "в течение двадцати двух суток")."""
+Грамматика-80 § 1369, п. 2: "четверо детей, трое людей"). Their accusative is "двоих детей", which this file does
+not read, and a reader cannot tell it from the nominative where a verb comes before the number: "Я видел 2 детей".
+So the collective numeral reads only where the number is the subject: at the start of its clause, after a form of
+`copulas` ("Нас было двое", § 1369, п. 3) and after a word of `owner_prepositions` and its owner ("У меня жена, двое
+девочек", § 1369, п. 1). In any other place, and after a preposition, the number stays as written. An adjective in
+the genitive plural, in -ых or -их (Грамматика-80 § 1216: "выходных, рабочих"), may stand between the number and
+the noun: "пятеро известных лиц" (§ 1369, п. 2). A sign reads "плюс" or "минус", words that do not decline before a
+number (Грамматика-80 § 1834: "плюс-минус единица", "равен минус единице"). `в течение` governs the genitive
+(Грамматика-80 § 1790, § 2710: "в течение двух недель"; Розенталь § 164, п. 3: "в течение двадцати двух суток")."""
 
 VARIETIES = (Variety("ru-RU"),)
 
@@ -452,6 +460,17 @@ def _counted_amount(span: Span, amount: FrozenMap, noun: FrozenMap, context: Spa
     return f"{words} {counted(noun, _written(amount), case, request)}"
 
 
+def _adjectival(word: str) -> bool:
+    return len(word) > 2 and word.endswith(("ых", "их"))
+
+
+def _subject_place(context: SpanContext) -> bool:
+    """Whether a number with no preposition before it stands where the subject of its clause stands: first in the
+    clause, after a form of `copulas`, or after a word of `owner_prepositions` and its owner."""
+    data, words = context.request.data, [word.lower() for word in context.before]
+    return not words or words[-1] in data["copulas"] or (len(words) > 1 and words[-2] in data["owner_prepositions"])
+
+
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """A cardinal in the gender and the case of its context. Digits with a leading zero after a lead read one by
     one."""
@@ -461,11 +480,15 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         words = " ".join(request.data["digit_words"][int(digit)] for digit in digits)
     else:
         features = agreement(digits, context)
-        noun = context.after[0].lower() if context.after else ""
-        collective = request.data["collective_numerals"].get(digits)
+        data = request.data
+        noun = next((word.lower() for word in context.after if not _adjectival(word.lower())), "")
+        collective = data["collective_numerals"].get(digits)
         nominative = features.case in (None, "nominative")
-        if collective and ((noun in request.data["pluralia_tantum"] and (nominative or features.case == "accusative"))
-                           or (noun in request.data["collective_persons"] and nominative)):
+        if collective and noun in data["collective_persons"]:
+            if not (nominative and _subject_place(context)):
+                raise DeclinedReading(f"no reading of {digits} before {noun} as an object or after a preposition")
+            words = collective
+        elif collective and noun in data["pluralia_tantum"] and (nominative or features.case == "accusative"):
             words = collective
         else:
             words = SPELLER.cardinal(digits, features, request)
@@ -546,34 +569,31 @@ def speak_time(span: Span, context: SpanContext) -> str:
 
 
 def date_case(span: Span, context: SpanContext) -> str:
-    """The case of the day of a date. After a preposition it is the case that the preposition governs. With no
-    preposition a date that says when something happens is a time adverbial in the genitive: "встреча пятого мая"
-    (Грамматика-80 § 1168), "Она выедет туда первого декабря" (Розенталь § 94, p. 110). The nominative stays where
-    the date names the day (§ 1167: "называющая форма в заголовках, подписях"): after a label colon, which the span
-    holds as its lead, and for a date that stands alone in its clause, each when no word but "года" follows the date
-    in the clause. A colon that opens a clause, as in "Внимание: 9 мая офис не работает", is no label, so the date
-    there is a time adverbial. The date is the subject after a deictic word of time, as in "Сегодня воскресенье"
-    (§ 2539), also with a form of `date_copulas` between them ("Завтра будет первое мая"), and after such a form
-    that opens the clause: "Было шесть часов вечера, конец мая" (§ 2536), "Наступила осень" (§ 2681). After another
-    word the form of `date_copulas` leaves the date a time adverbial: "Лето наступило первого июня"."""
+    """The case of the day of a date. After a preposition it is the case that the preposition governs. A date that
+    closes its clause reads in the nominative in two places. The first is after a label colon, which the span holds
+    as its lead, where the date names the day (Грамматика-80 § 1167: "называющая форма в заголовках, подписях").
+    The second is where the date is the subject of a form of `copulas` or of `onset_verbs`: "Было шесть часов вечера,
+    конец мая" (§ 2536), "Сегодня воскресенье" (§ 2539), "Наступила осень" (§ 2681). There the clause holds no word
+    before the date but those verbs and the words of `date_adverbs`: "Вот и наступило первое сентября", "Сегодня уже
+    первое мая", and a date alone in its clause. A date closes its clause when only "года" and a mark of `_CLOSING`
+    or the end of the clause follow it. Every other date says when something happens and reads in the genitive:
+    "встреча пятого мая" (§ 1168), "Лето наступило первого июня", "Было первого мая подписано соглашение". A
+    pronoun "это" before the copula is the subject (Розенталь § 189, п. 3: "это была хрестоматия"), so "Это было
+    первого мая" says when something happened."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
     after = context.after[1:] if context.after and context.after[0].lower() in data["year_noun"] else context.after
-    if span.lead == ":" and not after:
+    closed = span.trail in _CLOSING or not after
+    if span.lead == ":" and closed:
         return "nominative"
     words = [word.lower() for word in context.before]
     before = words[-1] if words else ""
     if before in data["governed_cases"] or " ".join(words[-2:]) in data["governed_cases"] \
             or before in data["case_choices"]:
         return governed_case(context)
-    if before in data["date_copulas"]:
-        if len(words) == 1:
-            return "nominative"
-        before = words[-2]
-    if before in data["nominative_dates"] or not (context.before or after):
-        return "nominative"
-    return "genitive"
+    subject = set(data["copulas"]) | set(data["onset_verbs"]) | set(data["date_adverbs"])
+    return "nominative" if closed and all(word in subject for word in words) else "genitive"
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -661,11 +681,24 @@ def attach(spoken: str, prefix: str, suffix: str) -> str:
     return prefix + spoken + ("" if suffix.lstrip() == "г." else suffix)
 
 
-def _after_label(text: str, span: Span) -> Span:
-    """The span from the colon of a label before it, as in `Дата: 9 мая`, so that the date can read in the
-    nominative that names it (Грамматика-80 § 1167). The colon is the lead, which holds only punctuation (design
-    section 5.1). The one space after the colon is in the span, and the reading of the date starts with it."""
-    return replace(span, start=span.start - 2, lead=":") if text[max(0, span.start - 2):span.start] == ": " else span
+_CLOSING = (",", ".", ";", ":", "!", "?", ")", "…")
+"""The marks that close a date in its clause for `date_case`."""
+
+
+def _framed(text: str, span: Span, request: Request) -> Span:
+    """The date span with the punctuation around it that `date_case` reads. A colon of a label before it, as in
+    `Дата: 9 мая`, is the lead, and the one space after the colon is in the span. A mark of `_CLOSING` after the
+    date, or after "года" after its year, is the trail, and the span holds that "года" too. The lead and the trail
+    hold only punctuation (design section 5.1)."""
+    if text[max(0, span.start - 2):span.start] == ": ":
+        span = replace(span, start=span.start - 2, lead=":")
+    if span.trail:
+        return span
+    end, noun = span.end, request.data["year_noun"][1]
+    if span.fields["year"] is not None and not span.fields["suffix"] and text[end:end + 1] in (" ", "\u00a0") \
+            and text.startswith(noun, end + 1):
+        end += 1 + len(noun)
+    return replace(span, end=end + 1, trail=text[end]) if text[end:end + 1] in _CLOSING else span
 
 
 def _sentence_end(text: str, end: int) -> bool:
@@ -750,20 +783,20 @@ class DateNamed:
                     and is_valid(year, month, day)) or (start and text[start - 1] in ".,/-"):
                 continue
             suffix = match.group(4) or ""
-            yield _after_label(text, Span(start, end, Form.DATE,
-                                          FrozenMap({"year": year, "month": month, "day": day, "written_order": "DMY",
-                                                     "month_written": "name", "prefix": "", "suffix": suffix}),
-                                          trail="." if suffix and _sentence_end(text, end) else "",
-                                          recognizer=self.name))
+            yield _framed(text, Span(start, end, Form.DATE,
+                                     FrozenMap({"year": year, "month": month, "day": day, "written_order": "DMY",
+                                                "month_written": "name", "prefix": "", "suffix": suffix}),
+                                     trail="." if suffix and _sentence_end(text, end) else "", recognizer=self.name),
+                          request)
 
 
 @dataclass(frozen=True)
 class LabelledDateNumeric(DateNumeric):
-    """The shared numeric date, `Дата: 09.05.1945`, with the colon of a label before it as its lead."""
+    """The shared numeric date, `Дата: 09.05.1945`, with the punctuation around it that `_framed` adds."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in super().find(text, tokens, request):
-            yield _after_label(text, span)
+            yield _framed(text, span, request)
 
 
 @dataclass(frozen=True)
