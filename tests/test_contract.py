@@ -397,7 +397,7 @@ def test_clause_12_bites(en, source):
                                     "import ovos_color_parser\n", "def f():\n    from ovos_date_parser import x\n"])
 def test_clause_12_bites_on_an_undeclared_dependency(source):
     with pytest.raises(AssertionError, match="does not hold"):
-        contract.clause_12("qac", STUB, source=source, requirements=[])
+        contract.clause_12("qac", STUB, source=source)
 
 
 def test_clause_12_admits_no_other_extra():
@@ -417,7 +417,7 @@ def test_clause_12_checks_the_dependency_of_each_core_speller():
     """The stub names OvosNumberSpeller, so the import of ovos_number_parser lives in the core, not in the file."""
     spec = replace(STUB, spellers={Form.CARDINAL: OvosNumberSpeller({})})
     with pytest.raises(AssertionError, match="ovos-number-parser"):
-        contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=[])
+        contract.clause_12("qac", spec, source=OVOS_SOURCE)
     with pytest.raises(AssertionError, match="ovos-number-parser"):
         contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "pt"'])
     contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "qac"'])

@@ -1,10 +1,11 @@
 """Russian: ru-RU, the one variety, which every other ru-* tag selects through closest_lang.
 
-Nominative cardinals and ordinals come from ovos-number-parser, and the other cases from CLDR RBNF, with one rule
-set for each gender and case (design section 5.4). A number agrees in gender and case with the noun it counts, and
-a preposition before it gives the case. The rules cite these sources:
+Nominative cardinals come from ovos-number-parser, and the other cases from CLDR RBNF, with one rule set for each
+gender and case (design section 5.4). Ordinals follow the rules of Грамматика-80 over these cardinal words. A number
+agrees in gender and case with the noun it counts, and a preposition before it gives the case. The rules cite these
+sources:
 
-- Грамматика-80: Русская грамматика, т. I, АН СССР, 1980, by paragraph (rusgram.narod.ru).
+- Грамматика-80: Русская грамматика, т. I-II, АН СССР, 1980, by paragraph (rusgram.narod.ru).
 - Розенталь: Д. Э. Розенталь, Справочник по правописанию и литературной правке, 4-е изд., 1985, by paragraph.
 - Правила-2006: Правила русской орфографии и пунктуации. Полный академический справочник, 2006, by paragraph
   (orfo.ruslang.ru).
@@ -20,7 +21,7 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.recognizers import SHARED, speak_lexicon
+from text2spoken.core.recognizers import SHARED, numbers_in, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
@@ -53,8 +54,10 @@ DATA = freeze({
     "range_marks": ["-", "–", "—"],
     "dimension_marks": ["×"],
     "dimension_word": "на",
-    "time_words": ["в", "во", "к", "ко", "до", "с", "со", "после", "около", "по", "от"],
+    "time_words": ["в", "во", "к", "ко", "до", "с", "со", "после", "по", "от"],
     "zero_minutes": "ноль-ноль",
+    "nominative_dates": ["сегодня", "завтра", "вчера", "послезавтра", "позавчера", "был", "было", "будет",
+                         "наступило"],
     "months": ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября",
                "ноября", "декабря"],
     "year_noun": ["год", "года", "году", "год", "годом", "году"],
@@ -66,7 +69,8 @@ DATA = freeze({
         "без": "genitive", "для": "genitive", "до": "genitive", "из": "genitive", "из-за": "genitive",
         "из-под": "genitive", "кроме": "genitive", "от": "genitive", "ради": "genitive", "у": "genitive",
         "около": "genitive", "после": "genitive", "вокруг": "genitive", "против": "genitive", "среди": "genitive",
-        "свыше": "genitive", "к": "dative", "ко": "dative", "согласно": "dative", "вопреки": "dative",
+        "свыше": "genitive", "более": "genitive", "менее": "genitive", "к": "dative", "ко": "dative",
+        "согласно": "dative", "вопреки": "dative",
         "про": "accusative", "через": "accusative", "сквозь": "accusative", "над": "instrumental",
         "перед": "instrumental", "при": "prepositional", "о": "prepositional", "об": "prepositional",
     },
@@ -107,20 +111,40 @@ DATA = freeze({
     "abbreviations": {"б-ка": "библиотека", "р-н": "район", "з-д": "завод"},
     "symbols": {"%": "percent", "₽": "money", "$": "money", "€": "money", "°": "measure", "×": "measure"},
 })
-"""Unit symbols, `млн` and `млрд` take no full stop (Правила-2006 § 209). The unit names are those of the
-International System of Units in Russian (ru.wikipedia.org, Международная система единиц). `°С` holds a Cyrillic С,
-which Russian text also writes. A graphic abbreviation reads as the word it shortens (Правила-2006, Графические
-сокращения, before § 209)."""
+"""A time word marks a clock time; `около` is none, because it comes before a quantity (Грамматика-80 § 1807:
+"около пяти километров"). `более` and `менее` are no prepositions, but a number after them takes the genitive: "более
+трех недель" (Розенталь § 190, п. 1 а)), "не менее десяти" (Грамматика-80 § 3123); after `около` and `свыше` too
+(Грамматика-80 § 1807, § 1658). Unit symbols, `млн` and `млрд` take no full stop (Правила-2006 § 209). The unit
+names are those of the International System of Units in Russian (ru.wikipedia.org, Международная система единиц).
+`°С` holds a Cyrillic С, which Russian text also writes. A graphic abbreviation reads as the word it shortens
+(Правила-2006, Графические сокращения, before § 209)."""
 
 VARIETIES = (Variety("ru-RU"),)
 
 _ONE_WORDS = ("один", "одна", "одно", "одну", "одного", "одной", "одному", "одним", "одном")
 _SCALE_WORD = re.compile("(?:тысяч|миллион|миллиард|триллион|квадриллион)")
+_INNER_THOUSAND = re.compile("((?:миллион|миллиард)[а-я]*) тысяча")
 _YO = (("трех", "трёх"), ("четырех", "четырёх"), ("четырем", "четырём"), ("четверт", "четвёрт"))
-_ORDINAL_ENDINGS = ("ый", "ий", "ой", "ая", "ья", "ое", "ье", "ые", "ьи", "ых", "их", "ьих", "ого", "его", "ьего",
-                    "ому", "ему", "ьему", "ым", "им", "ьим", "ом", "ем", "ьем", "ую", "ью", "ей", "ьей", "ыми", "ими",
-                    "ьими")
+_ORDINAL_STEMS = {0: "нулев", 1: "перв", 2: "втор", 3: "трет", 4: "четвёрт", 7: "седьм", 40: "сороков", 100: "сот"}
+"""The ordinal stems that the genitive of the cardinal does not give (Грамматика-80 § 679 and its note): "первый",
+"второй", "третий", "четвёртый", "седьмой", "сороковой", "сотый". "нулевой" is the CLDR form (common/rbnf/ru.xml)."""
+_STRESSED = frozenset({0, 2, 6, 7, 8, 40})
+"""The ordinals with a stressed ending, which take -ой in the masculine nominative: "второй", "шестой", "седьмой",
+"восьмой", "сороковой" (Грамматика-80 § 679, § 1311 "молод-ой")."""
+_HARD_ENDINGS = {M: ("ый", "ого", "ому", "ый", "ым", "ом"), N: ("ое", "ого", "ому", "ое", "ым", "ом"),
+                 F: ("ая", "ой", "ой", "ую", "ой", "ой"), "plural": ("ые", "ых", "ым", "ые", "ыми", "ых")}
+"""The hard adjective declension (Грамматика-80 § 1311, "нов-ый"), by which ordinals decline (§ 1310)."""
+_THIRD_ENDINGS = {M: ("ий", "ьего", "ьему", "ий", "ьим", "ьем"), N: ("ье", "ьего", "ьему", "ье", "ьим", "ьем"),
+                  F: ("ья", "ьей", "ьей", "ью", "ьей", "ьей"), "plural": ("ьи", "ьих", "ьим", "ьи", "ьими", "ьих")}
+""""третий" declines by the first kind of the pronominal declension (Грамматика-80 § 1317, § 1318: треть-его,
+треть-ему, треть-ем)."""
+_COMPOUND_SCALES = ((10**6, "миллионн"), (1000, "тысячн"))
+_COMPOUND_WORDS = {"ста": "сто", "девяноста": "девяносто", "одного": "одно"}
+"""In an ordinal in -тысячный or -миллионный the words before it take the genitive and join (Грамматика-80 § 758,
+note: "двухсотпятидесятитысячный"), but "сто" and "девяносто" keep their form and "один" reads "одно" (Грамматика-80
+§ 775, п. 3; Розенталь § 42, п. 6: "одногодичный, девяностолетие, стократный")."""
 _ADJECTIVE_PLURAL = ("ых", "их", "ые", "ие", "ыми", "ими")
+_DISTRIBUTIVE_DATIVE = ("1000", "1000000", "1000000000")
 _RBNF_CASE = {"nominative": "", "genitive": "-genitive", "dative": "-dative", "accusative": "-accusative",
               "instrumental": "-ablative", "prepositional": "-locative"}
 
@@ -128,40 +152,40 @@ _RBNF_CASE = {"nominative": "", "genitive": "-genitive", "dative": "-dative", "a
 def standard(words: str) -> str:
     """A reading in the standard form. The number 1 is not said before "тысяча" or "миллион" at the start, as
     Грамматика-80 § 1378 declines "тысяча двести восемьдесят семь" and Розенталь § 164, п. 2 writes "в тысяча
-    девятьсот шестьдесят пятом году". The number words take ё (Грамматика-80 § 1374, Правила-2006 § 5)."""
+    девятьсот шестьдесят пятом году". Inside a number "одна тысяча" keeps "одна": a number has one word for each
+    significant digit, and the words "тысяча" and "миллион" besides (Розенталь § 45, п. 2). The number words take ё
+    (Грамматика-80 § 1374, Правила-2006 § 5)."""
     first, _, rest = words.partition(" ")
     if first in _ONE_WORDS and _SCALE_WORD.match(rest):
         words = rest
+    words = _INNER_THOUSAND.sub(r"\1 одна тысяча", words)
     for written, spelled in _YO:
         words = words.replace(written, spelled)
     return " ".join(f"трём{word[4:]}" if word.startswith("трем") and not word.startswith("тремя") else word
                     for word in words.split())
 
 
-def _rule_sets(kind: str) -> dict[Features, str]:
-    """The RBNF rule set of each gender and case. The masculine and the neuter decline the same in the oblique
-    cases (Грамматика-80 § 1374, § 1378), and the masculine cardinal of the prepositional takes the neuter rule set,
+def _rule_sets() -> dict[Features, str]:
+    """The RBNF cardinal rule set of each gender and case. The masculine and the neuter decline the same in the
+    oblique cases (Грамматика-80 § 1374, § 1378), and the masculine of the prepositional takes the neuter rule set,
     because the masculine one keeps the tens in the nominative: "двадцать одном" for "двадцати одном"."""
-    names = {Features(): f"spellout-{kind}-masculine"}
+    names = {Features(): "spellout-cardinal-masculine"}
     for case, suffix in _RBNF_CASE.items():
-        masculine = "neuter" if (kind, case) == ("cardinal", "prepositional") else "masculine"
-        names[Features(case=case)] = f"spellout-{kind}-{masculine}{suffix}"
+        masculine = "neuter" if case == "prepositional" else "masculine"
+        names[Features(case=case)] = f"spellout-cardinal-{masculine}{suffix}"
         for gender in (M, F, N):
             name = masculine if gender is M else gender.value
-            names[Features(gender=gender, case=case)] = f"spellout-{kind}-{name}{suffix}"
+            names[Features(gender=gender, case=case)] = f"spellout-cardinal-{name}{suffix}"
     return names
 
 
 class RussianSpeller:
-    """ovos-number-parser for the nominative, and CLDR RBNF for the other cases and the plural ordinals."""
+    """Cardinals: ovos-number-parser for the nominative, and CLDR RBNF for the other cases. Ordinals: the rules of
+    Грамматика-80, over the cardinal words of this speller."""
 
     def __init__(self):
         self.nominative = OvosNumberSpeller({M: "masculine", F: "feminine", N: "neutral"})
-        self.cases = RbnfSpeller(cardinal=_rule_sets("cardinal"), ordinal=_rule_sets("ordinal"))
-        self.plural = RbnfSpeller(cardinal={Features(): "spellout-cardinal-plural"},
-                                  ordinal={Features(): "spellout-ordinal-plural"}
-                                  | {Features(case=case): f"spellout-ordinal-plural{suffix}"
-                                     for case, suffix in _RBNF_CASE.items()})
+        self.cases = RbnfSpeller(cardinal=_rule_sets(), ordinal={Features(): "spellout-ordinal-masculine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         if features.case in (None, "nominative"):
@@ -171,17 +195,41 @@ class RussianSpeller:
         return standard(words)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """RBNF reads no ordinal of 10 000 and above: it gives a cardinal such as "десять тысяч". A reading whose
-        last word has no ending of an ordinal declines."""
-        if features.number == "plural":
-            words = self.plural.ordinal(digits, Features(case=features.case), request)
-        elif features.case in (None, "nominative"):
-            words = self.nominative.ordinal(digits, Features(gender=features.gender), request)
-        else:
-            words = self.cases.ordinal(digits, features, request)
-        if not words.endswith(_ORDINAL_ENDINGS):
+        """Only the last word of an ordinal declines, and the words before it are the cardinal in the nominative:
+        "тысяча двести сороковой" (Грамматика-80 § 758), "в тысяча девятьсот шестьдесят пятом году" (Розенталь
+        § 164, п. 2). The last word is an adjective whose stem is that of the oblique cases of its cardinal:
+        "восьми - восьмой, пятидесяти - пятидесятый, двухсот - двухсотый" (Грамматика-80 § 679). A round number of
+        thousands or millions ends in one word in -тысячный or -миллионный (§ 758, note). An ordinal of a billion
+        and above declines."""
+        value = bounded_integer(digits)
+        if value is None or value >= 10**9:
             raise DeclinedReading(f"no ordinal reading of {len(digits)} digits")
-        return standard(words)
+        stem, tail = self._ordinal_stem(value, request)
+        endings = _THIRD_ENDINGS if stem == _ORDINAL_STEMS[3] else _HARD_ENDINGS
+        case = CASES.index(features.case or "nominative")
+        if features.number == "plural":
+            ending = endings["plural"][case]
+        else:
+            gender = features.gender or M
+            stressed = gender is M and case in (0, 3) and tail in _STRESSED
+            ending = "ой" if stressed else endings[gender][case]
+        head = value - tail
+        words = f"{self.cardinal(str(head), Features(gender=M), request)} " if head else ""
+        return words + stem + ending
+
+    def _ordinal_stem(self, value: int, request: Request) -> tuple[str, int]:
+        """The stem of the last word and the part of the value that it reads."""
+        for scale, word in _COMPOUND_SCALES:
+            if value and value % scale == 0 and (count := value // scale % 1000):
+                if count == 1:
+                    return word, scale
+                genitive = self.cardinal(str(count), Features(gender=M, case="genitive"), request)
+                return "".join(_COMPOUND_WORDS.get(part, part) for part in genitive.split()) + word, count * scale
+        tail = value % 1000 if value % 100 == 0 else value % 100 if value % 100 < 20 or value % 10 == 0 \
+            else value % 10
+        if tail in _ORDINAL_STEMS:
+            return _ORDINAL_STEMS[tail], tail
+        return self.cardinal(str(tail), Features(gender=M, case="genitive"), request).rstrip("иа"), tail
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         """A year is a masculine ordinal: "в тысяча девятьсот шестьдесят пятом году" (Розенталь § 164, п. 2)."""
@@ -221,11 +269,15 @@ def counted(noun: FrozenMap, written: str, case: str, request: Request) -> str:
     """The form of a noun after a number (Грамматика-80 § 1371). In the nominative and the accusative it is the
     singular after the category one, the genitive singular after few and the genitive plural after many; in the
     other cases the noun agrees, singular after one and plural after the rest. After a decimal the noun takes the
-    genitive singular: "35,5 процента" (Розенталь § 164, п. 8; Грамматика-80 § 1367)."""
+    genitive singular: "35,5 процента" (Розенталь § 164, п. 8; Грамматика-80 § 1367). After the dative of
+    "тысяча", "миллион" and "миллиард", which are nouns (Грамматика-80 § 1372), the noun takes the genitive plural:
+    "по тысяче книг, по миллиону жителей" (Розенталь § 164, п. 7 а))."""
     category = plural_category(request, written)
     index = CASES.index(case)
     if category == "other":
         form = noun["singular"][1]
+    elif case == "dative" and written in _DISTRIBUTIVE_DATIVE:
+        form = noun["plural"][1]
     elif case in ("nominative", "accusative"):
         form = {"one": noun["singular"][index], "few": noun["singular"][1]}.get(category, noun["plural"][1])
     else:
@@ -233,11 +285,13 @@ def counted(noun: FrozenMap, written: str, case: str, request: Request) -> str:
     return form + noun["tail"]
 
 
-def governed_case(context: SpanContext, word_after: str = "", category: str = "many") -> str:
+def governed_case(context: SpanContext, word_after: str = "", category: str = "many", digits: str = "") -> str:
     """The case of a hint, else the case that the preposition before a number governs. A preposition of one case
     gives it (Грамматика-80 § 1657, § 1658). A preposition of two or three cases takes the one that the ending of
     the noun after the number shows: a plural ending, or after the category one a singular ending of the
-    prepositional or the instrumental. With no such ending, the first case of `case_choices` applies."""
+    prepositional or the instrumental. With no such ending, the first case of `case_choices` applies. Distributive
+    `по` takes the dative of "один", "тысяча", "миллион" and "миллиард": "по одному рублю, по тысяче книг, по
+    миллиону жителей" (Розенталь § 164, п. 7 а)), and the accusative of the other numbers (п. 7 б))."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
@@ -249,25 +303,57 @@ def governed_case(context: SpanContext, word_after: str = "", category: str = "m
         return "nominative"
     word = word_after.lower()
     shown = next((case for ending, case in data["plural_endings"].items() if word.endswith(ending)), None)
-    if category == "one":
-        if preposition == "по":
-            shown = "dative"
-        elif word.endswith(("е", "и")):
-            shown = "prepositional"
-        elif word.endswith(("ом", "ем", "ём", "ой", "ей", "ью")):
-            shown = "instrumental"
+    if preposition == "по" and (category == "one" or digits.lstrip("0") in _DISTRIBUTIVE_DATIVE):
+        shown = "dative"
+    elif category == "one" and word.endswith(("е", "и")):
+        shown = "prepositional"
+    elif category == "one" and word.endswith(("ом", "ем", "ём", "ой", "ей", "ью")):
+        shown = "instrumental"
     return shown if shown in choices else choices[0]
 
 
+_MALE_PERSONS = ("мужчин", "юнош", "дяд", "слуг", "вельмож", "воевод", "старост", "старшин", "старейшин", "судь",
+                 "дедушк", "братишк", "мальчишк", "парнишк", "мальчонк")
+"""Stems of the nouns in -а, -я that name a male person, which are masculine (Грамматика-80 § 1136): "вельможа,
+воевода, дядя, мужчина, слуга, староста, старшина, юноша", "братишка, мальчишка, парнишка, дедушка, мальчонка"
+(§ 1184), "старейшина" (§ 1138), "судья" (§ 1173)."""
+_SECOND_DECLENSION = ("а", "я", "ы", "и", "е", "у", "ю", "ой", "ей", "ою", "ею", "ёй")
+_NEUTER_IN_MYA = ("бре", "вре", "вы", "зна", "пле", "и", "пла", "полы", "се", "стре", "те")
+"""The neuter nouns in -мя (Грамматика-80 § 1187: "бремя, время, вымя, знамя, племя, имя, пламя, полымя, семя,
+стремя, темя"), whose oblique forms take -мени."""
+
+
+def _lexical_gender(word: str) -> GrammaticalGender | None:
+    """The gender that the meaning or a closed list gives, in any case: a noun in -а, -я that names a male person,
+    "мать" by meaning (Грамматика-80 § 1140), "путь" (§ 1187, § 1189) and the nouns in -мя (§ 1187)."""
+    if any(word.startswith(stem) and word[len(stem):] in _SECOND_DECLENSION for stem in _MALE_PERSONS):
+        return M
+    if word in ("путь", "пути", "путём"):
+        return M
+    if word in ("мать", "матери", "матерью"):
+        return F
+    for root in _NEUTER_IN_MYA:
+        if word in (root + "мя", root + "мени", root + "менем"):
+            return N
+    return None
+
+
 def noun_gender(word: str, case: str, category: str) -> GrammaticalGender | None:
-    """The gender that the ending of the word after a number shows (Грамматика-80 § 1134). In the nominative an
-    adjective ends in -ая (feminine), -ое (neuter) or -ый, -ий, -ой (masculine); a noun with no ending is
-    masculine, a noun in -а, -я feminine and a noun in -о, -е, -ё neuter, and a noun in -ь has either gender. After
-    the category few the noun takes the genitive singular (Грамматика-80 § 1371), where -ы, -и mark the feminine
-    and -а, -я the masculine and the neuter, which both read "два"."""
+    """The gender that the ending of the word after a number shows (Грамматика-80 § 1134, §§ 1173-1188).
+    In the nominative an adjective ends in -ая (feminine), -ое (neuter) or -ый, -ий, -ой (masculine); a noun with no
+    ending is masculine, a noun in -а, -я feminine and a noun in -о, -е, -ё neuter. A noun in -ь after ж, ш, ч, щ is
+    feminine, because a masculine noun of a stem in a hissing consonant has no ь (§ 1173: "нож, мяч, товарищ"; § 1187:
+    "рожь, ночь, мощь"); another noun in -ь has either gender. After the category few the noun takes the genitive
+    singular (§ 1371), where -ы, -и mark the feminine and -а, -я the masculine and the neuter, which both read "два".
+    In the dative singular -у, -ю mark the masculine and the neuter ("нож-у", "плеч-у", § 1185), and -е, -и the
+    feminine ("карт-е", § 1185; "радост-и", § 1188); in the prepositional -у, -ю mark the masculine (§ 1182), and
+    -и after no и the feminine of the third declension. A prepositional in -е or -ии has any gender: "о нож-е",
+    "о карт-е" (§ 1185), "о лини-и" (§ 1186)."""
     word = word.lower()
     if not word or not all(is_letter(char) for char in word):
         return None
+    if (gender := _lexical_gender(word)) is not None:
+        return gender
     if category == "one" and case in ("nominative", "accusative"):
         if word.endswith(("ая", "яя")) or (case == "accusative" and word.endswith(("ую", "юю", "у", "ю"))):
             return F
@@ -275,11 +361,15 @@ def noun_gender(word: str, case: str, category: str) -> GrammaticalGender | None
             return N
         if word.endswith(("ый", "ий", "ой")) or word[-1] not in "аяеёоиыуюэь":
             return M
-        return F if word.endswith(("а", "я")) else None
+        return F if word.endswith(("а", "я", "жь", "шь", "чь", "щь")) else None
     if (category, case) in (("one", "genitive"), ("few", "nominative"), ("few", "accusative")):
         return F if word.endswith(("ы", "и")) else M if word.endswith(("а", "я")) else None
     if category == "one" and case == "instrumental":
         return F if word.endswith(("ой", "ей", "ью")) else M if word.endswith(("ом", "ем", "ём")) else None
+    if category == "one" and case == "dative":
+        return M if word.endswith(("у", "ю")) else F if word.endswith(("е", "и")) else None
+    if category == "one" and case == "prepositional":
+        return M if word.endswith(("у", "ю")) else F if word.endswith("и") and not word.endswith("ии") else None
     return None
 
 
@@ -293,7 +383,7 @@ def agreement(digits: str, context: SpanContext) -> Features:
     category = plural_category(request, digits.lstrip("0") or "0")
     after = [word for word in context.after if not word.lower().endswith(_ADJECTIVE_PLURAL)]
     word = after[0] if after else ""
-    case = governed_case(context, word, category)
+    case = governed_case(context, word, category, digits)
     default = request.params.default_gender.get(request.language.code) or request.language.default_gender
     return Features(gender=noun_gender(word, case, category) or default, case=case)
 
@@ -318,7 +408,7 @@ def _counted_amount(span: Span, amount: FrozenMap, noun: FrozenMap, context: Spa
     """An amount and its noun. The first number of a range, which takes the range word as its trail, reads alone:
     "десять — двадцать процентов"."""
     request = context.request
-    case = governed_case(context)
+    case = governed_case(context, digits=_written(amount))
     words = _amount(amount, GrammaticalGender(noun["gender"]), case, request)
     if span.trail.strip() == request.data["range_word"]:
         return words
@@ -410,16 +500,37 @@ def speak_time(span: Span, context: SpanContext) -> str:
     return " ".join(words)
 
 
+def date_case(context: SpanContext) -> str:
+    """The case of the day of a date. After a preposition it is the case that the preposition governs. With no
+    preposition a date that says when something happens is a time adverbial in the genitive: "Она выедет туда
+    первого декабря" (Розенталь § 94, p. 110). The nominative stays where the date is the subject or the predicate
+    nominal: after a word of `nominative_dates`, a deictic word of time as in "Сегодня воскресенье" (Грамматика-80
+    § 2539) or a form of "быть" or "наступить" as in "Наступила осень" (§ 2681) and "Это был самый обыкновенный
+    день" (§ 2953), and for a date that stands alone in its clause, with "года" after it or not."""
+    if context.hint is not None and context.hint.case is not None:
+        return context.hint.case
+    data = context.request.data
+    before = context.before[-1].lower() if context.before else ""
+    if before in data["governed_cases"] or before in data["case_choices"]:
+        return governed_case(context)
+    after = context.after[1:] if context.after and context.after[0].lower() in data["year_noun"] else context.after
+    if before in data["nominative_dates"] or not (context.before or after):
+        return "nominative"
+    return "genitive"
+
+
 def speak_date(span: Span, context: SpanContext) -> str:
-    """"двенадцатое марта две тысячи двадцать четвёртого года": the day a neuter ordinal in the case of the
-    preposition, the month in the genitive ("Первое мая", Розенталь § 20) and the year a genitive ordinal of which
+    """"двенадцатое марта две тысячи двадцать четвёртого года": the day a neuter ordinal in the case of
+    `date_case`, the month in the genitive ("Первое мая", Розенталь § 20) and the year a genitive ordinal of which
     only the last word declines (Розенталь § 164, п. 2). A form of "год" that the text writes after the date
-    stands in place of "года"."""
+    stands in place of "года". The first day of a range in one month has no month of its own: "с первого по
+    десятое мая"."""
     request, fields = context.request, span.fields
     words = []
     if fields["day"] is not None:
-        words.append(SPELLER.ordinal(str(fields["day"]), Features(gender=N, case=governed_case(context)), request))
-    words.append(request.data["months"][fields["month"] - 1])
+        words.append(SPELLER.ordinal(str(fields["day"]), Features(gender=N, case=date_case(context)), request))
+    if fields["month"] is not None:
+        words.append(request.data["months"][fields["month"] - 1])
     if fields["year"] is not None:
         words.append(SPELLER.year(str(fields["year"]), Features(case="genitive"), request))
         if fields["suffix"] or not (context.after and context.after[0].lower() in request.data["year_noun"]):
@@ -430,7 +541,8 @@ def speak_date(span: Span, context: SpanContext) -> str:
 def speak_year(span: Span, context: SpanContext) -> str:
     """The case of a year comes from the form of "год" after it: "в 2024 году" is the prepositional, "к 2024
     году" the dative, "2024 года" the genitive. After `г.` the preposition gives the case, and the span reads the
-    form of "год" in that case."""
+    form of "год" in that case. The first year of a range, which has no form of "год", takes the case of its
+    preposition: "с две тысячи первого по две тысячи пятый год" (Розенталь § 164, п. 2)."""
     request = context.request
     nouns = request.data["year_noun"]
     if span.fields["suffix"]:
@@ -439,7 +551,7 @@ def speak_year(span: Span, context: SpanContext) -> str:
         words = SPELLER.year(span.fields["digits"], Features(case=case), request)
         return f"{words} {nouns[CASES.index(case)]}"
     noun = context.after[0].lower() if context.after else ""
-    case = CASES[nouns.index(noun)] if noun in nouns else "nominative"
+    case = CASES[nouns.index(noun)] if noun in nouns else governed_case(context)
     if noun == nouns[5] and governed_case(context) != "dative":
         case = "prepositional"
     return SPELLER.year(span.fields["digits"], Features(case=case), request)
@@ -476,10 +588,11 @@ def speak_ordinal(span: Span, context: SpanContext) -> str:
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
     """A graphic abbreviation reads as the word it shortens (Правила-2006, Графические сокращения, § 209, § 210,
-    § 111, п. 1). `млн` and `млрд` after a number agree with it as nouns (Грамматика-80 § 1371)."""
+    § 111, п. 1). `млн` and `млрд` after a number agree with it as nouns (Грамматика-80 § 1371), and after a
+    decimal they take the genitive singular: "35,5 процента" (Розенталь § 164, п. 8)."""
     data, key = context.request.data, span.fields["key"]
     if key in data["scales"]:
-        number = context.before[-1]
+        number = re.search("[0-9]+(?:[.,][0-9]+)?$", fold_digits(context.before[-1])).group().replace(",", ".")
         case = governed_case(replace(context, before=context.before[:-1]))
         return counted(data["scale_nouns"][data["scales"][key]], number, case, context.request)
     return data["titles"].get(key) or data["abbreviations"][key]
@@ -522,13 +635,15 @@ class Clock:
 @dataclass(frozen=True)
 class Year:
     """Four digits from 1000 to 2999 before a form of "год", as in `в 2024 году` and `2024 года`, or before `г.`,
-    which the span holds: `в 1965 г.`."""
+    which the span holds: `в 1965 г.`. The first year of a range that `по` or `до` joins to such a year is a year
+    too: `с 2001 по 2005 год`."""
     name: str = "year"
     form: Form = Form.YEAR
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         nouns = "|".join(sorted(set(request.data["year_noun"]), key=len, reverse=True))
-        pattern = f"([0-9]{{4}})(?:[  ](?:{nouns})(?![^ .,;:!?)])|([  ]г[.]))"
+        year = f"[  ](?:{nouns})(?![^ .,;:!?)])|[  ]г[.]"
+        pattern = f"([0-9]{{4}})(?:[  ](?:{nouns})(?![^ .,;:!?)])|([  ]г[.])|(?=[  ](?:по|до)[  ][0-9]{{4}}(?:{year})))"
         for match in re.finditer(pattern, fold_digits(text)):
             start = match.start()
             end = match.end() if match.group(2) else match.end(1)
@@ -543,14 +658,27 @@ class Year:
 @dataclass(frozen=True)
 class DateNamed:
     """`12 марта`, `12 марта 2024`, `9 мая 1945 г.`: a day, a month in the genitive and a year of four digits.
-    The span holds `г.` after the year."""
+    The span holds `г.` after the year. In a range of days of one month, as in `с 1 по 10 мая`, the first day is a
+    date with no month or year of its own, and the month of the second day must hold it."""
     name: str = "date_named"
     form: Form = Form.DATE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         months = request.data["months"]
+        folded = fold_digits(text)
+        ranges = f"([0-9][0-9]?)[  ](?:по|до)[  ]([0-9][0-9]?)[  ]({'|'.join(months)})(?:[  ]([0-9]{{4}}))?"
+        for match in re.finditer(ranges, folded):
+            start, end = match.span(1)
+            first, last = int(match.group(1)), int(match.group(2))
+            month = months.index(match.group(3)) + 1
+            year = int(match.group(4)) if match.group(4) else None
+            if is_bounded(text, start, end) and one_digit_set(text[start:end]) and 0 < first < last \
+                    and is_valid(year, month, last) and not (start and text[start - 1] in ".,/-"):
+                yield Span(start, end, Form.DATE,
+                           FrozenMap({"year": None, "month": None, "day": first, "written_order": "DMY",
+                                      "month_written": "name", "prefix": "", "suffix": ""}), recognizer=self.name)
         pattern = f"([0-9][0-9]?)[  ]({'|'.join(months)})(?:[  ]([0-9]{{4}})([  ]г[.])?)?"
-        for match in re.finditer(pattern, fold_digits(text)):
+        for match in re.finditer(pattern, folded):
             start, end = match.span()
             day, month = int(match.group(1)), months.index(match.group(2)) + 1
             year = int(match.group(3)) if match.group(3) else None
@@ -611,6 +739,26 @@ class SpacedNumber:
             yield Span(start, end, Form.CARDINAL,
                        FrozenMap({"digits": match.group().replace(" ", ""), "sign": "", "lead": "", "prefix": "",
                                   "suffix": "", "script": "Latn"}), recognizer=self.name, keep=keep)
+
+
+@dataclass(frozen=True)
+class ScaledMoney:
+    """`1,5 млн ₽`, `5 млрд $`: a number, `млн` or `млрд` and a currency symbol after them. The shared money
+    recognizer reads a scale word only after a number that follows its symbol, as in `$1,5 млн`."""
+    name: str = "scaled_money"
+    form: Form = Form.MONEY
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        symbols = {symbol: code for code, currency in data["currencies"].items() for symbol in currency["symbols"]}
+        pattern = re.compile(f"[ \u00a0]({'|'.join(data['scales'])})[ \u00a0]?({'|'.join(map(re.escape, symbols))})")
+        for number in numbers_in(text, request):
+            match = pattern.match(text, number.end)
+            if match and not number.sign and is_bounded(text, number.start, match.end()):
+                yield Span(number.start, match.end(), Form.MONEY,
+                           FrozenMap({"amount": number.amount(), "currency": symbols[match.group(2)],
+                                      "written_symbol": match.group(2), "scale": match.group(1), "prefix": "",
+                                      "suffix": ""}), recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -678,8 +826,9 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], DateNamed(), SHARED["date_numeric"], Clock(), Year(), HyphenOrdinal(),
-                 SpacedNumber(), SHARED["money"], SHARED["percent"], SHARED["measure"], ExpressionGuard(),
-                 SHARED["fraction"], Abbreviation(), OtherDecimalMark(), SHARED["decimal"], SHARED["cardinal"]),
+                 SpacedNumber(), ScaledMoney(), SHARED["money"], SHARED["percent"], SHARED["measure"],
+                 ExpressionGuard(), SHARED["fraction"], Abbreviation(), OtherDecimalMark(), SHARED["decimal"],
+                 SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.YEAR: speak_year,
         Form.ORDINAL: speak_ordinal, Form.MONEY: speak_money, Form.PERCENT: speak_percent,

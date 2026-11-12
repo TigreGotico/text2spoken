@@ -168,7 +168,9 @@ If the tag is not valid, or if no language file reads the tag, the command write
 
 English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
-Russian reads `ru-RU`, and every other `ru-*` tag selects it. A number agrees in gender and case with the noun after it, and the preposition before it gives the case. A date with no preposition reads in the nominative, as in `первое мая`. A date in the genitive, as in `родился 12 марта`, needs a hint. The test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules, and no native speaker has checked them.
+Russian reads `ru-RU`, and every other `ru-*` tag selects it. Install it with `text2spoken[ru]`, which adds `ovos-number-parser`. A number agrees in gender and case with the noun after it, and the preposition before it gives the case. A noun in the prepositional in `-е` or `-ии` does not show its gender, so `в 1 квартире` reads the masculine "одном". A gender hint gives "одной".
+
+A date with no preposition says when something happens, so it reads in the genitive: `Он родился 12 марта` reads "двенадцатого марта" (Розенталь 1985, § 94: "выедет туда первого декабря"). After a deictic word of time or a form of "быть", the date reads in the nominative, as in `Сегодня 12 марта` and `Это было 1 мая`. A date that stands alone in its clause also reads in the nominative (Грамматика-80, § 2539 and § 2953). The test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules, and no native speaker has checked them.
 
 ## Development
 
