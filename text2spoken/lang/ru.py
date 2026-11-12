@@ -16,17 +16,18 @@ them right (Правила-2006 § 5).
 from __future__ import annotations
 
 import re
+from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.recognizers import SHARED, DateNumeric, numbers_in, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext
+from text2spoken.core.spans import Features, Span, SpanContext, Word, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (Token, context_word, fold_digits, is_bounded, is_letter, is_word_char,
-                                     next_visible, one_digit_set)
+from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_letter, is_word_char, next_visible,
+                                     one_digit_set)
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, freeze
 
@@ -61,6 +62,7 @@ DATA = freeze({
     "onset_verbs": ["наступил", "наступила", "наступило", "наступит"],
     "date_adverbs": ["вот", "и", "а", "но", "да", "ведь", "же", "ну", "ещё", "не", "ли", "наконец", "уже", "тогда",
                      "скоро", "сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
+    "date_particles": ["а", "но", "да", "и", "ведь", "же", "ну", "не", "ли"],
     "owner_prepositions": ["у", "в", "во"],
     "collective_numerals": {"2": "двое", "3": "трое", "4": "четверо"},
     "pluralia_tantum": ["суток", "саней", "ножниц", "брюк", "ворот"],
@@ -600,7 +602,9 @@ def date_case(span: Span, context: SpanContext) -> str:
     something happens and reads in the genitive: "встреча пятого мая" (§ 1168), "Лето наступило первого июня",
     "Было первого мая подписано соглашение". A pronoun "это" before the copula is the subject (Розенталь § 189,
     п. 3: "это была хрестоматия"), so "Это было первого мая" says when something happened. The particle "ли" asks a
-    question and leaves the subject in the nominative: "Падают ли овцы?" (§ 1693, § 1949)."""
+    question and leaves the subject in the nominative: "Падают ли овцы?" (§ 1693, § 1949). The words of `date_particles`
+    alone give no nominative: a reply such as "Да, первого мая" takes its form from the question (§ 1954), which the
+    window does not see."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
@@ -616,7 +620,8 @@ def date_case(span: Span, context: SpanContext) -> str:
             or before in data["case_choices"]:
         return governed_case(context)
     subject = set(data["copulas"]) | set(data["onset_verbs"]) | set(data["date_adverbs"])
-    return "nominative" if closed and all(word in subject for word in words) else "genitive"
+    named = not words or any(word not in data["date_particles"] for word in words)
+    return "nominative" if closed and named and all(word in subject for word in words) else "genitive"
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -713,35 +718,36 @@ _SCOPE = "ru_date_scope"
 opening quote and the date, where one stands among the three words before the date."""
 
 
-def _scope(text: str, start: int) -> int | None:
-    """The number of words between the last colon or opening quote and text[start], if one stands among the three
-    whitespace chunks before it. A colon before a digit is part of a clock time. A quote opens only at the start of
-    a chunk and only when no closing quote stands between it and the date, so a quoted title such as "газету
-    «Завтра»" leaves the window whole."""
-    chunks = text[max(0, start - 200):start].split()[-3:]
-    for index in range(len(chunks) - 1, -1, -1):
-        chunk = chunks[index]
-        colon = chunk.rfind(":")
-        if colon >= 0 and not chunk[colon + 1:colon + 2].isdigit():
-            rest = chunks[index + 1:] + [chunk[colon + 1:]]
-        elif chunk.startswith(_OPENING_QUOTES) and not any(
-                quote in " ".join(chunks[index:])[1:] for quote in ("»", "”", chunk[0])):
-            rest = chunks[index:]
-        else:
-            continue
-        return sum(context_word(word) is not None for word in rest if word)
+def _scope(text: str, words: Sequence[Word], start: int) -> int | None:
+    """The number of context words between the last colon or opening quote and text[start], if one stands among the
+    three context words before it. The words are those of the call's tokens, as `SpanContext.before` holds them. A
+    colon before a digit of the text before the date is part of a clock time. A quote opens only after a space or at
+    the start of the text, and only when no closing quote stands between it and the date, so a quoted title such as
+    "газету «Завтра»" leaves the window whole."""
+    index = bisect_right(words, start, key=lambda word: word.end)
+    window = words[max(0, index - 3):index]
+    if not window:
+        return None
+    for position in range(start - 1, window[0].start - 1, -1):
+        char = text[position]
+        colon = char == ":" and not text[position + 1:min(position + 2, start)].isdigit()
+        quote = (char in _OPENING_QUOTES and (position == 0 or text[position - 1].isspace())
+                 and not any(closing in text[position + 1:start] for closing in ("»", "”", char)))
+        if colon or quote:
+            return sum(word.start > position for word in window)
     return None
 
 
-def _framed(text: str, span: Span, request: Request) -> Span:
+def _framed(text: str, span: Span, words: Sequence[Word], request: Request) -> Span:
     """The date span with the punctuation around it that `date_case` reads. A colon of a label before it, as in
     `Дата: 9 мая`, is the lead, and the one space after the colon is in the span. The closing quotes and the mark
     of `_FINAL_MARKS` after the date, or after "года" after its year, are the trail, and the span holds that "года"
     too. A mark that a letter or a digit follows is no trail, so that a second pass reads the text the same way. The
-    lead and the trail hold only punctuation (design section 5.1). The scope of `_scope` goes into `Request.memo`."""
+    lead and the trail hold only punctuation (design section 5.1). The scope of `_scope` goes into `Request.memo`;
+    `words` are the context words of the call's tokens."""
     if text[max(0, span.start - 2):span.start] == ": ":
         span = replace(span, start=span.start - 2, lead=":")
-    scope = _scope(text, span.start)
+    scope = _scope(text, words, span.start)
     if scope is not None:
         request.memo.setdefault(_SCOPE, {})[span.start] = scope
     if span.trail:
@@ -819,7 +825,7 @@ class DateNamed:
     form: Form = Form.DATE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        months = request.data["months"]
+        months, words = request.data["months"], context_words(tokens)
         folded = fold_digits(text)
         ranges = f"([0-9][0-9]?)[  ](?:по|до)[  ]([0-9][0-9]?)[  ]({'|'.join(months)})(?:[  ]([0-9]{{4}}))?"
         for match in re.finditer(ranges, folded):
@@ -845,7 +851,7 @@ class DateNamed:
                                      FrozenMap({"year": year, "month": month, "day": day, "written_order": "DMY",
                                                 "month_written": "name", "prefix": "", "suffix": suffix}),
                                      trail="." if suffix and _sentence_end(text, end) else "", recognizer=self.name),
-                          request)
+                          words, request)
 
 
 @dataclass(frozen=True)
@@ -853,8 +859,9 @@ class LabelledDateNumeric(DateNumeric):
     """The shared numeric date, `Дата: 09.05.1945`, with the punctuation around it that `_framed` adds."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        words = context_words(tokens)
         for span in super().find(text, tokens, request):
-            yield _framed(text, span, request)
+            yield _framed(text, span, words, request)
 
 
 @dataclass(frozen=True)

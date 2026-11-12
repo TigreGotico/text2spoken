@@ -38,7 +38,7 @@ ENTRIES = {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",
         "range_word": DELETE, "range_marks": "-", "dimension_marks": "×", "dimension_word": DELETE, "time_words": "в",
         "zero_minutes": DELETE, "copulas": "будет", "onset_verbs": "наступило", "date_adverbs": "сегодня",
-        "owner_prepositions": "у", "collective_numerals": "2", "pluralia_tantum": "суток",
+        "date_particles": "да", "owner_prepositions": "у", "collective_numerals": "2", "pluralia_tantum": "суток",
         "collective_persons": "детей", "months": "марта", "year_noun": "года",
         "whole": DELETE, "fraction_endings": "one", "decimal_denominators": "десят", "governed_cases": "до",
         "case_choices": "в", "plural_endings": "ах",
