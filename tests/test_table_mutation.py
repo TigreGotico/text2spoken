@@ -35,7 +35,7 @@ ES_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
     "leads": "-", "fraction_names": "2", "range_word": DELETE, "range_marks": "-", "time_words": "las",
     "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_symbols": " h",
-    "day_periods": "pm", "day_period_words": "tarde", "minute_phrases": "30", "months": "marzo",
+    "day_periods": "pm", "day_period_words": "tarde", "minute_phrases": "30", "months": "marzo", "month_variants": "setiembre",
     "first_of_month": DELETE, "currencies": "EUR", "scales": "millones", "percent": "word", "units": "kg",
     "dimension_marks": "x", "dimension_word": DELETE, "operators": "+", "phone_words": "teléfono",
     "phone_links": "al", "short_codes": "112", "list_links": "o", "phone_shapes": "6[0-9]{2} [0-9]{3} [0-9]{3}",

@@ -172,11 +172,15 @@ Spanish reads the varieties `es-ES`, `es-419`, `es-MX`, `es-AR` and `es-US`, and
 
 Spanish leaves these forms as written or reads them in a limited way:
 
-- A number of 10^18 or more stays as written.
-- Only a whole number from 0 to 24 after `la` or `las` reads as a feminine hour. A larger number after `las` reads in the masculine, also where it counts a feminine noun that the text leaves out, as in `las 200 de la lista`.
-- `primero` for the first day of the month needs `1 de` and a month name. In `del 1 al 5 de mayo`, the `1` reads `uno` in every variety.
+- A number of 10^33 or more stays as written.
+- A round million before a participle or an adjective takes `de`, because these words are also nouns: `Tengo 2000000 ahorrados.` reads "dos millones de ahorrados".
+- `1000000000` reads "un millardo", the output of ovos-number-parser. The DPD («millardo», 1) finds "mil millones" more natural.
+- Only a whole number from 0 to 24 after a lowercase `la` or `las` reads as a feminine hour. `Las 21 ya pasaron.` reads "veintiuno", and `las 200 de la lista` reads in the masculine.
+- An adjective after a number counts as its noun and takes the masculine: `Elige las 21 mejores.` reads "veintiún mejores".
+- `primero` for the first day of the month needs `1 de` and a month name. In `del 1 al 5 de mayo`, the `1` reads `uno` in every variety. `el 01 de mayo`, `el 1° de mayo` and `el 1º de mayo` stay as written. In America, `Es la 1 de mayo.` reads "la primero de mayo".
 - `#` stays as written in `es-ES`, because the reading `número` is American.
-- `$` stays as written in `es-419`, `es-CO`, `es-VE`, `es-BO`, `es-PY` and `es-CR`, because it can be a peso or a dollar there.
+- `$` follows the 2005 text of DPD appendix 4. It stays as written in `es-419`, `es-CO`, `es-VE`, `es-BO`, `es-PY` and `es-CR`, because it can be a peso or a dollar there. `es-CU`, `es-SV` and `es-PA` get `es-419`, so `$` stays as written there too.
+- In `es-419` and the varieties that get it, the comma is the group mark, so `1,5 m` and `2,50 €` stay as written.
 - `es-CR` reads the point as the group mark, as `es` does. CLDR gives a space for `es_CR`, and a number grouped with spaces stays as written.
 - The night starts at 20:00 for a time with `p. m.`. The DPD starts it at nightfall.
 

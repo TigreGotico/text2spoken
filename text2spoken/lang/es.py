@@ -37,6 +37,10 @@ MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agost
           "noviembre", "diciembre"]
 """Month names with a lowercase initial (DPD «fecha», 2.a)."""
 
+MONTH_VARIANTS = ["setiembre"]
+"""Other written forms of a month name: `setiembre` is the preferred form in Costa Rica, Paraguay, Peru and
+Uruguay (DPD «septiembre», 1). A date reads the month from `MONTHS`."""
+
 _INITIAL = re.compile("[A-ZÁÉÍÓÚÑ][.] $")
 _SCALE_NOUN = re.compile(".*(?:llón|llones|llardo|llardos)$")
 
@@ -62,6 +66,7 @@ DATA = freeze({
                          "tarde": "de la tarde", "noche": "de la noche"},
     "minute_phrases": {"0": "en punto", "15": "y cuarto", "30": "y media", "45": "menos cuarto"},
     "months": MONTHS,
+    "month_variants": MONTH_VARIANTS,
     "first_of_month": "cardinal",
     "currencies": {
         "EUR": {"symbols": ["€"], "one": "euro", "other": "euros", "many": "de euros", "gender": "masculine",
@@ -125,7 +130,8 @@ DATA = freeze({
                        "un", "una", "unos", "unas", "se", "me", "te", "nos", "le", "les", "su", "sus", "mi", "mis",
                        "es", "son", "era", "eran", "fue", "fueron", "hay", "había", "hubo", "ha", "han", "hace",
                        "hacía", "ya", "no", "más", "menos", "muy", "también", "hoy", "ayer", "mañana", "ahora",
-                       "después", "antes", "luego", "aquí", "allí", "entonces", "casi", "solo"],
+                       "después", "antes", "luego", "aquí", "allí", "entonces", "casi", "solo", "además", "apenas",
+                       "pues", "mientras", "quizás", "jamás", "atrás", "detrás", "demás"],
     "year_words": ["en", "año", "desde", "hasta", "del"],
     "noun_gender": {"día": "masculine", "días": "masculine", "mapa": "masculine", "mapas": "masculine",
                     "problema": "masculine", "problemas": "masculine", "sistema": "masculine",
@@ -213,16 +219,16 @@ def _plain(text: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
 
 
-LARGEST = 10**18
-"""The first number that stays as written, `un trillón`. Above it, ovos-number-parser reads no ordinal from 10**24,
-and from 10**42 it reads a cardinal as a rounded power of ten: "uno por diez elevado a cuarenta y dos" for
-10**42 + 1."""
+LARGEST = 10**33
+"""The first number that stays as written. ovos-number-parser raises `NotImplementedError` for an ordinal from
+10**24, which declines the span. The CLDR plural rule of `es` raises `decimal.InvalidOperation` from about 10**34,
+because `i % 1000000` passes the default `Decimal` precision of 28 digits."""
 
 
 def _below_largest(digits: str) -> None:
     value = bounded_integer(digits)
     if value is None or value >= LARGEST:
-        raise DeclinedReading(f"{len(digits)} digits reach 10**18, which this file leaves as written")
+        raise DeclinedReading(f"{len(digits)} digits reach 10**33, which this file leaves as written")
 
 
 class SpanishSpeller:
@@ -358,7 +364,7 @@ def _written(amount: FrozenMap) -> str:
 def _first_of_month(span: Span, after: Sequence[str], data) -> bool:
     """`1` before `de` and a month name, as in `el 1 de mayo`."""
     return (span.fields["digits"] == "1" and not span.fields["sign"] and len(after) >= 2 and after[0] == "de"
-            and after[1].lower() in data["months"])
+            and after[1].lower() in (*data["months"], *data["month_variants"]))
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
@@ -537,6 +543,8 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
     unit = request.data["units"][span.fields["unit"]]
+    for amount in amounts:
+        _below_largest(amount["integer"] or "0")
     words = unit[plural_category(request, _written(amounts[-1]))]
     agree = Agreement(GrammaticalGender(unit["gender"]), words)
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
