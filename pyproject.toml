@@ -31,9 +31,11 @@ test = [
     "packaging",
     "ovos-number-parser>=0.24.6a1",
     "ovos-color-parser>=0.12.4a1",
+    "tugalex>=2.0.3a1",
 ]
 pt = [
     "ovos-number-parser>=0.24.35a1",
+    "tugalex>=2.0.3a1",
 ]
 
 [tool.setuptools.dynamic]

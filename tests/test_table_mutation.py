@@ -42,7 +42,7 @@ PT_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "function_words": "agora",
     "color_words": "cor", "colors": "000000", "titles": "Dr.", "abbreviations_any_case": "dr.",
     "honorific_before_name": "D.", "abbreviations": "etc.", "sentence_final": "etc.", "number_abbreviations": "n.º",
-    "ordinal_marks": "ª", "regnal_titles": "D", "century_words": "século", "determiners": "as", "noun_gender": "dia",
+    "ordinal_marks": "ª", "regnal_titles": "D", "century_words": "século", "determiners": "as", "noun_gender": "Isabel",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "min",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
 }

@@ -9,6 +9,9 @@ A number agrees with the noun that it counts. The hint of a frontend decides fir
 number, then a determiner before it, then `default_gender`. `um`, `dois` and the hundreds from `duzentos` have a
 feminine form; a scale word from `milhão` up is a masculine noun, so the words before it stay masculine (Priberam,
 "duas": "uma mesa e duas cadeiras"; "uma": "Flexão feminina de um"; "milhão": "nome masculino").
+
+The gender of a common noun comes from the noun lexicon of `tugalex`, behind the `pt` extra (design section 16).
+Without the extra, the `noun_gender` table and the endings of `gender_suffixes` give it.
 """
 from __future__ import annotations
 
@@ -238,6 +241,19 @@ def _written(amount: FrozenMap) -> str:
     return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
 
 
+_LEXICON_GENDERS = {"m": "masculine", "f": "feminine"}
+
+
+def _lexicon_gender(word: str) -> str | None:
+    """The gender code that `tugalex` gives a word read as a common noun: "m", "f", "mf" for a noun of two genders,
+    or None when tugalex does not know the word or is not installed."""
+    try:
+        from tugalex import TugaLexicon
+    except ImportError:
+        return None
+    return TugaLexicon.get_noun_gender(word)
+
+
 def _gender_of(word: str, request: Request) -> GrammaticalGender | None:
     """The gender of a noun or a given name: the `noun_gender` table, then the endings of `gender_suffixes`."""
     data = request.data
@@ -254,14 +270,27 @@ def _gender_of(word: str, request: Request) -> GrammaticalGender | None:
 
 def agreement(context: SpanContext) -> GrammaticalGender:
     """The gender of a number (design section 5.6): the hint, the noun after the number, a determiner before it,
-    then the `default_gender` of the params, then the language default."""
+    then the `default_gender` of the params, then the language default.
+
+    The `noun_gender` table names a noun first. When tugalex knows the word after the number, a determiner comes
+    before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
+    a noun"), and that word can be an adjective with no noun, as in `as 2 melhores`. A noun of two genders, such as
+    `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. Without
+    tugalex, the endings of `gender_suffixes` come before the determiner."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
     request = context.request
-    gender = _gender_of(context.after[0], request) if context.after else None
-    if gender is None and context.before and context.after:
-        determiner = request.data["determiners"].get(context.before[-1].lower())
-        gender = GrammaticalGender(determiner) if determiner is not None else None
+    data = request.data
+    noun = context.after[0] if context.after else ""
+    determiner = data["determiners"].get(context.before[-1].lower()) if context.before and noun else None
+    listed = data["noun_gender"].get(noun) or data["noun_gender"].get(noun.lower())
+    code = _lexicon_gender(noun) if noun and listed is None and noun not in data["function_words"] else None
+    if code is None:
+        found = _gender_of(noun, request) if noun else None
+        gender = found or (GrammaticalGender(determiner) if determiner else None)
+    else:
+        name = determiner or _LEXICON_GENDERS.get(code)
+        gender = GrammaticalGender(name) if name else None
     return gender or request.params.default_gender.get(LANGUAGE.code) or LANGUAGE.default_gender
 
 
