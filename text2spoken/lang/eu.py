@@ -228,8 +228,9 @@ def speak_time(span: Span, context: SpanContext) -> str:
     the reader leave out: `15:05ean` reads "hamabostak eta bostean", and `13:00etan` "hamahiruetan" (note 43).
     `00:00etan` reads "zero orduan", the formal reading of Araua 35, page 184.
 
-    A time with `a.m.` or `p.m.` after it takes the day period of its hour: `12:15 a.m.` reads "gaueko hamabiak
-    eta hamabost" (Araua 203, note 34, page 49)."""
+    A time with `a.m.` or `p.m.` after it takes the day period of its hour (Araua 203, note 34, page 49):
+    `12:15 a.m.` reads "gaueko hamabiak eta hamabost". Section 14.2, on the same page, reads `12:15` as "hamabiak
+    eta hamabost" or "hamabiak eta laurden", and this file reads the minutes as a number."""
     request = context.request
     data = request.data
     fields = span.fields
@@ -370,7 +371,7 @@ class Roman:
     section 3.1.2, page 7: "X. urtean (hamargarren urtean)").
 
     One capital letter and a full stop is also a label, as `A` to `D` label the rows of a table on page 13 of
-    Araua 203, or an initial, as in `M. Zabala` (Araua 18, page 115). So a numeral of one letter reads as an
+    Araua 203, or an initial, as in `M. Zabala` (Araua 18, page 116). So a numeral of one letter reads as an
     ordinal only before a noun of the `roman_nouns` table, the nouns that pages 7 to 10 number with Roman
     numerals, or when it is `I`, `V` or `X` with a case ending after a capitalised name, as in `Elisabet I.a`."""
     name: str = "roman"
