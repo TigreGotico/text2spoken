@@ -1,0 +1,67 @@
+id	tag	form	text	expected	source	checked_by
+es-001	es-ES	cardinal	Tengo 21 años.	Tengo veintiún años.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.2: verbatim example Tengo veintiún años	unchecked
+es-002	es-ES	cardinal	Hay 21 personas.	Hay veintiuna personas.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.3: the numeral agrees with a feminine noun; RAE, DLE 23.ª ed., «veintiuno» 1.b: veintiuna casas	unchecked
+es-003	es-ES	cardinal	Se repartió 1 arma.	Se repartió un arma.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.2: verbatim example Se repartió un arma; una before tonic /a/ takes the apocope	unchecked
+es-004	es-ES	cardinal	Llegaron 700000 toneladas.	Llegaron setecientas mil toneladas.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.3: verbatim example setecientas mil toneladas; 700000 = 700 × 1000 by hand	unchecked
+es-005	es-ES	cardinal	Hay 1 casa.	Hay una casa.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.1: un(o)/una varies in gender; casa is feminine (RAE, DLE 23.ª ed., «casa»: f.)	unchecked
+es-006	es-ES	cardinal	Hay 1 día libre.	Hay un día libre.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.2: uno before a masculine noun takes the apocope un; día is masculine (RAE, DLE 23.ª ed., «día»: m.)	unchecked
+es-007	es-ES	cardinal	Hay 1 de cada 3.	Hay uno de cada tres.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 1.3 and 2.1: uno with no noun is a pronoun and keeps the full form	unchecked
+es-008	es-ES	cardinal	En 1921 muchos emigraron.	En mil novecientos veintiuno muchos emigraron.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.1: the number itself is the masculine noun uno, so a year keeps veintiuno; 1921 = 1000 + 900 + 21 by hand	unchecked
+es-009	es-ES	cardinal	El paquete de 200 pesa poco.	El paquete de doscientos pesa poco.	RAE-ASALE, DPD 2.ª ed. provisional, «ciento» 1 and «uno» 2.1: with no noun the masculine form doscientos is the number name; pesa is a verb, not a noun	unchecked
+es-010	es-ES	cardinal	La temperatura es -5 hoy.	La temperatura es menos cinco hoy.	RAE, DLE 23.ª ed., «menos» 6: a negative number lleva antepuesto un menos	unchecked
+es-011	es-ES	cardinal	Es el #20 de la lista.	Es el número veinte de la lista.	RAE-ASALE, DPD 2005, Apéndice 4: # is the symbol of número	unchecked
+es-012	es-ES	cardinal	Hay 10 000 personas.	Hay 10 000 personas.	text2spoken-design section 4.3: a run of space-separated thousands stays as written, because a space is no group mark of the number readings	unchecked
+es-013	es-ES	ordinal	Vive en el 1.er piso.	Vive en el primer piso.	RAE-ASALE, DPD 2.ª ed. provisional, «primero» 1.a: primer before a masculine singular noun; RAE-ASALE, DPD 2.ª ed. provisional, «abreviatura» 5.b: the ending in raised letters after a period	unchecked
+es-014	es-ES	ordinal	Es el 3.er día.	Es el tercer día.	RAE-ASALE, DPD 2.ª ed. provisional, «tercero» 1.a: tercer before a masculine singular noun	unchecked
+es-015	es-ES	ordinal	Quedó 2.ª en la carrera.	Quedó segunda en la carrera.	RAE-ASALE, DPD 2.ª ed. provisional, «abreviatura» 5.b: ª marks the feminine ending; RAE, DLE 23.ª ed., «segundo» 1	unchecked
+es-016	es-ES	ordinal	Ganó el 21.er premio.	Ganó el vigésimo primer premio.	RAE, DLE 23.ª ed., «vigésimo» 1: Vigésima segunda edición; RAE-ASALE, DPD 2.ª ed. provisional, «primero» 1.a: primer before a masculine singular noun	unchecked
+es-017	es-ES	decimal	El índice es 3,25.	El índice es tres coma veinticinco.	RAE, DLE 23.ª ed., «coma» 1.b: trescientos veinticinco coma ochenta y cinco; the decimal part reads as a number	unchecked
+es-018	es-ES	decimal	El índice es 2,05.	El índice es dos coma cero cinco.	silver: no source found; a written zero after the mark reads cero (RAE, DLE 23.ª ed., «coma» 1.b covers the rest)	unchecked
+es-019	es-MX	decimal	El índice es 3.25.	El índice es tres punto veinticinco.	RAE-ASALE, DPD 2.ª ed. provisional, «punto» 4.4: the point is the decimal mark in some areas; the mark reads by its name as in RAE, DLE 23.ª ed., «coma» 1.b	unchecked
+es-020	es-US	decimal	El índice es 3.25.	El índice es tres punto veinticinco.	RAE-ASALE, DPD 2.ª ed. provisional, «punto» 4.4: the point is the decimal mark in some areas; the mark reads by its name as in RAE, DLE 23.ª ed., «coma» 1.b	unchecked
+es-021	es-ES	measure	Mide 3,5 m.	Mide tres coma cinco metros.	RAE-ASALE, DPD 2005, Apéndice 3: m is metro; RAE, DLE 23.ª ed., «coma» 1.b	unchecked
+es-022	es-ES	measure	Pesa 31 kg.	Pesa treinta y un kilogramos.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.3: treinta y un kilos; RAE-ASALE, DPD 2005, Apéndice 3: kg is kilogramo	unchecked
+es-023	es-ES	measure	Son 21 t de arena.	Son veintiuna toneladas de arena.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.3: verbatim veintiuna toneladas (no veintiún toneladas); RAE-ASALE, DPD 2005, Apéndice 3: t is tonelada	unchecked
+es-024	es-ES	measure	La pantalla mide 15x8 cm.	La pantalla mide quince por ocho centímetros.	RAE, DLE 23.ª ed., «por» 15: por marks multiplication; RAE-ASALE, DPD 2005, Apéndice 3: cm is centímetro	unchecked
+es-025	es-ES	expression	Calcula 5+3=8 ya.	Calcula cinco más tres igual a ocho ya.	RAE-ASALE, DPD 2005, Apéndice 4: + más, = igual a; RAE, DLE 23.ª ed., «más» 7 and «igual» 5	unchecked
+es-026	es-ES	percent	Subió un 20%.	Subió un veinte por ciento.	RAE-ASALE, DPD 2.ª ed. provisional, «ciento» 3: % reads por ciento	unchecked
+es-027	es-ES	percent	El 31 % votó.	El treinta y uno por ciento votó.	RAE-ASALE, DPD 2.ª ed. provisional, «ciento» 3: verbatim treinta y uno por ciento, not treinta y un por ciento	unchecked
+es-028	es-ES	percent	Al 100 % hoy.	Al cien por cien hoy.	RAE-ASALE, DPD 2.ª ed. provisional, «ciento» 3: cien por cien is the usual form in Spain	unchecked
+es-029	es-MX	percent	Al 100 % hoy.	Al ciento por ciento hoy.	RAE-ASALE, DPD 2.ª ed. provisional, «ciento» 3: ciento por ciento is the usual form in America	unchecked
+es-030	es-ES	fraction	Añade 1/2 taza.	Añade media taza.	RAE-ASALE, DPD 2.ª ed. provisional, «fraccionarios» 2: medio agrees with the noun, as in media tortilla	unchecked
+es-031	es-ES	fraction	El resultado es 1/2.	El resultado es un medio.	RAE-ASALE, DPD 2.ª ed. provisional, «fraccionarios» 3.a: un medio in mathematics	unchecked
+es-032	es-ES	fraction	Faltan 3/4 del total.	Faltan tres cuartos del total.	RAE-ASALE, DPD 2.ª ed. provisional, «fraccionarios» table: 4 is cuarto; plural for a numerator above 1	unchecked
+es-033	es-ES	fraction	Faltan 7/30 del total.	Faltan siete treintavos del total.	RAE-ASALE, DPD 2.ª ed. provisional, «fraccionarios» 4: above décimo the partitive takes -avo, as in cincuentavo	unchecked
+es-034	es-ES	fraction	Toca 1/21 a cada uno.	Toca un veintiunavo a cada uno.	RAE-ASALE, DPD 2.ª ed. provisional, «fraccionarios» 3.c: verbatim veintiunavo	unchecked
+es-035	es-ES	date	Nació el 12/03/2024.	Nació el doce de marzo de dos mil veinticuatro.	RAE-ASALE, DPD 2.ª ed. provisional, «fecha» 1.a: day, month, year; 2.a: the month in lowercase; 3.c: de between the parts	unchecked
+es-036	es-ES	date	Llegó el 1/5/2024.	Llegó el uno de mayo de dos mil veinticuatro.	RAE-ASALE, DPD 2.ª ed. provisional, «fecha» 2.b and «primero» 3: Spain uses the cardinal uno for the first day	unchecked
+es-037	es-MX	date	Llegó el 1/5/2024.	Llegó el primero de mayo de dos mil veinticuatro.	RAE-ASALE, DPD 2.ª ed. provisional, «fecha» 2.b and «primero» 3: America uses the ordinal primero for the first day	unchecked
+es-038	es-AR	date	Llegó el 1/5/2024.	Llegó el primero de mayo de dos mil veinticuatro.	RAE-ASALE, DPD 2.ª ed. provisional, «fecha» 2.b and «primero» 3: America uses the ordinal primero for the first day	unchecked
+es-039	es-ES	time	A las 14:30 llegó.	A las catorce treinta llegó.	RAE-ASALE, DPD 2.ª ed. provisional, «hora» 2.2: the 24-hour model uses the cardinals; 5.4: las once treinta	unchecked
+es-040	es-ES	time	El avión llegará a las 11:30 h.	El avión llegará a las once treinta horas.	RAE-ASALE, DPD 2.ª ed. provisional, «hora» 5.4: verbatim, 11:30 h leído las once treinta horas	unchecked
+es-041	es-ES	time	Llegará a la 1:00 h.	Llegará a la una.	RAE-ASALE, DPD 2.ª ed. provisional, «hora» 5.4: la una, not la 1:00 horas; 2.1.1: the hour reads as the feminine cardinal	unchecked
+es-042	es-ES	time	Son las 0:00 h.	Son las cero horas.	RAE-ASALE, DPD 2.ª ed. provisional, «hora» 5.2: Son las cero horas	unchecked
+es-043	es-ES	time	A las 19:00 empieza.	A las diecinueve horas empieza.	RAE-ASALE, DPD 2.ª ed. provisional, «hora» 3.d: a las diecinueve horas	unchecked
+es-044	es-ES	time	Salió a las 4.30 p. m.	Salió a las cuatro y media de la tarde.	RAE-ASALE, DPD 2.ª ed. provisional, «hora» 2.1.2: verbatim, 4.30 p. m. = cuatro y media de la tarde; 4.a: the point between hour and minutes	unchecked
+es-045	es-ES	time	Abrió a las 3:15 a. m. ayer.	Abrió a las tres y cuarto de la madrugada ayer.	RAE-ASALE, DPD 2.ª ed. provisional, «hora» 2.1: madrugada for the first hours; 2.1.1: y cuarto	unchecked
+es-046	es-ES	money	Cuesta 2,50 €.	Cuesta dos euros con cincuenta céntimos.	RAE-ASALE, DPD 2.ª ed. provisional, «euro» 3: the euro cent is céntimo; silver: no source found; the link word con	unchecked
+es-047	es-ES	money	Cuesta 21 £.	Cuesta veintiuna libras.	RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.3: the numeral agrees with a feminine noun; libra is feminine (RAE, DLE 23.ª ed., «libra»: f.)	unchecked
+es-048	es-ES	money	Pagó $5 ayer.	Pagó cinco dólares ayer.	RAE-ASALE, DPD 2005, Apéndice 4: $ is the dollar of the United States, Puerto Rico and Ecuador; Spain has no peso	unchecked
+es-049	es-419	money	Pagó US$ 2 millones.	Pagó dos millones de dólares.	RAE, DLE 23.ª ed., «millón» 1.a: Un millón de euros, de before the noun; RAE-ASALE, DPD 2005, Apéndice 4: US$	unchecked
+es-050	es-419	money	Pagó $5 ayer.	Pagó $5 ayer.	RAE-ASALE, DPD 2005, Apéndice 4: $ is a peso in some countries and a dollar in others, so the bare sign stays as written	unchecked
+es-051	es-MX	money	Pagó $5 ayer.	Pagó cinco pesos ayer.	RAE-ASALE, DPD 2005, Apéndice 4: $ is the peso of México	unchecked
+es-052	es-AR	money	Pagó $5 ayer.	Pagó cinco pesos ayer.	RAE-ASALE, DPD 2005, Apéndice 4: $ is the peso of Argentina	unchecked
+es-053	es-ES	telephone	Mi teléfono es 915 123 456.	Mi teléfono es nueve uno cinco uno dos tres cuatro cinco seis.	silver: no source found; digit by digit reading; Wikipedia, Telephone numbers in Spain: 9 digits, landline 9xx	unchecked
+es-054	es-ES	telephone	Escribe al 612 345 678 hoy.	Escribe al seis uno dos tres cuatro cinco seis siete ocho hoy.	silver: no source found; digit by digit reading; Wikipedia, Telephone numbers in Spain: mobile 6xx xxx xxx	unchecked
+es-055	es-ES	telephone	Llama al 112 ahora.	Llama al uno uno dos ahora.	silver: no source found; digit by digit reading; Wikipedia, Telephone numbers in Spain: 112 is the emergency number	unchecked
+es-056	es-ES	telephone	Llama al 112 o 091.	Llama al uno uno dos o cero nueve uno.	silver: no source found; digit by digit reading; Wikipedia, Telephone numbers in Spain: 112 and 091	unchecked
+es-057	es-AR	telephone	Mi número es 011 4321 5678.	Mi número es cero uno uno cuatro tres dos uno cinco seis siete ocho.	silver: no source found; digit by digit reading; Wikipedia, Telephone numbers in Argentina: trunk prefix 0, area 11, 8 digits	unchecked
+es-058	es-ES	range	Las ventas del móvil en 1990-2000 subieron.	Las ventas del móvil en mil novecientos noventa a dos mil subieron.	silver: no source found; the range word a; years read as cardinals (RAE-ASALE, DPD 2.ª ed. provisional, «uno» 2.1)	unchecked
+es-059	es-ES	range	Busca 18-25 personas.	Busca dieciocho a veinticinco personas.	silver: no source found; the range word a	unchecked
+es-060	es-ES	abbreviation	Hola Dr. García.	Hola doctor García.	RAE-ASALE, DPD 2005, Apéndice 2: Dr. doctor; RAE-ASALE, DPD 2.ª ed. provisional, «abreviatura» 3: read the full word; 8.c: the word is lowercase	unchecked
+es-061	es-ES	abbreviation	Trae pan, leche, etc.	Trae pan, leche, etcétera.	RAE-ASALE, DPD 2005, Apéndice 2: etc. etcétera	unchecked
+es-062	es-ES	abbreviation	Vive en el n.º 7.	Vive en el número siete.	RAE-ASALE, DPD 2005, Apéndice 2: n.º número	unchecked
+es-063	es-ES	time	La pantalla es 16:9 aquí.	La pantalla es 16:9 aquí.	text2spoken-design section 4.2 rule: a ratio is not a time	unchecked
+es-064	es-ES	time	Lee Juan 3:16 otra vez.	Lee Juan 3:16 otra vez.	text2spoken-design section 4.2 rule: a verse is not a time	unchecked
+es-065	es-ES	cardinal	Nos gusta #decade hoy.	Nos gusta #decade hoy.	text2spoken-design section 4.2 rule	unchecked
+es-066	es-ES	date	El 13/13/2024 no pasó nada.	El 13/13/2024 no pasó nada.	text2spoken-design section 4.2 rule: month 13 does not exist	unchecked

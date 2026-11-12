@@ -168,6 +168,8 @@ If the tag is not valid, or if no language file reads the tag, the command write
 
 English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
+Spanish reads the varieties `es-ES`, `es-419`, `es-MX`, `es-AR` and `es-US`. Install `text2spoken[es]` for its number words. Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The test rows in `tests/data/es.tsv` name their source. No native speaker has checked them.
+
 ## Development
 
 ```bash
