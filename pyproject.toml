@@ -32,6 +32,10 @@ test = [
     "ovos-number-parser>=0.24.6a1",
     "ovos-color-parser>=0.12.4a1",
 ]
+pt = [
+    "ovos-number-parser>=0.24.35a1",
+    "ovos-date-parser>=0.35.31a1",
+]
 
 [tool.setuptools.dynamic]
 version = {attr = "text2spoken.version.__version__"}
