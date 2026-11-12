@@ -131,11 +131,10 @@ DATA = freeze({
 DEFAULTS = {"date_order": "DMY", "clock": "24h", "minute_style": "number", "decimal_mark": ","}
 
 VARIETIES = (
-    Variety("pt-PT", freeze({"defaults": {**DEFAULTS, "scale": "long"}, "first_of_month": "cardinal",
+    Variety("pt-PT", freeze({"defaults": {**DEFAULTS, "scale": "long"},
                              "colors": {"808080": "cinzento"}})),
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
-        "first_of_month": "ordinal",
         "colors": {"808080": "cinza"},
         "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
         "units": {unit: {category: word.replace("ómetro", "ômetro") for category, word in forms.items()}
@@ -180,8 +179,8 @@ class PortugueseSpeller:
         return feminine(words) if features.gender is FEMININE else words
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """An ordinal to 1999. ovos-number-parser reads 2022 as `dois milésimo vigésimo segundo`, where the
-        ordinal of the thousands is `segundo milésimo`, so a larger ordinal stays as written."""
+        """An ordinal to 1999. ovos-number-parser reads 2022 as `dois milésimo vigésimo segundo`, and no cited
+        grammar passage gives the form of an ordinal from 2000 up, so such an ordinal stays as written."""
         number = bounded_integer(digits)
         if number is None or number >= 2000:
             raise DeclinedReading(f"no Portuguese ordinal reading of {len(digits)} digits from 2000 up")
@@ -323,9 +322,10 @@ def speak_range(span: Span, context: SpanContext) -> str:
 
 
 def _day(day: int, request: Request) -> str:
-    """The first day of a month reads `um` in pt-PT and `primeiro` in pt-BR, where the official writing is `1º de
-    maio` (Ciberdúvidas 6572; Decreto n.º 9.191/2017, art. 14, j). A written `1.º` is an ordinal span."""
-    if day == 1 and request.data["first_of_month"] == "ordinal":
+    """The first day of a month reads `primeiro`, and every other day a cardinal: "nas referências aos dias do mês
+    usam-se os cardinais, salvo na designação do primeiro dia, em que é de regra o uso do numeral ordinal" (Cunha
+    and Cintra, Nova Gramática do Português Contemporâneo, p. 374). A written `1.º` is an ordinal span."""
+    if day == 1:
         return SPELLER.ordinal("1", Features(gender=MASCULINE), request)
     return _cardinal(str(day), request)
 

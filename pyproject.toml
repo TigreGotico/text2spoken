@@ -34,7 +34,6 @@ test = [
 ]
 pt = [
     "ovos-number-parser>=0.24.35a1",
-    "ovos-date-parser>=0.35.31a1",
 ]
 
 [tool.setuptools.dynamic]
