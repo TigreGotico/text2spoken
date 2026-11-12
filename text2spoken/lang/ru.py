@@ -25,8 +25,8 @@ from text2spoken.core.recognizers import SHARED, DateNumeric, numbers_in, speak_
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_letter, is_word_char, next_visible,
-                                     one_digit_set)
+from text2spoken.core.tokens import (Token, context_word, fold_digits, is_bounded, is_letter, is_word_char,
+                                     next_visible, one_digit_set)
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, freeze
 
@@ -476,12 +476,17 @@ _MODIFIER_ENDINGS = ("ого", "его", "ой", "ей", "ом", "ем", "ых",
 
 def _subject_place(context: SpanContext) -> bool:
     """Whether a number with no preposition before it stands where the subject of its clause stands: first in the
-    clause, after a form of `copulas`, or after a word of `owner_prepositions` and the owner or the place, which one
-    modifier may come before: "у сестры", "у моей сестры", "в семье"."""
-    data, words = context.request.data, [word.lower() for word in context.before]
-    owner = data["owner_prepositions"]
-    return (not words or words[-1] in data["copulas"] or (len(words) > 1 and words[-2] in owner)
-            or (len(words) > 2 and words[-3] in owner and len(words[-2]) > 2 and words[-2].endswith(_MODIFIER_ENDINGS)))
+    clause, after a form of `copulas`, or after a phrase of a word of `owner_prepositions` and the owner or the
+    place, which one modifier may come before: "у сестры", "у моей сестры", "в семье". The phrase must open the
+    clause, because after a verb the number is its object: "Я видел в парке 2 детей". The window holds three words,
+    so a full window opens the clause only where its first word starts with a capital letter."""
+    data, written = context.request.data, context.before
+    words = [word.lower() for word in written]
+    if not words or words[-1] in data["copulas"]:
+        return True
+    opens = len(words) < 3 or written[0][:1].isupper()
+    phrase = len(words) == 2 or (len(words) == 3 and len(words[1]) > 2 and words[1].endswith(_MODIFIER_ENDINGS))
+    return opens and words[0] in data["owner_prepositions"] and phrase
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
@@ -589,7 +594,9 @@ def date_case(span: Span, context: SpanContext) -> str:
     конец мая" (§ 2536), "Сегодня воскресенье" (§ 2539), "Наступила осень" (§ 2681). There the clause holds no word
     before the date but those verbs and the words of `date_adverbs`: "Вот и наступило первое сентября", "Сегодня уже
     первое мая", and a date alone in its clause. A date closes its clause when only "года", closing quotes and a mark
-    or the end of the clause follow it, as `_FINAL_MARKS` and `_INNER_MARKS` say. Every other date says when
+    of `_FINAL_MARKS` or the end of the clause follow it. A comma does not close it, because the clause often goes
+    on after the comma: "Первого мая, в субботу, мы поехали на дачу". Only the words after the last colon or opening
+    quote before the date count: "Он сказал: «Сегодня первое мая»". Every other date says when
     something happens and reads in the genitive: "встреча пятого мая" (§ 1168), "Лето наступило первого июня",
     "Было первого мая подписано соглашение". A pronoun "это" before the copula is the subject (Розенталь § 189,
     п. 3: "это была хрестоматия"), so "Это было первого мая" says when something happened. The particle "ли" asks a
@@ -599,8 +606,9 @@ def date_case(span: Span, context: SpanContext) -> str:
     data = context.request.data
     after = context.after[1:] if context.after and context.after[0].lower() in data["year_noun"] else context.after
     words = [word.lower() for word in context.before]
-    mark = span.trail[-1:]
-    closed = not after or mark in _FINAL_MARKS or (mark in _INNER_MARKS and bool(span.lead or words))
+    scope = context.request.memo.get(_SCOPE, {}).get(span.start, len(words))
+    words = words[len(words) - min(scope, len(words)):]
+    closed = not after or span.trail[-1:] in _FINAL_MARKS
     if span.lead == ":" and closed:
         return "nominative"
     before = words[-1] if words else ""
@@ -697,22 +705,43 @@ def attach(spoken: str, prefix: str, suffix: str) -> str:
 
 
 _FINAL_MARKS = (".", "!", "?", "…")
-_INNER_MARKS = (",", ";", ":", ")")
 _CLOSING_QUOTES = ("»", "”", '"', ")")
-"""A date closes its clause before a mark of `_FINAL_MARKS`. It closes before a mark of `_INNER_MARKS` only where a
-word comes before it in the clause: a comma often opens a parenthesis, and the clause goes on after it ("Первого
-мая, в субботу, мы поехали на дачу"). Closing quotes may stand between the date and the mark."""
+"""A date closes its clause before a mark of `_FINAL_MARKS`, and closing quotes may stand between them."""
+_OPENING_QUOTES = ("«", "“", '"')
+_SCOPE = "ru_date_scope"
+"""The key of `Request.memo` that maps the start of a date span to the number of words between the last colon or
+opening quote and the date, where one stands among the three words before the date."""
+
+
+def _scope(text: str, start: int) -> int | None:
+    """The number of words between the last colon or opening quote and text[start], if one stands among the three
+    whitespace chunks before it. A colon before a digit is part of a clock time, and only a quote at the start of a
+    chunk opens."""
+    chunks = text[max(0, start - 200):start].split()[-3:]
+    for index in range(len(chunks) - 1, -1, -1):
+        chunk = chunks[index]
+        colon = chunk.rfind(":")
+        if colon >= 0 and not chunk[colon + 1:colon + 2].isdigit():
+            rest = chunks[index + 1:] + [chunk[colon + 1:]]
+        elif chunk.startswith(_OPENING_QUOTES):
+            rest = chunks[index:]
+        else:
+            continue
+        return sum(context_word(word) is not None for word in rest if word)
+    return None
 
 
 def _framed(text: str, span: Span, request: Request) -> Span:
     """The date span with the punctuation around it that `date_case` reads. A colon of a label before it, as in
     `Дата: 9 мая`, is the lead, and the one space after the colon is in the span. The closing quotes and the mark
-    after the date, or after "года" after its year, are the trail, and the span holds that "года" too. A mark that a
-    letter or a digit follows is no trail, so that a second pass reads the text the same way. A date right after a
-    comma is in a parenthesis, and only a mark of `_FINAL_MARKS` closes it: "Тогда, первого мая, мы уехали". The lead
-    and the trail hold only punctuation (design section 5.1)."""
+    of `_FINAL_MARKS` after the date, or after "года" after its year, are the trail, and the span holds that "года"
+    too. A mark that a letter or a digit follows is no trail, so that a second pass reads the text the same way. The
+    lead and the trail hold only punctuation (design section 5.1). The scope of `_scope` goes into `Request.memo`."""
     if text[max(0, span.start - 2):span.start] == ": ":
         span = replace(span, start=span.start - 2, lead=":")
+    scope = _scope(text, span.start)
+    if scope is not None:
+        request.memo.setdefault(_SCOPE, {})[span.start] = scope
     if span.trail:
         return span
     end, noun = span.end, request.data["year_noun"][1]
@@ -722,13 +751,10 @@ def _framed(text: str, span: Span, request: Request) -> Span:
     stop = end
     while text[stop:stop + 1] in _CLOSING_QUOTES:
         stop += 1
-    marks = _FINAL_MARKS if text[:span.start].rstrip().endswith(",") else _FINAL_MARKS + _INNER_MARKS
     following = text[stop + 1:stop + 2]
-    if text[stop:stop + 1] in marks and not (following and is_word_char(following)):
-        stop += 1
-    elif not (stop > end and text[stop - 1] == ")" and ")" in marks):
+    if text[stop:stop + 1] not in _FINAL_MARKS or (following and is_word_char(following)):
         return span
-    return replace(span, end=stop, trail=text[end:stop])
+    return replace(span, end=stop + 1, trail=text[end:stop + 1])
 
 
 def _sentence_end(text: str, end: int) -> bool:
