@@ -31,8 +31,22 @@ EN_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
 }
+ES_ENTRIES = {
+    "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
+    "leads": "-", "fraction_names": "2", "range_word": DELETE, "range_marks": "-", "time_words": "las",
+    "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_symbols": " h",
+    "day_periods": "pm", "day_period_words": "tarde", "minute_phrases": "30", "months": "marzo", "month_variants": "setiembre",
+    "first_of_month": DELETE, "currencies": "EUR", "scales": "millones", "percent": "word", "units": "kg",
+    "dimension_marks": "x", "dimension_word": DELETE, "operators": "+", "phone_words": "teléfono",
+    "phone_links": "al", "short_codes": "112", "list_links": "o", "phone_shapes": "6[0-9]{2} [0-9]{3} [0-9]{3}",
+    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "titles": "Dr.", "abbreviations": "etc.",
+    "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
+    "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
+}
 ENTRIES = {
     "en": EN_ENTRIES,
+    "es": ES_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",
