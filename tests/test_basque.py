@@ -38,8 +38,9 @@ def test_the_usual_reading_of_midnight_names_the_night():
     assert normalize("00:00etan", "eu") == "gaueko hamabietan"
 
 
-def test_a_base_install_holds_the_basque_speller():
-    """Design section 12: the first language file that calls ovos-number-parser adds it back as a dependency, so a
-    Basque voice reads a digit with no extra."""
-    base = {Requirement(line).name for line in requires("text2spoken") if Requirement(line).marker is None}
-    assert "ovos-number-parser" in base
+def test_the_eu_extra_installs_the_basque_speller():
+    """`eu.py` reads cardinals with ovos-number-parser, which design section 12 keeps out of the base install, so
+    the `eu` extra installs it."""
+    lines = [Requirement(line) for line in requires("text2spoken")]
+    extra = {line.name for line in lines if line.marker is not None and line.marker.evaluate({"extra": "eu"})}
+    assert "ovos-number-parser" in extra

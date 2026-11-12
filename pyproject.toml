@@ -20,13 +20,13 @@ dependencies = [
     "linguatag[langcodes]>=0.1.5a1",
     "unicode-rbnf>=2.4.1",
     "quebra-frases>=0.3.7",
-    "ovos-number-parser>=0.24.26a1",
 ]
 
 [project.urls]
 Homepage = "https://github.com/TigreGotico/text2spoken"
 
 [project.optional-dependencies]
+eu = ["ovos-number-parser>=0.24.26a1"]
 ru = ["ovos-number-parser>=0.24.35a1"]
 test = [
     "pytest",

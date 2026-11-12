@@ -188,7 +188,7 @@ Some Russian readings are still wrong:
 
 The test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules, and no native speaker has checked them.
 
-Basque reads the variety `eu-ES`, the standard language (batua) of the Euskaltzaindia norms. The test rows in `tests/data/eu.tsv` quote their page of the norm, and no native speaker has checked them. These forms stay as written in Basque:
+Basque reads the variety `eu-ES`, the standard language (batua) of the Euskaltzaindia norms. Install it with `text2spoken[eu]`, which adds `ovos-number-parser`. The test rows in `tests/data/eu.tsv` quote their page of the norm, and no native speaker has checked them. These forms stay as written in Basque:
 
 - A number with spaces between its groups, as in `30 000`, because the group mark of the file is the full stop.
 - A range of percentages, amounts or measures, as in `10%-20%` and `5 €-10 €`. Basque marks a range with the endings `-tik` and `-ra`, and the file has no rule for them.
