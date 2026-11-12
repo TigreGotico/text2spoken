@@ -92,6 +92,12 @@ SHAPES: dict[str, Shape] = {
     "defaults": map_of(one_of(*OPTIONS), text),
     "digit_words": list_of(word, length=10),
     "dimension_marks": WORDS,
+    "electronic_labels": map_of(word, one_of("word", "letters")),
+    "electronic_letters": map_of(one_of(*"abcdefghijklmnopqrstuvwxyz"), word),
+    "electronic_schemes": map_of(word, one_of("read", "drop")),
+    "electronic_symbols": map_of(character, word),
+    "electronic_tlds": WORDS,
+    "electronic_vowels": list_of(one_of(*"abcdefghijklmnopqrstuvwxyz"), minimum=1),
     "idioms": map_of(word, text),
     "leads": map_of(word, text),
     "list_links": WORDS,
@@ -135,17 +141,20 @@ READERS: dict[str, frozenset[str]] = {
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes"}),
     "color": frozenset({"color_words"}),
+    "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
+    "speak_electronic": frozenset({"electronic_symbols", "electronic_letters", "electronic_vowels", "electronic_labels",
+                                   "electronic_schemes", "digit_words"}),
     "render": frozenset({"symbols"}),
     "effective_params": frozenset({"defaults"}),
 }
 """The keys that each shared recognizer reads, by its name in `SHARED`. Then the keys that the shared verbalizers
-`speak_cardinal` and `speak_lexicon` read, and the keys of the unread check of `render` and of the option defaults
-of `effective_params`."""
+`speak_cardinal`, `speak_lexicon` and `speak_electronic` read, and the keys of the unread check of `render` and of
+the option defaults of `effective_params`."""
 
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 
-OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks"})
+OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks", "electronic_labels"})
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""

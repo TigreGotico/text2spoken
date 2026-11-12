@@ -40,6 +40,7 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.IDIOM: frozenset({"key", "prefix", "suffix"}),
     Form.ROMAN: frozenset({"value", "role", "suffix"}),
     Form.COLOR: frozenset({"rgb", "alpha", "hex"}),
+    Form.ELECTRONIC: frozenset({"kind", "scheme", "address"}),
 }
 """The fields of each form (section 4.4). A recognizer emits exactly these."""
 
