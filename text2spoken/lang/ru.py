@@ -136,7 +136,7 @@ VARIETIES = (Variety("ru-RU"),)
 _ONE_WORDS = ("один", "одна", "одно", "одну", "одного", "одной", "одному", "одним", "одном")
 _SCALE_WORD = re.compile("(?:тысяч|миллион|миллиард|триллион|квадриллион)")
 _INNER_THOUSAND = re.compile("((?:миллион|миллиард)[а-я]*) тысяча")
-_INNER_MILLION = re.compile("(миллиард[а-я]*) миллион(?![а-я])")
+_INNER_MILLION = re.compile("(миллиард[а-я]*) миллион( |$)")
 _YO = (("трех", "трёх"), ("четырех", "четырёх"), ("четырем", "четырём"), ("четверт", "четвёрт"))
 _ORDINAL_STEMS = {0: "нулев", 1: "перв", 2: "втор", 3: "трет", 4: "четвёрт", 7: "седьм", 40: "сороков", 100: "сот"}
 """The ordinal stems that the genitive of the cardinal does not give (Грамматика-80 § 679 and its note): "первый",
@@ -179,7 +179,7 @@ def standard(words: str) -> str:
     if first in _ONE_WORDS and _SCALE_WORD.match(rest):
         words = rest
     words = _INNER_THOUSAND.sub(r"\1 одна тысяча", words)
-    words = _INNER_MILLION.sub(r"\1 один миллион", words)
+    words = _INNER_MILLION.sub(r"\1 один миллион\2", words)
     for written, spelled in _YO:
         words = words.replace(written, spelled)
     return " ".join(f"трём{word[4:]}" if word.startswith("трем") and not word.startswith("тремя") else word
