@@ -62,7 +62,7 @@ DATA = freeze({
     "onset_verbs": ["наступил", "наступила", "наступило", "наступит"],
     "date_adverbs": ["вот", "и", "а", "но", "да", "ведь", "же", "ну", "ещё", "не", "ли", "наконец", "уже", "тогда",
                      "скоро", "сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
-    "date_particles": ["а", "но", "да", "и", "ведь", "же", "ну", "не", "ли"],
+    "date_particles": ["да", "а"],
     "owner_prepositions": ["у", "в", "во"],
     "collective_numerals": {"2": "двое", "3": "трое", "4": "четверо"},
     "pluralia_tantum": ["суток", "саней", "ножниц", "брюк", "ворот"],
@@ -595,7 +595,8 @@ def date_case(span: Span, context: SpanContext) -> str:
     The second is where the date is the subject of a form of `copulas` or of `onset_verbs`: "Было шесть часов вечера,
     конец мая" (§ 2536), "Сегодня воскресенье" (§ 2539), "Наступила осень" (§ 2681). There the clause holds no word
     before the date but those verbs and the words of `date_adverbs`: "Вот и наступило первое сентября", "Сегодня уже
-    первое мая", and a date alone in its clause. A date closes its clause when only "года", closing quotes and a mark
+    первое мая", and a date alone in its clause, which is a nominative sentence (§ 2522, § 2524: "Двадцать первое.
+    Ночь. Понедельник."). A date closes its clause when only "года", closing quotes and a mark
     of `_FINAL_MARKS` or the end of the clause follow it. A comma does not close it, because the clause often goes
     on after the comma: "Первого мая, в субботу, мы поехали на дачу". Only the words after the last colon or opening
     quote before the date count: "Он сказал: «Сегодня первое мая»". Every other date says when
@@ -603,8 +604,9 @@ def date_case(span: Span, context: SpanContext) -> str:
     "Было первого мая подписано соглашение". A pronoun "это" before the copula is the subject (Розенталь § 189,
     п. 3: "это была хрестоматия"), so "Это было первого мая" says when something happened. The particle "ли" asks a
     question and leaves the subject in the nominative: "Падают ли овцы?" (§ 1693, § 1949). The words of `date_particles`
-    alone give no nominative: a reply such as "Да, первого мая" takes its form from the question (§ 1954), which the
-    window does not see."""
+    alone give no nominative: "да" opens a reply and "а" a follow-up question, and such a reply as "Да, первого мая"
+    takes its form from the question (§ 1954), which the window does not see. Other particles and conjunctions keep
+    the nominative sentence: "но весна, весна" (§ 2524), so "Почему магазин закрыт? Ведь первое мая!"."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
