@@ -47,7 +47,7 @@ DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ",", "group": "\u00a0"}, {"decimal": ".", "group": "\u00a0"}]},
     "defaults": {"date_order": "DMY", "clock": "24h", "minute_style": "number", "decimal_mark": ",",
                  "scale": "short"},
-    "sign_words": {"-": "минус"},
+    "sign_words": {"-": "минус", "+": "плюс"},
     "digit_words": ["ноль", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"],
     "leads": {"№": "номер", "№ ": "номер"},
     "range_word": "—",
@@ -56,10 +56,11 @@ DATA = freeze({
     "dimension_word": "на",
     "time_words": ["в", "во", "к", "ко", "до", "с", "со", "после", "по", "от"],
     "zero_minutes": "ноль-ноль",
-    "nominative_dates": ["сегодня", "завтра", "вчера", "послезавтра", "позавчера", "наступило"],
-    "date_copulas": ["был", "была", "было", "будет"],
+    "nominative_dates": ["сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
+    "date_copulas": ["был", "была", "было", "будет", "наступило"],
     "collective_numerals": {"2": "двое", "3": "трое", "4": "четверо"},
     "pluralia_tantum": ["суток", "саней", "ножниц", "брюк", "ворот"],
+    "collective_persons": ["детей", "ребят", "людей"],
     "months": ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября",
                "ноября", "декабря"],
     "year_noun": ["год", "года", "году", "год", "годом", "году"],
@@ -72,7 +73,7 @@ DATA = freeze({
         "из-под": "genitive", "кроме": "genitive", "от": "genitive", "ради": "genitive", "у": "genitive",
         "около": "genitive", "после": "genitive", "вокруг": "genitive", "против": "genitive", "среди": "genitive",
         "свыше": "genitive", "более": "genitive", "менее": "genitive", "к": "dative", "ко": "dative",
-        "согласно": "dative", "вопреки": "dative",
+        "согласно": "dative", "вопреки": "dative", "в течение": "genitive",
         "про": "accusative", "через": "accusative", "сквозь": "accusative", "над": "instrumental",
         "перед": "instrumental", "при": "prepositional", "о": "prepositional", "об": "prepositional",
     },
@@ -123,13 +124,19 @@ names are those of the International System of Units in Russian (ru.wikipedia.or
 genitive plural, takes the collective numeral in the nominative and the accusative: "двое саней, трое ножниц, четверо
 суток", "двое брюк", and in the other cases the cardinal: "около четырех суток" (Розенталь § 165, п. 1, п. 3;
 Грамматика-80 § 1369, п. 4; the genitive forms "суток", "ножниц", "ворот" in § 1201). The other collective numerals
-are rare, so "пять суток" takes the cardinal (Розенталь § 165, п. 1)."""
+are rare, so "пять суток" takes the cardinal (Розенталь § 165, п. 1). The nouns of `collective_persons` take the
+collective numeral in the nominative: "двое детей, трое ребят, трое молодых людей" (Розенталь § 165, п. 1, 3;
+Грамматика-80 § 1369, п. 2: "четверо детей, трое людей"). Their accusative is the genitive "двоих", which this file
+does not read, so it takes the cardinal. A sign reads "плюс" or "минус", words that do not decline before a number
+(Грамматика-80 § 1834: "плюс-минус единица", "равен минус единице"). `в течение` governs the genitive (Грамматика-80
+§ 1790, § 2710: "в течение двух недель"; Розенталь § 164, п. 3: "в течение двадцати двух суток")."""
 
 VARIETIES = (Variety("ru-RU"),)
 
 _ONE_WORDS = ("один", "одна", "одно", "одну", "одного", "одной", "одному", "одним", "одном")
 _SCALE_WORD = re.compile("(?:тысяч|миллион|миллиард|триллион|квадриллион)")
 _INNER_THOUSAND = re.compile("((?:миллион|миллиард)[а-я]*) тысяча")
+_INNER_MILLION = re.compile("(миллиард[а-я]*) миллион(?![а-я])")
 _YO = (("трех", "трёх"), ("четырех", "четырёх"), ("четырем", "четырём"), ("четверт", "четвёрт"))
 _ORDINAL_STEMS = {0: "нулев", 1: "перв", 2: "втор", 3: "трет", 4: "четвёрт", 7: "седьм", 40: "сороков", 100: "сот"}
 """The ordinal stems that the genitive of the cardinal does not give (Грамматика-80 § 679 and its note): "первый",
@@ -165,12 +172,14 @@ def standard(words: str) -> str:
     """A reading in the standard form. The number 1 is not said before "тысяча" or "миллион" at the start, as
     Грамматика-80 § 1378 declines "тысяча двести восемьдесят семь" and Розенталь § 164, п. 2 writes "в тысяча
     девятьсот шестьдесят пятом году". Inside a number "одна тысяча" keeps "одна": a number has one word for each
-    significant digit, and the words "тысяча" and "миллион" besides (Розенталь § 45, п. 2). The number words take ё
+    significant digit, and the words "тысяча" and "миллион" besides (Розенталь § 45, п. 2). So "один миллион" keeps
+    "один" after "миллиард". The number words take ё
     (Грамматика-80 § 1374, Правила-2006 § 5)."""
     first, _, rest = words.partition(" ")
     if first in _ONE_WORDS and _SCALE_WORD.match(rest):
         words = rest
     words = _INNER_THOUSAND.sub(r"\1 одна тысяча", words)
+    words = _INNER_MILLION.sub(r"\1 один миллион", words)
     for written, spelled in _YO:
         words = words.replace(written, spelled)
     return " ".join(f"трём{word[4:]}" if word.startswith("трем") and not word.startswith("тремя") else word
@@ -302,7 +311,8 @@ def counted(noun: FrozenMap, written: str, case: str, request: Request) -> str:
 
 def governed_case(context: SpanContext, word_after: str = "", category: str = "many", digits: str = "") -> str:
     """The case of a hint, else the case that the preposition before a number governs. A preposition of one case
-    gives it (Грамматика-80 § 1657, § 1658). A preposition of two or three cases takes the one that the ending of
+    gives it (Грамматика-80 § 1657, § 1658), also a preposition of two words such as `в течение`. A preposition
+    of two or three cases takes the one that the ending of
     the noun after the number shows: a plural ending, or after the category one a singular ending of the
     prepositional or the instrumental. With no such ending, the first case of `case_choices` applies. Distributive
     `по` takes the dative of "один", "тысяча", "миллион" and "миллиард": "по одному рублю, по тысяче книг, по
@@ -311,6 +321,9 @@ def governed_case(context: SpanContext, word_after: str = "", category: str = "m
         return context.hint.case
     data = context.request.data
     preposition = context.before[-1].lower() if context.before else ""
+    compound = " ".join(context.before[-2:]).lower()
+    if compound in data["governed_cases"]:
+        return data["governed_cases"][compound]
     if preposition in data["governed_cases"]:
         return data["governed_cases"][preposition]
     choices = data["case_choices"].get(preposition)
@@ -407,7 +420,13 @@ def agreement(digits: str, context: SpanContext) -> Features:
 
 
 def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
+    """The words of the number after the word of its sign. A sign with no word in `sign_words` declines the
+    reading, so the span stays as written."""
+    if not sign:
+        return words
+    if sign not in request.data["sign_words"]:
+        raise DeclinedReading(f"no word for the sign {sign}")
+    return f"{request.data['sign_words'][sign]} {words}"
 
 
 def _written(amount: FrozenMap) -> str:
@@ -444,8 +463,9 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         features = agreement(digits, context)
         noun = context.after[0].lower() if context.after else ""
         collective = request.data["collective_numerals"].get(digits)
-        if collective and noun in request.data["pluralia_tantum"] and features.case in (None, "nominative",
-                                                                                         "accusative"):
+        nominative = features.case in (None, "nominative")
+        if collective and ((noun in request.data["pluralia_tantum"] and (nominative or features.case == "accusative"))
+                           or (noun in request.data["collective_persons"] and nominative)):
             words = collective
         else:
             words = SPELLER.cardinal(digits, features, request)
@@ -530,21 +550,27 @@ def date_case(span: Span, context: SpanContext) -> str:
     preposition a date that says when something happens is a time adverbial in the genitive: "встреча пятого мая"
     (Грамматика-80 § 1168), "Она выедет туда первого декабря" (Розенталь § 94, p. 110). The nominative stays where
     the date names the day (§ 1167: "называющая форма в заголовках, подписях"): after a label colon, which the span
-    holds as its lead, and for a date that stands alone in its clause, with "года" after it or not. The date is the
-    subject after a deictic word of time, as in "Сегодня воскресенье" (§ 2539), also with a form of "быть" between
-    them ("Завтра будет первое мая"), and after "наступило" (§ 2681: "Наступила осень")."""
+    holds as its lead, and for a date that stands alone in its clause, each when no word but "года" follows the date
+    in the clause. A colon that opens a clause, as in "Внимание: 9 мая офис не работает", is no label, so the date
+    there is a time adverbial. The date is the subject after a deictic word of time, as in "Сегодня воскресенье"
+    (§ 2539), also with a form of `date_copulas` between them ("Завтра будет первое мая"), and after such a form
+    that opens the clause: "Было шесть часов вечера, конец мая" (§ 2536), "Наступила осень" (§ 2681). After another
+    word the form of `date_copulas` leaves the date a time adverbial: "Лето наступило первого июня"."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
-    if span.lead.startswith(":"):
-        return "nominative"
     data = context.request.data
+    after = context.after[1:] if context.after and context.after[0].lower() in data["year_noun"] else context.after
+    if span.lead == ":" and not after:
+        return "nominative"
     words = [word.lower() for word in context.before]
     before = words[-1] if words else ""
-    if before in data["governed_cases"] or before in data["case_choices"]:
+    if before in data["governed_cases"] or " ".join(words[-2:]) in data["governed_cases"] \
+            or before in data["case_choices"]:
         return governed_case(context)
-    if before in data["date_copulas"] and len(words) > 1:
+    if before in data["date_copulas"]:
+        if len(words) == 1:
+            return "nominative"
         before = words[-2]
-    after = context.after[1:] if context.after and context.after[0].lower() in data["year_noun"] else context.after
     if before in data["nominative_dates"] or not (context.before or after):
         return "nominative"
     return "genitive"
@@ -555,7 +581,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
     `date_case`, the month in the genitive ("Первое мая", Розенталь § 20) and the year a genitive ordinal of which
     only the last word declines (Розенталь § 164, п. 2). A form of "год" that the text writes after the date
     stands in place of "года". The first day of a range in one month has no month of its own: "с первого по
-    десятое мая"."""
+    десятое мая". After a label colon the reading starts with the space that the span holds."""
     request, fields = context.request, span.fields
     words = []
     if fields["day"] is not None:
@@ -566,7 +592,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
         words.append(SPELLER.year(str(fields["year"]), Features(case="genitive"), request))
         if fields["suffix"] or not (context.after and context.after[0].lower() in request.data["year_noun"]):
             words.append(request.data["year_noun"][1])
-    return " ".join(words)
+    return (" " if span.lead else "") + " ".join(words)
 
 
 def speak_year(span: Span, context: SpanContext) -> str:
@@ -636,10 +662,10 @@ def attach(spoken: str, prefix: str, suffix: str) -> str:
 
 
 def _after_label(text: str, span: Span) -> Span:
-    """The span with the colon of a label before it, as in `Дата: 9 мая`, as its lead, so that the date reads in
-    the nominative that names it (Грамматика-80 § 1167)."""
-    label = re.search(":[ \u00a0]*$", text[:span.start])
-    return replace(span, start=label.start(), lead=label.group()) if label else span
+    """The span from the colon of a label before it, as in `Дата: 9 мая`, so that the date can read in the
+    nominative that names it (Грамматика-80 § 1167). The colon is the lead, which holds only punctuation (design
+    section 5.1). The one space after the colon is in the span, and the reading of the date starts with it."""
+    return replace(span, start=span.start - 2, lead=":") if text[max(0, span.start - 2):span.start] == ": " else span
 
 
 def _sentence_end(text: str, end: int) -> bool:
@@ -793,20 +819,22 @@ class SpacedNumber:
 class ScaledMoney:
     """`1,5 млн ₽`, `-1,5 млн ₽`, `5 млрд $`: a number with its sign, `млн` or `млрд` and a currency symbol after
     them. The shared money recognizer reads a scale word only after a number that follows its symbol, as in
-    `$1,5 млн`."""
+    `$1,5 млн`, and it reads no sign before a number with the symbol after it, so `+5 $` and `-5 ₽` are read here
+    too."""
     name: str = "scaled_money"
     form: Form = Form.MONEY
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
         symbols = {symbol: code for code, currency in data["currencies"].items() for symbol in currency["symbols"]}
-        pattern = re.compile(f"[ \u00a0]({'|'.join(data['scales'])})[ \u00a0]?({'|'.join(map(re.escape, symbols))})")
+        pattern = re.compile(f"[ \u00a0](?:({'|'.join(data['scales'])})[ \u00a0]?)?"
+                             f"({'|'.join(map(re.escape, symbols))})")
         for number in numbers_in(text, request):
             match = pattern.match(text, number.end)
-            if match and is_bounded(text, number.start, match.end()):
+            if match and (match.group(1) or number.sign) and is_bounded(text, number.start, match.end()):
                 yield Span(number.start, match.end(), Form.MONEY,
                            FrozenMap({"amount": number.amount(), "currency": symbols[match.group(2)],
-                                      "written_symbol": match.group(2), "scale": match.group(1), "prefix": "",
+                                      "written_symbol": match.group(2), "scale": match.group(1) or "", "prefix": "",
                                       "suffix": ""}), recognizer=self.name)
 
 
