@@ -43,7 +43,9 @@ DE_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "color_words": "Farbe", "titles": "Dr.",
     "abbreviations": "z. B.", "sentence_final": "usw.", "number_abbreviations": "Nr.", "dative_prepositions": "mit",
     "accusative_prepositions": "für", "two_way_prepositions": "in", "determiners": "am", "noun_genders": "auge",
-    "noun_endings": ("e", "feminine"), "patterns": "date_day_month",
+    "noun_endings": ("e", "feminine"), "patterns": "date_day_month", "genitive_prepositions": "wegen",
+    "temporal_prepositions": "vor", "time_nouns": "stunde", "accusative_verbs": "kostet",
+    "noun_frames": ("ge[^aeiouäöüy]+[aeiouäöüy].*e", "neuter"),
     "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
 }
 ENTRIES = {

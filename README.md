@@ -152,7 +152,25 @@ The `tokenizer` argument takes a callable `(text, lang)` that returns a sequence
 
 Each language is one file in `text2spoken/lang/`, named by its primary language subtag. A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written.
 
-`de` serves every German tag. `de-DE` is the default. `de-AT` says `Jänner` for January. `de-CH` writes `ss` for `ß` and takes `.` as the decimal mark. A German number takes the gender and the case of its noun, as in `für einen Tag` and `mit einer Frau`.
+`de` serves every German tag. `de-DE` is the default. `de-AT` says `Jänner` for January. `de-CH` writes `ss` for `ß` and takes `.` as the decimal mark. A German number takes the gender and the case of its noun, as in `für einen Tag` and `mit einer Frau`. The word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time, as in `vor einer Stunde`. A form of `kosten` gives the accusative, so `Das kostet 1 €.` reads "einen Euro". A noun with no known gender takes the masculine, and only the dative of a preposition, so `zu 1 Freund` reads "einem Freund". In `de-CH` the full stop is also the decimal mark, so a time with a full stop needs `Uhr`: `um 14.30 Uhr` is a time, and `um 1.15 Franken` reads "eins Komma eins fünf Franken". `von`, `bis`, `ab` and `seit` also come before a ratio, so a time after them needs `Uhr` or a range that `Uhr` closes, as in `von 9:00 bis 17:00 Uhr`.
+
+Some German readings are still wrong or stay as written:
+
+- A verb gives no case, except `kosten`. `Ich habe 1 Hund.` reads "ein Hund", not "einen Hund".
+- `in`, `an` and `vor` before a noun that is not a noun of time give no case. `Er wohnt in 1 Haus.` reads "ein Haus".
+- A noun whose gender no rule gives takes the masculine. `mit 1 Freundin` reads "einem Freundin", and `1 Ampel` reads "ein Ampel". A `default_gender` param or a gender hint gives the feminine.
+- A compound of an exception takes the ending rule, so `1 Osterei` reads "eine Osterei". A noun with `Ge-` that is not neuter, such as `Gerade`, reads as a neuter.
+- A preposition of the genitive gives no case to a number. `Während 1 Woche` reads "eine Woche".
+- In `de-CH`, a time with a full stop and no `Uhr` reads as a decimal. `um 9.15` reads "neun Komma eins fünf".
+- A time after `ab`, `von`, `bis` or `seit` with no `Uhr` stays as written, as in `Ab 16:10`. `9:00-17:00 Uhr` stays as written, because the core reads the dash as a joiner.
+- One half before a noun stays as written, as in `1/2 Pizza`, because `halb` declines before a noun.
+- A scale abbreviation after a number stays as written. `2 Mio. Einwohner` reads "zwei Mio. Einwohner", and `2 Mio. €` reads "zwei Mio. €".
+- A year with no year word reads as a cardinal. `Er wurde 1999 geboren.` reads "eintausendneunhundertneunundneunzig".
+- An ordinal from one million up stays as written, and so does an ordinal with no determiner before it, as in `Er wurde 2. Sieger.`
+- A determiner that does not agree with a date is ignored. `das 12/03/2024 Wetter` reads "das zwölfter März zweitausendvierundzwanzig Wetter".
+- The core table `PHONE_PLANS` holds no plan for DE, AT or CH.
+
+The test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia, and no native speaker has checked them.
 
 To see what a tag reads:
 

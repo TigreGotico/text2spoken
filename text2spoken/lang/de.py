@@ -24,6 +24,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, plural_cat
 from text2spoken.core.recognizers import PHONE_PLANS, SHARED, Telephone, join_ranges, numbers_in, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
+from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, next_visible, one_digit_set
 from text2spoken.errors import DeclinedReading
 from text2spoken.lang.en import Abbreviation, Expression
@@ -75,7 +76,7 @@ DATA = freeze({
                     {"mark": ".", "seconds": False, "needs": "evidence"}],
     "time_suffixes": [" Uhr", " Uhr"],
     "hour_word": "Uhr",
-    "time_words": ["um", "gegen", "ab", "seit", "von", "bis"],
+    "time_words": ["um", "gegen"],
     "dimension_marks": ["x", "×"],
     "dimension_word": "mal",
     "operators": {"+": "plus", "−": "minus", "×": "mal", "÷": "geteilt durch", "=": "gleich"},
@@ -113,7 +114,12 @@ DATA = freeze({
     "symbols": {"%": "percent", "$": "money", "£": "money", "€": "money", "°": "measure", "×": "measure"},
     "dative_prepositions": ["aus", "bei", "mit", "nach", "seit", "von", "zu", "gegenüber", "außer"],
     "accusative_prepositions": ["durch", "für", "gegen", "ohne", "um"],
+    "genitive_prepositions": ["wegen", "während", "trotz", "statt", "anstatt", "innerhalb", "außerhalb"],
     "two_way_prepositions": ["in", "an", "auf", "über", "unter", "vor", "hinter", "neben", "zwischen"],
+    "temporal_prepositions": ["in", "an", "vor"],
+    "time_nouns": ["sekunde", "minute", "stunde", "tag", "woche", "monat", "jahr", "jahrzehnt", "jahrhundert",
+                   "nacht", "moment", "augenblick"],
+    "accusative_verbs": ["kostet", "kosten", "kostete", "kosteten"],
     "determiners": {
         "der": {"definite": True, "case": "nominative", "gender": "masculine"},
         "die": {"definite": True, "case": "nominative", "gender": "feminine"},
@@ -135,17 +141,27 @@ DATA = freeze({
         "einer": {"definite": False, "case": "dative", "gender": "feminine"},
         "eines": {"definite": False, "case": "genitive"},
     },
-    "noun_genders": {"ende": "neuter", "auge": "neuter", "name": "masculine", "junge": "masculine",
-                     "käse": "masculine"},
+    # en.wikipedia, "Grammatical gender in German": 90% of nouns in -e are feminine, with the exceptions that it names
+    # and that the whole-word table holds, and 90% of nouns with the prefix Ge- are neuter. A frame is the prefix
+    # Ge-, a consonant and a vowel before the final -e, so "Geste" and "Geige" have no prefix. de.wiktionary gives
+    # "der Kaffee" and "der Tee", which end their compounds.
+    "noun_genders": {"ei": "neuter",
+                     **dict.fromkeys(("auge", "ende", "erbe", "finale", "image", "interesse", "prestige", "regime"),
+                                     "neuter"),
+                     **dict.fromkeys(("charme", "käse", "buchstabe", "friede", "funke", "gedanke", "glaube", "haufe",
+                                      "name", "same", "wille", "affe", "bote", "hase", "junge", "löwe", "gehilfe"),
+                                     "masculine"),
+                     **dict.fromkeys(("gebärde", "gemeinde", "geschichte"), "feminine")},
+    "noun_frames": [["ge[^aeiouäöüy]+[aeiouäöüy].*e", "neuter"]],
     "noun_endings": [["ung", "feminine"], ["heit", "feminine"], ["keit", "feminine"], ["schaft", "feminine"],
-                     ["ion", "feminine"], ["tät", "feminine"], ["ei", "feminine"], ["e", "feminine"],
+                     ["ion", "feminine"], ["tät", "feminine"], ["ei", "feminine"], ["e", "feminine"], ["kaffee", "masculine"],
                      ["erin", "feminine"], ["frau", "feminine"], ["nacht", "feminine"], ["zeit", "feminine"],
                      ["person", "feminine"],
                      ["chen", "neuter"], ["lein", "neuter"], ["kind", "neuter"], ["jahr", "neuter"],
                      ["haus", "neuter"], ["mal", "neuter"], ["buch", "neuter"], ["prozent", "neuter"],
                      ["ling", "masculine"], ["ismus", "masculine"], ["tag", "masculine"], ["monat", "masculine"],
                      ["mann", "masculine"], ["platz", "masculine"], ["versuch", "masculine"],
-                     ["euro", "masculine"]],
+                     ["euro", "masculine"], ["tee", "masculine"]],
 })
 
 _SS = str.maketrans({"ß": "ss"})
@@ -169,7 +185,7 @@ VARIETIES = (
         "number_marks": {"Latn": [{"decimal": ".", "group": "'"}, {"decimal": ",", "group": "'"}]},
         "defaults": {"decimal_mark": "."},
         "currencies": {"CHF": {"symbols": ["CHF", "Fr."]}},
-        **{key: _swiss(DATA[key]) for key in ("abbreviations", "dative_prepositions")},
+        **{key: _swiss(DATA[key]) for key in ("abbreviations", "dative_prepositions", "genitive_prepositions")},
     })),
 )
 
@@ -238,7 +254,7 @@ class GermanSpeller:
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """A fraction is a neuter noun of the ordinal stem and -tel or -stel: "ein Drittel", "drei Viertel",
-        "ein Hundertstel" (Regelwerk § 58 E5). One half reads "ein halb"."""
+        "ein Hundertstel" (Regelwerk § 56 E5). One half reads "ein halb"."""
         top = self.cardinal(numerator, Features(gender=N), request)
         if bounded_integer(denominator) == 2:
             return f"{top} {request.data['half']}"
@@ -263,24 +279,34 @@ def _signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}" if sign else words
 
 
-def _case(before: Sequence[str], data) -> str | None:
-    """The case that the preposition right before the number governs, for the prepositions that govern one case."""
+def _case(before: Sequence[str], data, noun: str | None = None) -> str | None:
+    """The case that the word right before the number governs: a preposition that governs one case, a form of
+    "kosten", which takes the price in the accusative (de.wiktionary, "kosten" [1]), or "in", "an" and "vor"
+    before a noun of time, which take the dative (de.wikipedia, "Präposition", Zeitlich; de.wiktionary, "vor" [1]).
+    "in" and "an" before another noun also say where to, with the accusative, so they give no case there."""
     if not before:
         return None
     word = before[-1].lower()
     if word in data["dative_prepositions"]:
         return "dative"
-    if word in data["accusative_prepositions"]:
+    if word in data["accusative_prepositions"] or word in data["accusative_verbs"]:
         return "accusative"
+    time_noun = noun is not None and noun.lower().endswith(tuple(data["time_nouns"]))
+    if word in data["temporal_prepositions"] and time_noun:
+        return "dative"
     return None
 
 
 def noun_gender(word: str, data) -> GrammaticalGender | None:
-    """The gender of a noun from the whole-word table, else from its ending, the longest first. A compound takes
-    the gender of its last part, so "Kaffeetasse" ends in "e" and "Lehrjahr" in "jahr"."""
+    """The gender of a noun from the whole-word table, then from a frame of the whole word, then from its ending,
+    the longest first. A compound takes the gender of its last part, so "Kaffeetasse" ends in "e" and "Lehrjahr"
+    in "jahr"."""
     lower = word.lower()
     if lower in data["noun_genders"]:
         return GrammaticalGender(data["noun_genders"][lower])
+    for frame, gender in data["noun_frames"]:
+        if re.fullmatch(frame, lower):
+            return GrammaticalGender(gender)
     for ending, gender in sorted(data["noun_endings"], key=lambda entry: len(entry[0]), reverse=True):
         if lower.endswith(ending):
             return GrammaticalGender(gender)
@@ -300,21 +326,23 @@ def _noun_after(after: Sequence[str]) -> str | None:
 
 def _features(context: SpanContext, gender: GrammaticalGender | None = None) -> Features:
     """The agreement of design section 5.6: the hint, then the gender of the counted noun or of the unit, then the
-    params and the file. With no noun after it, a number is counted: "eins". A preposition right before the
-    number gives the case when the gender is known."""
+    params and the file. With no noun after it, a number is counted: "eins". The word right before the number
+    gives the case. A noun with no known gender takes only the dative, where the masculine and the neuter of the
+    default share "einem"."""
     if context.hint is not None:
         return context.hint
     data = context.request.data
-    known = gender is not None
+    noun = None
     if gender is None:
         noun = _noun_after(context.after)
         if noun is None:
             return Features()
         gender = noun_gender(noun, data)
-        known = gender is not None
-        if gender is None:
-            gender = context.request.params.default_gender.get(LANGUAGE.code) or LANGUAGE.default_gender
-    return Features(gender=gender, case=_case(context.before, data) if known else None)
+    case = _case(context.before, data, noun)
+    if gender is None:
+        gender = context.request.params.default_gender.get(LANGUAGE.code) or LANGUAGE.default_gender
+        case = case if case == "dative" else None
+    return Features(gender=gender, case=case)
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
@@ -359,7 +387,7 @@ def _determiner(context: SpanContext) -> FrozenMap | None:
 
 def _ordinal_features(context: SpanContext, gender: GrammaticalGender | None) -> Features:
     """The declension of an ordinal from the determiner right before it. "der" after a preposition is the
-    feminine dative, as in "in der 3. Woche"."""
+    feminine dative, as in "in der 3. Woche", or the feminine genitive, as in "wegen der 3. Mahnung"."""
     if context.hint is not None:
         return context.hint
     determiner = _determiner(context)
@@ -369,8 +397,11 @@ def _ordinal_features(context: SpanContext, gender: GrammaticalGender | None) ->
     written_gender = determiner.get("gender")
     data = context.request.data
     prepositions = {*data["dative_prepositions"], *data["accusative_prepositions"], *data["two_way_prepositions"]}
-    if context.before[-1].lower() == "der" and len(context.before) > 1 and context.before[-2].lower() in prepositions:
-        case, written_gender = "dative", "feminine"
+    if context.before[-1].lower() == "der" and len(context.before) > 1:
+        if context.before[-2].lower() in prepositions:
+            case, written_gender = "dative", "feminine"
+        elif context.before[-2].lower() in data["genitive_prepositions"]:
+            case, written_gender = "genitive", "feminine"
     if gender is None and written_gender is not None:
         gender = GrammaticalGender(written_gender)
     return Features(gender=gender or M, case=case, definite=determiner["definite"])
@@ -570,6 +601,85 @@ class Money:
 
 
 @dataclass(frozen=True)
+class Time:
+    """The shared clock recognizer. A clock mark that is also the decimal mark of the request, the full stop in
+    de-CH (CLDR `de_CH`, decimal "."), needs the time suffix "Uhr", because a time word such as "um" also comes
+    before an amount: `um 14.30 Uhr` is a time, and `um 1.15 Franken` is an amount.
+
+    The range word joins a clock time to a time with "Uhr", which is the evidence of both, as in
+    `von 9:00 bis 17:00 Uhr`. "von" and "bis" are no time words, because they also come before a ratio, as in
+    `ein Maßstab von 1:25`."""
+    name: str = "time_clock"
+    form: Form = Form.TIME
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        yield from self._joined(text, data)
+        decimal_mark = request.params.decimal_mark or data.get("defaults", FrozenMap()).get("decimal_mark", "")
+        for span in SHARED["time_clock"].find(text, tokens, request):
+            if span.fields["suffix"] or not decimal_mark or decimal_mark not in text[span.start:span.end]:
+                yield span
+
+    def _joined(self, text: str, data: FrozenMap) -> Iterator[Span]:
+        marks = "".join(re.escape(clock["mark"]) for clock in data.get("clock_marks", ()))
+        suffixes = "|".join(re.escape(suffix) for suffix in data.get("time_suffixes", ()))
+        if not (marks and suffixes and data.get("range_word")):
+            return
+        joined = re.compile(f"([0-9][0-9]?)[{marks}]([0-9][0-9]) {re.escape(data['range_word'])} "
+                            f"([0-9][0-9]?)(?:[{marks}]([0-9][0-9]))?(?:{suffixes})")
+        for match in joined.finditer(fold_digits(text)):
+            start, end = match.span()
+            fields = clock_fields(match.group(1), match.group(2), None)
+            if (fields is not None and clock_fields(match.group(3), match.group(4) or "00", None) is not None
+                    and is_bounded(text, start, end) and one_digit_set(text[start:end])):
+                yield Span(start, match.end(2), Form.TIME,
+                           FrozenMap({"hour": fields[0], "minute": fields[1], "second": None, "period": None,
+                                      "suffix": ""}), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class Fraction:
+    """The shared fraction recognizer. One half before a noun is the adjective "halb", which declines, as in "eine
+    halbe Million" (de.wiktionary, "halb" [1]), and the file gives no declined reading, so `1/2 Pizza` stays as
+    written. A noun is a capitalised word of letters that no abbreviation of the file spells, so no other form
+    reads it and a second pass sees the same noun."""
+    name: str = "fraction"
+    form: Form = Form.FRACTION
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        abbreviations = {*data.get("titles", ()), *data.get("abbreviations", ()), *data.get("number_abbreviations", ()),
+                         *data.get("scales", ()),
+                         *(symbol for currency in data.get("currencies", FrozenMap()).values()
+                           for symbol in currency.get("symbols", ()))}
+        for span in SHARED["fraction"].find(text, tokens, request):
+            start = stop = span.end + 1
+            while stop < len(text) and text[stop].isalpha():
+                stop += 1
+            word = text[start:stop]
+            noun = (text[span.end:start].isspace() and word[:1].isupper() and word[1:].islower()
+                    and is_bounded(text, start, stop) and word + text[stop:stop + 1] not in abbreviations)
+            yield replace(span, keep=True) if noun and bounded_integer(span.fields["denominator"]) == 2 else span
+
+
+@dataclass(frozen=True)
+class TitleAbbreviation(Abbreviation):
+    """The abbreviations of `en.py`, where a title reads before a capitalised name. A title also reads before `#`,
+    because the lead and the colour read as capitalised words, "Nummer" and "F", and a second pass would read the
+    title before them."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        yield from super().find(text, tokens, request)
+        for key in request.data.get("titles", FrozenMap()):
+            position = text.find(key)
+            while position != -1:
+                end = position + len(key)
+                if is_bounded(text, position, end) and next_visible(text, end) == "#":
+                    yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}), recognizer=self.name)
+                position = text.find(key, end)
+
+
+@dataclass(frozen=True)
 class Ordinal:
     """A number and a full stop that mark an ordinal (Regelwerk § 104: "der 2. Weltkrieg"), after a determiner of
     the `determiners` table, as in `am 3. Tag` and `der 2. Platz`. At the end of a sentence the one full stop also
@@ -680,8 +790,8 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 SHARED["time_clock"], GermanTelephone(), Money(), SHARED["percent"], SHARED["measure"],
-                 Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
+                 Time(), GermanTelephone(), Money(), SHARED["percent"], SHARED["measure"],
+                 Year(), Expression(), Fraction(), SHARED["range"], Ordinal(), TitleAbbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon,
                  **{form: _swiss_verbalizer(verbalizer) for form, verbalizer in _VERBALIZERS.items()}},
