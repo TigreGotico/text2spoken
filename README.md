@@ -178,8 +178,8 @@ Some Russian readings are still wrong:
 - An object before the verb, as in `3 детей я видел`, reads "трое", not "троих".
 - An adverb before the adjective, as in `2 очень маленьких детей`, hides the noun, so the number reads "два".
 - A date before a dash reads in the genitive, also after "сегодня": `Сегодня 1 мая — День весны` reads "первого мая".
-- A date before a comma, a colon or a bracket reads in the genitive, also where it is the subject: `Было 1 мая, шёл дождь`, `Сегодня 1 мая, в субботу, мы идём на парад`, `«Сегодня 1 мая», — сказал он`, `Завтра, 1 мая, будет парад` and `Сегодня (1 мая) праздник`. A dateline such as `1 мая, вторник` and a label before a comma such as `Дата: 9 мая, вторник` read in the genitive too.
-- A phrase with "у", "в" or "во" that the three words before the number do not show whole stays as written: `У нас в семье 3 детей`.
+- A date before a comma, a colon or a bracket reads in the genitive, also where it is the subject: `Было 1 мая, шёл дождь`, `Сегодня 1 мая, в субботу, мы идём на парад`, `«Сегодня 1 мая», — сказал он` and `Сегодня (1 мая) праздник`. A dateline such as `1 мая, вторник` and a label before a comma such as `Дата: 9 мая, вторник` read in the genitive too.
+- A phrase with "у", "в" or "во" that does not open the clause stays as written: `В семье у нас 3 детей`. So does a phrase that the three words before the number do not show whole: `У нас в семье 3 детей`.
 - The prepositional in `-е` or `-ии` and some nouns in `-ь` read masculine without a gender hint.
 - A count after a verb reads the nominative, and an animate accusative reads the cardinal.
 

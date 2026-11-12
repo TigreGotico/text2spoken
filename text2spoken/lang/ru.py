@@ -59,8 +59,8 @@ DATA = freeze({
     "zero_minutes": "ноль-ноль",
     "copulas": ["был", "была", "было", "будет", "есть"],
     "onset_verbs": ["наступил", "наступила", "наступило", "наступит"],
-    "date_adverbs": ["вот", "и", "а", "но", "ведь", "же", "ну", "ещё", "не", "ли", "наконец", "уже", "тогда", "скоро",
-                     "сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
+    "date_adverbs": ["вот", "и", "а", "но", "да", "ведь", "же", "ну", "ещё", "не", "ли", "наконец", "уже", "тогда",
+                     "скоро", "сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
     "owner_prepositions": ["у", "в", "во"],
     "collective_numerals": {"2": "двое", "3": "трое", "4": "четверо"},
     "pluralia_tantum": ["суток", "саней", "ножниц", "брюк", "ворот"],
@@ -715,15 +715,17 @@ opening quote and the date, where one stands among the three words before the da
 
 def _scope(text: str, start: int) -> int | None:
     """The number of words between the last colon or opening quote and text[start], if one stands among the three
-    whitespace chunks before it. A colon before a digit is part of a clock time, and only a quote at the start of a
-    chunk opens."""
+    whitespace chunks before it. A colon before a digit is part of a clock time. A quote opens only at the start of
+    a chunk and only when no closing quote stands between it and the date, so a quoted title such as "газету
+    «Завтра»" leaves the window whole."""
     chunks = text[max(0, start - 200):start].split()[-3:]
     for index in range(len(chunks) - 1, -1, -1):
         chunk = chunks[index]
         colon = chunk.rfind(":")
         if colon >= 0 and not chunk[colon + 1:colon + 2].isdigit():
             rest = chunks[index + 1:] + [chunk[colon + 1:]]
-        elif chunk.startswith(_OPENING_QUOTES):
+        elif chunk.startswith(_OPENING_QUOTES) and not any(
+                quote in " ".join(chunks[index:])[1:] for quote in ("»", "”", chunk[0])):
             rest = chunks[index:]
         else:
             continue
