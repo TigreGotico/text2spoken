@@ -1,4 +1,5 @@
-"""Spanish: es-ES, the default variety, es-419, es-MX, es-AR and es-US.
+"""Spanish: es-ES, the default variety, es-419, es-MX, es-AR, es-US, and the American varieties that write a decimal
+comma: es-CO, es-CL, es-UY, es-VE, es-EC, es-BO, es-PY and es-CR.
 
 Number words come from ovos-number-parser, as the speller table of design section 5.4 names it. The file adds
 the agreement that the speller does not give: `uno` takes the apocope `un` before a masculine noun, and the
@@ -8,8 +9,9 @@ entry «fraccionarios» gives "un veintiunavo". It writes its own decimals, beca
 drops the written zero of `2,50`, and because the DLE entry «coma» (1.b) reads the decimal part as a number:
 "trescientos veinticinco coma ochenta y cinco".
 
-The varieties differ in the decimal mark (DPD «punto», 4.4), the currency of `$` (DPD, appendix 4), the reading
-of the first day of the month (DPD «primero», 3) and of a whole percentage (DPD «ciento», 3).
+The varieties differ in the decimal mark (DPD «punto», 4.4; CLDR per region), the currency of `$` (DPD, appendix 4),
+the reading of `#` (DPD, appendix 4), the reading of the first day of the month (DPD «primero», 3) and of a whole
+percentage (DPD «ciento», 3).
 """
 from __future__ import annotations
 
@@ -25,6 +27,7 @@ from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_win
 from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, is_bounded, is_word_char, next_visible
+from text2spoken.errors import DeclinedReading
 from text2spoken.lang.en import Expression
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
@@ -44,7 +47,7 @@ DATA = freeze({
     "sign_words": {"-": "menos", "+": "más"},
     "decimal_words": {",": "coma", ".": "punto"},
     "digit_words": ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"],
-    "leads": {"#": "número", "-": ""},
+    "leads": {"-": ""},
     "fraction_names": {"2": "medio", "3": "tercio", "4": "cuarto", "5": "quinto", "6": "sexto", "7": "séptimo",
                        "8": "octavo", "9": "noveno", "10": "décimo", "100": "centésimo"},
     "range_word": "a",
@@ -144,25 +147,46 @@ DATA = freeze({
     "patterns": {"expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+"},
 })
 
-AMERICA = {"first_of_month": "ordinal", "percent": {"whole": "ciento por ciento"}}
-"""What every American variety changes: `primero` for the first day of the month (DPD «primero», 3), and `ciento
-por ciento` for a whole percentage (DPD «ciento», 3). The euro cent is `céntimo` in every variety (DPD «euro», 3)."""
+AMERICA = {"first_of_month": "ordinal", "percent": {"whole": "ciento por ciento"}, "leads": {"#": "número"}}
+"""What every American variety changes: `primero` for the first day of the month (DPD «primero», 3), `ciento por
+ciento` for a whole percentage (DPD «ciento», 3), and `número` for `#`, which DPD appendix 4 marks as American. The
+euro cent is `céntimo` in every variety (DPD «euro», 3)."""
+
+POINT = {"decimal_mark": "."}
+"""The decimal point and the group comma of CLDR `es_419`, which `es_MX`, `es_US` and the other American locales
+with no symbols of their own take."""
+
+DOLLAR_SIGN_ONLY = {"USD": {"symbols": ["US$"]}}
+"""Where `$` can be a peso, only `US$` reads as the dollar."""
+
+
+def _peso(code: str) -> dict:
+    return {code: {"symbols": ["$"], "one": "peso", "other": "pesos", "many": "de pesos", "gender": "masculine",
+                   "minor": {"one": "centavo", "other": "centavos"}}}
+
 
 VARIETIES = (
     Variety("es-ES"),
-    Variety("es-419", freeze({**AMERICA, "currencies": {"USD": {"symbols": ["US$"]}}})),
-    Variety("es-MX", freeze({**AMERICA, "defaults": {"decimal_mark": "."}, "currencies": {
-        "USD": {"symbols": ["US$"]},
-        "MXN": {"symbols": ["$"], "one": "peso", "other": "pesos", "many": "de pesos", "gender": "masculine",
-                "minor": {"one": "centavo", "other": "centavos"}}}})),
-    Variety("es-AR", freeze({**AMERICA, "currencies": {
-        "USD": {"symbols": ["US$"]},
-        "ARS": {"symbols": ["$"], "one": "peso", "other": "pesos", "many": "de pesos", "gender": "masculine",
-                "minor": {"one": "centavo", "other": "centavos"}}}})),
-    Variety("es-US", freeze({**AMERICA, "defaults": {"decimal_mark": "."}})),
+    Variety("es-419", freeze({**AMERICA, "defaults": POINT, "currencies": DOLLAR_SIGN_ONLY})),
+    Variety("es-MX", freeze({**AMERICA, "defaults": POINT, "currencies": {**DOLLAR_SIGN_ONLY, **_peso("MXN")}})),
+    Variety("es-AR", freeze({**AMERICA, "currencies": {**DOLLAR_SIGN_ONLY, **_peso("ARS")}})),
+    Variety("es-US", freeze({**AMERICA, "defaults": POINT})),
+    Variety("es-CO", freeze({**AMERICA, "currencies": DOLLAR_SIGN_ONLY})),
+    Variety("es-CL", freeze({**AMERICA, "currencies": {**DOLLAR_SIGN_ONLY, **_peso("CLP")}})),
+    Variety("es-UY", freeze({**AMERICA, "currencies": {**DOLLAR_SIGN_ONLY, **_peso("UYU")}})),
+    Variety("es-VE", freeze({**AMERICA, "currencies": DOLLAR_SIGN_ONLY})),
+    Variety("es-EC", freeze(AMERICA)),
+    Variety("es-BO", freeze({**AMERICA, "currencies": DOLLAR_SIGN_ONLY})),
+    Variety("es-PY", freeze({**AMERICA, "currencies": DOLLAR_SIGN_ONLY})),
+    Variety("es-CR", freeze({**AMERICA, "currencies": DOLLAR_SIGN_ONLY})),
 )
 """`$` is the peso of Argentina, Chile, Mexico and Uruguay, and the dollar of the United States, Puerto Rico and
-Ecuador (DPD, appendix 4). `es-419` covers both, so `$` stays as written there, and `US$` reads as the dollar."""
+Ecuador (DPD, appendix 4). `es-419` covers both, so `$` stays as written there, and `US$` reads as the dollar. `$`
+also stays as written in the other comma varieties, because appendix 4 does not name it for them.
+
+CLDR gives `es_419` the decimal point, and `es_CO`, `es_CL`, `es_UY`, `es_VE`, `es_EC`, `es_BO`, `es_PY` and
+`es_CR` the decimal comma of `es`, so each of these has a variety. They read the point as the group mark, as `es`
+does; CLDR gives `es_CR` a space, and a run grouped with spaces stays as written (design section 4.3)."""
 
 
 def feminine(words: str) -> str:
@@ -189,6 +213,18 @@ def _plain(text: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
 
 
+LARGEST = 10**18
+"""The first number that stays as written, `un trillón`. Above it, ovos-number-parser reads no ordinal from 10**24,
+and from 10**42 it reads a cardinal as a rounded power of ten: "uno por diez elevado a cuarenta y dos" for
+10**42 + 1."""
+
+
+def _below_largest(digits: str) -> None:
+    value = bounded_integer(digits)
+    if value is None or value >= LARGEST:
+        raise DeclinedReading(f"{len(digits)} digits reach 10**18, which this file leaves as written")
+
+
 class SpanishSpeller:
     """ovos-number-parser cardinals and ordinals, with the agreement, decimals and fractions of this file."""
 
@@ -196,10 +232,12 @@ class SpanishSpeller:
         self.ovos = OvosNumberSpeller({M: "masculine", F: "feminine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
+        _below_largest(digits)
         words = self.ovos.cardinal(digits, Features(), request)
         return feminine(words) if features.gender is F else words
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
+        _below_largest(digits)
         return self.ovos.ordinal(digits, Features(gender=features.gender or M), request)
 
     def year(self, digits: str, features: Features, request: Request) -> str:
@@ -263,11 +301,21 @@ def _is_year(span: Span, before: Sequence[str], data) -> bool:
             and bool(before) and before[-1].lower() in data["year_words"])
 
 
+def _bare_hour(span: Span, before: Sequence[str], data) -> bool:
+    """A whole number from 0 to 24 right after `la` or `las` names an hour (DPD «hora», 2.2: the numbers from 0 to
+    23, and 24:00 for the end of the day)."""
+    if span.form is not Form.CARDINAL or span.fields["sign"] or not before or before[-1] not in data["time_words"]:
+        return False
+    value = bounded_integer(span.fields["digits"])
+    return value is not None and value <= 24
+
+
 def agreement(span: Span, context: SpanContext) -> Agreement:
     """The hint, else the noun after the number, else the default gender of the params (design section 5.6). A
     capitalised word is a name and no counted noun, and a year after a year word counts nothing. A number other
     than 1 counts a plural noun, so a word with no final `s` after it, such as the verb in `200 pesa`, is no
-    counted noun."""
+    counted noun. With no noun, an hour after `la` or `las` is feminine: "a la una de la tarde" (DPD «hora», 2.1),
+    "Son las cero horas" (5.2)."""
     data = context.request.data
     first = context.after[0] if context.after else ""
     noun = first if first[:1].islower() and first.isalpha() and first not in data["function_words"] else None
@@ -279,6 +327,8 @@ def agreement(span: Span, context: SpanContext) -> Agreement:
         return Agreement(context.hint.gender, noun)
     if noun is not None:
         return Agreement(noun_gender(noun, data) or M, noun)
+    if _bare_hour(span, context.before, data):
+        return Agreement(F, None)
     return Agreement(context.request.params.default_gender.get(LANGUAGE.code), None)
 
 
@@ -305,9 +355,19 @@ def _written(amount: FrozenMap) -> str:
     return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
 
 
+def _first_of_month(span: Span, after: Sequence[str], data) -> bool:
+    """`1` before `de` and a month name, as in `el 1 de mayo`."""
+    return (span.fields["digits"] == "1" and not span.fields["sign"] and len(after) >= 2 and after[0] == "de"
+            and after[1].lower() in data["months"])
+
+
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """A lead word of "" stands for a space; digits with a leading zero, which only a lead admits, read one by
-    one, and a number after a lead names a label, so it takes no agreement."""
+    one, and a number after a lead names a label, so it takes no agreement.
+
+    The first day of a month written with its name reads as a numeric date does: `primero` in America (DPD
+    «primero», 3). A round million before its noun takes `de`, as the CLDR plural category `many` gives for units
+    and currencies: "un millón de habitantes" (DLE «millón», 1.a)."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if fields["lead"]:
@@ -317,7 +377,13 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
             words = _plain_cardinal(digits, request)
         lead = request.data["leads"][fields["lead"]]
         return f"{lead} {words}" if lead else f" {words}"
-    return _signed(agreement(span, context).read(digits, request), fields["sign"], request)
+    if request.data["first_of_month"] == "ordinal" and _first_of_month(span, context.after, request.data):
+        return SPELLER.ordinal(digits, Features(gender=M), request)
+    agree = agreement(span, context)
+    words = agree.read(digits, request)
+    if agree.noun is not None and plural_category(request, digits) == "many":
+        words += " de"
+    return _signed(words, fields["sign"], request)
 
 
 def speak_decimal(span: Span, context: SpanContext) -> str:
@@ -326,7 +392,8 @@ def speak_decimal(span: Span, context: SpanContext) -> str:
 
 def speak_ordinal(span: Span, context: SpanContext) -> str:
     """The marker gives the gender and the number: `1.º`, `1.ª`, `1.os`. `1.er` and a masculine singular ordinal
-    before its noun take the apocope `primer` and `tercer` (DPD «primero», 1.a; «tercero», 1.a)."""
+    before its noun take the apocope `primer` and `tercer`, also at the end of a longer ordinal, as in
+    "vigesimoprimer" and "decimotercer" (DPD «ordinales», 4: "el vigesimoprimer aniversario")."""
     request = context.request
     kind = request.data["ordinal_marks"][span.fields["marker"]]
     gender = F if kind.startswith("feminine") else M
@@ -338,7 +405,7 @@ def speak_ordinal(span: Span, context: SpanContext) -> str:
                    and not first.endswith("s") and noun_gender(first, request.data) is not F)
     if kind == "apocope" or (gender is M and before_noun):
         *head, last = words.split()
-        words = " ".join([*head, {"primero": "primer", "tercero": "tercer"}.get(last, last)])
+        words = " ".join([*head, last[:-1] if last.endswith(("primero", "tercero")) else last])
     return words
 
 
@@ -389,7 +456,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
 
 def _day_period(hour: int) -> str:
     """The part of the day of a 24-hour hour (DPD «hora», 2.1 and 2.1.2). The DPD bounds the afternoon and the
-    night by sunset; this file puts that bound at 20:00."""
+    night by sunset; this file puts that bound at 20:00, so `8.30 p. m.` is "de la noche"."""
     if hour == 0 or hour >= 20:
         return "noche"
     if hour <= 5:

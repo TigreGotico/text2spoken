@@ -168,7 +168,17 @@ If the tag is not valid, or if no language file reads the tag, the command write
 
 English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
-Spanish reads the varieties `es-ES`, `es-419`, `es-MX`, `es-AR` and `es-US`. Install `text2spoken[es]` for its number words. Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The test rows in `tests/data/es.tsv` name their source. No native speaker has checked them.
+Spanish reads the varieties `es-ES`, `es-419`, `es-MX`, `es-AR` and `es-US`, and `es-CO`, `es-CL`, `es-UY`, `es-VE`, `es-EC`, `es-BO`, `es-PY` and `es-CR`. The decimal mark of each variety comes from CLDR: `es-419`, `es-MX` and `es-US` use the point, and the others use the comma. Install `text2spoken[es]` for its number words. Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The test rows in `tests/data/es.tsv` name their source. No native speaker has checked them.
+
+Spanish leaves these forms as written or reads them in a limited way:
+
+- A number of 10^18 or more stays as written.
+- Only a whole number from 0 to 24 after `la` or `las` reads as a feminine hour. A larger number after `las` reads in the masculine, also where it counts a feminine noun that the text leaves out, as in `las 200 de la lista`.
+- `primero` for the first day of the month needs `1 de` and a month name. In `del 1 al 5 de mayo`, the `1` reads `uno` in every variety.
+- `#` stays as written in `es-ES`, because the reading `número` is American.
+- `$` stays as written in `es-419`, `es-CO`, `es-VE`, `es-BO`, `es-PY` and `es-CR`, because it can be a peso or a dollar there.
+- `es-CR` reads the point as the group mark, as `es` does. CLDR gives a space for `es_CR`, and a number grouped with spaces stays as written.
+- The night starts at 20:00 for a time with `p. m.`. The DPD starts it at nightfall.
 
 ## Development
 

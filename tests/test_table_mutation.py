@@ -33,7 +33,7 @@ EN_ENTRIES = {
 }
 ES_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
-    "leads": "#", "fraction_names": "2", "range_word": DELETE, "range_marks": "-", "time_words": "las",
+    "leads": "-", "fraction_names": "2", "range_word": DELETE, "range_marks": "-", "time_words": "las",
     "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_symbols": " h",
     "day_periods": "pm", "day_period_words": "tarde", "minute_phrases": "30", "months": "marzo",
     "first_of_month": DELETE, "currencies": "EUR", "scales": "millones", "percent": "word", "units": "kg",
