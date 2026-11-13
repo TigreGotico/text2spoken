@@ -182,7 +182,7 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
     data = freeze({**thaw(STUB.data), "range_word": "al", "time_words": ["je"],
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
                                    {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
-                   "electronic_symbols": {"@": "et"}, "electronic_letters": {"a": "ha"}, "electronic_vowels": ["a"],
+                   "electronic_symbols": {"@": "et"}, "letter_names": {"a": "ha"}, "electronic_vowels": ["a"],
                    "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"]})
     readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["electronic"])
     verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic}

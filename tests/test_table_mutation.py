@@ -32,7 +32,7 @@ EN_ENTRIES = {
     "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
-    "electronic_symbols": "@", "electronic_letters": "w", "electronic_vowels": "i", "electronic_schemes": "https",
+    "electronic_symbols": "@", "letter_names": "w", "electronic_vowels": "i", "electronic_schemes": "https",
     "electronic_tlds": "uk",
 }
 DE_ENTRIES = {
@@ -130,10 +130,11 @@ def test_dropping_a_symbol_hides_it_from_the_unread_check(monkeypatch):
     assert normalize("Pay in $ only.", "en", strict) == "Pay in $ only."
 
 
-PT = pt_electronic.LANGUAGE
-PT_ENTRIES = {"electronic_symbols": "@", "electronic_letters": "w", "electronic_vowels": "a",
-              "electronic_schemes": "https", "electronic_tlds": "pt", "digit_words": "zero"}
-PT_VARIETY_ENTRIES = {("pt-PT", "electronic_symbols"): "_", ("pt-BR", "electronic_symbols"): "#"}
+PT_ADDRESS = pt_electronic.LANGUAGE
+PT_ADDRESS_ENTRIES = {"electronic_symbols": "@", "letter_names": "p", "electronic_vowels": "a",
+                      "electronic_schemes": "https", "electronic_tlds": "pt", "digit_words": "zero"}
+PT_ADDRESS_VARIETY_ENTRIES = {("pt-PT", "electronic_symbols"): "_", ("pt-BR", "electronic_symbols"): "#",
+                              ("pt-PT", "letter_names"): "w", ("pt-BR", "letter_names"): "w"}
 """One entry of each address table of Portuguese, in its language data and in each variety."""
 
 
@@ -143,19 +144,19 @@ def _pt_failures(monkeypatch, spec) -> list[str]:
 
 
 def test_every_pt_address_table_has_an_entry_to_drop():
-    assert set(PT_ENTRIES) == set(PT.data)
-    assert {(v.tag, table) for v in PT.varieties for table in v.data} == set(PT_VARIETY_ENTRIES)
+    assert set(PT_ADDRESS_ENTRIES) == set(PT_ADDRESS.data)
+    assert {(v.tag, table) for v in PT_ADDRESS.varieties for table in v.data} == set(PT_ADDRESS_VARIETY_ENTRIES)
 
 
-@pytest.mark.parametrize("table", sorted(PT_ENTRIES))
+@pytest.mark.parametrize("table", sorted(PT_ADDRESS_ENTRIES))
 def test_dropping_a_pt_address_entry_fails_a_row(monkeypatch, table):
-    assert _pt_failures(monkeypatch, PT) == []
-    assert _pt_failures(monkeypatch, replace(PT, data=drop(PT.data, table, PT_ENTRIES[table])))
+    assert _pt_failures(monkeypatch, PT_ADDRESS) == []
+    assert _pt_failures(monkeypatch, replace(PT_ADDRESS, data=drop(PT_ADDRESS.data, table, PT_ADDRESS_ENTRIES[table])))
 
 
-@pytest.mark.parametrize(("tag", "table"), sorted(PT_VARIETY_ENTRIES))
+@pytest.mark.parametrize(("tag", "table"), sorted(PT_ADDRESS_VARIETY_ENTRIES))
 def test_dropping_a_pt_variety_entry_fails_a_row(monkeypatch, tag, table):
-    entry = PT_VARIETY_ENTRIES[tag, table]
-    varieties = tuple(replace(v, data=drop(v.data, table, entry)) if v.tag == tag else v for v in PT.varieties)
-    assert _pt_failures(monkeypatch, PT) == []
-    assert _pt_failures(monkeypatch, replace(PT, varieties=varieties))
+    entry = PT_ADDRESS_VARIETY_ENTRIES[tag, table]
+    varieties = tuple(replace(v, data=drop(v.data, table, entry)) if v.tag == tag else v for v in PT_ADDRESS.varieties)
+    assert _pt_failures(monkeypatch, PT_ADDRESS) == []
+    assert _pt_failures(monkeypatch, replace(PT_ADDRESS, varieties=varieties))

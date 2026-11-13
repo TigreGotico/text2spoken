@@ -79,7 +79,7 @@ def _label(run: str, data) -> list[str]:
     vowels = frozenset(data["electronic_vowels"])
     if known == "word" or (known is None and len(run) >= 3 and any(c in vowels for c in run.lower())):
         return [run]
-    return [data["electronic_letters"][c] for c in run.lower()]
+    return [data["letter_names"][c] for c in run.lower()]
 
 
 def _words(written: str, data) -> list[str]:

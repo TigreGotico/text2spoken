@@ -93,6 +93,13 @@ def test_without_the_form_an_address_stays_as_written():
     assert normalize(text, "en", NormalizationParams().without(Form.ELECTRONIC)) == text
 
 
+@pytest.mark.parametrize("tag", ["pt-PT", "pt-BR"])
+def test_without_the_form_a_pt_address_stays_as_written(pt, tag):
+    text = "Escreva para ana@sapo.pt ou veja www.exemplo.com.br."
+    assert normalize(text, tag) != text
+    assert normalize(text, tag, NormalizationParams().without(Form.ELECTRONIC)) == text
+
+
 def test_an_address_glued_to_a_letter_stays_as_written():
     for text in ("Write to annè@example.com now.", "Write to ann@exampleé.com now.", "Go to www.câmara.pt now."):
         assert normalize(text, "en") == text

@@ -18,25 +18,34 @@ and "sublinha" in pt-BR (Ciberdúvidas, answer 10508, "O 'underscore' inglês": 
 "cerquilha" in pt-BR (Ciberdúvidas, answer 30141, "O nome e o significado do símbolo #": "Em Portugal, é corrente
 a denominação cardinal"; the Brazilian Houaiss "regista cerquilha").
 
-A letter reads by its name in the Acordo Ortográfico de 1990, Base I, 1.º, which both varieties share. For "g"
-and "k" the Base gives two names, "gê ou guê" and "capa ou cá", and the table takes the first. A domain of two
-letters reads letter by letter, and "com" reads as a word: Ciberdúvidas, answer 19059, "A pronúncia de '.com'
-(Internet)", says that the domains of countries are spelt "à portuguesa": "o domínio 'pt' é pronunciado 'pê
-tê'", and it advises the reading "cõ", the Portuguese word "com".
+A letter reads by its name in the Acordo Ortográfico de 1990, Base I, 1.º. For "g" and "k" the Base gives two
+names, "gê ou guê" and "capa ou cá", and the table takes the first. A phonemizer reads each name with no context,
+and three names of the Base are also common words with a closed [e]: the pronoun "ele", the determiner "esse" and
+the verb form "erre". So the table marks the open vowel with an acute accent in "éfe", "éle", "éme", "éne", "érre"
+and "ésse" (text2spoken design, section 4.5; the measured readings of tugaphone and espeak-ng are in
+knowledge/wiki/audits/text2spoken-langs/pt/letter-names/README.md). The name of "w" differs by variety. pt-PT
+writes "dâblio" [ˈdɐbliu], with a closed vowel (ruling of Miro, a native speaker of pt-PT), and pt-BR writes
+"dáblio" [ˈdabliu], the name in the Base. Unaccented "dablio" moves the stress to the last syllable in tugaphone,
+so both names keep an accent.
+
+A domain of two letters reads letter by letter, and "com" reads as a word: Ciberdúvidas, answer 19059, "A pronúncia
+de '.com' (Internet)", says that the domains of countries are spelt "à portuguesa": "o domínio 'pt' é pronunciado
+'pê tê'", and it advises the reading "cõ", the Portuguese word "com".
 """
 
 ELECTRONIC = {
     "electronic_symbols": {"@": "arroba", ".": "ponto", "-": "hífen", "/": "barra", ":": "dois pontos", "~": "til",
                            "?": "ponto de interrogação", "=": "igual", "&": "e comercial", "+": "mais"},
-    "electronic_letters": dict(zip("abcdefghijklmnopqrstuvwxyz", (
-        "á", "bê", "cê", "dê", "é", "efe", "gê", "agá", "i", "jota", "capa", "ele", "eme", "ene", "ó", "pê", "quê",
-        "erre", "esse", "tê", "u", "vê", "dáblio", "xis", "ípsilon", "zê"))),
+    # The name of "w" differs by variety, so VARIETIES holds it.
+    "letter_names": dict(zip("abcdefghijklmnopqrstuvxyz", (
+        "á", "bê", "cê", "dê", "é", "éfe", "gê", "agá", "i", "jota", "capa", "éle", "éme", "éne", "ó", "pê", "quê",
+        "érre", "ésse", "tê", "u", "vê", "xis", "ípsilon", "zê"))),
     "electronic_vowels": ["a", "e", "i", "o", "u"],
     "electronic_schemes": {"http": "read", "https": "read", "ftp": "read"},
     "electronic_tlds": ["pt", "br", "com", "org", "net", "eu"],
 }
 
 VARIETIES = {
-    "pt-PT": {"electronic_symbols": {"_": "traço inferior", "#": "cardinal"}},
-    "pt-BR": {"electronic_symbols": {"_": "sublinha", "#": "cerquilha"}},
+    "pt-PT": {"electronic_symbols": {"_": "traço inferior", "#": "cardinal"}, "letter_names": {"w": "dâblio"}},
+    "pt-BR": {"electronic_symbols": {"_": "sublinha", "#": "cerquilha"}, "letter_names": {"w": "dáblio"}},
 }

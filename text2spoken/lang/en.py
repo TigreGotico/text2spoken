@@ -157,7 +157,7 @@ DATA = freeze({
     "electronic_symbols": {"@": "at", ".": "dot", "-": "dash", "_": "underscore", "/": "slash", ":": "colon",
                            "~": "tilde", "#": "hash", "?": "question mark", "=": "equals", "&": "ampersand",
                            "+": "plus"},
-    "electronic_letters": dict(zip("abcdefghijklmnopqrstuvwxyz", (
+    "letter_names": dict(zip("abcdefghijklmnopqrstuvwxyz", (
         "a", "bee", "cee", "dee", "e", "ef", "gee", "aitch", "i", "jay", "kay", "el", "em", "en", "o", "pee", "cue",
         "ar", "ess", "tee", "u", "vee", "double-u", "ex", "wye", "zed"))),
     "electronic_vowels": ["a", "e", "i", "o", "u"],
@@ -176,7 +176,7 @@ VARIETIES = (
                                         if "gray" in name}})),
     Variety("en-US", freeze({
         "defaults": {"date_order": "MDY"},
-        "electronic_letters": {"z": "zee"},
+        "letter_names": {"z": "zee"},
         "numeric_date_reading": {"full": "{month} {day} {year}", "no_year": "{month} {day}"},
         "percent": {"word": "percent"},
         "titles": {"Dr": None, "Mr": None, "Mrs": None},
