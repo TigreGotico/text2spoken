@@ -12,6 +12,8 @@ import pytest
 
 from text2spoken import Form, NormalizationParams, normalize
 from text2spoken.core import symbols
+from text2spoken.lang import pt
+from text2spoken.params import freeze
 
 TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR")
 ROOT = Path(__file__).resolve().parent.parent
@@ -288,3 +290,35 @@ def test_a_symbol_between_two_phone_numbers_keeps_the_second_named(tag, text, pl
     once = normalize(text, tag)
     assert once == normalize(plain, tag).replace(link, f"{link}{name} ", 1)
     assert normalize(once, tag) == once
+
+
+@pytest.mark.parametrize(("tag", "text", "written"), [
+    ("pt-PT", "2 £", "2 libras"), ("pt-PT", "1₺", "1 lira turca"), ("pt-PT", "2 ₹", "2 rupias indianas"),
+    ("pt-BR", "21 £", "21 libras"), ("pt-BR", "£ 200", "200 libras"), ("pt-PT", "2 mil £", "2 mil libras"),
+    ("pt-PT", "2 €", "2 euros"), ("pt-BR", "1 R$", "1 real"), ("pt-PT", "2 ৳", "2 takas bengalis"),
+    ("pt-BR", "2 C$", "2 córdobas nicaraguenses"), ("pt-PT", "2 ₪", "2 sheqels novos israelitas"),
+])
+def test_a_currency_takes_the_gender_of_the_noun_that_names_it(tag, text, written):
+    """CLDR gives a currency no gender, so the number agrees with the currency name as it agrees with the same name
+    written after it (design section 4.7). Priberam: "libra", "lira" and "rupia" are "nome feminino"; "taka" and
+    "córdoba" are "nome masculino". The noun is the first word of the name, so "israelita" does not count."""
+    assert normalize(text, tag) == normalize(written, tag)
+
+
+@pytest.mark.parametrize("tag", ["pt-PT", "pt-BR"])
+def test_a_number_before_a_scale_noun_stays_masculine_before_a_feminine_currency(tag):
+    """Priberam, "milhão": "nome masculino", so the words before it stay masculine."""
+    assert normalize("2 milhões £", tag) == "dois milhões de libras"
+
+
+def test_the_major_unit_before_a_minor_unit_takes_the_gender_of_its_name(monkeypatch):
+    """No feminine currency of the pt data names a minor unit, so the test lends one to GBP."""
+    table = pt.currency_table
+
+    def lent(request):
+        currencies = dict(table(request))
+        currencies["GBP"] = freeze({**currencies["GBP"], "minor": {"one": "péni", "other": "pence"}})
+        return freeze(currencies)
+
+    monkeypatch.setattr(pt, "currency_table", lent)
+    assert normalize("2,50 £", "pt-PT") == f"{normalize('2 libras', 'pt-PT')} e cinquenta pence"

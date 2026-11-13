@@ -33,7 +33,11 @@ Reino Unido (código: GBP). = LIBRA"; "iene": "Unidade monetária do Japão (có
 currency name with a capital ("Euro", "Rupias indianas"), and a currency name is a common noun with a small letter
 (Acordo Ortográfico de 1990, Base XIX, 1.º a: "A letra minúscula inicial é usada: a) Ordinariamente, em todos os
 vocábulos da língua nos usos correntes"), so a currency name reads with a small first letter: "euros", "rupias
-indianas". The CLDR 49 pt
+indianas". CLDR gives a currency no gender, so the noun rules give the gender of the first word of the name, as
+they give the gender of a unit with no CLDR gender: `2 £` reads "duas libras" and `2 €` "dois euros". `noun_gender`
+names the currency nouns that end in "a" and are masculine: Priberam, "taka": "nome masculino [...] Unidade
+monetária do Bangladeche (código: BDT)"; "córdoba": "nome masculino [...] Unidade monetária da Nicarágua (código:
+NIO)". The CLDR 49 pt
 annotations name `$` "dólar" and `¥` "iene", so `$` reads as the dollar and `¥` as the yen, where CLDR pt shares the
 narrow `$` and `¥` between currencies. A `$` after the number is the escudo (see `Money`); CLDR 49 pt-PT gives the
 escudo `$` as its decimal mark. The minor units: Priberam, "cêntimo": "Moeda divisionária que corresponde à
@@ -171,6 +175,7 @@ DATA = freeze({
         "problema": "masculine", "problemas": "masculine", "sistema": "masculine", "sistemas": "masculine",
         "programa": "masculine", "programas": "masculine", "tema": "masculine", "temas": "masculine",
         "grama": "masculine", "gramas": "masculine", "quilograma": "masculine", "quilogramas": "masculine",
+        "taka": "masculine", "takas": "masculine", "córdoba": "masculine", "córdobas": "masculine",
         "lei": "feminine", "leis": "feminine", "vez": "feminine", "vezes": "feminine", "noite": "feminine",
         "noites": "feminine", "tarde": "feminine", "tardes": "feminine", "parte": "feminine", "partes": "feminine",
         "mulher": "feminine", "mulheres": "feminine", "flor": "feminine", "flores": "feminine",
@@ -457,16 +462,21 @@ def _currency(currency: FrozenMap, category: str) -> str:
 
 def speak_money(span: Span, context: SpanContext) -> str:
     """Two decimals are the minor unit, when the currency names one: `dois euros e cinquenta cêntimos`. A scale
-    word that the text writes reads before the plural name: `dois milhões de reais`."""
+    word that the text writes reads before the plural name: `dois milhões de reais`. The number agrees with the
+    first word of the currency name, so `2 £` reads `duas libras`; before a scale word from `milhão` up it stays
+    masculine, and before `mil` it agrees with the name: `duas mil libras`."""
     request = context.request
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
     currency = currency_table(request)[fields["currency"]]
+    gender = _gender_of(currency_name(currency, "one").split()[0], request)
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
-        words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {_currency(currency, 'other')}"
+        scale = request.data["scales"][fields["scale"]]
+        number = _amount(amount, request, gender if fields["scale"] == "mil" else None)
+        words = f"{number} {scale} {_currency(currency, 'other')}"
     elif len(fraction) == 2 and "minor" in currency:
-        major = f"{_cardinal(integer, request)} {_currency(currency, _plural(request, integer))}"
+        major = f"{_cardinal(integer, request, gender)} {_currency(currency, _plural(request, integer))}"
         cents = str(int(fraction))
         minor = f"{_cardinal(cents, request)} {currency['minor'][_plural(request, cents)]}"
         if int(fraction) == 0:
@@ -474,7 +484,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = minor if bounded_integer(integer) == 0 else f"{major} e {minor}"
     else:
-        words = f"{_amount(amount, request)} {_currency(currency, _plural(request, _written(amount)))}"
+        words = f"{_amount(amount, request, gender)} {_currency(currency, _plural(request, _written(amount)))}"
     return _signed(words, fields["amount"]["sign"], request)
 
 
