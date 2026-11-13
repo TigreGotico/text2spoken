@@ -265,7 +265,8 @@ ATOMS = (list("abcxyzABCXYZéñ") + list("0123456789") + list("٠١٢٣٤٥٦٧�
                                               " "]
          + ["Dr.", "vs.", "etc.", "No.", "March", "May", "[[", "]]", "am", "pm", "at", "in", "kg", "km/h", "°C",
             "call", "colour", "#fff", "#FF0000", "1/2", "24/7", "14:30", "12/03/2024", "+351", "00", "x", "−", "sub",
-            "3rd", "11th", "1984", "2005", "million", "m", "k", "-", "1,000"])
+            "3rd", "11th", "1984", "2005", "million", "m", "k", "-", "1,000", "@", "www.", ".com", "http://", "-",
+            "_"])
 
 
 @pytest.mark.parametrize("seed", range(4))
@@ -357,6 +358,25 @@ def test_a_long_digit_run_takes_linear_time_in_each_recognizer(name):
     def seconds(count: int) -> float:
         start = time.perf_counter()
         list(recognizer.find("1" * count, (), request))
+        return time.perf_counter() - start
+
+    small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
+ADDRESS_SHAPES = {"www": lambda count: "1www." * (count // 5),
+                  "brackets": lambda count: "see example.com/" + ")" * count}
+
+
+@pytest.mark.parametrize("shape", sorted(ADDRESS_SHAPES))
+def test_a_long_address_shape_takes_linear_time_in_the_address_recognizer(shape):
+    recognizer = next(r for r in EN.recognizers if r.name == "electronic")
+    request = analyze("1", "en").request
+
+    def seconds(count: int) -> float:
+        text = ADDRESS_SHAPES[shape](count)
+        start = time.perf_counter()
+        list(recognizer.find(text, (), request))
         return time.perf_counter() - start
 
     small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
