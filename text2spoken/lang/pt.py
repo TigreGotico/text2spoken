@@ -3,7 +3,10 @@
 
 Number words come from ovos-number-parser (design section 5.4), read with the variety tag. pt-PT follows the
 official norm: the long scale (Priberam, "bilião": "Um milhão de milhões"), "dezanove" (Priberam, "dezanove":
-"Grafia no Brasil: dezenove"), and lowercase month names (AO1990, Base XIX, 1.º b).
+"Grafia no Brasil: dezenove"), and lowercase month names (AO1990, Base XIX, 1.º b). pt-BR reads 14 as "quatorze"
+and pt-PT as "catorze". Dicio, "Catorze ou quatorze": "As duas palavras existem na língua portuguesa e estão
+corretas", and "Já no português falado em Portugal, a palavra quatorze está em desuso, sendo mais correto o uso
+da palavra catorze."
 
 A number agrees with the noun that it counts. The hint of a frontend decides first, then the noun after the
 number, then a determiner before it, then `default_gender`. `um`, `dois` and the hundreds from `duzentos` have a

@@ -30,12 +30,12 @@ ru = ["ovos-number-parser>=0.24.35a1"]
 test = [
     "pytest",
     "packaging",
-    "ovos-number-parser>=0.24.46a1",
+    "ovos-number-parser>=0.24.51a1",
     "ovos-color-parser>=0.12.4a1",
     "tugalex>=2.0.3a1",
 ]
 pt = [
-    "ovos-number-parser>=0.24.46a1",
+    "ovos-number-parser>=0.24.51a1",
     "tugalex>=2.0.3a1",
 ]
 
