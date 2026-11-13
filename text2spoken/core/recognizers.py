@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from bisect import bisect_right
+from bisect import bisect_left, bisect_right
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from types import MappingProxyType
 
 from text2spoken.core.color import COLOR
+from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.language import Request, lexicon_entries
@@ -23,8 +24,9 @@ from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import DigitSpeller, bounded_integer
+from text2spoken.core.symbols import SYMBOL, reads_symbol, symbol_name
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
+from text2spoken.core.tokens import (Token, context_word, fold_digits, is_bounded, is_digit, is_letter, is_mark,
                                      is_word_char, next_visible, one_digit_set)
 from text2spoken.core.units import unit_table, units_at
 from text2spoken.params import FrozenMap, Form
@@ -512,48 +514,59 @@ class Percent:
 
 @dataclass(frozen=True)
 class Money:
+    """With `scale_before_symbol`, a scale word may also stand between a number and a symbol after it, as in
+    `180 mil €`."""
     name: str = "money"
     form: Form = Form.MONEY
+    scale_before_symbol: bool = False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         return join_ranges(self._amounts(text, tokens, request), text, request)
 
     def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A currency symbol before or after a number. Before a symbol that comes first, a sign may stand, and
-        after its number a scale word of the language, attached or after one space: `-$5`, `$2 million`, `$1m`."""
-        symbols = [(symbol, code) for code, currency in request.data.get("currencies", FrozenMap()).items()
-                   for symbol in currency["symbols"]]
+        after its number a scale word of the language, attached or after one space: `-$5`, `$2 million`, `$1m`.
+
+        Each symbol next to a number gives a candidate, before the number and after it, and the claim takes the first
+        that no earlier span holds. So a symbol that one amount reads is not the symbol of the next number: in
+        `5 R$ 10£` the second amount is `10£`. A symbol that a phone number holds is still free for the amount after
+        it: `Call 999 £ 5 now.` reads "five pounds"."""
+        symbols = currency_symbols(request)
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         for number in numbers_in(text, request):
             if number.sign:
                 continue
-            for symbol, code in sorted(symbols, key=lambda pair: len(pair[0]), reverse=True):
-                found = None
-                for gap in ("", " ", " "):
-                    start = number.start - len(gap) - len(symbol)
-                    if start >= 0 and text[start:number.start] == symbol + gap:
-                        sign = SIGNS.get(text[start - 1], "") if start else ""
-                        if sign and _free_before(text, start - 1, ()):
-                            start -= 1
-                        else:
-                            sign = ""
-                        scale, end = _scale(text, number.end, scales)
-                        bounds = _affixes(text, start, end, request.data, ())
-                        if bounds is not None:
-                            found = (bounds, sign, scale)
-                            break
-                    end = number.end + len(gap) + len(symbol)
-                    if text.startswith(gap + symbol, number.end) \
-                            and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
-                        found = (bounds, "", "")
-                        break
-                if found:
-                    (start, end, prefix, suffix), sign, scale = found
+            for symbol, code in symbols:
+                for (start, end, prefix, suffix), sign, scale in self._sides(text, number, symbol, scales, request):
                     yield Span(start, end, Form.MONEY,
                                FrozenMap({"amount": FrozenMap({**number.amount(), "sign": sign}), "currency": code,
                                           "written_symbol": symbol, "scale": scale, "prefix": prefix,
                                           "suffix": suffix}), recognizer=self.name)
+
+    def _sides(self, text: str, number: Number, symbol: str, scales: Sequence[str],
+               request: Request) -> Iterator[tuple[tuple[int, int, str, str], str, str]]:
+        """The bounds, the sign and the scale of the amount with the symbol before the number, then of the amount
+        with the symbol after it, for each side where the symbol stands."""
+        for gap in ("", " ", " "):
+            start = number.start - len(gap) - len(symbol)
+            if start >= 0 and text[start:number.start] == symbol + gap:
+                sign = SIGNS.get(text[start - 1], "") if start else ""
+                if sign and _free_before(text, start - 1, ()):
+                    start -= 1
+                else:
+                    sign = ""
+                scale, end = _scale(text, number.end, scales)
+                if (bounds := _affixes(text, start, end, request.data, ())) is not None:
+                    yield bounds, sign, scale
                     break
+        scaled = _scale(text, number.end, scales) if self.scale_before_symbol else ("", number.end)
+        for gap in ("", " ", " "):
+            for scale, after in dict.fromkeys((scaled, ("", number.end))):
+                end = after + len(gap) + len(symbol)
+                if text.startswith(gap + symbol, after) \
+                        and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
+                    yield bounds, "", scale
+                    return
 
 
 def _scale(text: str, end: int, scales: Sequence[str]) -> tuple[str, int]:
@@ -617,6 +630,34 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
     return None
 
 
+def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple[Word, ...]:
+    """The context words of the text, where the characters that `SYMBOL` reads stand for their names. A sequence of
+    such characters that only spaces part is one word, whose text is the names, so it fills one slot of a window
+    however many words the names hold."""
+    marks = [index for index in range(len(text)) if reads_symbol(text, index, request)]
+    if not marks:
+        return context_words(tokens)
+    runs: list[list[int]] = []
+    for index in marks:
+        if runs and not text[runs[-1][-1] + 1:index].strip():
+            runs[-1].append(index)
+        else:
+            runs.append([index])
+    found = [Word(run[0], run[-1] + 1, " ".join(symbol_name(text[index], request) for index in run), False)
+             for run in runs]
+    for token in tokens:
+        first, piece = len(found), token.start
+        for cut in (*marks[bisect_left(marks, token.start):bisect_left(marks, token.end)], token.end):
+            word = context_word(text[piece:cut])
+            if word is not None:
+                offset = text.index(word, piece)
+                found.append(Word(offset, offset + len(word), word, False))
+            piece = cut + 1
+        if len(found) > first:
+            found[-1] = replace(found[-1], clause_end=token.clause_end)
+    return tuple(sorted(found, key=lambda word: word.start))
+
+
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
@@ -634,6 +675,14 @@ class Telephone:
     digit, continue, as in `Call 0800 123 456/7.` and `Call 112+1.` The kept run takes the digits that joiners
     chain to it, but not a group that a letter continues. Such a run is never named further back, so
     `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written.
+
+    In the window, the characters that `SYMBOL` reads count by their names, and a sequence of them that only spaces
+    part fills one slot. A slot names the run when one of its words is a phone word, so `☎000` reads "telephone zero
+    zero zero", as "telephone 000" does, and a name between a phone word and the run does not push the phone word
+    out: `Call me ⇒ 911` and `Call 911 or → 112.` read digit by digit. A run stays as written only when the last
+    word before it is a phone word, as on a second pass. So in pt-BR, where `☎` reads "telefone no gancho",
+    `☎3 91P` reads the number, and `Ligue → 1.234,56` reads the number. A list link does not count those
+    characters, so `Call ⇒ 999 or → 112.` reads both runs digit by digit.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -661,7 +710,7 @@ class Telephone:
         return False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        words = context_words(tokens)
+        words = _spoken_words(text, tokens, request)
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
@@ -694,9 +743,11 @@ class Telephone:
             digits = "".join(groups)
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
                 written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
-            phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
-                          if words[i].text.lower() in phone_words]
-            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))
+            window = self.window(text, words, breaks, start, end, request)
+            phone_ends = [words[i].end for i in window if phone_words.intersection(words[i].text.lower().split())]
+            between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
+            direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
+            keeps = direct and bool(window) and words[window[-1]].text.lower().split()[-1] in phone_words
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
@@ -705,14 +756,17 @@ class Telephone:
                     country_code = next((c for c in codes if groups[0].startswith(c)), "")
                     groups[0] = groups[0][len(country_code):]
             short_code = "".join(groups) in short_codes
+            gap = "" if named_end is None else re.sub(" {2,}", " ", "".join(
+                char for index, char in enumerate(text[named_end:start], named_end)
+                if not reads_symbol(text, index, request)))
             named = (direct
                      or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
                                                                request))
-                     or (named_end is not None and listed.fullmatch(text[named_end:start]) is not None))
+                     or (named_end is not None and listed.fullmatch(gap) is not None))
             named_end = end + len(suffix) if named else None
             unknown_code = written.startswith("+") and not country_code
             if glued:
-                if not (direct and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
+                if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
                     continue
                 chained = _GLUED.match(folded, end).group()
                 if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
@@ -720,7 +774,7 @@ class Telephone:
                 end = kept_end = named_end = end + len(chained)
             first, last = start - len(prefix), end + len(suffix)
             written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
-            if glued or not one_digit_set(text[start:end]) or (direct and (len(digits) > 15 or unknown_code)):
+            if glued or not one_digit_set(text[start:end]) or (keeps and (len(digits) > 15 or unknown_code)):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
                 continue
             if any(shape.fullmatch(written) for shape in unit_shapes):
@@ -831,5 +885,5 @@ def written_shapes() -> FrozenMap:
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, LETTERS)}
+                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, LETTERS, SYMBOL)}
 """The shared recognizers by name."""

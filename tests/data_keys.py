@@ -96,7 +96,8 @@ SHAPES: dict[str, Shape] = {
     "clock_marks": list_of(record(mark=word, seconds=boolean, needs=one_of("evidence", "day_period", "none"),
                                   optional={"closes_hour": boolean})),
     "color_words": WORDS,
-    "currencies": map_of(word, record(symbols=list_of(word, minimum=1))),
+    "currencies": map_of(word, record(optional={"symbols": list_of(word, minimum=1)})),
+    "currency_symbols": WORDS,
     "day_periods": map_of(word, WORDS),
     "defaults": map_of(one_of(*OPTIONS), text),
     "digit_words": list_of(word, length=10),
@@ -129,6 +130,7 @@ SHAPES: dict[str, Shape] = {
     "short_codes": list_of(digits),
     "sign_words": map_of(one_of(*SIGNS.values()), word),
     "symbols": map_of(word, one_of(*Form)),
+    "symbol_names": map_of(character, word),
     "time_suffixes": WORDS,
     "time_words": WORDS,
     "unit_symbols": WORDS,
@@ -136,6 +138,11 @@ SHAPES: dict[str, Shape] = {
 }
 """Each key that the core reads, with its shape. A shape names only what the core reads: the value of a unit is
 for the verbalizers of the file, so the core reads the unit names only."""
+
+SYMBOL_KEYS = frozenset({"symbols", "units", "unit_symbols", "operators", "currencies", "currency_symbols",
+                         "symbol_names", "leads"})
+"""The keys that the `SYMBOL` form reads: the tables that give a character to another form, which the form then does
+not read, the names of the language file for a character, and the leads, before which a name takes a space."""
 
 READERS: dict[str, frozenset[str]] = {
     "lexicon": frozenset(),
@@ -147,35 +154,40 @@ READERS: dict[str, frozenset[str]] = {
     "date_numeric": frozenset({"symbols", "proclitics", "case_suffixes"}),
     "time_clock": frozenset({"range_word", "range_marks", "clock_marks", "time_words", "day_periods", "time_suffixes"}),
     "percent": frozenset({"number_marks", "percent", "range_word", "range_marks", "proclitics", "case_suffixes"}),
-    "money": frozenset({"number_marks", "currencies", "scales", "range_word", "range_marks", "proclitics",
-                      "case_suffixes"}),
+    "money": frozenset({"number_marks", "currencies", "currency_symbols", "scales", "range_word", "range_marks",
+                      "proclitics", "case_suffixes"}),
     "measure": frozenset({"number_marks", "symbols", "units", "unit_symbols", "dimension_marks", "range_marks",
                         "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
-                          "case_suffixes"}),
+                          "case_suffixes"}) | SYMBOL_KEYS,
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
     "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_runs"}),
+    "symbol": SYMBOL_KEYS,
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
     "speak_electronic": frozenset({"electronic_symbols", "letter_names", "electronic_vowels", "electronic_labels",
-                                   "electronic_schemes", "digit_words"}),
+                                   "electronic_schemes", "digit_words", "symbol_names"}),
     "speak_letters": frozenset({"letter_names", "digit_words"}),
     "render": frozenset({"symbols"}),
     "effective_params": frozenset({"defaults"}),
 }
 """The keys that each shared recognizer reads, by its name in `SHARED`. Then the keys that the shared verbalizers
-`speak_cardinal`, `speak_lexicon`, `speak_electronic` and `speak_letters` read, and the keys of the unread check of `render` and of
-the option defaults of `effective_params`."""
+`speak_cardinal`, `speak_lexicon`, `speak_electronic` and `speak_letters` read, and the keys of the unread check of
+`render` and of the option defaults of `effective_params`. `speak_electronic` also reads the keys of the `symbol`
+reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
+them to find a character that `SYMBOL` reads between a phone word and the digits."""
 
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "day_periods", "electronic_labels", "letter_runs",
+    "symbol_names",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
 
-ALTERNATIVES = (frozenset({"units", "unit_symbols"}),)
-"""Keys of which a file gives at least one: its own unit table, or the unit symbols that it reads from CLDR."""
+ALTERNATIVES = (frozenset({"units", "unit_symbols"}), frozenset({"currencies", "currency_symbols"}))
+"""Keys of which a file gives at least one: its own unit table, or the unit symbols that it reads from CLDR, and its
+own currency table, or the currency symbols that it reads from CLDR."""

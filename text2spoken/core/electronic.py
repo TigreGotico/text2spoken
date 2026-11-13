@@ -5,7 +5,8 @@ A token between spaces that holds an address marker is spoken in full, even when
 recognizer claims the token whole, without the punctuation at its ends that belongs to the sentence and without its
 `[[...]]` blocks and lexicon spans. The verbalizer reads the claim piece by piece from the tables of the language
 file: a label as a word or letter by letter, each digit by its digit word, each symbol by its word, and a character
-with no word as written.
+with no word as written. With the `SYMBOL` form, a character that the address tables do not name reads by the CLDR
+name that `SYMBOL` gives it (design section 4.7), so a second pass finds no symbol for that form to read.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from dataclasses import dataclass
 
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext, splits_token
+from text2spoken.core.symbols import symbol_name
 from text2spoken.core.tokens import Token, is_digit, is_letter, is_mark, protect_blocks
 from text2spoken.params import FrozenMap, Form
 
@@ -179,27 +181,32 @@ def _pieces(written: str) -> Iterator[str]:
         yield written[label:]
 
 
-def _words(written: str, data) -> list[str]:
+def _words(written: str, request: Request) -> list[str]:
     """The reading of each piece: a label as in an address, a digit of any script by its digit word, a symbol by
-    its word, and a character with no word as written."""
+    its word, else by its `SYMBOL` name, and a character with no word as written."""
+    data = request.data
+    named = Form.SYMBOL in request.params.forms
     words: list[str] = []
     for piece in _pieces(written):
         if is_letter(piece[0]) or is_mark(piece[0]):
             words += _label(piece, data)
         elif is_digit(piece):
             words.append(data["digit_words"][int(piece)])
+        elif piece in data["electronic_symbols"]:
+            words.append(data["electronic_symbols"][piece])
         else:
-            words.append(data["electronic_symbols"].get(piece, piece))
+            name = symbol_name(piece, request) if named else None
+            words.append(name or piece)
     return words
 
 
 def speak_electronic(span: Span, context: SpanContext) -> str:
-    data = context.request.data
+    request = context.request
     scheme = span.fields["scheme"]
     words = []
-    if scheme and data["electronic_schemes"][scheme] == "read":
-        words = _words(scheme + "://", data)
-    return " ".join(words + _words(span.fields["address"], data))
+    if scheme and request.data["electronic_schemes"][scheme] == "read":
+        words = _words(scheme + "://", request)
+    return " ".join(words + _words(span.fields["address"], request))
 
 
 ELECTRONIC = Electronic()
