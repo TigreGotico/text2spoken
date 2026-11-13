@@ -18,6 +18,7 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.language import Request, lexicon_entries
+from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
@@ -830,5 +831,5 @@ def written_shapes() -> FrozenMap:
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC)}
+                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, LETTERS)}
 """The shared recognizers by name."""

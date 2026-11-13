@@ -35,7 +35,7 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.PERCENT: frozenset({"amount", "sign_position", "prefix", "suffix"}),
     Form.TELEPHONE: frozenset({"country_code", "groups", "prefix", "suffix"}),
     Form.IDENTIFIER: frozenset({"head", "digits"}),
-    Form.LETTERS: frozenset({"letters", "digits"}),
+    Form.LETTERS: frozenset({"letters", "reading"}),
     Form.ABBREVIATION: frozenset({"key"}),
     Form.IDIOM: frozenset({"key", "prefix", "suffix"}),
     Form.ROMAN: frozenset({"value", "role", "suffix"}),
@@ -336,11 +336,16 @@ does not offer the method of the form. Any other error of a verbalizer is a defe
 
 
 def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> str:
+    """The spoken text of an analysis. With `LETTERS` on, a run of capitals in the reading of another form reads
+    as the `LETTERS` form reads it, so a second pass leaves the reading unchanged (design section 11)."""
+    from text2spoken.core.letters import respell
+
     require_type(analysis, "analysis", Analysis)
     if hints is not None:
         require_type(hints, "hints", Mapping)
     request = analysis.request
     language = request.language
+    letters = Form.LETTERS in request.params.forms and Form.LETTERS in language.verbalizers
     hints = check_hints(hints or {}, analysis)
     words = context_words(analysis.tokens) if language.context_words else ()
     breaks = clause_breaks(analysis.text)
@@ -356,6 +361,8 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
         written = analysis.text[span.start:span.end]
         try:
             spoken = language.verbalizers[span.form](span, context)
+            if letters and span.form not in (Form.LETTERS, Form.LEXICON):
+                spoken = respell(spoken, request.data)
             spoken = language.attach(spoken, span.fields.get("prefix", ""), span.fields.get("suffix", ""))
             out.append(span.lead + spoken + span.trail)
         except DECLINED as error:

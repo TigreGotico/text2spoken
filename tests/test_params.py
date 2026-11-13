@@ -7,7 +7,7 @@ from dataclasses import fields
 import pytest
 
 from text2spoken import Form, FrozenMap, GrammaticalGender, NormalizationParams
-from text2spoken.params import OPTIONS, freeze, thaw
+from text2spoken.params import DEFAULT_FORMS, OPTIONS, freeze, thaw
 
 
 def test_frozen_map_is_sorted_hashable_and_a_mapping():
@@ -35,15 +35,17 @@ def test_params_are_hashable_and_equal_by_value():
     assert a == b and hash(a) == hash(b) and {a: 1}[b] == 1
 
 
-def test_default_reads_every_form():
-    assert NormalizationParams().forms == frozenset(Form)
+def test_default_reads_every_form_except_letters():
+    assert NormalizationParams().forms == DEFAULT_FORMS == frozenset(Form) - {Form.LETTERS}
 
 
-def test_only_and_without():
+def test_only_without_and_plus():
     params = NormalizationParams(clock="12h")
     assert params.only(Form.DATE, Form.TIME).forms == {Form.DATE, Form.TIME}
-    assert params.without(Form.TELEPHONE).forms == frozenset(Form) - {Form.TELEPHONE}
-    assert params.only(Form.DATE).clock == "12h"
+    assert params.without(Form.TELEPHONE).forms == frozenset(Form) - {Form.TELEPHONE, Form.LETTERS}
+    assert params.plus(Form.LETTERS).forms == frozenset(Form)
+    assert params.only(Form.DATE).plus(Form.LETTERS).forms == {Form.DATE, Form.LETTERS}
+    assert params.only(Form.DATE).clock == "12h" and params.plus(Form.LETTERS).clock == "12h"
 
 
 @pytest.mark.parametrize("kwargs", [{"clock": "13h"}, {"date_order": "DYM"}, {"minute_style": "words"},
