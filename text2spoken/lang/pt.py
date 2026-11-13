@@ -15,6 +15,13 @@ feminine form; a scale word from `milhão` up is a masculine noun, so the words 
 
 The gender of a common noun comes from the noun lexicon of `tugalex`, behind the `pt` extra (design section 16).
 Without the extra, the `noun_gender` table and the endings of `gender_suffixes` give it.
+
+Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of pt-PT and pt):
+`5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because
+CLDR gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`,
+reads with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`,
+`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "o símbolo da unidade hora
+é h e a abreviatura de minuto é min").
 """
 from __future__ import annotations
 
@@ -31,6 +38,7 @@ from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_bre
 from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, next_visible, one_digit_set
+from text2spoken.core.units import unit_reading
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
@@ -40,21 +48,6 @@ _SIGNS = "-−+"
 MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro",
           "novembro", "dezembro"]
 _MONTH = "(" + "|".join(f"[{m[0]}{m[0].upper()}]{m[1:]}" for m in MONTHS) + ")"
-
-UNITS_PT = {
-    "kg": {"one": "quilograma", "many": "de quilogramas", "other": "quilogramas"},
-    "g": {"one": "grama", "many": "de gramas", "other": "gramas"},
-    "km": {"one": "quilómetro", "many": "de quilómetros", "other": "quilómetros"},
-    "m": {"one": "metro", "many": "de metros", "other": "metros"},
-    "cm": {"one": "centímetro", "many": "de centímetros", "other": "centímetros"},
-    "mm": {"one": "milímetro", "many": "de milímetros", "other": "milímetros"},
-    "km/h": {"one": "quilómetro por hora", "many": "de quilómetros por hora", "other": "quilómetros por hora"},
-    "l": {"one": "litro", "many": "de litros", "other": "litros"},
-    "ml": {"one": "mililitro", "many": "de mililitros", "other": "mililitros"},
-    "°C": {"one": "grau Celsius", "many": "de graus Celsius", "other": "graus Celsius"},
-}
-"""SI symbols and the Portuguese unit names. Each unit name is a masculine noun (Priberam, "quilograma", "grama",
-"litro", "grau": "nome masculino"), so a number before it reads in the masculine."""
 
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}, {"decimal": ".", "group": ","}]},
@@ -90,7 +83,7 @@ DATA = freeze({
     "fraction_names": {"2": "meio", "3": "terço", "4": "quarto", "5": "quinto", "6": "sexto", "7": "sétimo",
                        "8": "oitavo", "9": "nono", "10": "décimo", "100": "centésimo"},
     "fraction_word": "avos",
-    "units": UNITS_PT,
+    "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml", "h", "min", "s"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
                     "contacto", "contato", "celular"],
     "short_codes": ["112", "190", "192", "193", "199"],
@@ -144,8 +137,6 @@ VARIETIES = (
         "defaults": {**DEFAULTS, "scale": "short"},
         "colors": {"808080": "cinza"},
         "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
-        "units": {unit: {category: word.replace("ómetro", "ômetro") for category, word in forms.items()}
-                  for unit, forms in UNITS_PT.items()},
     })),
 )
 
@@ -213,11 +204,11 @@ def _signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}" if sign else words
 
 
-def _amount(amount: FrozenMap, request: Request) -> str:
+def _amount(amount: FrozenMap, request: Request, gender: GrammaticalGender | None = None) -> str:
     if amount["fraction"]:
         words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
     else:
-        words = _cardinal(amount["integer"] or "0", request)
+        words = _cardinal(amount["integer"] or "0", request, gender)
     return _signed(words, amount["sign"], request)
 
 
@@ -415,13 +406,23 @@ def speak_money(span: Span, context: SpanContext) -> str:
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
+    """The number agrees with the gender of the unit in CLDR: `2 h` reads `duas horas`. CLDR gives no gender for
+    some units, such as `area-square-inch`, and then the unit name is the noun that the number counts, so `2 in²`
+    reads `duas polegadas quadradas`. A number of the category `many`, a scale word from `milhão` up, takes `de`
+    before the unit, as in `um milhão de quilogramas`."""
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
-    unit = request.data["units"][span.fields["unit"]][_plural(request, _written(amounts[-1]))]
+    category = _plural(request, _written(amounts[-1]))
+    pattern, gender = unit_reading(request, span.fields["unit"], category)
+    if gender is None:
+        gender = _gender_of(pattern.replace("{0}", "").split()[0], request)
+    else:
+        gender = GrammaticalGender(gender)
+    if category == "many":
+        pattern = pattern.replace("{0}", "{0} de", 1)
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
-    joined = f" {link} ".join(_amount(a, request) for a in amounts)
-    return f"{joined} {unit}"
+    return pattern.replace("{0}", f" {link} ".join(_amount(a, request, gender) for a in amounts))
 
 
 def speak_percent(span: Span, context: SpanContext) -> str:
