@@ -28,18 +28,22 @@ the spellings of the clusters in Wikipedia, "English phonology", Phonotactics, a
 Hansen 2004, p. 91), and its onset and coda tables carry a "Citation needed" mark. An onset is one of "All
 single-consonant phonemes except /ŋ/", or a cluster of the onset table, spelled as in its example words: play, blood,
 clean, glove, prize, bring, tree, dream, crowd, green, twin, dwarf, quick, floor, sleep, friend, three, shrimp, what,
-swoon, thwart, speak, stop, skill, smile, snow, sphere, split, spring, street, scream and square. The letter x spells
-/ks/, which is no onset ("xylophone" begins with /z/), so x is no onset. A coda is one of "The single consonant
-phonemes except /h/, /w/, /j/", or a cluster of the coda table, spelled as in help, bulb, belt, hold, milk, belch,
-harp, orb, fort, beard, mark, morgue, arch, golf, solve, wealth, else, Welsh, dwarf, carve, north, Mars, marsh, film,
-kiln, arm, born, snarl, jump, tent, end, lunch, pink, sing, triumph, month, bronze, left, crisp, lost, ask, opt, act,
-fifth, depth, lapse, klutz, width, box, next and horst. The tables give r and its clusters "in rhotic varieties"
-only, but en-GB writes the r that it does not say, so r stays a coda letter. ch, sh, th and ng spell one consonant
-each (Wikipedia, "English orthography": "chin", "shin", "thing", "strength"). The vowels are a, e, i, o and u, and the spellings with w and y in the table "Combinations of
-vowel letters" of Wikipedia, "English orthography", which "includes ⟨h, w, y⟩ when they represent vowel sounds": y as
-in myth and sky, aw as in flaw, ew as in dew, and ow as in owl. The rule reads CIA, IRS and USA as words, and
-Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/ and USA /juː ɛs ˈeɪ/. So `letter_runs`
-holds them.
+swoon, thwart, speak, stop, skill, smile, snow, sphere, split, sclera, spring, street, scream and square. The /sk/ of
+"sclera" and "scream" is spelled sc, so sc is an onset too. The letter x spells /ks/, which is no onset ("xylophone"
+begins with /z/), so x is no onset. A coda is one of "The single consonant phonemes except /h/, /w/, /j/", or a
+cluster of the coda table, spelled as in help, bulb, belt, hold, milk, belch, harp, orb, fort, beard, mark, morgue,
+arch, golf, solve, wealth, else, Welsh, dwarf, carve, north, Mars, marsh, film, kiln, arm, born, snarl, jump, tent,
+end, lunch, pink, sing, triumph, month, bronze, left, crisp, lost, ask, opt, act, fifth, depth, lapse, klutz, width,
+box, next and horst. The section above the coda table says: "Most (in theory, all) of the following except those that
+end with the sibilants /s/, /z/, /ʃ/, /ʒ/, /tʃ/ or /dʒ/ can be extended with /s/ or /z/ representing the morpheme
+-s/-z." So each coda that does not end in s, z, x, sh or ch also takes an s, as in the ds of AIDS, the rts of SPORTS
+and the nts of EVENTS. The tables give r and its clusters "in rhotic varieties" only, but en-GB writes the r that it
+does not say, so r stays a coda letter. ch, sh, th and ng spell one consonant each (Wikipedia, "English orthography":
+"chin", "shin", "thing", "strength"). The vowels are a, e, i, o and u, and the spellings with w and y in the table
+"Combinations of vowel letters" of Wikipedia, "English orthography", which "includes ⟨h, w, y⟩ when they represent
+vowel sounds": y as in myth and sky, aw as in flaw, ew as in dew, and ow as in owl. The rule reads CIA, IRS and USA as
+words, and Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/ and USA /juː ɛs ˈeɪ/. So
+`letter_runs` holds them.
 """
 from __future__ import annotations
 
@@ -104,6 +108,11 @@ COLORS = {
     "ffffff": "white",
 }
 """Seeded by `scripts/seed_colors.py en` from the ovos-color-parser palette `en-US/dot-net-colors.json`."""
+
+_CODAS = [*"bcdfgklmnprstvxz", "ch", "sh", "th", "ng", "lp", "lb", "lt", "ld", "lk", "lch", "rp", "rb",
+          "rt", "rd", "rk", "rg", "rch", "lf", "lv", "lth", "ls", "lsh", "rf", "rv", "rth", "rs", "rsh",
+          "lm", "ln", "rm", "rn", "rl", "mp", "nt", "nd", "nch", "nk", "mph", "nth", "nz", "ft", "sp",
+          "st", "sk", "pt", "ct", "fth", "pth", "ps", "tz", "dth", "xt", "rst"]
 
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ".", "group": ","}, {"decimal": ",", "group": "."}]},
@@ -176,11 +185,8 @@ DATA = freeze({
     "letter_vowels": ["a", "e", "i", "o", "u", "y", "aw", "ew", "ow"],
     "letter_onsets": [*"bcdfghjklmnprstvwyz", "ch", "sh", "th", "ph", "wh", "qu", "pl", "bl", "cl", "gl", "pr", "br",
                       "tr", "dr", "cr", "gr", "tw", "dw", "fl", "sl", "fr", "thr", "shr", "sw", "thw", "sp", "st",
-                      "sk", "sm", "sn", "sph", "spl", "spr", "str", "scr", "squ"],
-    "letter_codas": [*"bcdfgklmnprstvxz", "ch", "sh", "th", "ng", "lp", "lb", "lt", "ld", "lk", "lch", "rp", "rb",
-                     "rt", "rd", "rk", "rg", "rch", "lf", "lv", "lth", "ls", "lsh", "rf", "rv", "rth", "rs", "rsh",
-                     "lm", "ln", "rm", "rn", "rl", "mp", "nt", "nd", "nch", "nk", "mph", "nth", "nz", "ft", "sp",
-                     "st", "sk", "pt", "ct", "fth", "pth", "ps", "tz", "dth", "xt", "rst"],
+                      "sk", "sm", "sn", "sph", "spl", "sc", "scl", "spr", "str", "scr", "squ"],
+    "letter_codas": [*_CODAS, *(coda + "s" for coda in _CODAS if not coda.endswith(("s", "z", "x", "sh", "ch")))],
     "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters"},
     "patterns": {
         "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",

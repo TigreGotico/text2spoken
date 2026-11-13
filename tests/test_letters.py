@@ -63,11 +63,12 @@ def test_a_language_with_no_letter_names_does_not_offer_the_form(code):
 @pytest.mark.parametrize(("spec", "word"), [
     (PT, "nato"), (PT, "onu"), (PT, "iva"), (PT, "sida"), (PT, "uefa"), (PT, "etar"), (PT, "atenção"),
     (PT, "eua"), (EN, "nato"), (EN, "uefa"), (EN, "warning"), (EN, "first"), (EN, "help"), (EN, "irs"),
-    (EN, "usa"), (EN, "cia"),
+    (EN, "usa"), (EN, "cia"), (EN, "scuba"), (EN, "aids"), (EN, "sports"), (EN, "events"), (EN, "results"),
 ])
 def test_a_run_that_splits_into_syllables(spec, word):
     """na-to, o-nu, i-va, si-da, u-e-fa, e-tar, a-ten-ção, e-u-a; war-ning, first with coda rst, help with coda lp,
-    irs with coda rs, u-sa, ci-a."""
+    irs with coda rs, u-sa, ci-a; scu-ba with onset sc, and a-ids, sports, e-vents and re-sults with a coda that
+    takes the s of the -s/-z morpheme."""
     assert splits_into_syllables(word, *_sets(spec))
 
 
@@ -111,9 +112,10 @@ def test_a_lexicon_value_that_the_form_reads_raises_and_a_word_does_not():
         normalize("Vi o canal um.", "pt-PT", spelled.plus(Form.LETTERS))
 
 
-WORD_ROWS = {"en-386", "en-387", "en-396", "pt-167", "pt-168", "pt-169", "pt-170", "pt-171", "pt-186"}
+WORD_ROWS = {"en-386", "en-387", "en-396", "en-402", "en-403", "pt-167", "pt-168", "pt-169", "pt-170", "pt-171",
+             "pt-186"}
 """Rows whose run reads as a word by the syllable rule, and whose letters all have a name: NATO, UEFA, WARNING, ONU,
-IVA, SIDA and ETAR. ATENÇÃO holds Ç, which has no name, so it stays as written either way."""
+IVA, SIDA, ETAR, SCUBA and AIDS. ATENÇÃO holds Ç, which has no name, so it stays as written either way."""
 LETTER_ROWS = {"en-386", "en-387", "en-393", "en-397", "pt-167", "pt-172", "pt-173", "pt-174"}
 """Rows whose run of three or more letters reads letter by letter by the syllable rule: BMW, BBC, FBI, ZDF, RTP and
 CTT. A run of two letters, as in MP3, reads letter by letter before the rule."""
@@ -167,7 +169,21 @@ def test_normalize_with_the_form_on_is_idempotent_on_random_text(seed):
         assert normalize(off, lang) != off, (text, once)
 
 
-@pytest.mark.parametrize(("unit", "lang"), [("BA", "pt-PT"), ("BCD", "pt-PT"), ("MP3 ", "en"), ("NATO-", "en")])
+@pytest.mark.parametrize(("text", "lang", "expected"), [
+    ("Sala 9#D. RTP.", "pt-PT", "released by a spelled run"), ("Sala 9-D. RTP.", "pt-PT", "released by a spelled run"),
+    ("00 $‍52a@b.com... CD", "en", None),
+])
+def test_the_limit_of_the_form_holds_only_a_text_that_the_form_breaks(text, lang, expected):
+    """Each text changes on a second pass with the form on. The last one changes with the form off too, so the spelled
+    run `CD` does not cause the change."""
+    once = normalize(text, lang, LETTERS_ON)
+    assert normalize(once, lang, LETTERS_ON) != once
+    off = normalize(text, lang)
+    assert (normalize(off, lang) != off) == (expected is None)
+    assert known_limit(text, lang, LETTERS_ON) == expected
+
+
+@pytest.mark.parametrize(("unit", "lang"),[("BA", "pt-PT"), ("BCD", "pt-PT"), ("MP3 ", "en"), ("NATO-", "en")])
 def test_a_long_run_of_capitals_takes_linear_time(unit, lang):
     def seconds(count: int) -> float:
         start = time.perf_counter()

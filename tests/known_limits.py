@@ -55,14 +55,17 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
     `month at claim edge`: each span of the second pass is a date whose month word is the last or the first word of
     the reading of a claim, as in `See example.com/May 05 for details.` and `On 05 May@x.com we met.`.
     `released by a spelled run`: with `LETTERS` on, the first pass spells a run, and each span of the second pass is
-    a candidate of the first pass that waited on a joined character and stayed unread, as in `Sala 9#D. RTP`.
+    a candidate of the first pass that waited on a joined character and stayed unread, as in `Sala 9#D. RTP`. With
+    the form off, a second pass changes nothing.
     """
     once = normalize(text, lang, params)
     first = analyze(text, lang, params)
     second = analyze(once, lang, params).spans
     if not second:
         return None
-    if any(span.form is Form.LETTERS for span in first.spans):
+    off = normalize(text, lang, params.without(Form.LETTERS)) if params else once
+    if any(span.form is Form.LETTERS for span in first.spans) \
+            and normalize(off, lang, params.without(Form.LETTERS)) == off:
         unclaimed = _unclaimed(first)
 
         def released(span: Span) -> bool:
