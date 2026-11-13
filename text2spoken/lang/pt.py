@@ -29,11 +29,13 @@ indianas". `currency_symbols` names the ISO 4217 codes that read. The `currencie
 carries the country with the dictionary word. Priberam, "dólar": "Unidade monetária (símbolo: $) principal de vários
 países, nomeadamente [...] dos Estados Unidos (código: USD)", "Plural: dólares"; "real": "Unidade monetária do
 Brasil (código: BRL), divisível em centavos", "Plural: reais"; "libra esterlina": "Unidade monetária (símbolo: £) do
-Reino Unido (código: GBP). = LIBRA"; "iene": "Unidade monetária do Japão (código: JPY)". CLDR pt writes each
-currency name with a capital ("Euro", "Rupias indianas"), and a currency name is a common noun with a small letter
-(Acordo Ortográfico de 1990, Base XIX, 1.º a: "A letra minúscula inicial é usada: a) Ordinariamente, em todos os
-vocábulos da língua nos usos correntes"), so a currency name reads with a small first letter: "euros", "rupias
-indianas". CLDR gives a currency no gender, so the noun rules give the gender of the first word of the name, as
+Reino Unido (código: GBP). = LIBRA"; "iene": "Unidade monetária do Japão (código: JPY)". The table also replaces a
+CLDR adjective that does not agree with its noun: CLDR 49 writes "hryvnia ucraniano", and Priberam, "hryvnia": "nome
+feminino [...] Unidade monetária da Ucrânia (código: UAH, símbolo: ₴)", so the name is "hryvnia ucraniana". CLDR pt
+writes each currency name with a capital ("Euro", "Rupias indianas"), and a currency name is a common noun with a
+small letter (Acordo Ortográfico de 1990, Base XIX, 1.º a: "A letra minúscula inicial é usada: a) Ordinariamente,
+em todos os vocábulos da língua nos usos correntes"), so a currency name reads with a small first letter: "euros",
+"rupias indianas". CLDR gives a currency no gender, so the noun rules give the gender of the first word of the name, as
 they give the gender of a unit with no CLDR gender: `2 £` reads "duas libras" and `2 €` "dois euros". `noun_gender`
 names the currency nouns that end in "a" and are masculine: Priberam, "taka": "nome masculino [...] Unidade
 monetária do Bangladeche (código: BDT)"; "córdoba": "nome masculino [...] Unidade monetária da Nicarágua (código:
@@ -134,6 +136,7 @@ DATA = freeze({
         "USD": {"symbols": ["$"], "one": "dólar", "other": "dólares", "minor": {"one": "cêntimo", "other": "cêntimos"}},
         "GBP": {"one": "libra", "other": "libras"},
         "JPY": {"symbols": ["¥"], "one": "iene", "other": "ienes"},
+        "UAH": {"one": "hryvnia ucraniana", "other": "hryvnias ucranianas"},
     },
     "currency_symbols": ["EUR", "USD", "BRL", "GBP", "JPY", "CHF"],
     "symbol_names": {"§": "parágrafo"},

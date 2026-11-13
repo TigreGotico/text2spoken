@@ -681,7 +681,8 @@ class Telephone:
     zero zero", as "telephone 000" does, and a name between a phone word and the run does not push the phone word
     out: `Call me ⇒ 911` and `Call 911 or → 112.` read digit by digit. A run stays as written only when the last
     word before it is a phone word, as on a second pass. So in pt-BR, where `☎` reads "telefone no gancho",
-    `☎3 91P` reads the number, and `Ligue → 1.234,56` reads the number.
+    `☎3 91P` reads the number, and `Ligue → 1.234,56` reads the number. A list link does not count those
+    characters, so `Call ⇒ 999 or → 112.` reads both runs digit by digit.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -755,10 +756,13 @@ class Telephone:
                     country_code = next((c for c in codes if groups[0].startswith(c)), "")
                     groups[0] = groups[0][len(country_code):]
             short_code = "".join(groups) in short_codes
+            gap = "" if named_end is None else re.sub(" {2,}", " ", "".join(
+                char for index, char in enumerate(text[named_end:start], named_end)
+                if not reads_symbol(text, index, request)))
             named = (direct
                      or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
                                                                request))
-                     or (named_end is not None and listed.fullmatch(text[named_end:start]) is not None))
+                     or (named_end is not None and listed.fullmatch(gap) is not None))
             named_end = end + len(suffix) if named else None
             unknown_code = written.startswith("+") and not country_code
             if glued:

@@ -292,16 +292,37 @@ def test_a_symbol_between_two_phone_numbers_keeps_the_second_named(tag, text, pl
     assert normalize(once, tag) == once
 
 
+@pytest.mark.parametrize(("tag", "text", "plain"), [
+    ("en-GB", "Call ⇒ 999 or → 112.", "Call 999 or 112."), ("en-GB", "Call ⇒ 999, → 112.", "Call 999, 112."),
+    ("en-GB", "Call → 999 or → 112 or → 911.", "Call 999 or 112 or 911."),
+    ("pt-BR", "Ligue → 190 ou → 192.", "Ligue 190 ou 192."),
+])
+def test_a_list_link_joins_runs_that_symbols_precede(tag, text, plain):
+    """Design section 4.3: "a run that a word of `list_links` or a comma joins to a named run is named too". With
+    the symbol names taken out, the text reads as it does with no symbol."""
+    names = data(tag, "symbols")["symbols"]
+    once = normalize(text, tag)
+    spoken = once
+    for mark in ("⇒", "→"):
+        spoken = spoken.replace(f"{names[mark]} ", "")
+    assert spoken == normalize(plain, tag)
+    assert once.count(names["→"]) == text.count("→")
+    assert normalize(once, tag) == once
+
+
+
 @pytest.mark.parametrize(("tag", "text", "written"), [
     ("pt-PT", "2 £", "2 libras"), ("pt-PT", "1₺", "1 lira turca"), ("pt-PT", "2 ₹", "2 rupias indianas"),
     ("pt-BR", "21 £", "21 libras"), ("pt-BR", "£ 200", "200 libras"), ("pt-PT", "2 mil £", "2 mil libras"),
     ("pt-PT", "2 €", "2 euros"), ("pt-BR", "1 R$", "1 real"), ("pt-PT", "2 ৳", "2 takas bengalis"),
     ("pt-BR", "2 C$", "2 córdobas nicaraguenses"), ("pt-PT", "2 ₪", "2 sheqels novos israelitas"),
+    ("pt-PT", "2 ₴", "2 hryvnias ucranianas"), ("pt-BR", "₴1", "1 hryvnia ucraniana"),
 ])
 def test_a_currency_takes_the_gender_of_the_noun_that_names_it(tag, text, written):
     """CLDR gives a currency no gender, so the number agrees with the currency name as it agrees with the same name
     written after it (design section 4.7). Priberam: "libra", "lira" and "rupia" are "nome feminino"; "taka" and
-    "córdoba" are "nome masculino". The noun is the first word of the name, so "israelita" does not count."""
+    "córdoba" are "nome masculino". The noun is the first word of the name, so "israelita" does not count. CLDR 49
+    writes "hryvnia ucraniano", and the pt table gives the adjective that agrees with the feminine noun."""
     assert normalize(text, tag) == normalize(written, tag)
 
 
@@ -322,3 +343,13 @@ def test_the_major_unit_before_a_minor_unit_takes_the_gender_of_its_name(monkeyp
 
     monkeypatch.setattr(pt, "currency_table", lent)
     assert normalize("2,50 £", "pt-PT") == f"{normalize('2 libras', 'pt-PT')} e cinquenta pence"
+
+
+@pytest.mark.parametrize(("tag", "first", "mark", "second"), [
+    ("en-GB", "Call me now at home 999", "#", "112."), ("pt-BR", "Ligue já 190", ";", "192."),
+])
+def test_a_mark_that_symbol_does_not_read_still_breaks_a_list_link(tag, first, mark, second):
+    """Only the characters that `SYMBOL` reads drop out of the gap, so the second run reads as it reads alone."""
+    link = "or" if tag.startswith("en") else "ou"
+    expected = f"{normalize(first, tag)} {link} {mark} {normalize(second, tag)}"
+    assert normalize(f"{first} {link} {mark} {second}", tag) == expected
