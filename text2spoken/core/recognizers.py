@@ -24,6 +24,7 @@ from text2spoken.core.spellers import DigitSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
                                      is_word_char, next_visible, one_digit_set)
+from text2spoken.core.units import unit_table, units_at
 from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
@@ -310,7 +311,7 @@ class Fraction:
         """A symbol of the language next to the fraction or a unit after it leaves a reading that is not clear,
         as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets."""
         symbols = request.data.get("symbols", FrozenMap())
-        units = request.data.get("units", FrozenMap())
+        units = unit_table(request)
         for match, start, end, prefix, suffix in _affixed_matches(_FRACTION, text, request.data):
             written = match.group()
             sign = "-" if written[0] in "-−" else "+" if written[0] == "+" else ""
@@ -572,7 +573,6 @@ class Measure:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
-        units = sorted(data.get("units", FrozenMap()), key=len, reverse=True)
         relations = {"dimension": data.get("dimension_marks", ()), "range": data.get("range_marks", ())}
         every_mark = tuple(mark for marks in relations.values() for mark in marks)
         numbers = numbers_in(text, request)
@@ -588,7 +588,7 @@ class Measure:
                     amounts.append(following)
                     end = following.end
             for gap in ("", " ", " "):
-                unit = next((u for u in units if text.startswith(gap + u, end)
+                unit = next((u for u in units_at(text, end + len(gap), request) if text.startswith(gap, end)
                              and _suffix(text, end + len(gap) + len(u), data) is not None
                              and not _per_unit(text, end + len(gap) + len(u))), None)
                 if unit is not None:

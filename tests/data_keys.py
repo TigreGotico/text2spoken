@@ -112,6 +112,7 @@ SHAPES: dict[str, Shape] = {
     "symbols": map_of(word, one_of(*Form)),
     "time_suffixes": WORDS,
     "time_words": WORDS,
+    "unit_symbols": WORDS,
     "units": map_of(word, anything),
 }
 """Each key that the core reads, with its shape. A shape names only what the core reads: the value of a unit is
@@ -121,7 +122,7 @@ READERS: dict[str, frozenset[str]] = {
     "lexicon": frozenset(),
     "cardinal": frozenset({"number_marks", "leads", "sign_words", "symbols", "proclitics", "case_suffixes"}),
     "decimal": frozenset({"number_marks", "symbols", "proclitics", "case_suffixes"}),
-    "fraction": frozenset({"symbols", "units", "proclitics", "case_suffixes"}),
+    "fraction": frozenset({"symbols", "units", "unit_symbols", "proclitics", "case_suffixes"}),
     "idiom": frozenset({"idioms", "proclitics", "case_suffixes"}),
     "range": frozenset({"range_marks", "symbols", "proclitics", "case_suffixes"}),
     "date_numeric": frozenset({"symbols", "proclitics", "case_suffixes"}),
@@ -129,8 +130,8 @@ READERS: dict[str, frozenset[str]] = {
     "percent": frozenset({"number_marks", "percent", "range_word", "range_marks", "proclitics", "case_suffixes"}),
     "money": frozenset({"number_marks", "currencies", "scales", "range_word", "range_marks", "proclitics",
                       "case_suffixes"}),
-    "measure": frozenset({"number_marks", "symbols", "units", "dimension_marks", "range_marks", "proclitics",
-                        "case_suffixes"}),
+    "measure": frozenset({"number_marks", "symbols", "units", "unit_symbols", "dimension_marks", "range_marks",
+                        "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes"}),
@@ -149,3 +150,6 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 
 OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks", "day_periods"})
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
+
+ALTERNATIVES = (frozenset({"units", "unit_symbols"}),)
+"""Keys of which a file gives at least one: its own unit table, or the unit symbols that it reads from CLDR."""

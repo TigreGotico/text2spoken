@@ -153,3 +153,15 @@ pt-151	pt-PT	telephone	Liga para o 112.	Liga para o um um dois.	Wikipedia, Emerg
 pt-152	pt-PT	telephone	Telefona para o 112.	Telefona para o um um dois.	Wikipedia, Emergency telephone number: 112; design section 4.3 window rule; telefona, the imperative of telefonar	unchecked
 pt-153	pt-PT	ordinal	Ficou em 2022.º lugar.	Ficou em dois milésimo vigésimo segundo lugar.	silver: Teyssier, Manual de Língua Portuguesa, p. 183 writes 2000.º as dois milésimo, as the owner of ovos-number-parser reports it; the page was not opened here	unchecked
 pt-154	pt-PT	cardinal	Vieram 18 pessoas.	Vieram dezoito pessoas.	Priberam (dicionario.priberam.org, fetched 2026-11-12): dezoito = quantificador numeral cardinal de dois géneros; pessoa nome feminino	unchecked
+pt-155	pt-PT	measure	A carga é de 10 kg/m².	A carga é de dez quilogramas por metro quadrado.	CLDR 49 pt-PT units long: mass-kilogram {0} quilogramas; area-square-meter perUnitPattern {0} por metro quadrado	unchecked
+pt-156	pt-PT	measure	A célula mede 5 µm.	A célula mede cinco micrómetros.	CLDR 49 pt-PT units long: length-micrometer {0} micrómetros; short {0} μm; design section 4.7: U+00B5 counts as the micro sign	unchecked
+pt-157	pt-BR	measure	A célula mede 5 μm.	A célula mede cinco micrômetros.	CLDR 49 pt units long: length-micrometer {0} micrômetros; short {0} μm (U+03BC)	unchecked
+pt-158	pt-PT	measure	O vento sopra a 100 m/s.	O vento sopra a cem metros por segundo.	CLDR 49 pt-PT units long: speed-meter-per-second {0} metros por segundo; short {0} m/s	unchecked
+pt-159	pt-PT	measure	Faltam 45 min.	Faltam quarenta e cinco minutos.	CLDR 49 pt-PT units long: duration-minute {0} minutos; Ciberdúvidas 14648 (D´Silvas Filho): a abreviatura de minuto é min (sem ponto)	unchecked
+pt-160	pt-PT	measure	O teor é de 5‰.	O teor é de cinco por mil.	CLDR 49 pt-PT units long: concentr-permille {0} por mil; short {0}‰	unchecked
+pt-161	pt-PT	measure	A sala tem 3 m².	A sala tem três metros quadrados.	CLDR 49 pt-PT units long: area-square-meter {0} metros quadrados; short {0} m²	unchecked
+pt-162	pt-PT	measure	O tanque leva 2 m³.	O tanque leva dois metros cúbicos.	CLDR 49 pt-PT units long: volume-cubic-meter {0} metros cúbicos; short {0} m³	unchecked
+pt-163	pt-PT	measure	O fio tem 1 mm².	O fio tem um milímetro quadrado.	CLDR 49 pt-PT units long: length-millimeter {0} milímetro (one); power2 compoundUnitPattern1-count-one {0} quadrado	unchecked
+pt-164	pt-PT	measure	A ilha tem 2 mi².	A ilha tem duas milhas quadradas.	CLDR 49 pt-PT units long: area-square-mile {0} milhas quadradas, gender feminine; short {0} mi²; Priberam (dicionario.priberam.org): duas = feminino de dois	unchecked
+pt-165	pt-PT	measure	O ecrã tem 2 in².	O ecrã tem duas polegadas quadradas.	CLDR 49 pt-PT units long: area-square-inch {0} polegadas quadradas, with no gender; length-inch gender feminine; short {0} in²	unchecked
+pt-166	pt-PT	measure	O camião anda a 5 kg/h.	O camião anda a cinco quilogramas por hora.	CLDR 49 pt-PT units long: mass-kilogram {0} quilogramas; duration-hour {0} hora (one), perUnitPattern {0}/h holds a symbol, so per compoundUnitPattern {0} por {1} reads the pair (design section 4.7)	unchecked

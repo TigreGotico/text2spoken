@@ -45,3 +45,6 @@ version = {attr = "text2spoken.version.__version__"}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["text2spoken*"]
+
+[tool.setuptools.package-data]
+text2spoken = ["data/cldr/*.json", "data/cldr/LICENSE"]

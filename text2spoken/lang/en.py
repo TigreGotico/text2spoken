@@ -3,6 +3,12 @@
 Number words come from CLDR RBNF. American English writes no "and" in the whole part of a number, and
 British English writes "one hundred and one" (Wikipedia, "English numerals"), so each variety names its rule
 set. The design page `text2spoken-design.md`, section 5.4, gives the measured reason for each speller.
+
+Unit words come from CLDR 49 (`cldr-units-full`, the `long` patterns of en-GB and en). A symbol that cannot be a
+plain word, such as `km/h`, `°C` or `µm`, reads with no list. `unit_symbols` names the symbols made only of
+letters that read as units: the SI symbols `kg`, `g`, `mg`, `km`, `m`, `cm`, `mm` and `ml`, and `mph`, `MHz`,
+`GHz`, `MB` and `ft`. Other CLDR symbols are also words or letters of running text, so `1 in 3`, `Plan 2 A` and
+`29 GB golds` read no unit. `GB` names Great Britain as often as gigabytes (design section 16).
 """
 from __future__ import annotations
 
@@ -21,6 +27,7 @@ from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_bre
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
+from text2spoken.core.units import unit_reading, unit_table
 from text2spoken.params import FrozenMap, Form, freeze
 
 LOG = logging.getLogger("text2spoken")
@@ -65,25 +72,6 @@ COLORS = {
 }
 """Seeded by `scripts/seed_colors.py en` from the ovos-color-parser palette `en-US/dot-net-colors.json`."""
 
-UNITS_GB = {
-    "kg": {"one": "kilogram", "other": "kilograms"},
-    "g": {"one": "gram", "other": "grams"},
-    "mg": {"one": "milligram", "other": "milligrams"},
-    "km": {"one": "kilometre", "other": "kilometres"},
-    "m": {"one": "metre", "other": "metres"},
-    "cm": {"one": "centimetre", "other": "centimetres"},
-    "mm": {"one": "millimetre", "other": "millimetres"},
-    "km/h": {"one": "kilometre per hour", "other": "kilometres per hour"},
-    "m/s": {"one": "metre per second", "other": "metres per second"},
-    "mph": {"one": "mile per hour", "other": "miles per hour"},
-    "ml": {"one": "millilitre", "other": "millilitres"},
-    "°C": {"one": "degree Celsius", "other": "degrees Celsius"},
-    "°F": {"one": "degree Fahrenheit", "other": "degrees Fahrenheit"},
-    "MHz": {"one": "megahertz", "other": "megahertz"},
-    "GHz": {"one": "gigahertz", "other": "gigahertz"},
-    "MB": {"one": "megabyte", "other": "megabytes"},
-}
-
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ".", "group": ","}, {"decimal": ",", "group": "."}]},
     "defaults": {"date_order": "DMY", "clock": "12h", "minute_style": "number", "decimal_mark": ".",
@@ -125,7 +113,7 @@ DATA = freeze({
     "scales": {"thousand": "thousand", "million": "million", "billion": "billion", "trillion": "trillion",
                "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
-    "units": UNITS_GB,
+    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "mph", "ml", "MHz", "GHz", "MB", "ft"],
     "phone_words": ["phone", "telephone", "tel", "call", "dial", "ring", "text", "mobile", "cell", "fax"],
     "short_codes": ["000", "101", "111", "112", "211", "311", "411", "511", "611", "711", "811", "911", "988", "999"],
     "list_links": ["and", "or"],
@@ -159,8 +147,6 @@ VARIETIES = (
         "numeric_date_reading": {"full": "{month} {day} {year}", "no_year": "{month} {day}"},
         "percent": {"word": "percent"},
         "titles": {"Dr": None, "Mr": None, "Mrs": None},
-        "units": {unit: {category: word.replace("metre", "meter").replace("litre", "liter")
-                         for category, word in forms.items()} for unit, forms in UNITS_GB.items()},
     })),
 )
 
@@ -352,10 +338,9 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
-    unit = request.data["units"][span.fields["unit"]][plural_category(request, _written(amounts[-1]))]
+    pattern, _ = unit_reading(request, span.fields["unit"], plural_category(request, _written(amounts[-1])))
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
-    joined = f" {link} ".join(_amount(a, request) for a in amounts)
-    return f"{joined} {unit}"
+    return pattern.replace("{0}", f" {link} ".join(_amount(a, request) for a in amounts))
 
 
 def speak_percent(span: Span, context: SpanContext) -> str:
@@ -511,7 +496,7 @@ class Year:
         year_words = frozenset(data["year_words"])
         function_words = frozenset(data["function_words"])
         marks = frozenset(data["range_marks"])
-        units = frozenset(unit.lower() for unit in data["units"])
+        units = frozenset(unit.lower() for unit in unit_table(request))
         signs = frozenset(data["operators"]) | frozenset(data["dimension_marks"]) | {"*", "/"}
         word_link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") ")
         words = context_words(tokens)
