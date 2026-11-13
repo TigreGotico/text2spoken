@@ -272,7 +272,7 @@ ATOMS = (list("abcxyzABCXYZéñ") + list("0123456789") + list("٠١٢٣٤٥٦٧�
 
 @pytest.mark.parametrize("seed", range(4))
 def test_normalize_is_idempotent_and_never_crashes_on_random_text(seed):
-    """Section 11: a second pass changes nothing, except in the two known limits of the address claim that the
+    """Section 11: a second pass changes nothing, except in the three known limits of the address claim that the
     README lists. Random text built from the atoms of each form."""
     rng = random.Random(seed)
     for _ in range(500):

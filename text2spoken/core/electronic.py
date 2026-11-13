@@ -55,18 +55,23 @@ def _marked(text: str, start: int, end: int, token: re.Match, tlds: frozenset[st
 
 
 def _claim(text: str, start: int, end: int) -> tuple[int, int]:
-    """The token without an opening bracket or quote at its start and a closing full stop, comma, semicolon, colon,
-    `!`, `?`, bracket or quote at its end, which belong to the sentence. A bracket that the address opens stays."""
+    """The token without an opening bracket or quote at its start and the run of closing full stops, commas,
+    semicolons, colons, `!`, `?`, brackets and quotes at its end, which belong to the sentence. A bracket that the
+    address opens stays."""
     if unicodedata.category(text[start]) in ("Ps", "Pi", "Pf") or text[start] in _QUOTES:
         start += 1
-    if end > start:
+    unclosed = {closer: text.count(opener, start, end) - text.count(closer, start, end)
+                for closer, opener in _OPENERS.items()}
+    while end > start:
         last = text[end - 1]
         category = unicodedata.category(last)
-        if last in _CLOSING or last in _QUOTES or category in ("Pi", "Pf"):
-            end -= 1
-        elif category == "Pe" and not (last in _OPENERS and text.count(_OPENERS[last], start, end - 1)
-                                       > text.count(last, start, end - 1)):
-            end -= 1
+        if last in _OPENERS:
+            if unclosed[last] >= 0:
+                break
+            unclosed[last] += 1
+        elif not (last in _CLOSING or last in _QUOTES or category in ("Pi", "Pf", "Pe")):
+            break
+        end -= 1
     return start, end
 
 

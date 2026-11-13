@@ -24,7 +24,7 @@ def test_row(row):
 
 @pytest.mark.parametrize("row", ROWS, ids=[r["id"] for r in ROWS])
 def test_row_is_idempotent(row):
-    """Section 11. A row that pins a known limit of the README is one of the two cases of tests/known_limits.py."""
+    """Section 11. A row that pins a known limit of the README is one of the three cases of tests/known_limits.py."""
     once = normalize(row["text"], row["tag"])
     if "README limit" in row["source"]:
         assert known_limit(row["text"], row["tag"])
