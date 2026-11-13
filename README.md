@@ -64,7 +64,10 @@ normalize("The run took 1:23:45.", "en-GB")
 
 A second pass changes nothing: `normalize(normalize(text, lang), lang)` gives the same text as one pass. Output depends only on the text, the tag and the params.
 
-A number that a character other than a space joins to an e-mail or web address stays as written, and so does the address. `Mail me@x.com,2 copies.` stays as written, because the comma ties the 2 to the address. With a space, `Mail me@x.com 2 copies.` reads "Mail em e at ex dot com two copies."
+A word with `@`, `www.`, `://` or a top-level domain such as `.com` is spoken in full, even when it is not one valid address. `Mail me@x.com,2 copies.` reads "Mail em e at ex dot com , two copies." A character with no word in the address tables stays as written, between spaces: `See 20%.com` reads "See two zero % dot com". Two cases are known limits, where a second pass changes the first:
+
+- The last label and the full stop after it can form an abbreviation. `See a@b.etc.` reads "See a at bee dot etc.", and a second pass reads "et cetera".
+- A final `@` reads "at", and a second pass takes it as the time word of a time after it. Only spaces or punctuation can stand between them. `Write x.com@ 9:30` reads "Write ex dot com at 9:30", and a second pass reads "nine thirty". `Write x.com@ (9:30)` gives the same result inside the brackets.
 
 ## The API
 

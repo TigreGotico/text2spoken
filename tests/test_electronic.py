@@ -9,7 +9,7 @@ import pytest
 
 from tests.conftest import DATA
 from tests.fixtures import pt_electronic
-from text2spoken import Form, NormalizationParams, UnreadFormError, analyze, normalize
+from text2spoken import Form, NormalizationParams, analyze, normalize
 from text2spoken.core import language
 from text2spoken.params import FrozenMap, freeze
 
@@ -74,8 +74,10 @@ def test_a_scheme_that_the_table_drops_reads_nothing(en_with):
     assert normalize("See https://example.com now.", "en") == "See example dot com now."
 
 
-def test_a_scheme_outside_the_table_starts_no_url():
-    assert normalize("See gopher://example.com now.", "en") == "See gopher://example.com now."
+def test_a_scheme_outside_the_table_starts_no_url_and_reads_as_a_label():
+    assert normalize("See gopher://example.com now.", "en") == "See gopher colon slash slash example dot com now."
+    assert [dict(s.fields) for s in analyze("See gopher://example.com now.", "en").spans] == [
+        {"kind": "run", "scheme": "", "address": "gopher://example.com"}]
 
 
 def test_a_bare_domain_needs_a_top_level_domain_of_the_table(en_with):
@@ -83,9 +85,9 @@ def test_a_bare_domain_needs_a_top_level_domain_of_the_table(en_with):
     assert normalize("See example.com and example.org.", "en") == "See example.com and example dot org."
 
 
-def test_an_address_with_no_word_for_a_symbol_raises_in_strict_mode():
-    with pytest.raises(UnreadFormError):
-        normalize("Go to http://example.com/a%20b now.", "en", NormalizationParams(strict=True))
+def test_a_character_with_no_word_stays_as_written_between_spaces_in_strict_mode():
+    assert normalize("Go to http://example.com/a%20b now.", "en", NormalizationParams(strict=True)) == (
+        "Go to aitch tee tee pee colon slash slash example dot com slash a % two zero bee now.")
 
 
 def test_without_the_form_an_address_stays_as_written():
@@ -100,6 +102,26 @@ def test_without_the_form_a_pt_address_stays_as_written(pt, tag):
     assert normalize(text, tag, NormalizationParams().without(Form.ELECTRONIC)) == text
 
 
-def test_an_address_glued_to_a_letter_stays_as_written():
-    for text in ("Write to annè@example.com now.", "Write to ann@exampleé.com now.", "Go to www.câmara.pt now."):
-        assert normalize(text, "en") == text
+@pytest.mark.parametrize("text, expected", [
+    ("Write to annè@example.com now.", "Write to annè at example dot com now."),
+    ("Write to ann@exampleé.com now.", "Write to ann at exampleé dot com now."),
+    ("Go to www.câmara.pt now.", "Go to double-u double-u double-u dot câmara dot pee tee now."),
+])
+def test_a_label_with_a_letter_outside_ascii_reads_as_written(text, expected):
+    """Section 4.2: a letter outside ASCII and a combining mark are letters of a label, and such a label reads as a
+    word, as the text writes it."""
+    assert normalize(text, "en") == expected
+
+
+@pytest.mark.parametrize("entries, text, expected", [
+    ({"foo": "bar"}, "foo@x.5", "bar at ex dot five"),
+    ({"ACME": "acme"}, "Mail ACME@x.5 now.", "Mail acme at ex dot five now."),
+    ({"foo": "bar"}, "x@foo.5.com", "ex at bar dot five dot com"),
+])
+def test_a_lexicon_span_is_never_part_of_a_run(entries, text, expected):
+    """Section 4.5: the lexicon reads its key, the address claim reads the rest of the token, and a single space
+    separates the two readings. A second pass changes nothing."""
+    params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap(entries)}))
+    once = normalize(text, "en", params)
+    assert once == expected
+    assert normalize(once, "en", params) == once

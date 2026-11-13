@@ -163,11 +163,13 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     A span that one character joins to a digit run waits while no span reads that run, and no other span claims a
     character of a waiting span. A claimed span wakes the waiting spans next to it, which are checked again in
     claim order, as they would be on a second pass over the output. A `keep` span claims its characters and
-    stays out of the result, so its text stays as written.
+    stays out of the result, so its text stays as written. An `ELECTRONIC` span claims a token whole (section 4.5),
+    so it does not wait on a joined digit.
     """
     candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
                   for span in recognizer.find(text, tokens, request)
-                  if not (_inside(span, blocks) or splits_token(span, tokens, text))]
+                  if not (_inside(span, blocks) or (span.form is not Form.ELECTRONIC
+                                                    and splits_token(span, tokens, text)))]
     read = bytearray(len(text))
     holder: list[Span | None] = [None] * len(text)
     neighbours: dict[int, list[int]] = {}
@@ -178,7 +180,7 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
         span = candidates[index]
         if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
             continue
-        if _joined(text, span, read, holder):
+        if span.form is not Form.ELECTRONIC and _joined(text, span, read, holder):
             for position in range(span.start, span.end):
                 holder[position] = span
             for position in (span.start - 2, span.start - 1, span.end, span.end + 1):
