@@ -6,9 +6,18 @@ that a preposition before it governs, and "eins" when no noun follows. The ordin
 endings -e, -en, -er, -es and -em. The design page `text2spoken-design.md`, section 5.4, gives the measured
 reason for each speller.
 
-The amtliche Regelwerk of the Rat für deutsche Rechtschreibung (2018 edition) is the rule source. Its § 25 E2
-lets Switzerland always write ss for ß, so de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write
-ss. CLDR gives the Austrian month name "Jänner" and the Swiss number marks.
+The amtliche Regelwerk is the rule source for spelling. Its § 25 E2 lets Switzerland always write ss for ß, so
+de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR gives the Austrian month name
+"Jänner" and the Swiss number marks. The rules cite these sources:
+
+- Regelwerk: Rat für deutsche Rechtschreibung, Deutsche Rechtschreibung. Regeln und Wörterverzeichnis.
+  Aktualisierte Fassung des amtlichen Regelwerks, Mannheim 2018, by paragraph (rechtschreibrat.com).
+- CLDR: Unicode Common Locale Data Repository, RBNF `de` and `de_CH`, and `common/main` `de`, `de_AT` and `de_CH`
+  (months, date formats, number marks).
+- Duden online, by entry: "Grad", "plus", "Prozent", "Uhr" (duden.de).
+- de.wiktionary, by entry and sense: "halb" [1], "Kaffee", "Komitee", "kosten" [1], "Tee", "vor" [1].
+- de.wikipedia, "Präposition", sections Rektion and Zeitlich.
+- en.wikipedia, "Grammatical gender in German", the tables of masculine, feminine and neuter endings.
 
 `Expression` and `Abbreviation` come from `en.py`. They read only the data tables of the language.
 """
@@ -144,7 +153,8 @@ DATA = freeze({
     # en.wikipedia, "Grammatical gender in German": 90% of nouns in -e are feminine, with the exceptions that it names
     # and that the whole-word table holds, and 90% of nouns with the prefix Ge- are neuter. A frame is the prefix
     # Ge-, a consonant and a vowel before the final -e, so "Geste" and "Geige" have no prefix. de.wiktionary gives
-    # "der Kaffee" and "der Tee", which end their compounds.
+    # "der Kaffee" and "der Tee", which end their compounds, and "das Komitee", which ends in "tee" but is no
+    # compound of "Tee".
     "noun_genders": {"ei": "neuter",
                      **dict.fromkeys(("auge", "ende", "erbe", "finale", "image", "interesse", "prestige", "regime"),
                                      "neuter"),
@@ -161,7 +171,7 @@ DATA = freeze({
                      ["haus", "neuter"], ["mal", "neuter"], ["buch", "neuter"], ["prozent", "neuter"],
                      ["ling", "masculine"], ["ismus", "masculine"], ["tag", "masculine"], ["monat", "masculine"],
                      ["mann", "masculine"], ["platz", "masculine"], ["versuch", "masculine"],
-                     ["euro", "masculine"], ["tee", "masculine"]],
+                     ["euro", "masculine"], ["tee", "masculine"], ["komitee", "neuter"]],
 })
 
 _SS = str.maketrans({"ß": "ss"})
@@ -279,17 +289,25 @@ def _signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}" if sign else words
 
 
-def _case(before: Sequence[str], data, noun: str | None = None) -> str | None:
+def _case(before: Sequence[str], data, noun: str | None = None, price: bool = False) -> str | None:
     """The case that the word right before the number governs: a preposition that governs one case, a form of
-    "kosten", which takes the price in the accusative (de.wiktionary, "kosten" [1]), or "in", "an" and "vor"
-    before a noun of time, which take the dative (de.wikipedia, "Präposition", Zeitlich; de.wiktionary, "vor" [1]).
-    "in" and "an" before another noun also say where to, with the accusative, so they give no case there."""
+    the verb "kosten" before a price, or "in", "an" and "vor" before a noun of time, which take the dative
+    (de.wikipedia, "Präposition", Zeitlich; de.wiktionary, "vor" [1]). "in" and "an" before another noun also say
+    where to, with the accusative, so they give no case there.
+
+    "kosten" takes the price in the accusative: "Das hat die Familie einen großen Haufen Geld gekostet."
+    (de.wiktionary, "kosten" [1]). The noun right after it can also be the subject, in the nominative:
+    "normalerweise kostet ein solches Fluggerät mehrere zehntausend Euro" (same entry). So only an amount of money,
+    a currency sign or a currency name with the number, takes the accusative, and only the verb, which is written
+    in lowercase, gives it, not the noun "Kosten"."""
     if not before:
         return None
     word = before[-1].lower()
     if word in data["dative_prepositions"]:
         return "dative"
-    if word in data["accusative_prepositions"] or word in data["accusative_verbs"]:
+    currency_names = {name for currency in data["currencies"].values() for name in (currency["one"], currency["other"])}
+    price = price or noun in currency_names
+    if word in data["accusative_prepositions"] or (price and before[-1] in data["accusative_verbs"]):
         return "accusative"
     time_noun = noun is not None and noun.lower().endswith(tuple(data["time_nouns"]))
     if word in data["temporal_prepositions"] and time_noun:
@@ -324,7 +342,7 @@ def _noun_after(after: Sequence[str]) -> str | None:
     return None
 
 
-def _features(context: SpanContext, gender: GrammaticalGender | None = None) -> Features:
+def _features(context: SpanContext, gender: GrammaticalGender | None = None, price: bool = False) -> Features:
     """The agreement of design section 5.6: the hint, then the gender of the counted noun or of the unit, then the
     params and the file. With no noun after it, a number is counted: "eins". The word right before the number
     gives the case. A noun with no known gender takes only the dative, where the masculine and the neuter of the
@@ -338,7 +356,7 @@ def _features(context: SpanContext, gender: GrammaticalGender | None = None) -> 
         if noun is None:
             return Features()
         gender = noun_gender(noun, data)
-    case = _case(context.before, data, noun)
+    case = _case(context.before, data, noun, price)
     if gender is None:
         gender = context.request.params.default_gender.get(LANGUAGE.code) or LANGUAGE.default_gender
         case = case if case == "dative" else None
@@ -488,7 +506,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
     currency = request.data["currencies"][fields["currency"]]
-    gender = _unit_features(context, currency["gender"])
+    gender = _features(context, GrammaticalGender(currency["gender"]), price=True)
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         scale = request.data["scales"][fields["scale"]]
@@ -753,12 +771,16 @@ class DateNamed:
         for key in ("date_day_month", "date_month_year"):
             for match in re.finditer(patterns[key], folded):
                 start, end = match.span()
-                if not is_bounded(text, start, end) or not one_digit_set(text[start:end]):
-                    continue
                 if key == "date_month_year":
                     day, month_name, year = None, match.group(1), match.group(2)
                 else:
                     day, month_name, year = match.group(1), match.group(2), match.group(3)
+                    # The start of a longer number is no year, and the portable patterns hold no lookahead
+                    # (design section 8), so the date ends at the month.
+                    if year is not None and folded[end:end + 1].isdecimal():
+                        end, year = match.end(2), None
+                if not is_bounded(text, start, end) or not one_digit_set(text[start:end]):
+                    continue
                 month = month_numbers[month_name]
                 year_value = int(year) if year is not None else None
                 if day is not None and not is_valid(year_value, month, int(day)):

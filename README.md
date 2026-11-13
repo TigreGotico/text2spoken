@@ -152,15 +152,19 @@ The `tokenizer` argument takes a callable `(text, lang)` that returns a sequence
 
 Each language is one file in `text2spoken/lang/`, named by its primary language subtag. A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written.
 
-`de` serves every German tag. `de-DE` is the default. `de-AT` says `Jänner` for January. `de-CH` writes `ss` for `ß` and takes `.` as the decimal mark. A German number takes the gender and the case of its noun, as in `für einen Tag` and `mit einer Frau`. The word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time, as in `vor einer Stunde`. A form of `kosten` gives the accusative, so `Das kostet 1 €.` reads "einen Euro". A noun with no known gender takes the masculine, and only the dative of a preposition, so `zu 1 Freund` reads "einem Freund". In `de-CH` the full stop is also the decimal mark, so a time with a full stop needs `Uhr`: `um 14.30 Uhr` is a time, and `um 1.15 Franken` reads "eins Komma eins fünf Franken". `von`, `bis`, `ab` and `seit` also come before a ratio, so a time after them needs `Uhr` or a range that `Uhr` closes, as in `von 9:00 bis 17:00 Uhr`.
+`de` serves every German tag. `de-DE` is the default. `de-AT` says `Jänner` for January. `de-CH` writes `ss` for `ß` and takes `.` as the decimal mark. A German number takes the gender and the case of its noun, as in `für einen Tag` and `mit einer Frau`. The word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time, as in `vor einer Stunde`. A form of the verb `kosten` gives the accusative to a price, so `Das kostet 1 €.` reads "einen Euro". Any other noun after the verb is its subject, so `Wie viel kostet 1 Kaffee?` reads "ein Kaffee". A noun with no known gender takes the masculine, and only the dative of a preposition, so `zu 1 Freund` reads "einem Freund". In `de-CH` the full stop is also the decimal mark, so a time with a full stop needs `Uhr`: `um 14.30 Uhr` is a time, and `um 1.15 Franken` reads "eins Komma eins fünf Franken". `von`, `bis`, `ab` and `seit` also come before a ratio, so a time after them needs `Uhr` or a range that `Uhr` closes, as in `von 9:00 bis 17:00 Uhr`.
 
 Some German readings are still wrong or stay as written:
 
-- A verb gives no case, except `kosten`. `Ich habe 1 Hund.` reads "ein Hund", not "einen Hund".
+- A verb gives no case, except `kosten`. `Ich habe 1 Hund.` reads "ein Hund", not "einen Hund". `Ich erinnere mich an 1 Tag im Mai.` reads "einem Tag", but `sich erinnern an` takes the accusative.
+- A price that is the subject of `kosten` takes the accusative. `Wie viel kostet 1 Euro in Dollar?` reads "einen Euro".
 - `in`, `an` and `vor` before a noun that is not a noun of time give no case. `Er wohnt in 1 Haus.` reads "ein Haus".
 - A noun whose gender no rule gives takes the masculine. `mit 1 Freundin` reads "einem Freundin", and `1 Ampel` reads "ein Ampel". A `default_gender` param or a gender hint gives the feminine.
-- A compound of an exception takes the ending rule, so `1 Osterei` reads "eine Osterei". A noun with `Ge-` that is not neuter, such as `Gerade`, reads as a neuter.
-- A preposition of the genitive gives no case to a number. `Während 1 Woche` reads "eine Woche".
+- A compound of an exception takes the ending rule, so `1 Osterei` reads "eine Osterei". A noun with `Ge-` that is not neuter reads as a neuter, so `1 Gerade` reads "ein Gerade", and `Mit 1 Gelatine.` reads "einem Gelatine".
+- A preposition of the genitive gives no case to a number. `Während 1 Woche` and `Innerhalb 1 Woche` read "eine Woche". In `de-CH`, `Außerhalb der 3. Woche` with `ß` reads "dritte", because the `de-CH` tables write `ss`.
+- `h`, `min` and `Std.` are not units. `Er kommt in 1 h.` reads "in eins h", `Er kam vor 1 min.` reads "vor eins min", and `1 Std.` reads "ein Std.".
+- A minus sign between spaces stays as written. `5 - 3 = 2` reads "fünf - drei gleich zwei".
+- A number with a space as the group mark stays as written, as in `10 000`.
 - In `de-CH`, a time with a full stop and no `Uhr` reads as a decimal. `um 9.15` reads "neun Komma eins fünf".
 - A time after `ab`, `von`, `bis` or `seit` with no `Uhr` stays as written, as in `Ab 16:10`. `9:00-17:00 Uhr` stays as written, because the core reads the dash as a joiner.
 - One half before a noun stays as written, as in `1/2 Pizza`, because `halb` declines before a noun.

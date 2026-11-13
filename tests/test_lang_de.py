@@ -20,6 +20,8 @@ SECOND_PASS = [
     ("de-CH", "3/4 CHF 4 Pizza"),
     ("de-AT", "Fr. #5 kam."),
     ("de-DE", "Dr. #fff Farbe"),
+    ("de-DE", "Stand 3. Mai 12000 Fälle."),
+    ("de-DE", "Montag, 3. Mai 12000 Fälle."),
 ]
 
 
