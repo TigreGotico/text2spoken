@@ -631,13 +631,20 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 
 
 def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple[Word, ...]:
-    """The context words of the text, where a character that `SYMBOL` reads stands for the words of its name, as
-    in the output of a first pass. Each word of a name takes the offsets of its character."""
+    """The context words of the text, where the characters that `SYMBOL` reads stand for their names. A sequence of
+    such characters that only spaces part is one word, whose text is the names, so it fills one slot of a window
+    however many words the names hold."""
     marks = [index for index in range(len(text)) if reads_symbol(text, index, request)]
     if not marks:
         return context_words(tokens)
-    found = [Word(index, index + 1, part, False)
-             for index in marks for part in symbol_name(text[index], request).split()]
+    runs: list[list[int]] = []
+    for index in marks:
+        if runs and not text[runs[-1][-1] + 1:index].strip():
+            runs[-1].append(index)
+        else:
+            runs.append([index])
+    found = [Word(run[0], run[-1] + 1, " ".join(symbol_name(text[index], request) for index in run), False)
+             for run in runs]
     for token in tokens:
         first, piece = len(found), token.start
         for cut in (*marks[bisect_left(marks, token.start):bisect_left(marks, token.end)], token.end):
@@ -669,12 +676,12 @@ class Telephone:
     chain to it, but not a group that a letter continues. Such a run is never named further back, so
     `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written.
 
-    The window holds the words that a second pass sees: a character that `SYMBOL` reads counts as the words of its
-    name. A run stays as written only after a phone word that is the last word before it. So `Ligue → 1.234,56`
-    reads the number, `☎000` reads "telephone zero zero zero", as "telephone 000" does, and in pt-BR, where `☎`
-    reads "telefone no gancho", `☎3 91P` reads the number, on the first pass as on the second. The word right
-    before the run in the text still names it, whatever names stand between, so `Call ⇒ 2125550123` and
-    `Call ☎ 2125550123.` read digit by digit.
+    In the window, the characters that `SYMBOL` reads count by their names, and a sequence of them that only spaces
+    part fills one slot. A slot names the run when one of its words is a phone word, so `☎000` reads "telephone zero
+    zero zero", as "telephone 000" does, and a name between a phone word and the run does not push the phone word
+    out: `Call me ⇒ 911` and `Call 911 or → 112.` read digit by digit. A run stays as written only when the last
+    word before it is a phone word, as on a second pass. So in pt-BR, where `☎` reads "telefone no gancho",
+    `☎3 91P` reads the number, and `Ligue → 1.234,56` reads the number.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -702,7 +709,6 @@ class Telephone:
         return False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        raw_words = context_words(tokens)
         words = _spoken_words(text, tokens, request)
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
@@ -737,14 +743,10 @@ class Telephone:
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
                 written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
             window = self.window(text, words, breaks, start, end, request)
-            phone_ends = [words[i].end for i in window if words[i].text.lower() in phone_words]
-            raw = bisect_right(raw_words, start, key=lambda word: word.end) - 1
-            if raw >= 0 and raw_words[raw].text.lower() in phone_words \
-                    and clause_window(text, raw_words, start, end, -1, limit=1, breaks=breaks):
-                phone_ends = sorted({*phone_ends, raw_words[raw].end})
+            phone_ends = [words[i].end for i in window if phone_words.intersection(words[i].text.lower().split())]
             between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
             direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
-            keeps = direct and bool(window) and words[window[-1]].text.lower() in phone_words
+            keeps = direct and bool(window) and words[window[-1]].text.lower().split()[-1] in phone_words
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:

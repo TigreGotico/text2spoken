@@ -180,9 +180,12 @@ def test_a_symbol_that_reads_stands_between_a_phone_word_and_the_digits_as_a_wor
     ("en-GB", "Call", "→", "2125550123."), ("en-GB", "Call", "⇒", "2125550123"),
     ("en-GB", "Call", "→ → →", "2125550123"),
     ("pt-PT", "Ligue", "→", "912345678"), ("pt-BR", "Ligue", "→", "912345678"), ("pt-PT", "Ligue", "⇒", "912345678"),
+    ("en-GB", "Call me", "⇒", "911"), ("en-GB", "Call us", "→ →", "911"), ("en-GB", "Call us", "⇒", "912 345 678"),
+    ("en-US", "Call us", "→", "07946001800"), ("pt-PT", "Em caso de emergência, ligue já", "→", "112."),
+    ("pt-BR", "Telefone já", "→", "190"), ("pt-BR", "Ligue já", "→", "0800 123 456"),
 ])
 def test_a_phone_word_names_a_phone_number_across_symbols_that_read(tag, word, marks, run):
-    """No letter or digit stands between the phone word and the run, so the run is named and reads digit by digit,
+    """A sequence of symbols fills one slot of the phone window, so the run is named as it is with no symbol,
     however many words the names hold."""
     names = " ".join(data(tag, "symbols")["symbols"][mark] for mark in marks.split())
     once = normalize(f"{word} {marks} {run}", tag)
@@ -265,10 +268,23 @@ def test_symbols_and_letters_read_the_same_on_a_second_pass():
 @pytest.mark.parametrize(("tag", "text", "spelled"), [
     ("en-US", "☎000", "telephone 000"), ("en-US", "☎∞000", "telephone infinity sign 000"),
     ("pt-BR", "☎3 91P", "telefone no gancho 3 91P"), ("pt-BR", "☎+4", "telefone no gancho +4"),
+    ("pt-PT", "Ligue ∞☎ 1.234,56", "Ligue símbolo de infinito telefone 1.234,56"),
 ])
 def test_a_symbol_counts_as_the_words_of_its_name_before_a_phone_number(tag, text, spelled):
     """The first pass reads the digits as the text with the name in place of the symbol reads them, so a second
     pass changes nothing."""
     once = normalize(text, tag)
     assert once == normalize(spelled, tag)
+    assert normalize(once, tag) == once
+
+
+@pytest.mark.parametrize(("tag", "text", "plain", "link"), [
+    ("en-US", "Call 911 or → 112.", "Call 911 or 112.", " or "),
+    ("pt-BR", "Ligue 112, → 190.", "Ligue 112, 190.", ", "),
+])
+def test_a_symbol_between_two_phone_numbers_keeps_the_second_named(tag, text, plain, link):
+    """Each number reads as it does with no symbol, and the name stands after the link."""
+    name = data(tag, "symbols")["symbols"]["→"]
+    once = normalize(text, tag)
+    assert once == normalize(plain, tag).replace(link, f"{link}{name} ", 1)
     assert normalize(once, tag) == once
