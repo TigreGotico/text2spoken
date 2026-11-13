@@ -39,13 +39,29 @@ def _words_only(pattern: str) -> bool:
     return all(char.isalpha() or char.isspace() or char in "-'" for char in pattern.replace("{0}", ""))
 
 
+def _case_changes(symbol: str, other: str) -> int:
+    return sum(first != second for first, second in zip(symbol, other))
+
+
 @lru_cache(maxsize=64)
 def _cldr_table(tag: str, listed: tuple[str, ...]) -> FrozenMap:
     """A unit whose CLDR name holds a digit or a symbol, as `{0} litres per 100 kilometres` does, reads no symbol,
-    because a reading holds words only (design section 11)."""
-    units = cldr_data(tag)["units"]
-    return FrozenMap((symbol, unit) for unit in units.values() for symbol in unit["symbols"]
-                     if (no_word(symbol) or symbol in listed) and all(map(_words_only, unit["names"].values())))
+    because a reading holds words only (design section 11).
+
+    A listed symbol that is no CLDR symbol of the locale, but differs from one only in case, reads as that unit, so
+    en-US `ml` reads as `mL`. When it differs in case from two symbols, as `ml` does from `mL` and `ML`, the symbol
+    with the fewest case changes wins, and a tie reads no unit."""
+    units = [unit for unit in cldr_data(tag)["units"].values() if all(map(_words_only, unit["names"].values()))]
+    table = {symbol: unit for unit in units for symbol in unit["symbols"] if no_word(symbol) or symbol in listed}
+    written = {symbol for unit in cldr_data(tag)["units"].values() for symbol in unit["symbols"]}
+    for symbol in listed:
+        if symbol in written:
+            continue
+        ranked = sorted((_case_changes(symbol, other), other, unit) for unit in units for other in unit["symbols"]
+                        if len(other) == len(symbol) and other.lower() == symbol.lower())
+        if ranked and (len(ranked) == 1 or ranked[0][0] < ranked[1][0]):
+            table[symbol] = ranked[0][2]
+    return FrozenMap(table)
 
 
 def unit_table(request: Request) -> FrozenMap:

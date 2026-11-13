@@ -306,3 +306,4 @@ en-304	en-GB	measure	The shelf is 1 ft long.	The shelf is one foot long.	CLDR 49
 en-305	en-US	measure	Use 5 mL of oil.	Use five milliliters of oil.	CLDR 49 en units long: volume-milliliter {0} milliliters; short {0} mL	unchecked
 en-306	en-GB	cardinal	1 in 3 people voted.	one in three people voted.	design section 4.7: a CLDR symbol made only of letters (in, length-inch) reads only through unit_symbols	unchecked
 en-307	en-GB	cardinal	Plan 2 A failed.	Plan two A failed.	design section 4.7: a CLDR symbol made only of letters (A, electric-ampere) reads only through unit_symbols	unchecked
+en-308	en-US	measure	Use 5 ml of oil.	Use five milliliters of oil.	CLDR 49 en units long: volume-milliliter {0} milliliters; short {0} mL; design section 4.7: a listed symbol that differs from a CLDR symbol of the locale only in case reads as that unit	unchecked

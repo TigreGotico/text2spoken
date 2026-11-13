@@ -81,3 +81,22 @@ def test_the_data_loads_on_first_use_of_each_variety():
               "print(before, cldr_data.cache_info().currsize)\n")
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, check=True)
     assert result.stdout.split() == ["0", "1"]
+
+
+@pytest.mark.parametrize("module", [en, pt])
+def test_only_a_listed_symbol_reads_through_a_case_match(module):
+    from text2spoken.core.language import Request, select
+    from text2spoken.core.units import unit_table
+    from text2spoken.params import NormalizationParams
+
+    for variety in module.VARIETIES:
+        tag, language, chosen = select(variety.tag)
+        table = unit_table(Request(tag, chosen, language, NormalizationParams()))
+        written = {s for u in data(variety.tag)["units"].values() for s in u["symbols"]}
+        assert set(table) - written <= set(module.DATA["unit_symbols"])
+
+
+def test_a_case_match_takes_the_symbol_with_the_fewest_case_changes():
+    """en-US writes `mL` for the millilitre and `ML` for the megalitre, so the listed `ml` reads as `mL`."""
+    symbols = {s: key for key, u in data("en-US")["units"].items() for s in u["symbols"]}
+    assert symbols["mL"] == "volume-milliliter" and symbols["ML"] == "volume-megaliter" and "ml" not in symbols
