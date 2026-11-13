@@ -45,6 +45,8 @@ _CONTINUES = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123
 """A joiner of `_JOINERS` before a character of `_CONTINUES` continues an address to the right."""
 _TOKEN = re.compile("[^\t-\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+")
 """A run of characters between spaces, with the space characters of `str.isspace`."""
+_AT = re.compile("[A-Za-z0-9._+-]@[A-Za-z0-9._+-]")
+"""An `@` between two address characters."""
 _TRAILING = ".,;:!?'\""
 _PIECE = re.compile("[A-Za-z]+|[0-9]|.")
 
@@ -114,7 +116,8 @@ class Electronic:
 
     def _kept(self, text: str, addresses: Sequence[Span], tlds: frozenset[str]) -> Iterator[Span]:
         """A token between spaces that holds a run of labels joined by full stops, ending in a label of
-        `electronic_tlds`, but that holds no address, stays whole as written (design section 4.5)."""
+        `electronic_tlds`, or that holds `@` between two address characters, but that holds no address, stays whole
+        as written (design section 4.5)."""
         bounds = sorted((span.start, span.end) for span in addresses)
         starts, ends = [start for start, _ in bounds], list(accumulate((end for _, end in bounds), max))
         chains = _RUNS[_DOMAIN][0]
@@ -122,9 +125,10 @@ class Electronic:
             index = bisect_right(starts, token.end() - 1) - 1
             if index >= 0 and ends[index] > token.start():
                 continue
-            if any(chain.group().rsplit(".", 1)[-1] in tlds
-                   and ("." in chain.group() or text[chain.start() - 1:chain.start()] == ".")
-                   for chain in chains.finditer(text, token.start(), token.end())):
+            if _AT.search(text, token.start(), token.end()) or any(
+                    chain.group().rsplit(".", 1)[-1] in tlds
+                    and ("." in chain.group() or text[chain.start() - 1:chain.start()] == ".")
+                    for chain in chains.finditer(text, token.start(), token.end())):
                 yield Span(token.start(), token.end(), Form.ELECTRONIC,
                            FrozenMap({"kind": "domain", "scheme": "", "address": token.group()}),
                            recognizer=self.name, keep=True)
