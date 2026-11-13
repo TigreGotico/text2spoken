@@ -35,15 +35,15 @@ def test_params_are_hashable_and_equal_by_value():
     assert a == b and hash(a) == hash(b) and {a: 1}[b] == 1
 
 
-def test_default_reads_every_form_except_letters():
-    assert NormalizationParams().forms == DEFAULT_FORMS == frozenset(Form) - {Form.LETTERS}
+def test_default_reads_every_form_except_letters_and_emoji():
+    assert NormalizationParams().forms == DEFAULT_FORMS == frozenset(Form) - {Form.LETTERS, Form.EMOJI}
 
 
 def test_only_without_and_plus():
     params = NormalizationParams(clock="12h")
     assert params.only(Form.DATE, Form.TIME).forms == {Form.DATE, Form.TIME}
-    assert params.without(Form.TELEPHONE).forms == frozenset(Form) - {Form.TELEPHONE, Form.LETTERS}
-    assert params.plus(Form.LETTERS).forms == frozenset(Form)
+    assert params.without(Form.TELEPHONE).forms == frozenset(Form) - {Form.TELEPHONE, Form.LETTERS, Form.EMOJI}
+    assert params.plus(Form.LETTERS, Form.EMOJI).forms == frozenset(Form)
     assert params.only(Form.DATE).plus(Form.LETTERS).forms == {Form.DATE, Form.LETTERS}
     assert params.only(Form.DATE).clock == "12h" and params.plus(Form.LETTERS).clock == "12h"
 

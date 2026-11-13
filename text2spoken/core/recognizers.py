@@ -24,7 +24,7 @@ from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import DigitSpeller, bounded_integer
-from text2spoken.core.symbols import SYMBOL, reads_symbol, symbol_name
+from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, context_word, fold_digits, is_bounded, is_digit, is_letter, is_mark,
                                      is_word_char, next_visible, one_digit_set)
@@ -631,28 +631,29 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 
 
 def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple[Word, ...]:
-    """The context words of the text, where the characters that `SYMBOL` reads stand for their names. A sequence of
-    such characters that only spaces part is one word, whose text is the names, so it fills one slot of a window
-    however many words the names hold."""
-    marks = [index for index in range(len(text)) if reads_symbol(text, index, request)]
+    """The context words of the text, where the characters that `SYMBOL` reads and the emoji sequences that `EMOJI`
+    reads stand for their names. A sequence of such pieces that only spaces part is one word, whose text is the
+    names, so it fills one slot of a window however many words the names hold."""
+    marks = named_pieces(text, request)
     if not marks:
         return context_words(tokens)
-    runs: list[list[int]] = []
-    for index in marks:
-        if runs and not text[runs[-1][-1] + 1:index].strip():
-            runs[-1].append(index)
+    runs: list[list[tuple[int, int, str]]] = []
+    for mark in marks:
+        if runs and not text[runs[-1][-1][1]:mark[0]].strip():
+            runs[-1].append(mark)
         else:
-            runs.append([index])
-    found = [Word(run[0], run[-1] + 1, " ".join(symbol_name(text[index], request) for index in run), False)
-             for run in runs]
+            runs.append([mark])
+    found = [Word(run[0][0], run[-1][1], " ".join(name for _, _, name in run), False) for run in runs]
+    starts = [start for start, _, _ in marks]
     for token in tokens:
         first, piece = len(found), token.start
-        for cut in (*marks[bisect_left(marks, token.start):bisect_left(marks, token.end)], token.end):
-            word = context_word(text[piece:cut])
+        for start, end, _ in (*marks[bisect_left(starts, token.start):bisect_left(starts, token.end)],
+                              (token.end, token.end + 1, "")):
+            word = context_word(text[piece:start])
             if word is not None:
                 offset = text.index(word, piece)
                 found.append(Word(offset, offset + len(word), word, False))
-            piece = cut + 1
+            piece = end
         if len(found) > first:
             found[-1] = replace(found[-1], clause_end=token.clause_end)
     return tuple(sorted(found, key=lambda word: word.start))
@@ -711,6 +712,7 @@ class Telephone:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         words = _spoken_words(text, tokens, request)
+        covered = frozenset(index for start, end, _ in named_pieces(text, request) for index in range(start, end))
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
@@ -758,7 +760,7 @@ class Telephone:
             short_code = "".join(groups) in short_codes
             gap = "" if named_end is None else re.sub(" {2,}", " ", "".join(
                 char for index, char in enumerate(text[named_end:start], named_end)
-                if not reads_symbol(text, index, request)))
+                if index not in covered))
             named = (direct
                      or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
                                                                request))
@@ -885,5 +887,5 @@ def written_shapes() -> FrozenMap:
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, LETTERS, SYMBOL)}
+                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
 """The shared recognizers by name."""

@@ -101,6 +101,27 @@ Known limits of the form:
 - The Portuguese codas are only `l`, `r`, `s`, `z`, `x`, `m` and `n`. So the form spells some acronyms that speakers read as words, some with an added e: `CIAV` "ciave" (Ciberdúvidas 39064), `OVNI` ¦óvni¦ (Ciberdúvidas 9355) and `PIB` "pibe" (Wiktionary). They read "cê i á vê", "ó vê éne i" and "pê i bê". A measurement against WikiPron in both directions decides the coda set.
 - A span that waits on a joined character on the first pass can read on a second pass, after the form spells a run next to it. `Sala 9#D. RTP.` reads "Sala 9#D. érre tê pê.", and a second pass reads "nove".
 
+### Emoji
+
+The `EMOJI` form reads an emoji by its CLDR name. A chat reader wants it and a book reader does not, so the form is off by default, and each emoji stays as written. Turn it on with `plus`:
+
+```python
+from text2spoken import Form, NormalizationParams
+
+normalize("Nice 👍🏽!", "pt-PT", NormalizationParams().plus(Form.EMOJI))
+# 'Nice polegar para cima tipo de pele quatro!'
+```
+
+The form reads each emoji sequence: an emoji with its skin tone, its U+FE0F and the emoji that zero width joiners add to it. The sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. `😂😂` reads the name twice, `👨‍👩‍👧‍👦` reads "family man woman girl boy", `🇵🇹` reads "flag Portugal", and `1️⃣` reads "keycap one". A sequence with no name reads by the name of its first emoji, so `😀🏽` reads "grinning face". A name drops its quote marks, its colons, commas and brackets become spaces, and the language reads its digits and abbreviations as in a sentence: en `1st place medal` reads "first place medal", and pt-PT `tipo de pele 4` reads "tipo de pele quatro". U+2019 between two letters is an apostrophe, so `🕐` reads "one o’clock". The spacing follows the `SYMBOL` form, so `(😂).` reads "(face with tears of joy).". `❤` with no U+FE0F stays with `SYMBOL`, and `❤️` reads through this form. In an address, an emoji sequence is one piece: `x@a👍🏽b.com` reads "ex at a thumbs up medium skin tone bee dot com", and with the form off "ex at a 👍🏽 bee dot com".
+
+U+FE0F, U+FE0E and U+20E3 are no part of a word next to another form, with the form on or off. So `❤️2 cats` reads the number, as `😀2 cats` does: "❤️two cats" with the form off. The character before such a mark belongs to the emoji, so `1️⃣` stays as written with the form off. With the form on, a sequence that joins two other spans counts as one character, as a symbol does, so `10+4 ₡👍🏽+4 ₴` stays as written, as `10+4 ₡😂+4 ₴` does.
+
+Known limits of the form:
+
+- A name that still holds a character that is no word after the reading stays as written, because a second pass would read that character. The names hold `&` (en-GB 14, en-US 14), `!` (2 in each tag), `#` and `*` (the keycaps, 1 each in each tag), `/` (pt-PT 2), or a full stop that no abbreviation reads (en-US 9, as in `flag: St. Lucia` and `flag: U.S. Virgin Islands`, and pt-PT 6, in `Sra. Natal`). So `🇦🇬` stays as written in English, and `#️⃣` stays as written in every tag. `scripts/extract_cldr.py` prints each such name.
+- A character other than a space before a skin tone, U+FE0F or a zero width joiner belongs to the form, so `a🏽` stays as written. A digit before a skin tone still reads, as without the form: `5🏽` reads "five🏽".
+- An emoji that starts with a letter or a digit and that a letter or a digit joins on the left stays as written, as a number joined to a word does. `x.org1️⃣` stays as written.
+
 ## The API
 
 | Function | Returns |

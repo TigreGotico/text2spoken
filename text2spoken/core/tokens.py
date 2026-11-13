@@ -29,8 +29,14 @@ def default_tokenizer(text: str, lang: str) -> tuple[Token, ...]:
     return tuple(Token(start, end, word) for start, end, word in quebra_frases.span_indexed_word_tokenize(text))
 
 
+EMOJI_MARKS = frozenset("\ufe0e\ufe0f\u20e3")
+"""The variation selectors U+FE0E and U+FE0F and the combining enclosing keycap U+20E3. They belong to an emoji
+sequence, so they are no part of a word at the edge of another form: `❤️2 cats` reads the number as `😀2 cats` does
+(design section 4.7)."""
+
+
 def is_mark(char: str) -> bool:
-    return unicodedata.category(char).startswith("M")
+    return unicodedata.category(char).startswith("M") and char not in EMOJI_MARKS
 
 
 def is_letter(char: str) -> bool:

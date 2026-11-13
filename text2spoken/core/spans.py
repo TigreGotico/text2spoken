@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation
+from text2spoken.core.tokens import EMOJI_MARKS, Token, context_word, is_digit, is_punctuation
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
                                 UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
@@ -42,6 +42,7 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.COLOR: frozenset({"rgb", "alpha", "hex"}),
     Form.ELECTRONIC: frozenset({"kind", "scheme", "address"}),
     Form.SYMBOL: frozenset({"symbol"}),
+    Form.EMOJI: frozenset({"sequence", "name"}),
 }
 """The fields of each form (section 4.4). A recognizer emits exactly these."""
 
@@ -143,7 +144,16 @@ def _joiner(char: str) -> bool:
     return not (char.isspace() or is_digit(char))
 
 
-def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None]) -> bool:
+def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> tuple[tuple[int, int], ...]:
+    """The joiner and the character beyond it, on the left and on the right of the span. `before` maps the end of each
+    emoji sequence that the `EMOJI` form finds to its start, and `after` maps its start to its end. The sequence is
+    one joiner, as one `SYMBOL` character is, so the character beyond it is outside the sequence."""
+    left = before.get(span.start, span.start - 1)
+    return (left, left - 1), (span.end, after.get(span.end, span.end + 1))
+
+
+def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None],
+            sides: Sequence[tuple[int, int]]) -> bool:
     """Whether one character that is not a digit or a space joins the span, on either side, to a digit that no
     span reads, or to a character of a waiting span of another form. A joiner that a waiting span of the same
     form holds is no joiner: the two spans are one range, as in `$5-$10`."""
@@ -155,7 +165,15 @@ def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None]) -
             return False
         waiting = holder[beyond]
         return is_digit(text[beyond]) or (waiting is not None and waiting.form is not span.form)
-    return side(span.start - 1, span.start - 2) or side(span.end, span.end + 1)
+    return any(side(joiner, beyond) for joiner, beyond in sides)
+
+
+def _before_emoji_mark(span: Span, text: str) -> bool:
+    """Whether a span of a form that reads words ends right before U+FE0F, U+FE0E or U+20E3. The character before the
+    mark belongs to an emoji sequence (design section 4.7), so `1️⃣` stays as written with `EMOJI` off. The mark is no
+    word character after the sequence, so `❤️2` reads the number."""
+    return (span.form not in (Form.SYMBOL, Form.EMOJI, Form.ELECTRONIC) and span.end < len(text)
+            and text[span.end] in EMOJI_MARKS)
 
 
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
@@ -165,13 +183,16 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     character of a waiting span. A claimed span wakes the waiting spans next to it, which are checked again in
     claim order, as they would be on a second pass over the output. A `keep` span claims its characters and
     stays out of the result, so its text stays as written. An `ELECTRONIC` span claims a token whole (section 4.5),
-    so it does not wait on a joined digit. A waiting `SYMBOL` span holds no character, so no span waits on it, and
-    two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
+    so it does not wait on a joined digit. An emoji sequence that `EMOJI` finds joins as one character. A waiting
+    `SYMBOL` or `EMOJI` span holds no character, so no span waits on it, and two spans cannot wait on each other
+    through a symbol, as in `•∈$2§1`.
     """
     candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
                   for span in recognizer.find(text, tokens, request)
-                  if not (_inside(span, blocks) or (span.form is not Form.ELECTRONIC
-                                                    and splits_token(span, tokens, text)))]
+                  if not (_inside(span, blocks) or _before_emoji_mark(span, text)
+                          or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
+    before = {span.end: span.start for span in candidates if span.form is Form.EMOJI}
+    after = {span.start: span.end for span in candidates if span.form is Form.EMOJI}
     read = bytearray(len(text))
     holder: list[Span | None] = [None] * len(text)
     neighbours: dict[int, list[int]] = {}
@@ -182,11 +203,12 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
         span = candidates[index]
         if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
             continue
-        if span.form is not Form.ELECTRONIC and _joined(text, span, read, holder):
-            if span.form is not Form.SYMBOL:
+        sides = _sides(span, before, after)
+        if span.form is not Form.ELECTRONIC and _joined(text, span, read, holder, sides):
+            if span.form not in (Form.SYMBOL, Form.EMOJI):
                 for position in range(span.start, span.end):
                     holder[position] = span
-            for position in (span.start - 2, span.start - 1, span.end, span.end + 1):
+            for position in (position for side in sides for position in side):
                 neighbours.setdefault(position, []).append(index)
             continue
         read[span.start:span.end] = b"\x01" * (span.end - span.start)
