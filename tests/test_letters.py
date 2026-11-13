@@ -111,10 +111,10 @@ def test_a_lexicon_value_that_the_form_reads_raises_and_a_word_does_not():
         normalize("Vi o canal um.", "pt-PT", spelled.plus(Form.LETTERS))
 
 
-WORD_ROWS = {"en-366", "en-367", "en-376", "pt-155", "pt-156", "pt-157", "pt-158", "pt-159", "pt-174"}
+WORD_ROWS = {"en-386", "en-387", "en-396", "pt-167", "pt-168", "pt-169", "pt-170", "pt-171", "pt-186"}
 """Rows whose run reads as a word by the syllable rule, and whose letters all have a name: NATO, UEFA, WARNING, ONU,
 IVA, SIDA and ETAR. ATENÇÃO holds Ç, which has no name, so it stays as written either way."""
-LETTER_ROWS = {"en-366", "en-367", "en-373", "en-377", "pt-155", "pt-160", "pt-161", "pt-162"}
+LETTER_ROWS = {"en-386", "en-387", "en-393", "en-397", "pt-167", "pt-172", "pt-173", "pt-174"}
 """Rows whose run of three or more letters reads letter by letter by the syllable rule: BMW, BBC, FBI, ZDF, RTP and
 CTT. A run of two letters, as in MP3, reads letter by letter before the rule."""
 
@@ -131,8 +131,8 @@ def test_the_syllable_rule_bites(monkeypatch, verdict, expected):
     assert _failing_rows() >= expected
 
 
-@pytest.mark.parametrize(("spec", "run", "row"), [(EN, "IRS", "en-370"), (EN, "CIA", "en-370"), (EN, "USA", "en-371"),
-                                                  (PT, "TAP", "pt-166"), (PT, "EUA", "pt-167")])
+@pytest.mark.parametrize(("spec", "run", "row"), [(EN, "IRS", "en-390"), (EN, "CIA", "en-390"), (EN, "USA", "en-391"),
+                                                  (PT, "TAP", "pt-178"), (PT, "EUA", "pt-179")])
 def test_each_exception_bites(monkeypatch, spec, run, row):
     assert row not in _failing_rows()
     table = FrozenMap({k: v for k, v in spec.data["letter_runs"].items() if k != run})

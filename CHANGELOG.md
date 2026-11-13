@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a34](https://github.com/TigreGotico/text2spoken/tree/0.0.2a34) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a33...0.0.2a34)
+
+**Merged pull requests:**
+
+- feat: read units from CLDR 49 for en and pt [\#71](https://github.com/TigreGotico/text2spoken/pull/71) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a33](https://github.com/TigreGotico/text2spoken/tree/0.0.2a33) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a32...0.0.2a33)

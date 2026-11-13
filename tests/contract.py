@@ -20,7 +20,7 @@ import linguatag
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from tests.data_keys import OPTIONAL, PHONE_SHAPE_KEYS, READERS, SHAPES
+from tests.data_keys import ALTERNATIVES, OPTIONAL, PHONE_SHAPE_KEYS, READERS, SHAPES
 from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core import recognizers
@@ -173,6 +173,10 @@ def clause_6(name: str, spec: LanguageSpec) -> None:
         data = request_for(spec, index).data
         check_data_keys(data, variety.tag)
         missing = required - set(data)
+        for keys in ALTERNATIVES:
+            missing -= keys
+            if keys & required and not keys & set(data):
+                missing.add(" or ".join(sorted(keys)))
         assert not missing, f"{variety.tag}: no {sorted(missing)}, which its shared recognizers and verbalizers read"
 
 
