@@ -299,15 +299,20 @@ def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = N
     cells = [row["expected"] for row in rows(name)] if expected_cells is None else expected_cells
     speller = spec.spellers.get(Form.CARDINAL)
     request = request_for(spec)
+    # Values may differ in one case only, as German masculine "einen" and neuter "ein" in the accusative, so the
+    # check also reads each case that an RBNF cardinal map of the file names.
+    cases = (None, *sorted({key.case for s in _rbnf_spellers(spec) for key in s.cardinal_sets if key.case}))
+    keys = [(n, case) for n in ("1", "2") for case in cases]
     for field, values in (("gender", spec.genders), ("animacy", spec.animacies), ("noun_class", spec.noun_classes),
                           ("numeral_system", spec.numeral_systems)):
+        def spoken(value) -> dict:
+            return {(n, case): speller.cardinal(n, Features(**{field: value}, case=case), request) for n, case in keys}
         for value in values:
-            words = {n: speller.cardinal(n, Features(**{field: value}), request) for n in ("1", "2")}
+            words = spoken(value)
             for other in values - {value}:
-                others = {n: speller.cardinal(n, Features(**{field: other}), request) for n in ("1", "2")}
-                assert any(words[n] != others[n] for n in words), f"{value} and {other} give the same words"
-            distinct = [w for n, w in words.items()
-                        if all(w != speller.cardinal(n, Features(**{field: o}), request) for o in values - {value})]
+                others = spoken(other)
+                assert any(words[k] != others[k] for k in words), f"{value} and {other} give the same words"
+            distinct = [w for k, w in words.items() if all(w != spoken(o)[k] for o in values - {value})]
             assert any(any(w in cell.split() for cell in cells) for w in distinct), f"no row holds a {value} word"
 
 

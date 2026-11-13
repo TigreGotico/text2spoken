@@ -31,6 +31,23 @@ EN_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
 }
+DE_ENTRIES = {
+    "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_word": DELETE,
+    "digit_words": "null", "leads": "#", "half": DELETE, "idioms": "24/7", "range_word": DELETE, "range_marks": "-",
+    "time_suffixes": " Uhr",
+    "hour_word": DELETE, "time_words": "um", "dimension_marks": "x", "dimension_word": DELETE, "operators": "+",
+    "months": "März", "month_numbers": "März", "year_words": "Jahr", "currencies": "EUR", "scales": "Mio.",
+    "scale_plurals": "Million", "percent": "word", "units": "kg", "phone_words": "notruf", "short_codes": "112",
+    "list_links": "oder", "phone_shapes": "0[1-9][0-9]{1,4} [0-9]+-[0-9]+",
+    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "color_words": "Farbe", "titles": "Dr.",
+    "abbreviations": "z. B.", "sentence_final": "usw.", "number_abbreviations": "Nr.", "dative_prepositions": "mit",
+    "accusative_prepositions": "für", "two_way_prepositions": "in", "determiners": "am", "noun_genders": "auge",
+    "noun_endings": ("e", "feminine"), "patterns": "date_day_month", "genitive_prepositions": "wegen",
+    "temporal_prepositions": "vor", "time_nouns": "stunde", "accusative_verbs": "kostet",
+    "noun_frames": ("ge[^aeiouäöüy]+[aeiouäöüy].*e", "neuter"),
+    "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
+}
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
     "range_marks": "-", "clock_marks": freeze({"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}),
@@ -47,6 +64,7 @@ PT_ENTRIES = {
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
 }
 ENTRIES = {
+    "de": DE_ENTRIES,
     "en": EN_ENTRIES,
     "pt": PT_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},

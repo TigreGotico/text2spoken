@@ -179,7 +179,7 @@ def test_clause_6_requires_no_key_of_a_verbalizer_that_the_file_replaces():
 
 
 def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
-    data = freeze({**thaw(STUB.data), "range_word": "al", "time_words": ["je"], "day_periods": {"am": ["am"]},
+    data = freeze({**thaw(STUB.data), "range_word": "al", "time_words": ["je"],
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
                                    {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}]})
     readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"])

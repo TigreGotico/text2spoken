@@ -147,5 +147,5 @@ of `effective_params`."""
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 
-OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks"})
+OPTIONAL = frozenset({"proclitics", "case_suffixes", "time_suffixes", "range_marks", "day_periods"})
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
