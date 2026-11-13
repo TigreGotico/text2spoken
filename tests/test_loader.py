@@ -80,7 +80,7 @@ WRITTEN_FORMS = [
     ("fr-FR", "Il a payé £5."), ("fr-FR", "Il a payé 5 €."), ("fr-FR", "Il a payé 5\u00a0€."), ("fr-FR", "50%"),
     ("fr-FR", "C'est 25 % moins cher."), ("lb-LU", "Et kascht $5."), ("lb-LU", "Et kascht 50%."),
     ("lb-LU", "Et weit 5 kg."), ("lb-LU", "Et huet 25°."), ("lb-LU", "Mir fueren 50 km/h."), ("lb-LU", "den 3. Mee"),
-    ("lb-LU", "Hie gouf 2. Sieger."), ("pt-PT", "Price: $5."), ("pt-PT", "Custa R$5."), ("es-ES", "el 1.º de mayo"),
+    ("lb-LU", "Hie gouf 2. Sieger."), ("mt-MT", "Il-prezz: $5."), ("mt-MT", "Jiswa R$5."), ("es-ES", "el 1.º de mayo"),
     ("es-ES", "la 2.ª vez"), ("it-IT", "Costa 5 € al giorno."), ("it-IT", "Il 12/03/2024 alle 7:30."),
     ("tr-TR", "%50 indirim"),
 ]
