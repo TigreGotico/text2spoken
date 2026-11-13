@@ -11,13 +11,12 @@ from __future__ import annotations
 
 import re
 from bisect import bisect_right
-from itertools import accumulate
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
-from text2spoken.core.tokens import Token, is_word_char
+from text2spoken.core.tokens import Token, is_word_char, protect_blocks
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form
 
@@ -45,8 +44,6 @@ _CONTINUES = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123
 """A joiner of `_JOINERS` before a character of `_CONTINUES` continues an address to the right."""
 _TOKEN = re.compile("[^\t-\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+")
 """A run of characters between spaces, with the space characters of `str.isspace`."""
-_AT = re.compile("[A-Za-z0-9._+-]@[A-Za-z0-9._+-]")
-"""An `@` between two address characters."""
 _TRAILING = ".,;:!?'\""
 _PIECE = re.compile("[A-Za-z]+|[0-9]|.")
 
@@ -103,6 +100,17 @@ def _www_matches(text: str) -> Iterator[re.Match]:
             yield match
 
 
+def _marked(text: str, start: int, end: int, token: re.Match, tlds: frozenset[str]) -> bool:
+    """Whether `text[start:end]`, a part of `token`, holds an address marker: `@` between two characters that are
+    not spaces, `www.`, `://`, or a run of labels joined by full stops that ends in a label of `tlds`."""
+    return (text.find("@", max(start, token.start() + 1), min(end, token.end() - 1)) != -1
+            or text.find("://", start, end) != -1
+            or _WWW_START.search(text, start, end) is not None
+            or any(chain.group().rsplit(".", 1)[-1] in tlds
+                   and ("." in chain.group() or (chain.start() > start and text[chain.start() - 1] == "."))
+                   for chain in _RUNS[_DOMAIN][0].finditer(text, start, end)))
+
+
 @dataclass(frozen=True)
 class Electronic:
     name: str = "electronic"
@@ -115,23 +123,31 @@ class Electronic:
         yield from self._kept(text, addresses, tlds)
 
     def _kept(self, text: str, addresses: Sequence[Span], tlds: frozenset[str]) -> Iterator[Span]:
-        """A token between spaces that holds a run of labels joined by full stops, ending in a label of
-        `electronic_tlds`, or that holds `@` between two address characters, but that holds no address, stays whole
-        as written (design section 4.5)."""
-        bounds = sorted((span.start, span.end) for span in addresses)
-        starts, ends = [start for start, _ in bounds], list(accumulate((end for _, end in bounds), max))
-        chains = _RUNS[_DOMAIN][0]
+        """Each part of a token between spaces, outside the addresses and the `[[...]]` blocks, that holds an
+        address marker stays whole as written (design section 4.5)."""
+        holes: list[list[int]] = []
+        for start, end in sorted([(span.start, span.end) for span in addresses] + list(protect_blocks(text))):
+            if holes and start <= holes[-1][1]:
+                holes[-1][1] = max(holes[-1][1], end)
+            else:
+                holes.append([start, end])
+        index = 0
         for token in _TOKEN.finditer(text):
-            index = bisect_right(starts, token.end() - 1) - 1
-            if index >= 0 and ends[index] > token.start():
-                continue
-            if _AT.search(text, token.start(), token.end()) or any(
-                    chain.group().rsplit(".", 1)[-1] in tlds
-                    and ("." in chain.group() or text[chain.start() - 1:chain.start()] == ".")
-                    for chain in chains.finditer(text, token.start(), token.end())):
-                yield Span(token.start(), token.end(), Form.ELECTRONIC,
-                           FrozenMap({"kind": "domain", "scheme": "", "address": token.group()}),
-                           recognizer=self.name, keep=True)
+            cursor, stop = token.span()
+            while index < len(holes) and holes[index][1] <= cursor:
+                index += 1
+            position = index
+            while cursor < stop:
+                if position < len(holes) and holes[position][0] < stop:
+                    hole_start, hole_end = holes[position]
+                    position += 1
+                else:
+                    hole_start = hole_end = stop
+                if cursor < hole_start and _marked(text, cursor, hole_start, token, tlds):
+                    yield Span(cursor, hole_start, Form.ELECTRONIC,
+                               FrozenMap({"kind": "domain", "scheme": "", "address": text[cursor:hole_start]}),
+                               recognizer=self.name, keep=True)
+                cursor = max(cursor, hole_end)
 
     def _addresses(self, text: str, request: Request, tlds: frozenset[str]) -> Iterator[Span]:
         schemes = request.data.get("electronic_schemes", FrozenMap())
