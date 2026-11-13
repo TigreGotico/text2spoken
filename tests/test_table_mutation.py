@@ -7,7 +7,7 @@ from importlib import import_module
 
 import pytest
 
-from tests.conftest import language_names, registry_with_stubs, rows
+from tests.conftest import language_names, registry_with_stubs, row_params, rows
 from tests.fixtures import pt_electronic
 from tests.test_electronic import PT_ROWS
 from text2spoken import NormalizationParams, UnreadFormError, analyze, normalize
@@ -33,7 +33,7 @@ EN_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
     "electronic_symbols": "@", "letter_names": "w", "electronic_vowels": "i", "electronic_schemes": "https",
-    "electronic_tlds": "uk",
+    "electronic_tlds": "uk", "letter_vowels": "a", "letter_onsets": "n", "letter_codas": "ng", "letter_runs": "IRS",
 }
 DE_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_word": DELETE,
@@ -66,6 +66,7 @@ PT_ENTRIES = {
     "ordinal_marks": "ª", "regnal_titles": "D", "century_words": "século", "determiners": "as", "noun_gender": "Isabel",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "min",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
+    "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "r", "letter_runs": "TAP",
 }
 ENTRIES = {
     "de": DE_ENTRIES,
@@ -108,7 +109,7 @@ def test_every_table_has_an_entry_to_drop(code):
 
 def _fails(row) -> bool:
     try:
-        return normalize(row["text"], row["tag"]) != row["expected"]
+        return normalize(row["text"], row["tag"], row_params(row)) != row["expected"]
     except Exception:
         return True
 

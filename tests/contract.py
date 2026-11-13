@@ -26,6 +26,7 @@ from text2spoken.core import language as loader
 from text2spoken.core import recognizers
 from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
+from text2spoken.core.letters import speak_letters
 from text2spoken.core.spans import FIELDS, Span
 from text2spoken.core.recognizers import SHARED, speak_cardinal, speak_lexicon
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
@@ -149,7 +150,7 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
 
 
 SHARED_VERBALIZERS = {"speak_cardinal": speak_cardinal, "speak_lexicon": speak_lexicon,
-                      "speak_electronic": speak_electronic}
+                      "speak_electronic": speak_electronic, "speak_letters": speak_letters}
 """The verbalizers of the core that a file can name, by their name in `READERS`."""
 
 

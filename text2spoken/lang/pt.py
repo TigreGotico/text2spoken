@@ -15,6 +15,34 @@ feminine form; a scale word from `milhão` up is a masculine noun, so the words 
 
 The gender of a common noun comes from the noun lexicon of `tugalex`, behind the `pt` extra (design section 16).
 Without the extra, the `noun_gender` table and the endings of `gender_suffixes` give it.
+
+A run of capital letters reads by the `LETTERS` form (design section 4.6) when the caller turns the form on.
+Correia and San Payo de Lemos, Inovação Lexical em Português (2005, p. 46), quoted in Ciberdúvidas answer 26164,
+give the rule: "aquilo que distingue uma sigla de um acrónimo é apenas a sua concordância/não-concordância com a
+estrutura silábica da língua em causa". The Gramática do Português (Fundação Calouste Gulbenkian, p. 222), quoted in
+Ciberdúvidas answer 39064, gives the two readings: a sigla such as IRS has "a sua pronúncia ... feita letra a
+letra", and acronyms such as IVA and ETAR "têm estrutura silábica, isto é, são pronunciados como uma palavra da
+língua". A run that splits into syllables stays as written. Any other run reads each letter by its name in
+`lang/_pt_electronic.py`.
+
+The vowels are a, e, i, o and u, with the acute and the circumflex of AO1990, Bases VIII to XI, the grave of Base
+XII, and the tilde of "ã" ("representa-se a nasalidade pelo til, se essa vogal é de timbre a", Base VI, 1) and of
+"õ" ("ditongos representados por vogal com til e semivogal", Base VII, 3). A diphthong of Base VII is two vowel
+letters, which already form two syllables of the rule, so the set holds single vowels only. An onset is a consonant
+letter of Base I other than k, w and y, which "usam-se nos seguintes casos especiais" (Base I, 2), or ç and the
+digraphs ch, lh and nh (Base I, Obs. 1), which open a syllable in "ca-cho, lha-no, ma-lha, ma-nha" (Base XX). An
+onset of two consonants is a group of Base XX, 1, where "a primeira consoante é uma labial, uma velar, uma dental ou
+uma labiodental e a segunda um l ou um r" (p, b; c, g; t, d; f, v). A coda is one consonant: "Syllables ending in a
+consonant generally end in one of the single consonants /S/, /l/, /R/, /N/" (Cristófaro Silva 2024, p. 98, quoted
+in Wikipedia, "Portuguese phonology", a secondary source). The letters are s, z and x for /S/ ("nas-cer",
+"atroz-mente", "bissex-to", Base XX, 2), l, r, and m and n "com valor de nasalidade" (Base XX, 2). So IRS, with the
+coda rs, and PIB, with the coda b, read letter by letter.
+
+`letter_runs` holds two runs that the rule reads wrong. TAP reads as a word against the coda rule: Ciberdúvidas
+answer 77 says that "O.N.U.; T.A.P.; O.M.S., que se liam letra por letra. Por facilidade de leitura, começaram a
+ler-se como uma palavra única", and answer 35524 lists TAP among the "acrónimos e siglas com sentido silábico". EUA
+reads letter by letter against the syllable rule: Ciberdúvidas answer 9355 lists EUA among the "Siglas
+(siglóides)", with "letras em que é típico (mas não obrigatório) serem soletradas independentemente".
 """
 from __future__ import annotations
 
@@ -25,6 +53,7 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
+from text2spoken.core.letters import speak_letters
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import PHONE_PLANS, SHARED, Telephone, TimeClock, digit_run_matches, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
@@ -32,6 +61,7 @@ from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_i
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, next_visible, one_digit_set
 from text2spoken.errors import DeclinedReading
+from text2spoken.lang import _pt_electronic
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
 MASCULINE, FEMININE = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE
@@ -129,6 +159,12 @@ DATA = freeze({
     "gender_suffixes": [["dade", "feminine"], ["dades", "feminine"], ["agem", "feminine"], ["agens", "feminine"],
                         ["ção", "feminine"], ["ções", "feminine"], ["a", "feminine"], ["as", "feminine"]],
     "symbols": {"%": "percent", "€": "money", "$": "money", "°": "measure", "×": "measure"},
+    "letter_names": _pt_electronic.ELECTRONIC["letter_names"],
+    "letter_vowels": [*"aeiouáéíóúâêôàãõ"],
+    "letter_onsets": [*"bcçdfghjlmnpqrstvxz", "ch", "lh", "nh",
+                      *(first + second for first in "pbcgtdfv" for second in "lr")],
+    "letter_codas": [*"lrszxmn"],
+    "letter_runs": {"EUA": "letters", "TAP": "word"},
     "patterns": {
         "date_named": "([0-9][0-9]?) de " + _MONTH + "(?: de ([0-9][0-9][0-9][0-9]))?",
         "expression": "[-−+]?[0-9]+(?: ?[+−×=] ?[-−+]*[0-9]+)+",
@@ -139,9 +175,11 @@ DEFAULTS = {"date_order": "DMY", "clock": "24h", "minute_style": "number", "deci
 
 VARIETIES = (
     Variety("pt-PT", freeze({"defaults": {**DEFAULTS, "scale": "long"},
-                             "colors": {"808080": "cinzento"}})),
+                             "colors": {"808080": "cinzento"},
+                             "letter_names": _pt_electronic.VARIETIES["pt-PT"]["letter_names"]})),
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
+        "letter_names": _pt_electronic.VARIETIES["pt-BR"]["letter_names"],
         "colors": {"808080": "cinza"},
         "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
         "units": {unit: {category: word.replace("ómetro", "ômetro") for category, word in forms.items()}
@@ -778,15 +816,15 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
                  PortugueseTelephone(), Money(), SHARED["percent"], SHARED["measure"], Expression(),
-                 SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(), SHARED["decimal"],
-                 SHARED["cardinal"]),
+                 SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(), SHARED["letters"],
+                 SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
         Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
         Form.RANGE: speak_range,
         Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman, Form.ABBREVIATION: speak_abbreviation,
-        Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
+        Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=attach,

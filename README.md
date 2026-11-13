@@ -72,6 +72,30 @@ Known limits: a word of a spoken address can become the key or the context of an
 - A final `@` reads "at", and a second pass takes it as the time word of a time after it. Only spaces or punctuation can stand between them. `Write x.com@ 9:30` reads "Write ex dot com at 9:30", and a second pass reads "nine thirty". `Write x.com@ (9:30)` gives the same result inside the brackets.
 - A month name as the first or the last label of an address forms a date with the digits next to it on a second pass. `See example.com/May 05 for details.` reads "See example dot com slash May 05 for details.", and a second pass reads "May fifth". `On 05 May@x.com we met.` reads "On 05 May at ex dot com we met.", and a second pass reads "the fifth of May".
 
+### Runs of capital letters
+
+The `LETTERS` form reads a run of capital letters, such as `NATO`, `BMW` or `MP3`. The form is off by default, so a run stays as written and the phonemizer reads it. Turn it on with `plus`:
+
+```python
+from text2spoken import Form, NormalizationParams
+
+normalize("A NATO reuniu-se com a RTP.", "pt-PT", NormalizationParams().plus(Form.LETTERS))
+# 'A NATO reuniu-se com a érre tê pê.'
+```
+
+A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name and each digit by its word. A table in the language file holds the runs that the rule reads wrong: `TAP` reads as a word and `EUA` letter by letter in Portuguese, and `CIA`, `IRS` and `USA` read letter by letter in English. English and Portuguese offer the form. A language with no letter names keeps each run as written.
+
+The form does not take a run with a lowercase letter (`ONGs`, `PhD`), a run with full stops (`E.U.A.`), a capital alone (`plano B`), or a Roman numeral that the `ROMAN` form reads (`século XIV`). An e-mail or web address reads as an address. With the form on, a run of capitals in the reading of another form reads as this form reads it. So `Call the BBC at 9 AM.` reads "Call the bee bee cee at nine a em." in `en-US`, and `help@IRS.gov` reads "help at i ar ess dot gov".
+
+Known limits of the form:
+
+- A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i".
+- A run that reads as a word and holds a digit stays as written, as `COVID19` does with the form off.
+- The rule reads some initialisms as words, because no source in the language file names them: `CEO` and `WHO` stay as written in English.
+- A run with a letter that has no name, such as `Ç`, stays as written when it does not split into syllables.
+- Portuguese has no onset or coda with `k`, `w` or `y`, which AO1990 keeps for foreign names. So `WEB` reads "dâblio é bê" in pt-PT.
+- A span that waits on a joined character on the first pass can read on a second pass, after the form spells a run next to it. `Sala 9#D. RTP.` reads "Sala 9#D. érre tê pê.", and a second pass reads "nove".
+
 ## The API
 
 | Function | Returns |
@@ -198,7 +222,7 @@ python -m text2spoken.export en
 
 If the tag is not valid, or if no language file reads the tag, the command writes one error line and exits with code 1.
 
-English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals, letter codes such as `GPS`, or codes such as `X5` after a name; these stay as written. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
+English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals. A letter code such as `GPS` or `X5` stays as written, unless the `LETTERS` form is on. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
 Russian reads `ru-RU`, and every other `ru-*` tag selects it. Install it with `text2spoken[ru]`, which adds `ovos-number-parser`. A number agrees in gender and case with the noun after it, and the preposition before it gives the case. A noun in the prepositional in `-е` or `-ии` does not show its gender, so `в 1 квартире` reads the masculine "одном". A gender hint gives "одной".
 

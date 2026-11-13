@@ -183,11 +183,14 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
                                    {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
                    "electronic_symbols": {"@": "et"}, "letter_names": {"a": "ha"}, "electronic_vowels": ["a"],
-                   "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"]})
-    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["electronic"])
-    verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic}
+                   "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"], "letter_vowels": ["a"],
+                   "letter_onsets": ["q"], "letter_codas": ["c"]})
+    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["electronic"],
+               SHARED["letters"])
+    verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic,
+                   Form.LETTERS: contract.speak_letters}
     spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers), verbalizers=verbalizers)
-    read = set().union(*(READERS[r.name] for r in readers), READERS["speak_electronic"])
+    read = set().union(*(READERS[r.name] for r in readers), READERS["speak_electronic"], READERS["speak_letters"])
     assert OPTIONAL <= read and not OPTIONAL & set(spec.data)
     contract.clause_6("qac", spec)
 
