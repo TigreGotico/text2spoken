@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a32](https://github.com/TigreGotico/text2spoken/tree/0.0.2a32) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a31...0.0.2a32)
+
+**Merged pull requests:**
+
+- fix\(pt\): read 14 as quatorze in pt-BR [\#70](https://github.com/TigreGotico/text2spoken/pull/70) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a31](https://github.com/TigreGotico/text2spoken/tree/0.0.2a31) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a30...0.0.2a31)
