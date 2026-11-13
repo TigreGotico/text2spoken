@@ -100,3 +100,38 @@ def test_a_case_match_takes_the_symbol_with_the_fewest_case_changes():
     """en-US writes `mL` for the millilitre and `ML` for the megalitre, so the listed `ml` reads as `mL`."""
     symbols = {s: key for key, u in data("en-US")["units"].items() for s in u["symbols"]}
     assert symbols["mL"] == "volume-milliliter" and symbols["ML"] == "volume-megaliter" and "ml" not in symbols
+
+
+def test_a_unit_whose_name_holds_a_digit_reads_no_symbol():
+    """CLDR en names `L/100 km` "{0} liters per 100 kilometers". Read, a second pass would read the 100 again."""
+    from text2spoken import normalize
+
+    once = normalize("It uses 5 L/100 km.", "en-US")
+    assert once == "It uses five L/one hundred kilometers."
+    assert normalize(once, "en-US") == once
+
+
+def test_a_feminine_unit_takes_the_feminine_power_pattern():
+    """CLDR pt-PT: duration-hour `{0} horas`, gender feminine; power2 feminine `{0} quadradas`."""
+    from text2spoken import normalize
+
+    assert normalize("A área é 2 h².", "pt-PT") == "A área é duas horas quadradas."
+
+
+def test_a_power_after_a_slash_squares_the_denominator():
+    """`km/h²` is kilometres per square hour: CLDR pt-PT `{0} quilómetros`, per `{0} por {1}`, duration-hour one
+    `{0} hora`, power2 feminine one `{0} quadrada`. A square of the whole `km/h` would read "por hora quadrados"."""
+    from text2spoken import normalize
+
+    assert normalize("Acelera 5 km/h².", "pt-PT") == "Acelera cinco quilómetros por hora quadrada."
+
+
+def test_a_case_match_with_two_equal_candidates_reads_no_unit():
+    """en-US writes `cd` for the candela and `CD` for the carat. A listed `Cd` differs from each in one letter, so
+    it reads neither, while a listed `ml` differs from `mL` in one letter and from `ML` in two, so it reads `mL`."""
+    from text2spoken.core.units import _cldr_table
+
+    symbols = {s for u in data("en-US")["units"].values() for s in u["symbols"]}
+    assert {"cd", "CD"} <= symbols and "Cd" not in symbols
+    assert "Cd" not in _cldr_table("en-US", ("Cd",))
+    assert _cldr_table("en-US", ("ml",))["ml"]["names"]["other"] == "{0} milliliters"

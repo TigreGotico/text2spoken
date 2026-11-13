@@ -73,6 +73,12 @@ def unit_table(request: Request) -> FrozenMap:
     return _cldr_table(request.variety.tag, tuple(data["unit_symbols"]))
 
 
+def _takes_power(symbol: str) -> bool:
+    """Whether `²` or `³` may follow the symbol: not after a power, and not after `/`, so `kWh/100km²` is no square
+    of `kWh/100km`."""
+    return symbol[-1] not in POWERS and "/" not in symbol
+
+
 @lru_cache(maxsize=64)
 def _by_length(table: FrozenMap) -> tuple[str, ...]:
     return tuple(sorted(table, key=len, reverse=True))
@@ -80,7 +86,7 @@ def _by_length(table: FrozenMap) -> tuple[str, ...]:
 
 def units_at(text: str, start: int, request: Request) -> Iterator[str]:
     """The written units that start at text[start], the longest first. With CLDR data, a symbol with no `/` may take
-    `²` or `³` after it, and a symbol may take `/` and a second symbol, as in `kg/m²`."""
+    `²` or `³` after it, and a symbol may take `/` and a second symbol, as in `kg/m²` and `km/h²`."""
     table = unit_table(request)
     symbols = _by_length(table)
     compound = "unit_symbols" in request.data
@@ -89,15 +95,18 @@ def units_at(text: str, start: int, request: Request) -> Iterator[str]:
         for symbol in symbols:
             if text.startswith(symbol, at):
                 power = text[at + len(symbol):at + len(symbol) + 1]
-                if compound and power in POWERS and symbol[-1] not in POWERS and "/" not in symbol:
+                if compound and power in POWERS and _takes_power(symbol):
                     yield symbol + power
                 yield symbol
 
-    for base in bases(start):
-        end = start + len(base)
-        if compound and text[end:end + 1] == "/":
-            yield from (base + "/" + denominator for denominator in bases(end + 1))
-        yield base
+    def candidates() -> Iterator[str]:
+        for base in bases(start):
+            end = start + len(base)
+            if compound and text[end:end + 1] == "/":
+                yield from (base + "/" + denominator for denominator in bases(end + 1))
+            yield base
+
+    return iter(sorted(candidates(), key=len, reverse=True))
 
 
 def _pattern(names: FrozenMap, category: str) -> str:
@@ -108,7 +117,7 @@ def _simple(request: Request, unit: str, category: str) -> tuple[str, str | None
     table = unit_table(request)
     if unit in table:
         return _pattern(table[unit]["names"], category), table[unit].get("gender")
-    if unit[-1:] in POWERS and unit[:-1] in table:
+    if unit[-1:] in POWERS and unit[:-1] in table and _takes_power(unit[:-1]):
         entry = table[unit[:-1]]
         compound = cldr_data(request.variety.tag)["compound"]
         power = POWERS[unit[-1]]

@@ -7,8 +7,9 @@ set. The design page `text2spoken-design.md`, section 5.4, gives the measured re
 Unit words come from CLDR 49 (`cldr-units-full`, the `long` patterns of en-GB and en). A symbol that cannot be a
 plain word, such as `km/h`, `°C` or `µm`, reads with no list. `unit_symbols` names the symbols made only of
 letters that read as units: the SI symbols `kg`, `g`, `mg`, `km`, `m`, `cm`, `mm` and `ml`, and `mph`, `MHz`,
-`GHz`, `MB` and `ft`. Other CLDR symbols are also words or letters of running text, so `1 in 3`, `Plan 2 A` and
-`29 GB golds` read no unit. `GB` names Great Britain as often as gigabytes (design section 16).
+`GHz` and `MB`. Other CLDR symbols are also words or letters of running text, so `1 in 3`, `Plan 2 A` and
+`29 GB golds` read no unit. `GB` names Great Britain as often as gigabytes (design section 16), and `ft.` names
+"featuring" in a music credit, as in `Maroon 5 ft. Cardi B`.
 
 An e-mail or web address reads the name of each symbol. Wiktionary gives each name: "@" is "at" ("@", sense 2:
 the separator in an e-mail address, "at" the domain name), "." is "dot" ("dot", usage note: "In email addresses
@@ -124,7 +125,7 @@ DATA = freeze({
     "scales": {"thousand": "thousand", "million": "million", "billion": "billion", "trillion": "trillion",
                "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
-    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "mph", "ml", "MHz", "GHz", "MB", "ft"],
+    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "mph", "ml", "MHz", "GHz", "MB"],
     "phone_words": ["phone", "telephone", "tel", "call", "dial", "ring", "text", "mobile", "cell", "fax"],
     "short_codes": ["000", "101", "111", "112", "211", "311", "411", "511", "611", "711", "811", "911", "988", "999"],
     "list_links": ["and", "or"],
@@ -504,8 +505,9 @@ class Year:
 
     A count read as a year is wrong, so the follower of a linked list decides for all its years, and a range is
     one link of a list. A lowercase word that is not in `function_words` blocks them, as in `in 1234 steps`, and
-    so do a unit of the units table in any case, an operator and a dimension mark, as in `in 2048 MB` and
-    `in 1920 × 1080`."""
+    so do a symbol of `unit_symbols` in any case, another unit symbol in its own case, an operator and a dimension
+    mark, as in `in 2048 MB`, `in 2020 mA` and `in 1920 × 1080`. An acronym that only matches a unit symbol in
+    another case, such as `EV` or `MA`, is a capitalised name, so `In 2023 EV sales rose.` keeps its year."""
     name: str = "year"
     form: Form = Form.YEAR
 
@@ -517,7 +519,8 @@ class Year:
         year_words = frozenset(data["year_words"])
         function_words = frozenset(data["function_words"])
         marks = frozenset(data["range_marks"])
-        units = frozenset(unit.lower() for unit in unit_table(request))
+        units = unit_table(request)
+        listed = frozenset(symbol.lower() for symbol in data["unit_symbols"])
         signs = frozenset(data["operators"]) | frozenset(data["dimension_marks"]) | {"*", "/"}
         word_link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") ")
         words = context_words(tokens)
@@ -542,7 +545,7 @@ class Year:
             while stop < len(text) and not text[stop].isspace():
                 stop += 1
             follower = text[start:stop].rstrip(".,;:!?)")
-            if (text[start] in signs and not is_letter(text[start])) or follower.lower() in units:
+            if (text[start] in signs and not is_letter(text[start])) or follower in units or follower.lower() in listed:
                 return False
             stop = start
             while stop < len(text) and is_letter(text[stop]):
