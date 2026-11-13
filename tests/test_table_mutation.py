@@ -31,8 +31,24 @@ EN_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
 }
+PT_ENTRIES = {
+    "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
+    "range_marks": "-", "clock_marks": freeze({"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}),
+    "time_words": "às", "time_suffixes": "h", "day_periods": "pm", "dimension_marks": "x", "dimension_word": DELETE,
+    "operators": "+", "months": "março", "currencies": "EUR", "scales": "milhões", "percent": "word", "units": "kg",
+    "phone_words": "ligue", "short_codes": "112", "list_links": "ou",
+    "phone_shapes": "[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}",
+    "phone_unit_shapes": "[29][0-9]{2} [0-9]{3} [0-9]{3}", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "function_words": "agora",
+    "color_words": "cor", "colors": "000000", "titles": "Dr.", "abbreviations_any_case": "dr.",
+    "honorific_before_name": "D.", "abbreviations": "etc.", "sentence_final": "etc.", "number_abbreviations": "n.º",
+    "ordinal_marks": "ª", "regnal_titles": "D", "century_words": "século", "determiners": "as", "noun_gender": "Isabel",
+    "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "min",
+    "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
+}
 ENTRIES = {
     "en": EN_ENTRIES,
+    "pt": PT_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",

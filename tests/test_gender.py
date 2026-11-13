@@ -1,7 +1,11 @@
-"""Gender per language (design sections 2.3 and 5.6), on the gendered test language `qaa` and on English."""
+"""Gender per language (design sections 2.3 and 5.6), on the gendered test language `qaa`, on English, and on
+Portuguese without the noun lexicon of tugalex (design section 16)."""
+import sys
 import warnings
 
 import pytest
+
+from tests.conftest import rows
 
 from text2spoken import (Features, FrozenMap, GrammaticalGender, NormalizationParams, UndefinedGrammaticalGender,
                          analyze, effective_params, normalize, render)
@@ -98,3 +102,20 @@ def test_a_language_with_no_context_words_reads_none(monkeypatch, gendered):
         assert normalize("Tenho 1 casa.", "qaa") == "Tenho um casa."
     finally:
         gendered.LANGUAGE = original
+
+
+SUFFIX_READINGS = {
+    "pt-131": "Há dois pontes e um árvore.",
+    "pt-132": "Tenho dois mãos e falo duas idiomas.",
+    "pt-133": "Júpiter e Saturno são duas planetas.",
+    "pt-134": "A região tem dois tribos indígenas.",
+    "pt-135": "Os duas artistas e as duas artistas.",
+}
+"""The Portuguese rows that need tugalex, read by the `gender_suffixes` of pt.py alone: a noun that no ending
+matches takes the masculine default, and `-as` reads feminine."""
+
+
+@pytest.mark.parametrize("row", rows("pt"), ids=lambda row: row["id"])
+def test_portuguese_without_tugalex_reads_by_the_suffix_rules(monkeypatch, row):
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    assert normalize(row["text"], row["tag"]) == SUFFIX_READINGS.get(row["id"], row["expected"])
