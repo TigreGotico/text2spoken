@@ -213,7 +213,7 @@ def test_a_phone_region_set_with_one_region_lacking_a_plan_warns():
 
 
 def test_supports_lists_every_form_that_en_reads():
-    assert set(Form) - supports("en").forms == {Form.ROMAN, Form.LETTERS, Form.IDENTIFIER}
+    assert set(Form) - supports("en").forms == {Form.ROMAN, Form.IDENTIFIER}
 
 
 def test_cldr_locale_tries_the_script_before_the_region(gendered):

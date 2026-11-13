@@ -5,7 +5,7 @@ import warnings
 
 import pytest
 
-from tests.conftest import rows
+from tests.conftest import row_params, rows
 
 from text2spoken import (Features, FrozenMap, GrammaticalGender, NormalizationParams, UndefinedGrammaticalGender,
                          analyze, effective_params, normalize, render)
@@ -118,4 +118,4 @@ matches takes the masculine default, and `-as` reads feminine."""
 @pytest.mark.parametrize("row", rows("pt"), ids=lambda row: row["id"])
 def test_portuguese_without_tugalex_reads_by_the_suffix_rules(monkeypatch, row):
     monkeypatch.setitem(sys.modules, "tugalex", None)
-    assert normalize(row["text"], row["tag"]) == SUFFIX_READINGS.get(row["id"], row["expected"])
+    assert normalize(row["text"], row["tag"], row_params(row)) == SUFFIX_READINGS.get(row["id"], row["expected"])

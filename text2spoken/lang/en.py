@@ -33,6 +33,30 @@ symbol"). The Wiktionary example "en.wiktionary.org", read aloud "E-N-dot-wiktio
 two-letter label and reads the longer labels as words. A letter reads by the name that Wikipedia, "English
 alphabet", Letter names, gives from the Oxford English Dictionary, with "zed" in British and "zee" in American
 English.
+
+A run of capital letters reads by the `LETTERS` form (design section 4.6) when the caller turns the form on. A run
+that splits into English syllables stays as written, and any other run reads letter by letter. The syllable sets are
+the spellings of the clusters in Wikipedia, "English phonology", Phonotactics, a secondary source: it gives English
+"clusters of up to three consonants in the syllable onset and up to four consonants in the syllable coda" (citing
+Hansen 2004, p. 91), and its onset and coda tables carry a "Citation needed" mark. An onset is one of "All
+single-consonant phonemes except /ŋ/", or a cluster of the onset table, spelled as in its example words: play, blood,
+clean, glove, prize, bring, tree, dream, crowd, green, twin, dwarf, quick, floor, sleep, friend, three, shrimp, what,
+swoon, thwart, speak, stop, skill, smile, snow, sphere, split, sclera, spring, street, scream and square. The /sk/ of
+"sclera" and "scream" is spelled sc, so sc is an onset too. The letter x spells /ks/, which is no onset ("xylophone"
+begins with /z/), so x is no onset. A coda is one of "The single consonant phonemes except /h/, /w/, /j/", or a
+cluster of the coda table, spelled as in help, bulb, belt, hold, milk, belch, harp, orb, fort, beard, mark, morgue,
+arch, golf, solve, wealth, else, Welsh, dwarf, carve, north, Mars, marsh, film, kiln, arm, born, snarl, jump, tent,
+end, lunch, pink, sing, triumph, month, bronze, left, crisp, lost, ask, opt, act, fifth, depth, lapse, klutz, width,
+box, next and horst. The section above the coda table says: "Most (in theory, all) of the following except those that
+end with the sibilants /s/, /z/, /ʃ/, /ʒ/, /tʃ/ or /dʒ/ can be extended with /s/ or /z/ representing the morpheme
+-s/-z." So each coda that does not end in s, z, x, sh or ch also takes an s, as in the ds of AIDS, the rts of SPORTS
+and the nts of EVENTS. The tables give r and its clusters "in rhotic varieties" only, but en-GB writes the r that it
+does not say, so r stays a coda letter. ch, sh, th and ng spell one consonant each (Wikipedia, "English orthography":
+"chin", "shin", "thing", "strength"). The vowels are a, e, i, o and u, and the spellings with w and y in the table
+"Combinations of vowel letters" of Wikipedia, "English orthography", which "includes ⟨h, w, y⟩ when they represent
+vowel sounds": y as in myth and sky, aw as in flaw, ew as in dew, and ow as in owl. The rule reads CIA, IRS, USA, IBS
+and IDS as words, and Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/, USA /juː ɛs ˈeɪ/,
+IBS /aɪ.biːˈɛs/ and IDS /aɪ diː ɛs/. So `letter_runs` holds them.
 """
 from __future__ import annotations
 
@@ -46,6 +70,7 @@ from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
+from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, digit_run_matches, join_ranges,
                                           numbers_in, speak_cardinal, speak_lexicon)
@@ -98,6 +123,11 @@ COLORS = {
     "ffffff": "white",
 }
 """Seeded by `scripts/seed_colors.py en` from the ovos-color-parser palette `en-US/dot-net-colors.json`."""
+
+_CODAS = [*"bcdfgklmnprstvxz", "ch", "sh", "th", "ng", "lp", "lb", "lt", "ld", "lk", "lch", "rp", "rb",
+          "rt", "rd", "rk", "rg", "rch", "lf", "lv", "lth", "ls", "lsh", "rf", "rv", "rth", "rs", "rsh",
+          "lm", "ln", "rm", "rn", "rl", "mp", "nt", "nd", "nch", "nk", "mph", "nth", "nz", "ft", "sp",
+          "st", "sk", "pt", "ct", "fth", "pth", "ps", "tz", "dth", "xt", "rst"]
 
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ".", "group": ","}, {"decimal": ",", "group": "."}]},
@@ -167,6 +197,12 @@ DATA = freeze({
     "electronic_vowels": ["a", "e", "i", "o", "u"],
     "electronic_schemes": {"http": "read", "https": "read", "ftp": "read"},
     "electronic_tlds": ["com", "org", "net", "edu", "gov", "uk"],
+    "letter_vowels": ["a", "e", "i", "o", "u", "y", "aw", "ew", "ow"],
+    "letter_onsets": [*"bcdfghjklmnprstvwyz", "ch", "sh", "th", "ph", "wh", "qu", "pl", "bl", "cl", "gl", "pr", "br",
+                      "tr", "dr", "cr", "gr", "tw", "dw", "fl", "sl", "fr", "thr", "shr", "sw", "thw", "sp", "st",
+                      "sk", "sm", "sn", "sph", "spl", "sc", "scl", "spr", "str", "scr", "squ"],
+    "letter_codas": [*_CODAS, *(coda + "s" for coda in _CODAS if not coda.endswith(("s", "z", "x", "sh", "ch")))],
+    "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters", "IBS": "letters", "IDS": "letters"},
     "patterns": {
         "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",
@@ -710,14 +746,15 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
                  SHARED["date_numeric"], SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"],
                  SHARED["measure"], Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(),
-                 Abbreviation(), SHARED["decimal"], SHARED["cardinal"], SHARED["symbol"]),
+                 Abbreviation(), SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
-        Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic, Form.SYMBOL: speak_symbol,
+        Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic, Form.LETTERS: speak_letters,
+        Form.SYMBOL: speak_symbol,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},

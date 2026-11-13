@@ -24,6 +24,15 @@ def character(value, where: str) -> None:
     assert type(value) is str and len(value) == 1, f"{where}: {value!r} is not one character"
 
 
+def lower(value, where: str) -> None:
+    assert type(value) is str and value and value == value.lower(), f"{where}: {value!r} is not a lowercase string"
+
+
+def capitals(value, where: str) -> None:
+    assert type(value) is str and len(value) >= 2 and all(c.isupper() for c in value), \
+        f"{where}: {value!r} is not a run of two or more capital letters"
+
+
 def digits(value, where: str) -> None:
     assert type(value) is str and value.isascii() and value.isdigit(), f"{where}: {value!r} is not ASCII digits"
 
@@ -101,6 +110,10 @@ SHAPES: dict[str, Shape] = {
     "idioms": map_of(word, text),
     "leads": map_of(word, text),
     "letter_names": map_of(one_of(*"abcdefghijklmnopqrstuvwxyz"), word),
+    "letter_codas": list_of(lower),
+    "letter_onsets": list_of(lower),
+    "letter_runs": map_of(capitals, one_of("word", "letters")),
+    "letter_vowels": list_of(lower, minimum=1),
     "list_links": WORDS,
     "number_marks": map_of(script, list_of(record(decimal=word, group=text), minimum=1)),
     "operators": map_of(character, word),
@@ -150,25 +163,27 @@ READERS: dict[str, frozenset[str]] = {
                           "case_suffixes"}) | SYMBOL_KEYS,
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
+    "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_runs"}),
     "symbol": SYMBOL_KEYS,
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
     "speak_electronic": frozenset({"electronic_symbols", "letter_names", "electronic_vowels", "electronic_labels",
                                    "electronic_schemes", "digit_words", "symbol_names"}),
+    "speak_letters": frozenset({"letter_names", "digit_words"}),
     "render": frozenset({"symbols"}),
     "effective_params": frozenset({"defaults"}),
 }
 """The keys that each shared recognizer reads, by its name in `SHARED`. Then the keys that the shared verbalizers
-`speak_cardinal`, `speak_lexicon` and `speak_electronic` read, and the keys of the unread check of `render` and of
-the option defaults of `effective_params`. `speak_electronic` also reads the keys of the `symbol` reader, with a
-default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads them to find
-a character that `SYMBOL` reads between a phone word and the digits."""
+`speak_cardinal`, `speak_lexicon`, `speak_electronic` and `speak_letters` read, and the keys of the unread check of
+`render` and of the option defaults of `effective_params`. `speak_electronic` also reads the keys of the `symbol`
+reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
+them to find a character that `SYMBOL` reads between a phone word and the digits."""
 
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 
 OPTIONAL = frozenset({
-    "proclitics", "case_suffixes", "time_suffixes", "range_marks", "day_periods", "electronic_labels",
+    "proclitics", "case_suffixes", "time_suffixes", "range_marks", "day_periods", "electronic_labels", "letter_runs",
     "symbol_names",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
