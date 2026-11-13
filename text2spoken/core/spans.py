@@ -165,7 +165,8 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     character of a waiting span. A claimed span wakes the waiting spans next to it, which are checked again in
     claim order, as they would be on a second pass over the output. A `keep` span claims its characters and
     stays out of the result, so its text stays as written. An `ELECTRONIC` span claims a token whole (section 4.5),
-    so it does not wait on a joined digit.
+    so it does not wait on a joined digit. A waiting `SYMBOL` span holds no character, so no span waits on it, and
+    two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
     """
     candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
                   for span in recognizer.find(text, tokens, request)
@@ -182,8 +183,9 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
         if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
             continue
         if span.form is not Form.ELECTRONIC and _joined(text, span, read, holder):
-            for position in range(span.start, span.end):
-                holder[position] = span
+            if span.form is not Form.SYMBOL:
+                for position in range(span.start, span.end):
+                    holder[position] = span
             for position in (span.start - 2, span.start - 1, span.end, span.end + 1):
                 neighbours.setdefault(position, []).append(index)
             continue

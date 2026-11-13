@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from bisect import bisect_right
+from bisect import bisect_left, bisect_right
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
@@ -24,9 +24,9 @@ from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import DigitSpeller, bounded_integer
-from text2spoken.core.symbols import SYMBOL, reads_symbol
+from text2spoken.core.symbols import SYMBOL, reads_symbol, symbol_name
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
+from text2spoken.core.tokens import (Token, context_word, fold_digits, is_bounded, is_digit, is_letter, is_mark,
                                      is_word_char, next_visible, one_digit_set)
 from text2spoken.core.units import unit_table, units_at
 from text2spoken.params import FrozenMap, Form
@@ -526,46 +526,47 @@ class Money:
     def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A currency symbol before or after a number. Before a symbol that comes first, a sign may stand, and
         after its number a scale word of the language, attached or after one space: `-$5`, `$2 million`, `$1m`.
-        A symbol that the amount before already reads is not the symbol of the next number, so in `5 R$ 10£` the
-        second amount is `10£`."""
+
+        Each symbol next to a number gives a candidate, before the number and after it, and the claim takes the first
+        that no earlier span holds. So a symbol that one amount reads is not the symbol of the next number: in
+        `5 R$ 10£` the second amount is `10£`. A symbol that a phone number holds is still free for the amount after
+        it: `Call 999 £ 5 now.` reads "five pounds"."""
         symbols = currency_symbols(request)
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
-        claimed = 0
         for number in numbers_in(text, request):
             if number.sign:
                 continue
             for symbol, code in symbols:
-                found = None
-                for gap in ("", " ", " "):
-                    start = number.start - len(gap) - len(symbol)
-                    if start >= claimed and text[start:number.start] == symbol + gap:
-                        sign = SIGNS.get(text[start - 1], "") if start else ""
-                        if sign and _free_before(text, start - 1, ()):
-                            start -= 1
-                        else:
-                            sign = ""
-                        scale, end = _scale(text, number.end, scales)
-                        bounds = _affixes(text, start, end, request.data, ())
-                        if bounds is not None:
-                            found = (bounds, sign, scale)
-                            break
-                    scaled = _scale(text, number.end, scales) if self.scale_before_symbol else ("", number.end)
-                    for scale, after in dict.fromkeys((scaled, ("", number.end))):
-                        end = after + len(gap) + len(symbol)
-                        if text.startswith(gap + symbol, after) \
-                                and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
-                            found = (bounds, "", scale)
-                            break
-                    if found:
-                        break
-                if found:
-                    (start, end, prefix, suffix), sign, scale = found
-                    claimed = end
+                for (start, end, prefix, suffix), sign, scale in self._sides(text, number, symbol, scales, request):
                     yield Span(start, end, Form.MONEY,
                                FrozenMap({"amount": FrozenMap({**number.amount(), "sign": sign}), "currency": code,
                                           "written_symbol": symbol, "scale": scale, "prefix": prefix,
                                           "suffix": suffix}), recognizer=self.name)
+
+    def _sides(self, text: str, number: Number, symbol: str, scales: Sequence[str],
+               request: Request) -> Iterator[tuple[tuple[int, int, str, str], str, str]]:
+        """The bounds, the sign and the scale of the amount with the symbol before the number, then of the amount
+        with the symbol after it, for each side where the symbol stands."""
+        for gap in ("", " ", " "):
+            start = number.start - len(gap) - len(symbol)
+            if start >= 0 and text[start:number.start] == symbol + gap:
+                sign = SIGNS.get(text[start - 1], "") if start else ""
+                if sign and _free_before(text, start - 1, ()):
+                    start -= 1
+                else:
+                    sign = ""
+                scale, end = _scale(text, number.end, scales)
+                if (bounds := _affixes(text, start, end, request.data, ())) is not None:
+                    yield bounds, sign, scale
                     break
+        scaled = _scale(text, number.end, scales) if self.scale_before_symbol else ("", number.end)
+        for gap in ("", " ", " "):
+            for scale, after in dict.fromkeys((scaled, ("", number.end))):
+                end = after + len(gap) + len(symbol)
+                if text.startswith(gap + symbol, after) \
+                        and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
+                    yield bounds, "", scale
+                    return
 
 
 def _scale(text: str, end: int, scales: Sequence[str]) -> tuple[str, int]:
@@ -629,6 +630,27 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
     return None
 
 
+def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple[Word, ...]:
+    """The context words of the text, where a character that `SYMBOL` reads stands for the words of its name, as
+    in the output of a first pass. Each word of a name takes the offsets of its character."""
+    marks = [index for index in range(len(text)) if reads_symbol(text, index, request)]
+    if not marks:
+        return context_words(tokens)
+    found = [Word(index, index + 1, part, False)
+             for index in marks for part in symbol_name(text[index], request).split()]
+    for token in tokens:
+        first, piece = len(found), token.start
+        for cut in (*marks[bisect_left(marks, token.start):bisect_left(marks, token.end)], token.end):
+            word = context_word(text[piece:cut])
+            if word is not None:
+                offset = text.index(word, piece)
+                found.append(Word(offset, offset + len(word), word, False))
+            piece = cut + 1
+        if len(found) > first:
+            found[-1] = replace(found[-1], clause_end=token.clause_end)
+    return tuple(sorted(found, key=lambda word: word.start))
+
+
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
@@ -645,9 +667,13 @@ class Telephone:
     phone-shaped run, a short code or a run of 7 or more digits that a letter, or a joiner or an operator and a
     digit, continue, as in `Call 0800 123 456/7.` and `Call 112+1.` The kept run takes the digits that joiners
     chain to it, but not a group that a letter continues. Such a run is never named further back, so
-    `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written. A character
-    that `SYMBOL` reads between the phone word and the run reads as a word, so it keeps no run: `Ligue → 1.234,56`
-    reads the number, on the first pass and on the second, and `Call ☎ 2125550123.` still reads digit by digit.
+    `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written.
+
+    The window holds the words that a second pass sees: a character that `SYMBOL` reads counts as the words of its
+    name. A run stays as written only after a phone word that is the last word before it. So `Ligue → 1.234,56`
+    reads the number, `☎000` reads "telephone zero zero zero", as "telephone 000" does, and in pt-BR, where `☎`
+    reads "telefone no gancho", `☎3 91P` reads the number, on the first pass as on the second. `Call ☎ 2125550123.`
+    reads digit by digit.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -675,7 +701,7 @@ class Telephone:
         return False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        words = context_words(tokens)
+        words = _spoken_words(text, tokens, request)
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
@@ -708,11 +734,11 @@ class Telephone:
             digits = "".join(groups)
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
                 written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
-            phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
-                          if words[i].text.lower() in phone_words]
+            window = self.window(text, words, breaks, start, end, request)
+            phone_ends = [words[i].end for i in window if words[i].text.lower() in phone_words]
             between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
             direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
-            keeps = direct and not any(reads_symbol(text, index, request) for index in between)
+            keeps = direct and words[window[-1]].text.lower() in phone_words
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:

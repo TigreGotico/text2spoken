@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from text2spoken import Form, NormalizationParams, normalize
+from text2spoken.core import symbols
 
 TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR")
 ROOT = Path(__file__).resolve().parent.parent
@@ -94,15 +95,15 @@ def test_the_extractor_assigns_a_shared_symbol_by_the_symbol_field():
 
 
 def test_the_extractor_keeps_symbols_of_text_presentation_and_child_names():
-    """`©` (So) and `§` (Po, a listed mark) read; `😀` has emoji presentation, `½` is No and `&` is ASCII. The child
-    locale names `©` and inherits `§` from its parent."""
+    """`©` (So) and `§` (Po, a listed mark) read; `‰` is Po and no listed mark, `😀` has emoji presentation, `½` is
+    No and `&` is ASCII. The child locale names `©` and inherits `§` from its parent."""
     module = extractor()
     ucd = Files({"UnicodeData.txt": "\n".join(f"{ord(c):04X};X;{gc};" for c, gc in
-                                              (("&", "Po"), ("§", "Po"), ("©", "So"), ("½", "No"),
-                                               ("😀", "So"))).encode(),
+                                              (("&", "Po"), ("§", "Po"), ("‰", "Po"), ("©", "So"),
+                                               ("½", "No"), ("😀", "So"))).encode(),
                  "emoji/emoji-data.txt": b"1F600 ; Emoji_Presentation # grinning face\n"})
     categories, presentation = module.unicode_properties(ucd)
-    names = {c: {"tts": [f"parent {c}"]} for c in "&§©½😀"}
+    names = {c: {"tts": [f"parent {c}"]} for c in "&§‰©½😀"}
     release = Files({
         "cldr-json/cldr-annotations-full/annotations/qq/annotations.json":
             {"annotations": {"annotations": names}},
@@ -116,17 +117,24 @@ def test_the_extractor_keeps_symbols_of_text_presentation_and_child_names():
 
 @pytest.mark.parametrize(("tag", "char", "name"), [
     ("en-GB", "©", "copyright"), ("en-US", "→", "right-pointing arrow"), ("pt-PT", "©", "direitos de autor"),
-    ("pt-BR", "©", "símbolo de copyright"), ("pt-PT", "‰", "por mil"), ("pt-PT", "§", "secção"),
+    ("pt-BR", "©", "símbolo de copyright"), ("pt-PT", "†", "obelisco"), ("pt-PT", "§", "secção"),
     ("en-GB", "☺", "smiling face"),
 ])
 def test_the_symbol_names_are_the_cldr_tts_names_of_the_parent_chain(tag, char, name):
-    """CLDR 49 annotations: pt-PT names `©` and `§` itself, and gives no `tts` for `‰`, so it takes the pt name."""
+    """CLDR 49 annotations: pt-PT names `©` and `§` itself, and gives no `tts` for `†`, so it takes the pt name."""
     assert data(tag, "symbols")["symbols"][char] == name
 
 
 @pytest.mark.parametrize("char", ["😀", "½", "²", "&", "µ", "–"])
 def test_the_symbol_file_holds_no_emoji_of_emoji_presentation_no_number_and_no_ascii(char):
     assert char not in data("en-GB", "symbols")["symbols"]
+
+
+@pytest.mark.parametrize("tag", TAGS)
+def test_the_symbol_file_holds_no_per_mille_sign(tag):
+    """Design section 4.7 adds `§ ¶ † ‡ •` to the symbol categories; `‰` and `‱` are of category `Po` and not in
+    that list."""
+    assert not {"‰", "‱"} & set(data(tag, "symbols")["symbols"])
 
 
 @pytest.mark.parametrize(("tag", "text", "spoken"), [
@@ -151,9 +159,9 @@ def test_two_decimals_read_as_a_decimal_when_the_currency_names_no_minor_unit():
 ])
 def test_a_character_that_a_table_gives_to_another_form_stays_as_written(tag, text):
     """`°` is in the `symbols` table, `÷` is an operator of en.py, `₹` and `€` are currency signs that MONEY reads,
-    `‰` is the symbol of the CLDR 49 en and pt unit concentr-permille, and `¤` is the CLDR symbol of XXX, whose
-    bracketed names do not read. CLDR names each of them, yet SYMBOL leaves them to their form, so `3/4 ‰` stays as
-    written as `3/4 kg` does."""
+    and `¤` is the CLDR symbol of XXX, whose bracketed names do not read. CLDR names each of them, yet SYMBOL leaves
+    them to their form. `‰` is the symbol of the CLDR 49 en and pt unit concentr-permille and no character of the
+    `SYMBOL` list (design section 4.7), so `3/4 ‰` stays as written as `3/4 kg` does."""
     assert normalize(text, tag) == text
 
 
@@ -168,6 +176,13 @@ def test_a_symbol_that_reads_stands_between_a_phone_word_and_the_digits_as_a_wor
     assert normalize(once, tag) == once
 
 
+def test_a_phone_word_names_a_phone_number_across_a_symbol_that_reads():
+    """No letter or digit stands between `Call` and the run, so the run is named and reads digit by digit."""
+    once = normalize("Call → 2125550123.", "en-GB")
+    assert once == f"Call {data('en-GB', 'symbols')['symbols']['→']} {normalize('Call 2125550123.', 'en-GB')[5:]}"
+    assert normalize(once, "en-GB") == once
+
+
 @pytest.mark.parametrize("text", ["©️ 2024", "☝🏽 up", "🏳‍🌈 flag", "Pay 🅰 now."])
 def test_an_emoji_sequence_and_a_name_with_no_words_stay_as_written(text):
     """U+FE0F, a skin tone modifier or a zero width joiner makes the character part of an emoji sequence. CLDR 49
@@ -179,9 +194,17 @@ def test_an_emoji_sequence_and_a_name_with_no_words_stay_as_written(text):
     ("©2024", "copyright two thousand and twenty-four"), ("©®", "copyright registered"),
     ("a→b", "a right-pointing arrow b"), ("(©)", "(copyright)"), ("§§ 5", "section section five"),
     ("†‡", "dagger symbol double dagger symbol"), ("¶≠", "paragraph mark not equal"),
+    ("©-5", "copyright minus five"), ("(©).", "(copyright)."), ("a,©", "a, copyright"), ("a©, b", "a copyright, b"),
 ])
 def test_a_symbol_name_takes_a_space_where_it_touches_a_word_or_a_symbol(text, spoken):
     assert normalize(text, "en-GB") == spoken
+
+
+def test_a_unit_symbol_belongs_to_measure(monkeypatch):
+    """No unit symbol of the CLDR 49 data is a character that `SYMBOL` names, so the test lends `©` to the unit
+    table."""
+    monkeypatch.setattr(symbols, "unit_table", lambda request: {"©": "copyright unit"})
+    assert normalize("a © b", "en-GB") == "a © b"
 
 
 def test_without_the_symbol_form_the_symbol_stays_also_in_an_address():
@@ -191,10 +214,52 @@ def test_without_the_symbol_form_the_symbol_stays_also_in_an_address():
 
 @pytest.mark.parametrize(("tag", "text", "first", "second"), [
     ("en-GB", "5 R$ 10£", "5 R$", "10£"), ("pt-BR", "12,50 NT$ 2024€", "12,50 NT$", "2024€"),
-    ("en-GB", "5 € 10£", "5 €", "10£"),
+    ("en-GB", "5 € 10£", "5 €", "10£"), ("en-GB", "5 € 10 €", "5 €", "10 €"),
 ])
 def test_a_symbol_that_an_amount_reads_is_not_the_symbol_of_the_next_number(tag, text, first, second):
     """Each amount reads as it reads alone, on the first pass and on the second."""
     once = normalize(text, tag)
     assert once == f"{normalize(first, tag)} {normalize(second, tag)}"
+    assert normalize(once, tag) == once
+
+
+@pytest.mark.parametrize(("tag", "text", "phone", "amount"), [
+    ("pt-PT", "Ligue 912 345 678 € 0800", "Ligue 912 345 678", "€ 0800"),
+    ("en-GB", "Call 999 £ 5", "Call 999", "£ 5"),
+])
+def test_a_symbol_that_a_phone_number_holds_is_free_for_the_amount_after_it(tag, text, phone, amount):
+    """The phone number and the amount each read as they read alone, on the first pass and on the second."""
+    once = normalize(text, tag)
+    assert once == f"{normalize(phone, tag)} {normalize(amount, tag)}"
+    assert normalize(once, tag) == once
+
+
+@pytest.mark.parametrize(("tag", "text"), [
+    ("en-GB", "07946001800 ₱ 5₫-3"), ("pt-PT", "Ligue 912 345 678 € 0800"), ("pt-BR", "•∈$2§1"),
+])
+def test_money_next_to_symbols_and_phone_numbers_reads_the_same_on_a_second_pass(tag, text):
+    once = normalize(text, tag)
+    assert normalize(once, tag) == once
+
+
+def test_two_spans_do_not_wait_on_each_other_through_a_symbol():
+    """`$2` waits on `∈` and `§1`; neither symbol holds a character, so each piece reads as it reads alone."""
+    assert normalize("•∈$2§1", "pt-BR") == " ".join(normalize(piece, "pt-BR") for piece in ("•", "∈", "$2", "§1"))
+
+
+def test_symbols_and_letters_read_the_same_on_a_second_pass():
+    params = NormalizationParams().plus(Form.LETTERS)
+    once = normalize("™∞P3⊃6", "en-US", params)
+    assert normalize(once, "en-US", params) == once
+
+
+@pytest.mark.parametrize(("tag", "text", "spelled"), [
+    ("en-US", "☎000", "telephone 000"), ("en-US", "☎∞000", "telephone infinity sign 000"),
+    ("pt-BR", "☎3 91P", "telefone no gancho 3 91P"), ("pt-BR", "☎+4", "telefone no gancho +4"),
+])
+def test_a_symbol_counts_as_the_words_of_its_name_before_a_phone_number(tag, text, spelled):
+    """The first pass reads the digits as the text with the name in place of the symbol reads them, so a second
+    pass changes nothing."""
+    once = normalize(text, tag)
+    assert once == normalize(spelled, tag)
     assert normalize(once, tag) == once

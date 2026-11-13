@@ -1,7 +1,7 @@
 """The `SYMBOL` form: a character that no other form claims, read by its CLDR name (design section 4.7).
 
 `scripts/extract_cldr.py` writes `text2spoken/data/cldr/<tag>.symbols.json`: the `tts` name of each character
-outside ASCII whose Unicode general category is `Sm`, `Sc`, `Sk` or `So`, or that is one of `§ ¶ † ‡ • ‰ ‱`, and
+outside ASCII whose Unicode general category is `Sm`, `Sc`, `Sk` or `So`, or that is one of `§ ¶ † ‡ •`, and
 that is no emoji with emoji presentation by default. So `©` reads "copyright" and `→` reads "right-pointing arrow"
 in English. A name that holds a character other than a letter, a space, `-` or `'`, such as "A button (blood
 type)", does not read, because a reading holds words only (design section 11).
@@ -19,16 +19,18 @@ number, so `Call ☎ 2125550123.` reads digit by digit.
 An emoji presentation selector (U+FE0F), a skin tone modifier or a zero width joiner next to a character makes it
 part of an emoji sequence, which the `EMOJI` form reads, so `©` followed by U+FE0F stays.
 
-A name takes one space before it when the character before it is no space and either no punctuation or a character
-that the form reads, and one space after it when a letter, a digit or a combining mark follows. So `©2024` reads
-"copyright two thousand and twenty-four", `©®` reads "copyright registered", and `§§ 5` reads "section section five",
-while `(©)` reads "(copyright)".
+A name is one word or more of the sentence, so it takes one space on each side where it touches a character that is
+no space. It takes none after an opening bracket or quote, and none before a closing bracket or quote or another
+mark of the Unicode general category `Po`, such as a full stop or a comma. So `©2024` reads "copyright two thousand
+and twenty-four", `©®` reads "copyright registered", `§§ 5` reads "section section five", `∈$2` reads "element of
+two dollars", `©-5` reads "copyright minus five", and `(©).` reads "(copyright)."
 
 A language file may give its own name for a character in `symbol_names`, with a quoted source. That name replaces the
 CLDR name for that character only.
 """
 from __future__ import annotations
 
+import unicodedata
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
@@ -36,13 +38,15 @@ from functools import lru_cache
 from text2spoken.core.currencies import cldr_part, currency_signs, words_only
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
-from text2spoken.core.tokens import Token, is_punctuation, is_word_char
+from text2spoken.core.tokens import Token
 from text2spoken.core.units import unit_table
 from text2spoken.params import FrozenMap, Form
 
 _PRESENTATION = "\ufe0f"
 _JOINER = "\u200d"
 _MODIFIERS = frozenset(map(chr, range(0x1F3FB, 0x1F400)))
+_OPENING = ("Ps", "Pi")
+_CLOSING = ("Pe", "Pf", "Po")
 
 
 @lru_cache(maxsize=64)
@@ -93,9 +97,10 @@ class Symbol:
             if not reads_symbol(text, index, request):
                 continue
             before = text[index - 1] if index else " "
-            joins = before.isspace() or is_punctuation(before) and not reads_symbol(text, index - 1, request)
-            lead = "" if joins else " "
-            trail = " " if index + 1 < len(text) and is_word_char(text[index + 1]) else ""
+            after = text[index + 1] if index + 1 < len(text) else " "
+            lead = "" if before.isspace() or unicodedata.category(before) in _OPENING else " "
+            closes = after.isspace() or unicodedata.category(after) in _CLOSING
+            trail = "" if closes or reads_symbol(text, index + 1, request) else " "
             yield Span(index, index + 1, Form.SYMBOL, FrozenMap({"symbol": char}), lead=lead, trail=trail,
                        recognizer=self.name)
 

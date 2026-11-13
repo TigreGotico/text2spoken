@@ -22,7 +22,7 @@ left out, and the script prints it.
 
 A symbol holds the `tts` name of the annotations of the locale, from `cldr-annotations-full` and
 `cldr-annotations-derived-full`. The file holds each single character outside ASCII whose general category is
-`Sm`, `Sc`, `Sk` or `So`, or that is one of `§ ¶ † ‡ • ‰ ‱`, and that is no emoji with emoji presentation by
+`Sm`, `Sc`, `Sk` or `So`, or that is one of `§ ¶ † ‡ •`, and that is no emoji with emoji presentation by
 default (design section 4.7). The general category and the emoji property come from the Unicode Character Database
 of the Unicode version of the release, `UnicodeData.txt` and `emoji/emoji-data.txt`, which the script fetches from
 unicode.org or reads from `--ucd`.
@@ -49,7 +49,7 @@ MICRO = ("µ", "μ")
 COMPOUNDS = ("per", "power2", "power3")
 SYMBOL_FIELDS = ("symbol", "symbol-alt-narrow", "symbol-alt-variant")
 SYMBOL_CATEGORIES = ("Sm", "Sc", "Sk", "So")
-SYMBOL_MARKS = "§¶†‡•‰‱"
+SYMBOL_MARKS = "§¶†‡•"
 
 
 class Source:
