@@ -7,6 +7,7 @@ from dataclasses import replace
 
 import pytest
 
+from tests.known_limits import known_limit
 from text2spoken import (Animacy, Features, FrozenMap, InvalidLexiconError, NormalizationParams,
                          ParameterNotHonouredWarning, Token, TokenizerError, UndefinedGrammaticalGender,
                          UnreadFormError, analyze, effective_params, normalize, render, supports)
@@ -265,18 +266,20 @@ ATOMS = (list("abcxyzABCXYZéñ") + list("0123456789") + list("٠١٢٣٤٥٦٧�
                                               " "]
          + ["Dr.", "vs.", "etc.", "No.", "March", "May", "[[", "]]", "am", "pm", "at", "in", "kg", "km/h", "°C",
             "call", "colour", "#fff", "#FF0000", "1/2", "24/7", "14:30", "12/03/2024", "+351", "00", "x", "−", "sub",
-            "3rd", "11th", "1984", "2005", "million", "m", "k", "-", "1,000"])
+            "3rd", "11th", "1984", "2005", "million", "m", "k", "-", "1,000", "@", "www.", ".com", "http://", "-",
+            "_", "ftp://", ".5", ".٣", "@x.", "a@b.com."])
 
 
 @pytest.mark.parametrize("seed", range(4))
 def test_normalize_is_idempotent_and_never_crashes_on_random_text(seed):
-    """Section 11: a second pass changes nothing. Random text built from the atoms of each form."""
+    """Section 11: a second pass changes nothing, except in the three known limits of the address claim that the
+    README lists. Random text built from the atoms of each form."""
     rng = random.Random(seed)
     for _ in range(500):
         lang = rng.choice(["en", "en-US", "fr", "xx"])
         text = "".join(rng.choice(ATOMS) for _ in range(rng.randint(1, 30)))
         once = normalize(text, lang)
-        assert normalize(once, lang) == once, (text, once)
+        assert normalize(once, lang) == once or known_limit(text, lang), (text, once)
 
 
 def test_run_time_grows_linearly_with_the_input():
@@ -357,6 +360,28 @@ def test_a_long_digit_run_takes_linear_time_in_each_recognizer(name):
     def seconds(count: int) -> float:
         start = time.perf_counter()
         list(recognizer.find("1" * count, (), request))
+        return time.perf_counter() - start
+
+    small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
+    assert large < 20 * small, (small, large)
+
+
+ADDRESS_SHAPES = {"www": lambda count: "1www." * (count // 5),
+                  "brackets": lambda count: "see example.com/" + ")" * count,
+                  "labels": lambda count: "a." * (count // 2) + "1",
+                  "at": lambda count: "a@" * (count // 2),
+                  "blocks": lambda count: "[[x]]a@b" * (count // 8)}
+
+
+@pytest.mark.parametrize("shape", sorted(ADDRESS_SHAPES))
+def test_a_long_address_shape_takes_linear_time_in_the_address_recognizer(shape):
+    recognizer = next(r for r in EN.recognizers if r.name == "electronic")
+    request = analyze("1", "en").request
+
+    def seconds(count: int) -> float:
+        text = ADDRESS_SHAPES[shape](count)
+        start = time.perf_counter()
+        list(recognizer.find(text, (), request))
         return time.perf_counter() - start
 
     small, large = min(seconds(1000) for _ in range(3)), min(seconds(8000) for _ in range(3))
