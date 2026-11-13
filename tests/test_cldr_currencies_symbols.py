@@ -147,12 +147,13 @@ def test_two_decimals_read_as_a_decimal_when_the_currency_names_no_minor_unit():
 @pytest.mark.parametrize(("tag", "text"), [
     ("en-GB", "It is 20° today."), ("en-GB", "Use a ÷ b here."), ("en-GB", "Pay in ₹ only."),
     ("pt-PT", "Pague em € agora."), ("en-GB", "The sign ‰ means per thousand."), ("en-US", "Add 3/4 ‰ now."),
-    ("pt-PT", "Junte 3/4 ‰ já."),
+    ("pt-PT", "Junte 3/4 ‰ já."), ("en-GB", "The ¤ sign means any currency."),
 ])
 def test_a_character_that_a_table_gives_to_another_form_stays_as_written(tag, text):
     """`°` is in the `symbols` table, `÷` is an operator of en.py, `₹` and `€` are currency signs that MONEY reads,
-    and `‰` is the symbol of the CLDR 49 en and pt unit concentr-permille. CLDR names each of them, yet SYMBOL leaves
-    them to their form, so `3/4 ‰` stays as written as `3/4 kg` does."""
+    `‰` is the symbol of the CLDR 49 en and pt unit concentr-permille, and `¤` is the CLDR symbol of XXX, whose
+    bracketed names do not read. CLDR names each of them, yet SYMBOL leaves them to their form, so `3/4 ‰` stays as
+    written as `3/4 kg` does."""
     assert normalize(text, tag) == text
 
 
@@ -176,7 +177,8 @@ def test_an_emoji_sequence_and_a_name_with_no_words_stay_as_written(text):
 
 @pytest.mark.parametrize(("text", "spoken"), [
     ("©2024", "copyright two thousand and twenty-four"), ("©®", "copyright registered"),
-    ("a→b", "a right-pointing arrow b"), ("(©)", "(copyright)"),
+    ("a→b", "a right-pointing arrow b"), ("(©)", "(copyright)"), ("§§ 5", "section section five"),
+    ("†‡", "dagger symbol double dagger symbol"), ("¶≠", "paragraph mark not equal"),
 ])
 def test_a_symbol_name_takes_a_space_where_it_touches_a_word_or_a_symbol(text, spoken):
     assert normalize(text, "en-GB") == spoken
@@ -185,3 +187,14 @@ def test_a_symbol_name_takes_a_space_where_it_touches_a_word_or_a_symbol(text, s
 def test_without_the_symbol_form_the_symbol_stays_also_in_an_address():
     params = NormalizationParams().without(Form.SYMBOL)
     assert normalize("© 2024 at a©b.com", "en-GB", params) == "© two thousand and twenty-four at a © bee dot com"
+
+
+@pytest.mark.parametrize(("tag", "text", "first", "second"), [
+    ("en-GB", "5 R$ 10£", "5 R$", "10£"), ("pt-BR", "12,50 NT$ 2024€", "12,50 NT$", "2024€"),
+    ("en-GB", "5 € 10£", "5 €", "10£"),
+])
+def test_a_symbol_that_an_amount_reads_is_not_the_symbol_of_the_next_number(tag, text, first, second):
+    """Each amount reads as it reads alone, on the first pass and on the second."""
+    once = normalize(text, tag)
+    assert once == f"{normalize(first, tag)} {normalize(second, tag)}"
+    assert normalize(once, tag) == once

@@ -29,9 +29,11 @@ indianas". `currency_symbols` names the ISO 4217 codes that read. The `currencie
 carries the country with the dictionary word. Priberam, "dólar": "Unidade monetária (símbolo: $) principal de vários
 países, nomeadamente [...] dos Estados Unidos (código: USD)", "Plural: dólares"; "real": "Unidade monetária do
 Brasil (código: BRL), divisível em centavos", "Plural: reais"; "libra esterlina": "Unidade monetária (símbolo: £) do
-Reino Unido (código: GBP). = LIBRA"; "iene": "Unidade monetária do Japão (código: JPY)". CLDR pt writes "Euro" with a
-capital, and a currency name is a common noun with a small letter (Acordo Ortográfico de 1990, Base XIX, 1.º a:
-"Ordinariamente, em todos os vocábulos da língua nos usos correntes"), so pt-BR reads "euro". The CLDR 49 pt
+Reino Unido (código: GBP). = LIBRA"; "iene": "Unidade monetária do Japão (código: JPY)". CLDR pt writes each
+currency name with a capital ("Euro", "Rupias indianas"), and a currency name is a common noun with a small letter
+(Acordo Ortográfico de 1990, Base XIX, 1.º a: "A letra minúscula inicial é usada: a) Ordinariamente, em todos os
+vocábulos da língua nos usos correntes"), so a currency name reads with a small first letter: "euros", "rupias
+indianas". The CLDR 49 pt
 annotations name `$` "dólar" and `¥` "iene", so `$` reads as the dollar and `¥` as the yen, where CLDR pt shares the
 narrow `$` and `¥` between currencies. A `$` after the number is the escudo (see `Money`); CLDR 49 pt-PT gives the
 escudo `$` as its decimal mark. The minor units: Priberam, "cêntimo": "Moeda divisionária que corresponde à
@@ -41,7 +43,9 @@ centésima parte do euro"; "dólar": "dividida em 100 cêntimos". The design kee
 A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
 `cldr-annotations-derived-full`). A name of pt-PT wins over the pt name, so `©` reads "direitos de autor" in pt-PT
 and "símbolo de copyright" in pt-BR, and `¶` reads "marca de parágrafo" in pt-PT and "pé de mosca" in pt-BR. pt-PT
-takes a name that its locale does not give from pt, so `†` reads "obelisco" in both.
+takes a name that its locale does not give from pt, so `†` reads "obelisco" in both. `symbol_names` replaces the
+CLDR name "secção" and "seção" of `§` with the name of the sign: Priberam, "parágrafo", sense 3: "Sinal desta divisão
+(§)." So `Veja o § 5` reads "Veja o parágrafo cinco".
 """
 from __future__ import annotations
 
@@ -98,6 +102,7 @@ DATA = freeze({
         "JPY": {"symbols": ["¥"], "one": "iene", "other": "ienes"},
     },
     "currency_symbols": ["EUR", "USD", "BRL", "GBP", "JPY", "CHF"],
+    "symbol_names": {"§": "parágrafo"},
     "scales": {"mil": "mil", "milhão": "milhão de", "milhões": "milhões de", "bilhão": "bilhão de",
                "bilhões": "bilhões de", "bilião": "bilião de", "biliões": "biliões de"},
     "symbols_before_only": ["$"],
@@ -158,8 +163,7 @@ VARIETIES = (
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
         "colors": {"808080": "cinza"},
-        "currencies": {"EUR": {"one": "euro", "other": "euros"},
-                       "USD": {"minor": {"one": "centavo", "other": "centavos"}}},
+        "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
     })),
 )
 
@@ -406,9 +410,10 @@ def speak_time(span: Span, context: SpanContext) -> str:
 
 
 def _currency(currency: FrozenMap, category: str) -> str:
-    """The name of a currency in a plural category. A number of the category `many`, a scale word from `milhão`
-    up, takes `de` before the name, as it does before a unit: `um milhão de euros`."""
+    """The name of a currency in a plural category, with a small first letter. A number of the category `many`, a
+    scale word from `milhão` up, takes `de` before the name, as it does before a unit: `um milhão de euros`."""
     name = currency_name(currency, category)
+    name = name[:1].lower() + name[1:]
     return f"de {name}" if category == "many" and "many" not in currency else name
 
 
@@ -421,7 +426,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     currency = currency_table(request)[fields["currency"]]
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
-        words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
+        words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {_currency(currency, 'other')}"
     elif len(fraction) == 2 and "minor" in currency:
         major = f"{_cardinal(integer, request)} {_currency(currency, _plural(request, integer))}"
         cents = str(int(fraction))

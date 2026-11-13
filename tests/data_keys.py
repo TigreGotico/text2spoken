@@ -117,6 +117,7 @@ SHAPES: dict[str, Shape] = {
     "short_codes": list_of(digits),
     "sign_words": map_of(one_of(*SIGNS.values()), word),
     "symbols": map_of(word, one_of(*Form)),
+    "symbol_names": map_of(character, word),
     "time_suffixes": WORDS,
     "time_words": WORDS,
     "unit_symbols": WORDS,
@@ -125,8 +126,10 @@ SHAPES: dict[str, Shape] = {
 """Each key that the core reads, with its shape. A shape names only what the core reads: the value of a unit is
 for the verbalizers of the file, so the core reads the unit names only."""
 
-SYMBOL_OWNERS = frozenset({"symbols", "units", "unit_symbols", "operators", "currencies", "currency_symbols"})
-"""The keys of the tables that give a character to another form, which the `SYMBOL` form then does not read."""
+SYMBOL_KEYS = frozenset({"symbols", "units", "unit_symbols", "operators", "currencies", "currency_symbols",
+                         "symbol_names"})
+"""The keys that the `SYMBOL` form reads: the tables that give a character to another form, which the form then does
+not read, and the names of the language file for a character."""
 
 READERS: dict[str, frozenset[str]] = {
     "lexicon": frozenset(),
@@ -144,14 +147,14 @@ READERS: dict[str, frozenset[str]] = {
                         "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
-                          "case_suffixes"}) | SYMBOL_OWNERS,
+                          "case_suffixes"}) | SYMBOL_KEYS,
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
-    "symbol": SYMBOL_OWNERS,
+    "symbol": SYMBOL_KEYS,
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
     "speak_electronic": frozenset({"electronic_symbols", "letter_names", "electronic_vowels", "electronic_labels",
-                                   "electronic_schemes", "digit_words"}),
+                                   "electronic_schemes", "digit_words", "symbol_names"}),
     "render": frozenset({"symbols"}),
     "effective_params": frozenset({"defaults"}),
 }
@@ -166,6 +169,7 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "day_periods", "electronic_labels",
+    "symbol_names",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
 

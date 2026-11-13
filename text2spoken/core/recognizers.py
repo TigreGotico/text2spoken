@@ -524,9 +524,12 @@ class Money:
 
     def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A currency symbol before or after a number. Before a symbol that comes first, a sign may stand, and
-        after its number a scale word of the language, attached or after one space: `-$5`, `$2 million`, `$1m`."""
+        after its number a scale word of the language, attached or after one space: `-$5`, `$2 million`, `$1m`.
+        A symbol that the amount before already reads is not the symbol of the next number, so in `5 R$ 10£` the
+        second amount is `10£`."""
         symbols = currency_symbols(request)
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
+        claimed = 0
         for number in numbers_in(text, request):
             if number.sign:
                 continue
@@ -534,7 +537,7 @@ class Money:
                 found = None
                 for gap in ("", " ", " "):
                     start = number.start - len(gap) - len(symbol)
-                    if start >= 0 and text[start:number.start] == symbol + gap:
+                    if start >= claimed and text[start:number.start] == symbol + gap:
                         sign = SIGNS.get(text[start - 1], "") if start else ""
                         if sign and _free_before(text, start - 1, ()):
                             start -= 1
@@ -556,6 +559,7 @@ class Money:
                         break
                 if found:
                     (start, end, prefix, suffix), sign, scale = found
+                    claimed = end
                     yield Span(start, end, Form.MONEY,
                                FrozenMap({"amount": FrozenMap({**number.amount(), "sign": sign}), "currency": code,
                                           "written_symbol": symbol, "scale": scale, "prefix": prefix,
@@ -630,10 +634,9 @@ class Telephone:
     region in `phone_regions`, a shape of the `phone_shapes` table, as in `(212) 555-0123`, or a phone word that
     names the run.
 
-    A phone word names the run right after it, with no letter, digit or character that `SYMBOL` reads between
-    them. A run that a word of `list_links` or a comma joins to a named run is named too, as `112` in
-    `Call 999 or 112.` Readings only add words before a run, so a run that a first pass leaves unnamed stays unnamed
-    on a second pass.
+    A phone word names the run right after it, with no letter or digit between them. A run that a word of
+    `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only add
+    words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
 
     A named run of 7 to 15 digits reads digit by digit. A shorter named run reads digit by digit only when it is a
     short code, so `Call 100 customers.` reads a count. A run right after a phone word that no plan reads stays as
@@ -641,7 +644,9 @@ class Telephone:
     phone-shaped run, a short code or a run of 7 or more digits that a letter, or a joiner or an operator and a
     digit, continue, as in `Call 0800 123 456/7.` and `Call 112+1.` The kept run takes the digits that joiners
     chain to it, but not a group that a letter continues. Such a run is never named further back, so
-    `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written.
+    `Call 911 or 112+1.` reads the expression. A run with digits from two digit sets stays as written. A character
+    that `SYMBOL` reads between the phone word and the run reads as a word, so it keeps no run: `Ligue → 1.234,56`
+    reads the number, on the first pass and on the second, and `Call ☎ 2125550123.` still reads digit by digit.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -704,8 +709,9 @@ class Telephone:
                 written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
             phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
                           if words[i].text.lower() in phone_words]
-            direct = bool(phone_ends) and not any(is_word_char(text[index]) or reads_symbol(text, index, request)
-                                                  for index in range(phone_ends[-1], start - len(prefix)))
+            between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
+            direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
+            keeps = direct and not any(reads_symbol(text, index, request) for index in between)
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
@@ -721,7 +727,7 @@ class Telephone:
             named_end = end + len(suffix) if named else None
             unknown_code = written.startswith("+") and not country_code
             if glued:
-                if not (direct and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
+                if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
                     continue
                 chained = _GLUED.match(folded, end).group()
                 if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
@@ -729,7 +735,7 @@ class Telephone:
                 end = kept_end = named_end = end + len(chained)
             first, last = start - len(prefix), end + len(suffix)
             written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
-            if glued or not one_digit_set(text[start:end]) or (direct and (len(digits) > 15 or unknown_code)):
+            if glued or not one_digit_set(text[start:end]) or (keeps and (len(digits) > 15 or unknown_code)):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
                 continue
             if any(shape.fullmatch(written) for shape in unit_shapes):

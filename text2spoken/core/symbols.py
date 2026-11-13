@@ -7,19 +7,25 @@ in English. A name that holds a character other than a letter, a space, `-` or `
 type)", does not read, because a reading holds words only (design section 11).
 
 A character that a table of the language gives to another form belongs to that form: a character of the `symbols`
-table or a unit symbol, as `°` and `‰` belong to `MEASURE`, an operator, and a currency sign that `MONEY` reads. Such
-a character stays as written when its form does not read it, so `It is 20° today.` gives no "twenty degree", `3/4 ‰`
-stays as written as `3/4 kg` does, and `−−3 × 3` stays as written on the first pass and on the second.
+table or a unit symbol, as `°` and `‰` belong to `MEASURE`, an operator, and a symbol of the currency table, as `€`
+and `¤` belong to `MONEY`. Such a character stays as written wherever it stands when its form does not read it, so
+`It is 20° today.` gives no "twenty degree", `3/4 ‰` stays as written as `3/4 kg` does, `the € sign` stays as
+written, and `−−3 × 3` stays as written on the first pass and on the second.
 
-A character that the form reads is a word of the reading, so it stands between a phone word and the digits after it
-as a word does: `Ligue → 1.234,56` reads the number, on the first pass and on the second.
+A character that the form reads is a word of the reading, so a phone word before it keeps no run of digits after
+it: `Ligue → 1.234,56` reads the number, on the first pass and on the second. The phone word still names a phone
+number, so `Call ☎ 2125550123.` reads digit by digit.
 
 An emoji presentation selector (U+FE0F), a skin tone modifier or a zero width joiner next to a character makes it
 part of an emoji sequence, which the `EMOJI` form reads, so `©` followed by U+FE0F stays.
 
-A name takes one space before it when the character before it is no space and no punctuation, and one space after
-it when a letter, a digit or a combining mark follows, so `©2024` reads "copyright two thousand and twenty-four"
-and `©®` reads "copyright registered".
+A name takes one space before it when the character before it is no space and either no punctuation or a character
+that the form reads, and one space after it when a letter, a digit or a combining mark follows. So `©2024` reads
+"copyright two thousand and twenty-four", `©®` reads "copyright registered", and `§§ 5` reads "section section five",
+while `(©)` reads "(copyright)".
+
+A language file may give its own name for a character in `symbol_names`, with a quoted source. That name replaces the
+CLDR name for that character only.
 """
 from __future__ import annotations
 
@@ -27,7 +33,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 
-from text2spoken.core.currencies import cldr_part, currency_table
+from text2spoken.core.currencies import cldr_part, currency_signs, words_only
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
 from text2spoken.core.tokens import Token, is_punctuation, is_word_char
@@ -39,32 +45,29 @@ _JOINER = "\u200d"
 _MODIFIERS = frozenset(map(chr, range(0x1F3FB, 0x1F400)))
 
 
-def _words_only(name: str) -> bool:
-    return all(char.isalpha() or char.isspace() or char in "-'" for char in name)
-
-
-@lru_cache(maxsize=None)
-def _names(tag: str) -> FrozenMap:
-    return FrozenMap((char, name) for char, name in cldr_part(tag, "symbols").get("symbols", FrozenMap()).items()
-                     if _words_only(name))
-
-
 @lru_cache(maxsize=64)
-def _signs(table: FrozenMap) -> frozenset[str]:
-    return frozenset(symbol for currency in table.values() for symbol in currency["symbols"])
+def _table(tag: str, own: FrozenMap) -> FrozenMap:
+    cldr = cldr_part(tag, "symbols").get("symbols", FrozenMap())
+    return FrozenMap({**{char: name for char, name in cldr.items() if words_only(name)}, **own})
+
+
+def _names(request: Request) -> FrozenMap:
+    """The name of each character that the variety names: the CLDR names with the `symbol_names` of the language
+    file over them."""
+    return _table(request.variety.tag, request.data.get("symbol_names", FrozenMap()))
 
 
 def _owned(char: str, request: Request) -> bool:
     """Whether a table of the language gives the character to another form: the `symbols` table, a unit symbol, an
-    operator or a currency sign that `MONEY` reads."""
+    operator or a symbol of the currency table."""
     data = request.data
     return (char in data.get("symbols", FrozenMap()) or char in unit_table(request)
-            or char in data.get("operators", FrozenMap()) or char in _signs(currency_table(request)))
+            or char in data.get("operators", FrozenMap()) or char in currency_signs(request))
 
 
 def symbol_name(char: str, request: Request) -> str | None:
     """The CLDR name of a character that the `SYMBOL` form reads, or None."""
-    name = _names(request.variety.tag).get(char)
+    name = _names(request).get(char)
     return None if name is None or _owned(char, request) else name
 
 
@@ -76,7 +79,7 @@ def _in_emoji(text: str, index: int) -> bool:
 def reads_symbol(text: str, index: int, request: Request) -> bool:
     """Whether the `SYMBOL` form reads the character text[index] as words."""
     char = text[index]
-    return (Form.SYMBOL in request.params.forms and char in _names(request.variety.tag)
+    return (Form.SYMBOL in request.params.forms and char in _names(request)
             and not _in_emoji(text, index) and not _owned(char, request))
 
 
@@ -90,7 +93,8 @@ class Symbol:
             if not reads_symbol(text, index, request):
                 continue
             before = text[index - 1] if index else " "
-            lead = "" if before.isspace() or is_punctuation(before) else " "
+            joins = before.isspace() or is_punctuation(before) and not reads_symbol(text, index - 1, request)
+            lead = "" if joins else " "
             trail = " " if index + 1 < len(text) and is_word_char(text[index + 1]) else ""
             yield Span(index, index + 1, Form.SYMBOL, FrozenMap({"symbol": char}), lead=lead, trail=trail,
                        recognizer=self.name)
