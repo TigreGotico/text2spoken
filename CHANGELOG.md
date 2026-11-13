@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a31](https://github.com/TigreGotico/text2spoken/tree/0.0.2a31) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a30...0.0.2a31)
+
+**Merged pull requests:**
+
+- feat\(de\): German language file [\#61](https://github.com/TigreGotico/text2spoken/pull/61) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a30](https://github.com/TigreGotico/text2spoken/tree/0.0.2a30) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a29...0.0.2a30)
