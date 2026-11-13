@@ -140,9 +140,9 @@ SHAPES: dict[str, Shape] = {
 for the verbalizers of the file, so the core reads the unit names only."""
 
 SYMBOL_KEYS = frozenset({"symbols", "units", "unit_symbols", "operators", "currencies", "currency_symbols",
-                         "symbol_names"})
+                         "symbol_names", "leads"})
 """The keys that the `SYMBOL` form reads: the tables that give a character to another form, which the form then does
-not read, and the names of the language file for a character."""
+not read, the names of the language file for a character, and the leads, before which a name takes a space."""
 
 READERS: dict[str, frozenset[str]] = {
     "lexicon": frozenset(),

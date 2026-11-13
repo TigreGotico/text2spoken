@@ -672,8 +672,9 @@ class Telephone:
     The window holds the words that a second pass sees: a character that `SYMBOL` reads counts as the words of its
     name. A run stays as written only after a phone word that is the last word before it. So `Ligue → 1.234,56`
     reads the number, `☎000` reads "telephone zero zero zero", as "telephone 000" does, and in pt-BR, where `☎`
-    reads "telefone no gancho", `☎3 91P` reads the number, on the first pass as on the second. `Call ☎ 2125550123.`
-    reads digit by digit.
+    reads "telefone no gancho", `☎3 91P` reads the number, on the first pass as on the second. The word right
+    before the run in the text still names it, whatever names stand between, so `Call ⇒ 2125550123` and
+    `Call ☎ 2125550123.` read digit by digit.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -701,6 +702,7 @@ class Telephone:
         return False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        raw_words = context_words(tokens)
         words = _spoken_words(text, tokens, request)
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
@@ -736,9 +738,13 @@ class Telephone:
                 written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
             window = self.window(text, words, breaks, start, end, request)
             phone_ends = [words[i].end for i in window if words[i].text.lower() in phone_words]
+            raw = bisect_right(raw_words, start, key=lambda word: word.end) - 1
+            if raw >= 0 and raw_words[raw].text.lower() in phone_words \
+                    and clause_window(text, raw_words, start, end, -1, limit=1, breaks=breaks):
+                phone_ends = sorted({*phone_ends, raw_words[raw].end})
             between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
             direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
-            keeps = direct and words[window[-1]].text.lower() in phone_words
+            keeps = direct and bool(window) and words[window[-1]].text.lower() in phone_words
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:

@@ -21,9 +21,11 @@ part of an emoji sequence, which the `EMOJI` form reads, so `©` followed by U+F
 
 A name is one word or more of the sentence, so it takes one space on each side where it touches a character that is
 no space. It takes none after an opening bracket or quote, and none before a closing bracket or quote or another
-mark of the Unicode general category `Po`, such as a full stop or a comma. So `©2024` reads "copyright two thousand
-and twenty-four", `©®` reads "copyright registered", `§§ 5` reads "section section five", `∈$2` reads "element of
-two dollars", `©-5` reads "copyright minus five", and `(©).` reads "(copyright)."
+mark of the Unicode general category `Po`, such as a full stop or a comma. A straight quote at the start of a token
+opens, so `He said "© 2024"` reads `He said "copyright two thousand and twenty-four"`. A mark that the `leads` table
+of the language reads as words before a number takes the space, so `™#1` reads "trade mark number one". So `©2024`
+reads "copyright two thousand and twenty-four", `©®` reads "copyright registered", `§§ 5` reads "section section
+five", `∈$2` reads "element of two dollars", `©-5` reads "copyright minus five", and `(©).` reads "(copyright)."
 
 A language file may give its own name for a character in `symbol_names`, with a quoted source. That name replaces the
 CLDR name for that character only.
@@ -38,7 +40,7 @@ from functools import lru_cache
 from text2spoken.core.currencies import cldr_part, currency_signs, words_only
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
-from text2spoken.core.tokens import Token
+from text2spoken.core.tokens import Token, is_digit
 from text2spoken.core.units import unit_table
 from text2spoken.params import FrozenMap, Form
 
@@ -47,6 +49,7 @@ _JOINER = "\u200d"
 _MODIFIERS = frozenset(map(chr, range(0x1F3FB, 0x1F400)))
 _OPENING = ("Ps", "Pi")
 _CLOSING = ("Pe", "Pf", "Po")
+_QUOTES = "\"'"
 
 
 @lru_cache(maxsize=64)
@@ -93,13 +96,18 @@ class Symbol:
     form: Form = Form.SYMBOL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        leads = [lead for lead, words in request.data.get("leads", FrozenMap()).items() if words]
         for index, char in enumerate(text):
             if not reads_symbol(text, index, request):
                 continue
             before = text[index - 1] if index else " "
             after = text[index + 1] if index + 1 < len(text) else " "
-            lead = "" if before.isspace() or unicodedata.category(before) in _OPENING else " "
-            closes = after.isspace() or unicodedata.category(after) in _CLOSING
+            opens = unicodedata.category(before) in _OPENING or (
+                before in _QUOTES and (index < 2 or text[index - 2].isspace()))
+            lead = "" if before.isspace() or opens else " "
+            number = any(text.startswith(word, index + 1) and index + 1 + len(word) < len(text)
+                         and is_digit(text[index + 1 + len(word)]) for word in leads)
+            closes = after.isspace() or (unicodedata.category(after) in _CLOSING and not number)
             trail = "" if closes or reads_symbol(text, index + 1, request) else " "
             yield Span(index, index + 1, Form.SYMBOL, FrozenMap({"symbol": char}), lead=lead, trail=trail,
                        recognizer=self.name)

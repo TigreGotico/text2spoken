@@ -176,11 +176,18 @@ def test_a_symbol_that_reads_stands_between_a_phone_word_and_the_digits_as_a_wor
     assert normalize(once, tag) == once
 
 
-def test_a_phone_word_names_a_phone_number_across_a_symbol_that_reads():
-    """No letter or digit stands between `Call` and the run, so the run is named and reads digit by digit."""
-    once = normalize("Call → 2125550123.", "en-GB")
-    assert once == f"Call {data('en-GB', 'symbols')['symbols']['→']} {normalize('Call 2125550123.', 'en-GB')[5:]}"
-    assert normalize(once, "en-GB") == once
+@pytest.mark.parametrize(("tag", "word", "marks", "run"), [
+    ("en-GB", "Call", "→", "2125550123."), ("en-GB", "Call", "⇒", "2125550123"),
+    ("en-GB", "Call", "→ → →", "2125550123"),
+    ("pt-PT", "Ligue", "→", "912345678"), ("pt-BR", "Ligue", "→", "912345678"), ("pt-PT", "Ligue", "⇒", "912345678"),
+])
+def test_a_phone_word_names_a_phone_number_across_symbols_that_read(tag, word, marks, run):
+    """No letter or digit stands between the phone word and the run, so the run is named and reads digit by digit,
+    however many words the names hold."""
+    names = " ".join(data(tag, "symbols")["symbols"][mark] for mark in marks.split())
+    once = normalize(f"{word} {marks} {run}", tag)
+    assert once == f"{word} {names} {normalize(f'{word} {run}', tag)[len(word) + 1:]}"
+    assert normalize(once, tag) == once
 
 
 @pytest.mark.parametrize("text", ["©️ 2024", "☝🏽 up", "🏳‍🌈 flag", "Pay 🅰 now."])
@@ -195,6 +202,7 @@ def test_an_emoji_sequence_and_a_name_with_no_words_stay_as_written(text):
     ("a→b", "a right-pointing arrow b"), ("(©)", "(copyright)"), ("§§ 5", "section section five"),
     ("†‡", "dagger symbol double dagger symbol"), ("¶≠", "paragraph mark not equal"),
     ("©-5", "copyright minus five"), ("(©).", "(copyright)."), ("a,©", "a, copyright"), ("a©, b", "a copyright, b"),
+    ('"© x"', '"copyright x"'), ("'→ x'", "'right-pointing arrow x'"), ("™#1", "trade mark number one"),
 ])
 def test_a_symbol_name_takes_a_space_where_it_touches_a_word_or_a_symbol(text, spoken):
     assert normalize(text, "en-GB") == spoken
@@ -236,6 +244,7 @@ def test_a_symbol_that_a_phone_number_holds_is_free_for_the_amount_after_it(tag,
 
 @pytest.mark.parametrize(("tag", "text"), [
     ("en-GB", "07946001800 ₱ 5₫-3"), ("pt-PT", "Ligue 912 345 678 € 0800"), ("pt-BR", "•∈$2§1"),
+    ("en-US", "☎∞∩|000"),
 ])
 def test_money_next_to_symbols_and_phone_numbers_reads_the_same_on_a_second_pass(tag, text):
     once = normalize(text, tag)
