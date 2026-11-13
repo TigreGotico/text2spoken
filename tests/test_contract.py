@@ -181,10 +181,14 @@ def test_clause_6_requires_no_key_of_a_verbalizer_that_the_file_replaces():
 def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
     data = freeze({**thaw(STUB.data), "range_word": "al", "time_words": ["je"],
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
-                                   {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}]})
-    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"])
-    spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers))
-    assert OPTIONAL <= set().union(*(READERS[r.name] for r in readers)) and not OPTIONAL & set(spec.data)
+                                   {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
+                   "electronic_symbols": {"@": "et"}, "letter_names": {"a": "ha"}, "electronic_vowels": ["a"],
+                   "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"]})
+    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["electronic"])
+    verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic}
+    spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers), verbalizers=verbalizers)
+    read = set().union(*(READERS[r.name] for r in readers), READERS["speak_electronic"])
+    assert OPTIONAL <= read and not OPTIONAL & set(spec.data)
     contract.clause_6("qac", spec)
 
 

@@ -9,6 +9,16 @@ plain word, such as `km/h`, `°C` or `µm`, reads with no list. `unit_symbols` n
 letters that read as units: the SI symbols `kg`, `g`, `mg`, `km`, `m`, `cm`, `mm` and `ml`, and `mph`, `MHz`,
 `GHz`, `MB` and `ft`. Other CLDR symbols are also words or letters of running text, so `1 in 3`, `Plan 2 A` and
 `29 GB golds` read no unit. `GB` names Great Britain as often as gigabytes (design section 16).
+
+An e-mail or web address reads the name of each symbol. Wiktionary gives each name: "@" is "at" ("@", sense 2:
+the separator in an e-mail address, "at" the domain name), "." is "dot" ("dot", usage note: "In email addresses
+and URLs, it is conventionally read aloud as 'dot'"), "-" is "dash" ("dash", sense 1.1: "A hyphen or minus
+sign"), and "_", "/", ":", "~", "#", "?", "=", "&" and "+" are "underscore", "slash", "colon", "tilde", "hash",
+"question mark", "equals", "ampersand" and "plus" (the entries of the same names, and "hash", sense 3: "The #
+symbol"). The Wiktionary example "en.wiktionary.org", read aloud "E-N-dot-wiktionary-dot-org", spells the
+two-letter label and reads the longer labels as words. A letter reads by the name that Wikipedia, "English
+alphabet", Letter names, gives from the Oxford English Dictionary, with "zed" in British and "zee" in American
+English.
 """
 from __future__ import annotations
 
@@ -19,6 +29,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
 from text2spoken.core.dates import is_valid
+from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import Number
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, digit_run_matches, join_ranges,
@@ -131,6 +142,15 @@ DATA = freeze({
     "symbols": {"%": "percent", "$": "money", "£": "money", "€": "money", "¥": "money", "°": "measure",
                 "×": "measure"},
     "ordinal_marks": ["st", "nd", "rd", "th"],
+    "electronic_symbols": {"@": "at", ".": "dot", "-": "dash", "_": "underscore", "/": "slash", ":": "colon",
+                           "~": "tilde", "#": "hash", "?": "question mark", "=": "equals", "&": "ampersand",
+                           "+": "plus"},
+    "letter_names": dict(zip("abcdefghijklmnopqrstuvwxyz", (
+        "a", "bee", "cee", "dee", "e", "ef", "gee", "aitch", "i", "jay", "kay", "el", "em", "en", "o", "pee", "cue",
+        "ar", "ess", "tee", "u", "vee", "double-u", "ex", "wye", "zed"))),
+    "electronic_vowels": ["a", "e", "i", "o", "u"],
+    "electronic_schemes": {"http": "read", "https": "read", "ftp": "read"},
+    "electronic_tlds": ["com", "org", "net", "edu", "gov", "uk"],
     "patterns": {
         "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",
@@ -144,6 +164,7 @@ VARIETIES = (
                                         if "gray" in name}})),
     Variety("en-US", freeze({
         "defaults": {"date_order": "MDY"},
+        "letter_names": {"z": "zee"},
         "numeric_date_reading": {"full": "{month} {day} {year}", "no_year": "{month} {day}"},
         "percent": {"word": "percent"},
         "titles": {"Dr": None, "Mr": None, "Mrs": None},
@@ -665,17 +686,17 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"], SHARED["measure"],
-                 Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
-                 SHARED["decimal"], SHARED["cardinal"]),
+    recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
+                 SHARED["date_numeric"], SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"],
+                 SHARED["measure"], Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(),
+                 Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
-        Form.YEAR: speak_year,
+        Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},

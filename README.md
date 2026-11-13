@@ -1,6 +1,6 @@
 # text2spoken
 
-text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours and abbreviations. The rest of the text stays as it is, character for character.
+text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours, abbreviations, and e-mail and web addresses. The rest of the text stays as it is, character for character.
 
 ```python
 from text2spoken import normalize
@@ -63,6 +63,14 @@ normalize("The run took 1:23:45.", "en-GB")
 ```
 
 A second pass changes nothing: `normalize(normalize(text, lang), lang)` gives the same text as one pass. Output depends only on the text, the tag and the params.
+
+A word with `@`, `www.`, `://` or a top-level domain such as `.com` is spoken in full, even when it is not one valid address. `Mail me@x.com,2 copies.` reads "Mail em e at ex dot com , two copies." The closing punctuation at the end of the word stays with the sentence: `Have you seen www.example.com?!` keeps `?!`. A character with no word in the address tables stays as written, between spaces: `See 20%.com` reads "See two zero % dot com".
+
+Known limits: a word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Three cases are known:
+
+- The last label and the full stop after it can form an abbreviation. `See a@b.etc.` reads "See a at bee dot etc.", and a second pass reads "et cetera".
+- A final `@` reads "at", and a second pass takes it as the time word of a time after it. Only spaces or punctuation can stand between them. `Write x.com@ 9:30` reads "Write ex dot com at 9:30", and a second pass reads "nine thirty". `Write x.com@ (9:30)` gives the same result inside the brackets.
+- A month name as the first or the last label of an address forms a date with the digits next to it on a second pass. `See example.com/May 05 for details.` reads "See example dot com slash May 05 for details.", and a second pass reads "May fifth". `On 05 May@x.com we met.` reads "On 05 May at ex dot com we met.", and a second pass reads "the fifth of May".
 
 ## The API
 

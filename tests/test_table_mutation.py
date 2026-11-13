@@ -8,7 +8,9 @@ from importlib import import_module
 import pytest
 
 from tests.conftest import language_names, registry_with_stubs, rows
-from text2spoken import NormalizationParams, UnreadFormError, normalize
+from tests.fixtures import pt_electronic
+from tests.test_electronic import PT_ROWS
+from text2spoken import NormalizationParams, UnreadFormError, analyze, normalize
 from text2spoken.core import language as loader
 from text2spoken.params import FrozenMap, freeze
 
@@ -30,6 +32,8 @@ EN_ENTRIES = {
     "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
+    "electronic_symbols": "@", "letter_names": "w", "electronic_vowels": "i", "electronic_schemes": "https",
+    "electronic_tlds": "uk",
 }
 DE_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_word": DELETE,
@@ -80,7 +84,10 @@ ENTRIES = {
         "units": "кг", "titles": "проф.", "abbreviations": "р-н",
     },
 }
-TABLES = [(code, table) for code in language_names() for table in sorted(ENTRIES.get(code, ()))]
+FIELD_ONLY = {"electronic_schemes"}
+"""Tables that no reading of a row shows. A scheme with `read` reads as its label would, so the entry gives only the
+`kind` and `scheme` fields of an address span (section 4.5), which `test_dropping_a_scheme_changes_the_fields` checks."""
+TABLES = [(code, table) for code in language_names() for table in sorted(ENTRIES.get(code, ())) if table not in FIELD_ONLY]
 
 
 def drop(data: FrozenMap, table: str, entry) -> FrozenMap:
@@ -124,3 +131,47 @@ def test_dropping_a_symbol_hides_it_from_the_unread_check(monkeypatch):
         normalize("Pay in $ only.", "en", strict)
     monkeypatch.setattr(loader, "_registry", lambda: {"en": replace(EN, data=drop(EN.data, "symbols", "$"))})
     assert normalize("Pay in $ only.", "en", strict) == "Pay in $ only."
+
+
+PT_ADDRESS = pt_electronic.LANGUAGE
+PT_ADDRESS_ENTRIES = {"electronic_symbols": "@", "letter_names": "p", "electronic_vowels": "a",
+                      "electronic_schemes": "https", "electronic_tlds": "pt", "digit_words": "zero"}
+PT_ADDRESS_VARIETY_ENTRIES = {("pt-PT", "electronic_symbols"): "_", ("pt-BR", "electronic_symbols"): "#",
+                              ("pt-PT", "letter_names"): "w", ("pt-BR", "letter_names"): "w"}
+"""One entry of each address table of Portuguese, in its language data and in each variety."""
+
+
+def _pt_failures(monkeypatch, spec) -> list[str]:
+    monkeypatch.setattr(loader, "_registry", lambda: {"pt": spec})
+    return [r["id"] for r in PT_ROWS if _fails(r)]
+
+
+def test_every_pt_address_table_has_an_entry_to_drop():
+    assert set(PT_ADDRESS_ENTRIES) == set(PT_ADDRESS.data)
+    assert {(v.tag, table) for v in PT_ADDRESS.varieties for table in v.data} == set(PT_ADDRESS_VARIETY_ENTRIES)
+
+
+@pytest.mark.parametrize("table", sorted(set(PT_ADDRESS_ENTRIES) - FIELD_ONLY))
+def test_dropping_a_pt_address_entry_fails_a_row(monkeypatch, table):
+    assert _pt_failures(monkeypatch, PT_ADDRESS) == []
+    assert _pt_failures(monkeypatch, replace(PT_ADDRESS, data=drop(PT_ADDRESS.data, table, PT_ADDRESS_ENTRIES[table])))
+
+
+@pytest.mark.parametrize(("tag", "table"), sorted(PT_ADDRESS_VARIETY_ENTRIES))
+def test_dropping_a_pt_variety_entry_fails_a_row(monkeypatch, tag, table):
+    entry = PT_ADDRESS_VARIETY_ENTRIES[tag, table]
+    varieties = tuple(replace(v, data=drop(v.data, table, entry)) if v.tag == tag else v for v in PT_ADDRESS.varieties)
+    assert _pt_failures(monkeypatch, PT_ADDRESS) == []
+    assert _pt_failures(monkeypatch, replace(PT_ADDRESS, varieties=varieties))
+
+
+@pytest.mark.parametrize(("spec", "tag"), [(EN, "en"), (PT_ADDRESS, "pt-PT")])
+def test_dropping_a_scheme_changes_the_fields(monkeypatch, spec, tag):
+    text = "See https://example.com now."
+    monkeypatch.setattr(loader, "_registry", lambda: dict.fromkeys((spec.code, *spec.serves), spec))
+    assert [dict(s.fields) for s in analyze(text, tag).spans] == [
+        {"kind": "url", "scheme": "https", "address": "example.com"}]
+    dropped = replace(spec, data=drop(spec.data, "electronic_schemes", "https"))
+    monkeypatch.setattr(loader, "_registry", lambda: dict.fromkeys((dropped.code, *dropped.serves), dropped))
+    assert [dict(s.fields) for s in analyze(text, tag).spans] == [
+        {"kind": "run", "scheme": "", "address": "https://example.com"}]
