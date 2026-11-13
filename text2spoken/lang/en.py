@@ -41,9 +41,9 @@ and the nts of EVENTS. The tables give r and its clusters "in rhotic varieties" 
 does not say, so r stays a coda letter. ch, sh, th and ng spell one consonant each (Wikipedia, "English orthography":
 "chin", "shin", "thing", "strength"). The vowels are a, e, i, o and u, and the spellings with w and y in the table
 "Combinations of vowel letters" of Wikipedia, "English orthography", which "includes ⟨h, w, y⟩ when they represent
-vowel sounds": y as in myth and sky, aw as in flaw, ew as in dew, and ow as in owl. The rule reads CIA, IRS and USA as
-words, and Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/ and USA /juː ɛs ˈeɪ/. So
-`letter_runs` holds them.
+vowel sounds": y as in myth and sky, aw as in flaw, ew as in dew, and ow as in owl. The rule reads CIA, IRS, USA, IBS
+and IDS as words, and Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/, USA /juː ɛs ˈeɪ/,
+IBS /aɪ.biːˈɛs/ and IDS /aɪ diː ɛs/. So `letter_runs` holds them.
 """
 from __future__ import annotations
 
@@ -187,7 +187,7 @@ DATA = freeze({
                       "tr", "dr", "cr", "gr", "tw", "dw", "fl", "sl", "fr", "thr", "shr", "sw", "thw", "sp", "st",
                       "sk", "sm", "sn", "sph", "spl", "sc", "scl", "spr", "str", "scr", "squ"],
     "letter_codas": [*_CODAS, *(coda + "s" for coda in _CODAS if not coda.endswith(("s", "z", "x", "sh", "ch")))],
-    "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters"},
+    "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters", "IBS": "letters", "IDS": "letters"},
     "patterns": {
         "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",

@@ -134,6 +134,7 @@ def test_the_syllable_rule_bites(monkeypatch, verdict, expected):
 
 
 @pytest.mark.parametrize(("spec", "run", "row"), [(EN, "IRS", "en-390"), (EN, "CIA", "en-390"), (EN, "USA", "en-391"),
+                                                  (EN, "IBS", "en-404"), (EN, "IDS", "en-405"),
                                                   (PT, "TAP", "pt-178"), (PT, "EUA", "pt-179")])
 def test_each_exception_bites(monkeypatch, spec, run, row):
     assert row not in _failing_rows()
@@ -183,7 +184,7 @@ def test_the_limit_of_the_form_holds_only_a_text_that_the_form_breaks(text, lang
     assert known_limit(text, lang, LETTERS_ON) == expected
 
 
-@pytest.mark.parametrize(("unit", "lang"),[("BA", "pt-PT"), ("BCD", "pt-PT"), ("MP3 ", "en"), ("NATO-", "en")])
+@pytest.mark.parametrize(("unit", "lang"), [("BA", "pt-PT"), ("BCD", "pt-PT"), ("MP3 ", "en"), ("NATO-", "en")])
 def test_a_long_run_of_capitals_takes_linear_time(unit, lang):
     def seconds(count: int) -> float:
         start = time.perf_counter()

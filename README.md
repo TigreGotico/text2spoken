@@ -83,7 +83,7 @@ normalize("A NATO reuniu-se com a RTP.", "pt-PT", NormalizationParams().plus(For
 # 'A NATO reuniu-se com a érre tê pê.'
 ```
 
-A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name and each digit by its word. A table in the language file holds the runs that the rule reads wrong: `TAP` reads as a word and `EUA` letter by letter in Portuguese, and `CIA`, `IRS` and `USA` read letter by letter in English. English and Portuguese offer the form. A language with no letter names keeps each run as written.
+A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name and each digit by its word. A table in the language file holds the runs that the rule reads wrong: `TAP` reads as a word and `EUA` letter by letter in Portuguese, and `CIA`, `IRS`, `USA`, `IBS` and `IDS` read letter by letter in English. English and Portuguese offer the form. A language with no letter names keeps each run as written.
 
 The form does not take a run with a lowercase letter (`ONGs`, `PhD`), a run with full stops (`E.U.A.`), a capital alone (`plano B`), or a Roman numeral that the `ROMAN` form reads (`século XIV`). In English, an e-mail or web address reads as an address. With the form on, a run of capitals in the reading of another form reads as this form reads it. So `Call the BBC at 9 AM.` reads "Call the bee bee cee at nine a em." in `en-US`, and `help@IRS.gov` reads "help at i ar ess dot gov".
 
@@ -92,12 +92,13 @@ Known limits of the form:
 - A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i".
 - A run that reads as a word and holds a digit stays as written, as `COVID19` does with the form off.
 - The rule reads some initialisms as words, because no source in the language file names them: `CEO` and `WHO` stay as written in English.
+- In English, a coda takes the s of the -s/-z morpheme. So the rule reads some three-letter initialisms of a vowel, a consonant and s as words: `ABS` and `ITS` stay as written. `letter_runs` lists the ones that a source spells, such as `IBS` and `IDS`.
 - A run with a letter that has no name, such as `Ç`, stays as written when it does not split into syllables.
 - Portuguese has no onset or coda with `k`, `w` or `y`, which AO1990 keeps for foreign names. So `WEB` reads "dâblio é bê" in pt-PT.
 - Text in capitals spells its two-letter words, because a run of two letters reads letter by letter. `SAIA DA SALA` reads "SAIA dê á SALA" in pt-PT, and `DO NOT ENTER` reads "dee o NOT ENTER". The rule stays, because two-letter acronyms such as `TV`, `PC`, `UE` and `IA` are frequent.
 - A run of digits joined to a run reads digit by digit. `10GB` reads "one zero gee bee", and `A25` reads "á dois cinco" in pt-PT.
 - Portuguese has no address form, so the form spells only the run in an address. `geral@RTP.pt` reads "geral@érre tê pê.pt" in pt-PT.
-- The Portuguese codas are only `l`, `r`, `s`, `z`, `x`, `m` and `n`. So the form spells some acronyms that speakers read as words, some with an added e: `CIAV` "ciave" (Ciberdúvidas 39064), `OVNI` «óvni» (Ciberdúvidas 9355) and `PIB` "pibe" (Wiktionary). They read "cê i á vê", "ó vê éne i" and "pê i bê". A measurement against WikiPron in both directions decides the coda set.
+- The Portuguese codas are only `l`, `r`, `s`, `z`, `x`, `m` and `n`. So the form spells some acronyms that speakers read as words, some with an added e: `CIAV` "ciave" (Ciberdúvidas 39064), `OVNI` ¦óvni¦ (Ciberdúvidas 9355) and `PIB` "pibe" (Wiktionary). They read "cê i á vê", "ó vê éne i" and "pê i bê". A measurement against WikiPron in both directions decides the coda set.
 - A span that waits on a joined character on the first pass can read on a second pass, after the form spells a run next to it. `Sala 9#D. RTP.` reads "Sala 9#D. érre tê pê.", and a second pass reads "nove".
 
 ## The API
