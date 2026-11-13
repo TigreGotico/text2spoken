@@ -256,8 +256,9 @@ Some currency and symbol readings are still wrong or stay as written:
 - A sign that CLDR names before a number reads before the number. `₿1` reads "bitcoin one".
 - A euro amount with a comma for the decimal mark stays as written in English, as in `€12,50`.
 - A doubled mark reads its singular name twice. `Veja os §§ 2 e 3.` reads "Veja os parágrafo parágrafo dois e três".
-- A currency sign at the start or the end of an address stays as written in the address, and a second pass reads it with the number next to it. `x@€ 08` reads "ex at € 08", and a second pass reads "ex at eight euros".
-- A currency sign between a range and another sign can keep the range as written. `0–2$€0` reads "0–2$zero euros", and a second pass reads "zero to two$zero euros".
+- A currency sign at the start or the end of an address stays as written in the address, and a second pass reads it with the number next to it. `x@€ 08` reads "ex at € 08", and a second pass reads "ex at eight euros". The same holds for the signs of the CLDR currencies: `x@₦ 08` reads "ex at ₦ 08", and a second pass reads "ex at eight Nigerian nairas".
+- A currency sign between a range and another sign can keep the range as written. `0–2$€0` reads "0–2$zero euros", and a second pass reads "zero to two$zero euros". `0–2$₽0` reads "0–2$zero Russian rubles", and a second pass reads "zero to two$zero Russian rubles".
+- A money range whose last amount ends in a letter code, with a joiner and a digit after it, stays as written, and the amount after the joiner reads. A second pass reads the range. `$0–0USD+2$` reads "$0–0USD+two dollars", and a second pass reads "zero dollars to zero dollars+two dollars".
 
 Russian reads `ru-RU`, and every other `ru-*` tag selects it. Install it with `text2spoken[ru]`, which adds `ovos-number-parser`. A number agrees in gender and case with the noun after it, and the preposition before it gives the case. A noun in the prepositional in `-е` or `-ии` does not show its gender, so `в 1 квартире` reads the masculine "одном". A gender hint gives "одной".
 
