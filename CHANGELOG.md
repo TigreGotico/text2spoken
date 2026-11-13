@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a36](https://github.com/TigreGotico/text2spoken/tree/0.0.2a36) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a35...0.0.2a36)
+
+**Merged pull requests:**
+
+- feat: read CLDR currencies in MONEY and add the SYMBOL form for en and pt [\#76](https://github.com/TigreGotico/text2spoken/pull/76) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a35](https://github.com/TigreGotico/text2spoken/tree/0.0.2a35) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a34...0.0.2a35)
