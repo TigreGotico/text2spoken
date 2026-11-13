@@ -26,6 +26,15 @@ _SCHEME_URL = re.compile(f"([A-Za-z][A-Za-z0-9+.-]*)://{_HOST}{_REST}")
 _EMAIL = re.compile(f"[A-Za-z0-9._+-]+@{_HOST}")
 _WWW = re.compile(f"[Ww][Ww][Ww][.]{_HOST}{_REST}")
 _DOMAIN = re.compile(f"{_HOST}{_REST}")
+_RUNS = {
+    _SCHEME_URL: (re.compile("[A-Za-z0-9+.-]+"), re.compile("[A-Za-z]")),
+    _EMAIL: (re.compile("[A-Za-z0-9._+-]+"), re.compile("[A-Za-z0-9._+-]")),
+    _WWW: (re.compile("[Ww]"), re.compile("[Ww]")),
+    _DOMAIN: (re.compile(f"{_LABEL}(?:[.]{_LABEL})*"), re.compile("[A-Za-z0-9]")),
+}
+"""For each pattern, a run of characters and the characters that can start the pattern. A match that starts inside
+the run also starts at the first start character of the run, so `_matches` tries the pattern there only, and a long
+run costs one try, not one try for each character."""
 _BEFORE = frozenset("._%+-@/~#?=&")
 """Characters that continue an address to the left, so a match that starts after one starts inside an address."""
 _TRAILING = ".,;:!?'\""
@@ -48,6 +57,17 @@ def _free(text: str, start: int, end: int) -> bool:
             and (end == len(text) or not (is_word_char(text[end]) or text[end] == "@")))
 
 
+def _matches(pattern: re.Pattern, text: str) -> Iterator[re.Match]:
+    """The matches that `pattern.finditer(text)` gives, found with one try in each run of `_RUNS`."""
+    runs, starts = _RUNS[pattern]
+    end = 0
+    for run in runs.finditer(text):
+        first = starts.search(text, max(run.start(), end), run.end())
+        if first and (match := pattern.match(text, first.start())):
+            end = match.end()
+            yield match
+
+
 @dataclass(frozen=True)
 class Electronic:
     name: str = "electronic"
@@ -57,7 +77,7 @@ class Electronic:
         schemes = request.data.get("electronic_schemes", FrozenMap())
         tlds = frozenset(request.data.get("electronic_tlds", ()))
         for kind, pattern in (("url", _SCHEME_URL), ("email", _EMAIL), ("url", _WWW), ("domain", _DOMAIN)):
-            for match in pattern.finditer(text):
+            for match in _matches(pattern, text):
                 start = match.start()
                 end = _trimmed(text, start, match.end())
                 scheme = match.group(1).lower() if pattern is _SCHEME_URL else ""
