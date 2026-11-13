@@ -1,75 +1,292 @@
 # text2spoken
 
-text2spoken rewrites written text into the words a voice speaks. It expands numbers, dates, times, units, titles and contractions. A phonemizer then reads words, not digits or symbols.
-
-## Quickstart
-
-```bash
-pip install --pre text2spoken
-```
+text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours, abbreviations, and e-mail and web addresses. The rest of the text stays as it is, character for character.
 
 ```python
 from text2spoken import normalize
 
-print(normalize("Dr. Smith paid 3/4 of the bill at 25°C.", "en"))
-print(normalize("O Sr. Silva pagou 10kg às 14h30.", "pt-PT"))
+normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB")
+# 'Doctor Smith paid three pounds and fifty pence for two tickets on the fourteenth of March twenty twenty-four.'
 ```
 
-```text
-Doctor Smith paid three quarters of the bill at twenty five degrees celsius.
-O Senhor Silva pagou dez quilogramas às catorze e trinta.
+## Install
+
+```bash
+uv pip install --prerelease=allow text2spoken
 ```
 
-## Where this fits
+The library needs Python 3.11 or later. It uses no network and loads no model.
 
-Alone: it turns written text into spoken words, with `from text2spoken import normalize`.
-In the stack: it is the normalisation stage. A frontend or a TTS library calls it before phonemization, and it calls `ovos-number-parser`, `ovos-date-parser` and `unicode_rbnf`.
-Through scriptconv: scriptconv has no `normalize` extra. Install `text2spoken` directly.
+## Uses
 
-## What `normalize` does
+### Text to speech
 
-`normalize(text, lang)` runs four passes in this order:
+A voice speaks words, not digits or symbols. Normalise the text before you send it to the voice:
 
-1. It expands dates and times, such as `03/08/2025` and `14h30`.
-2. It splits a word from a digit that a hyphen joins, such as `sub-23`. A range such as `3-2` stays as it is.
-3. It expands units and ordinal indicators, such as `10kg`, `25°C` and `1º`.
-4. It reads each word, and expands contractions, titles, fractions and numbers.
+```python
+normalize("Meet on 03/04/2025 at 7:30 pm.", "en-US")
+# 'Meet on March fourth twenty twenty-five at seven thirty PM.'
+```
 
-Each pass is also a plain function, so a frontend can compose them and add its own rules. See [docs/api.md](docs/api.md).
+The language tag selects the reading. `en-US` reads `03/04/2025` as month, day, year. `en-GB` reads it as day, month, year.
 
-The language tag selects the rules. The tables use the part before the first hyphen, so `pt-BR` and `pt-PT` share one table. `en-US` reads an ambiguous date as month first, and every other tag reads it as day first.
+### Phonemizers
+
+A grapheme-to-phoneme model or a rule set expects words. A digit or a symbol has no pronunciation of its own, so the phonemizer drops it or spells it wrongly. Normalise first, then phonemize:
+
+```python
+words = normalize("It is 5 km away.", "en-GB")
+# 'It is five kilometres away.'
+phonemes = my_phonemizer(words)
+```
+
+### Word error rate
+
+An ASR system writes "ten thirty" where a reference transcript writes "10:30". The two texts say the same thing, but a word error rate counts each difference as an error. Normalise the reference and the hypothesis with the same tag and the same params:
+
+```python
+ref = normalize("The train leaves at 10:30 on 3 May from platform 2.", "en-GB")
+hyp = normalize("the train leaves at ten thirty on the third of may from platform two", "en-GB")
+# ref: 'The train leaves at ten thirty on the third of May from platform two.'
+# hyp: 'the train leaves at ten thirty on the third of may from platform two'
+```
+
+Text that is already in words does not change. The library does not change case or punctuation, so lowercase both texts and remove punctuation before you score them.
+
+## How it reads text
+
+The library finds each written form that it can read, and replaces it with words. It does not guess. A form that it cannot read for sure stays as written, and the library logs a WARNING on the `text2spoken` logger:
+
+```python
+normalize("The run took 1:23:45.", "en-GB")
+# 'The run took 1:23:45.'  (a duration, not a clock time)
+```
+
+A second pass changes nothing: `normalize(normalize(text, lang), lang)` gives the same text as one pass. Output depends only on the text, the tag and the params.
+
+A word with `@`, `www.`, `://` or a top-level domain such as `.com` is spoken in full, even when it is not one valid address. `Mail me@x.com,2 copies.` reads "Mail em e at ex dot com , two copies." The closing punctuation at the end of the word stays with the sentence: `Have you seen www.example.com?!` keeps `?!`. A character with no word in the address tables stays as written, between spaces: `See 20%.com` reads "See two zero % dot com".
+
+Known limits: a word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Three cases are known:
+
+- The last label and the full stop after it can form an abbreviation. `See a@b.etc.` reads "See a at bee dot etc.", and a second pass reads "et cetera".
+- A final `@` reads "at", and a second pass takes it as the time word of a time after it. Only spaces or punctuation can stand between them. `Write x.com@ 9:30` reads "Write ex dot com at 9:30", and a second pass reads "nine thirty". `Write x.com@ (9:30)` gives the same result inside the brackets.
+- A month name as the first or the last label of an address forms a date with the digits next to it on a second pass. `See example.com/May 05 for details.` reads "See example dot com slash May 05 for details.", and a second pass reads "May fifth". `On 05 May@x.com we met.` reads "On 05 May at ex dot com we met.", and a second pass reads "the fifth of May".
+
+### Runs of capital letters
+
+The `LETTERS` form reads a run of capital letters, such as `NATO`, `BMW` or `MP3`. The form is off by default, so a run stays as written and the phonemizer reads it. Turn it on with `plus`:
+
+```python
+from text2spoken import Form, NormalizationParams
+
+normalize("A NATO reuniu-se com a RTP.", "pt-PT", NormalizationParams().plus(Form.LETTERS))
+# 'A NATO reuniu-se com a érre tê pê.'
+```
+
+A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name and each digit by its word. A table in the language file holds the runs that the rule reads wrong: `TAP` reads as a word and `EUA` letter by letter in Portuguese, and `CIA`, `IRS`, `USA`, `IBS` and `IDS` read letter by letter in English. English and Portuguese offer the form. A language with no letter names keeps each run as written.
+
+The form does not take a run with a lowercase letter (`ONGs`, `PhD`), a run with full stops (`E.U.A.`), a capital alone (`plano B`), or a Roman numeral that the `ROMAN` form reads (`século XIV`). In English, an e-mail or web address reads as an address. With the form on, a run of capitals in the reading of another form reads as this form reads it. So `Call the BBC at 9 AM.` reads "Call the bee bee cee at nine a em." in `en-US`, and `help@IRS.gov` reads "help at i ar ess dot gov".
+
+Known limits of the form:
+
+- A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i".
+- A run that reads as a word and holds a digit stays as written, as `COVID19` does with the form off.
+- The rule reads some initialisms as words, because no source in the language file names them: `CEO` and `WHO` stay as written in English.
+- In English, a coda takes the s of the -s/-z morpheme. So the rule reads some three-letter initialisms of a vowel, a consonant and s as words: `ABS` and `ITS` stay as written. `letter_runs` lists the ones that a source spells, such as `IBS` and `IDS`.
+- A run with a letter that has no name, such as `Ç`, stays as written when it does not split into syllables.
+- Portuguese has no onset or coda with `k`, `w` or `y`, which AO1990 keeps for foreign names. So `WEB` reads "dâblio é bê" in pt-PT.
+- Text in capitals spells its two-letter words, because a run of two letters reads letter by letter. `SAIA DA SALA` reads "SAIA dê á SALA" in pt-PT, and `DO NOT ENTER` reads "dee o NOT ENTER". The rule stays, because two-letter acronyms such as `TV`, `PC`, `UE` and `IA` are frequent.
+- A run of digits joined to a run reads digit by digit. `10GB` reads "one zero gee bee", and `A25` reads "á dois cinco" in pt-PT.
+- Portuguese has no address form, so the form spells only the run in an address. `geral@RTP.pt` reads "geral@érre tê pê.pt" in pt-PT.
+- The Portuguese codas are only `l`, `r`, `s`, `z`, `x`, `m` and `n`. So the form spells some acronyms that speakers read as words, some with an added e: `CIAV` "ciave" (Ciberdúvidas 39064), `OVNI` ¦óvni¦ (Ciberdúvidas 9355) and `PIB` "pibe" (Wiktionary). They read "cê i á vê", "ó vê éne i" and "pê i bê". A measurement against WikiPron in both directions decides the coda set.
+- A span that waits on a joined character on the first pass can read on a second pass, after the form spells a run next to it. `Sala 9#D. RTP.` reads "Sala 9#D. érre tê pê.", and a second pass reads "nove".
+
+## The API
+
+| Function | Returns |
+| --- | --- |
+| `normalize(text, lang, params=None, tokenizer=None)` | The spoken text |
+| `analyze(text, lang, params=None, tokenizer=None)` | An `Analysis` with the tokens and the spans that the library found |
+| `render(analysis, hints=None)` | The spoken text of an `Analysis` |
+| `supports(lang)` | A `Support` record: the forms, genders and option values of a tag |
+| `effective_params(lang, params=None)` | The params of a call, with the language defaults filled in |
+
+`lang` is a BCP 47 tag, for example `en`, `en-GB` or `pt-PT`. A tag that is not valid raises `InvalidLanguageTagError`.
+
+### Grammatical agreement
+
+In many languages a number agrees with its noun. `analyze` and `render` let the caller give that information. `hints` maps the start offset of a span to `Features`, for example a grammatical gender:
+
+```python
+from text2spoken import analyze, render
+
+analysis = analyze("Gate 7 opens at 9:15.", "en-US")
+[(span.start, span.end, span.form) for span in analysis.spans]
+# [(5, 6, <Form.CARDINAL: 'cardinal'>), (16, 20, <Form.TIME: 'time'>)]
+render(analysis)
+# 'Gate seven opens at nine fifteen.'
+```
+
+### Params
+
+`NormalizationParams` is a frozen dataclass. A field that is `None` takes the default of the language variety.
+
+| Field | Values |
+| --- | --- |
+| `forms` | The `Form` values to read. `params.only(Form.CARDINAL)` and `params.without(Form.TIME)` give a changed copy |
+| `date_order` | `DMY`, `MDY`, `YMD` |
+| `clock` | `12h`, `24h` |
+| `minute_style` | `number`, `phrase` |
+| `decimal_mark` | The decimal mark of the written numbers |
+| `scale` | `short`, `long` |
+| `default_gender` | A `FrozenMap` of language code to `GrammaticalGender` |
+| `register` | `formal`, `colloquial` |
+| `phone_regions` | ISO 3166 region codes for telephone number plans |
+| `lexicon` | A `FrozenMap` of language tag to a `FrozenMap` of written form to spoken words |
+| `strict` | `True` raises an error where the default mode logs a warning |
+
+A lexicon entry reads a form your way:
+
+```python
+from text2spoken import FrozenMap, NormalizationParams
+
+params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"NHS": "N H S"})}))
+normalize("Ask the NHS today.", "en-GB", params)
+# 'Ask the N H S today.'
+```
+
+To read only some forms, select them:
+
+```python
+from text2spoken import Form
+
+normalize("Pay $5 on 12/03/2024 for 3 items.", "en-US", NormalizationParams().only(Form.CARDINAL))
+# 'Pay $5 on 12/03/2024 for three items.'
+```
+
+### Errors and warnings
+
+| Case | Default mode | `strict=True` |
+| --- | --- | --- |
+| An argument, a param field or a hint of the wrong type | `ArgumentTypeError` | `ArgumentTypeError` |
+| A param value that no language takes, such as `date_order="mdy"` | `InvalidParameterError` | `InvalidParameterError` |
+| A form that the library cannot read | Stays as written, WARNING logged | `UnreadFormError` |
+| A param value that the language cannot produce | Language default, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
+| A gender that a language with genders does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |
+| A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
+| A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
+| A tokenizer result that is not a sequence of tokens that match the text | `TokenizerError` | `TokenizerError` |
+
+A language with no genders ignores a gender in a hint or in `default_gender`. English and every language with no file have no genders.
+
+Every error in this table is a subclass of `Text2SpokenError`, and so of `ValueError`. `ArgumentTypeError` is also a subclass of `TypeError`. Every warning is a subclass of `Text2SpokenWarning`. A defect in a speller or a verbalizer raises its own error, with a note that names the language, the form and the text.
+
+### Your own tokenizer
+
+The `tokenizer` argument takes a callable `(text, lang)` that returns a sequence of `Token(start, end, text)`. Give it when your pipeline already splits text into tokens, so that the spans and the context words follow your tokens. With no tokenizer, the library uses its default.
 
 ## Languages
 
-These languages have tables in `text2spoken/tables.py`:
+Each language is one file in `text2spoken/lang/`, named by its primary language subtag. A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written.
 
-| Table | Languages |
-| --- | --- |
-| `CONTRACTIONS` | en |
-| `TITLES` | ca, de, en, es, fr, gl, it, nl, pt |
-| `UNITS` | de, en, es, fr, pt |
+`de` serves every German tag. `de-DE` is the default. `de-AT` says `Jänner` for January. `de-CH` writes `ss` for `ß` and takes `.` as the decimal mark. A German number takes the gender and the case of its noun, as in `für einen Tag` and `mit einer Frau`. The word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time, as in `vor einer Stunde`. A form of the verb `kosten` gives the accusative to a price, so `Das kostet 1 €.` reads "einen Euro". Any other noun after the verb is its subject, so `Wie viel kostet 1 Kaffee?` reads "ein Kaffee". A noun with no known gender takes the masculine, and only the dative of a preposition, so `zu 1 Freund` reads "einem Freund". In `de-CH` the full stop is also the decimal mark, so a time with a full stop needs `Uhr`: `um 14.30 Uhr` is a time, and `um 1.15 Franken` reads "eins Komma eins fünf Franken". `von`, `bis`, `ab` and `seit` also come before a ratio, so a time after them needs `Uhr` or a range that `Uhr` closes, as in `von 9:00 bis 17:00 Uhr`.
 
-This command prints the same list from the installed package:
+Some German readings are still wrong or stay as written:
+
+- A verb gives no case, except `kosten`. `Ich habe 1 Hund.` reads "ein Hund", not "einen Hund". `Ich erinnere mich an 1 Tag im Mai.` reads "einem Tag", but `sich erinnern an` takes the accusative.
+- A price that is the subject of `kosten` takes the accusative. `Wie viel kostet 1 Euro in Dollar?` reads "einen Euro".
+- `in`, `an` and `vor` before a noun that is not a noun of time give no case. `Er wohnt in 1 Haus.` reads "ein Haus".
+- A noun whose gender no rule gives takes the masculine. `mit 1 Freundin` reads "einem Freundin", and `1 Ampel` reads "ein Ampel". A `default_gender` param or a gender hint gives the feminine.
+- A compound of an exception takes the ending rule, so `1 Osterei` reads "eine Osterei". A noun with `Ge-` that is not neuter reads as a neuter, so `1 Gerade` reads "ein Gerade", and `Mit 1 Gelatine.` reads "einem Gelatine".
+- A preposition of the genitive gives no case to a number. `Während 1 Woche` and `Innerhalb 1 Woche` read "eine Woche". In `de-CH`, `Außerhalb der 3. Woche` with `ß` reads "dritte", because the `de-CH` tables write `ss`.
+- `h`, `min` and `Std.` are not units. `Er kommt in 1 h.` reads "in eins h", `Er kam vor 1 min.` reads "vor eins min", and `1 Std.` reads "ein Std.".
+- A minus sign between spaces stays as written. `5 - 3 = 2` reads "fünf - drei gleich zwei".
+- A number with a space as the group mark stays as written, as in `10 000`.
+- In `de-CH`, a time with a full stop and no `Uhr` reads as a decimal. `um 9.15` reads "neun Komma eins fünf".
+- A time after `ab`, `von`, `bis` or `seit` with no `Uhr` stays as written, as in `Ab 16:10`. `9:00-17:00 Uhr` stays as written, because the core reads the dash as a joiner.
+- One half before a noun stays as written, as in `1/2 Pizza`, because `halb` declines before a noun.
+- A scale abbreviation after a number stays as written. `2 Mio. Einwohner` reads "zwei Mio. Einwohner", and `2 Mio. €` reads "zwei Mio. €".
+- A year with no year word reads as a cardinal. `Er wurde 1999 geboren.` reads "eintausendneunhundertneunundneunzig".
+- An ordinal from one million up stays as written, and so does an ordinal with no determiner before it, as in `Er wurde 2. Sieger.`
+- A determiner that does not agree with a date is ignored. `das 12/03/2024 Wetter` reads "das zwölfter März zweitausendvierundzwanzig Wetter".
+- The core table `PHONE_PLANS` holds no plan for DE, AT or CH.
+
+The test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia, and no native speaker has checked them.
+
+To see what a tag reads:
 
 ```bash
-python -c "from text2spoken import CONTRACTIONS, TITLES, UNITS; [print(sorted(t)) for t in (CONTRACTIONS, TITLES, UNITS)]"
+python -c "from text2spoken import supports; print(supports('en-US'))"
 ```
 
-Numbers, dates and times come from `ovos-number-parser` and `ovos-date-parser`, so those packages set their language coverage.
+To print the data of a language file as JSON, give a BCP 47 tag. The command prints the language file that `normalize` selects for that tag:
 
-To add a language, add its entries to `text2spoken/tables.py`. A new language needs no code change.
+```bash
+python -m text2spoken.export en
+```
 
-## Behaviour to know
+If the tag is not valid, or if no language file reads the tag, the command writes one error line and exits with code 1.
 
-- The library uses no network and loads no model, so it works offline.
-- A language that the parsers do not support keeps its digits. The library logs an error and returns the text.
-- A `text` or `lang` value of the wrong type raises `TypeError` or `AttributeError` from the code that reads it.
-- Importing the library imports `ovos-date-parser`, which sets the import time.
-- `ovos-config`, a dependency of `ovos-date-parser`, creates `~/.config/mycroft` at import.
+English reads the varieties `en-GB` and `en-US`. It does not read Roman numerals. A letter code such as `GPS` or `X5` stays as written, unless the `LETTERS` form is on. The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
+
+English and Portuguese take the words for units from the Unicode CLDR, release 49. The data ships in `text2spoken/data/cldr/` under the Unicode License v3, and `scripts/extract_cldr.py` writes it. A unit symbol that cannot be a word, such as `km/h`, `°C`, `kWh` or `µm`, reads with no list. A symbol made only of letters reads only when the language file lists it in `unit_symbols`, so `1 in 3` and `29 GB golds` keep `in` and `GB`. `a/b` reads with the `per` pattern, and `²` and `³` read with the square and cubic patterns: `10 kg/m²` reads "ten kilograms per square metre", and `5 µm` reads "cinco micrómetros" in `pt-PT`. A Portuguese number takes the gender of its unit, so `2 h` reads "duas horas". A listed symbol that differs from a CLDR symbol only in case reads as that unit, so `5 ml` reads "five milliliters" in `en-US`, where CLDR writes `mL`.
+
+Currency names and symbols come from the same release. A currency symbol before or after a number reads with the CLDR name of the currency, so `R$ 500` reads "five hundred Brazilian reals" and `₹50` reads "cinquenta rupias indianas" in `pt-PT`. A scale word may stand between the number and a symbol after it: `180 mil €` reads "cento e oitenta mil euros". A symbol with a currency sign, such as `$`, `€` or `₹`, reads with no list. A symbol of letters, as an ISO 4217 code such as `CHF`, reads only when the language file lists it in `currency_symbols`, so `10 L` and `TOP 10` keep `L` and `TOP`. A symbol that two currencies share reads as the currency whose CLDR symbol it is. The language file names a currency where the CLDR name carries the country, as "dollar" for "US dollar", and gives its source. Portuguese writes each currency name with a small first letter, so `₹50` reads "cinquenta rupias indianas" in `pt-BR` too. A currency whose CLDR name is no word, as the `¤` of "(unknown currency)", does not read.
+
+A character that no other form claims reads by its CLDR name, if it is outside ASCII and its Unicode general category is `Sm`, `Sc`, `Sk` or `So`, or if it is one of `§ ¶ † ‡ •`. `© 2024` reads "copyright two thousand and twenty-four", and `→` reads "right-pointing arrow". A name takes one space on each side where it touches a character that is no space. It takes none after an opening bracket or quote, and none before a closing bracket or quote, a full stop or a comma. So `§§ 5` reads "section section five", `©-5` reads "copyright minus five", and `(©)` reads "(copyright)". Before a phone number, a symbol counts as the words of its name, so `☎000` reads "telephone zero zero zero", as `telephone 000` does. The language file may give its own name with a source: Portuguese reads `§` as "parágrafo". `NormalizationParams().without(Form.SYMBOL)` turns this off. A character that a table of the language gives to another form, such as `°`, `‰`, `×` or a currency sign, belongs to that form wherever it stands. It stays as written when that form does not read it, so `the € sign` stays as written, and `3/4 ‰` stays as written as `3/4 kg` does. An emoji with emoji presentation, and a character with U+FE0F, a skin tone or a zero width joiner after it, stays as written. In an address, a character that the address tables do not name reads by its CLDR name: `a©b.com` reads "a copyright bee dot com".
+
+Some unit readings in English and Portuguese are still wrong or stay as written:
+
+- `ft` does not read as feet, because `ft.` also names "featuring" in a music credit, as in `Maroon 5 ft. Cardi B`.
+- A fraction before a unit stays as written. `Espere 1/2 min.` and `A 1/2 kWh cell.` keep `1/2`.
+- Portuguese `min` and `s` read as units also where they abbreviate other words. `12 min e 20 máx.` reads "doze minutos", and `2 s/ uso` reads "dois segundos/ uso".
+- A pt-BR decimal below 2 takes the singular, by the CLDR plural rule. `1,5 min` reads "um vírgula cinco minuto".
+- A decimal takes no unit gender. `2,5h` reads "dois vírgula cinco horas".
+- `1,5h` reads, but `1,5 h` with a space stays as written.
+- A unit before a noun reads in the plural. `A 5 µm hole.` reads "A five micrometres hole".
+- A language file that reads units from CLDR cannot yet give its own word for a unit.
+- A year before a unit symbol in its CLDR case reads as a measure. `In 2020 kWh prices rose.` reads "two thousand and twenty kilowatt-hours prices", and a list of years before such a symbol reads each year as a cardinal: `In 2019-2020 kWh were sold.`
+- Portuguese has no address form, so a unit inside a Portuguese address reads as a measure. `Veja www.x.pt/5µm` reads "www.x.pt/cinco micrómetros".
+- For the same reason, a symbol inside a Portuguese address reads by its name. `x@a©b.pt` reads "x@a direitos de autor b.pt".
+
+Some currency and symbol readings are still wrong or stay as written:
+
+- Two decimals read as a decimal when the language names no minor unit for the currency. `₹10.50` reads "ten point five zero Indian rupees".
+- A symbol name is the CLDR name, with no agreement and no context. `8 ÷ 2` reads "oito sinal de divisão dois" in Portuguese.
+- A sign that CLDR names before a number reads before the number. `₿1` reads "bitcoin one".
+- A euro amount with a comma for the decimal mark stays as written in English, as in `€12,50`.
+- A doubled mark reads its singular name twice. `Veja os §§ 2 e 3.` reads "Veja os parágrafo parágrafo dois e três".
+- A currency sign at the start or the end of an address stays as written in the address, and a second pass reads it with the number next to it. `x@€ 08` reads "ex at € 08", and a second pass reads "ex at eight euros". The same holds for the signs of the CLDR currencies: `x@₦ 08` reads "ex at ₦ 08", and a second pass reads "ex at eight Nigerian nairas".
+- A currency sign between a range and another sign can keep the range as written. `0–2$€0` reads "0–2$zero euros", and a second pass reads "zero to two$zero euros". `0–2$₽0` reads "0–2$zero Russian rubles", and a second pass reads "zero to two$zero Russian rubles".
+- A money range whose last amount ends in a letter code, with a joiner and a digit after it, stays as written, and the amount after the joiner reads. A second pass reads the range. `$0–0USD+2$` reads "$0–0USD+two dollars", and a second pass reads "zero dollars to zero dollars+two dollars".
+- An amount right before a run of digits that starts with `0` reads, and the run stays as written. A second pass reads the run digit by digit. `€2 07946001800` reads "two euros 07946001800", and `USD20 07946001800` reads "twenty dollars 07946001800".
+- With the `LETTERS` form on, an amount before a symbol and digits can stay as written while the symbol and the digits read. `US$0 0∇2` reads "US$0 0 nabla two", and a second pass reads "zero dollars zero nabla two".
+- A money range with a symbol at one end only stays as written, as `$5-10` does. `5–10 USD` and `CHF 5–10 per day` stay as written, and so does `5–10 EUR` in Portuguese.
+
+Russian reads `ru-RU`, and every other `ru-*` tag selects it. Install it with `text2spoken[ru]`, which adds `ovos-number-parser`. A number agrees in gender and case with the noun after it, and the preposition before it gives the case. A noun in the prepositional in `-е` or `-ии` does not show its gender, so `в 1 квартире` reads the masculine "одном". A gender hint gives "одной".
+
+A date with no preposition says when something happens, so it reads in the genitive: `Он родился 12 марта` reads "двенадцатого марта", and `Экзамен был 3 июня` reads "третьего июня" (Грамматика-80, § 1168, and Розенталь 1985, § 94). A date that closes its clause reads in the nominative in two places. Only "года", closing quotes and one of the marks ". ! ? …", or the end of the clause, follow such a date. A date before a comma reads in the genitive, because the clause often goes on after the comma: `1 мая, в субботу, мы поехали на дачу` and `Тогда, 1 мая, мы уехали` read "первого мая". The first place is after a label colon, where the date names the day (§ 1167): `Дата: 9 мая.` reads "девятое мая". The second place is where the date is the subject of "был", "была", "было", "будет", "есть" or a form of "наступить" (§ 2536, § 2539, § 2681). In that clause only these verbs and words such as "а", "но", "ведь", "вот", "и", "ли", "наконец", "уже", "сегодня" and "завтра" come before the date. So `Вот и наступило 1 сентября` reads "первое сентября", and `Сегодня уже 1 мая` reads "первое мая". A date alone in its clause is a nominative sentence (§ 2522, § 2524), so `1 мая.` and `Почему магазин закрыт? Ведь 1 мая!` read "первое мая". After only "да" or "а", the date reads in the genitive, because a reply takes its form from the question (§ 1954): `Да, 1 мая.` reads "первого мая". Only the words after the last colon or opening quote count, so `Он сказал: «Сегодня 1 мая».` reads "первое мая". A subject before the verb, or a word after the date, makes the date a time again: `Лето наступило 1 июня` and `Было 1 мая подписано соглашение` read the genitive. The pronoun "это" is a subject too (Розенталь 1985, § 189), so `Это было 1 мая` reads "первого мая". After 2, 3 and 4, a noun that has only plural forms takes "двое", "трое" or "четверо": `2 суток` reads "двое суток" (Розенталь 1985, § 165). The nouns "детей", "ребят" and "людей" take them only where the number is the subject. That is the case first in the clause, after "было", and after a phrase with "у", "в" or "во" that opens the clause: `У моей сестры 2 детей` reads "двое детей", and `В семье 3 детей` reads "трое детей" (Грамматика-80, § 2455). After a verb or a preposition of the accusative, as in `Я видел 2 детей` and `Я видел в парке 2 детей`, the number stays as written. Another preposition takes the cardinal in its case: `Для 2 детей` reads "для двух детей" (Грамматика-80, § 1366). A sign reads "плюс" or "минус".
+
+Some Russian readings are still wrong:
+
+- `Нас было 2` reads "два", not "двое".
+- An object before the verb, as in `3 детей я видел`, reads "трое", not "троих".
+- An adverb before the adjective, as in `2 очень маленьких детей`, hides the noun, so the number reads "два".
+- A date before a dash reads in the genitive, also after "сегодня": `Сегодня 1 мая — День весны` reads "первого мая".
+- A date before a comma, a colon or a bracket reads in the genitive, also where it is the subject: `Было 1 мая, шёл дождь`, `Сегодня 1 мая, в субботу, мы идём на парад`, `«Сегодня 1 мая», — сказал он` and `Сегодня (1 мая) праздник`. A dateline such as `1 мая, вторник` and a label before a comma such as `Дата: 9 мая, вторник` read in the genitive too.
+- `Да здравствует 1 мая!` reads "первого", although the date is the subject of "здравствует".
+- A quoted title of a date word before the date makes the date read in the nominative: `«Завтра» 1 мая.` and `Я купил «Завтра» и «Сегодня» 1 мая.` read "первое".
+- A date after a comma with no space is not taken as a date, so the number reads as a cardinal: `Он сказал: «Сегодня,1 мая».` reads "Сегодня,одна мая".
+- A phrase with "у", "в" or "во" that does not open the clause stays as written: `В семье у нас 3 детей`. So does a phrase that the three words before the number do not show whole: `У нас в семье 3 детей`.
+- The prepositional in `-е` or `-ии` and some nouns in `-ь` read masculine without a gender hint.
+- A count after a verb reads the nominative, and an animate accusative reads the cardinal.
+
+The test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules, and no native speaker has checked them.
 
 ## Development
 
 ```bash
+uv venv
 uv pip install --prerelease=allow -e ".[test]"
 pytest tests
 ```

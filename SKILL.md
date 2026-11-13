@@ -1,16 +1,16 @@
 ---
 name: text2spoken
-description: Rewrite written text into the words a voice speaks. Use to expand numbers, dates, times, units, titles and contractions before phonemization or TTS.
+description: Rewrite written text into the words a speaker says. Use to read numbers, dates, times, money, measures, telephone numbers and abbreviations before phonemization, TTS or a word error rate score.
 ---
 
 # text2spoken
 
-Use this library when text must reach a phonemizer as words, with no digits or symbols.
+Use this library when text must reach a phonemizer or a voice as words, with no digits or symbols, and to normalise a reference and a hypothesis before a word error rate score.
 
 ## Install
 
 ```bash
-pip install --pre text2spoken
+uv pip install --prerelease=allow text2spoken
 ```
 
 ## Use
@@ -18,17 +18,20 @@ pip install --pre text2spoken
 ```python
 from text2spoken import normalize
 
-normalize("Dr. Smith paid 3/4 of the bill at 25°C.", "en")
+normalize("Dr Smith paid £3.50 for 2 tickets.", "en-GB")
 ```
 
-The result is `Doctor Smith paid three quarters of the bill at twenty five degrees celsius.`
+The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 
-## Compose
+## Control
 
-A frontend can run one pass and add its own rules around it. The plain functions are `expand_dates_and_times`, `expand_hyphen_digits`, `expand_units` and `expand_word`. See `docs/api.md`.
+- Pass `NormalizationParams` to set the date order, the clock, the forms to read and a lexicon.
+- Pass `tokenizer=` to use the tokens of your own frontend.
+- Call `supports(lang)` to see what a tag reads, and `effective_params(lang, params)` to see the params that apply.
+- Call `analyze` and then `render(analysis, hints)` to give a number the gender of its noun.
 
 ## Limits
 
-- A language that the parsers do not support keeps its digits. The call logs an error and raises nothing.
-- Tables cover a fixed set of languages. Read `TITLES`, `UNITS` and `CONTRACTIONS` for the list.
-- Add a language in `text2spoken/tables.py`. It needs no code change.
+- `en` reads every form except `ROMAN`, `LETTERS` and `IDENTIFIER`, which stay as written. `de` also leaves `ELECTRONIC` and `SYMBOL` as written. `supports("en")` lists the forms. A language with no file reads cardinal numbers only.
+- A form that the library cannot read stays as written, with a WARNING log. `strict=True` raises `UnreadFormError`.
+- The English and German test rows name their source, and no native speaker has checked them.

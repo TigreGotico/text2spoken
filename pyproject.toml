@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "text2spoken"
 dynamic = ["version"]
-description = "Rewrite written text into the words a voice speaks: numbers, dates, times, units, titles and contractions"
+description = "Rewrite written forms into the words a speaker says: numbers, dates, times, money, units and more, one file per language"
 license = {text = "Apache-2.0"}
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -17,17 +17,26 @@ authors = [{name = "JarbasAI", email = "jarbasai@mailfence.com"}]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "ovos-number-parser>=0.4.0",
-    "ovos-date-parser>=0.6.4a1",
-    "unicode_rbnf>=2.0.0",
+    "linguatag[langcodes]>=0.1.5a1",
+    "unicode-rbnf>=2.4.1",
+    "quebra-frases>=0.3.7",
 ]
 
 [project.urls]
 Homepage = "https://github.com/TigreGotico/text2spoken"
 
 [project.optional-dependencies]
+ru = ["ovos-number-parser>=0.24.35a1"]
 test = [
     "pytest",
+    "packaging",
+    "ovos-number-parser>=0.24.51a1",
+    "ovos-color-parser>=0.12.4a1",
+    "tugalex>=2.0.3a1",
+]
+pt = [
+    "ovos-number-parser>=0.24.51a1",
+    "tugalex>=2.0.3a1",
 ]
 
 [tool.setuptools.dynamic]
@@ -36,3 +45,6 @@ version = {attr = "text2spoken.version.__version__"}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["text2spoken*"]
+
+[tool.setuptools.package-data]
+text2spoken = ["data/cldr/*.json", "data/cldr/LICENSE"]
