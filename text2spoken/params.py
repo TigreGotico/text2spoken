@@ -87,6 +87,7 @@ class Form(StrEnum):
     ROMAN = "roman"
     COLOR = "color"
     ELECTRONIC = "electronic"
+    SYMBOL = "symbol"
 
 
 class GrammaticalGender(StrEnum):

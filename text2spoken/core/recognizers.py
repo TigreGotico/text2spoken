@@ -15,6 +15,7 @@ from functools import lru_cache
 from types import MappingProxyType
 
 from text2spoken.core.color import COLOR
+from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.language import Request, lexicon_entries
@@ -22,6 +23,7 @@ from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import DigitSpeller, bounded_integer
+from text2spoken.core.symbols import SYMBOL, reads_symbol
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark,
                                      is_word_char, next_visible, one_digit_set)
@@ -511,8 +513,11 @@ class Percent:
 
 @dataclass(frozen=True)
 class Money:
+    """With `scale_before_symbol`, a scale word may also stand between a number and a symbol after it, as in
+    `180 mil €`."""
     name: str = "money"
     form: Form = Form.MONEY
+    scale_before_symbol: bool = False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         return join_ranges(self._amounts(text, tokens, request), text, request)
@@ -520,13 +525,12 @@ class Money:
     def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A currency symbol before or after a number. Before a symbol that comes first, a sign may stand, and
         after its number a scale word of the language, attached or after one space: `-$5`, `$2 million`, `$1m`."""
-        symbols = [(symbol, code) for code, currency in request.data.get("currencies", FrozenMap()).items()
-                   for symbol in currency["symbols"]]
+        symbols = currency_symbols(request)
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         for number in numbers_in(text, request):
             if number.sign:
                 continue
-            for symbol, code in sorted(symbols, key=lambda pair: len(pair[0]), reverse=True):
+            for symbol, code in symbols:
                 found = None
                 for gap in ("", " ", " "):
                     start = number.start - len(gap) - len(symbol)
@@ -541,10 +545,14 @@ class Money:
                         if bounds is not None:
                             found = (bounds, sign, scale)
                             break
-                    end = number.end + len(gap) + len(symbol)
-                    if text.startswith(gap + symbol, number.end) \
-                            and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
-                        found = (bounds, "", "")
+                    scaled = _scale(text, number.end, scales) if self.scale_before_symbol else ("", number.end)
+                    for scale, after in dict.fromkeys((scaled, ("", number.end))):
+                        end = after + len(gap) + len(symbol)
+                        if text.startswith(gap + symbol, after) \
+                                and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
+                            found = (bounds, "", scale)
+                            break
+                    if found:
                         break
                 if found:
                     (start, end, prefix, suffix), sign, scale = found
@@ -622,9 +630,10 @@ class Telephone:
     region in `phone_regions`, a shape of the `phone_shapes` table, as in `(212) 555-0123`, or a phone word that
     names the run.
 
-    A phone word names the run right after it, with no letter or digit between them. A run that a word of
-    `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only add
-    words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
+    A phone word names the run right after it, with no letter, digit or character that `SYMBOL` reads between
+    them. A run that a word of `list_links` or a comma joins to a named run is named too, as `112` in
+    `Call 999 or 112.` Readings only add words before a run, so a run that a first pass leaves unnamed stays unnamed
+    on a second pass.
 
     A named run of 7 to 15 digits reads digit by digit. A shorter named run reads digit by digit only when it is a
     short code, so `Call 100 customers.` reads a count. A run right after a phone word that no plan reads stays as
@@ -695,7 +704,8 @@ class Telephone:
                 written.startswith("+") or digits.startswith("0") or any(c in " .()-" for c in written))
             phone_ends = [words[i].end for i in self.window(text, words, breaks, start, end, request)
                           if words[i].text.lower() in phone_words]
-            direct = bool(phone_ends) and not any(map(is_word_char, text[phone_ends[-1]:start - len(prefix)]))
+            direct = bool(phone_ends) and not any(is_word_char(text[index]) or reads_symbol(text, index, request)
+                                                  for index in range(phone_ends[-1], start - len(prefix)))
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
@@ -830,5 +840,5 @@ def written_shapes() -> FrozenMap:
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC)}
+                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, SYMBOL)}
 """The shared recognizers by name."""

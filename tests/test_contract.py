@@ -120,7 +120,7 @@ BAD_KEYS = [
     ("operators", {"+-": "plus"}),
     ("short_codes", ["9 1 1"]),
     ("short_codes", [911]),
-    ("currencies", {"USD": {"one": "dollar"}}),
+    ("currencies", {"USD": {"symbols": []}}),
     ("day_periods", {"pm": "pm"}),
     ("defaults", {"clocks": "12h"}),
     ("range_word", ["to"]),

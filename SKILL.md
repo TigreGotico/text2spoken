@@ -32,6 +32,6 @@ The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 
 ## Limits
 
-- `en` reads every form except `ROMAN`, `LETTERS` and `IDENTIFIER`, which stay as written. `de` also leaves `ELECTRONIC` as written. `supports("en")` lists the forms. A language with no file reads cardinal numbers only.
+- `en` reads every form except `ROMAN`, `LETTERS` and `IDENTIFIER`, which stay as written. `de` also leaves `ELECTRONIC` and `SYMBOL` as written. `supports("en")` lists the forms. A language with no file reads cardinal numbers only.
 - A form that the library cannot read stays as written, with a WARNING log. `strict=True` raises `UnreadFormError`.
 - The English and German test rows name their source, and no native speaker has checked them.

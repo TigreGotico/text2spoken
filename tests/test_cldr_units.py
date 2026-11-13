@@ -135,3 +135,15 @@ def test_a_case_match_with_two_equal_candidates_reads_no_unit():
     assert {"cd", "CD"} <= symbols and "Cd" not in symbols
     assert "Cd" not in _cldr_table("en-US", ("Cd",))
     assert _cldr_table("en-US", ("ml",))["ml"]["names"]["other"] == "{0} milliliters"
+
+
+def test_no_power_follows_a_power():
+    """`m²²` is no square of `m²`: `²` and `³` follow a symbol that holds no power (design section 4.7)."""
+    from text2spoken.core.language import Request, select
+    from text2spoken.core.units import _takes_power, units_at
+    from text2spoken.params import NormalizationParams
+
+    tag, language, variety = select("en-GB")
+    request = Request(tag, variety, language, NormalizationParams())
+    assert not _takes_power("m²")
+    assert "m²" in units_at("5 m²²", 2, request) and "m²²" not in set(units_at("5 m²²", 2, request))

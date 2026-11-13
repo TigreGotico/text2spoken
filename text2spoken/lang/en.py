@@ -11,6 +11,19 @@ letters that read as units: the SI symbols `kg`, `g`, `mg`, `km`, `m`, `cm`, `mm
 `29 GB golds` read no unit. `GB` names Great Britain as often as gigabytes (design section 16), and `ft.` names
 "featuring" in a music credit, as in `Maroon 5 ft. Cardi B`.
 
+Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of en-GB, en-001
+and en), and a symbol with a currency sign reads with no list: `R$ 500` reads "five hundred Brazilian reals" and
+`₹50` "fifty Indian rupees". `currency_symbols` names the ISO 4217 codes that read, as in `CHF 20` and `20 EUR`.
+The `currencies` table replaces a CLDR name that carries the country. CLDR names USD "US dollar", GBP "British
+pound" and JPY "Japanese yen", and the CLDR 49 en annotations name the signs `$` "dollar", `£` "pound" and `¥`
+"yen", so these currencies read "dollar", "pound" and "yen". The table also assigns a shared sign. CLDR 49 en gives
+USD the symbol `$` and JPY the symbol `¥`, but en-001, the parent of en-GB, writes `US$` and `JP¥`, and en-GB
+shares the narrow `$` and `¥` between currencies. The en symbol and the en annotation name keep `$` for the dollar
+and `¥` for the yen in en-GB. en-US reads `US$`, the symbol of USD in CLDR en-001 and root, as the dollar too.
+
+A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
+`cldr-annotations-derived-full`): `©` reads "copyright", `→` "right-pointing arrow" and `¶` "paragraph mark".
+
 An e-mail or web address reads the name of each symbol. Wiktionary gives each name: "@" is "at" ("@", sense 2:
 the separator in an e-mail address, "at" the domain name), "." is "dot" ("dot", usage note: "In email addresses
 and URLs, it is conventionally read aloud as 'dot'"), "-" is "dash" ("dash", sense 1.1: "A hyphen or minus
@@ -29,6 +42,7 @@ from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
+from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
@@ -37,6 +51,7 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge,
                                           numbers_in, speak_cardinal, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
+from text2spoken.core.symbols import speak_symbol
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
 from text2spoken.core.units import unit_reading, unit_table
@@ -116,12 +131,12 @@ DATA = freeze({
     "months": MONTHS,
     "numeric_date_reading": {"full": "the {day} of {month} {year}", "no_year": "the {day} of {month}"},
     "currencies": {
-        "USD": {"symbols": ["$", "US$"], "one": "dollar", "other": "dollars",
-                "minor": {"one": "cent", "other": "cents"}},
-        "GBP": {"symbols": ["£"], "one": "pound", "other": "pounds", "minor": {"one": "penny", "other": "pence"}},
-        "EUR": {"symbols": ["€"], "one": "euro", "other": "euros", "minor": {"one": "cent", "other": "cents"}},
-        "JPY": {"symbols": ["¥"], "one": "yen", "other": "yen", "minor": {"one": "sen", "other": "sen"}},
+        "USD": {"one": "dollar", "other": "dollars", "minor": {"one": "cent", "other": "cents"}},
+        "GBP": {"one": "pound", "other": "pounds", "minor": {"one": "penny", "other": "pence"}},
+        "EUR": {"minor": {"one": "cent", "other": "cents"}},
+        "JPY": {"one": "yen", "other": "yen", "minor": {"one": "sen", "other": "sen"}},
     },
+    "currency_symbols": ["USD", "EUR", "GBP", "JPY", "CHF"],
     "scales": {"thousand": "thousand", "million": "million", "billion": "billion", "trillion": "trillion",
                "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
@@ -162,9 +177,11 @@ DATA = freeze({
 
 VARIETIES = (
     Variety("en-GB", freeze({"colors": {code: name.replace("gray", "grey") for code, name in COLORS.items()
-                                        if "gray" in name}})),
+                                        if "gray" in name},
+                             "currencies": {"USD": {"symbols": ["$"]}, "JPY": {"symbols": ["¥"]}}})),
     Variety("en-US", freeze({
         "defaults": {"date_order": "MDY"},
+        "currencies": {"USD": {"symbols": ["US$"]}},
         "letter_names": {"z": "zee"},
         "numeric_date_reading": {"full": "{month} {day} {year}", "no_year": "{month} {day}"},
         "percent": {"word": "percent"},
@@ -334,17 +351,18 @@ def speak_time(span: Span, context: SpanContext) -> str:
 
 
 def speak_money(span: Span, context: SpanContext) -> str:
-    """A scale word comes between the amount and the plural currency name: "two million dollars"."""
+    """A scale word comes between the amount and the plural currency name: "two million dollars". Two decimals
+    read as the minor unit when the currency names one: "five dollars and fifty cents"."""
     request = context.request
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
-    currency = request.data["currencies"][fields["currency"]]
+    currency = currency_table(request)[fields["currency"]]
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         amount = FrozenMap({**amount, "fraction": (fraction or "").rstrip("0")})
         words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
-    elif len(fraction) == 2:
-        major = f"{_cardinal(integer, request)} {currency[plural_category(request, integer)]}"
+    elif len(fraction) == 2 and "minor" in currency:
+        major = f"{_cardinal(integer, request)} {currency_name(currency, plural_category(request, integer))}"
         minor_digits = str(int(fraction))
         minor = f"{_cardinal(minor_digits, request)} {currency['minor'][plural_category(request, minor_digits)]}"
         if int(fraction) == 0:
@@ -352,7 +370,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = minor if bounded_integer(integer) == 0 else f"{major} and {minor}"
     else:
-        words = f"{_amount(amount, request)} {currency[plural_category(request, _written(amount))]}"
+        words = f"{_amount(amount, request)} {currency_name(currency, plural_category(request, _written(amount)))}"
     return _signed(words, fields["amount"]["sign"], request)
 
 
@@ -692,14 +710,14 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
                  SHARED["date_numeric"], SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"],
                  SHARED["measure"], Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(),
-                 Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
+                 Abbreviation(), SHARED["decimal"], SHARED["cardinal"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
-        Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic,
+        Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic, Form.SYMBOL: speak_symbol,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},

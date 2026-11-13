@@ -22,6 +22,26 @@ CLDR gives `duration-hour` the feminine gender. A symbol that cannot be a plain 
 reads with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`,
 `g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "o símbolo da unidade hora
 é h e a abreviatura de minuto é min").
+
+Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of pt-PT and pt), and
+a symbol with a currency sign reads with no list: `20 CHF` reads "vinte francos suíços" and `₹50` "cinquenta rupias
+indianas". `currency_symbols` names the ISO 4217 codes that read. The `currencies` table replaces a CLDR name that
+carries the country with the dictionary word. Priberam, "dólar": "Unidade monetária (símbolo: $) principal de vários
+países, nomeadamente [...] dos Estados Unidos (código: USD)", "Plural: dólares"; "real": "Unidade monetária do
+Brasil (código: BRL), divisível em centavos", "Plural: reais"; "libra esterlina": "Unidade monetária (símbolo: £) do
+Reino Unido (código: GBP). = LIBRA"; "iene": "Unidade monetária do Japão (código: JPY)". CLDR pt writes "Euro" with a
+capital, and a currency name is a common noun with a small letter (Acordo Ortográfico de 1990, Base XIX, 1.º a:
+"Ordinariamente, em todos os vocábulos da língua nos usos correntes"), so pt-BR reads "euro". The CLDR 49 pt
+annotations name `$` "dólar" and `¥` "iene", so `$` reads as the dollar and `¥` as the yen, where CLDR pt shares the
+narrow `$` and `¥` between currencies. A `$` after the number is the escudo (see `Money`); CLDR 49 pt-PT gives the
+escudo `$` as its decimal mark. The minor units: Priberam, "cêntimo": "Moeda divisionária que corresponde à
+centésima parte do euro"; "dólar": "dividida em 100 cêntimos". The design keeps the cêntimo of the euro in pt-BR
+(design section 7.1), because no source names the centavo of the euro.
+
+A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
+`cldr-annotations-derived-full`). A name of pt-PT wins over the pt name, so `©` reads "direitos de autor" in pt-PT
+and "símbolo de copyright" in pt-BR, and `¶` reads "marca de parágrafo" in pt-PT and "pé de mosca" in pt-BR. pt-PT
+takes a name that its locale does not give from pt, so `†` reads "obelisco" in both.
 """
 from __future__ import annotations
 
@@ -30,12 +50,14 @@ from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
+from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import PHONE_PLANS, SHARED, Telephone, TimeClock, digit_run_matches, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_integer
+from text2spoken.core.symbols import speak_symbol
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, next_visible, one_digit_set
 from text2spoken.core.units import unit_reading
@@ -69,13 +91,13 @@ DATA = freeze({
     "operators": {"+": "mais", "−": "menos", "×": "vezes", "=": "igual a"},
     "months": MONTHS,
     "currencies": {
-        "EUR": {"symbols": ["€"], "one": "euro", "many": "de euros", "other": "euros",
-                "minor": {"one": "cêntimo", "other": "cêntimos"}},
-        "BRL": {"symbols": ["R$"], "one": "real", "many": "de reais", "other": "reais",
-                "minor": {"one": "centavo", "other": "centavos"}},
-        "USD": {"symbols": ["US$", "$"], "one": "dólar", "many": "de dólares", "other": "dólares",
-                "minor": {"one": "cêntimo", "other": "cêntimos"}},
+        "EUR": {"minor": {"one": "cêntimo", "other": "cêntimos"}},
+        "BRL": {"one": "real", "other": "reais", "minor": {"one": "centavo", "other": "centavos"}},
+        "USD": {"symbols": ["$"], "one": "dólar", "other": "dólares", "minor": {"one": "cêntimo", "other": "cêntimos"}},
+        "GBP": {"one": "libra", "other": "libras"},
+        "JPY": {"symbols": ["¥"], "one": "iene", "other": "ienes"},
     },
+    "currency_symbols": ["EUR", "USD", "BRL", "GBP", "JPY", "CHF"],
     "scales": {"mil": "mil", "milhão": "milhão de", "milhões": "milhões de", "bilhão": "bilhão de",
                "bilhões": "bilhões de", "bilião": "bilião de", "biliões": "biliões de"},
     "symbols_before_only": ["$"],
@@ -136,7 +158,8 @@ VARIETIES = (
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
         "colors": {"808080": "cinza"},
-        "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
+        "currencies": {"EUR": {"one": "euro", "other": "euros"},
+                       "USD": {"minor": {"one": "centavo", "other": "centavos"}}},
     })),
 )
 
@@ -382,18 +405,25 @@ def speak_time(span: Span, context: SpanContext) -> str:
     return ", ".join(parts[:-1]) + " e " + parts[-1]
 
 
+def _currency(currency: FrozenMap, category: str) -> str:
+    """The name of a currency in a plural category. A number of the category `many`, a scale word from `milhão`
+    up, takes `de` before the name, as it does before a unit: `um milhão de euros`."""
+    name = currency_name(currency, category)
+    return f"de {name}" if category == "many" and "many" not in currency else name
+
+
 def speak_money(span: Span, context: SpanContext) -> str:
-    """Two decimals are the minor unit: `dois euros e cinquenta cêntimos`. A scale word that the text writes reads
-    before the plural name: `dois milhões de reais`."""
+    """Two decimals are the minor unit, when the currency names one: `dois euros e cinquenta cêntimos`. A scale
+    word that the text writes reads before the plural name: `dois milhões de reais`."""
     request = context.request
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
-    currency = request.data["currencies"][fields["currency"]]
+    currency = currency_table(request)[fields["currency"]]
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
-    elif len(fraction) == 2:
-        major = f"{_cardinal(integer, request)} {currency[_plural(request, integer)]}"
+    elif len(fraction) == 2 and "minor" in currency:
+        major = f"{_cardinal(integer, request)} {_currency(currency, _plural(request, integer))}"
         cents = str(int(fraction))
         minor = f"{_cardinal(cents, request)} {currency['minor'][_plural(request, cents)]}"
         if int(fraction) == 0:
@@ -401,7 +431,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = minor if bounded_integer(integer) == 0 else f"{major} e {minor}"
     else:
-        words = f"{_amount(amount, request)} {currency[_plural(request, _written(amount))]}"
+        words = f"{_amount(amount, request)} {_currency(currency, _plural(request, _written(amount)))}"
     return _signed(words, fields["amount"]["sign"], request)
 
 
@@ -612,7 +642,9 @@ class Clock(TimeClock):
 class Money(CoreMoney):
     """The money of the core. A `$` after the number is the cifrão of the escudo, which Portugal wrote to the right
     of the digits (Priberam, "cifrão": "antes do euro, indicava escudos, e escrevia-se à direita do algarismo"), so
-    `100$` stays as written."""
+    `100$` stays as written. A scale word may stand between the number and a symbol after it, so `180 mil €` reads
+    "cento e oitenta mil euros" and `2 milhões €` "dois milhões de euros"."""
+    scale_before_symbol: bool = True
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         before_only = request.data["symbols_before_only"]
@@ -780,14 +812,14 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
                  PortugueseTelephone(), Money(), SHARED["percent"], SHARED["measure"], Expression(),
                  SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(), SHARED["decimal"],
-                 SHARED["cardinal"]),
+                 SHARED["cardinal"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
         Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
         Form.RANGE: speak_range,
         Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman, Form.ABBREVIATION: speak_abbreviation,
-        Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
+        Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.SYMBOL: speak_symbol,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=attach,
