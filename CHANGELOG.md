@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a33](https://github.com/TigreGotico/text2spoken/tree/0.0.2a33) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a32...0.0.2a33)
+
+**Merged pull requests:**
+
+- feat: read e-mail and web addresses \(ELECTRONIC form\) [\#67](https://github.com/TigreGotico/text2spoken/pull/67) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a32](https://github.com/TigreGotico/text2spoken/tree/0.0.2a32) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a31...0.0.2a32)
