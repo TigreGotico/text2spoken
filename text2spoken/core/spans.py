@@ -186,9 +186,9 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     any sequence does.
     """
     emoji = Form.EMOJI in request.params.forms
-    sequences = [(start, end) for start, end in sequences_in(text)
+    sequences = [(start, end) for start, end in sequences_in(text, request.memo)
                  if emoji or any(char in EMOJI_MARKS for char in text[start:end])]
-    view = emoji_view(text)
+    view = emoji_view(text, request.memo)
     request.memo[("written", view)] = text
     candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
                   for span in recognizer.find(view, tokens, request)
@@ -416,7 +416,7 @@ def _check_unread(analysis: Analysis, passthrough: list[tuple[int, int]]) -> Non
                         if Form(form) in request.params.forms)
     read_digits = Form.CARDINAL in request.params.forms
     unread: list[str] = []
-    view = emoji_view(analysis.text)
+    view = emoji_view(analysis.text, request.memo)
     blocks = analysis.blocks
     for start, end in passthrough:
         cursor = start

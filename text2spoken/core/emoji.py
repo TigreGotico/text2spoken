@@ -52,25 +52,28 @@ def _sequences() -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
     return keys, starts, text
 
 
-@lru_cache(maxsize=64)
-def _second_indicators(text: str) -> frozenset[int]:
+def _second_indicators(text: str, memo: dict) -> frozenset[int]:
     """The position of each regional indicator that pairs with the one before it. UAX #29 rules GB12 and GB13 pair
     regional indicators from the start of a run: "Do not break within emoji flag sequences. That is, do not break
     between regional indicator (RI) symbols if there is an odd number of RI characters before the break point." So
-    `🇵🇵🇹` is the pair `🇵🇵` and a lone `🇹`, and no flag of Portugal. One pass over the text finds every pair."""
-    second, run = [], 0
-    for index, char in enumerate(text):
-        run = run + 1 if char in REGIONAL_INDICATORS else 0
-        if run and run % 2 == 0:
-            second.append(index)
-    return frozenset(second)
+    `🇵🇵🇹` is the pair `🇵🇵` and a lone `🇹`, and no flag of Portugal. One pass over the text finds every pair, and
+    `memo`, the memo of the request, keeps them for the rest of the call."""
+    key = ("indicators", text)
+    if key not in memo:
+        second, run = [], 0
+        for index, char in enumerate(text):
+            run = run + 1 if char in REGIONAL_INDICATORS else 0
+            if run and run % 2 == 0:
+                second.append(index)
+        memo[key] = frozenset(second)
+    return memo[key]
 
 
-def _emoji(text: str, index: int, joined: bool) -> int | None:
+def _emoji(text: str, index: int, joined: bool, memo: dict) -> int | None:
     """The end of the emoji at text[index], or None. A character that is no space, before U+FE0F, a skin tone or a
     zero width joiner, is an emoji, even when the emoji files do not hold it. After a zero width joiner (`joined`),
     a character with text presentation is an emoji with nothing after it."""
-    if text[index:index + 1] in ("", SELECTOR) or index in _second_indicators(text):
+    if text[index:index + 1] in ("", SELECTOR) or index in _second_indicators(text, memo):
         return None
     keys, starts, text_presentation = _sequences()
     key, end, position = "", None, index
@@ -95,34 +98,38 @@ def _emoji(text: str, index: int, joined: bool) -> int | None:
     return end + 1 if text[end:end + 1] == SELECTOR else end
 
 
-def sequence_at(text: str, index: int) -> tuple[int, int] | None:
-    """The end of the first emoji and the end of the emoji sequence that start at text[index], or None."""
-    first = _emoji(text, index, False)
+def sequence_at(text: str, index: int, memo: dict) -> tuple[int, int] | None:
+    """The end of the first emoji and the end of the emoji sequence that start at text[index], or None. `memo` is the
+    memo of the request."""
+    first = _emoji(text, index, False, memo)
     if first is None:
         return None
     end = first
     while end < len(text):
         if text[end] == SELECTOR or text[end] in MODIFIERS:
             end += 1
-        elif text[end] == JOINER and (following := _emoji(text, end + 1, True)) is not None:
+        elif text[end] == JOINER and (following := _emoji(text, end + 1, True, memo)) is not None:
             end = following
         else:
             break
     return first, end
 
 
-@lru_cache(maxsize=64)
-def sequences_in(text: str) -> tuple[tuple[int, int], ...]:
-    """The start and the end of each emoji sequence of the text, in text order."""
-    found, index = [], 0
-    while index < len(text):
-        sequence = sequence_at(text, index)
-        if sequence is None:
-            index += 1
-        else:
-            found.append((index, sequence[1]))
-            index = sequence[1]
-    return tuple(found)
+def sequences_in(text: str, memo: dict) -> tuple[tuple[int, int], ...]:
+    """The start and the end of each emoji sequence of the text, in text order. `memo`, the memo of the request,
+    keeps them for the rest of the call."""
+    key = ("sequences", text)
+    if key not in memo:
+        found, index = [], 0
+        while index < len(text):
+            sequence = sequence_at(text, index, memo)
+            if sequence is None:
+                index += 1
+            else:
+                found.append((index, sequence[1]))
+                index = sequence[1]
+        memo[key] = tuple(found)
+    return memo[key]
 
 
 def touches_word(text: str, start: int, end: int) -> bool:
@@ -133,29 +140,48 @@ def touches_word(text: str, start: int, end: int) -> bool:
             and any(char in EMOJI_MARKS for char in text[start:end]))
 
 
-@lru_cache(maxsize=64)
-def emoji_view(text: str) -> str:
+def touched_words(text: str, memo: dict) -> tuple[tuple[int, int, int], ...]:
+    """The start of the touched word, the start and the end of each emoji sequence that touches a word
+    (`touches_word`), in text order. Design section 4.7: such a sequence "stays as written, together with the word it
+    touches". The word is the run of letters, digits and marks right before the sequence, back to the sequence before
+    it. A space, a symbol or a punctuation mark ends it, so the `2` of `2,cats1️⃣` and the date of
+    `12/03/2024.Next1️⃣` stay out of it and read. `memo`, the memo of the request, keeps the result for the rest of
+    the call."""
+    key = ("touched", text)
+    if key not in memo:
+        found, previous = [], 0
+        for start, end in sequences_in(text, memo):
+            if touches_word(text, start, end):
+                word = start
+                while word > previous and is_word_char(text[word - 1]):
+                    word -= 1
+                found.append((word, start, end))
+            previous = end
+        memo[key] = tuple(found)
+    return memo[key]
+
+
+def emoji_view(text: str, memo: dict) -> str:
     """The text as every form other than `EMOJI` and `ELECTRONIC` reads it. A character of an emoji sequence that
     U+FE0E, U+FE0F or U+20E3 follows belongs to the sequence (design section 4.7). When it is no symbol, as the digit
     of `1️⃣` and the `#` of `#️⃣` are, it is U+FFFC here, a symbol that no form reads, so no number takes it. A symbol
     stays, because `SYMBOL` already leaves a symbol that such a mark follows. The view has the length of the text, so
     a span of the view is the same span of the text.
 
-    A sequence that touches a word (`touches_word`) stays as written with the word it touches, so every character of
-    that word is U+FFFC too. The word runs back to a space, a symbol, the start of the text or the end of the sequence
-    before it: `Code 12️⃣` keeps `12️⃣`, `x.org1️⃣` stays as written whole, and `©` of `©A1️⃣` still reads."""
-    chars, previous = list(text), 0
-    for start, end in sequences_in(text):
-        if touches_word(text, start, end):
-            word = start
-            while word > previous and not (text[word - 1].isspace() or unicodedata.category(text[word - 1])[0] == "S"):
-                word -= 1
+    A sequence that touches a word stays as written together with the word it touches (`touched_words`), so every
+    character of that word is U+FFFC too: `Code 12️⃣` keeps `12️⃣`, and `I have 2,cats1️⃣` still reads the `2`. `memo`,
+    the memo of the request, keeps the view for the rest of the call."""
+    key = ("view", text)
+    if key not in memo:
+        chars = list(text)
+        for word, start, _ in touched_words(text, memo):
             chars[word:start + 1] = STAND_IN * (start + 1 - word)
-        previous = end
-        for index in range(start, end - 1):
-            if text[index + 1] in EMOJI_MARKS and not unicodedata.category(text[index]).startswith(("S", "M")):
-                chars[index] = STAND_IN
-    return "".join(chars)
+        for start, end in sequences_in(text, memo):
+            for index in range(start, end - 1):
+                if text[index + 1] in EMOJI_MARKS and not unicodedata.category(text[index]).startswith(("S", "M")):
+                    chars[index] = STAND_IN
+        memo[key] = "".join(chars)
+    return memo[key]
 
 
 def written_text(text: str, request: Request) -> str:
@@ -187,7 +213,7 @@ def name_reading(name: str, tag: str, params: NormalizationParams) -> str | None
 def emoji_name(text: str, start: int, request: Request) -> tuple[int, str | None] | None:
     """The end of the emoji sequence at text[start] and the CLDR name that it reads by, None when no name holds it,
     or None when no sequence starts there."""
-    found = sequence_at(text, start)
+    found = sequence_at(text, start, request.memo)
     if found is None:
         return None
     first, end = found

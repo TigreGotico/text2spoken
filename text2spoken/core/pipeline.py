@@ -22,7 +22,7 @@ def analyze(text: str, lang: str, params: NormalizationParams | None = None,
     request = resolve(lang, params or NormalizationParams())
     raw = (tokenizer or default_tokenizer)(text, request.tag)
     joined = join_split_words(check_tokens(raw, text), text, declared_marks(request.data))
-    tokens = cut_tokens(joined, emoji_view(text))
+    tokens = cut_tokens(joined, emoji_view(text, request.memo))
     blocks = protect_blocks(text)
     return Analysis(text=text, blocks=blocks, tokens=tokens, spans=classify(text, tokens, blocks, request),
                     request=request)

@@ -18,7 +18,7 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
-from text2spoken.core.emoji import sequences_in, touches_word, written_text
+from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
@@ -175,15 +175,19 @@ class Lexicon:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """The caller's keys match the text as written, so a key such as `#️⃣` matches. An emoji sequence that holds
         U+FE0E, U+FE0F or U+20E3 is one character, as `😀` is. A match neither starts nor ends inside it, so a key `1`
-        leaves the `1` of `1️⃣`. Next to a key, the sequence is no word character, unless it touches a word
-        (`touches_word`), so a key `x` matches in `1️⃣x` as in `😀x`, and a key `A` does not match in `A1️⃣`."""
+        leaves the `1` of `1️⃣`. Next to a key, the sequence is no word character, so a key `x` matches in `1️⃣x` as
+        in `😀x`. A sequence that touches a word stays as written with that word (`touched_words`), so there it is a
+        word character, and no match starts or ends inside the word or the sequence: a key `A` does not match in
+        `A1️⃣`, the keys `org` and `x.org` do not match in `x.org1️⃣`, and a key `cats` does not match in `2,cats1️⃣`.
+        A key `2` matches there, and the view keeps that `2` too."""
         entries = lexicon_entries(request.tag, request.params.lexicon)
         by_first = _keys_by_first_character(entries)
         text = written_text(text, request)
-        sequences = [(start, end) for start, end in sequences_in(text)
+        sequences = [(start, end) for start, end in sequences_in(text, request.memo)
                      if any(char in EMOJI_MARKS for char in text[start:end])]
+        touched = {start for _, start, _ in touched_words(text, request.memo)}
         inside = {index for start, end in sequences for index in range(start + 1, end)}
-        apart = {start for start, end in sequences if not touches_word(text, start, end)}
+        apart = {start for start, _ in sequences} - touched
 
         def limit(index: int) -> bool:
             return index in apart or _lexicon_limit(text, index)

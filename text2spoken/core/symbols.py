@@ -119,7 +119,7 @@ def _emoji_readings(text: str, request: Request) -> Iterator[tuple[int, int, str
     order."""
     index = 0
     while index < len(text):
-        found = sequence_at(text, index)
+        found = sequence_at(text, index, request.memo)
         if found is None:
             index += 1
             continue

@@ -169,13 +169,13 @@ def _label(run: str, data) -> list[str]:
     return [data["letter_names"][c] for c in run.lower()]
 
 
-def _pieces(written: str) -> Iterator[str]:
+def _pieces(written: str, memo: dict) -> Iterator[str]:
     """The labels, the emoji sequences and the single characters of a claim, in order. A label is a run of letters
     and marks. An emoji sequence stays whole. A letter or a digit before a skin tone or a zero width joiner is no
     sequence here, as outside the claim, where `5🏽` reads the number."""
     label, index = None, 0
     while index < len(written):
-        char, found = written[index], sequence_at(written, index)
+        char, found = written[index], sequence_at(written, index, memo)
         if found is not None and is_word_char(char) and written[index + 1] not in EMOJI_MARKS:
             found = None
         if found is None and (is_letter(char) or is_mark(char)):
@@ -208,7 +208,7 @@ def _words(written: str, request: Request) -> list[str]:
     data = request.data
     named = Form.SYMBOL in request.params.forms
     words: list[str] = []
-    for piece in _pieces(written):
+    for piece in _pieces(written, request.memo):
         emoji = _emoji_words(piece, request)
         if emoji is not None:
             words.append(emoji)

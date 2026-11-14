@@ -2,9 +2,11 @@
 
 Each expected value is read off the clause, the raw CLDR 49 JSON and the Unicode 17.0 emoji files, not off a run of the
 code."""
+import gc
 import json
 import random
-import unicodedata
+import re
+import tracemalloc
 from dataclasses import replace
 from importlib.resources import files
 
@@ -97,7 +99,7 @@ def test_a_name_reads_in_three_steps(name, tag, reading):
     ("1⃣", 2), ("a🏽", 2), ("⋂🏿", 2), (" 🏽", None), ("🇵🇹🇧🇷", 2), ("🇵🇵🇹", None),
 ])
 def test_an_emoji_sequence_ends_after_its_skin_tones_selectors_and_joined_emoji(text, end):
-    found = sequence_at(text, 0)
+    found = sequence_at(text, 0, {})
     assert (found and found[1]) == end
 
 
@@ -107,12 +109,12 @@ def test_an_emoji_sequence_ends_after_its_skin_tones_selectors_and_joined_emoji(
 def test_regional_indicators_pair_from_the_start_of_a_run(text, found):
     """UAX #29 GB12 and GB13: "do not break between regional indicator (RI) symbols if there is an odd number of RI
     characters before the break point". So `🇵🇵🇹` is the pair `🇵🇵`, which names no flag, and a lone `🇹`."""
-    assert list(sequences_in(text)) == found
+    assert list(sequences_in(text, {})) == found
 
 
 def test_the_view_hides_each_character_of_a_sequence_that_an_emoji_mark_follows_and_is_no_symbol():
     text = "a 1️⃣ #️⃣ ❤️ 5🏽 ©️‍1️⃣ ❤︎"
-    view = emoji_view(text)
+    view = emoji_view(text, {})
     assert len(view) == len(text)
     hidden = [index for index, char in enumerate(view) if char != text[index]]
     assert [text[index] for index in hidden] == ["1", "#", "1"] and hidden[2] == text.index("‍") + 1
@@ -221,7 +223,8 @@ def test_an_emoji_sequence_joins_two_spans_as_one_character(sequence):
 @pytest.mark.parametrize("params", [None, EMOJI_ON], ids=["off", "on"])
 @pytest.mark.parametrize(("tag", "text"), [("en-GB", "See x.org1️⃣ now."), ("en-GB", "Code 12️⃣ here."),
                                            ("en-GB", "x 12️⃣ y"), ("en-US", "Pay $51️⃣ now."),
-                                           ("pt-PT", "Código 12️⃣ aqui.")])
+                                           ("pt-PT", "Código 12️⃣ aqui."), ("en-GB", "O'Neil1️⃣ won"),
+                                           ("en-GB", "well-known1️⃣ fact"), ("en-GB", "x.y12️⃣")])
 def test_an_emoji_that_a_word_joins_on_the_left_stays_as_written(tag, text, params):
     """Design section 4.7: "An emoji sequence that starts with a letter or a digit and touches a letter or a digit on
     its left stays as written (`12️⃣`)." The word that it touches stays as written too, with the form on or off, and
@@ -245,10 +248,20 @@ def test_a_digit_before_a_skin_tone_reads_next_to_a_digit(params):
     assert normalize("Room 15🏽 now", "en-GB", params) == "Room fifteen🏽 now"
 
 
-def test_the_view_hides_the_word_that_a_sequence_touches():
-    text = "a 😀x.org1️⃣ b"
-    view = emoji_view(text)
-    assert view == "a 😀" + STAND_IN * 6 + "️⃣ b"
+@pytest.mark.parametrize(("text", "word"), [
+    ("a 😀x.org1️⃣ b", "org1"), ("I have 2,cats1️⃣", "cats1"), ("on 12/03/2024.Next1️⃣", "Next1"),
+    ("5km.Next1️⃣", "Next1"), ('He said "50%"great1️⃣', "great1"), ("Call me:07700 900123,ok1️⃣", "ok1"),
+    ("Liga 912345678/ok1️⃣", "ok1"), ("From 9am-5pm,team2️⃣", "team2"), ("O'Neil1️⃣ won", "Neil1"),
+    ("O’Neil1️⃣ won", "Neil1"), ("well-known1️⃣ fact", "known1"), ("x.y12️⃣", "y12"), ("Score 3-12️⃣", "12"),
+    ("Total:100.Item12️⃣", "Item12"), ("1st.Place1️⃣", "Place1"), ("a; b1️⃣", "b1"), ("(x)y1️⃣", "y1"),
+    ("a 👨\u200dℹy2️⃣", "y2")])
+def test_the_view_hides_the_word_that_a_sequence_touches(text, word):
+    """Design section 4.7: the sequence "stays as written, together with the word it touches". The word is the run of
+    letters, digits and combining marks right before the sequence. A punctuation mark, a space, a symbol and the
+    sequence before it end the word. `👨`, U+200D and `ℹ` make a sequence that ends in a letter, and that letter stays
+    out of the word when `y2️⃣` follows."""
+    start = text.index(word)
+    assert emoji_view(text, {}) == text[:start] + STAND_IN * len(word) + text[start + len(word):]
 
 
 MARKED = ["❤️", "☑️", "✈️", "1️⃣", "#️⃣", "1⃣", "©️", "🏳️‍🌈", "5️"]
@@ -266,11 +279,8 @@ CONTEXTS = {
 
 
 def touched_word(before: str) -> str:
-    """The word at the end of `before`, back to a space or a symbol, by the clause."""
-    start = len(before)
-    while start and not (before[start - 1].isspace() or unicodedata.category(before[start - 1])[0] == "S"):
-        start -= 1
-    return before[start:]
+    """The word at the end of `before`, by the clause: its run of letters and digits."""
+    return re.search(r"[^\W_]*$", before).group()
 
 
 @pytest.mark.parametrize("tag", TAGS)
@@ -343,6 +353,38 @@ def test_a_caller_lexicon_key_meets_an_emoji_sequence_as_it_meets_a_plain_emoji(
     params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"#️⃣": "hash key", "A": "ay"})}))
     assert normalize("#️⃣1️⃣ x", "en-GB", params) == normalize("#️⃣😀 x", "en-GB", params).replace("😀", "1️⃣")
     assert normalize("A1️⃣ x", "en-GB", params) == "A1️⃣ x"
+
+
+@pytest.mark.parametrize(("key", "text", "expected"), [
+    ("2", "I have 2,cats1️⃣", "I have two-key,cats1️⃣"), ("cats", "I have 2,cats1️⃣", "I have two,cats1️⃣"),
+    ("org", "See x.org1️⃣ now.", "See x.org1️⃣ now."), ("x.org", "See x.org1️⃣ now.", "See x.org1️⃣ now."),
+    ("x", "See x.org1️⃣ now.", "See word.org1️⃣ now."),
+    ("Next", "on 12/03/2024.Next1️⃣", "on the twelfth of March twenty twenty-four.Next1️⃣"),
+    ("known", "well-known1️⃣ fact", "well-known1️⃣ fact")])
+def test_a_caller_lexicon_key_and_the_view_agree_on_the_touched_word(key, text, expected):
+    """A key matches outside the word that a sequence touches and does not match inside it or across its edge, as the
+    other forms read the view. The word of `2,cats1️⃣` is `cats`, so a key `2` matches, and the word of `x.org1️⃣` is
+    `org`, so a key `x` matches, and the keys `org` and `x.org` do not."""
+    params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({key: "two-key" if key == "2" else "word"})}))
+    assert normalize(text, "en-GB", params) == expected
+
+
+@pytest.mark.parametrize("params", [None, EMOJI_ON], ids=["off", "on"])
+def test_a_call_keeps_nothing_of_a_long_text_after_it_returns(params):
+    """The pairs of regional indicators, the emoji sequences and the view of a text live in the memo of the request,
+    which lives for one call. So after a call on a long run of flags, no set of indicators or other result of the
+    text stays in memory."""
+    label = "on" if params else "off"
+    normalize(f"{label} 🇵🇹 x", "en-GB", params)
+    tracemalloc.start()
+    try:
+        before = tracemalloc.get_traced_memory()[0]
+        normalize(f"{label} " + "🇵🇹" * 5000, "en-GB", params)
+        gc.collect()
+        kept = tracemalloc.get_traced_memory()[0] - before
+    finally:
+        tracemalloc.stop()
+    assert kept < 10_000
 
 
 def test_a_run_of_regional_indicators_takes_linear_work(monkeypatch):
