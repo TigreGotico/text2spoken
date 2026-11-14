@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a39](https://github.com/TigreGotico/text2spoken/tree/0.0.2a39) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a38...0.0.2a39)
+
+**Merged pull requests:**
+
+- fix\(en\): spell the letter name of C as "see" [\#82](https://github.com/TigreGotico/text2spoken/pull/82) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a38](https://github.com/TigreGotico/text2spoken/tree/0.0.2a38) (2026-11-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a37...0.0.2a38)
