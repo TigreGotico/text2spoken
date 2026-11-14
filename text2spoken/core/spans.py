@@ -10,7 +10,7 @@ from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
-from text2spoken.core.tokens import EMOJI_MARKS, Token, context_word, is_digit, is_punctuation
+from text2spoken.core.tokens import EMOJI_MARKS, Token, context_word, is_digit, is_letter, is_mark, is_punctuation
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
                                 UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
@@ -177,8 +177,10 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     claim order, as they would be on a second pass over the output. A `keep` span claims its characters and
     stays out of the result, so its text stays as written. An `ELECTRONIC` span claims a token whole (section 4.5),
     so it does not wait on a joined digit. A `LEXICON` span claims before every recognizer (section 4.2), so it
-    waits only on a side where the key ends in a digit: with a key `cats`, `2,cats` reads "two,kats", and with a
-    key `GPT-4`, `GPT-4/5` stays as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
+    does not wait on a side where the key ends in a letter, or in a letter and its combining marks. On any other
+    side it waits like any span, because a number recognizer refuses digits that one character joins to a digit,
+    a symbol or an emoji. So with a key `cats`, `2,cats` reads "two,kats", and with a key `GPT-4`, `©` or `#️⃣`,
+    `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
 
     An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
@@ -210,7 +212,10 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
             continue
         sides = _sides(span, before, after)
         if span.form is Form.LEXICON:
-            sides = tuple(side for side, edge in zip(sides, (span.start, span.end - 1)) if is_digit(view[edge]))
+            last = span.end - 1
+            while last > span.start and is_mark(view[last]):
+                last -= 1
+            sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
         if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
             if span.form not in (Form.SYMBOL, Form.EMOJI):
                 for position in range(span.start, span.end):

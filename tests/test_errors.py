@@ -33,14 +33,33 @@ def test_a_lexicon_claim_does_not_wait_on_a_digit_that_one_character_joins_to_a_
     assert normalize(expected, "en", params) == expected
 
 
-@pytest.mark.parametrize("text,entries", [("GPT-4/5", {"GPT-4": "G P T four"}),
-                                          ("Windows 10/11", {"Windows 10": "windows ten"}),
-                                          ("It cost $1,911.", {"911": "nine one one"}),
-                                          ("Call 911/112.", {"911": "nine one one"})])
-def test_a_lexicon_key_that_ends_in_a_digit_waits_on_the_digits_that_one_character_joins_to_it(text, entries):
-    """No recognizer reads the digits that a key ends in, so the key waits on the joined run as any span does,
-    and the text stays as written on both passes."""
-    assert normalize(text, "en", lexicon(en=entries)) == text
+@pytest.mark.parametrize("text,lang,entries,expected", [
+    ("GPT-4/5", "en", {"GPT-4": "G P T four"}, "GPT-4/5"),
+    ("Windows 10/11", "en", {"Windows 10": "windows ten"}, "Windows 10/11"),
+    ("It cost $1,911.", "en", {"911": "nine one one"}, "It cost $1,911."),
+    ("Call 911/112.", "en", {"911": "nine one one"}, "Call 911/112."),
+    ("Press #️⃣,2 or 3.", "en", {"#️⃣": "hash key"}, "Press #️⃣,2 or three."),
+    ("Prima 1️⃣/2.", "pt-PT", {"1️⃣": "opção um"}, "Prima 1️⃣/2."),
+    ("©,2", "en", {"©": "copyright"}, "©,2"),
+    ("😀,2", "en", {"😀": "smile"}, "😀,2")])
+@pytest.mark.parametrize("emoji", [False, True])
+def test_a_lexicon_key_that_does_not_end_in_a_letter_waits_on_the_digits_that_one_character_joins_to_it(
+        text, lang, entries, expected, emoji):
+    """No number recognizer reads digits that one character joins to a digit, a symbol or an emoji, so a key that
+    ends in one waits on the joined run as any span does. The run and the key stay as written on both passes."""
+    params = lexicon(**{lang.split("-")[0]: entries})
+    params = params.plus(Form.EMOJI) if emoji else params
+    assert normalize(text, lang, params) == expected
+    assert normalize(expected, lang, params) == expected
+
+
+@pytest.mark.parametrize("key", ["café", "cafe\u0301"])
+def test_a_lexicon_key_that_ends_in_a_letter_and_a_combining_mark_reads_the_joined_number(key):
+    """A combining mark belongs to the letter before it, so a key that ends in `e` and U+0301 reads as the same key
+    with `é` does."""
+    params = lexicon(fr={key: "kafé"})
+    assert normalize(f"2,{key}", "fr", params) == "deux,kafé"
+    assert normalize("deux,kafé", "fr", params) == "deux,kafé"
 
 
 def test_a_lexicon_key_before_a_glued_phone_run_counts_by_its_spoken_words():
