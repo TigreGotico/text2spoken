@@ -93,9 +93,9 @@ runs that read: "Acaso tinha alguma lógica escrever-se com pontos acrónimos e 
 FAOJ, FENPROF, FIFA, ONU, PALOP, TAP, UEFA, UNESCO ou VARIG?" The final consonant reads only in a run that holds a
 consonant before a vowel (p. 13: "Para serem lidos, os acrónimos necessitam de compreender, pelo menos, um grupo
 CV"), so IRS still reads letter by letter. It also reads only in a run with no h outside ch, lh and nh (p. 13: "a
-presença da consoante «H», em qualquer posição"), so HIV reads letter by letter. A run made only of the Roman
-numeral letters takes no free consonant (design section 4.6), so `XIV`, where `ROMAN` does not read it, reads letter
-by letter.
+presença da consoante «H», em qualquer posição"), so HIV reads letter by letter. A run that is a well-formed Roman
+numeral, which `ROMAN` declines in its context, takes no free consonant (design section 4.6). So `XIV` reads letter
+by letter where `ROMAN` does not read it, and `CIC`, which is no Roman numeral, reads as a word.
 
 `letter_runs` holds three runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
