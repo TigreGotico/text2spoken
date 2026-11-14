@@ -294,12 +294,13 @@ def _check_lexicon(request: Request) -> None:
 
 @lru_cache(maxsize=128)
 def _check_lexicon_once(tag: str, variety: Variety, language: LanguageSpec, params: NormalizationParams) -> None:
+    from text2spoken.core.emoji import emoji_view
     from text2spoken.core.spans import classify
-    from text2spoken.core.tokens import default_tokenizer
+    from text2spoken.core.tokens import cut_tokens, default_tokenizer
 
     request = Request(tag, variety, language, params)
     for written, spoken in lexicon_entries(request.tag, request.params.lexicon).items():
-        tokens = default_tokenizer(spoken, request.tag)
+        tokens = cut_tokens(default_tokenizer(spoken, request.tag), emoji_view(spoken))
         for claimed in classify(spoken, tokens, (), request):
             if not (claimed.form is Form.LEXICON and claimed.fields["spoken"] == spoken[claimed.start:claimed.end]):
                 raise InvalidLexiconError(

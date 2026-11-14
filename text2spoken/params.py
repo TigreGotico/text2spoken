@@ -88,11 +88,12 @@ class Form(StrEnum):
     COLOR = "color"
     ELECTRONIC = "electronic"
     SYMBOL = "symbol"
+    EMOJI = "emoji"
 
 
-DEFAULT_FORMS = frozenset(Form) - {Form.LETTERS}
-"""The forms that `NormalizationParams()` reads: every form except `LETTERS`, which a caller turns on with
-`NormalizationParams().plus(Form.LETTERS)`."""
+DEFAULT_FORMS = frozenset(Form) - {Form.LETTERS, Form.EMOJI}
+"""The forms that `NormalizationParams()` reads: every form except `LETTERS` and `EMOJI`, which a caller turns on with
+`NormalizationParams().plus(Form.LETTERS)` and `NormalizationParams().plus(Form.EMOJI)`."""
 
 
 class GrammaticalGender(StrEnum):

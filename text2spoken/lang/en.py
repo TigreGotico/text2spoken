@@ -76,7 +76,7 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge,
                                           numbers_in, speak_cardinal, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
-from text2spoken.core.symbols import speak_symbol
+from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
 from text2spoken.core.units import unit_reading, unit_table
@@ -746,7 +746,8 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
                  SHARED["date_numeric"], SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"],
                  SHARED["measure"], Year(), Expression(), SHARED["fraction"], SHARED["range"], Ordinal(),
-                 Abbreviation(), SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["symbol"]),
+                 Abbreviation(), SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"],
+                 SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
@@ -754,7 +755,7 @@ LANGUAGE = LanguageSpec(
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
         Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic, Form.LETTERS: speak_letters,
-        Form.SYMBOL: speak_symbol,
+        Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},

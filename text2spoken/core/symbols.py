@@ -1,4 +1,5 @@
-"""The `SYMBOL` form: a character that no other form claims, read by its CLDR name (design section 4.7).
+"""The `SYMBOL` form, a character that no other form claims read by its CLDR name, and the `EMOJI` form, an emoji
+sequence read by its CLDR name (design section 4.7).
 
 `scripts/extract_cldr.py` writes `text2spoken/data/cldr/<tag>.symbols.json`: the `tts` name of each character
 outside ASCII whose Unicode general category is `Sm`, `Sc`, `Sk` or `So`, or that is one of `§ ¶ † ‡ •`, and
@@ -17,15 +18,18 @@ it: `Ligue → 1.234,56` reads the number, on the first pass and on the second. 
 number, so `Call ☎ 2125550123.` reads digit by digit.
 
 An emoji presentation selector (U+FE0F), a skin tone modifier or a zero width joiner next to a character makes it
-part of an emoji sequence, which the `EMOJI` form reads, so `©` followed by U+FE0F stays.
+part of an emoji sequence, which the `EMOJI` form reads, so `©` followed by U+FE0F stays. The `EMOJI` form is off by
+default. With it on, each emoji sequence reads by its name (`text2spoken.core.emoji`), so `😂😂` reads "face with tears
+of joy face with tears of joy", and `❤` followed by U+FE0F reads "red heart".
 
-A name is one word or more of the sentence, so it takes one space on each side where it touches a character that is
-no space. It takes none after an opening bracket or quote, and none before a closing bracket or quote or another
-mark of the Unicode general category `Po`, such as a full stop or a comma. A straight quote at the start of a token
-opens, so `He said "© 2024"` reads `He said "copyright two thousand and twenty-four"`. A mark that the `leads` table
-of the language reads as words before a number takes the space, so `™#1` reads "trade mark number one". So `©2024`
-reads "copyright two thousand and twenty-four", `©®` reads "copyright registered", `§§ 5` reads "section section
-five", `∈$2` reads "element of two dollars", `©-5` reads "copyright minus five", and `(©).` reads "(copyright)."
+A name of either form is one word or more of the sentence, so it takes one space on each side where it touches a
+character that is no space. It takes none after an opening bracket or quote, and none before a closing bracket or quote
+or another mark of the Unicode general category `Po`, such as a full stop or a comma. A straight quote at the start of a
+token opens, so `He said "© 2024"` reads `He said "copyright two thousand and twenty-four"`. A mark that the `leads`
+table of the language reads as words before a number takes the space, so `™#1` reads "trade mark number one". So `©2024`
+reads "copyright two thousand and twenty-four", `©®` reads "copyright registered", `§§ 5` reads "section section five",
+`∈$2` reads "element of two dollars", `©-5` reads "copyright minus five", and `(©).` reads "(copyright)." With `EMOJI`
+on, `(😂).` reads "(face with tears of joy)."
 
 A language file may give its own name for a character in `symbol_names`, with a quoted source. That name replaces the
 CLDR name for that character only.
@@ -38,15 +42,13 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 from text2spoken.core.currencies import cldr_part, currency_signs, words_only
+from text2spoken.core.emoji import JOINER, MODIFIERS, SELECTOR, emoji_name, name_reading, sequence_at, written_text
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
 from text2spoken.core.tokens import Token, is_digit
 from text2spoken.core.units import unit_table
 from text2spoken.params import FrozenMap, Form
 
-_PRESENTATION = "\ufe0f"
-_JOINER = "\u200d"
-_MODIFIERS = frozenset(map(chr, range(0x1F3FB, 0x1F400)))
 _OPENING = ("Ps", "Pi")
 _CLOSING = ("Pe", "Pf", "Po")
 _QUOTES = "\"'"
@@ -80,7 +82,7 @@ def symbol_name(char: str, request: Request) -> str | None:
 
 def _in_emoji(text: str, index: int) -> bool:
     after = text[index + 1:index + 2]
-    return after in (_PRESENTATION, _JOINER) or after in _MODIFIERS or text[index - 1:index] == _JOINER
+    return after in (SELECTOR, JOINER) or after in MODIFIERS or text[index - 1:index] == JOINER
 
 
 def reads_symbol(text: str, index: int, request: Request) -> bool:
@@ -90,31 +92,104 @@ def reads_symbol(text: str, index: int, request: Request) -> bool:
             and not _in_emoji(text, index) and not _owned(char, request))
 
 
+def _emoji_reading(text: str, start: int, request: Request) -> tuple[int, str, str | None] | None:
+    """The end, the CLDR name and the reading of the emoji sequence at text[start], or None when no sequence with a
+    name starts there. The reading is None when the name does not read."""
+    found = emoji_name(text, start, request)
+    if found is None or found[1] is None:
+        return None
+    end, name = found
+    return end, name, name_reading(name, request.tag, request.params)
+
+
+def reads_emoji(text: str, index: int, request: Request) -> bool:
+    """Whether the `EMOJI` form reads an emoji sequence that starts at text[index]."""
+    if Form.EMOJI not in request.params.forms:
+        return False
+    found = _emoji_reading(written_text(text, request), index, request)
+    return found is not None and found[2] is not None
+
+
+def _emoji_readings(text: str, request: Request) -> Iterator[tuple[int, int, str, str]]:
+    """The start, the end, the CLDR name and the reading of each emoji sequence that the `EMOJI` form reads, in text
+    order."""
+    index = 0
+    while index < len(text):
+        found = sequence_at(text, index)
+        if found is None:
+            index += 1
+            continue
+        reading = _emoji_reading(text, index, request)
+        if reading is not None and reading[2] is not None:
+            yield index, *reading
+        index = found[1]
+
+
+def named_pieces(text: str, request: Request) -> list[tuple[int, int, str]]:
+    """The start, the end and the name of each piece of the text that `SYMBOL` or `EMOJI` reads, in text order. The
+    text may be the view of `classify`, so the `EMOJI` pieces come from the text as written."""
+    symbols = [(index, index + 1, symbol_name(char, request)) for index, char in enumerate(text)
+               if reads_symbol(text, index, request)]
+    if Form.EMOJI not in request.params.forms:
+        return symbols
+    return sorted(symbols + [(start, end, reading)
+                             for start, end, _, reading in _emoji_readings(written_text(text, request), request)])
+
+
+def _spacing(text: str, start: int, end: int, leads: Sequence[str], request: Request) -> tuple[str, str]:
+    """The lead and the trail of a name that reads text[start:end]."""
+    before = text[start - 1] if start else " "
+    after = text[end] if end < len(text) else " "
+    opens = unicodedata.category(before) in _OPENING or (
+        before in _QUOTES and (start < 2 or text[start - 2].isspace()))
+    lead = "" if before.isspace() or opens else " "
+    number = any(text.startswith(word, end) and end + len(word) < len(text) and is_digit(text[end + len(word)])
+                 for word in leads)
+    closes = after.isspace() or (unicodedata.category(after) in _CLOSING and not number)
+    trail = "" if closes or reads_symbol(text, end, request) or reads_emoji(text, end, request) else " "
+    return lead, trail
+
+
+def _leads(request: Request) -> list[str]:
+    return [lead for lead, words in request.data.get("leads", FrozenMap()).items() if words]
+
+
 @dataclass(frozen=True)
 class Symbol:
     name: str = "symbol"
     form: Form = Form.SYMBOL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        leads = [lead for lead, words in request.data.get("leads", FrozenMap()).items() if words]
+        leads = _leads(request)
         for index, char in enumerate(text):
-            if not reads_symbol(text, index, request):
-                continue
-            before = text[index - 1] if index else " "
-            after = text[index + 1] if index + 1 < len(text) else " "
-            opens = unicodedata.category(before) in _OPENING or (
-                before in _QUOTES and (index < 2 or text[index - 2].isspace()))
-            lead = "" if before.isspace() or opens else " "
-            number = any(text.startswith(word, index + 1) and index + 1 + len(word) < len(text)
-                         and is_digit(text[index + 1 + len(word)]) for word in leads)
-            closes = after.isspace() or (unicodedata.category(after) in _CLOSING and not number)
-            trail = "" if closes or reads_symbol(text, index + 1, request) else " "
-            yield Span(index, index + 1, Form.SYMBOL, FrozenMap({"symbol": char}), lead=lead, trail=trail,
-                       recognizer=self.name)
+            if reads_symbol(text, index, request):
+                lead, trail = _spacing(text, index, index + 1, leads, request)
+                yield Span(index, index + 1, Form.SYMBOL, FrozenMap({"symbol": char}), lead=lead, trail=trail,
+                           recognizer=self.name)
 
 
 def speak_symbol(span: Span, context: SpanContext) -> str:
     return symbol_name(span.fields["symbol"], context.request)
 
 
+@dataclass(frozen=True)
+class Emoji:
+    name: str = "emoji"
+    form: Form = Form.EMOJI
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        written = written_text(text, request)
+        leads = _leads(request)
+        for start, end, name, _ in _emoji_readings(written, request):
+            lead, trail = _spacing(written, start, end, leads, request)
+            yield Span(start, end, Form.EMOJI, FrozenMap({"sequence": written[start:end], "name": name}), lead=lead,
+                       trail=trail, recognizer=self.name)
+
+
+def speak_emoji(span: Span, context: SpanContext) -> str:
+    request = context.request
+    return name_reading(span.fields["name"], request.tag, request.params)
+
+
 SYMBOL = Symbol()
+EMOJI = Emoji()

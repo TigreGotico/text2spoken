@@ -142,7 +142,9 @@ for the verbalizers of the file, so the core reads the unit names only."""
 SYMBOL_KEYS = frozenset({"symbols", "units", "unit_symbols", "operators", "currencies", "currency_symbols",
                          "symbol_names", "leads"})
 """The keys that the `SYMBOL` form reads: the tables that give a character to another form, which the form then does
-not read, the names of the language file for a character, and the leads, before which a name takes a space."""
+not read, the names of the language file for a character, and the leads, before which a name takes a space. The
+`EMOJI` form reads the same keys, because it shares the spacing of `SYMBOL`, and a name of either form touches the
+other."""
 
 READERS: dict[str, frozenset[str]] = {
     "lexicon": frozenset(),
@@ -165,6 +167,7 @@ READERS: dict[str, frozenset[str]] = {
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
     "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_runs"}),
     "symbol": SYMBOL_KEYS,
+    "emoji": SYMBOL_KEYS,
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
     "speak_electronic": frozenset({"electronic_symbols", "letter_names", "electronic_vowels", "electronic_labels",

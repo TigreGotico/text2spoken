@@ -96,7 +96,7 @@ from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import PHONE_PLANS, SHARED, Telephone, TimeClock, digit_run_matches, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_integer
-from text2spoken.core.symbols import speak_symbol
+from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, next_visible, one_digit_set
 from text2spoken.core.units import unit_reading
@@ -868,7 +868,7 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
                  PortugueseTelephone(), Money(), SHARED["percent"], SHARED["measure"], Expression(),
                  SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(), SHARED["letters"],
-                 SHARED["decimal"], SHARED["cardinal"], SHARED["symbol"]),
+                 SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
@@ -876,7 +876,7 @@ LANGUAGE = LanguageSpec(
         Form.RANGE: speak_range,
         Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman, Form.ABBREVIATION: speak_abbreviation,
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
-        Form.SYMBOL: speak_symbol,
+        Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=attach,

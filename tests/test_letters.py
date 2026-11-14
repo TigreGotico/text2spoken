@@ -38,7 +38,8 @@ def _without_letters(spec):
 
 
 def test_the_form_is_off_by_default():
-    assert Form.LETTERS not in NormalizationParams().forms and DEFAULT_FORMS == frozenset(Form) - {Form.LETTERS}
+    assert Form.LETTERS not in NormalizationParams().forms
+    assert DEFAULT_FORMS == frozenset(Form) - {Form.LETTERS, Form.EMOJI}
     assert normalize("A NATO e a RTP.", "pt-PT") == "A NATO e a RTP."
     assert normalize("Call the BBC at 9 AM.", "en-US") == "Call the BBC at nine AM."
 

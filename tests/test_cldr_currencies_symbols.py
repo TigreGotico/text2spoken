@@ -59,7 +59,7 @@ def test_each_currency_file_records_the_pinned_release_and_its_inputs(tag):
 @pytest.mark.parametrize("tag", TAGS)
 def test_each_symbol_file_records_the_release_the_unicode_version_and_its_inputs(tag):
     source = data(tag, "symbols")["source"]
-    assert source["release"] == "49.0.0" and source["unicode"] == "16.0.0"
+    assert source["release"] == "49.0.0" and source["unicode"] == "17.0.0"
     shared = {"LICENSE", "cldr-json/cldr-core/supplemental/parentLocales.json", "ucd/UnicodeData.txt",
               "ucd/emoji/emoji-data.txt"}
     annotations = {f"cldr-json/cldr-annotations-full/annotations/{locale}/annotations.json"
