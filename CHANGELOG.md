@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a41](https://github.com/TigreGotico/text2spoken/tree/0.0.2a41) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a40...0.0.2a41)
+
+**Merged pull requests:**
+
+- test: pin the combining-mark step-back on the right edge of a lexicon key [\#88](https://github.com/TigreGotico/text2spoken/pull/88) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a40](https://github.com/TigreGotico/text2spoken/tree/0.0.2a40) (2026-11-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a39...0.0.2a40)
