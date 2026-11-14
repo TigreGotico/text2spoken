@@ -91,6 +91,7 @@ Known limits of the form:
 
 - A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i". Portuguese gives such a run no free consonant, so `A D. XIV.` reads "A Dom xis i vê."
 - A run that reads as a word and holds a digit stays as written, as `COVID19` does with the form off.
+- Portuguese reads some initialisms as words that a reader spells, because no source in the language file names them: `IBGE` stays as written. A well-formed Roman numeral is spelled, so `DIV`, `CIV` and `LIV` read letter by letter.
 - The rule reads some initialisms as words, because no source in the language file names them: `CEO` and `WHO` stay as written in English.
 - In English, a coda takes the s of the -s/-z morpheme. So the rule reads some three-letter initialisms of a vowel, a consonant and s as words: `ABS` and `ITS` stay as written. `letter_runs` lists the ones that a source spells, such as `IBS` and `IDS`.
 - A run with a letter that has no name, such as `Ç`, stays as written when it does not split into syllables.
@@ -283,6 +284,7 @@ Some currency and symbol readings are still wrong or stay as written:
 - A symbol name is the CLDR name, with no agreement and no context. `8 ÷ 2` reads "oito sinal de divisão dois" in Portuguese.
 - A sign that CLDR names before a number reads before the number. `₿1` reads "bitcoin one".
 - A euro amount with a comma for the decimal mark stays as written in English, as in `€12,50`.
+- Portuguese text in capitals cannot tell the city Córdoba from the currency, because the currency gender entry matches the word as written. So `PAGUEI 2 CÓRDOBAS.` reads "duas", and `Paguei 2 córdobas.` reads "dois".
 - The Portuguese paʻanga reads as a feminine noun, so `2 T$` reads "duas paʻangas tonganesas". The CLDR adjective "tonganesas" agrees with it, but Priberam gives a masculine noun: "paanga": "nome masculino [...] Unidade monetária de Tonga (código: TOP)".
 - A doubled mark reads its singular name twice. `Veja os §§ 2 e 3.` reads "Veja os parágrafo parágrafo dois e três".
 - A currency sign at the start or the end of an address stays as written in the address, and a second pass reads it with the number next to it. `x@€ 08` reads "ex at € 08", and a second pass reads "ex at eight euros". The same holds for the signs of the CLDR currencies: `x@₦ 08` reads "ex at ₦ 08", and a second pass reads "ex at eight Nigerian nairas".
