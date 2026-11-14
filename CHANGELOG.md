@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a40](https://github.com/TigreGotico/text2spoken/tree/0.0.2a40) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a39...0.0.2a40)
+
+**Merged pull requests:**
+
+- fix: a lexicon claim does not wait on a joined digit [\#83](https://github.com/TigreGotico/text2spoken/pull/83) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a39](https://github.com/TigreGotico/text2spoken/tree/0.0.2a39) (2026-11-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a38...0.0.2a39)
