@@ -148,10 +148,10 @@ def test_an_emoji_row_stays_as_written_with_the_form_off(row):
 
 @pytest.mark.parametrize("tag", ["en-GB", "en-US"])
 def test_an_address_keeps_an_emoji_sequence_whole(tag):
-    assert normalize("x@a👨‍💻b.com", tag) == "ex at ay 👨‍💻 bee dot com"
-    assert normalize("x@a👨‍💻b.com", tag, EMOJI_ON) == "ex at ay man technologist bee dot com"
-    assert normalize("x@a©️b.com", tag, EMOJI_ON) == "ex at ay copyright bee dot com"
-    assert normalize("x@a🇦🇬b.com", tag, EMOJI_ON) == "ex at ay 🇦🇬 bee dot com"
+    assert normalize("x@a👨‍💻b.com", tag) == "ex at a 👨‍💻 bee dot com"
+    assert normalize("x@a👨‍💻b.com", tag, EMOJI_ON) == "ex at a man technologist bee dot com"
+    assert normalize("x@a©️b.com", tag, EMOJI_ON) == "ex at a copyright bee dot com"
+    assert normalize("x@a🇦🇬b.com", tag, EMOJI_ON) == "ex at a 🇦🇬 bee dot com"
 
 
 def test_the_form_reads_inside_an_address_only_through_its_name():
@@ -428,5 +428,5 @@ def test_a_sequence_between_a_waiting_amount_and_a_number_reads_as_a_symbol_does
 @pytest.mark.parametrize("params", [None, EMOJI_ON], ids=["off", "on"])
 def test_a_digit_before_a_skin_tone_in_an_address_reads_as_outside_it(params):
     once = normalize("x@a5🏽b.com", "en-GB", params)
-    assert once == ("ex at ay five 🏽 bee dot com" if params is None else "ex at ay five medium skin tone bee dot com")
+    assert once == ("ex at a five 🏽 bee dot com" if params is None else "ex at a five medium skin tone bee dot com")
     assert normalize(once, "en-GB", params) == once
