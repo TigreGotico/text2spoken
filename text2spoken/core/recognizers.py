@@ -702,7 +702,8 @@ class Telephone:
     out: `Call me ⇒ 911` and `Call 911 or → 112.` read digit by digit. A run stays as written only when the last
     word before it is a phone word, as on a second pass. So in pt-BR, where `☎` reads "telefone no gancho",
     `☎3 91P` reads the number, and `Ligue → 1.234,56` reads the number. A list link does not count those
-    characters, so `Call ⇒ 999 or → 112.` reads both runs digit by digit.
+    characters, so `Call ⇒ 999 or → 112.` reads both runs digit by digit. For the same reason, a lexicon key as
+    that last word counts by its spoken words: with a key `call` for "kall", `call+351` reads the number.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -731,6 +732,8 @@ class Telephone:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         words = _spoken_words(text, tokens, request)
+        lexicon = {span.end: span.fields["spoken"] for span in Lexicon().find(text, tokens, request)} \
+            if Form.LEXICON in request.params.forms else {}
         covered = frozenset(index for start, end, _ in named_pieces(text, request) for index in range(start, end))
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
@@ -768,7 +771,8 @@ class Telephone:
             phone_ends = [words[i].end for i in window if phone_words.intersection(words[i].text.lower().split())]
             between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
             direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
-            keeps = direct and bool(window) and words[window[-1]].text.lower().split()[-1] in phone_words
+            spoken = lexicon.get(words[window[-1]].end, words[window[-1]].text) if window else ""
+            keeps = direct and bool(phone_words.intersection(spoken.lower().split()[-1:]))
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:

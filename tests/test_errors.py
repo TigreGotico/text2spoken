@@ -22,6 +22,72 @@ def test_the_lexicon_claims_before_every_recognizer():
     assert normalize("ACME sold 3 tins.", "en", lexicon(en={"ACME": "acme"})) == "acme sold three tins."
 
 
+@pytest.mark.parametrize("text,expected", [("I have 2,cats😀", "I have two,kats😀"), ("I have 2,cats", "I have two,kats"),
+                                           ("3,cats", "three,kats"), ("cats/5", "kats/five"),
+                                           ("2 cats", "two kats"), ("cats, 2", "kats, two")])
+def test_a_lexicon_claim_does_not_wait_on_a_digit_that_one_character_joins_to_a_letter_of_the_key(text, expected):
+    """The lexicon claims before every recognizer (section 4.2), so a number that a comma or a slash joins to the
+    letter at the edge of a key reads, and a second pass changes nothing (section 11)."""
+    params = lexicon(en={"cats": "kats"})
+    assert normalize(text, "en", params) == expected
+    assert normalize(expected, "en", params) == expected
+
+
+@pytest.mark.parametrize("text,lang,entries,expected", [
+    ("GPT-4/5", "en", {"GPT-4": "G P T four"}, "GPT-4/5"),
+    ("Windows 10/11", "en", {"Windows 10": "windows ten"}, "Windows 10/11"),
+    ("It cost $1,911.", "en", {"911": "nine one one"}, "It cost $1,911."),
+    ("Call 911/112.", "en", {"911": "nine one one"}, "Call 911/112."),
+    ("Press #️⃣,2 or 3.", "en", {"#️⃣": "hash key"}, "Press #️⃣,2 or three."),
+    ("Prima 1️⃣/2.", "pt-PT", {"1️⃣": "opção um"}, "Prima 1️⃣/2."),
+    ("©,2", "en", {"©": "copyright"}, "©,2"),
+    ("😀,2", "en", {"😀": "smile"}, "😀,2")])
+@pytest.mark.parametrize("emoji", [False, True])
+def test_a_lexicon_key_that_does_not_end_in_a_letter_waits_on_the_digits_that_one_character_joins_to_it(
+        text, lang, entries, expected, emoji):
+    """No number recognizer reads digits that one character joins to a digit, a symbol or an emoji, so a key that
+    ends in one waits on the joined run as any span does. The run and the key stay as written on both passes."""
+    params = lexicon(**{lang.split("-")[0]: entries})
+    params = params.plus(Form.EMOJI) if emoji else params
+    assert normalize(text, lang, params) == expected
+    assert normalize(expected, lang, params) == expected
+
+
+@pytest.mark.parametrize("key", ["café", "cafe\u0301"])
+def test_a_lexicon_key_that_ends_in_a_letter_and_a_combining_mark_reads_the_joined_number(key):
+    """A combining mark belongs to the letter before it, so a key that ends in `e` and U+0301 reads as the same key
+    with `é` does."""
+    params = lexicon(fr={key: "kafé"})
+    assert normalize(f"2,{key}", "fr", params) == "deux,kafé"
+    assert normalize("deux,kafé", "fr", params) == "deux,kafé"
+
+
+def test_a_lexicon_key_before_a_glued_phone_run_counts_by_its_spoken_words():
+    """A glued run stays as written only after a phone word, as a second pass sees the text (section 4.3). With
+    a key `call` for "kall", the word before `+351` on a second pass is "kall", so the first pass reads the number."""
+    params = lexicon(en={"call": "kall"})
+    assert normalize("call+351", "en", params) == "kall+three hundred and fifty-one"
+    assert normalize("kall+three hundred and fifty-one", "en", params) == "kall+three hundred and fifty-one"
+    assert normalize("call+351", "en") == "call+351"
+    telephone = lexicon(en={"Tel": "telephone"})
+    assert normalize("Tel+351", "en", telephone) == "telephone+351"
+    assert normalize("telephone+351", "en", telephone) == "telephone+351"
+
+
+@pytest.mark.parametrize("entries", [{"COVID": "COVID-19"}, {"x": "x/2"}])
+def test_a_lexicon_value_that_holds_its_key_and_a_joined_number_raises(entries):
+    """The key claims inside the value and the number next to it reads, so a second pass would change the
+    reading (section 11)."""
+    with pytest.raises(InvalidLexiconError):
+        normalize("hello", "en", lexicon(en=entries))
+
+
+@pytest.mark.parametrize("text,expected", [("I have 2,catsup", "I have two,catsup"),
+                                           ("I have 2,cats1️⃣", "I have two,cats1️⃣")])
+def test_a_lexicon_key_inside_a_longer_word_still_does_not_match_next_to_a_number(text, expected):
+    assert normalize(text, "en", lexicon(en={"cats": "kats"})) == expected
+
+
 def test_the_lexicon_matches_a_whole_form_with_its_case_and_an_apostrophe_limit():
     p = lexicon(en={"ACME": "acme"})
     assert normalize("ACME's tins and l'ACME", "en", p) == "acme's tins and l'acme"
