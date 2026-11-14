@@ -104,9 +104,13 @@ A field that the parser refuses (`UnsupportedForm` or `ValueError`) keeps the wr
 that spoken text says "meia-noite" for 00:00 and "meio-dia" for 12:00, and that the preposition before the time
 agrees with the noun. So a whole hour written as a clock with no `h`, at 0 or 12, reads the 12-hour form of the
 parser, and the article in the word before it agrees: "às 0:00" reads "à meia-noite", "das 12:00" "do meio-dia" and
-"até às 12:00" "até ao meio-dia". `time_contractions` gives the words: Priberam, "meia-noite": "nome feminino";
-"meio-dia": "nome masculino"; "ao": "Contracção da preposição a e do artigo ou pronome o"; "do": "Contracção da
-preposição de e artigo ou pronome o"; "pelo": "Aglutinação da preposição antiga per e do artigo ou pronome lo". A
+"até às 12:00" "até ao meio-dia". The article "as" after "entre", "desde", "após" and the pt-BR "até" agrees in
+the same way: "entre as 0:00" reads "entre a meia-noite" and "até as 12:00" "até o meio-dia". A singular "à" or
+"da" before 12:00 takes the masculine too: "à 12:00" reads "ao meio-dia". `time_contractions`
+gives the words: Priberam, "meia-noite": "nome feminino"; "meio-dia": "nome masculino"; "as": "feminino plural de
+o"; "ao": "Contracção da preposição a e do artigo ou pronome o"; "do": "Contracção da preposição de e artigo ou
+pronome o"; "pelo": "Aglutinação da preposição antiga per e do artigo ou pronome lo". The word keeps its case, so
+"DAS 12:00" reads "DO meio-dia". A
 time that writes `h`, such as `0h` or `12h`, reads the hour unit as written, as the ruling keeps it: "zero horas" in
 pt-PT and "zero hora" in pt-BR (Dicio, "Zero grau ou zero graus": "No Brasil, o zero é encarado como singular: zero
 grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero graus; zero reais; zero horas.").
@@ -159,7 +163,8 @@ DATA = freeze({
     "time_words": ["às", "as", "à", "pelas", "das", "até", "desde"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
-    "time_contractions": {"às": {"0": "à", "12": "ao"}, "das": {"0": "da", "12": "do"},
+    "time_contractions": {"às": {"0": "à", "12": "ao"}, "à": {"0": "à", "12": "ao"}, "as": {"0": "a", "12": "o"},
+                          "das": {"0": "da", "12": "do"}, "da": {"0": "da", "12": "do"},
                           "pelas": {"0": "pela", "12": "pelo"}},
     "range_articles": {"da": {"one": "à", "other": "às"}, "das": {"one": "à", "other": "às"}},
     "day_periods": {"am": ["a.m."], "pm": ["p.m."]},
@@ -470,10 +475,26 @@ def _hour(fields: FrozenMap) -> int:
 
 
 def _day_point(fields: FrozenMap) -> int | None:
-    """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds."""
+    """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds. A `prefix`
+    of None marks a time whose word of `time_contractions` stays as written, so its hour reads the 24-hour form that
+    the plural article agrees with."""
     hour = _hour(fields)
-    whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"]
+    whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"] and fields["prefix"] is not None
     return hour if whole and hour in (0, 12) else None
+
+
+def _contracted_word(prefix: str, hour: int, request: Request) -> str:
+    """The word of `prefix` with the article of the noun at `hour`, and the white space after it as written. The
+    word keeps its case: `às` gives `à`, `Às` and `À` give `Ao` before "meio-dia", and `DAS` gives `DO`."""
+    word = prefix.rstrip()
+    if not word:
+        return prefix
+    article = request.data["time_contractions"][word.lower()][str(hour)]
+    if len(word) > 1 and word.isupper():
+        article = article.upper()
+    elif word[0].isupper():
+        article = article.capitalize()
+    return article + prefix[len(word):]
 
 
 def speak_time(span: Span, context: SpanContext) -> str:
@@ -485,11 +506,13 @@ def speak_time(span: Span, context: SpanContext) -> str:
     from ovos_date_parser.spoken import spoken_time
 
     fields = span.fields
-    tag = context.request.variety.tag
+    request = context.request
+    tag = request.variety.tag
     hour, minute = _hour(fields), fields["minute"]
     try:
         if _day_point(fields) is not None:
-            return spoken_time(tag, hour, clock="12h", period=True)
+            reading = spoken_time(tag, hour, clock="12h", period=True)
+            return _contracted_word(fields["prefix"], hour, request) + reading
         if fields["suffix"]:
             return spoken_time(tag, hour, minute, fields["second"] or None, style="units")
         return spoken_time(tag, hour, minute)
@@ -669,10 +692,15 @@ class Clock(TimeClock):
     that writes `h` keeps it in the `suffix` field, so it reads its units.
 
     Before "meia-noite" or "meio-dia", a word of `time_contractions` right before the time takes the article of that
-    noun, when only white space stands between them. The span then starts at the word and gives the article and the
-    white space in its `lead`, so `às 0:00` reads `à meia-noite`. A character between them, such as the `§` of `às §
-    0:00`, keeps the word as written, so that the span claims no character that another form reads. In a range, the
-    range word of the first time takes the article: `das 9:00-12:00` reads `das nove horas ao meio-dia`."""
+    noun, when only white space stands between them. The span then starts at the word and holds the word and the
+    white space in its `prefix` field, and the reading writes the contracted word: `às 0:00` reads `à meia-noite`.
+    The time span that starts at the digits follows it, with a `prefix` of None. It reads when a lexicon entry claims
+    the word first, and then the word stays as written and the time reads its 24-hour form: `às zero horas`. A word
+    with two characters right before it that are no white space, as in `5(às 0:00`, gives only that span, because
+    the span at the word would wait on the digit that the word touches (design section 4.2). So does a character
+    between the word and the time, such as the `§` of `às § 0:00`, so that the span claims no character that another
+    form reads. In a range, the range word of the first time takes the article: `das 9:00-12:00` reads `das nove
+    horas ao meio-dia`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
@@ -697,19 +725,21 @@ class Clock(TimeClock):
             if out and out[-1].end == span.start and out[-1].trail:
                 forms = contractions.get(out[-1].trail.strip().lower())
                 if forms is not None:
-                    out[-1] = replace(out[-1], trail=f" {forms[str(hour)]} ")
+                    out = [replace(first, trail=f" {forms[str(hour)]} ") if first.end == span.start else first
+                           for first in out]
                 out.append(span)
                 continue
             index = bisect_right(words, span.start, key=lambda word: word.end)
             word = words[index - 1] if index else None
-            forms = contractions.get(word.text.lower()) if word is not None else None
-            gap = text[word.end:span.start] if forms is not None else ""
-            if gap.isspace():
-                article = forms[str(hour)]
-                if word.text[0].isupper():
-                    article = article[0].upper() + article[1:]
-                span = replace(span, start=word.start, lead=article + gap)
-            out.append(span)
+            if word is None or word.text.lower() not in contractions:
+                out.append(span)
+                continue
+            edge = text[max(word.start - 2, 0):word.start]
+            free = len(edge) < 2 or edge[0].isspace() or edge[1].isspace()
+            if free and text[word.end:span.start].isspace():
+                out.append(replace(span, start=word.start,
+                                   fields=FrozenMap({**span.fields, "prefix": text[word.start:span.start]})))
+            out.append(replace(span, fields=FrozenMap({**span.fields, "prefix": None})))
         return out
 
     @staticmethod
@@ -723,7 +753,8 @@ class Clock(TimeClock):
         if fields is None:
             return None
         return Span(start, start, Form.TIME, FrozenMap({"hour": fields[0], "minute": fields[1], "second": fields[2],
-                                                        "period": None, "suffix": symbol}), recognizer=self.name)
+                                                        "period": None, "prefix": "", "suffix": symbol}),
+                    recognizer=self.name)
 
     def _symbols(self, text: str, request: Request) -> Iterator[Span]:
         """`17 h`, `17h30 min`, `17h 30min`, `17 h 34 min 25 s` and `17:30 h`. Minutes after a space take `min`.

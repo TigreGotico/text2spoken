@@ -492,7 +492,7 @@ class TimeClock:
                     continue
                 yield Span(start, end + len(suffix), Form.TIME,
                            FrozenMap({"hour": hour, "minute": minute, "second": second, "period": period,
-                                      "suffix": suffix}), trail=trail, recognizer=self.name)
+                                      "prefix": "", "suffix": suffix}), trail=trail, recognizer=self.name)
 
 
 @dataclass(frozen=True)
