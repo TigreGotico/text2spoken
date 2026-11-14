@@ -176,8 +176,9 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     character of a waiting span. A claimed span wakes the waiting spans next to it, which are checked again in
     claim order, as they would be on a second pass over the output. A `keep` span claims its characters and
     stays out of the result, so its text stays as written. An `ELECTRONIC` span claims a token whole (section 4.5),
-    so it does not wait on a joined digit. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span waits on
-    it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
+    and a `LEXICON` span claims before every recognizer (section 4.2), so neither waits on a joined digit: with a
+    key `cats`, `2,cats` reads "two,kats". A waiting `SYMBOL` or `EMOJI` span holds no character, so no span waits
+    on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
 
     An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
     `😀` in place of the sequence (design section 4.7). The recognizers read the view of `emoji_view`, in which the
@@ -207,7 +208,7 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
         if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
             continue
         sides = _sides(span, before, after)
-        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
+        if span.form not in (Form.ELECTRONIC, Form.LEXICON) and _joined(view, span, read, holder, sides):
             if span.form not in (Form.SYMBOL, Form.EMOJI):
                 for position in range(span.start, span.end):
                     holder[position] = span

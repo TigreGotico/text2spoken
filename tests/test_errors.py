@@ -22,6 +22,21 @@ def test_the_lexicon_claims_before_every_recognizer():
     assert normalize("ACME sold 3 tins.", "en", lexicon(en={"ACME": "acme"})) == "acme sold three tins."
 
 
+@pytest.mark.parametrize("text,expected", [("I have 2,cats😀", "I have two,kats😀"), ("I have 2,cats", "I have two,kats"),
+                                           ("3,cats", "three,kats"), ("cats/5", "kats/five"),
+                                           ("2 cats", "two kats"), ("cats, 2", "kats, two")])
+def test_a_lexicon_claim_does_not_wait_on_a_digit_that_one_character_joins_to_it(text, expected):
+    """The lexicon claims before every recognizer (section 4.2), so a number that a comma or a slash joins to a
+    key reads as it reads next to any other word."""
+    assert normalize(text, "en", lexicon(en={"cats": "kats"})) == expected
+
+
+@pytest.mark.parametrize("text,expected", [("I have 2,catsup", "I have two,catsup"),
+                                           ("I have 2,cats1️⃣", "I have two,cats1️⃣")])
+def test_a_lexicon_key_inside_a_longer_word_still_does_not_match_next_to_a_number(text, expected):
+    assert normalize(text, "en", lexicon(en={"cats": "kats"})) == expected
+
+
 def test_the_lexicon_matches_a_whole_form_with_its_case_and_an_apostrophe_limit():
     p = lexicon(en={"ACME": "acme"})
     assert normalize("ACME's tins and l'ACME", "en", p) == "acme's tins and l'acme"
