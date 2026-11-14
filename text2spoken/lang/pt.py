@@ -88,10 +88,14 @@ consonant closes a syllable that another syllable follows, as Base XX, 2 divides
 so OVNI reads ov-ni. One such consonant can also follow the last syllable. Viana et al. 1994 ("Sobre a pronúncia de
 nomes próprios, siglas e acrónimos em Português Europeu"), quoted by Mendes, Oliveira and Teixeira on p. 14, read a
 run in this way "quando CC são silabificáveis e a sigla apenas contém um núcleo vazio (ex. SERB, CELT), em posição
-final absoluta". So PIB, CIAV, PALOP and TAP read as words. The final consonant reads only in a run that holds a
+final absoluta". So PIB, CIAV, PALOP and TAP read as words. Ciberdúvidas answer 35524 names PALOP and TAP among the
+runs that read: "Acaso tinha alguma lógica escrever-se com pontos acrónimos e siglas com sentido silábico, como APU,
+FAOJ, FENPROF, FIFA, ONU, PALOP, TAP, UEFA, UNESCO ou VARIG?" The final consonant reads only in a run that holds a
 consonant before a vowel (p. 13: "Para serem lidos, os acrónimos necessitam de compreender, pelo menos, um grupo
 CV"), so IRS still reads letter by letter. It also reads only in a run with no h outside ch, lh and nh (p. 13: "a
-presença da consoante «H», em qualquer posição"), so HIV reads letter by letter.
+presença da consoante «H», em qualquer posição"), so HIV reads letter by letter. A run made only of the Roman
+numeral letters takes no free consonant (design section 4.6), so `XIV`, where `ROMAN` does not read it, reads letter
+by letter.
 
 `letter_runs` holds three runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não

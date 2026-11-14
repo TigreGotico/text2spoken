@@ -89,7 +89,7 @@ The form does not take a run with a lowercase letter (`ONGs`, `PhD`), a run with
 
 Known limits of the form:
 
-- A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i". A Portuguese numeral that splits into syllables stays as written, as `XIV` in `A D. XIV.` does.
+- A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i". Portuguese gives such a run no free consonant, so `A D. XIV.` reads "A Dom xis i vê."
 - A run that reads as a word and holds a digit stays as written, as `COVID19` does with the form off.
 - The rule reads some initialisms as words, because no source in the language file names them: `CEO` and `WHO` stay as written in English.
 - In English, a coda takes the s of the -s/-z morpheme. So the rule reads some three-letter initialisms of a vowel, a consonant and s as words: `ABS` and `ITS` stay as written. `letter_runs` lists the ones that a source spells, such as `IBS` and `IDS`.

@@ -6,7 +6,9 @@ decides first. Else a run of one or two letters reads letter by letter, and a lo
 splits into syllables that the language allows: an optional onset of `letter_onsets`, a vowel of `letter_vowels`
 and an optional coda of `letter_codas`. A consonant of `letter_free_consonants` may also stand where a reader adds a
 vowel: as the coda of a syllable that another syllable follows, and after the last syllable of a run that holds a
-consonant before a vowel. A run that reads as a word stays as written, so its span keeps the text.
+consonant before a vowel. A run made only of the Roman numeral letters I, V, X, L, C, D and M takes no free
+consonant, so `XIV` reads as it reads without them. A run that reads as a word stays as written, so its span keeps
+the text.
 A run that reads letter by letter gives the name of each letter from `letter_names` and the word of each digit from
 `digit_words`.
 """
@@ -23,6 +25,7 @@ from text2spoken.core.tokens import Token, is_letter, is_word_char
 from text2spoken.params import FrozenMap, Form
 
 _DIGITS = "0123456789"
+_ROMAN_LETTERS = frozenset("IVXLCDM")
 
 
 def splits_into_syllables(word: str, vowels: frozenset[str], onsets: frozenset[str], codas: frozenset[str],
@@ -77,9 +80,10 @@ def reading(run: str, data: FrozenMap) -> Literal["word", "letters"] | None:
         return None
     read = data.get("letter_runs", FrozenMap()).get(letters)
     if read is None:
+        free = frozenset() if set(letters) <= _ROMAN_LETTERS else frozenset(data.get("letter_free_consonants", ()))
         word = len(letters) > 2 and splits_into_syllables(
             letters.lower(), frozenset(data["letter_vowels"]), frozenset(data["letter_onsets"]),
-            frozenset(data["letter_codas"]), frozenset(data.get("letter_free_consonants", ())))
+            frozenset(data["letter_codas"]), free)
         read = "word" if word else "letters"
     if read == "word":
         return None if letters != run else "word"

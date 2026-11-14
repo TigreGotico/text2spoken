@@ -89,13 +89,14 @@ def test_a_run_that_does_not_split_into_syllables(spec, word):
 
 @pytest.mark.parametrize(("run", "expected"), [
     ("ONU", "word"), ("ON", "letters"), ("A", None), ("A1", "letters"), ("4G", "letters"), ("12AB34", "letters"),
-    ("TAP", "word"), ("EUA", "letters"), ("UEFA2", None), ("ONGs", None), ("PhD", None), ("ÇX", None),
-    ("ΒΓΔ", None), ("ATENÇÃO", None), ("A٣", None),
+    ("TAP", "word"), ("EUA", "letters"), ("XIV", "letters"), ("LIV", "letters"), ("MIX", "word"), ("UEFA2", None),
+    ("ONGs", None), ("PhD", None), ("ÇX", None), ("ΒΓΔ", None), ("ATENÇÃO", None), ("A٣", None),
 ])
 def test_the_reading_of_a_run(run, expected):
     """Two letters read letter by letter, and one letter needs a digit. A run that reads as a word and holds a digit
     is not taken. A letter with no name, a lowercase letter, a combining mark and a digit outside ASCII end the
-    run."""
+    run. A run of Roman numeral letters takes no free consonant, so XIV and LIV read letter by letter, and MIX, with
+    the coda x, reads as a word."""
     assert reading(run, PT.data) == expected
 
 
