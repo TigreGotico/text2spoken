@@ -69,7 +69,7 @@ PT_ENTRIES = {
     "ordinal_marks": "ª", "regnal_titles": "D", "century_words": "século", "determiners": "as", "noun_gender": "Isabel",
     "currency_noun_gender": "córdobas",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "h",
-    "time_contractions": "às",
+    "time_contractions": "às", "time_article_prepositions": "as",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
     "letter_free_consonants": "b",

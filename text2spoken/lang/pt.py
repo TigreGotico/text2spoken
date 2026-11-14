@@ -97,23 +97,28 @@ presença da consoante «H», em qualquer posição"), so HIV reads letter by le
 numeral, which `ROMAN` declines in its context, takes no free consonant (design section 4.6). So `XIV` reads letter
 by letter where `ROMAN` does not read it, and `CIC`, which is no Roman numeral, reads as a word.
 
-The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4), read with
-the variety tag: `1/5/2024` reads "primeiro de maio de dois mil e vinte e quatro", `14:30` "catorze e trinta" and
+The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4), read with the
+variety tag: `1/5/2024` reads "primeiro de maio de dois mil e vinte e quatro", `14:30` "catorze e trinta" and
 `17h30` "dezassete horas e trinta minutos". text2spoken recognises the written form and gives the parser its fields.
 A field that the parser refuses (`UnsupportedForm` or `ValueError`) keeps the written text. The maintainer ruled
 that spoken text says "meia-noite" for 00:00 and "meio-dia" for 12:00, and that the preposition before the time
 agrees with the noun. So a whole hour written as a clock with no `h`, at 0 or 12, reads the 12-hour form of the
 parser, and the article in the word before it agrees: "às 0:00" reads "à meia-noite", "das 12:00" "do meio-dia" and
-"até às 12:00" "até ao meio-dia". The article "as" after "entre", "desde", "após" and the pt-BR "até" agrees in
-the same way: "entre as 0:00" reads "entre a meia-noite" and "até as 12:00" "até o meio-dia". A singular "à" or
-"da" before 12:00 takes the masculine too: "à 12:00" reads "ao meio-dia". `time_contractions`
-gives the words: Priberam, "meia-noite": "nome feminino"; "meio-dia": "nome masculino"; "as": "feminino plural de
-o"; "ao": "Contracção da preposição a e do artigo ou pronome o"; "do": "Contracção da preposição de e artigo ou
-pronome o"; "pelo": "Aglutinação da preposição antiga per e do artigo ou pronome lo". The word keeps its case, so
-"DAS 12:00" reads "DO meio-dia". A
-time that writes `h`, such as `0h` or `12h`, reads the hour unit as written, as the ruling keeps it: "zero horas" in
-pt-PT and "zero hora" in pt-BR (Dicio, "Zero grau ou zero graus": "No Brasil, o zero é encarado como singular: zero
-grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero graus; zero reais; zero horas.").
+"até às 12:00" "até ao meio-dia". The article "as" agrees in the same way after a preposition of
+`time_article_prepositions`: "entre as 0:00" reads "entre a meia-noite" and "até as 12:00" "até o meio-dia".
+Priberam labels each of entre, desde, após, até, para, sobre, contra and sem "preposição". Any other "as" before the
+time stands for "às", the contraction of the preposition a and the article as (Ciberdúvidas 27390: "A(preposição) +
+A(S) (artigo definido feminino singular ou plural): ÀS"). So that "as" stays as written, and the time reads the
+hours that it agrees with: "Almoçamos as 12:00." reads "Almoçamos as doze horas.". A singular "à" or "da" before
+12:00 takes the masculine too: "à 12:00" reads "ao meio-dia". `time_contractions` gives the words: Priberam,
+"meia-noite": "nome feminino"; "meio-dia": "nome masculino"; "as": "feminino plural de o"; "ao": "Contracção da
+preposição a e do artigo ou pronome o"; "do": "Contracção da preposição de e artigo ou pronome o"; "pelo":
+"Aglutinação da preposição antiga per e do artigo ou pronome lo". The word keeps the case of its first letter only,
+so "DAS 12:00" reads "Do meio-dia": an all-caps "DO" would be a two-letter word that the input did not write, which
+the LETTERS form spells. A time that writes `h`, such as `0h` or `12h`, reads the hour unit as written, as the
+ruling keeps it: "zero horas" in pt-PT and "zero hora" in pt-BR (Dicio, "Zero grau ou zero graus": "No Brasil, o
+zero é encarado como singular: zero grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero
+graus; zero reais; zero horas.").
 
 `letter_runs` holds three runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
@@ -166,6 +171,7 @@ DATA = freeze({
     "time_contractions": {"às": {"0": "à", "12": "ao"}, "à": {"0": "à", "12": "ao"}, "as": {"0": "a", "12": "o"},
                           "das": {"0": "da", "12": "do"}, "da": {"0": "da", "12": "do"},
                           "pelas": {"0": "pela", "12": "pelo"}},
+    "time_article_prepositions": {"as": ["entre", "desde", "após", "até", "para", "sobre", "contra", "sem"]},
     "range_articles": {"da": {"one": "à", "other": "às"}, "das": {"one": "à", "other": "às"}},
     "day_periods": {"am": ["a.m."], "pm": ["p.m."]},
     "dimension_marks": ["x", "×"],
@@ -485,14 +491,12 @@ def _day_point(fields: FrozenMap) -> int | None:
 
 def _contracted_word(prefix: str, hour: int, request: Request) -> str:
     """The word of `prefix` with the article of the noun at `hour`, and the white space after it as written. The
-    word keeps its case: `às` gives `à`, `Às` and `À` give `Ao` before "meio-dia", and `DAS` gives `DO`."""
+    word keeps the case of its first letter: `às` gives `à`, and `Às`, `À` and `ÀS` give `Ao` before "meio-dia"."""
     word = prefix.rstrip()
     if not word:
         return prefix
     article = request.data["time_contractions"][word.lower()][str(hour)]
-    if len(word) > 1 and word.isupper():
-        article = article.upper()
-    elif word[0].isupper():
+    if word[0].isupper():
         article = article.capitalize()
     return article + prefix[len(word):]
 
@@ -694,13 +698,14 @@ class Clock(TimeClock):
     Before "meia-noite" or "meio-dia", a word of `time_contractions` right before the time takes the article of that
     noun, when only white space stands between them. The span then starts at the word and holds the word and the
     white space in its `prefix` field, and the reading writes the contracted word: `às 0:00` reads `à meia-noite`.
-    The time span that starts at the digits follows it, with a `prefix` of None. It reads when a lexicon entry claims
-    the word first, and then the word stays as written and the time reads its 24-hour form: `às zero horas`. A word
-    with two characters right before it that are no white space, as in `5(às 0:00`, gives only that span, because
-    the span at the word would wait on the digit that the word touches (design section 4.2). So does a character
-    between the word and the time, such as the `§` of `às § 0:00`, so that the span claims no character that another
-    form reads. In a range, the range word of the first time takes the article: `das 9:00-12:00` reads `das nove
-    horas ao meio-dia`."""
+    The time span that starts at the digits follows it, with a `prefix` of None. It reads when a lexicon entry
+    claims the word first, and then the word stays as written and the time reads its 24-hour form: `às zero horas`.
+    A word with two characters right before it that are no white space, as in `5(às 0:00`, gives only that span,
+    because the span at the word would wait on the digit that the word touches (design section 4.2). So does a
+    character between the word and the time, such as the `§` of `às § 0:00`, so that the span claims no character
+    that another form reads. So does a word of `time_article_prepositions` with no preposition of its list right
+    before it, as in `Almoçamos as 12:00`. In a range, the range word of the first time takes the article: `das
+    9:00-12:00` reads `das nove horas ao meio-dia`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
@@ -736,7 +741,11 @@ class Clock(TimeClock):
                 continue
             edge = text[max(word.start - 2, 0):word.start]
             free = len(edge) < 2 or edge[0].isspace() or edge[1].isspace()
-            if free and text[word.end:span.start].isspace():
+            needed = request.data["time_article_prepositions"].get(word.text.lower())
+            previous = words[index - 2] if index > 1 else None
+            governed = needed is None or (previous is not None and previous.text.lower() in needed
+                                          and text[previous.end:word.start].isspace())
+            if free and governed and text[word.end:span.start].isspace():
                 out.append(replace(span, start=word.start,
                                    fields=FrozenMap({**span.fields, "prefix": text[word.start:span.start]})))
             out.append(replace(span, fields=FrozenMap({**span.fields, "prefix": None})))

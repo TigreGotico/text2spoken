@@ -3,8 +3,8 @@ import pytest
 from ovos_date_parser import spoken
 from ovos_date_parser.spoken import UnsupportedForm
 
-from text2spoken import (Features, FrozenMap, GrammaticalGender, HintWarning, NormalizationParams, analyze, normalize,
-                         render)
+from text2spoken import (Features, Form, FrozenMap, GrammaticalGender, HintWarning, NormalizationParams, analyze,
+                         normalize, render)
 
 
 def _refuse(error):
@@ -87,3 +87,26 @@ def test_a_hint_at_the_digits_of_a_contracted_time_warns_and_the_time_reads():
     assert render(analysis, {5: feminine}) == "Abre à meia-noite."
     with pytest.warns(HintWarning, match="offset 8"):
         assert render(analysis, {8: feminine}) == "Abre à meia-noite."
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), [
+    ("pt-BR", "Te vejo as 12:00!", "Te vejo as doze horas!"),
+    ("pt-PT", "As 12:00 chega.", "As doze horas chega."),
+    ("pt-PT", "Abre as 12:00 e fecha as 0:00.", "Abre as doze horas e fecha as zero horas."),
+    ("pt-PT", "entre, as 12:00", "entre, as doze horas"),
+    ("pt-PT", "sobre  as 0:00", "sobre  a meia-noite"),
+    ("pt-BR", "Sem as 12:00 não há almoço.", "Sem o meio-dia não há almoço."),
+])
+def test_the_article_as_contracts_only_right_after_a_preposition(tag, text, expected):
+    """Ciberdúvidas 27390: "A(preposição) + A(S) (artigo definido feminino singular ou plural): ÀS". An "as" with no
+    preposition right before it stands for "às", so it stays as written and the time reads the hours it agrees with."""
+    assert normalize(text, tag) == expected
+
+
+@pytest.mark.parametrize(("text", "expected"), [("ÀS 12:00 FECHA.", "Ao meio-dia FECHA."),
+                                              ("DAS 12:00 ÀS 14:00", "Do meio-dia ÀS catorze horas")])
+def test_a_contracted_word_in_capitals_takes_only_a_first_capital(text, expected):
+    """An all-caps "AO" or "DO" would be a two-letter word that the text did not write, and the LETTERS form spells a
+    run of two capitals."""
+    params = NormalizationParams(forms=NormalizationParams().forms | {Form.LETTERS})
+    assert normalize(text, "pt-PT") == normalize(text, "pt-PT", params) == expected
