@@ -83,14 +83,15 @@ normalize("A NATO reuniu-se com a RTP.", "pt-PT", NormalizationParams().plus(For
 # 'A NATO reuniu-se com a érre tê pê.'
 ```
 
-A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name and each digit by its word. A table in the language file holds the runs that the rule reads wrong: `TAP` reads as a word and `EUA` letter by letter in Portuguese, and `CIA`, `IRS`, `USA`, `IBS` and `IDS` read letter by letter in English. English and Portuguese offer the form. A language with no letter names keeps each run as written.
+A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name and each digit by its word. In Portuguese, a consonant can also stand where a reader adds a vowel, so `PIB`, `TAP`, `CIAV`, `OVNI` and `PALOP` read as words. A table in the language file holds the runs that the rule reads wrong: `EUA`, `APPO` and `OCDE` read letter by letter in Portuguese, and `CIA`, `IRS`, `USA`, `IBS` and `IDS` read letter by letter in English. English and Portuguese offer the form. A language with no letter names keeps each run as written.
 
 The form does not take a run with a lowercase letter (`ONGs`, `PhD`), a run with full stops (`E.U.A.`), a capital alone (`plano B`), or a Roman numeral that the `ROMAN` form reads (`século XIV`). In English, an e-mail or web address reads as an address. With the form on, a run of capitals in the reading of another form reads as this form reads it. So `Call the BBC at 9 AM.` reads "Call the bee bee see at nine a em." in `en-US`, and `help@IRS.gov` reads "help at i ar ess dot gov".
 
 Known limits of the form:
 
-- A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i".
+- A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i". Portuguese gives such a run no free consonant, so `A D. XIV.` reads "A Dom xis i vê."
 - A run that reads as a word and holds a digit stays as written, as `COVID19` does with the form off.
+- Portuguese reads some initialisms as words that a reader spells, because no source in the language file names them: `IBGE` stays as written. A well-formed Roman numeral is spelled, so `DIV`, `CIV` and `LIV` read letter by letter.
 - The rule reads some initialisms as words, because no source in the language file names them: `CEO` and `WHO` stay as written in English.
 - In English, a coda takes the s of the -s/-z morpheme. So the rule reads some three-letter initialisms of a vowel, a consonant and s as words: `ABS` and `ITS` stay as written. `letter_runs` lists the ones that a source spells, such as `IBS` and `IDS`.
 - A run with a letter that has no name, such as `Ç`, stays as written when it does not split into syllables.
@@ -99,8 +100,9 @@ Known limits of the form:
 - A run of digits joined to a run reads digit by digit. `10GB` reads "one zero gee bee", and `A25` reads "á dois cinco" in pt-PT.
 - Portuguese has no address form, so the form spells only the run in an address. `geral@RTP.pt` reads "geral@érre tê pê.pt" in pt-PT.
 - Some English letter names do not read right in every English phonemizer, and no other spelling that Wiktionary gives as the name reads right in more of them. misaki does not know `ef` (F) or `ar` (R). In `double-u` (W), orthography2ipa reads `double` with the vowel of "out" on its rules alone, and g2p_en drops the /j/. An address reads the same names.
-- `a`, the name of A, reads as the article inside a phrase. So `nine a em` and `a at bee dot com` read the article in every English phonemizer measured. Before a punctuation mark, espeak-ng and misaki read `a` as the letter name, as in `u ess a.` for `the USA.`. The other spelling `ay` reads as "aye", the name of I, in espeak-ng, so the table keeps `a`.
-- The Portuguese codas are only `l`, `r`, `s`, `z`, `x`, `m` and `n`. So the form spells some acronyms that speakers read as words, some with an added e: `CIAV` "ciave" (Ciberdúvidas 39064), `OVNI` ¦óvni¦ (Ciberdúvidas 9355) and `PIB` "pibe" (Wiktionary). They read "cê i á vê", "ó vê éne i" and "pê i bê". A measurement against WikiPron in both directions decides the coda set.
+- `a`, the name of A, reads as the article inside a phrase. So `nine a em` and `a at bee dot com` read the article in every English phonemizer measured. Before a full stop, espeak-ng and misaki read `a` as the letter name, as in `u ess a.` for `the USA.`. The other spelling `ay` reads as "aye", the name of I, in espeak-ng, so the table keeps `a`.
+- A Portuguese syllable inside a run closes with one consonant. So a word in capitals that needs two consonants at the end of a syllable reads letter by letter: `INSTITUTO` (ins-ti-tu-to) reads "i éne ésse tê i tê u tê ó".
+- The Portuguese rule reads some runs that Wiktionary spells, such as `EPI` ({{pt-IPA|ê-pê-i}}) and `ODE` ({{pt-IPA|ó-dê-é}}). It spells some runs that Wiktionary reads as words, such as `WAN`, because `w` starts no Portuguese syllable.
 - A span that waits on a joined character on the first pass can read on a second pass, after the form spells a run next to it. `Sala 9#D. RTP.` reads "Sala 9#D. érre tê pê.", and a second pass reads "nove".
 
 ### Emoji
@@ -284,6 +286,8 @@ Some currency and symbol readings are still wrong or stay as written:
 - A symbol name is the CLDR name, with no agreement and no context. `8 ÷ 2` reads "oito sinal de divisão dois" in Portuguese.
 - A sign that CLDR names before a number reads before the number. `₿1` reads "bitcoin one".
 - A euro amount with a comma for the decimal mark stays as written in English, as in `€12,50`.
+- Portuguese text in capitals cannot tell the city Córdoba from the currency, because the currency gender entry matches the word as written. So `PAGUEI 2 CÓRDOBAS.` reads "duas", and `Paguei 2 córdobas.` reads "dois".
+- The Portuguese paʻanga reads as a feminine noun, so `2 T$` reads "duas paʻangas tonganesas". The CLDR adjective "tonganesas" agrees with it, but Priberam gives a masculine noun: "paanga": "nome masculino [...] Unidade monetária de Tonga (código: TOP)".
 - A doubled mark reads its singular name twice. `Veja os §§ 2 e 3.` reads "Veja os parágrafo parágrafo dois e três".
 - A currency sign at the start or the end of an address stays as written in the address, and a second pass reads it with the number next to it. `x@€ 08` reads "ex at € 08", and a second pass reads "ex at eight euros". The same holds for the signs of the CLDR currencies: `x@₦ 08` reads "ex at ₦ 08", and a second pass reads "ex at eight Nigerian nairas".
 - A currency sign between a range and another sign can keep the range as written. `0–2$€0` reads "0–2$zero euros", and a second pass reads "zero to two$zero euros". `0–2$₽0` reads "0–2$zero Russian rubles", and a second pass reads "zero to two$zero Russian rubles".

@@ -35,7 +35,7 @@ alphabet", Letter names, gives from the Oxford English Dictionary, with "zed" in
 English. C reads "see", another spelling of its name, because misaki, an English phonemizer, has no "cee" in its
 American lexicon (Wiktionary, "see", Etymology 3, Noun: "Alternative form of cee; the name of the Latin script
 letter C/c."). A keeps "a". English phonemizers read "a" inside a phrase as the article, but espeak-ng and misaki read
-it as the letter name before a punctuation mark, as in "u ess a.". The other spelling "ay" reads as /aɪ/, the name of
+it as the letter name before a full stop, as in "u ess a.". The other spelling "ay" reads as /aɪ/, the name of
 I, in espeak-ng.
 
 A run of capital letters reads by the `LETTERS` form (design section 4.6) when the caller turns the form on. A run

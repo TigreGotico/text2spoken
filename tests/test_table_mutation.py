@@ -67,9 +67,11 @@ PT_ENTRIES = {
     "color_words": "cor", "colors": "000000", "titles": "Dr.", "abbreviations_any_case": "dr.",
     "honorific_before_name": "D.", "abbreviations": "etc.", "sentence_final": "etc.", "number_abbreviations": "n.º",
     "ordinal_marks": "ª", "regnal_titles": "D", "century_words": "século", "determiners": "as", "noun_gender": "Isabel",
+    "currency_noun_gender": "córdobas",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "min",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
-    "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "r", "letter_runs": "TAP",
+    "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
+    "letter_free_consonants": "b",
 }
 ENTRIES = {
     "de": DE_ENTRIES,

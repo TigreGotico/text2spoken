@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a38](https://github.com/TigreGotico/text2spoken/tree/0.0.2a38) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a37...0.0.2a38)
+
+**Merged pull requests:**
+
+- fix\(pt\): read PIB, CIAV, OVNI and PALOP as words, and keep Córdoba feminine [\#81](https://github.com/TigreGotico/text2spoken/pull/81) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a37](https://github.com/TigreGotico/text2spoken/tree/0.0.2a37) (2026-11-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a36...0.0.2a37)
