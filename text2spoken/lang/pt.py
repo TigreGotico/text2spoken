@@ -97,6 +97,20 @@ presença da consoante «H», em qualquer posição"), so HIV reads letter by le
 numeral, which `ROMAN` declines in its context, takes no free consonant (design section 4.6). So `XIV` reads letter
 by letter where `ROMAN` does not read it, and `CIC`, which is no Roman numeral, reads as a word.
 
+The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4), read with
+the variety tag: `1/5/2024` reads "primeiro de maio de dois mil e vinte e quatro", `14:30` "catorze e trinta" and
+`17h30` "dezassete horas e trinta minutos". text2spoken recognises the written form and gives the parser its fields.
+A field that the parser refuses (`UnsupportedForm` or `ValueError`) keeps the written text. The maintainer ruled
+that spoken text says "meia-noite" for 00:00 and "meio-dia" for 12:00, and that the preposition before the time
+agrees with the noun. So a whole hour written as a clock with no `h`, at 0 or 12, reads the 12-hour form of the
+parser, and the article in the word before it agrees: "às 0:00" reads "à meia-noite", "das 12:00" "do meio-dia" and
+"até às 12:00" "até ao meio-dia". `time_contractions` gives the words: Priberam, "meia-noite": "nome feminino";
+"meio-dia": "nome masculino"; "ao": "Contracção da preposição a e do artigo ou pronome o"; "do": "Contracção da
+preposição de e artigo ou pronome o"; "pelo": "Aglutinação da preposição antiga per e do artigo ou pronome lo". A
+time that writes `h`, such as `0h` or `12h`, reads the hour unit as written, as the ruling keeps it: "zero horas" in
+pt-PT and "zero hora" in pt-BR (Dicio, "Zero grau ou zero graus": "No Brasil, o zero é encarado como singular: zero
+grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero graus; zero reais; zero horas.").
+
 `letter_runs` holds three runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
@@ -144,8 +158,9 @@ DATA = freeze({
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
     "time_words": ["às", "as", "à", "pelas", "das", "até", "desde"],
     "time_suffixes": ["h"],
-    "time_units": {"h": {"one": "hora", "other": "horas"}, "min": {"one": "minuto", "other": "minutos"},
-                   "s": {"one": "segundo", "other": "segundos"}},
+    "time_units": {"h": {"one": "hora", "other": "horas"}},
+    "time_contractions": {"às": {"0": "à", "12": "ao"}, "das": {"0": "da", "12": "do"},
+                          "pelas": {"0": "pela", "12": "pelo"}},
     "range_articles": {"da": {"one": "à", "other": "às"}, "das": {"one": "à", "other": "às"}},
     "day_periods": {"am": ["a.m."], "pm": ["p.m."]},
     "dimension_marks": ["x", "×"],
@@ -261,9 +276,6 @@ class PortugueseSpeller:
         (Teyssier, Manual de Língua Portuguesa, p. 183, as the owner of ovos-number-parser reports it)."""
         gender = FEMININE if features.gender is FEMININE else MASCULINE
         return self.ovos.ordinal(digits, Features(gender=gender), at_variety(request))
-
-    def year(self, digits: str, features: Features, request: Request) -> str:
-        return self.cardinal(digits, Features(), request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         return self.ovos.decimal(integer, fraction, Features(), at_variety(request))
@@ -440,51 +452,49 @@ def speak_range(span: Span, context: SpanContext) -> str:
     return f"{low} {word} {high}"
 
 
-def _day(day: int, request: Request) -> str:
-    """The first day of a month reads `primeiro`, and every other day a cardinal. Ciberdúvidas 32700 gives this
-    rule, paraphrasing Cunha and Cintra, Nova Gramática do Português Contemporâneo, p. 374: in the days of the
-    month the cardinals are used, except for the first day, where the ordinal is the rule. A written `1.º` is an
-    ordinal span."""
-    if day == 1:
-        return SPELLER.ordinal("1", Features(gender=MASCULINE), request)
-    return _cardinal(str(day), request)
-
-
 def speak_date(span: Span, context: SpanContext) -> str:
-    request = context.request
+    from ovos_date_parser.spoken import spoken_date
+
     fields = span.fields
-    words = [_day(fields["day"], request), "de",
-             request.data["months"][fields["month"] - 1]]
-    if fields["year"] is not None:
-        words += ["de", SPELLER.year(str(fields["year"]), Features(), request)]
-    return " ".join(words)
+    try:
+        return spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
+    except ValueError as error:
+        raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
+
+
+def _hour(fields: FrozenMap) -> int:
+    """The hour of the 24-hour clock. A written `a.m.` or `p.m.` gives it (Priberam, "a.m.": "antes do meio-dia";
+    "p.m.": "depois do meio-dia")."""
+    hour = fields["hour"]
+    return hour if fields["period"] is None else hour % 12 + (12 if fields["period"] == "pm" else 0)
+
+
+def _day_point(fields: FrozenMap) -> int | None:
+    """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds."""
+    hour = _hour(fields)
+    whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"]
+    return hour if whole and hour in (0, 12) else None
 
 
 def speak_time(span: Span, context: SpanContext) -> str:
-    """`catorze e trinta` for `14:30`, `catorze horas`, `uma hora`. The hour counts `hora`, a feminine noun
-    (Priberam, "hora"). A time that writes the hour symbol `h` reads its units, so `17h30` reads `dezassete horas e
-    trinta minutos` (Ciberdúvidas 14648; Ciberdúvidas 3267: "às onze horas e trinta minutos"). Seconds read as in
-    Ciberdúvidas 14586: "em 20 h 30 m 24 s, é claro que se quer dizer vinte horas, trinta minutos e vinte e quatro
-    segundos". A written `a.m.` or
-    `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.": "antes do meio-dia"; "p.m.": "depois do
-    meio-dia")."""
-    request = context.request
+    """`catorze e trinta` for `14:30`, `vinte e uma horas` for `21:00`, and `meia-noite` for `0:00`. A time that
+    writes the hour symbol `h` reads its units, so `17h30` reads `dezassete horas e trinta minutos` (Ciberdúvidas
+    14648; Ciberdúvidas 3267: "às onze horas e trinta minutos"), and its seconds (Ciberdúvidas 14586: "vinte horas,
+    trinta minutos e vinte e quatro segundos"). The parser gives words with no comma, so `17 h 34 min 25 s` reads
+    `dezassete horas trinta e quatro minutos e vinte e cinco segundos`. A written zero second is not read."""
+    from ovos_date_parser.spoken import spoken_time
+
     fields = span.fields
-    units = request.data["time_units"]
-    hour, minute = fields["hour"], fields["minute"]
-    if fields["period"] is not None:
-        hour = hour % 12 + (12 if fields["period"] == "pm" else 0)
-    hour_words = _cardinal(str(hour), request, FEMININE)
-    second = fields["second"]
-    if minute == 0 and not second:
-        return f"{hour_words} {_counted(units['h'], request, str(hour))}"
-    if not fields["suffix"]:
-        return f"{hour_words} e {_cardinal(str(minute), request)}"
-    parts = [f"{hour_words} {_counted(units['h'], request, str(hour))}"]
-    for value, unit in ((minute, "min"), (second, "s")):
-        if value:
-            parts.append(f"{_cardinal(str(value), request)} {_counted(units[unit], request, str(value))}")
-    return ", ".join(parts[:-1]) + " e " + parts[-1]
+    tag = context.request.variety.tag
+    hour, minute = _hour(fields), fields["minute"]
+    try:
+        if _day_point(fields) is not None:
+            return spoken_time(tag, hour, clock="12h", period=True)
+        if fields["suffix"]:
+            return spoken_time(tag, hour, minute, fields["second"] or None, style="units")
+        return spoken_time(tag, hour, minute)
+    except ValueError as error:
+        raise DeclinedReading(f"ovos-date-parser reads no time {hour}:{minute:02}: {error}") from error
 
 
 def _currency(currency: FrozenMap, category: str) -> str:
@@ -656,7 +666,13 @@ class Clock(TimeClock):
     "Considero perfeitamente aceitável 17:30 h") and `17 h 34 min 25 s` (Ciberdúvidas 3267). The other is two times
     that a range mark joins, as in `das 9h-17h` and `das 9:00-17:00`, where the second time takes the article of the
     first (Ciberdúvidas 22241: "das cinco às seis horas"). A chain of three times or more stays as written. A time
-    that writes `h` keeps it in the `suffix` field, so it reads its units."""
+    that writes `h` keeps it in the `suffix` field, so it reads its units.
+
+    Before "meia-noite" or "meio-dia", a word of `time_contractions` right before the time takes the article of that
+    noun, when only white space stands between them. The span then starts at the word and gives the article and the
+    white space in its `lead`, so `às 0:00` reads `à meia-noite`. A character between them, such as the `§` of `às §
+    0:00`, keeps the word as written, so that the span claims no character that another form reads. In a range, the
+    range word of the first time takes the article: `das 9:00-12:00` reads `das nove horas ao meio-dia`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
@@ -666,7 +682,35 @@ class Clock(TimeClock):
         for span in super().find(text, tokens, request):
             if not any(span.start < other.end and other.start < span.end for other in own):
                 own.append(self._with_symbol(span, text))
-        yield from sorted(own, key=lambda span: span.start)
+        yield from self._contracted(text, tokens, sorted(own, key=lambda span: span.start), request)
+
+    @staticmethod
+    def _contracted(text: str, tokens: Sequence[Token], spans: list[Span], request: Request) -> list[Span]:
+        contractions = request.data["time_contractions"]
+        words = context_words(tokens)
+        out: list[Span] = []
+        for span in spans:
+            hour = _day_point(span.fields)
+            if hour is None:
+                out.append(span)
+                continue
+            if out and out[-1].end == span.start and out[-1].trail:
+                forms = contractions.get(out[-1].trail.strip().lower())
+                if forms is not None:
+                    out[-1] = replace(out[-1], trail=f" {forms[str(hour)]} ")
+                out.append(span)
+                continue
+            index = bisect_right(words, span.start, key=lambda word: word.end)
+            word = words[index - 1] if index else None
+            forms = contractions.get(word.text.lower()) if word is not None else None
+            gap = text[word.end:span.start] if forms is not None else ""
+            if gap.isspace():
+                article = forms[str(hour)]
+                if word.text[0].isupper():
+                    article = article[0].upper() + article[1:]
+                span = replace(span, start=word.start, lead=article + gap)
+            out.append(span)
+        return out
 
     @staticmethod
     def _with_symbol(span: Span, text: str) -> Span:
