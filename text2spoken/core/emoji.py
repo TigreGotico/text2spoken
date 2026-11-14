@@ -28,7 +28,7 @@ from importlib.resources import files
 
 from text2spoken.core.currencies import cldr_part
 from text2spoken.core.language import Request
-from text2spoken.core.tokens import EMOJI_MARKS, STAND_IN
+from text2spoken.core.tokens import EMOJI_MARKS, STAND_IN, is_word_char
 from text2spoken.params import Form, NormalizationParams
 
 SELECTOR = "️"
@@ -52,22 +52,25 @@ def _sequences() -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
     return keys, starts, text
 
 
-def _second_indicator(text: str, index: int) -> bool:
-    """Whether text[index] is a regional indicator that pairs with the one before it. UAX #29 rules GB12 and GB13
-    pair regional indicators from the start of a run: "Do not break within emoji flag sequences. That is, do not
-    break between regional indicator (RI) symbols if there is an odd number of RI characters before the break
-    point." So `🇵🇵🇹` is the pair `🇵🇵` and a lone `🇹`, and no flag of Portugal."""
-    count = 0
-    while index - count > 0 and text[index - count - 1] in REGIONAL_INDICATORS:
-        count += 1
-    return text[index] in REGIONAL_INDICATORS and count % 2 == 1
+@lru_cache(maxsize=64)
+def _second_indicators(text: str) -> frozenset[int]:
+    """The position of each regional indicator that pairs with the one before it. UAX #29 rules GB12 and GB13 pair
+    regional indicators from the start of a run: "Do not break within emoji flag sequences. That is, do not break
+    between regional indicator (RI) symbols if there is an odd number of RI characters before the break point." So
+    `🇵🇵🇹` is the pair `🇵🇵` and a lone `🇹`, and no flag of Portugal. One pass over the text finds every pair."""
+    second, run = [], 0
+    for index, char in enumerate(text):
+        run = run + 1 if char in REGIONAL_INDICATORS else 0
+        if run and run % 2 == 0:
+            second.append(index)
+    return frozenset(second)
 
 
 def _emoji(text: str, index: int, joined: bool) -> int | None:
     """The end of the emoji at text[index], or None. A character that is no space, before U+FE0F, a skin tone or a
     zero width joiner, is an emoji, even when the emoji files do not hold it. After a zero width joiner (`joined`),
     a character with text presentation is an emoji with nothing after it."""
-    if text[index:index + 1] in ("", SELECTOR) or _second_indicator(text, index):
+    if text[index:index + 1] in ("", SELECTOR) or index in _second_indicators(text):
         return None
     keys, starts, text_presentation = _sequences()
     key, end, position = "", None, index
@@ -122,15 +125,33 @@ def sequences_in(text: str) -> tuple[tuple[int, int], ...]:
     return tuple(found)
 
 
+def touches_word(text: str, start: int, end: int) -> bool:
+    """Whether the emoji sequence text[start:end] stays as written because it touches a word. Design section 4.7: "An
+    emoji sequence that starts with a letter or a digit and touches a letter or a digit on its left stays as written
+    (`12️⃣`)." The sequence must hold U+FE0E, U+FE0F or U+20E3, as each sequence that the view hides does."""
+    return (start > 0 and is_word_char(text[start]) and is_word_char(text[start - 1])
+            and any(char in EMOJI_MARKS for char in text[start:end]))
+
+
 @lru_cache(maxsize=64)
 def emoji_view(text: str) -> str:
     """The text as every form other than `EMOJI` and `ELECTRONIC` reads it. A character of an emoji sequence that
     U+FE0E, U+FE0F or U+20E3 follows belongs to the sequence (design section 4.7). When it is no symbol, as the digit
     of `1️⃣` and the `#` of `#️⃣` are, it is U+FFFC here, a symbol that no form reads, so no number takes it. A symbol
     stays, because `SYMBOL` already leaves a symbol that such a mark follows. The view has the length of the text, so
-    a span of the view is the same span of the text."""
-    chars = list(text)
+    a span of the view is the same span of the text.
+
+    A sequence that touches a word (`touches_word`) stays as written with the word it touches, so every character of
+    that word is U+FFFC too. The word runs back to a space, a symbol, the start of the text or the end of the sequence
+    before it: `Code 12️⃣` keeps `12️⃣`, `x.org1️⃣` stays as written whole, and `©` of `©A1️⃣` still reads."""
+    chars, previous = list(text), 0
     for start, end in sequences_in(text):
+        if touches_word(text, start, end):
+            word = start
+            while word > previous and not (text[word - 1].isspace() or unicodedata.category(text[word - 1])[0] == "S"):
+                word -= 1
+            chars[word:start + 1] = STAND_IN * (start + 1 - word)
+        previous = end
         for index in range(start, end - 1):
             if text[index + 1] in EMOJI_MARKS and not unicodedata.category(text[index]).startswith(("S", "M")):
                 chars[index] = STAND_IN

@@ -42,7 +42,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 from text2spoken.core.currencies import cldr_part, currency_signs, words_only
-from text2spoken.core.emoji import JOINER, MODIFIERS, SELECTOR, emoji_name, name_reading, sequence_at, written_text
+from text2spoken.core.emoji import (JOINER, MODIFIERS, SELECTOR, emoji_name, name_reading, sequence_at, touches_word,
+                                    written_text)
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
 from text2spoken.core.tokens import Token, is_digit
@@ -94,11 +95,14 @@ def reads_symbol(text: str, index: int, request: Request) -> bool:
 
 def _emoji_reading(text: str, start: int, request: Request) -> tuple[int, str, str | None] | None:
     """The end, the CLDR name and the reading of the emoji sequence at text[start], or None when no sequence with a
-    name starts there. The reading is None when the name does not read."""
+    name starts there. The reading is None when the name does not read, or when the sequence touches a word on its
+    left (`touches_word`), as `12️⃣` does: such a sequence stays as written."""
     found = emoji_name(text, start, request)
     if found is None or found[1] is None:
         return None
     end, name = found
+    if touches_word(text, start, end):
+        return end, name, None
     return end, name, name_reading(name, request.tag, request.params)
 
 

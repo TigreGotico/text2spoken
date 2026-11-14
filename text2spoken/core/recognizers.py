@@ -18,6 +18,7 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
+from text2spoken.core.emoji import sequences_in, touches_word, written_text
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
@@ -26,8 +27,8 @@ from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Wor
 from text2spoken.core.spellers import DigitSpeller, bounded_integer
 from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (Token, context_word, fold_digits, is_bounded, is_digit, is_letter, is_mark,
-                                     is_word_char, next_visible, one_digit_set)
+from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_bounded, is_digit, is_letter,
+                                     is_mark, is_word_char, next_visible, one_digit_set)
 from text2spoken.core.units import unit_table, units_at
 from text2spoken.params import FrozenMap, Form
 
@@ -172,12 +173,26 @@ class Lexicon:
     form: Form = Form.LEXICON
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        """The caller's keys match the text as written, so a key such as `#️⃣` matches. An emoji sequence that holds
+        U+FE0E, U+FE0F or U+20E3 is one character, as `😀` is. A match neither starts nor ends inside it, so a key `1`
+        leaves the `1` of `1️⃣`. Next to a key, the sequence is no word character, unless it touches a word
+        (`touches_word`), so a key `x` matches in `1️⃣x` as in `😀x`, and a key `A` does not match in `A1️⃣`."""
         entries = lexicon_entries(request.tag, request.params.lexicon)
         by_first = _keys_by_first_character(entries)
+        text = written_text(text, request)
+        sequences = [(start, end) for start, end in sequences_in(text)
+                     if any(char in EMOJI_MARKS for char in text[start:end])]
+        inside = {index for start, end in sequences for index in range(start + 1, end)}
+        apart = {start for start, end in sequences if not touches_word(text, start, end)}
+
+        def limit(index: int) -> bool:
+            return index in apart or _lexicon_limit(text, index)
+
         position = 0
         while position < len(text):
             key = next((k for k in by_first.get(text[position], ()) if text.startswith(k, position)
-                        and _lexicon_limit(text, position - 1) and _lexicon_limit(text, position + len(k))), None)
+                        and position not in inside and position + len(k) not in inside
+                        and limit(position - 1) and limit(position + len(k))), None)
             if key is None:
                 position += 1
                 continue

@@ -4,6 +4,8 @@ Each expected value is read off the clause, the raw CLDR 49 JSON and the Unicode
 code."""
 import json
 import random
+import unicodedata
+from dataclasses import replace
 from importlib.resources import files
 
 import pytest
@@ -11,7 +13,8 @@ import pytest
 from tests.conftest import EMOJI_ON, rows
 from tests.known_limits import known_limit
 from tests.test_cldr_currencies_symbols import Files, data, extractor
-from text2spoken import Form, FrozenMap, InvalidLexiconError, NormalizationParams, analyze, normalize
+from text2spoken import (Form, FrozenMap, InvalidLexiconError, NormalizationParams, UnreadFormError, analyze,
+                         normalize)
 from text2spoken.core.emoji import emoji_view, name_reading, sequence_at, sequences_in
 from text2spoken.core.tokens import STAND_IN, is_mark, is_word_char
 
@@ -108,7 +111,7 @@ def test_regional_indicators_pair_from_the_start_of_a_run(text, found):
 
 
 def test_the_view_hides_each_character_of_a_sequence_that_an_emoji_mark_follows_and_is_no_symbol():
-    text = "a1️⃣ #️⃣ ❤️ 5🏽 ©️‍1️⃣ ❤︎"
+    text = "a 1️⃣ #️⃣ ❤️ 5🏽 ©️‍1️⃣ ❤︎"
     view = emoji_view(text)
     assert len(view) == len(text)
     hidden = [index for index, char in enumerate(view) if char != text[index]]
@@ -167,13 +170,20 @@ def test_every_sequence_reads_the_same_on_a_second_pass(tag):
 EMOJI_ATOMS = ["😂", "👍🏽", "❤", "❤️", "©", "©️", "1️⃣", "#️⃣", "🇵🇹", "🇦🇬", "🇵", "🕐", "😀🏽", "a🏽", "⋂🏿", "️",
                "‍", "🏽", "⃣", "👨‍👩‍👧", "🧜‍♂️", "x@a", "b.com", ".org", " ", " ", "2", "+4",
                "3/4", "1.234,56", "Call", "Ligue", "(", ")", ".", ",", "$5", "€", "→", "May", "in",
-               "Call 0800 123 456 ", "call 911", "555-123-4567", "(11) 91234-5678", "10+4 ₡", "₡-", "₴", "-"]
+               "Call 0800 123 456 ", "call 911", "555-123-4567", "(11) 91234-5678", "10+4 ₡", "₡-", "₴", "-", "A",
+               "12️⃣", "1⃣"]
+ADDRESS_ATOMS = ("x@a", "b.com", ".org")
+KEYCAP_LEXICON = FrozenMap({code: FrozenMap({"#️⃣": "hash key", "1️⃣": "option one", "A1️⃣": "grade"})
+                            for code in ("en", "pt")})
 
 
 @pytest.mark.parametrize("seed", range(4))
 def test_normalize_with_the_form_on_is_idempotent_on_random_text(seed):
     """Section 11 with `EMOJI` on: a second pass changes nothing, except in the known limits of the README and in a
-    text that a second pass changes with the default params too, which is no break of this form."""
+    text that a second pass changes with the default params too, which is no break of this form. The same holds with
+    a caller lexicon of keycap keys, on text with no address: an address puts a space after itself, and a key that a
+    word character blocked on the first pass then matches, with the default forms too (`x.org😀` with a key `😀`). A
+    break that the same text gives with a symbol key in place of each keycap key is excused (`symbol_twin_breaks`)."""
     rng = random.Random(seed)
     for _ in range(500):
         lang = rng.choice(TAGS)
@@ -181,6 +191,23 @@ def test_normalize_with_the_form_on_is_idempotent_on_random_text(seed):
         once, off = normalize(text, lang, EMOJI_ON), normalize(text, lang)
         assert (normalize(once, lang, EMOJI_ON) == once or known_limit(text, lang, EMOJI_ON)
                 or normalize(off, lang) != off), (text, once)
+        if any(atom in text for atom in ADDRESS_ATOMS):
+            continue
+        lexicon = replace(EMOJI_ON, lexicon=KEYCAP_LEXICON)
+        once = normalize(text, lang, lexicon)
+        assert (normalize(once, lang, lexicon) == once or known_limit(text, lang, EMOJI_ON)
+                or normalize(off, lang) != off or symbol_twin_breaks(text, lang)), (text, once)
+
+
+def symbol_twin_breaks(text: str, lang: str) -> bool:
+    """Whether a second pass changes the text with `©` in place of each keycap key and a lexicon key `©`, with the
+    default forms. A lexicon value of letters in place of a symbol can change how the spans around it join, so such a
+    break is no break of this form."""
+    for key in ("A1️⃣", "#️⃣", "1️⃣"):
+        text = text.replace(key, "©")
+    params = NormalizationParams(lexicon=FrozenMap({code: FrozenMap({"©": "hash key"}) for code in ("en", "pt")}))
+    once = normalize(text, lang, params)
+    return normalize(once, lang, params) != once
 
 
 @pytest.mark.parametrize("sequence", ["😂", "👍🏽", "🧑🏿‍🦲"])
@@ -192,12 +219,36 @@ def test_an_emoji_sequence_joins_two_spans_as_one_character(sequence):
 
 
 @pytest.mark.parametrize("params", [None, EMOJI_ON], ids=["off", "on"])
-def test_an_address_before_a_keycap_reads_as_before_a_plain_emoji(params):
-    """The digit of `1️⃣` belongs to the emoji, so the token is `x.org`, as before `😀`."""
-    once = normalize("See x.org1️⃣ now.", "en-GB", params)
-    assert once == normalize("See x.org😀 now.", "en-GB", params).replace(
-        "😀" if params is None else "grinning face", "1️⃣" if params is None else "keycap one")
-    assert normalize(once, "en-GB", params) == once
+@pytest.mark.parametrize(("tag", "text"), [("en-GB", "See x.org1️⃣ now."), ("en-GB", "Code 12️⃣ here."),
+                                           ("en-GB", "x 12️⃣ y"), ("en-US", "Pay $51️⃣ now."),
+                                           ("pt-PT", "Código 12️⃣ aqui.")])
+def test_an_emoji_that_a_word_joins_on_the_left_stays_as_written(tag, text, params):
+    """Design section 4.7: "An emoji sequence that starts with a letter or a digit and touches a letter or a digit on
+    its left stays as written (`12️⃣`)." The word that it touches stays as written too, with the form on or off, and
+    strict mode passes it. The word ends at a symbol, so `$` stays outside it, no form reads `$51️⃣`, and strict mode
+    reports it."""
+    assert normalize(text, tag, params) == text
+    strict = replace(params or NormalizationParams(), strict=True)
+    if "$" in text:
+        with pytest.raises(UnreadFormError) as raised:
+            normalize(text, tag, strict)
+        assert raised.value.unread == ("$51️⃣",)
+    else:
+        assert normalize(text, tag, strict) == text
+
+
+@pytest.mark.parametrize("params", [None, EMOJI_ON], ids=["off", "on"])
+def test_a_digit_before_a_skin_tone_reads_next_to_a_digit(params):
+    """The rule for a sequence that touches a word covers a sequence with U+FE0E, U+FE0F or U+20E3, the sequences
+    that the view hides. A digit before a skin tone reads, as the README limit says, so `5🏽` after `1` reads with it,
+    with the form on or off."""
+    assert normalize("Room 15🏽 now", "en-GB", params) == "Room fifteen🏽 now"
+
+
+def test_the_view_hides_the_word_that_a_sequence_touches():
+    text = "a 😀x.org1️⃣ b"
+    view = emoji_view(text)
+    assert view == "a 😀" + STAND_IN * 6 + "️⃣ b"
 
 
 MARKED = ["❤️", "☑️", "✈️", "1️⃣", "#️⃣", "1⃣", "©️", "🏳️‍🌈", "5️"]
@@ -214,16 +265,31 @@ CONTEXTS = {
 }
 
 
+def touched_word(before: str) -> str:
+    """The word at the end of `before`, back to a space or a symbol, by the clause."""
+    start = len(before)
+    while start and not (before[start - 1].isspace() or unicodedata.category(before[start - 1])[0] == "S"):
+        start -= 1
+    return before[start:]
+
+
 @pytest.mark.parametrize("tag", TAGS)
 @pytest.mark.parametrize("emoji", MARKED)
 def test_with_the_form_off_a_marked_emoji_reads_as_a_plain_emoji(tag, emoji):
     """Design section 4.7: U+FE0F and U+20E3 are no word characters at the edge of another form, and the character
     before them belongs to the emoji. So with the form off, a phone, an amount or a number next to a keycap or a
-    sequence with U+FE0F reads as it reads next to `😀`, and only the emoji differs."""
+    sequence with U+FE0F reads as it reads next to `😀`, and only the emoji differs. A sequence that starts with a
+    digit and touches a letter or a digit on its left stays as written with that word instead."""
     for template in CONTEXTS[tag[:2]]:
         for space in ("", " "):
             text, plain = template.format(e=space + emoji + space), template.format(e=space + "😀" + space)
-            assert normalize(text, tag) == normalize(plain, tag).replace("😀", emoji), text
+            before = template[:template.index("{e}")]
+            if space or not (before[-1:].isalnum() and emoji[0].isalnum()):
+                assert normalize(text, tag) == normalize(plain, tag).replace("😀", emoji), text
+            else:
+                word = touched_word(before)
+                once = normalize(text, tag)
+                assert word + emoji in once and normalize(once, tag) == once, text
 
 
 @pytest.mark.parametrize("tag", TAGS)
@@ -248,6 +314,61 @@ def test_the_lexicon_check_finds_what_a_second_pass_reads_next_to_a_keycap(value
     else:
         with pytest.raises(InvalidLexiconError):
             normalize("X", "en", params)
+
+
+@pytest.mark.parametrize("params", [NormalizationParams(), EMOJI_ON], ids=["off", "on"])
+@pytest.mark.parametrize(("key", "value", "text", "expected"), [
+    ("#️⃣", "hash key", "Press #️⃣ now", "Press hash key now"),
+    ("1️⃣", "option one", "Press 1️⃣ now", "Press option one now"),
+    ("1⃣", "option one", "Press 1⃣ now", "Press option one now"),
+    ("A1️⃣", "grade", "A1️⃣ ok", "grade ok"),
+])
+def test_a_caller_lexicon_key_with_an_emoji_mark_matches_as_written(key, value, text, expected, params):
+    """The caller's lexicon claims first and matches the text as written, so a key that holds a keycap reads its
+    value with the form on or off, as on dev."""
+    lexicon = FrozenMap({"en": FrozenMap({key: value})})
+    assert normalize(text, "en-GB", replace(params, lexicon=lexicon)) == expected
+
+
+def test_a_caller_lexicon_key_ends_at_no_point_inside_an_emoji_sequence():
+    """A key `1` claims a bare `1`, and leaves the `1` of `1️⃣`, which belongs to the sequence."""
+    params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"1": "uno"})}))
+    assert normalize("Press 1 now", "en-GB", params) == "Press uno now"
+    assert normalize("Press 1️⃣ now", "en-GB", params) == "Press 1️⃣ now"
+
+
+def test_a_caller_lexicon_key_meets_an_emoji_sequence_as_it_meets_a_plain_emoji():
+    """A sequence with an emoji mark is one character, as `😀` is, so a key before `1️⃣` matches as it matches before
+    `😀`. A key inside a word that a sequence touches does not match, so `A1️⃣` stays as written."""
+    params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"#️⃣": "hash key", "A": "ay"})}))
+    assert normalize("#️⃣1️⃣ x", "en-GB", params) == normalize("#️⃣😀 x", "en-GB", params).replace("😀", "1️⃣")
+    assert normalize("A1️⃣ x", "en-GB", params) == "A1️⃣ x"
+
+
+def test_a_run_of_regional_indicators_takes_linear_work(monkeypatch):
+    """UAX #29 pairs regional indicators from the start of a run. The pairing reads each character of the run a
+    bounded number of times, so twice the run takes about twice the work, with the form on or off."""
+    from text2spoken.core import emoji
+
+    checks = 0
+
+    class Counted(frozenset):
+        def __contains__(self, char):
+            nonlocal checks
+            checks += 1
+            return frozenset.__contains__(self, char)
+
+    monkeypatch.setattr(emoji, "REGIONAL_INDICATORS", Counted(emoji.REGIONAL_INDICATORS))
+
+    def work(count, params, label):
+        nonlocal checks
+        checks = 0
+        normalize(f"{label} {count} " + "🇵🇹" * count, "en-GB", params)
+        return checks
+
+    for params, label in ((None, "off"), (EMOJI_ON, "on")):
+        small = work(2000, params, label)
+        assert 0 < small and work(4000, params, label) <= 2.2 * small, label
 
 
 @pytest.mark.parametrize("tag", TAGS)
