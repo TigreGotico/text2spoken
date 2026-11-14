@@ -222,7 +222,7 @@ def test_a_unit_symbol_belongs_to_measure(monkeypatch):
 
 def test_without_the_symbol_form_the_symbol_stays_also_in_an_address():
     params = NormalizationParams().without(Form.SYMBOL)
-    assert normalize("© 2024 at a©b.com", "en-GB", params) == "© two thousand and twenty-four at a © bee dot com"
+    assert normalize("© 2024 at a©b.com", "en-GB", params) == "© two thousand and twenty-four at ay © bee dot com"
 
 
 @pytest.mark.parametrize(("tag", "text", "first", "second"), [

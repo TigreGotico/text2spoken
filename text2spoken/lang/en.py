@@ -32,7 +32,11 @@ sign"), and "_", "/", ":", "~", "#", "?", "=", "&" and "+" are "underscore", "sl
 symbol"). The Wiktionary example "en.wiktionary.org", read aloud "E-N-dot-wiktionary-dot-org", spells the
 two-letter label and reads the longer labels as words. A letter reads by the name that Wikipedia, "English
 alphabet", Letter names, gives from the Oxford English Dictionary, with "zed" in British and "zee" in American
-English.
+English. Two letters take another spelling of their name, because English phonemizers read the OED spelling as a
+different word or do not know it: they read "a" as the article, and misaki has no "cee" in its American lexicon.
+Wiktionary gives each spelling as the name of the letter. A is "ay" (Wiktionary, "ay", Etymology 4, Noun:
+"Alternative form of a: the name of the Latin script letter A/a."), and C is "see" (Wiktionary, "see", Etymology 3,
+Noun: "Alternative form of cee; the name of the Latin script letter C/c.").
 
 A run of capital letters reads by the `LETTERS` form (design section 4.6) when the caller turns the form on. A run
 that splits into English syllables stays as written, and any other run reads letter by letter. The syllable sets are
@@ -192,7 +196,7 @@ DATA = freeze({
                            "~": "tilde", "#": "hash", "?": "question mark", "=": "equals", "&": "ampersand",
                            "+": "plus"},
     "letter_names": dict(zip("abcdefghijklmnopqrstuvwxyz", (
-        "a", "bee", "cee", "dee", "e", "ef", "gee", "aitch", "i", "jay", "kay", "el", "em", "en", "o", "pee", "cue",
+        "ay", "bee", "see", "dee", "e", "ef", "gee", "aitch", "i", "jay", "kay", "el", "em", "en", "o", "pee", "cue",
         "ar", "ess", "tee", "u", "vee", "double-u", "ex", "wye", "zed"))),
     "electronic_vowels": ["a", "e", "i", "o", "u"],
     "electronic_schemes": {"http": "read", "https": "read", "ftp": "read"},

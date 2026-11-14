@@ -87,7 +87,7 @@ def test_a_bare_domain_needs_a_top_level_domain_of_the_table(en_with):
 
 def test_a_character_with_no_word_stays_as_written_between_spaces_in_strict_mode():
     assert normalize("Go to http://example.com/a%20b now.", "en", NormalizationParams(strict=True)) == (
-        "Go to aitch tee tee pee colon slash slash example dot com slash a % two zero bee now.")
+        "Go to aitch tee tee pee colon slash slash example dot com slash ay % two zero bee now.")
 
 
 def test_without_the_form_an_address_stays_as_written():

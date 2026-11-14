@@ -7,8 +7,8 @@ recognizer claims the token whole, without the punctuation at its ends that belo
 file: a label as a word or letter by letter, each digit by its digit word, each symbol by its word, and a character
 with no word as written. With the `SYMBOL` form, a character that the address tables do not name reads by the CLDR
 name that `SYMBOL` gives it (design section 4.7), so a second pass finds no symbol for that form to read. An emoji
-sequence is one piece. With the `EMOJI` form it reads by its name, so `x@a👍🏽b.com` reads "ex at a thumbs up medium
-skin tone bee dot com", and with the form off it stays whole as written: "ex at a 👍🏽 bee dot com".
+sequence is one piece. With the `EMOJI` form it reads by its name, so `x@a👍🏽b.com` reads "ex at ay thumbs up medium
+skin tone bee dot com", and with the form off it stays whole as written: "ex at ay 👍🏽 bee dot com".
 """
 from __future__ import annotations
 
