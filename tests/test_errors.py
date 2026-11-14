@@ -25,10 +25,42 @@ def test_the_lexicon_claims_before_every_recognizer():
 @pytest.mark.parametrize("text,expected", [("I have 2,cats😀", "I have two,kats😀"), ("I have 2,cats", "I have two,kats"),
                                            ("3,cats", "three,kats"), ("cats/5", "kats/five"),
                                            ("2 cats", "two kats"), ("cats, 2", "kats, two")])
-def test_a_lexicon_claim_does_not_wait_on_a_digit_that_one_character_joins_to_it(text, expected):
-    """The lexicon claims before every recognizer (section 4.2), so a number that a comma or a slash joins to a
-    key reads as it reads next to any other word."""
-    assert normalize(text, "en", lexicon(en={"cats": "kats"})) == expected
+def test_a_lexicon_claim_does_not_wait_on_a_digit_that_one_character_joins_to_a_letter_of_the_key(text, expected):
+    """The lexicon claims before every recognizer (section 4.2), so a number that a comma or a slash joins to the
+    letter at the edge of a key reads, and a second pass changes nothing (section 11)."""
+    params = lexicon(en={"cats": "kats"})
+    assert normalize(text, "en", params) == expected
+    assert normalize(expected, "en", params) == expected
+
+
+@pytest.mark.parametrize("text,entries", [("GPT-4/5", {"GPT-4": "G P T four"}),
+                                          ("Windows 10/11", {"Windows 10": "windows ten"}),
+                                          ("It cost $1,911.", {"911": "nine one one"}),
+                                          ("Call 911/112.", {"911": "nine one one"})])
+def test_a_lexicon_key_that_ends_in_a_digit_waits_on_the_digits_that_one_character_joins_to_it(text, entries):
+    """No recognizer reads the digits that a key ends in, so the key waits on the joined run as any span does,
+    and the text stays as written on both passes."""
+    assert normalize(text, "en", lexicon(en=entries)) == text
+
+
+def test_a_lexicon_key_before_a_glued_phone_run_counts_by_its_spoken_words():
+    """A glued run stays as written only after a phone word, as a second pass sees the text (section 4.3). With
+    a key `call` for "kall", the word before `+351` on a second pass is "kall", so the first pass reads the number."""
+    params = lexicon(en={"call": "kall"})
+    assert normalize("call+351", "en", params) == "kall+three hundred and fifty-one"
+    assert normalize("kall+three hundred and fifty-one", "en", params) == "kall+three hundred and fifty-one"
+    assert normalize("call+351", "en") == "call+351"
+    telephone = lexicon(en={"Tel": "telephone"})
+    assert normalize("Tel+351", "en", telephone) == "telephone+351"
+    assert normalize("telephone+351", "en", telephone) == "telephone+351"
+
+
+@pytest.mark.parametrize("entries", [{"COVID": "COVID-19"}, {"x": "x/2"}])
+def test_a_lexicon_value_that_holds_its_key_and_a_joined_number_raises(entries):
+    """The key claims inside the value and the number next to it reads, so a second pass would change the
+    reading (section 11)."""
+    with pytest.raises(InvalidLexiconError):
+        normalize("hello", "en", lexicon(en=entries))
 
 
 @pytest.mark.parametrize("text,expected", [("I have 2,catsup", "I have two,catsup"),
