@@ -36,13 +36,18 @@ writes each currency name with a capital ("Euro", "Rupias indianas"), and a curr
 small letter (Acordo Ortográfico de 1990, Base XIX, 1.º a: "A letra minúscula inicial é usada: a) Ordinariamente,
 em todos os vocábulos da língua nos usos correntes"), so a currency name reads with a small first letter: "euros",
 "rupias indianas". CLDR gives a currency no gender, so the noun rules give the gender of the first word of the name, as
-they give the gender of a unit with no CLDR gender: `2 £` reads "duas libras" and `2 €` "dois euros". `noun_gender`
-names the currency nouns that end in "a" and are masculine: Priberam, "taka": "nome masculino [...] Unidade
-monetária do Bangladeche (código: BDT)"; "córdoba": "nome masculino [...] Unidade monetária da Nicarágua (código:
-NIO)". The CLDR 49 pt
-annotations name `$` "dólar" and `¥` "iene", so `$` reads as the dollar and `¥` as the yen, where CLDR pt shares the
-narrow `$` and `¥` between currencies. A `$` after the number is the escudo (see `Money`); CLDR 49 pt-PT gives the
-escudo `$` as its decimal mark. The minor units: Priberam, "cêntimo": "Moeda divisionária que corresponde à
+they give the gender of a unit with no CLDR gender: `2 £` reads "duas libras" and `2 €` "dois euros".
+`currency_noun_gender` names the currency nouns that end in "a" and are masculine: Priberam, "taka": "nome masculino
+[...] Unidade monetária do Bangladeche (código: BDT)"; "córdoba": "nome masculino [...] Unidade monetária da
+Nicarágua (código: NIO)". The table matches a word only as written. A word with a capital is a proper noun (AO1990,
+Base XIX, 2.º: "A letra maiúscula inicial é usada: a) Nos antropónimos/antropônimos, reais ou fictícios [...] b) Nos
+topónimos/topônimos, reais ou fictícios"), and Priberam gives the currency its name from one: "córdoba": "Origem:
+[Fernández de] Córdoba, antropónimo". So `2 córdobas` reads "dois córdobas", and the city in `Visitei as 2
+Córdobas.` takes its gender as another noun does: "duas". A currency amount looks up the name with its small first
+letter, so pt-BR `2 C$` reads "dois córdobas nicaraguenses", though CLDR 49 pt writes "Córdoba nicaraguense". The
+CLDR 49 pt annotations name `$` "dólar" and `¥` "iene", so `$` reads as the dollar and `¥` as the yen, where CLDR pt
+shares the narrow `$` and `¥` between currencies. A `$` after the number is the escudo (see `Money`); CLDR 49 pt-PT
+gives the escudo `$` as its decimal mark. The minor units: Priberam, "cêntimo": "Moeda divisionária que corresponde à
 centésima parte do euro"; "dólar": "dividida em 100 cêntimos". The design keeps the cêntimo of the euro in pt-BR
 (design section 7.1), because no source names the centavo of the euro.
 
@@ -73,13 +78,26 @@ uma labiodental e a segunda um l ou um r" (p, b; c, g; t, d; f, v). A coda is on
 consonant generally end in one of the single consonants /S/, /l/, /R/, /N/" (Cristófaro Silva 2024, p. 98, quoted
 in Wikipedia, "Portuguese phonology", a secondary source). The letters are s, z and x for /S/ ("nas-cer",
 "atroz-mente", "bissex-to", Base XX, 2), l, r, and m and n "com valor de nasalidade" (Base XX, 2). So IRS, with the
-coda rs, and PIB, with the coda b, read letter by letter.
+coda rs, reads letter by letter.
 
-`letter_runs` holds two runs that the rule reads wrong. TAP reads as a word against the coda rule: Ciberdúvidas
-answer 77 says that "O.N.U.; T.A.P.; O.M.S., que se liam letra por letra. Por facilidade de leitura, começaram a
-ler-se como uma palavra única", and answer 35524 lists TAP among the "acrónimos e siglas com sentido silábico". EUA
-reads letter by letter against the syllable rule: Ciberdúvidas answer 9355 lists EUA among the "Siglas
-(siglóides)", with "letras em que é típico (mas não obrigatório) serem soletradas independentemente".
+A consonant of `letter_free_consonants` can also stand before a vowel that the reader adds. Mendes, Oliveira and
+Teixeira, "PLE: uma sigla para ler ou soletrar?", Cadernos de PLE, Universidade de Aveiro, DOI
+10.34624/cadernosple.v0i0.36961, p. 6: "na língua os núcleos vazios são autorizados, podendo apresentar sílabas cuja
+vogal não é realizada foneticamente". The set holds each consonant letter of Base I but h, which has no sound. Such a
+consonant closes a syllable that another syllable follows, as Base XX, 2 divides "ab-dicar", "af-ta" and "rit-mo",
+so OVNI reads ov-ni. One such consonant can also follow the last syllable. Viana et al. 1994 ("Sobre a pronúncia de
+nomes próprios, siglas e acrónimos em Português Europeu"), quoted by Mendes, Oliveira and Teixeira on p. 14, read a
+run in this way "quando CC são silabificáveis e a sigla apenas contém um núcleo vazio (ex. SERB, CELT), em posição
+final absoluta". So PIB, CIAV, PALOP and TAP read as words. The final consonant reads only in a run that holds a
+consonant before a vowel (p. 13: "Para serem lidos, os acrónimos necessitam de compreender, pelo menos, um grupo
+CV"), so IRS still reads letter by letter. It also reads only in a run with no h outside ch, lh and nh (p. 13: "a
+presença da consoante «H», em qualquer posição"), so HIV reads letter by letter.
+
+`letter_runs` holds three runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
+Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
+obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
+inside the run: Mendes, Oliveira and Teixeira, p. 10: "A estrutura VCCV admite também algumas excepções à leitura:
+OSCE, OCDE e APPO."
 """
 from __future__ import annotations
 
@@ -178,12 +196,13 @@ DATA = freeze({
         "problema": "masculine", "problemas": "masculine", "sistema": "masculine", "sistemas": "masculine",
         "programa": "masculine", "programas": "masculine", "tema": "masculine", "temas": "masculine",
         "grama": "masculine", "gramas": "masculine", "quilograma": "masculine", "quilogramas": "masculine",
-        "taka": "masculine", "takas": "masculine", "córdoba": "masculine", "córdobas": "masculine",
         "lei": "feminine", "leis": "feminine", "vez": "feminine", "vezes": "feminine", "noite": "feminine",
         "noites": "feminine", "tarde": "feminine", "tardes": "feminine", "parte": "feminine", "partes": "feminine",
         "mulher": "feminine", "mulheres": "feminine", "flor": "feminine", "flores": "feminine",
         "Isabel": "feminine", "Leonor": "feminine", "Beatriz": "feminine", "Inês": "feminine",
     },
+    "currency_noun_gender": {"taka": "masculine", "takas": "masculine", "córdoba": "masculine",
+                             "córdobas": "masculine"},
     "gender_suffixes": [["dade", "feminine"], ["dades", "feminine"], ["agem", "feminine"], ["agens", "feminine"],
                         ["ção", "feminine"], ["ções", "feminine"], ["a", "feminine"], ["as", "feminine"]],
     "symbols": {"%": "percent", "€": "money", "$": "money", "°": "measure", "×": "measure"},
@@ -192,7 +211,8 @@ DATA = freeze({
     "letter_onsets": [*"bcçdfghjlmnpqrstvxz", "ch", "lh", "nh",
                       *(first + second for first in "pbcgtdfv" for second in "lr")],
     "letter_codas": [*"lrszxmn"],
-    "letter_runs": {"EUA": "letters", "TAP": "word"},
+    "letter_free_consonants": [*"bcçdfgjklmnpqrstvwxz"],
+    "letter_runs": {"EUA": "letters", "APPO": "letters", "OCDE": "letters"},
     "patterns": {
         "date_named": "([0-9][0-9]?) de " + _MONTH + "(?: de ([0-9][0-9][0-9][0-9]))?",
         "expression": "[-−+]?[0-9]+(?: ?[+−×=] ?[-−+]*[0-9]+)+",
@@ -303,12 +323,20 @@ def _lexicon_gender(word: str) -> str | None:
     return TugaLexicon.get_noun_gender(word)
 
 
+def _listed_gender(word: str, data: FrozenMap) -> str | None:
+    """The gender that the tables name: `currency_noun_gender` for the word as written, then `noun_gender` for the
+    word or its lower case. A currency noun matches only in lower case, because the word with a capital is a proper
+    noun, as the city Córdoba is."""
+    return data["currency_noun_gender"].get(word) or data["noun_gender"].get(word) \
+        or data["noun_gender"].get(word.lower())
+
+
 def _gender_of(word: str, request: Request) -> GrammaticalGender | None:
-    """The gender of a noun or a given name: the `noun_gender` table, then the endings of `gender_suffixes`."""
+    """The gender of a noun or a given name: the tables of `_listed_gender`, then the endings of `gender_suffixes`."""
     data = request.data
     if word in data["function_words"]:
         return None
-    entry = data["noun_gender"].get(word) or data["noun_gender"].get(word.lower())
+    entry = _listed_gender(word, data)
     if entry is not None:
         return GrammaticalGender(entry)
     for suffix, gender in data["gender_suffixes"]:
@@ -325,7 +353,7 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     numeral cardinal de dois géneros"), so `2 mil pessoas` takes the gender of `pessoas`, as `2000 pessoas` does. A
     partitive `das` or `dos` right after the number gives the gender, as in `1 das casas`.
 
-    The `noun_gender` table names a noun first. When tugalex knows the word after the number, a determiner comes
+    The tables of `_listed_gender` name a noun first. When tugalex knows the word after the number, a determiner comes
     before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
     a noun"), and that word can be an adjective with no noun, as in `as 2 melhores`. A noun of two genders, such as
     `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. Without
@@ -341,7 +369,7 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     if noun.lower() in _PARTITIVES:
         return GrammaticalGender(data["determiners"][noun.lower()])
     determiner = data["determiners"].get(context.before[-1].lower()) if context.before else None
-    listed = data["noun_gender"].get(noun) or data["noun_gender"].get(noun.lower())
+    listed = _listed_gender(noun, data)
     code = _lexicon_gender(noun) if noun and listed is None and noun not in data["function_words"] else None
     if code is None:
         found = _gender_of(noun, request) if noun else None
@@ -472,7 +500,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
     currency = currency_table(request)[fields["currency"]]
-    gender = _gender_of(currency_name(currency, "one").split()[0], request)
+    gender = _gender_of(_currency(currency, "one").split()[0], request)
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         scale = request.data["scales"][fields["scale"]]

@@ -21,8 +21,9 @@ EN, PT = language_file("en"), language_file("pt")
 ROW_FILES = sorted(p.stem for p in DATA.glob("*.tsv"))
 
 
-def _sets(spec) -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
-    return tuple(frozenset(spec.data[key]) for key in ("letter_vowels", "letter_onsets", "letter_codas"))
+def _sets(spec) -> tuple[frozenset[str], ...]:
+    return tuple(frozenset(spec.data.get(key, ())) for key in ("letter_vowels", "letter_onsets", "letter_codas",
+                                                                "letter_free_consonants"))
 
 
 def _registry(monkeypatch, *specs) -> None:
@@ -63,23 +64,26 @@ def test_a_language_with_no_letter_names_does_not_offer_the_form(code):
 
 @pytest.mark.parametrize(("spec", "word"), [
     (PT, "nato"), (PT, "onu"), (PT, "iva"), (PT, "sida"), (PT, "uefa"), (PT, "etar"), (PT, "atenção"),
-    (PT, "eua"), (EN, "nato"), (EN, "uefa"), (EN, "warning"), (EN, "first"), (EN, "help"), (EN, "irs"),
+    (PT, "eua"), (PT, "pib"), (PT, "tap"), (PT, "ciav"), (PT, "palop"), (PT, "ovni"), (PT, "técnico"), (PT, "chip"),
+    (EN, "nato"), (EN, "uefa"), (EN, "warning"), (EN, "first"), (EN, "help"), (EN, "irs"),
     (EN, "usa"), (EN, "cia"), (EN, "scuba"), (EN, "aids"), (EN, "sports"), (EN, "events"), (EN, "results"),
 ])
 def test_a_run_that_splits_into_syllables(spec, word):
-    """na-to, o-nu, i-va, si-da, u-e-fa, e-tar, a-ten-ção, e-u-a; war-ning, first with coda rst, help with coda lp,
-    irs with coda rs, u-sa, ci-a; scu-ba with onset sc, and a-ids, sports, e-vents and re-sults with a coda that
-    takes the s of the -s/-z morpheme."""
+    """na-to, o-nu, i-va, si-da, u-e-fa, e-tar, a-ten-ção, e-u-a; pi-b, ta-p, ci-a-v, pa-lo-p and chi-p with a free
+    consonant after the last syllable, and ov-ni and téc-ni-co with a free consonant that closes a syllable;
+    war-ning, first with coda rst, help with coda lp, irs with coda rs, u-sa, ci-a; scu-ba with onset sc, and a-ids,
+    sports, e-vents and re-sults with a coda that takes the s of the -s/-z morpheme."""
     assert splits_into_syllables(word, *_sets(spec))
 
 
 @pytest.mark.parametrize(("spec", "word"), [
-    (PT, "rtp"), (PT, "ctt"), (PT, "cplp"), (PT, "bmw"), (PT, "irs"), (PT, "pib"), (PT, "tap"), (EN, "bbc"),
-    (EN, "fbi"), (EN, "ibm"), (EN, "bmw"), (EN, "zdf"),
+    (PT, "rtp"), (PT, "ctt"), (PT, "cplp"), (PT, "bmw"), (PT, "irs"), (PT, "anp"), (PT, "hiv"), (PT, "nih"),
+    (PT, "instituto"), (EN, "bbc"), (EN, "fbi"), (EN, "ibm"), (EN, "bmw"), (EN, "zdf"),
 ])
 def test_a_run_that_does_not_split_into_syllables(spec, word):
-    """No vowel (rtp, ctt, cplp, bmw, bbc, zdf), no coda rs or b or p in Portuguese (irs, pib, tap), no onset fb, and
-    no coda b before a lone m (fbi, ibm)."""
+    """No vowel (rtp, ctt, cplp, bmw, bbc, zdf), no free consonant after the last syllable of a run with no consonant
+    before a vowel (irs, anp) or with an h outside ch, lh and nh (hiv, nih), no two consonants that close a syllable
+    in Portuguese (ns of instituto), no onset fb, and no coda b before a lone m (fbi, ibm)."""
     assert not splits_into_syllables(word, *_sets(spec))
 
 
@@ -114,9 +118,10 @@ def test_a_lexicon_value_that_the_form_reads_raises_and_a_word_does_not():
 
 
 WORD_ROWS = {"en-386", "en-387", "en-396", "en-402", "en-403", "pt-167", "pt-168", "pt-169", "pt-170", "pt-171",
-             "pt-186"}
+             "pt-178", "pt-186", "pt-187", "pt-245", "pt-246", "pt-247", "pt-253"}
 """Rows whose run reads as a word by the syllable rule, and whose letters all have a name: NATO, UEFA, WARNING, ONU,
-IVA, SIDA, ETAR, SCUBA and AIDS. ATENÇÃO holds Ç, which has no name, so it stays as written either way."""
+IVA, SIDA, PIB, TAP, ETAR, CIAV, OVNI, PALOP, CELT, SCUBA and AIDS. ATENÇÃO holds Ç, which has no name, so it stays as
+written either way."""
 LETTER_ROWS = {"en-386", "en-387", "en-393", "en-397", "pt-167", "pt-172", "pt-173", "pt-174"}
 """Rows whose run of three or more letters reads letter by letter by the syllable rule: BMW, BBC, FBI, ZDF, RTP and
 CTT. A run of two letters, as in MP3, reads letter by letter before the rule."""
@@ -136,7 +141,8 @@ def test_the_syllable_rule_bites(monkeypatch, verdict, expected):
 
 @pytest.mark.parametrize(("spec", "run", "row"), [(EN, "IRS", "en-390"), (EN, "CIA", "en-390"), (EN, "USA", "en-391"),
                                                   (EN, "IBS", "en-404"), (EN, "IDS", "en-405"),
-                                                  (PT, "TAP", "pt-178"), (PT, "EUA", "pt-179")])
+                                                  (PT, "EUA", "pt-179"), (PT, "APPO", "pt-248"),
+                                                  (PT, "OCDE", "pt-249")])
 def test_each_exception_bites(monkeypatch, spec, run, row):
     assert row not in _failing_rows()
     table = FrozenMap({k: v for k, v in spec.data["letter_runs"].items() if k != run})
