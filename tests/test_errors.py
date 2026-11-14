@@ -53,13 +53,14 @@ def test_a_lexicon_key_that_does_not_end_in_a_letter_waits_on_the_digits_that_on
     assert normalize(expected, lang, params) == expected
 
 
+@pytest.mark.parametrize("template,expected", [("2,{key}", "deux,kafé"), ("{key},2", "kafé,deux")])
 @pytest.mark.parametrize("key", ["café", "cafe\u0301"])
-def test_a_lexicon_key_that_ends_in_a_letter_and_a_combining_mark_reads_the_joined_number(key):
+def test_a_lexicon_key_that_ends_in_a_letter_and_a_combining_mark_reads_the_joined_number(key, template, expected):
     """A combining mark belongs to the letter before it, so a key that ends in `e` and U+0301 reads as the same key
-    with `é` does."""
+    with `é` does, on either side of the number."""
     params = lexicon(fr={key: "kafé"})
-    assert normalize(f"2,{key}", "fr", params) == "deux,kafé"
-    assert normalize("deux,kafé", "fr", params) == "deux,kafé"
+    assert normalize(template.format(key=key), "fr", params) == expected
+    assert normalize(expected, "fr", params) == expected
 
 
 def test_a_lexicon_key_before_a_glued_phone_run_counts_by_its_spoken_words():
