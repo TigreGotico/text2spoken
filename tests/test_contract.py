@@ -231,12 +231,15 @@ class _Recorder(FrozenMap):
 
 
 def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
-    """A recording run over the rows of each language file, for the shared recognizers that the files use."""
+    """A recording run over the rows of each language file, for the shared recognizers that the files use. A
+    request with no recognizer comes from the `normalize` call that reads an emoji name, and is not recorded."""
     read: dict[str, set[str]] = {name: set() for name in SHARED}
     used = set()
     data = Request.data.fget
 
     def recording(request):
+        if "recognizer" not in request.memo:
+            return data(request)
         recorder = _Recorder(data(request))
         recorder.keys = read[request.memo["recognizer"]]
         return recorder

@@ -15,7 +15,7 @@ from text2spoken.core import language as loader
 from text2spoken.core.language import cldr_locale
 from text2spoken.core.numbers import find_numbers
 from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_matches
-from text2spoken.core.spans import Span, _inside, _joined, check_features, splits_token
+from text2spoken.core.spans import Span, _inside, _joined, _sides, check_features, splits_token
 from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words, protect_blocks
 from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form, freeze, thaw
@@ -412,8 +412,9 @@ def test_a_digit_next_to_a_span_is_no_joiner():
     """Section 2.1: the joining character is not a space and not a digit."""
     span = Span(0, 2, Form.CARDINAL, FrozenMap())
     text = "ab12"
-    assert not _joined(text, span, bytearray(len(text)), [None] * len(text))
-    assert _joined("ab/2", span, bytearray(4), [None] * 4)
+    sides = _sides(span, {}, {})
+    assert not _joined(text, span, bytearray(len(text)), [None] * len(text), sides)
+    assert _joined("ab/2", span, bytearray(4), [None] * 4, sides)
 
 
 def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():

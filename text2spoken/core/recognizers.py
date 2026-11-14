@@ -18,16 +18,17 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
+from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import DigitSpeller, bounded_integer
-from text2spoken.core.symbols import SYMBOL, reads_symbol, symbol_name
+from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (Token, context_word, fold_digits, is_bounded, is_digit, is_letter, is_mark,
-                                     is_word_char, next_visible, one_digit_set)
+from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_bounded, is_digit, is_letter,
+                                     is_mark, is_word_char, next_visible, one_digit_set)
 from text2spoken.core.units import unit_table, units_at
 from text2spoken.params import FrozenMap, Form
 
@@ -172,12 +173,30 @@ class Lexicon:
     form: Form = Form.LEXICON
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        """The caller's keys match the text as written, so a key such as `#️⃣` matches. An emoji sequence that holds
+        U+FE0E, U+FE0F or U+20E3 is one character, as `😀` is. A match neither starts nor ends inside it, so a key `1`
+        leaves the `1` of `1️⃣`. Next to a key, the sequence is no word character, so a key `x` matches in `1️⃣x` as
+        in `😀x`. A sequence that touches a word stays as written with that word (`touched_words`), so there it is a
+        word character, and no match starts or ends inside the word or the sequence: a key `A` does not match in
+        `A1️⃣`, the keys `org` and `x.org` do not match in `x.org1️⃣`, and a key `cats` does not match in `2,cats1️⃣`.
+        A key `2` matches there, and the view keeps that `2` too."""
         entries = lexicon_entries(request.tag, request.params.lexicon)
         by_first = _keys_by_first_character(entries)
+        text = written_text(text, request)
+        sequences = [(start, end) for start, end in sequences_in(text, request.memo)
+                     if any(char in EMOJI_MARKS for char in text[start:end])]
+        touched = {start for _, start, _ in touched_words(text, request.memo)}
+        inside = {index for start, end in sequences for index in range(start + 1, end)}
+        apart = {start for start, _ in sequences} - touched
+
+        def limit(index: int) -> bool:
+            return index in apart or _lexicon_limit(text, index)
+
         position = 0
         while position < len(text):
             key = next((k for k in by_first.get(text[position], ()) if text.startswith(k, position)
-                        and _lexicon_limit(text, position - 1) and _lexicon_limit(text, position + len(k))), None)
+                        and position not in inside and position + len(k) not in inside
+                        and limit(position - 1) and limit(position + len(k))), None)
             if key is None:
                 position += 1
                 continue
@@ -631,28 +650,29 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
 
 
 def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple[Word, ...]:
-    """The context words of the text, where the characters that `SYMBOL` reads stand for their names. A sequence of
-    such characters that only spaces part is one word, whose text is the names, so it fills one slot of a window
-    however many words the names hold."""
-    marks = [index for index in range(len(text)) if reads_symbol(text, index, request)]
+    """The context words of the text, where the characters that `SYMBOL` reads and the emoji sequences that `EMOJI`
+    reads stand for their names. A sequence of such pieces that only spaces part is one word, whose text is the
+    names, so it fills one slot of a window however many words the names hold."""
+    marks = named_pieces(text, request)
     if not marks:
         return context_words(tokens)
-    runs: list[list[int]] = []
-    for index in marks:
-        if runs and not text[runs[-1][-1] + 1:index].strip():
-            runs[-1].append(index)
+    runs: list[list[tuple[int, int, str]]] = []
+    for mark in marks:
+        if runs and not text[runs[-1][-1][1]:mark[0]].strip():
+            runs[-1].append(mark)
         else:
-            runs.append([index])
-    found = [Word(run[0], run[-1] + 1, " ".join(symbol_name(text[index], request) for index in run), False)
-             for run in runs]
+            runs.append([mark])
+    found = [Word(run[0][0], run[-1][1], " ".join(name for _, _, name in run), False) for run in runs]
+    starts = [start for start, _, _ in marks]
     for token in tokens:
         first, piece = len(found), token.start
-        for cut in (*marks[bisect_left(marks, token.start):bisect_left(marks, token.end)], token.end):
-            word = context_word(text[piece:cut])
+        for start, end, _ in (*marks[bisect_left(starts, token.start):bisect_left(starts, token.end)],
+                              (token.end, token.end + 1, "")):
+            word = context_word(text[piece:start])
             if word is not None:
                 offset = text.index(word, piece)
                 found.append(Word(offset, offset + len(word), word, False))
-            piece = cut + 1
+            piece = end
         if len(found) > first:
             found[-1] = replace(found[-1], clause_end=token.clause_end)
     return tuple(sorted(found, key=lambda word: word.start))
@@ -711,6 +731,7 @@ class Telephone:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         words = _spoken_words(text, tokens, request)
+        covered = frozenset(index for start, end, _ in named_pieces(text, request) for index in range(start, end))
         breaks = clause_breaks(text)
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
@@ -758,7 +779,7 @@ class Telephone:
             short_code = "".join(groups) in short_codes
             gap = "" if named_end is None else re.sub(" {2,}", " ", "".join(
                 char for index, char in enumerate(text[named_end:start], named_end)
-                if not reads_symbol(text, index, request)))
+                if index not in covered))
             named = (direct
                      or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
                                                                request))
@@ -885,5 +906,5 @@ def written_shapes() -> FrozenMap:
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, LETTERS, SYMBOL)}
+                              Percent(), Money(), Measure(), Telephone(), COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
 """The shared recognizers by name."""
