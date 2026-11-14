@@ -42,10 +42,10 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 from text2spoken.core.currencies import cldr_part, currency_signs, words_only
-from text2spoken.core.emoji import JOINER, MODIFIERS, SELECTOR, emoji_name, name_reading, sequence_at
+from text2spoken.core.emoji import JOINER, MODIFIERS, SELECTOR, emoji_name, name_reading, sequence_at, written_text
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
-from text2spoken.core.tokens import Token, is_digit, is_word_char
+from text2spoken.core.tokens import Token, is_digit
 from text2spoken.core.units import unit_table
 from text2spoken.params import FrozenMap, Form
 
@@ -94,15 +94,11 @@ def reads_symbol(text: str, index: int, request: Request) -> bool:
 
 def _emoji_reading(text: str, start: int, request: Request) -> tuple[int, str, str | None] | None:
     """The end, the CLDR name and the reading of the emoji sequence at text[start], or None when no sequence with a
-    name starts there. The reading is None when the name does not read, or when the sequence starts with a letter or
-    a digit that a letter or a digit before it joins, as the digit of `x.org1️⃣` is joined: such a sequence stays as
-    written, as a number joined to a word does."""
+    name starts there. The reading is None when the name does not read."""
     found = emoji_name(text, start, request)
     if found is None or found[1] is None:
         return None
     end, name = found
-    if start and is_word_char(text[start]) and is_word_char(text[start - 1]):
-        return end, name, None
     return end, name, name_reading(name, request.tag, request.params)
 
 
@@ -110,7 +106,7 @@ def reads_emoji(text: str, index: int, request: Request) -> bool:
     """Whether the `EMOJI` form reads an emoji sequence that starts at text[index]."""
     if Form.EMOJI not in request.params.forms:
         return False
-    found = _emoji_reading(text, index, request)
+    found = _emoji_reading(written_text(text, request), index, request)
     return found is not None and found[2] is not None
 
 
@@ -130,12 +126,14 @@ def _emoji_readings(text: str, request: Request) -> Iterator[tuple[int, int, str
 
 
 def named_pieces(text: str, request: Request) -> list[tuple[int, int, str]]:
-    """The start, the end and the name of each piece of the text that `SYMBOL` or `EMOJI` reads, in text order."""
+    """The start, the end and the name of each piece of the text that `SYMBOL` or `EMOJI` reads, in text order. The
+    text may be the view of `classify`, so the `EMOJI` pieces come from the text as written."""
     symbols = [(index, index + 1, symbol_name(char, request)) for index, char in enumerate(text)
                if reads_symbol(text, index, request)]
     if Form.EMOJI not in request.params.forms:
         return symbols
-    return sorted(symbols + [(start, end, reading) for start, end, _, reading in _emoji_readings(text, request)])
+    return sorted(symbols + [(start, end, reading)
+                             for start, end, _, reading in _emoji_readings(written_text(text, request), request)])
 
 
 def _spacing(text: str, start: int, end: int, leads: Sequence[str], request: Request) -> tuple[str, str]:
@@ -180,10 +178,11 @@ class Emoji:
     form: Form = Form.EMOJI
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        written = written_text(text, request)
         leads = _leads(request)
-        for start, end, name, _ in _emoji_readings(text, request):
-            lead, trail = _spacing(text, start, end, leads, request)
-            yield Span(start, end, Form.EMOJI, FrozenMap({"sequence": text[start:end], "name": name}), lead=lead,
+        for start, end, name, _ in _emoji_readings(written, request):
+            lead, trail = _spacing(written, start, end, leads, request)
+            yield Span(start, end, Form.EMOJI, FrozenMap({"sequence": written[start:end], "name": name}), lead=lead,
                        trail=trail, recognizer=self.name)
 
 

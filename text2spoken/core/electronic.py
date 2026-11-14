@@ -17,7 +17,7 @@ import unicodedata
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from text2spoken.core.emoji import emoji_name, name_reading, sequence_at
+from text2spoken.core.emoji import emoji_name, name_reading, sequence_at, written_text
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext, splits_token
 from text2spoken.core.symbols import symbol_name
@@ -131,6 +131,7 @@ class Electronic:
         (design section 4.5). A block passes through as written, so no marker inside it counts. A single space
         separates the reading of each part from a block or a lexicon span that touches it."""
         data = request.data
+        written = written_text(text, request)
         tlds = frozenset(data.get("electronic_tlds", ()))
         schemes = data.get("electronic_schemes", FrozenMap())
         lexicon = [(span.start, span.end) for recognizer in request.language.recognizers
@@ -150,7 +151,7 @@ class Electronic:
                 claim_start, claim_end = _claim(text, start, stop)
                 for part_start, part_end in _parts(gaps, gap, claim_start, claim_end):
                     yield Span(part_start, part_end, Form.ELECTRONIC,
-                               _fields(text[part_start:part_end], schemes, tlds),
+                               _fields(written[part_start:part_end], schemes, tlds),
                                lead=" " if part_start > claim_start else "", trail=" " if part_end < claim_end else "",
                                recognizer=self.name)
 

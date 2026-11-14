@@ -28,11 +28,13 @@ from importlib.resources import files
 
 from text2spoken.core.currencies import cldr_part
 from text2spoken.core.language import Request
+from text2spoken.core.tokens import EMOJI_MARKS, STAND_IN
 from text2spoken.params import Form, NormalizationParams
 
 SELECTOR = "️"
 JOINER = "‍"
 MODIFIERS = frozenset(map(chr, range(0x1F3FB, 0x1F400)))
+REGIONAL_INDICATORS = frozenset(map(chr, range(0x1F1E6, 0x1F200)))
 _QUOTES = frozenset("\"“”‘’")
 _APOSTROPHE = "’"
 _SPACES = frozenset(":,()")
@@ -50,11 +52,22 @@ def _sequences() -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
     return keys, starts, text
 
 
+def _second_indicator(text: str, index: int) -> bool:
+    """Whether text[index] is a regional indicator that pairs with the one before it. UAX #29 rules GB12 and GB13
+    pair regional indicators from the start of a run: "Do not break within emoji flag sequences. That is, do not
+    break between regional indicator (RI) symbols if there is an odd number of RI characters before the break
+    point." So `🇵🇵🇹` is the pair `🇵🇵` and a lone `🇹`, and no flag of Portugal."""
+    count = 0
+    while index - count > 0 and text[index - count - 1] in REGIONAL_INDICATORS:
+        count += 1
+    return text[index] in REGIONAL_INDICATORS and count % 2 == 1
+
+
 def _emoji(text: str, index: int, joined: bool) -> int | None:
     """The end of the emoji at text[index], or None. A character that is no space, before U+FE0F, a skin tone or a
     zero width joiner, is an emoji, even when the emoji files do not hold it. After a zero width joiner (`joined`),
     a character with text presentation is an emoji with nothing after it."""
-    if text[index:index + 1] in ("", SELECTOR):
+    if text[index:index + 1] in ("", SELECTOR) or _second_indicator(text, index):
         return None
     keys, starts, text_presentation = _sequences()
     key, end, position = "", None, index
@@ -93,6 +106,41 @@ def sequence_at(text: str, index: int) -> tuple[int, int] | None:
         else:
             break
     return first, end
+
+
+@lru_cache(maxsize=64)
+def sequences_in(text: str) -> tuple[tuple[int, int], ...]:
+    """The start and the end of each emoji sequence of the text, in text order."""
+    found, index = [], 0
+    while index < len(text):
+        sequence = sequence_at(text, index)
+        if sequence is None:
+            index += 1
+        else:
+            found.append((index, sequence[1]))
+            index = sequence[1]
+    return tuple(found)
+
+
+@lru_cache(maxsize=64)
+def emoji_view(text: str) -> str:
+    """The text as every form other than `EMOJI` and `ELECTRONIC` reads it. A character of an emoji sequence that
+    U+FE0E, U+FE0F or U+20E3 follows belongs to the sequence (design section 4.7). When it is no symbol, as the digit
+    of `1️⃣` and the `#` of `#️⃣` are, it is U+FFFC here, a symbol that no form reads, so no number takes it. A symbol
+    stays, because `SYMBOL` already leaves a symbol that such a mark follows. The view has the length of the text, so
+    a span of the view is the same span of the text."""
+    chars = list(text)
+    for start, end in sequences_in(text):
+        for index in range(start, end - 1):
+            if text[index + 1] in EMOJI_MARKS and not unicodedata.category(text[index]).startswith(("S", "M")):
+                chars[index] = STAND_IN
+    return "".join(chars)
+
+
+def written_text(text: str, request: Request) -> str:
+    """The text as written, for a text that may be the view of `classify`. The recognizers read the view, and a
+    recognizer that names an emoji sequence reads the sequence as written."""
+    return request.memo.get(("written", text), text)
 
 
 def _apostrophe(name: str, index: int) -> bool:
