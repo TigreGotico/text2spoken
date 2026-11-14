@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a37](https://github.com/TigreGotico/text2spoken/tree/0.0.2a37) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a36...0.0.2a37)
+
+**Merged pull requests:**
+
+- feat: read emoji by their CLDR names \(EMOJI form\) [\#79](https://github.com/TigreGotico/text2spoken/pull/79) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a36](https://github.com/TigreGotico/text2spoken/tree/0.0.2a36) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a35...0.0.2a36)
