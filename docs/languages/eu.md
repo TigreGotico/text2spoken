@@ -42,4 +42,4 @@ These forms stay as written in Basque:
 The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093 and eu-112. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko` and `U2`.
 
 ---
-[← Spanish](es.md) · [Home](../index.md) · [Portuguese →](pt.md)
+[← Spanish](es.md) · [Home](../index.md) · [French →](fr.md)

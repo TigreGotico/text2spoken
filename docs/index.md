@@ -23,5 +23,6 @@ Each language page gives the varieties of the language, the codes that it serves
 | English | [en](languages/en.md) |
 | Spanish | [es](languages/es.md) |
 | Basque | [eu](languages/eu.md) |
+| French | [fr](languages/fr.md) |
 | Portuguese | [pt](languages/pt.md) |
 | Russian | [ru](languages/ru.md) |

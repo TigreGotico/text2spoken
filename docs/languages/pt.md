@@ -64,4 +64,4 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 The edge cases that Portuguese shares with English are on the [How it reads text](../how-it-reads.md#edge-cases) page.
 
 ---
-[← Basque](eu.md) · [Home](../index.md) · [Russian →](ru.md)
+[← French](fr.md) · [Home](../index.md) · [Russian →](ru.md)

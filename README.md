@@ -12,10 +12,10 @@ text2spoken rewrites written text into the words that a person says when they re
 uv pip install --prerelease=allow text2spoken
 ```
 
-The library needs Python 3.11 or later. It uses no network and loads no model. English and German need no extra. The other languages take their number words from an extra:
+The library needs Python 3.11 or later. It uses no network and loads no model. English and German need no extra. French reads its number words through the core too, and its extra holds the floor of `unicode-rbnf` that it needs. The other languages take their number words from an extra:
 
 ```bash
-uv pip install --prerelease=allow "text2spoken[pt]"   # also ar, es, eu, ru
+uv pip install --prerelease=allow "text2spoken[pt]"   # also ar, es, eu, fr, ru
 ```
 
 ## Quickstart
@@ -50,6 +50,7 @@ Each language is one file in `text2spoken/lang/`. A tag with no file reads cardi
 | [English](docs/languages/en.md) | `en-GB`, `en-US` | none |
 | [Spanish](docs/languages/es.md) | `es-ES`, `es-419`, `es-MX`, `es-AR`, `es-US` and eight other American varieties | `es` |
 | [Basque](docs/languages/eu.md) | `eu-ES` | `eu` |
+| [French](docs/languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`. Every other `fr-*` tag reads as `fr-FR` | `fr` |
 | [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` | `pt` |
 | [Russian](docs/languages/ru.md) | `ru-RU` | `ru` |
 
