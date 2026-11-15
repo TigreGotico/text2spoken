@@ -19,7 +19,8 @@ de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR
 - de.wikipedia, "Präposition", sections Rektion and Zeitlich.
 - en.wikipedia, "Grammatical gender in German", the tables of masculine, feminine and neuter endings.
 
-`Expression` and `Abbreviation` come from `en.py`. They read only the data tables of the language.
+`Abbreviation` comes from `en.py`, and `Expression` is a shared recognizer. Both read only the data tables of the
+language.
 """
 from __future__ import annotations
 
@@ -36,7 +37,7 @@ from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, next_visible, one_digit_set
 from text2spoken.errors import DeclinedReading
-from text2spoken.lang.en import Abbreviation, Expression
+from text2spoken.lang.en import Abbreviation
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
 M, F, N = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE, GrammaticalGender.NEUTER
@@ -813,7 +814,7 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
                  Time(), GermanTelephone(), Money(), SHARED["percent"], SHARED["measure"],
-                 Year(), Expression(), Fraction(), SHARED["range"], Ordinal(), TitleAbbreviation(),
+                 Year(), SHARED["expression"], Fraction(), SHARED["range"], Ordinal(), TitleAbbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon,
                  **{form: _swiss_verbalizer(verbalizer) for form, verbalizer in _VERBALIZERS.items()}},

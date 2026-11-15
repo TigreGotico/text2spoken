@@ -179,7 +179,7 @@ def test_clause_6_requires_no_key_of_a_verbalizer_that_the_file_replaces():
 
 
 def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
-    data = freeze({**thaw(STUB.data), "range_word": "al", "time_words": ["je"],
+    data = freeze({**thaw(STUB.data), "time_words": ["je"],
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
                                    {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
                    "electronic_symbols": {"@": "et"}, "letter_names": {"a": "ha"}, "electronic_vowels": ["a"],
@@ -352,7 +352,7 @@ def test_clause_7_gives_the_helper_back_when_a_recognizer_raises(en):
     with pytest.raises(RuntimeError, match="a recognizer fails"):
         contract.clause_7("en", replace(en, recognizers=(*en.recognizers, _Raises())))
     assert recognizers.digit_run_matches is HELPER
-    assert import_module("text2spoken.lang.en").digit_run_matches is HELPER
+    assert digit_run_matches is HELPER
 
 
 def test_clause_8_bites(en):

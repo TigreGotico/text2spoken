@@ -118,6 +118,7 @@ SHAPES: dict[str, Shape] = {
     "list_links": WORDS,
     "number_marks": map_of(script, list_of(record(decimal=word, group=text), minimum=1)),
     "operators": map_of(character, word),
+    "patterns": map_of(word, word),
     "percent": record(signs=list_of(word, minimum=1), position=one_of("after", "before", "either")),
     "no_phone_shapes": WORDS,
     "phone_kept_shapes": WORDS,
@@ -164,6 +165,7 @@ READERS: dict[str, frozenset[str]] = {
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes"}) | SYMBOL_KEYS,
+    "expression": frozenset({"operators", "patterns", "symbols"}),
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
     "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_free_consonants",
@@ -188,10 +190,12 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 """The tables of regexes that the shared telephone recognizer compiles."""
 
 OPTIONAL = frozenset({
-    "proclitics", "case_suffixes", "time_suffixes", "range_marks", "day_periods", "electronic_labels", "letter_runs",
-    "letter_free_consonants", "symbol_names",
+    "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
+    "letter_runs", "letter_free_consonants", "symbol_names",
 })
-"""Keys whose absence means that the language has none, so a file that uses their reader may leave them out."""
+"""Keys whose absence means that the language has none, so a file that uses their reader may leave them out.
+Design section 4.2 lets a language have no range word: "A language that marks a range with case endings has no
+range word", and "With no range word the default leaves the pair as written"."""
 
 ALTERNATIVES = (frozenset({"units", "unit_symbols"}), frozenset({"currencies", "currency_symbols"}))
 """Keys of which a file gives at least one: its own unit table, or the unit symbols that it reads from CLDR, and its

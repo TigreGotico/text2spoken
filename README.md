@@ -318,6 +318,19 @@ Some Russian readings are still wrong:
 
 The test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules, and no native speaker has checked them.
 
+Basque reads the variety `eu-ES`, the standard language (batua) of the Euskaltzaindia norms. Install it with `text2spoken[eu]`, which adds `ovos-number-parser`. In `tests/data/eu.tsv`, 125 rows cite a page of the norm, and one of them, eu-002, is silver. The 7 guard rows eu-080, eu-081, eu-082, eu-088, eu-091, eu-093 and eu-112 cite design section 4.2. No native speaker has checked the rows. These forms stay as written in Basque:
+
+- A number with spaces between its groups, as in `30 000`, because the group mark of the file is the full stop.
+- A range of percentages, amounts or measures, as in `10%-20%` and `5 €-10 €`. Basque marks a range with the endings `-tik` and `-ra`, and the file has no rule for them.
+- An amount with the currency symbol first and a case ending, as in `€5eko`.
+- A code of letters, a hyphen and digits, as in `COVID-19`. One capital letter before the hyphen reads as a sigla and a number: `A-8` reads "A zortzi".
+- A Roman numeral of one letter, unless a noun of the `roman_nouns` table follows it, as in `V. mendean`, or it is `I`, `V` or `X` with a case ending after a name, as in `Elisabet I.a`. So `B. eta C. aukerak` and `I. eranskina` stay as written.
+- A Roman numeral of two letters or more, unless a noun of the `roman_nouns` table, a case ending, the comma of a list, or `eta` or `edo` and a numeral that reads follows it. So `XIX., XX. eta XXI. mendeetan` reads, and `II. 1995ean sortu zen.` keeps `II.` as written.
+- A Roman numeral before a noun of the `roman_nouns` table and the word `bat`, as in `XX. mende batean`. The measure reading writes one unit in that order, as `1 °C` reads "gradu bat" (Araua 203, page 21), so the noun is no evidence there.
+- A clock time with no case ending and no day period, as in a timetable.
+
+The file reads `00:00ak` as "gaueko hamabiak" and `01:00ak` as "goizeko ordu bata", with the day period. Araua 203, page 53, reads `01:00` as "gaueko ordu bata". The abbreviation `or.` always reads "orrialdea" and `pl.` "plaza", although the norm also lists other readings. The file has no variety for a dialect, so a tag such as `eu-x-zuberera` reads the standard language.
+
 ## Development
 
 ```bash
