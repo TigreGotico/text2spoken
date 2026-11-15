@@ -74,7 +74,18 @@ PT_ENTRIES = {
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
     "letter_free_consonants": "b",
 }
+AR_ENTRIES = {
+    "number_marks": "Arab", "defaults": "decimal_mark", "proclitics": "بـ", "prepositions": "في",
+    "year_nouns": "سنة", "feminine_plurals": "سيارات", "rank_nouns": "الطابق", "sign_words": "-", "leads": "#",
+    "decimal_word": DELETE, "fraction_names": "2", "construct_duals": "مئتان", "range_word": DELETE,
+    "range_marks": "-", "percent": "word",
+    "currencies": "USD", "symbols_after_only": "ريال", "scales": "مليون", "units": "كم", "dimension_marks": "×",
+    "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_words": "الساعة",
+    "day_periods": "pm", "spoken_periods": "afternoon2", "minute_phrases": "30", "months": "مارس",
+    "date_reading": "full",
+}
 ENTRIES = {
+    "ar": AR_ENTRIES,
     "de": DE_ENTRIES,
     "en": EN_ENTRIES,
     "pt": PT_ENTRIES,

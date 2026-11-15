@@ -331,6 +331,15 @@ Basque reads the variety `eu-ES`, the standard language (batua) of the Euskaltza
 
 The file reads `00:00ak` as "gaueko hamabiak" and `01:00ak` as "goizeko ordu bata", with the day period. Araua 203, page 53, reads `01:00` as "gaueko ordu bata". The abbreviation `or.` always reads "orrialdea" and `pl.` "plaza", although the norm also lists other readings. The file has no variety for a dialect, so a tag such as `eu-x-zuberera` reads the standard language.
 
+Arabic reads Modern Standard Arabic in Arabic script, with no diacritics. Install it with `text2spoken[ar]`, which adds `ovos-number-parser`. Each regional tag, such as `ar-MA`, reads the month names and number marks of its CLDR locale. The Arabic varieties of ISO 639-3 that write Arabic script, such as `arz` and `ary`, read as `ar`, with no dialect words. `apc` (Levantine) is not one of them. A number agrees in gender and case with the noun after it, and an ordinal follows the noun that it ranks: `الطابق 3` reads "الطابق الثالث". Telephone numbers, operators such as `5+3`, a number with a `+` sign, and the word `ريال` before a number stay as written. In `tests/data/ar.tsv`, the 75 rows cite their source, and no native speaker has checked them.
+
+Some Arabic readings wait for a native speaker:
+
+- One o'clock stays as written, because the sources give no form for it: a speaker can say الواحدة or الأولى. `الساعة 1:30` stays as written.
+- A fraction part with a leading zero stays as written, because no source gives its reading. `النسبة 0.05` stays as written.
+- 800 reads ثمانمئة, where Ryding (2005, p. 348) writes thamaanii mi'at-in.
+- 45,001 reads خمسة وأربعون ألف وواحد, with no tamyiz ending on the thousand, as ovos-number-parser writes it.
+
 ## Development
 
 ```bash
