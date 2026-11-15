@@ -60,6 +60,12 @@ def language_files() -> list[str]:
                   if e.name.endswith(".py") and not e.name.startswith("_"))
 
 
+def language_modules() -> list[str]:
+    """The language files and their private modules, such as `_pt_electronic`."""
+    return sorted(e.name[:-3] for e in files("text2spoken.lang").iterdir()
+                  if e.name.endswith(".py") and e.name != "__init__.py")
+
+
 def request_for(spec: LanguageSpec, variety_index: int = 0) -> Request:
     return Request(spec.varieties[variety_index].tag, spec.varieties[variety_index], spec, NormalizationParams())
 
@@ -452,6 +458,37 @@ def sandbox_import(module: str, allowed_dir: str, path: str = "") -> tuple[list[
     out = subprocess.run([sys.executable, "-c", _SANDBOX, module, allowed_dir], capture_output=True, text=True,
                          check=True, env=env).stdout
     return ast.literal_eval(out.strip().splitlines()[-1])
+
+
+_ALONE = """
+import sys
+from importlib.abc import MetaPathFinder
+module, own = sys.argv[1], sys.argv[2]
+blocked = []
+class Block(MetaPathFinder):
+    def find_spec(self, name, path=None, target=None):
+        rest = name.removeprefix("text2spoken.lang.")
+        if rest != name and name != module and not rest.startswith(own):
+            blocked.append(name)
+            raise ImportError(f"{name} is blocked")
+        return None
+sys.meta_path.insert(0, Block())
+__import__(module)
+print(repr(blocked))
+"""
+
+
+def import_alone(module: str, code: str, path: str = "") -> None:
+    """Imports `module` in a fresh interpreter in which each module of `text2spoken.lang` is blocked, except
+    `module` itself and the private modules of the language `code`, whose names start with `_<code>_`. The import
+    must succeed and must try no blocked module, so an import that `importlib`, `__import__` or a caught
+    `ImportError` hides from the static check of clause 12 still fails here."""
+    env = {**__import__("os").environ, "PYTHONPATH": path} if path else None
+    run = subprocess.run([sys.executable, "-c", _ALONE, module, f"_{code}_"], capture_output=True, text=True,
+                         env=env)
+    assert run.returncode == 0, f"{module} does not import alone: {run.stderr.strip().splitlines()[-1:]}"
+    blocked = ast.literal_eval(run.stdout.strip().splitlines()[-1])
+    assert not blocked, f"{module} imports the language files {blocked}; a language file imports only the core"
 
 
 def clause_12(name: str, spec: LanguageSpec, source: str | None = None, requirements: list[str] | None = None) -> None:

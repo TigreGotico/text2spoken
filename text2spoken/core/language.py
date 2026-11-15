@@ -206,8 +206,11 @@ def plural_category(request: Request, written: str) -> str:
     `InvalidOperation` from 10**29. A number can reach this function before a speller checks `DIGIT_BOUND`, so the
     precision follows the number.
 
-    unicode_rbnf converts the fraction digits to an `int`. So a number whose fraction or integer part has more
-    digits than `sys.get_int_max_str_digits()` raises `DeclinedReading`, and its span stays as written. A limit of
+    The plural operands `f` and `t` convert the fraction digits to an `int` from a string, and Python refuses a
+    string of more digits than `sys.get_int_max_str_digits()`. So a number whose fraction has more digits than that
+    limit raises `DeclinedReading`, and its span stays as written. An integer part of more digits than the limit
+    declines too, for another cause: the operand `i` comes from `int(Decimal)`, which has no limit, so the check
+    declines early what a speller declines later at `DIGIT_BOUND`, and saves the time of `int(Decimal)`. A limit of
     0 is no limit."""
     from unicode_rbnf.plural_rules import get_plural_category
 

@@ -8,6 +8,8 @@ and pt-PT as "catorze". Dicio, "Catorze ou quatorze": "As duas palavras existem 
 corretas", and "Já no português falado em Portugal, a palavra quatorze está em desuso, sendo mais correto o uso
 da palavra catorze."
 
+A fraction reads `um meio`, `três quartos`, `três onze avos` (Priberam, "avo": "doze vinte e cinco avos = 12/25").
+
 A number agrees with the noun that it counts. The hint of a frontend decides first, then the noun after the
 number, then a determiner before it, then `default_gender`. `um`, `dois` and the hundreds from `duzentos` have a
 feminine form; a scale word from `milhão` up is a masculine noun, so the words before it stay masculine (Priberam,

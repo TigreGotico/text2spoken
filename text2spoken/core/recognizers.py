@@ -718,7 +718,7 @@ class Telephone:
     police on 999 now.`, and not the count in `The phone rang 101 times.`
 
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
-    methods `trimmed`, `window` and `names_back`, as `EnglishTelephone` does."""
+    methods `trimmed`, `window` and `names_back` as it needs. `EnglishTelephone` replaces only `trimmed`."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
     reach: int = 1
@@ -1097,8 +1097,8 @@ class Abbreviation:
                     position = text.find(key, end)
 
 
-SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[   ][0-9]{3})+(?:,[0-9]{1,3}(?:[   ][0-9]{1,3})*)?"
-                          "|[0-9]+,[0-9]{3}(?:[   ][0-9]{1,3})+")
+SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{1,3})*)?"
+                          "|[0-9]+,[0-9]{3}(?:[ \u00a0\u202f][0-9]{1,3})+")
 """Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the
 whole part or in the fraction after a decimal comma: `36 524`, `123 456 789,987 546`, `0,264 7` (Araua 203,
 section 3.2.1.1, page 12)."""
@@ -1106,8 +1106,9 @@ section 3.2.1.1, page 12)."""
 
 @dataclass(frozen=True)
 class SpaceGroups:
-    """`36 524`, `30 000`: digits in groups of three with a space between them. In a language whose group mark is
-    not a space, each group would read as a number of its own, so the span stays as written."""
+    """`36 524`, `30 000`: digits in groups of three with a space between them. The span stays as written in every
+    language that lists this recognizer, whatever its group mark, so that no other recognizer reads each group as
+    a number of its own."""
     name: str = "space_groups"
     form: Form = Form.CARDINAL
 
