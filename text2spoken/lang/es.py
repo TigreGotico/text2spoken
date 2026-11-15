@@ -318,10 +318,8 @@ def _bare_hour(span: Span, before: Sequence[str], data) -> bool:
 
 def _expansions(data) -> dict[str, str]:
     """The word of each one-word abbreviation of the `abbreviations` table, by the context word that the
-    abbreviation gives: `págs` reads `páginas`. An abbreviation that can end a sentence, such as `etc.`, closes a
-    list and counts nothing, so `Vimos 21, etc.` reads "veintiuno"."""
-    return {key.rstrip("."): word for key, word in data["abbreviations"].items()
-            if " " not in key and key not in data["sentence_final"]}
+    abbreviation gives: `págs` reads `páginas`."""
+    return {key.rstrip("."): word for key, word in data["abbreviations"].items() if " " not in key}
 
 
 def agreement(span: Span, context: SpanContext) -> Agreement:
@@ -329,11 +327,15 @@ def agreement(span: Span, context: SpanContext) -> Agreement:
     capitalised word is a name and no counted noun, and a year after a year word counts nothing. A number other
     than 1 counts a plural noun, so a word with no final `s` after it, such as the verb in `200 pesa`, is no
     counted noun. An abbreviation of the `abbreviations` table counts as its full word, which may write no plural:
-    `300 págs.` reads "trescientas páginas" and `1 admón.` reads "una administración" (DPD «uno», 2.3). With no noun, an hour after `la` or `las` is feminine: "a la una de la tarde" (DPD «hora», 2.1),
+    `300 págs.` reads "trescientas páginas" and `1 admón.` reads "una administración" (DPD «uno», 2.3). An
+    abbreviation that can end a sentence, such as `etc.`, closes a list and counts nothing, so `Vimos 1, etc.` reads
+    "uno" (2.2). With no noun, an hour after `la` or `las` is feminine: "a la una de la tarde" (DPD «hora», 2.1),
     "Son las cero horas" (5.2)."""
     data = context.request.data
     first = context.after[0] if context.after else ""
     noun = first if first[:1].islower() and first.isalpha() and first not in data["function_words"] else None
+    if noun is not None and f"{noun}." in data["sentence_final"]:
+        noun = None
     counted = span.fields.get("digits") or span.fields.get("high") or span.fields["numerator"]
     expansion = _expansions(data).get(noun)
     if expansion is not None:
