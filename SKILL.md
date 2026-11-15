@@ -32,7 +32,14 @@ The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 
 ## Limits
 
-- `en` reads every form except `ROMAN`, `LETTERS` and `IDENTIFIER`, which stay as written. `de` also leaves `ELECTRONIC` and `SYMBOL` as written. `supports("en")` lists the forms. A language with no file reads cardinal numbers only.
-- The `EMOJI` form reads each emoji by its CLDR name in `en` and `pt`. It is off by default; turn it on with `NormalizationParams().plus(Form.EMOJI)`.
+- `en` reads every form except `ROMAN` and `IDENTIFIER`, which stay as written. `de` also leaves `ELECTRONIC`, `SYMBOL`, `LETTERS` and `EMOJI` as written. `supports("en")` lists the forms. A language with no file reads cardinal numbers only.
+- The `EMOJI` and `LETTERS` forms read emoji and runs of capital letters in `en` and `pt`. They are off by default. Turn one on with `NormalizationParams().plus(Form.EMOJI)`.
 - A form that the library cannot read stays as written, with a WARNING log. `strict=True` raises `UnreadFormError`.
 - The English and German test rows name their source, and no native speaker has checked them.
+
+## Docs
+
+- [Quickstart](docs/quickstart.md) and [usage](docs/usage.md).
+- [How it reads text](docs/how-it-reads.md): each form, and which forms are off by default.
+- [API](docs/api.md) and [errors and warnings](docs/errors.md).
+- [Languages](docs/index.md#languages): the varieties, sources and limits of each language.
