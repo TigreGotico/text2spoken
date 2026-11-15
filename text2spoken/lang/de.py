@@ -652,7 +652,7 @@ class Time:
                     and is_bounded(text, start, end) and one_digit_set(text[start:end])):
                 yield Span(start, match.end(2), Form.TIME,
                            FrozenMap({"hour": fields[0], "minute": fields[1], "second": None, "period": None,
-                                      "suffix": ""}), recognizer=self.name)
+                                      "prefix": "", "suffix": ""}), recognizer=self.name)
 
 
 @dataclass(frozen=True)
