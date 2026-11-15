@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a47](https://github.com/TigreGotico/text2spoken/tree/0.0.2a47) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a46...0.0.2a47)
+
+**Merged pull requests:**
+
+- fix\(deps\): floor ovos-date-parser at 0.36.2a1 [\#98](https://github.com/TigreGotico/text2spoken/pull/98) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a46](https://github.com/TigreGotico/text2spoken/tree/0.0.2a46) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a45...0.0.2a46)
