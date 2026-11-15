@@ -7,11 +7,11 @@ ar-005	ar	cardinal	في عام 1956	في عام ألف وتسعمئة وستة �
 ar-006	ar	cardinal	سنة 2001	سنة ألفين وواحدة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 353: sanat-a 'alfayni wa-waaHidat-in	unchecked
 ar-007	ar	cardinal	انتظرت 8 ساعات	انتظرت ثماني ساعات	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336: thamaanii saa'aat-in	unchecked
 ar-008	ar	cardinal	بلغ العدد 11000	بلغ العدد أحد عشر ألفا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 350: 'aHad-a 'ashar-a 'alf-an	unchecked
-ar-009	ar	cardinal	اشترى 200 كتاب	اشترى مئتا كتاب	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 347 (mi'at-aa fils-in: the dual drops its nuun before the noun), p. 348 (genitive singular noun)	unchecked
+ar-009	ar	cardinal	حضر 200 طالب	حضر مئتا طالب	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 169 (the subject of a verbal sentence is nominative), p. 347 (mi'at-aa fils-in: the dual drops its nuun before the noun), p. 348 (genitive singular noun)	unchecked
 ar-010	ar	cardinal	الطقس -5 جميل	الطقس سالب خمسة جميل	Arabic Wikipedia, عدد سالب, section التسمية (the name سالب); Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 329	unchecked
 ar-011	ar	cardinal	الغرفة #5	الغرفة رقم خمسة	Wiktionary, رقم, Arabic noun sense 1 (number); Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 329	unchecked
 ar-012	ar	cardinal	الوسم #decade	الوسم #decade	unread: no number follows the sign	unchecked
-ar-013	ar	cardinal	حضر 2 طلاب	حضر 2 طلاب	unread: two follows the noun that it counts (Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 332)	unchecked
+ar-013	ar	cardinal	حضر 2 طلاب	حضر 2 طلاب	unread: two follows the noun that it counts (Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 333)	unchecked
 ar-014	arz-EG	cardinal	الكتاب 7 الجديد 42 على 1234	الكتاب سبعة الجديد اثنان وأربعون على ألف ومئتين وأربعة وثلاثين	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 329, p. 345, pp. 366-367 ('alaa governs the genitive); Modern Standard Arabic, no Egyptian words	unchecked
 ar-015	ars-SA	cardinal	لـ6 أشخاص	لستة أشخاص	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336 (sab'at-a 'ashxaaS-in: three to ten before a masculine plural), pp. 366-367 (li- governs the genitive)	unchecked
 ar-016	ar	cardinal	الضمان 5 سنوات	الضمان خمس سنوات	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 334 (three to ten take the opposite gender), pp. 352-353 (sana is feminine)	unchecked
@@ -34,7 +34,7 @@ ar-032	ar	percent	الطقس 20%.	الطقس عشرون في المئة.	Ryding 
 ar-033	ar	percent	نما ١٥٪	نما خمسة عشر في المئة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 347: xamsat-a 'ashar-a fii l-mi'at-i; CLDR 49 arab percent sign	unchecked
 ar-034	ar	money	اشتريت ٣ سيارات بـ45,000 ريال	اشتريت ثلاث سيارات بخمسة وأربعين ألف ريال	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336, pp. 350-351 ('alf and a genitive singular noun), pp. 366-367 (bi- governs the genitive)	unchecked
 ar-035	ar	money	الثمن $15	الثمن خمسة عشر دولارا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 342: xamsat-a 'ashar-a riyaal-an; Wiktionary, دولار (accusative singular)	unchecked
-ar-036	ar	money	الثمن $1	الثمن دولار	CLDR 49 currencies EGP and LYD, count one: the noun alone; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 330	unchecked
+ar-036	ar	money	الثمن $1	الثمن دولار واحد	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 330: waaHid "behaves syntactically as an adjective, following the counted noun, and agreeing with it in case and gender"; Wiktionary, دولار	unchecked
 ar-037	ar	money	الثمن $2	الثمن دولاران	Wiktionary, دولار (dual nominative); Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 332	unchecked
 ar-038	ar	money	الميزانية $3 مليون	الميزانية ثلاثة ملايين دولار	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 353: thalaathat-a balaayiin-i duulaar-in (million and billion count alike)	unchecked
 ar-039	ar	money	الثمن 12 ريال	الثمن اثنا عشر ريالا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 339-340 (eleven and twelve, accusative singular noun); Wiktionary, ريال	unchecked
@@ -74,3 +74,6 @@ ar-072	ar	measure	عندي 3 كم سؤال	عندي 3 كم سؤال	unread: Rydi
 ar-073	ar	money	الثمن ريال 5	الثمن ريال 5	unread: ريال is a counted noun, which follows the number (Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 335)	unchecked
 ar-074	ar	fraction	أضف +1/2 الكمية	أضف +1/2 الكمية	unread: sign_words gives a word for the minus sign only (Arabic Wikipedia, عدد سالب, section التسمية); no cited word for +	unchecked
 ar-075	ar	percent	نما +20%	نما +20%	unread: sign_words gives a word for the minus sign only (Arabic Wikipedia, عدد سالب, section التسمية); no cited word for +	unchecked
+ar-076	ar	cardinal	بعد 24 ساعة	بعد أربع وعشرين ساعة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 346: bacd-a 'arbac-in wa-cishriina saacat-an; p. 367 (the object of a semi-preposition is genitive); p. 388 (bacd-a)	unchecked
+ar-077	ar	percent	في نحو 90% منها	في نحو تسعين في المئة منها	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 347: fii naHw-i tisciina fii l-mi'at-i; p. 395 (naHw-a after a preposition)	unchecked
+ar-078	ar	measure	المسافة 1 كم	المسافة كيلومتر واحد	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 330 (waaHid follows the counted noun and agrees with it); CLDR 49 units length-kilometer (masculine)	unchecked

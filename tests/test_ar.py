@@ -29,7 +29,9 @@ def test_a_hint_gives_the_gender_of_the_counted_noun():
 
 
 def test_the_colloquial_register_reads_a_rank_ordinal_and_a_construct_oblique():
-    # Ryding 2005, p. 359: l-Haadii wa-l-'ishriina in the genitive; p. 350: mi'ataa 'alf-in, with -ay in the oblique.
+    # The README lists this reading as a choice with no source: Ryding 2005, p. 343, note 11, gives the spoken
+    # genitive-accusative for the tens only. The oblique forms are those of p. 359, l-Haadii wa-l-'ishriina in the
+    # genitive, and p. 350, mi'ataa 'alf-in, with -ay in the oblique.
     params = NormalizationParams(register="colloquial")
     assert normalize("القرن 21", "ar", params) == "القرن الحادي والعشرين"
     assert normalize("سعرها 200,000 ريال", "ar", params) == "سعرها مئتي ألف ريال"

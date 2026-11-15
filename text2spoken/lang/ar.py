@@ -9,22 +9,26 @@ never selects its dialect words.
 
 The rules and their sources:
 
-- Agreement (Ryding 2005, chapter 15). One and two follow the noun that they count (pp. 330-332). From 3 to 10 a
-  number takes the gender opposite to its noun (p. 334), and eight before a feminine plural is ثماني (p. 336). From
-  11 to 99 the noun follows in the accusative singular (pp. 339-345). A noun that ends in taa' marbuuTa is feminine
-  (p. 121), and the plurals in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals
-  a table.
-- Case. A number after a preposition (pp. 366-367) or a year noun (pp. 351-353) is genitive, and the colloquial
-  register has no case endings (p. 343, note 11). With no diacritics, the genitive and the accusative of a number
-  are one written form, the oblique form of ovos-number-parser, and the oblique dual ends in -ayni (p. 332).
+- Agreement (Ryding 2005, chapter 15). One follows the noun that it counts: waaHid "behaves syntactically as an
+  adjective, following the counted noun, and agreeing with it in case and gender" (p. 330). Two follows the noun too
+  (p. 333), and a noun in the dual counts two with no numeral (p. 332). From 3 to 10 a number takes the gender
+  opposite to its noun (p. 334), and eight before a feminine plural is ثماني (p. 336). From 11 to 99 the noun follows
+  in the accusative singular (pp. 339-345). A noun that ends in taa' marbuuTa is feminine (p. 121), and the plurals
+  in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table.
+- Case. A number after a preposition or a semi-preposition (p. 367) or a year noun (pp. 351-353) is genitive. Ryding
+  writes that "colloquial forms of Arabic do not have case marking" (p. 166), and "In spoken Arabic, the tens numbers
+  are reduced to one case, the genitive-accusative" (p. 343, note 11). So the colloquial register reads the tens in
+  the oblique form. It also reads every other number, the dual and the ordinals in the oblique form; no source gives
+  this choice, and the README lists it. With no diacritics, the genitive and the accusative of a number are one
+  written form, the oblique form of ovos-number-parser, and the oblique dual ends in -ayni (p. 332).
 - Hundreds, thousands and millions. A dual before its counted noun drops its nuun (p. 347), a thousand or a million
   counted from 11 to 99 with no noun is an accusative tamyiz (pp. 350 and 353), and a scale word makes the million
   the counted noun of an amount (p. 353).
 - Ordinals follow the noun that they rank and agree with it (pp. 354-359). A date reads the day as a masculine
   ordinal, then من and the month (pp. 357-358).
-- Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the
-  quarters, thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour
-  comes from the CLDR 49 day period rules of `ar` (`dayPeriods.json`).
+- Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
+  thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour comes from
+  the CLDR 49 day period rules of `ar` (`dayPeriods.json`).
 - Percent: the number and في المئة (p. 347). The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of
   the minus sign is سالب (Arabic Wikipedia, عدد سالب, section التسمية).
 - كم before an indefinite noun is the question word "how many" (pp. 402-403), not the kilometre.
@@ -83,6 +87,7 @@ DATA = freeze({
     "defaults": {"date_order": "DMY", "clock": "12h", "decimal_mark": ".", "register": "formal"},
     "proclitics": ["ب", "بـ", "ل", "لـ", "و"],
     "prepositions": ["ب", "بـ", "ل", "لـ", "في", "من", "إلى", "على", "عن", "حتى", "منذ"],
+    "semi_prepositions": ["بعد", "قبل", "نحو", "خلال", "طوال", "مع"],
     "year_nouns": {"عام": "masculine", "سنة": "feminine"},
     "feminine_plurals": ["مخطوطات", "قصائد", "مقابلات", "آبار", "مرات", "فرق", "ساعات", "سيارات", "دقائق",
                          "سنوات"],
@@ -127,14 +132,16 @@ DATA = freeze({
 })
 """Sources, by table. `number_marks`, `months`, `day_periods` and `spoken_periods`: CLDR 49 (numbers.json,
 ca-gregorian.json, dayPeriods). `percent`: Ryding 2005, p. 347. `prepositions`: Ryding 2005, pp. 366-367.
-`year_nouns`: Ryding 2005, pp. 351-353. `feminine_plurals`: the counted plurals of Ryding 2005, pp. 335-336, دقائق of
-CLDR (units.json, duration-minute), and سنوات, the plural of the feminine sana (pp. 352-353). `rank_nouns`: nouns
-that an ordinal follows (Ryding 2005, pp. 354-359). `currencies`: `SAR` reads the CLDR name ريال سعودي, and the sign
-ر.س (English Wikipedia, Saudi riyal, revision 1252604873) and the word ريال read ريال. `fraction_names`: Ryding 2005,
-pp. 360-361. `minute_phrases`: Ryding 2005, pp. 361-362. `decimal_word`: Wiktionary, فاصلة, sense "decimal point".
-`sign_words`: Arabic Wikipedia, عدد سالب, section التسمية. The count forms of `currencies` and `units`: Wiktionary
-دولار and ريال, CLDR units.json (length-kilometer), and the count rules of Ryding 2005, pp. 330-345.
-`symbols_after_only`: ريال is a counted noun, which follows the number (Ryding 2005, p. 335)."""
+`semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
+3.21.1 qabl-a (p. 395), 3.25 Tiwaal-a (p. 397) and 3.31 xilaal-a (p. 398). `year_nouns`: Ryding 2005, pp. 351-353.
+`feminine_plurals`: the counted plurals of Ryding 2005, pp. 335-336, دقائق of CLDR (units.json, duration-minute), and
+سنوات, the plural of the feminine sana (pp. 352-353). `rank_nouns`: nouns that an ordinal follows (Ryding 2005,
+pp. 354-359). `currencies`: `SAR` reads the CLDR name ريال سعودي, and the sign ر.س (English Wikipedia, Saudi riyal,
+revision 1252604873) and the word ريال read ريال. `fraction_names`: Ryding 2005, pp. 360-361. `minute_phrases`:
+Ryding 2005, pp. 361-362. `decimal_word`: Wiktionary, فاصلة, sense "decimal point". `sign_words`: Arabic Wikipedia,
+عدد سالب, section التسمية. The count forms of `currencies` and `units`: Wiktionary دولار and ريال, CLDR units.json
+(length-kilometer), and the count rules of Ryding 2005, pp. 330-345. `symbols_after_only`: ريال is a counted noun,
+which follows the number (Ryding 2005, p. 335)."""
 
 VARIETIES = (
     Variety("ar-001"),
@@ -227,16 +234,23 @@ def noun_gender(noun: str, data: FrozenMap) -> GrammaticalGender:
     return FEMININE if noun.endswith("ة") or noun in data["feminine_plurals"] else MASCULINE
 
 
+def _governs(word: str, data: FrozenMap) -> bool:
+    """Whether a word right before a number is a preposition or a semi-preposition, whose object is genitive
+    (Ryding 2005, p. 367)."""
+    return word in data["prepositions"] or word in data["semi_prepositions"]
+
+
 def _case(span: Span, context: SpanContext) -> str:
-    """Oblique after a preposition or a year noun, and everywhere in the colloquial register, which has no case
-    endings (Ryding 2005, p. 343, note 11); else nominative."""
+    """Oblique after a preposition, a semi-preposition or a year noun, else nominative. The colloquial register reads
+    every number oblique: Ryding 2005, p. 343, note 11, gives the genitive-accusative for the spoken tens only, and
+    the README lists the rest as a choice with no source."""
     request = context.request
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = request.data
     before = context.before[-1] if context.before else ""
     if (request.params.register == "colloquial" or span.fields.get("prefix", "") in data["prepositions"]
-            or before in data["prepositions"] or before in data["year_nouns"]):
+            or _governs(before, data) or before in data["year_nouns"]):
         return OBLIQUE
     return NOMINATIVE
 
@@ -308,15 +322,15 @@ def speak_rank(span: Span, context: SpanContext, proclitic: str, noun: str) -> s
     hint = context.hint or Features()
     before = context.before[-2] if len(context.before) > 1 else ""
     oblique = (request.params.register == "colloquial" or proclitic in request.data["prepositions"]
-               or before in request.data["prepositions"])
+               or _governs(before, request.data))
     features = Features(gender=hint.gender or noun_gender(noun, request.data),
                         case=hint.case or (OBLIQUE if oblique else NOMINATIVE))
     return SPELLER.ordinal(span.fields["digits"], features, request)
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
-    """One and two follow the noun that they count (Ryding 2005, pp. 330-332), so a digit 1 or 2 before a noun stays
-    as written."""
+    """One and two follow the noun that they count (Ryding 2005, pp. 330 and 333), so a digit 1 or 2 before a noun
+    stays as written."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
@@ -378,13 +392,16 @@ def speak_percent(span: Span, context: SpanContext) -> str:
 
 
 def counted(digits: str, forms: FrozenMap, features: Features, request: Request) -> str:
-    """A whole number and the noun that it counts, by CLDR plural category: the noun alone for one, the dual for
-    two, then the number and the genitive plural (few), the accusative singular (many) or the genitive singular
-    (other) (CLDR units.json; Ryding 2005, pp. 330-345 and 348-349)."""
+    """A whole number and the noun that it counts, by CLDR plural category. One is the noun and واحد after it, in the
+    gender of the noun (Ryding 2005, p. 330). CLDR 49 units.json writes the noun alone for one only for some units,
+    such as duration-minute "دقيقة", and length-kilometer keeps the number, "{0} كيلومتر", so the file does not take
+    this form from CLDR. Two is the dual (p. 332). Then come the number and the genitive plural (few), the
+    accusative singular (many) or the genitive singular (other) (Ryding 2005, pp. 334-345 and 348-349)."""
     value = bounded_integer(digits)
     category = plural_category(request, digits)
     if category == "one":
-        return forms["one"]
+        one = SPELLER.cardinal("1", replace(features, gender=GrammaticalGender(forms["gender"])), request)
+        return f"{forms['one']} {one}"
     if category == "two":
         return forms["two"][1 if features.case == OBLIQUE else 0]
     if category == "zero" or value is None or (value > 100 and value % 100 in (1, 2)):
