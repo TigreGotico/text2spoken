@@ -318,8 +318,10 @@ def _bare_hour(span: Span, before: Sequence[str], data) -> bool:
 
 def _expansions(data) -> dict[str, str]:
     """The word of each one-word abbreviation of the `abbreviations` table, by the context word that the
-    abbreviation gives: `págs` reads `páginas`."""
-    return {key.rstrip("."): word for key, word in data["abbreviations"].items() if " " not in key}
+    abbreviation gives: `págs` reads `páginas`. An abbreviation that can end a sentence, such as `etc.`, closes a
+    list and counts nothing, so `Vimos 21, etc.` reads "veintiuno"."""
+    return {key.rstrip("."): word for key, word in data["abbreviations"].items()
+            if " " not in key and key not in data["sentence_final"]}
 
 
 def agreement(span: Span, context: SpanContext) -> Agreement:
@@ -708,8 +710,8 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(), SHARED["money"],
-                 SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(),
-                 Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
+                 SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"], SHARED["range"],
+                 Ordinal(), Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
