@@ -10,12 +10,13 @@ drops the written zero of `2,50`, and because the DLE entry «coma» (1.b) reads
 "trescientos veinticinco coma ochenta y cinco".
 
 An abbreviation reads as its full word (DPD «abreviatura», 3: "deben leerse reponiendo la forma plena de la palabra
-abreviada"). A noun abbreviation after a number other than one reads as the plural of that word. The noun that such a
-number counts is plural, as in the examples of DPD «uno», 2.2: "Tengo veintiún años", "treinta y una novelas". The
-plural of a noun abbreviation stands for the plural noun (DPD «abreviatura», 7.a: "págs. por páginas"). So `21 vol.`
-reads "veintiún volúmenes". The plurals follow DPD «plural», 1.1 and 1.7.a ("ciclamen, pl. ciclámenes"). A pronoun
-such as `Ud.` counts no number, because a cardinal quantifies a noun (DPD «ordinales», 1) and `usted` is a personal
-pronoun (DPD «usted», 1).
+abreviada"). A noun abbreviation that an integer other than one counts reads as the plural of that word, so `21 vol.`
+reads "veintiún volúmenes". No source states this rule. The file infers it from three passages: the full word of DPD
+«abreviatura», 3; the plural noun after such a number in the examples of DPD «uno», 2.2 ("Tengo veintiún años",
+"treinta y una novelas"); and the plural forms of DPD «plural», 1.1 and 1.7.a ("ciclamen, pl. ciclámenes"). The
+integer counts the abbreviation only when spaces alone stand between them and no digit follows the abbreviation, as
+one does in a locator such as `pág. 45`. A pronoun such as `Ud.` counts no number, because a cardinal quantifies a
+noun (DPD «ordinales», 1) and `usted` is a personal pronoun (DPD «usted», 1).
 
 The varieties differ in the decimal mark (DPD «punto», 4.4; CLDR per region), the currency of `$` (DPD, appendix 4),
 the reading of `#` (DPD, appendix 4), the reading of the first day of the month (DPD «primero», 3) and of a whole
@@ -379,15 +380,6 @@ def _amount(amount: FrozenMap, request: Request, agree: Agreement | None = None)
     return signed(words, amount["sign"], request)
 
 
-def _counts_plural(before: Sequence[str], request: Request) -> bool:
-    """Whether the context word before a span is a whole written number whose CLDR plural category is not `one`."""
-    word = before[-1] if before else ""
-    number = next(iter(numbers_in(word, request)), None)
-    if number is None or number.start != 0 or number.end != len(word):
-        return False
-    return plural_category(request, written_amount(number.amount())) != "one"
-
-
 def _first_of_month(span: Span, after: Sequence[str], data) -> bool:
     """`1` before `de` and a month name, as in `el 1 de mayo`."""
     return (span.fields["digits"] == "1" and not span.fields["sign"] and len(after) >= 2 and after[0] == "de"
@@ -577,16 +569,15 @@ def speak_percent(span: Span, context: SpanContext) -> str:
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
     """An abbreviation reads as the full word (DPD «abreviatura», 3). A title abbreviation has a capital, while
     the word is lowercase (DPD «abreviatura», 8.c), so the word takes a capital only where a clause starts. Any
-    other abbreviation keeps the case of its first letter. A noun abbreviation after a number other than one reads
-    the plural: `2 tel.` reads "dos teléfonos"."""
+    other abbreviation keeps the case of its first letter. A noun abbreviation that `CountedAbbreviation` claims
+    reads the plural: `2 tel.` reads "dos teléfonos"."""
     data = context.request.data
     key = span.fields["key"]
     for table in ("titles", "abbreviations", "number_abbreviations"):
         word = data[table].get(key)
         if word is not None:
-            plural = data["abbreviation_plurals"].get(key) if table == "abbreviations" else None
-            if plural is not None and _counts_plural(context.before, context.request):
-                word = plural
+            if table == "abbreviations" and span.recognizer == CountedAbbreviation.name:
+                word = data["abbreviation_plurals"][key]
             capital = not context.before if table == "titles" else key[0].isupper()
             return word[0].upper() + word[1:] if capital else word
     raise LookupError(f"no abbreviation {key!r} for {context.request.tag}")
@@ -645,6 +636,36 @@ class Ordinal:
                                   "script": number.script}), recognizer=self.name)
 
 
+@dataclass(frozen=True)
+class CountedAbbreviation:
+    """A key of `abbreviation_plurals` that an integer other than one counts, as in `21 vol.`. Only spaces stand
+    between the integer and the key, so a comma, a bracket or a full stop ends the count, as in `Ver cap. 2, pág.
+    10`. No digit follows the key, as one does in a locator such as `vol. 3`."""
+    name: str = "counted_abbreviation"
+    form: Form = Form.ABBREVIATION
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        numbers = numbers_in(text, request)
+        for key in request.data["abbreviation_plurals"]:
+            position = text.find(key)
+            while position != -1:
+                end = position + len(key)
+                number = max((n for n in numbers if n.end <= position), key=lambda n: n.end, default=None)
+                if (number is not None and text[number.end:position].isspace()
+                        and not next_visible(text, end).isdigit()
+                        and number.fraction is None
+                        and not (number.start and is_word_char(text[number.start - 1]))
+                        and is_bounded(text, position, end) and _counts(number.integer, request)):
+                    yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}), recognizer=self.name)
+                position = text.find(key, end)
+
+
+def _counts(digits: str, request: Request) -> bool:
+    """Whether an integer takes a plural noun: its CLDR plural category is not `one`."""
+    value = bounded_integer(digits)
+    return value is not None and plural_category(request, str(value)) != "one"
+
+
 def _after_initial(text: str, position: int, titles) -> bool:
     """Whether an initial that stays as written comes right before `position`, as `J.` does in `J. D. Salinger`. A
     title that this pass reads is no such initial, so `D. D. Palmer` reads both titles, and a second pass, which sees
@@ -677,7 +698,7 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(reach=3), SHARED["money"],
                  SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"], SHARED["range"],
-                 Ordinal(), Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
+                 Ordinal(), CountedAbbreviation(), Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
