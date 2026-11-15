@@ -28,7 +28,6 @@ from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_i
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, is_bounded, is_word_char, next_visible
 from text2spoken.errors import DeclinedReading
-from text2spoken.lang.en import Expression
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
 M, F = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE
@@ -709,7 +708,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(), SHARED["money"],
-                 SHARED["percent"], SHARED["measure"], Expression(), SHARED["fraction"], SHARED["range"], Ordinal(),
+                 SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(),
                  Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time,
