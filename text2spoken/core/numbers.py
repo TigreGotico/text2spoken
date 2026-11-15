@@ -26,6 +26,11 @@ class Number:
                           "prefix": prefix, "suffix": suffix, "script": self.script})
 
 
+def written_amount(amount: FrozenMap) -> str:
+    """The `DECIMAL` record as plain digits, with a full stop before the fraction, for `plural_category`."""
+    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
+
+
 Marks = tuple[tuple[str, str, str], ...]
 """(script, decimal mark, group mark) for each script that a language declares."""
 

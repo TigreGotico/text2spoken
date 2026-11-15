@@ -27,6 +27,12 @@ def concatenate(spoken: str, prefix: str, suffix: str) -> str:
     return prefix + spoken + suffix
 
 
+def drop_affixes(spoken: str, prefix: str, suffix: str) -> str:
+    """The attachment of a language whose verbalizers already say each affix that it declares: the spoken words
+    alone."""
+    return spoken
+
+
 def infix_range(span: Span, following: Span, range_word: str) -> tuple[Span, Span]:
     """The core range join: the first span takes the mark between the two spans and a trail of the range word,
     so the range word stands between the two readings. With no range word, the pair stays as written."""

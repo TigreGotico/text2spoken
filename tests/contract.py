@@ -28,7 +28,9 @@ from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.spans import FIELDS, Span
-from text2spoken.core.recognizers import SHARED, speak_cardinal, speak_lexicon
+from text2spoken.core.recognizers import (SHARED, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
+                                          speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
+                                          speak_range, speak_telephone)
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import OPTIONS, Form, FrozenMap
@@ -149,8 +151,9 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
             shape(data[key], f"{where}.{key}")
 
 
-SHARED_VERBALIZERS = {"speak_cardinal": speak_cardinal, "speak_lexicon": speak_lexicon,
-                      "speak_electronic": speak_electronic, "speak_letters": speak_letters}
+SHARED_VERBALIZERS = {verbalizer.__name__: verbalizer for verbalizer in (
+    speak_cardinal, speak_lexicon, speak_electronic, speak_letters, speak_decimal, speak_fraction, speak_ordinal,
+    speak_range, speak_percent, speak_expression, speak_telephone, speak_abbreviation, speak_idiom)}
 """The verbalizers of the core that a file can name, by their name in `READERS`."""
 
 
@@ -376,6 +379,25 @@ def check_imports(source: str) -> None:
     assert nested <= stdlib | ALLOWED_IMPORTS | LAZY_ONLY | {"text2spoken"}, f"imports {sorted(nested)}"
 
 
+def check_core_only(source: str, code: str) -> None:
+    """Of the package, a language file imports only the core and its own private modules, such as
+    `text2spoken.lang._pt_electronic` for `pt`: a module of `text2spoken.lang` whose name starts with `_<code>_`."""
+    own = f"_{code}_"
+    foreign = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            modules = [a.name for a in node.names]
+        elif isinstance(node, ast.ImportFrom) and node.module == "text2spoken.lang":
+            modules = [f"text2spoken.lang.{a.name}" for a in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            modules = [node.module or ""]
+        else:
+            continue
+        foreign.update(m for m in modules if m.startswith("text2spoken.lang.")
+                       and not m.removeprefix("text2spoken.lang.").startswith(own))
+    assert not foreign, f"imports the language files {sorted(foreign)}; a language file imports only the core"
+
+
 def declared(requirements: list[str], extra: str) -> set[str]:
     """The distributions that an install of the package with `extra` holds; "" is an install with no extra."""
     found = set()
@@ -436,6 +458,7 @@ def clause_12(name: str, spec: LanguageSpec, source: str | None = None, requirem
     path = Path(find_spec(f"text2spoken.lang.{name}").origin) if source is None else None
     text = source if path is None else path.read_text(encoding="utf-8")
     check_imports(text)
+    check_core_only(text, spec.code)
     check_declared(text, spec.code, requirements)
     check_speller_dependencies(spec, requirements)
     if path is not None:

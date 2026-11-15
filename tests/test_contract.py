@@ -184,9 +184,11 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
                                    {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
                    "electronic_symbols": {"@": "et"}, "letter_names": {"a": "ha"}, "electronic_vowels": ["a"],
                    "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"], "letter_vowels": ["a"],
-                   "letter_onsets": ["q"], "letter_codas": ["c"]})
-    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["electronic"],
-               SHARED["letters"])
+                   "letter_onsets": ["q"], "letter_codas": ["c"], "phone_words": ["fon"], "phone_shapes": [],
+                   "phone_unit_shapes": [], "phone_kept_shapes": [], "no_phone_shapes": [], "short_codes": [],
+                   "list_links": [], "operators": {}, "unit_symbols": [], "currency_symbols": []})
+    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["telephone"],
+               SHARED["electronic"], SHARED["letters"])
     verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic,
                    Form.LETTERS: contract.speak_letters}
     spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers), verbalizers=verbalizers)
@@ -231,8 +233,9 @@ class _Recorder(FrozenMap):
 
 
 def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
-    """A recording run over the rows of each language file, for the shared recognizers that the files use. A
-    request with no recognizer comes from the `normalize` call that reads an emoji name, and is not recorded."""
+    """A recording run over the rows of each language file, for the shared recognizers that the files use, with
+    the fields of the shared instance or with fields of their own. A request with no recognizer comes from the
+    `normalize` call that reads an emoji name, and is not recorded."""
     read: dict[str, set[str]] = {name: set() for name in SHARED}
     used = set()
     data = Request.data.fget
@@ -249,8 +252,8 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
         for row in rows(code):
             tag, language, variety = select(row["tag"])
             tokens = default_tokenizer(row["text"], tag)
-            for name, recognizer in SHARED.items():
-                if recognizer in language.recognizers:
+            for name, shared in SHARED.items():
+                for recognizer in (r for r in language.recognizers if type(r) is type(shared)):
                     used.add(name)
                     request = Request(tag, variety, language, NormalizationParams(), memo={"recognizer": name})
                     list(recognizer.find(row["text"], tokens, request))
@@ -408,6 +411,21 @@ def test_clause_12_bites(en, source):
 def test_clause_12_bites_on_an_undeclared_dependency(source):
     with pytest.raises(AssertionError, match="does not hold"):
         contract.clause_12("qac", STUB, source=source)
+
+
+@pytest.mark.parametrize("source", ["from text2spoken.lang.en import Abbreviation\n", "import text2spoken.lang.es\n",
+                                    "from text2spoken.lang import en, _pt_electronic\n",
+                                    "from text2spoken.lang import _de_tables\n"])
+def test_clause_12_bites_on_an_import_of_another_language_file(source):
+    with pytest.raises(AssertionError, match="imports the language files"):
+        contract.clause_12("pt", replace(STUB, code="pt"), source=source, requirements=[])
+
+
+@pytest.mark.parametrize("source", ["from text2spoken.lang import _pt_electronic\n",
+                                    "from text2spoken.lang._pt_electronic import ElectronicReader\n",
+                                    "from text2spoken.core.spans import Span\n"])
+def test_clause_12_admits_the_core_and_the_own_private_modules(source):
+    contract.clause_12("pt", replace(STUB, code="pt"), source=source, requirements=[])
 
 
 def test_clause_12_admits_no_other_extra():

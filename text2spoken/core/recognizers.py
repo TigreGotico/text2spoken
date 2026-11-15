@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from bisect import bisect_left, bisect_right
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from types import MappingProxyType
@@ -24,11 +24,11 @@ from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
-from text2spoken.core.spellers import DigitSpeller, bounded_integer
+from text2spoken.core.spellers import bounded_integer, spell_digits
 from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_bounded, is_digit, is_letter,
-                                     is_mark, is_word_char, next_visible, one_digit_set)
+from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
+                                     is_letter, is_mark, is_word_char, next_visible, one_digit_set)
 from text2spoken.core.units import unit_table, units_at
 from text2spoken.params import FrozenMap, Form
 
@@ -710,10 +710,21 @@ class Telephone:
     `phone_kept_shapes` matches whole stays as written when it has no phone reading. A run that a shape of
     `no_phone_shapes` matches whole has no phone shape.
 
+    By default the window holds the one word right before the run. Four fields widen it. `reach` is the number of
+    words back that a phone word may stand. With `content_words`, a word of `function_words` does not count toward
+    the reach, and the window stays within eight words of the clause, as in `Ligue para o 112.` A phone word of the
+    window that is not right before the run names a run with a phone shape when `names_shaped` is set, and a short
+    code that ends its clause or that a function word follows when `names_short_codes` is set, as in `Call the
+    police on 999 now.`, and not the count in `The phone rang 101 times.`
+
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
     methods `trimmed`, `window` and `names_back`, as `EnglishTelephone` does."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
+    reach: int = 1
+    content_words: bool = False
+    names_shaped: bool = False
+    names_short_codes: bool = False
 
     def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
         """The run that `_PHONE` matched at `start`, less a last group that the language reads apart."""
@@ -721,14 +732,26 @@ class Telephone:
 
     def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                request: Request) -> range:
-        """The indices of the words that may hold a phone word for the run: the word right before it."""
+        """The indices of the words that may hold a phone word for the run."""
         index = bisect_right(words, start, key=lambda word: word.end)
-        return range(index - len(clause_window(text, words, start, end, -1, limit=1, breaks=breaks)), index)
+        if not self.content_words:
+            return range(index - len(clause_window(text, words, start, end, -1, limit=self.reach, breaks=breaks)),
+                         index)
+        function_words = frozenset(request.data.get("function_words", ()))
+        before = clause_window(text, words, start, end, -1, limit=8, breaks=breaks)
+        counted = [i for i in range(index - len(before), index) if words[i].text.lower() not in function_words]
+        return range(counted[-self.reach] if len(counted) >= self.reach else index - len(before), index)
 
     def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                    shaped: bool, short_code: bool, request: Request) -> bool:
         """Whether a phone word of the window that is not right before the run names it."""
-        return False
+        if self.names_shaped and shaped:
+            return True
+        if not (self.names_short_codes and short_code):
+            return False
+        function_words = frozenset(request.data.get("function_words", ()))
+        following = clause_window(text, words, start, end, 1, limit=1, breaks=breaks)
+        return all(word.lower() in function_words for word in following)
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         words = _spoken_words(text, tokens, request)
@@ -834,15 +857,99 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
-        words = DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
+        words = spell_digits(digits, request)
     else:
         words = request.language.spellers[Form.CARDINAL].cardinal(digits, Features(), request)
-    if fields["sign"]:
-        words = f"{request.data['sign_words'][fields['sign']]} {words}"
+    words = signed(words, fields["sign"], request)
     if fields["lead"]:
         lead = request.data["leads"][fields["lead"]]
         words = f"{lead} {words}" if lead else f" {words}"
     return words
+
+
+def signed(words: str, sign: str, request: Request) -> str:
+    """The words of a number after the word of its sign in `sign_words`."""
+    return f"{request.data['sign_words'][sign]} {words}" if sign else words
+
+
+def amount_words(amount: FrozenMap, request: Request, features: Features = Features()) -> str:
+    """A `DECIMAL` record through the spellers of the language, with its sign: the decimal speller when the record
+    has fraction digits, else the cardinal speller with `features`."""
+    spellers = request.language.spellers
+    if amount["fraction"]:
+        words = spellers[Form.DECIMAL].decimal(amount["integer"], amount["fraction"], features, request)
+    else:
+        words = spellers[Form.CARDINAL].cardinal(amount["integer"] or "0", features, request)
+    return signed(words, amount["sign"], request)
+
+
+def speak_decimal(span: Span, context: SpanContext) -> str:
+    return amount_words(span.fields, context.request)
+
+
+def speak_fraction(span: Span, context: SpanContext) -> str:
+    fields, request = span.fields, context.request
+    words = request.language.spellers[Form.FRACTION].fraction(fields["numerator"], fields["denominator"], Features(),
+                                                              request)
+    return signed(words, fields["sign"], request)
+
+
+def speak_ordinal(span: Span, context: SpanContext) -> str:
+    return context.request.language.spellers[Form.ORDINAL].ordinal(span.fields["digits"], Features(), context.request)
+
+
+def speak_range(span: Span, context: SpanContext) -> str:
+    """The two ends as cardinals, with the `range_word` between them."""
+    request = context.request
+    cardinal = request.language.spellers[Form.CARDINAL].cardinal
+    low, high = (cardinal(span.fields[end], Features(), request) for end in ("low", "high"))
+    return f"{low} {request.data['range_word']} {high}"
+
+
+def speak_percent(span: Span, context: SpanContext) -> str:
+    """The amount, then the word of the `percent` table."""
+    request = context.request
+    return f"{amount_words(span.fields['amount'], request)} {request.data['percent']['word']}"
+
+
+def speak_expression(span: Span, context: SpanContext) -> str:
+    """Each operand as a cardinal with its sign, and the word of each operator from `operators`: `-2+3=1` reads
+    "minus two plus three equals one", and `3 − −3` "three minus minus three"."""
+    request = context.request
+    cardinal = request.language.spellers[Form.CARDINAL].cardinal
+
+    def operand(written: str) -> str:
+        return signed(cardinal(written.lstrip(_OPERAND_SIGNS), Features(), request), SIGNS.get(written[0], ""),
+                      request)
+
+    operands = span.fields["operands"]
+    words = [operand(operands[0])]
+    for operator, written in zip(span.fields["operators"], operands[1:]):
+        words += [request.data["operators"][operator], operand(written)]
+    return " ".join(words)
+
+
+def speak_telephone(span: Span, context: SpanContext) -> str:
+    """Each group digit by digit, after the sign word of `+` and the country code when the number has one."""
+    request = context.request
+    groups = [spell_digits(group, request) for group in span.fields["groups"]]
+    if span.fields["country_code"]:
+        groups.insert(0, f"{request.data['sign_words']['+']} {spell_digits(span.fields['country_code'], request)}")
+    return " ".join(groups)
+
+
+def speak_abbreviation(span: Span, context: SpanContext) -> str:
+    """The reading of the key in the first of `titles`, `abbreviations` and `number_abbreviations` that holds it."""
+    data = context.request.data
+    key = span.fields["key"]
+    for table in ("titles", "abbreviations", "number_abbreviations"):
+        if data[table].get(key) is not None:
+            return data[table][key]
+    raise LookupError(f"no abbreviation {key!r} for {context.request.tag}")
+
+
+def speak_idiom(span: Span, context: SpanContext) -> str:
+    return context.request.data["idioms"][span.fields["key"]]
 
 
 @dataclass(frozen=True)
@@ -948,9 +1055,77 @@ class Expression:
                        recognizer=self.name, keep=unclear)
 
 
+@dataclass(frozen=True)
+class Abbreviation:
+    """A title before a capitalised name, a number abbreviation before a number, and the abbreviations of the
+    table, as in `Dr. Smith`, `No. 5` and `etc.` A key of `sentence_final` that ends the sentence, before a capital
+    letter or at the end of the text, keeps its full stop as the trail of the span.
+
+    A language file that reads other tables replaces `tables`, and one that refuses a key in some places replaces
+    `refuses`."""
+    name: str = "abbreviation"
+    form: Form = Form.ABBREVIATION
+
+    def tables(self, data) -> tuple[tuple[str, Iterable[str], Callable[[str], bool]], ...]:
+        """Each table: its name, its keys, and the test that the character after a key passes. A key with no
+        reading, as in a variety that removes a key of the language, is no key."""
+        def keys(table) -> list[str]:
+            return [key for key, value in table.items() if value is not None]
+
+        return (("titles", keys(data["titles"]), str.isupper),
+                ("number_abbreviations", keys(data["number_abbreviations"]), str.isdigit),
+                ("abbreviations", keys(data["abbreviations"]), lambda _: True))
+
+    def refuses(self, text: str, position: int, table: str, data) -> bool:
+        """Whether the key of `table` at `position` stays as written."""
+        return False
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        final = frozenset(data["sentence_final"])
+        for table, keys, follows in self.tables(data):
+            for key in sorted(keys, key=len, reverse=True):
+                position = text.find(key)
+                while position != -1:
+                    end = position + len(key)
+                    following = next_visible(text, end)
+                    if is_bounded(text, position, end) and follows(following) \
+                            and not self.refuses(text, position, table, data):
+                        sentence_end = key in final and (following == "" or following.isupper())
+                        yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
+                                   trail="." if sentence_end else "", recognizer=self.name)
+                    position = text.find(key, end)
+
+
+SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[   ][0-9]{3})+(?:,[0-9]{1,3}(?:[   ][0-9]{1,3})*)?"
+                          "|[0-9]+,[0-9]{3}(?:[   ][0-9]{1,3})+")
+"""Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the
+whole part or in the fraction after a decimal comma: `36 524`, `123 456 789,987 546`, `0,264 7` (Araua 203,
+section 3.2.1.1, page 12)."""
+
+
+@dataclass(frozen=True)
+class SpaceGroups:
+    """`36 524`, `30 000`: digits in groups of three with a space between them. In a language whose group mark is
+    not a space, each group would read as a number of its own, so the span stays as written."""
+    name: str = "space_groups"
+    form: Form = Form.CARDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for match in SPACE_GROUPS.finditer(fold_digits(text)):
+            start, end = match.span()
+            script = digit_script(text[start:end])
+            if script is None or (start and is_word_char(text[start - 1])) or not _cluster_edge(text, start, end):
+                continue
+            digits = re.sub("[^0-9]", "", match.group())
+            yield Span(start, end, Form.CARDINAL,
+                       FrozenMap({"digits": digits, "sign": "", "lead": "", "prefix": "", "suffix": "",
+                                  "script": script}), recognizer=self.name, keep=True)
+
+
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), Expression(), COLOR, ELECTRONIC, LETTERS,
-                              SYMBOL, EMOJI)}
+                              Percent(), Money(), Measure(), Telephone(), Expression(), Abbreviation(), SpaceGroups(),
+                              COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
 """The shared recognizers by name."""
