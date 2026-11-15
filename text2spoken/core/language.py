@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import sys
 import warnings
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field, replace
@@ -11,8 +12,9 @@ from importlib import import_module
 from importlib.resources import files
 from typing import TYPE_CHECKING
 
-from text2spoken.errors import (InvalidLanguageTagError, InvalidLexiconError, ParameterNotHonouredWarning,
-                                UndefinedGrammaticalGender, UnsupportedParameterError, require_type)
+from text2spoken.errors import (DeclinedReading, InvalidLanguageTagError, InvalidLexiconError,
+                                ParameterNotHonouredWarning, UndefinedGrammaticalGender, UnsupportedParameterError,
+                                require_type)
 from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams
 
 if TYPE_CHECKING:
@@ -192,17 +194,29 @@ def cldr_locale(tag: str, available: Collection[str], language: LanguageSpec) ->
 def plural_category(request: Request, written: str) -> str:
     """The CLDR plural category of a written ASCII number, such as `1.0` or `5`, in the variety of the request.
 
-    The rule runs at the precision of the number. Each operand and each `%` quotient of a CLDR rule has at most as
-    many digits as the number, so that precision keeps the rule exact. The default context rounds at 28 digits:
-    `10**28 + 1` then takes the category of `10**28`, and `i % 10` raises `InvalidOperation` from 10**29. A number
-    can reach this function before a speller checks `DIGIT_BOUND`, so the precision follows the number."""
+    The rule runs at the precision of the number. Each operand of a CLDR rule has at most as many digits as the
+    number, and the quotient of `i % m` has at most as many digits as `i`, so that precision keeps the rule exact.
+    The default context rounds at 28 digits: `10**28 + 1` then takes the category of `10**28`, and `i % 10` raises
+    `InvalidOperation` from 10**29. A number can reach this function before a speller checks `DIGIT_BOUND`, so the
+    precision follows the number.
+
+    unicode_rbnf converts the fraction digits to an `int`. So a number whose fraction or integer part has more
+    digits than `sys.get_int_max_str_digits()` raises `DeclinedReading`, and its span stays as written. A limit of
+    0 is no limit."""
     from unicode_rbnf.plural_rules import get_plural_category
 
     locale = cldr_locale(request.tag, plural_locales(), request.language)
     if locale is None:
         raise LookupError(f"no CLDR plural rules for {request.tag!r}")
     number = Decimal(written)
-    with localcontext(prec=max(len(number.as_tuple().digits), getcontext().prec)):
+    _, digits, exponent = number.as_tuple()
+    fraction = max(-exponent, 0)
+    integer = max(len(digits) - fraction, 0)
+    limit = sys.get_int_max_str_digits()
+    if limit and max(fraction, integer) > limit:
+        raise DeclinedReading(f"a number of {integer} integer and {fraction} fraction digits passes the int string "
+                              f"limit of {limit} digits, so it has no plural category")
+    with localcontext(prec=max(len(digits), getcontext().prec)):
         return str(get_plural_category(locale, number))
 
 
