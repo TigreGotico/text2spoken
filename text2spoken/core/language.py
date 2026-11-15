@@ -5,7 +5,7 @@ import re
 import warnings
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field, replace
-from decimal import Decimal
+from decimal import Decimal, getcontext, localcontext
 from functools import cache, lru_cache
 from importlib import import_module
 from importlib.resources import files
@@ -190,13 +190,20 @@ def cldr_locale(tag: str, available: Collection[str], language: LanguageSpec) ->
 
 
 def plural_category(request: Request, written: str) -> str:
-    """The CLDR plural category of a written ASCII number, such as `1.0` or `5`, in the variety of the request."""
+    """The CLDR plural category of a written ASCII number, such as `1.0` or `5`, in the variety of the request.
+
+    The rule runs at the precision of the number. Each operand and each `%` quotient of a CLDR rule has at most as
+    many digits as the number, so that precision keeps the rule exact. The default context rounds at 28 digits:
+    `10**28 + 1` then takes the category of `10**28`, and `i % 10` raises `InvalidOperation` from 10**29. A number
+    can reach this function before a speller checks `DIGIT_BOUND`, so the precision follows the number."""
     from unicode_rbnf.plural_rules import get_plural_category
 
     locale = cldr_locale(request.tag, plural_locales(), request.language)
     if locale is None:
         raise LookupError(f"no CLDR plural rules for {request.tag!r}")
-    return str(get_plural_category(locale, Decimal(written)))
+    number = Decimal(written)
+    with localcontext(prec=max(len(number.as_tuple().digits), getcontext().prec)):
+        return str(get_plural_category(locale, number))
 
 
 @cache

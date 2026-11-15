@@ -3,6 +3,7 @@ import json
 import subprocess
 import sys
 from dataclasses import replace
+from decimal import localcontext
 
 import pytest
 
@@ -365,6 +366,60 @@ def test_plural_category_refuses_a_locale_with_no_rules(gendered):
     language = replace(gendered.LANGUAGE, code="tlh", cldr_aliases=())
     with pytest.raises(LookupError):
         plural_category(Request("tlh", Variety("tlh"), language, NormalizationParams()), "1")
+
+
+# CLDR 49, common/supplemental/plurals.xml, read by hand:
+#   es        one:  n = 1
+#   fr pt     one:  i = 0..1
+#   pt_PT     one:  i = 1 and v = 0
+#   es, pt, pt_PT  many: e = 0 and i != 0 and i % 1000000 = 0 and v = 0 or e != 0..5
+#   ru uk     one:  v = 0 and i % 10 = 1 and i % 100 != 11
+#             few:  v = 0 and i % 10 = 2..4 and i % 100 != 12..14
+#             many: v = 0 and i % 10 = 0 or v = 0 and i % 10 = 5..9 or v = 0 and i % 100 = 11..14
+def cldr_integer_category(code: str, i: int) -> str:
+    """The category of a written integer above 1 (v = 0, e = 0) by the rules above, in Python int arithmetic."""
+    if code == "ru":
+        if i % 10 == 1 and i % 100 != 11:
+            return "one"
+        if 2 <= i % 10 <= 4 and not 12 <= i % 100 <= 14:
+            return "few"
+        return "many" if i % 10 == 0 or 5 <= i % 10 <= 9 or 11 <= i % 100 <= 14 else "other"
+    return "many" if i % 1000000 == 0 else "other"
+
+
+LARGE_INTEGERS = [10**28, 10**28 + 1, 10**29, 10**29 + 1, 10**29 + 2, 10**29 + 11, 10**34, 10**34 + 1,
+                  int("1" * 400)]
+
+
+@pytest.mark.parametrize("tag", ["es", "pt-BR", "pt-PT", "ru"])
+@pytest.mark.parametrize("number", LARGE_INTEGERS, ids=lambda number: f"{len(str(number))}digits-{number % 100}")
+def test_the_plural_category_of_a_large_integer_is_exact(gendered, tag, number):
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    category = plural_category(Request(tag, Variety(tag), language, NormalizationParams()), str(number))
+    assert category == cldr_integer_category(tag.split("-")[0], number)
+
+
+@pytest.mark.parametrize("tag", ["es", "pt-BR", "pt-PT"])
+def test_one_more_than_ten_to_the_twenty_eight_is_other(gendered, tag):
+    # (10**28 + 1) % 1000000 == 1, so many fails; n and i are not 1 or 0..1, so one fails.
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    assert plural_category(Request(tag, Variety(tag), language, NormalizationParams()), str(10**28 + 1)) == "other"
+
+
+@pytest.mark.parametrize("tag", ["es", "pt-BR", "pt-PT", "ru"])
+def test_a_long_decimal_keeps_its_visible_fraction(gendered, tag):
+    # v = 1, so neither many nor any ru category applies; n and i are far from 1.
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    written = "1" + "0" * 30 + ".5"
+    assert plural_category(Request(tag, Variety(tag), language, NormalizationParams()), written) == "other"
+
+
+def test_the_plural_category_is_exact_under_a_caller_context_of_low_precision(gendered):
+    # ru 1000001: i % 10 = 1 and i % 100 = 1, so one.
+    language = replace(gendered.LANGUAGE, code="ru", cldr_aliases=())
+    with localcontext(prec=6) as caller:
+        assert plural_category(Request("ru", Variety("ru"), language, NormalizationParams()), "1000001") == "one"
+        assert caller.prec == 6
 
 
 def test_the_private_plural_locale_list_has_its_shape():
