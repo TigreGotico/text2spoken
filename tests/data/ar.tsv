@@ -1,0 +1,79 @@
+id	tag	form	text	expected	source	checked_by
+ar-001	ar-001	cardinal	الطقس 7 جميل 42 جدا 1234	الطقس سبعة جميل اثنان وأربعون جدا ألف ومئتان وأربعة وثلاثون	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 329-330 (citation forms), p. 345 (compound tens), pp. 348-350 (hundreds, thousands)	unchecked
+ar-002	ar	cardinal	اشتريت ٣ سيارات	اشتريت ثلاث سيارات	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 334 (three to ten take the opposite gender), p. 336 (tis'a sayyaaraat); CLDR 49 arab digits	unchecked
+ar-003	ar	cardinal	عندي 42 سيارة	عندي اثنتان وأربعون سيارة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 345 (one and two in a compound number agree with the noun), p. 332 (ithnataani)	unchecked
+ar-004	ar	cardinal	في 20 دقيقة	في عشرين دقيقة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 343 (tens -iina in the genitive), pp. 366-367 (fii governs the genitive)	unchecked
+ar-005	ar	cardinal	في عام 1956	في عام ألف وتسعمئة وستة وخمسين	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 352: fii 'aam-i 'alf-in wa-tis'-i mi'at-in wa-sittat-in wa-xamsiina	unchecked
+ar-006	ar	cardinal	سنة 2001	سنة ألفين وواحدة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 353: sanat-a 'alfayni wa-waaHidat-in	unchecked
+ar-007	ar	cardinal	انتظرت 8 ساعات	انتظرت ثماني ساعات	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336: thamaanii saa'aat-in	unchecked
+ar-008	ar	cardinal	بلغ العدد 11000	بلغ العدد أحد عشر ألفا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 350: 'aHad-a 'ashar-a 'alf-an	unchecked
+ar-009	ar	cardinal	حضر 200 طالب	حضر مئتا طالب	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 169 (the subject of a verbal sentence is nominative), p. 347 (mi'at-aa fils-in: the dual drops its nuun before the noun), p. 348 (genitive singular noun)	unchecked
+ar-010	ar	cardinal	الطقس -5 جميل	الطقس سالب خمسة جميل	Arabic Wikipedia, عدد سالب, section التسمية (the name سالب); Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 329	unchecked
+ar-011	ar	cardinal	الغرفة #5	الغرفة رقم خمسة	Wiktionary, رقم, Arabic noun sense 1 (number); Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 329	unchecked
+ar-012	ar	cardinal	الوسم #decade	الوسم #decade	unread: no number follows the sign	unchecked
+ar-013	ar	cardinal	حضر 2 طلاب	حضر 2 طلاب	unread: two follows the noun that it counts (Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 333)	unchecked
+ar-014	arz-EG	cardinal	الكتاب 7 الجديد 42 على 1234	الكتاب سبعة الجديد اثنان وأربعون على ألف ومئتين وأربعة وثلاثين	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 329, p. 345, pp. 366-367 ('alaa governs the genitive); Modern Standard Arabic, no Egyptian words	unchecked
+ar-015	ars-SA	cardinal	لـ6 أشخاص	لستة أشخاص	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336 (sab'at-a 'ashxaaS-in: three to ten before a masculine plural), pp. 366-367 (li- governs the genitive)	unchecked
+ar-016	ar	cardinal	الضمان 5 سنوات	الضمان خمس سنوات	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 334 (three to ten take the opposite gender), pp. 352-353 (sana is feminine)	unchecked
+ar-017	ar	cardinal	خلال 3 أيام	خلال ثلاثة أيام	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 334 (a masculine noun takes thalaatha)	unchecked
+ar-018	ar	cardinal	الطابق 3	الطابق الثالث	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 354 (an ordinal follows the noun and agrees with it), p. 356	unchecked
+ar-019	ar	cardinal	الفئة 5	الفئة الخامسة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 354, p. 356 (feminine ordinals); p. 121 (taa' marbuuTa marks the feminine)	unchecked
+ar-020	ar	cardinal	بالمرتبة 1	بالمرتبة الأولى	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 354-355 ('awwal, feminine 'uulaa)	unchecked
+ar-021	ar	cardinal	القرن 21	القرن الحادي والعشرون	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 359 (both parts of a tens ordinal take the article and the case of the noun)	unchecked
+ar-022	ar	cardinal	في القرن 21	في القرن الحادي والعشرين	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 359: fii l-qarn-i l-Haadii wa-l-'ishriina	unchecked
+ar-023	ar	decimal	درجة الحرارة ١٢٫٥	درجة الحرارة اثنا عشر فاصلة خمسة	Wiktionary, فاصلة, Arabic sense 6 (decimal point), example 232.78; CLDR 49 arab decimal mark U+066B; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 339	unchecked
+ar-024	ar-001	decimal	النسبة 3.75	النسبة ثلاثة فاصلة خمسة وسبعون	Wiktionary, فاصلة, Arabic sense 6 (decimal point); CLDR 49 ar latn decimal mark; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 345	unchecked
+ar-025	ar-DZ	decimal	الوزن 2,5	الوزن اثنان فاصلة خمسة	CLDR 49 ar-DZ latn decimal mark ','; Wiktionary, فاصلة, Arabic sense 6	unchecked
+ar-026	ar-LY	decimal	الوزن 7,5	الوزن سبعة فاصلة خمسة	CLDR 49 ar-LY latn decimal mark ','; Wiktionary, فاصلة, Arabic sense 6	unchecked
+ar-027	ar	fraction	$5 1/2 5+3 الطقس	خمسة دولارات نصف 5+3 الطقس	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 360 (niSf), p. 336 (three to ten with a masculine plural); Wiktionary, دولار (plural دولارات); 5+3 unread: no cited operator words	unchecked
+ar-028	ar	fraction	أكل 3/4 الكعكة	أكل ثلاثة أرباع الكعكة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 360 (rub'/'arbaa'), p. 334	unchecked
+ar-029	ar	fraction	يحتاج إلى 2/3 الأعضاء	يحتاج إلى ثلثي الأعضاء	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 361: ya-Htaaj-u 'ilaa thulth-ay-i l-a'Daa'-i	unchecked
+ar-030	ar	fraction	خذ 1/12 الكمية	خذ 1/12 الكمية	unread: Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 360 names fractions from a half to a tenth only	unchecked
+ar-031	ar	percent	الطقس 20% جميل	الطقس عشرون في المئة جميل	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 347 (fii l-mi'at-i), p. 343	unchecked
+ar-032	ar	percent	الطقس 20%.	الطقس عشرون في المئة.	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 347, p. 343	unchecked
+ar-033	ar	percent	نما ١٥٪	نما خمسة عشر في المئة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 347: xamsat-a 'ashar-a fii l-mi'at-i; CLDR 49 arab percent sign	unchecked
+ar-034	ar	money	اشتريت ٣ سيارات بـ45,000 ريال	اشتريت ثلاث سيارات بخمسة وأربعين ألف ريال	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336, pp. 350-351 ('alf and a genitive singular noun), pp. 366-367 (bi- governs the genitive)	unchecked
+ar-035	ar	money	الثمن $15	الثمن خمسة عشر دولارا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 342: xamsat-a 'ashar-a riyaal-an; Wiktionary, دولار (accusative singular)	unchecked
+ar-036	ar	money	الثمن $1	الثمن دولار واحد	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 330: waaHid "behaves syntactically as an adjective, following the counted noun, and agreeing with it in case and gender"; Wiktionary, دولار	unchecked
+ar-037	ar	money	الثمن $2	الثمن دولاران	Wiktionary, دولار (dual nominative); Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 332	unchecked
+ar-038	ar	money	الميزانية $3 مليون	الميزانية ثلاثة ملايين دولار	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 353: thalaathat-a balaayiin-i duulaar-in (million and billion count alike)	unchecked
+ar-039	ar	money	الثمن 12 ريال	الثمن اثنا عشر ريالا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 339-340 (eleven and twelve, accusative singular noun); Wiktionary, ريال	unchecked
+ar-040	ar	money	سعرها 200,000 ريال	سعرها مئتا ألف ريال	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 350 (200,000 mi'ataa 'alf-in), p. 347 (the dual drops its nuun before the noun)	unchecked
+ar-041	ar	money	السعر 500 SAR	السعر خمسمئة ريال سعودي	CLDR 49 currencies.json SAR displayName ريال سعودي; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 348 (hundreds and a genitive singular noun)	unchecked
+ar-042	ar	money	المجموع 1200ر.س	المجموع ألف ومئتا ريال	English Wikipedia, Saudi riyal, revision 1252604873 (symbol ر.س); Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 347-349 (the last part of the number counts the noun, and a dual drops its nuun)	unchecked
+ar-043	ar	measure	المسافة 5 km	المسافة خمسة كيلومترات	CLDR 49 units length-kilometer, count few; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336 (sittat-i kiiluumitraat-in)	unchecked
+ar-044	ar	measure	المسافة 6 كم	المسافة ستة كيلومترات	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 336: sittat-i kiiluumitraat-in; CLDR 49 units length-kilometer	unchecked
+ar-045	ar	measure	المسافة 25 كم	المسافة خمسة وعشرون كيلومترا	CLDR 49 units length-kilometer, count many; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 345	unchecked
+ar-046	ar	measure	القطعة 10 × 20 كم	القطعة 10 × 20 كم	unread: no cited reading for a dimension	unchecked
+ar-047	ar	date	الطقس 12/03/2024 جميل	الطقس الثاني عشر من مارس ألفين وأربعة وعشرين جميل	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 357-358 (ordinal day, min, month), pp. 352-353 (year in the genitive); CLDR 49 ar months	unchecked
+ar-048	ar	date	ولد في 12 مارس 2024	ولد في الثاني عشر من مارس ألفين وأربعة وعشرين	CLDR 49 ar long date d MMMM y; Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 357-358, pp. 352-353	unchecked
+ar-049	ar	date	يوم 3 يونيو	يوم الثالث من يونيو	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 356-358; CLDR 49 ar months	unchecked
+ar-050	ar	date	الموعد 13/13/2024	الموعد 13/13/2024	unread: no month 13	unchecked
+ar-051	ar-MA	date	الطقس 12/08/2024 جميل	الطقس الثاني عشر من غشت ألفين وأربعة وعشرين جميل	CLDR 49 ar-MA months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 357-358	unchecked
+ar-052	ar-DZ	date	5/7/2024	الخامس من جويلية ألفين وأربعة وعشرين	CLDR 49 ar-DZ months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 356-358	unchecked
+ar-053	ar-TN	date	1/8/2024	الأول من أوت ألفين وأربعة وعشرين	CLDR 49 ar-TN months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 354-355 ('awwal)	unchecked
+ar-054	ar-IQ	date	14/7/1958	الرابع عشر من تموز ألف وتسعمئة وثمانية وخمسين	CLDR 49 ar-IQ months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 358 (eleventh to nineteenth), p. 352	unchecked
+ar-055	ar-JO	date	25/5/1946	الخامس والعشرون من أيار ألف وتسعمئة وستة وأربعين	CLDR 49 ar-JO months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 359 (compound ordinals), p. 352	unchecked
+ar-056	ar-PS	date	15/11/1988	الخامس عشر من تشرين الثاني ألف وتسعمئة وثمانية وثمانين	CLDR 49 ar-PS months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 358, p. 352	unchecked
+ar-057	ar-SY	date	17/4/1946	السابع عشر من نيسان ألف وتسعمئة وستة وأربعين	CLDR 49 ar-SY months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 358, p. 352	unchecked
+ar-058	ar-LB	date	22/11/1943	الثاني والعشرون من تشرين الثاني ألف وتسعمئة وثلاثة وأربعين	CLDR 49 ar-LB months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 359, p. 352	unchecked
+ar-059	ar-LY	date	24/12/1951	الرابع والعشرون من ديسمبر ألف وتسعمئة وواحد وخمسين	CLDR 49 ar-LY months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 359, p. 352	unchecked
+ar-060	ar-MR	date	28/11/1960	الثامن والعشرون من نوفمبر ألف وتسعمئة وستين	CLDR 49 ar-MR months; Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 359, p. 352	unchecked
+ar-061	ar	time	الساعة 9:30	الساعة التاسعة والنصف	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 361-362 (l-'aashirat-i wa-l-niSf-i)	unchecked
+ar-062	ar	time	الساعة 7:15 مساءً	الساعة السابعة والربع مساء	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 362 (l-saabi'at-i wa-l-rub'-i min masaa'-i); CLDR 49 ar day period evening1	unchecked
+ar-063	ar	time	الساعة 6:45	الساعة السابعة إلا ربعا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 362: l-saabi'at-i 'illaa rub'-an	unchecked
+ar-064	ar	time	الساعة 5:20	الساعة الخامسة والثلث	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 362: l-xaamisat-i wa-l-thulth-i	unchecked
+ar-065	ar	time	الساعة 4:40	الساعة الخامسة إلا ثلثا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 362: l-xaamisat-i 'illaa thulth-an	unchecked
+ar-066	ar	time	الساعة 4:05	الساعة الرابعة والدقيقة الخامسة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 362: al-saa'at-u l-raabi'at-u wa-l-daqiiqat-u l-xaamisat-u	unchecked
+ar-067	ar	time	الساعة 14:30	الساعة الثانية والنصف بعد الظهر	Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 361-362; CLDR 49 ar day period afternoon2 (13:00-18:00)	unchecked
+ar-068	ar	time	الساعة 11:00 صباحًا	الساعة الحادية عشرة صباحا	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 361: l-saa'at-a l-Haadiyat-a 'ashrat-a SabaaH-an	unchecked
+ar-069	ar	time	الشاشة 16:9	الشاشة 16:9	unread: a ratio, not a time	unchecked
+ar-070	ar	time	الآية 3:16	الآية 3:16	unread: a verse reference with no time word	unchecked
+ar-071	ar	range	الأعمار 20-30	الأعمار عشرون إلى ثلاثين	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 343 (tens), pp. 366-367 ('ilaa governs the genitive)	unchecked
+ar-072	ar	measure	عندي 3 كم سؤال	عندي 3 كم سؤال	unread: Ryding 2005, A Reference Grammar of Modern Standard Arabic, pp. 402-403: kam before an indefinite singular noun is the question word 'how many'	unchecked
+ar-073	ar	money	الثمن ريال 5	الثمن ريال 5	unread: ريال is a counted noun, which follows the number (Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 335)	unchecked
+ar-074	ar	fraction	أضف +1/2 الكمية	أضف +1/2 الكمية	unread: sign_words gives a word for the minus sign only (Arabic Wikipedia, عدد سالب, section التسمية); no cited word for +	unchecked
+ar-075	ar	percent	نما +20%	نما +20%	unread: sign_words gives a word for the minus sign only (Arabic Wikipedia, عدد سالب, section التسمية); no cited word for +	unchecked
+ar-076	ar	cardinal	بعد 24 ساعة	بعد أربع وعشرين ساعة	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 346: bacd-a 'arbac-in wa-cishriina saacat-an; p. 367 (the object of a semi-preposition is genitive); p. 388 (bacd-a)	unchecked
+ar-077	ar	percent	في نحو 90% منها	في نحو تسعين في المئة منها	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 347: fii naHw-i tisciina fii l-mi'at-i; p. 395 (naHw-a after a preposition)	unchecked
+ar-078	ar	measure	المسافة 1 كم	المسافة كيلومتر واحد	Ryding 2005, A Reference Grammar of Modern Standard Arabic, p. 330 (waaHid follows the counted noun and agrees with it); CLDR 49 units length-kilometer (masculine)	unchecked
