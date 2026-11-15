@@ -219,16 +219,17 @@ def _plain(text: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
 
 
-LARGEST = 10**33
-"""The first number that stays as written. ovos-number-parser raises `NotImplementedError` for an ordinal from
-10**24, which declines the span. The CLDR plural rule of `es` raises `decimal.InvalidOperation` from about 10**34,
-because `i % 1000000` passes the default `Decimal` precision of 28 digits."""
+LARGEST = 10**28
+"""The first number that stays as written. `plural_category` evaluates the CLDR plural rule of `es` with a `Decimal`
+under the default precision of 28 digits. From 10**28 the rule `i % 1000000` reads a rounded value, so
+10**28 + 1 gets `many` and a wrong `de`, and from about 10**34 the rule raises `decimal.InvalidOperation`.
+ovos-number-parser raises `NotImplementedError` for an ordinal from 10**24, which declines the span."""
 
 
 def _below_largest(digits: str) -> None:
     value = bounded_integer(digits)
     if value is None or value >= LARGEST:
-        raise DeclinedReading(f"{len(digits)} digits reach 10**33, which this file leaves as written")
+        raise DeclinedReading(f"{len(digits)} digits reach 10**28, which this file leaves as written")
 
 
 class SpanishSpeller:
@@ -316,18 +317,28 @@ def _bare_hour(span: Span, before: Sequence[str], data) -> bool:
     return value is not None and value <= 24
 
 
+def _expansions(data) -> dict[str, str]:
+    """The word of each one-word abbreviation of the `abbreviations` table, by the context word that the
+    abbreviation gives: `págs` reads `páginas`."""
+    return {key.rstrip("."): word for key, word in data["abbreviations"].items() if " " not in key}
+
+
 def agreement(span: Span, context: SpanContext) -> Agreement:
     """The hint, else the noun after the number, else the default gender of the params (design section 5.6). A
     capitalised word is a name and no counted noun, and a year after a year word counts nothing. A number other
     than 1 counts a plural noun, so a word with no final `s` after it, such as the verb in `200 pesa`, is no
-    counted noun. With no noun, an hour after `la` or `las` is feminine: "a la una de la tarde" (DPD «hora», 2.1),
+    counted noun. An abbreviation of the `abbreviations` table counts as its full word, which may write no plural:
+    `300 págs.` reads "trescientas páginas" and `1 admón.` reads "una administración" (DPD «uno», 2.3). With no noun, an hour after `la` or `las` is feminine: "a la una de la tarde" (DPD «hora», 2.1),
     "Son las cero horas" (5.2)."""
     data = context.request.data
     first = context.after[0] if context.after else ""
     noun = first if first[:1].islower() and first.isalpha() and first not in data["function_words"] else None
     counted = span.fields.get("digits") or span.fields.get("high") or span.fields["numerator"]
-    if noun is not None and (_is_year(span, context.before, data)
-                             or (bounded_integer(counted) != 1 and not noun.endswith("s"))):
+    expansion = _expansions(data).get(noun)
+    if expansion is not None:
+        noun = None if _is_year(span, context.before, data) else expansion
+    elif noun is not None and (_is_year(span, context.before, data)
+                               or (bounded_integer(counted) != 1 and not noun.endswith("s"))):
         noun = None
     if context.hint is not None and context.hint.gender is not None:
         return Agreement(context.hint.gender, noun)
@@ -644,6 +655,22 @@ class Ordinal:
                                   "script": number.script}), recognizer=self.name)
 
 
+def _after_initial(text: str, position: int, titles) -> bool:
+    """Whether an initial that stays as written comes right before `position`, as `J.` does in `J. D. Salinger`. A
+    title that this pass reads is no such initial, so `D. D. Palmer` reads both titles, and a second pass, which sees
+    "Don don Palmer", reads the same. The chain of initials before `position` is read from its left end."""
+    chain = []
+    while (match := _INITIAL.search(text, max(position - 3, 0), position)) is not None:
+        chain.append(match.start())
+        position = match.start()
+    after = False
+    for start in reversed(chain):
+        end = start + 2
+        after = not (text[start:end] in titles and is_bounded(text, start, end)
+                     and next_visible(text, end).isupper() and not after)
+    return after
+
+
 @dataclass(frozen=True)
 class Abbreviation:
     """A title before a capitalised name, `n.º` before a number, and the abbreviations of the table (DPD,
@@ -661,7 +688,7 @@ class Abbreviation:
                 while position != -1:
                     end = position + len(key)
                     following = next_visible(text, end)
-                    initial = table == "titles" and _INITIAL.search(text, 0, position) is not None
+                    initial = table == "titles" and _after_initial(text, position, data["titles"])
                     if is_bounded(text, position, end) and follows(following) and not initial:
                         sentence_end = key in final and (following == "" or following.isupper())
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),

@@ -298,11 +298,13 @@ Some currency and symbol readings are still wrong or stay as written:
 
 Portuguese reads `pt-PT` and `pt-BR`. Install it with `text2spoken[pt]`, which adds `ovos-number-parser`, `ovos-date-parser` and `tugalex`. The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun: `às 0:00` reads "à meia-noite", `das 12:00` reads "do meio-dia", and `entre as 0:00` reads "entre a meia-noite". When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with: "às zero horas". A time with `h` reads the hours as written, so `às 0h` reads "às zero horas" in `pt-PT`.
 
-Spanish reads the varieties `es-ES`, `es-419`, `es-MX`, `es-AR` and `es-US`, and `es-CO`, `es-CL`, `es-UY`, `es-VE`, `es-EC`, `es-BO`, `es-PY` and `es-CR`. The decimal mark of each variety comes from CLDR: `es-419`, `es-MX` and `es-US` use the point, and the others use the comma. Install `text2spoken[es]` for its number words. Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The test rows in `tests/data/es.tsv` name their source. No native speaker has checked them.
+Spanish reads the varieties `es-ES`, `es-419`, `es-MX`, `es-AR` and `es-US`, and `es-CO`, `es-CL`, `es-UY`, `es-VE`, `es-EC`, `es-BO`, `es-PY` and `es-CR`. The decimal mark of each variety comes from CLDR: `es-419`, `es-MX` and `es-US` use the point, and the others use the comma. Install `text2spoken[es]` for its number words. Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. Of the 104 test rows in `tests/data/es.tsv`, 93 name a source for their reading. The other 11 are marked silver: 10 of them say that no source was found for the reading, and two of these, es-059 and es-091, name no source at all. No native speaker has checked any row.
 
 Spanish leaves these forms as written or reads them in a limited way:
 
-- A number of 10^33 or more stays as written.
+- A number of 10^28 or more stays as written. The core function `plural_category` reads the CLDR plural rule with a `Decimal` of 28 digits, so from 10^28 it can give a wrong category: 10^28 + 1 gets `many`, which adds a wrong `de`.
+- `D.` before a capitalised word reads `don`, also after a title that reads: `Lo dijo D. D. Palmer.` reads "Lo dijo don Don Palmer.". After an initial that stays as written, as in `J. D. Salinger`, `D.` is an initial too and stays as written.
+- A title after a title takes a capital, because a full stop and a capital letter end the context of the second title: `el Sr. D. Juan` reads "el señor Don Juan".
 - A round million before a participle or an adjective takes `de`, because these words are also nouns: `Tengo 2000000 ahorrados.` reads "dos millones de ahorrados".
 - `1000000000` reads "un millardo", the output of ovos-number-parser. The DPD («millardo», 1) finds "mil millones" more natural.
 - Only a whole number from 0 to 24 after a lowercase `la` or `las` reads as a feminine hour. `Las 21 ya pasaron.` reads "veintiuno", and `las 200 de la lista` reads in the masculine.
