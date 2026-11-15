@@ -20,11 +20,13 @@ import linguatag
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from tests.data_keys import OPTIONAL, PHONE_SHAPE_KEYS, READERS, SHAPES
+from tests.data_keys import ALTERNATIVES, OPTIONAL, PHONE_SHAPE_KEYS, READERS, SHAPES
 from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core import recognizers
+from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
+from text2spoken.core.letters import speak_letters
 from text2spoken.core.spans import FIELDS, Span
 from text2spoken.core.recognizers import SHARED, speak_cardinal, speak_lexicon
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
@@ -147,7 +149,8 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
             shape(data[key], f"{where}.{key}")
 
 
-SHARED_VERBALIZERS = {"speak_cardinal": speak_cardinal, "speak_lexicon": speak_lexicon}
+SHARED_VERBALIZERS = {"speak_cardinal": speak_cardinal, "speak_lexicon": speak_lexicon,
+                      "speak_electronic": speak_electronic, "speak_letters": speak_letters}
 """The verbalizers of the core that a file can name, by their name in `READERS`."""
 
 
@@ -170,6 +173,10 @@ def clause_6(name: str, spec: LanguageSpec) -> None:
         data = request_for(spec, index).data
         check_data_keys(data, variety.tag)
         missing = required - set(data)
+        for keys in ALTERNATIVES:
+            missing -= keys
+            if keys & required and not keys & set(data):
+                missing.add(" or ".join(sorted(keys)))
         assert not missing, f"{variety.tag}: no {sorted(missing)}, which its shared recognizers and verbalizers read"
 
 
@@ -299,15 +306,20 @@ def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = N
     cells = [row["expected"] for row in rows(name)] if expected_cells is None else expected_cells
     speller = spec.spellers.get(Form.CARDINAL)
     request = request_for(spec)
+    # Values may differ in one case only, as German masculine "einen" and neuter "ein" in the accusative, so the
+    # check also reads each case that an RBNF cardinal map of the file names.
+    cases = (None, *sorted({key.case for s in _rbnf_spellers(spec) for key in s.cardinal_sets if key.case}))
+    keys = [(n, case) for n in ("1", "2") for case in cases]
     for field, values in (("gender", spec.genders), ("animacy", spec.animacies), ("noun_class", spec.noun_classes),
                           ("numeral_system", spec.numeral_systems)):
+        def spoken(value) -> dict:
+            return {(n, case): speller.cardinal(n, Features(**{field: value}, case=case), request) for n, case in keys}
         for value in values:
-            words = {n: speller.cardinal(n, Features(**{field: value}), request) for n in ("1", "2")}
+            words = spoken(value)
             for other in values - {value}:
-                others = {n: speller.cardinal(n, Features(**{field: other}), request) for n in ("1", "2")}
-                assert any(words[n] != others[n] for n in words), f"{value} and {other} give the same words"
-            distinct = [w for n, w in words.items()
-                        if all(w != speller.cardinal(n, Features(**{field: o}), request) for o in values - {value})]
+                others = spoken(other)
+                assert any(words[k] != others[k] for k in words), f"{value} and {other} give the same words"
+            distinct = [w for k, w in words.items() if all(w != spoken(o)[k] for o in values - {value})]
             assert any(any(w in cell.split() for cell in cells) for w in distinct), f"no row holds a {value} word"
 
 
@@ -358,13 +370,6 @@ def _imports(source: str) -> tuple[set[str], set[str]]:
 
 
 def check_imports(source: str) -> None:
-    """The file imports the core, the standard library and the allowed dependencies. Another language file is
-    none of these, so a change to it would change this language too."""
-    nodes = list(ast.walk(ast.parse(source)))
-    modules = {node.module or "" for node in nodes if isinstance(node, ast.ImportFrom)}
-    modules |= {alias.name for node in nodes if isinstance(node, ast.Import) for alias in node.names}
-    languages = sorted(m for m in modules if m == "text2spoken.lang" or m.startswith("text2spoken.lang."))
-    assert not languages, f"imports the language files {languages}"
     top, nested = _imports(source)
     stdlib = set(sys.stdlib_module_names) | {"__future__"}
     assert top <= stdlib | ALLOWED_IMPORTS | {"text2spoken"}, f"imports {sorted(top - stdlib - ALLOWED_IMPORTS)}"

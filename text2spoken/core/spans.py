@@ -9,7 +9,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from text2spoken.core.tokens import Token, context_word, is_digit, is_punctuation
+from text2spoken.core.emoji import emoji_view, sequences_in
+from text2spoken.core.tokens import EMOJI_MARKS, Token, context_word, is_digit, is_letter, is_mark, is_punctuation
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
                                 UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
@@ -28,18 +29,21 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.RANGE: frozenset({"low", "high", "prefix", "suffix"}),
     Form.EXPRESSION: frozenset({"operands", "operators"}),
     Form.DATE: frozenset({"year", "month", "day", "written_order", "month_written", "prefix", "suffix"}),
-    Form.TIME: frozenset({"hour", "minute", "second", "period", "suffix"}),
+    Form.TIME: frozenset({"hour", "minute", "second", "period", "prefix", "suffix"}),
     Form.YEAR: frozenset({"digits", "suffix"}),
     Form.MONEY: frozenset({"amount", "currency", "written_symbol", "scale", "prefix", "suffix"}),
     Form.MEASURE: frozenset({"amount", "relation", "unit", "prefix", "suffix"}),
     Form.PERCENT: frozenset({"amount", "sign_position", "prefix", "suffix"}),
     Form.TELEPHONE: frozenset({"country_code", "groups", "prefix", "suffix"}),
     Form.IDENTIFIER: frozenset({"head", "digits"}),
-    Form.LETTERS: frozenset({"letters", "digits"}),
+    Form.LETTERS: frozenset({"letters", "reading"}),
     Form.ABBREVIATION: frozenset({"key"}),
     Form.IDIOM: frozenset({"key", "prefix", "suffix"}),
     Form.ROMAN: frozenset({"value", "role", "suffix"}),
     Form.COLOR: frozenset({"rgb", "alpha", "hex"}),
+    Form.ELECTRONIC: frozenset({"kind", "scheme", "address"}),
+    Form.SYMBOL: frozenset({"symbol"}),
+    Form.EMOJI: frozenset({"sequence", "name"}),
 }
 """The fields of each form (section 4.4). A recognizer emits exactly these."""
 
@@ -141,7 +145,16 @@ def _joiner(char: str) -> bool:
     return not (char.isspace() or is_digit(char))
 
 
-def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None]) -> bool:
+def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> tuple[tuple[int, int], ...]:
+    """The joiner and the character beyond it, on the left and on the right of the span. `before` maps the end of each
+    emoji sequence to its start, and `after` maps its start to its end. The sequence is one joiner, as one `SYMBOL`
+    character is, so the character beyond it is outside the sequence."""
+    left = before.get(span.start, span.start - 1)
+    return (left, left - 1), (span.end, after.get(span.end, span.end + 1))
+
+
+def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None],
+            sides: Sequence[tuple[int, int]]) -> bool:
     """Whether one character that is not a digit or a space joins the span, on either side, to a digit that no
     span reads, or to a character of a waiting span of another form. A joiner that a waiting span of the same
     form holds is no joiner: the two spans are one range, as in `$5-$10`."""
@@ -153,7 +166,7 @@ def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None]) -
             return False
         waiting = holder[beyond]
         return is_digit(text[beyond]) or (waiting is not None and waiting.form is not span.form)
-    return side(span.start - 1, span.start - 2) or side(span.end, span.end + 1)
+    return any(side(joiner, beyond) for joiner, beyond in sides)
 
 
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
@@ -162,11 +175,31 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     A span that one character joins to a digit run waits while no span reads that run, and no other span claims a
     character of a waiting span. A claimed span wakes the waiting spans next to it, which are checked again in
     claim order, as they would be on a second pass over the output. A `keep` span claims its characters and
-    stays out of the result, so its text stays as written.
+    stays out of the result, so its text stays as written. An `ELECTRONIC` span claims a token whole (section 4.5),
+    so it does not wait on a joined digit. A `LEXICON` span claims before every recognizer (section 4.2), so it
+    does not wait on a side where the key ends in a letter, or in a letter and its combining marks. On any other
+    side it waits like any span, because a number recognizer refuses digits that one character joins to a digit,
+    a symbol or an emoji. So with a key `cats`, `2,cats` reads "two,kats", and with a key `GPT-4`, `©` or `#️⃣`,
+    `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
+    waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
+
+    An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
+    `😀` in place of the sequence (design section 4.7). The recognizers read the view of `emoji_view`, in which the
+    digit of `1️⃣` is no digit. `EMOJI` and `ELECTRONIC` read the name of a sequence from the text as written
+    (`written_text`). A sequence joins as one character when it holds U+FE0E, U+FE0F or U+20E3, and with `EMOJI` on,
+    any sequence does.
     """
+    emoji = Form.EMOJI in request.params.forms
+    sequences = [(start, end) for start, end in sequences_in(text, request.memo)
+                 if emoji or any(char in EMOJI_MARKS for char in text[start:end])]
+    view = emoji_view(text, request.memo)
+    request.memo[("written", view)] = text
     candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
-                  for span in recognizer.find(text, tokens, request)
-                  if not (_inside(span, blocks) or splits_token(span, tokens, text))]
+                  for span in recognizer.find(view, tokens, request)
+                  if not (_inside(span, blocks)
+                          or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
+    before = {end: start for start, end in sequences}
+    after = dict(sequences)
     read = bytearray(len(text))
     holder: list[Span | None] = [None] * len(text)
     neighbours: dict[int, list[int]] = {}
@@ -177,10 +210,17 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
         span = candidates[index]
         if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
             continue
-        if _joined(text, span, read, holder):
-            for position in range(span.start, span.end):
-                holder[position] = span
-            for position in (span.start - 2, span.start - 1, span.end, span.end + 1):
+        sides = _sides(span, before, after)
+        if span.form is Form.LEXICON:
+            last = span.end - 1
+            while last > span.start and is_mark(view[last]):
+                last -= 1
+            sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
+        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
+            if span.form not in (Form.SYMBOL, Form.EMOJI):
+                for position in range(span.start, span.end):
+                    holder[position] = span
+            for position in (position for side in sides for position in side):
                 neighbours.setdefault(position, []).append(index)
             continue
         read[span.start:span.end] = b"\x01" * (span.end - span.start)
@@ -319,12 +359,11 @@ def check_hints(hints: Mapping[int, Features], analysis: Analysis) -> dict[int, 
     return checked
 
 
-def _unread_runs(segment: str, symbols: frozenset[str], read_digits: bool) -> list[str]:
-    runs = []
-    for run in segment.split():
-        if any((read_digits and is_digit(c)) or c in symbols for c in run):
-            runs.append(run)
-    return runs
+def _unread_runs(segment: str, seen: str, symbols: frozenset[str], read_digits: bool) -> list[str]:
+    """The runs of the segment that hold a digit or a form symbol, as the view `seen` of the segment shows them, so
+    the digit of `1️⃣` is no unread digit."""
+    return [run for run, view in zip(segment.split(), seen.split())
+            if any((read_digits and is_digit(c)) or c in symbols for c in view)]
 
 
 DECLINED = (DeclinedReading, NotImplementedError)
@@ -333,11 +372,16 @@ does not offer the method of the form. Any other error of a verbalizer is a defe
 
 
 def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> str:
+    """The spoken text of an analysis. With `LETTERS` on, a run of capitals in the reading of another form reads
+    as the `LETTERS` form reads it, so a second pass leaves the reading unchanged (design section 11)."""
+    from text2spoken.core.letters import respell
+
     require_type(analysis, "analysis", Analysis)
     if hints is not None:
         require_type(hints, "hints", Mapping)
     request = analysis.request
     language = request.language
+    letters = Form.LETTERS in request.params.forms and Form.LETTERS in language.verbalizers
     hints = check_hints(hints or {}, analysis)
     words = context_words(analysis.tokens) if language.context_words else ()
     breaks = clause_breaks(analysis.text)
@@ -353,6 +397,8 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
         written = analysis.text[span.start:span.end]
         try:
             spoken = language.verbalizers[span.form](span, context)
+            if letters and span.form not in (Form.LETTERS, Form.LEXICON):
+                spoken = respell(spoken, request.data)
             spoken = language.attach(spoken, span.fields.get("prefix", ""), span.fields.get("suffix", ""))
             out.append(span.lead + spoken + span.trail)
         except DECLINED as error:
@@ -379,17 +425,18 @@ def _check_unread(analysis: Analysis, passthrough: list[tuple[int, int]]) -> Non
                         if Form(form) in request.params.forms)
     read_digits = Form.CARDINAL in request.params.forms
     unread: list[str] = []
+    view = emoji_view(analysis.text, request.memo)
     blocks = analysis.blocks
     for start, end in passthrough:
         cursor = start
         index = bisect_right(blocks, start, key=lambda block: block[1])
         while index < len(blocks) and blocks[index][0] < end:
             block_start, block_end = blocks[index]
-            unread += _unread_runs(analysis.text[cursor:block_start], symbols, read_digits)
+            unread += _unread_runs(analysis.text[cursor:block_start], view[cursor:block_start], symbols, read_digits)
             cursor = block_end
             index += 1
         if cursor < end:
-            unread += _unread_runs(analysis.text[cursor:end], symbols, read_digits)
+            unread += _unread_runs(analysis.text[cursor:end], view[cursor:end], symbols, read_digits)
     if not unread:
         return
     if request.params.strict:

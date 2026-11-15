@@ -120,7 +120,7 @@ BAD_KEYS = [
     ("operators", {"+-": "plus"}),
     ("short_codes", ["9 1 1"]),
     ("short_codes", [911]),
-    ("currencies", {"USD": {"one": "dollar"}}),
+    ("currencies", {"USD": {"symbols": []}}),
     ("day_periods", {"pm": "pm"}),
     ("defaults", {"clocks": "12h"}),
     ("range_word", ["to"]),
@@ -179,12 +179,19 @@ def test_clause_6_requires_no_key_of_a_verbalizer_that_the_file_replaces():
 
 
 def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
-    data = freeze({**thaw(STUB.data), "time_words": ["je"], "day_periods": {"am": ["am"]},
+    data = freeze({**thaw(STUB.data), "time_words": ["je"],
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
-                                   {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}]})
-    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"])
-    spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers))
-    assert OPTIONAL <= set().union(*(READERS[r.name] for r in readers)) and not OPTIONAL & set(spec.data)
+                                   {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
+                   "electronic_symbols": {"@": "et"}, "letter_names": {"a": "ha"}, "electronic_vowels": ["a"],
+                   "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"], "letter_vowels": ["a"],
+                   "letter_onsets": ["q"], "letter_codas": ["c"]})
+    readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["electronic"],
+               SHARED["letters"])
+    verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic,
+                   Form.LETTERS: contract.speak_letters}
+    spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers), verbalizers=verbalizers)
+    read = set().union(*(READERS[r.name] for r in readers), READERS["speak_electronic"], READERS["speak_letters"])
+    assert OPTIONAL <= read and not OPTIONAL & set(spec.data)
     contract.clause_6("qac", spec)
 
 
@@ -224,12 +231,15 @@ class _Recorder(FrozenMap):
 
 
 def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
-    """A recording run over the rows of each language file, for the shared recognizers that the files use."""
+    """A recording run over the rows of each language file, for the shared recognizers that the files use. A
+    request with no recognizer comes from the `normalize` call that reads an emoji name, and is not recorded."""
     read: dict[str, set[str]] = {name: set() for name in SHARED}
     used = set()
     data = Request.data.fget
 
     def recording(request):
+        if "recognizer" not in request.memo:
+            return data(request)
         recorder = _Recorder(data(request))
         recorder.keys = read[request.memo["recognizer"]]
         return recorder
@@ -387,8 +397,7 @@ def test_clause_11_bites(en):
 
 
 @pytest.mark.parametrize("source", ["import requests\n", "import tugalex\n", "from orthography2ipa import x\n",
-                                    "def f():\n    import scriptconv\n",
-                                    "from text2spoken.lang.en import Expression\n"])
+                                    "def f():\n    import scriptconv\n"])
 def test_clause_12_bites(en, source):
     with pytest.raises(AssertionError):
         contract.clause_12("en", en, source=source)

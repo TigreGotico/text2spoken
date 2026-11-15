@@ -513,7 +513,7 @@ class BasqueTime:
                 if 1 <= fields[0] <= 12:
                     yield Span(start, stop, Form.TIME,
                                FrozenMap({"hour": fields[0], "minute": fields[1], "second": None, "period": period,
-                                          "suffix": ""}),
+                                          "prefix": "", "suffix": ""}),
                                trail="." if _sentence_period(text, stop) else "", recognizer=self.name)
                 continue
             after = _suffix(text, end, data, ())
@@ -527,7 +527,7 @@ class BasqueTime:
                 continue
             yield Span(start, stop, Form.TIME,
                        FrozenMap({"hour": fields[0], "minute": fields[1], "second": None, "period": None,
-                                  "suffix": suffix}), recognizer=self.name)
+                                  "prefix": "", "suffix": suffix}), recognizer=self.name)
 
 
 def _amount_spans(text: str, request: Request, symbols: Sequence[str]) -> Iterator[tuple[Number, str, int, int,

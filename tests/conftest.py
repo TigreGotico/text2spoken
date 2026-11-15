@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from text2spoken import Form, NormalizationParams
 from text2spoken.core import language
 
 DATA = Path(__file__).parent / "data"
@@ -17,6 +18,16 @@ def rows(code: str) -> list[dict]:
     path = FIXTURES / f"{code}.tsv" if code in STUBS else DATA / f"{code}.tsv"
     with open(path, encoding="utf-8") as f:
         return list(csv.DictReader(f, delimiter="\t"))
+
+
+LETTERS_ON = NormalizationParams().plus(Form.LETTERS)
+EMOJI_ON = NormalizationParams().plus(Form.EMOJI)
+
+
+def row_params(row: dict) -> NormalizationParams | None:
+    """The params of a row. A `LETTERS` row and an `EMOJI` row run with their form on, which is off by default
+    (design sections 4.6 and 4.7)."""
+    return {"letters": LETTERS_ON, "emoji": EMOJI_ON}.get(row["form"])
 
 
 def language_names() -> list[str]:

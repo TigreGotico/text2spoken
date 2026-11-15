@@ -3,7 +3,8 @@ from importlib.resources import files
 
 import pytest
 
-from tests.conftest import DATA, rows
+from tests.conftest import DATA, row_params, rows
+from tests.known_limits import known_limit
 from text2spoken import Form, normalize, supports
 
 CODES = sorted(p.stem for p in DATA.glob("*.tsv"))
@@ -18,13 +19,18 @@ def test_every_language_file_has_rows():
 
 @pytest.mark.parametrize("row", ROWS, ids=[r["id"] for r in ROWS])
 def test_row(row):
-    assert normalize(row["text"], row["tag"]) == row["expected"]
+    assert normalize(row["text"], row["tag"], row_params(row)) == row["expected"]
 
 
 @pytest.mark.parametrize("row", ROWS, ids=[r["id"] for r in ROWS])
 def test_row_is_idempotent(row):
-    once = normalize(row["text"], row["tag"])
-    assert normalize(once, row["tag"]) == once
+    """Section 11. A row that pins a known limit of the README is one of the cases of tests/known_limits.py."""
+    params = row_params(row)
+    once = normalize(row["text"], row["tag"], params)
+    if "README limit" in row["source"]:
+        assert known_limit(row["text"], row["tag"], params)
+    else:
+        assert normalize(once, row["tag"], params) == once
 
 
 @pytest.mark.parametrize("code", CODES)

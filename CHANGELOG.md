@@ -1,5 +1,109 @@
 # Changelog
 
+## [0.0.2a42](https://github.com/TigreGotico/text2spoken/tree/0.0.2a42) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a41...0.0.2a42)
+
+**Merged pull requests:**
+
+- fix\(pt\): take date and time words from ovos-date-parser; read midnight and noon [\#86](https://github.com/TigreGotico/text2spoken/pull/86) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a41](https://github.com/TigreGotico/text2spoken/tree/0.0.2a41) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a40...0.0.2a41)
+
+**Merged pull requests:**
+
+- test: pin the combining-mark step-back on the right edge of a lexicon key [\#88](https://github.com/TigreGotico/text2spoken/pull/88) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a40](https://github.com/TigreGotico/text2spoken/tree/0.0.2a40) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a39...0.0.2a40)
+
+**Merged pull requests:**
+
+- fix: a lexicon claim does not wait on a joined digit [\#83](https://github.com/TigreGotico/text2spoken/pull/83) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a39](https://github.com/TigreGotico/text2spoken/tree/0.0.2a39) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a38...0.0.2a39)
+
+**Merged pull requests:**
+
+- fix\(en\): spell the letter name of C as "see" [\#82](https://github.com/TigreGotico/text2spoken/pull/82) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a38](https://github.com/TigreGotico/text2spoken/tree/0.0.2a38) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a37...0.0.2a38)
+
+**Merged pull requests:**
+
+- fix\(pt\): read PIB, CIAV, OVNI and PALOP as words, and keep Córdoba feminine [\#81](https://github.com/TigreGotico/text2spoken/pull/81) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a37](https://github.com/TigreGotico/text2spoken/tree/0.0.2a37) (2026-11-14)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a36...0.0.2a37)
+
+**Merged pull requests:**
+
+- feat: read emoji by their CLDR names \(EMOJI form\) [\#79](https://github.com/TigreGotico/text2spoken/pull/79) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a36](https://github.com/TigreGotico/text2spoken/tree/0.0.2a36) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a35...0.0.2a36)
+
+**Merged pull requests:**
+
+- feat: read CLDR currencies in MONEY and add the SYMBOL form for en and pt [\#76](https://github.com/TigreGotico/text2spoken/pull/76) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a35](https://github.com/TigreGotico/text2spoken/tree/0.0.2a35) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a34...0.0.2a35)
+
+**Merged pull requests:**
+
+- feat: read runs of capital letters \(LETTERS form\) [\#75](https://github.com/TigreGotico/text2spoken/pull/75) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a34](https://github.com/TigreGotico/text2spoken/tree/0.0.2a34) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a33...0.0.2a34)
+
+**Merged pull requests:**
+
+- feat: read units from CLDR 49 for en and pt [\#71](https://github.com/TigreGotico/text2spoken/pull/71) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a33](https://github.com/TigreGotico/text2spoken/tree/0.0.2a33) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a32...0.0.2a33)
+
+**Merged pull requests:**
+
+- feat: read e-mail and web addresses \(ELECTRONIC form\) [\#67](https://github.com/TigreGotico/text2spoken/pull/67) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a32](https://github.com/TigreGotico/text2spoken/tree/0.0.2a32) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a31...0.0.2a32)
+
+**Merged pull requests:**
+
+- fix\(pt\): read 14 as quatorze in pt-BR [\#70](https://github.com/TigreGotico/text2spoken/pull/70) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.0.2a31](https://github.com/TigreGotico/text2spoken/tree/0.0.2a31) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a30...0.0.2a31)
+
+**Merged pull requests:**
+
+- feat\(de\): German language file [\#61](https://github.com/TigreGotico/text2spoken/pull/61) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.0.2a30](https://github.com/TigreGotico/text2spoken/tree/0.0.2a30) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a29...0.0.2a30)
+
+**Merged pull requests:**
+
+- feat\(pt\): Portuguese language file [\#65](https://github.com/TigreGotico/text2spoken/pull/65) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a29](https://github.com/TigreGotico/text2spoken/tree/0.0.2a29) (2026-11-12)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a28...0.0.2a29)
