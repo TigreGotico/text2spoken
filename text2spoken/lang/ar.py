@@ -51,7 +51,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, plural_cat
 from text2spoken.core.recognizers import SHARED, Money as CoreMoney, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
-from text2spoken.core.times import twelve_hour
+from text2spoken.core.times import day_hour, twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, one_digit_set
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
@@ -473,13 +473,9 @@ def speak_time(span: Span, context: SpanContext) -> str:
     from 13 to 23, reads the CLDR day period of the hour."""
     request = context.request
     fields = span.fields
-    hour, minute = fields["hour"], fields["minute"]
+    hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
     if fields["second"] is not None:
         raise DeclinedReading("no cited reading for seconds")
-    if fields["period"] == "pm" and hour < 12:
-        hour += 12
-    elif fields["period"] == "am" and hour == 12:
-        hour = 0
     phrases = request.data["minute_phrases"]
     template = phrases.get(str(minute), phrases["other"])
     next_hour = _hour(twelve_hour(hour + 1), request) if "{next_hour}" in template else ""
