@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a42](https://github.com/TigreGotico/text2spoken/tree/0.0.2a42) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a41...0.0.2a42)
+
+**Merged pull requests:**
+
+- fix\(pt\): take date and time words from ovos-date-parser; read midnight and noon [\#86](https://github.com/TigreGotico/text2spoken/pull/86) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a41](https://github.com/TigreGotico/text2spoken/tree/0.0.2a41) (2026-11-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a40...0.0.2a41)
