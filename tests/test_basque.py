@@ -44,3 +44,35 @@ def test_the_eu_extra_installs_the_basque_speller():
     lines = [Requirement(line) for line in requires("text2spoken")]
     extra = {line.name for line in lines if line.marker is not None and line.marker.evaluate({"extra": "eu"})}
     assert "ovos-number-parser" in extra
+
+
+IDEMPOTENT = [
+    "II. 1995ean sortu zen.", "XX. 5", "III. 25 urte geroago", "1. 25 lagun etorri ziren.", "2. 3 aukera",
+    "XIX. 1850ean", "V. 5 mendean", "MIV. 1907", "Luis XIV. 1715ean hil zen.", "27. 5 orrialdea", "II. 12:00etan",
+    "II. % 5", "II. 5 €", "II. etab.", "II. 1 °C", "XX. 1 °C-an", "V. 1 °C", "XIX., XX. eta XXI. mendeetan",
+    "XX. eta XXI. mendeetan", "XX. edo XXI. mendean", "II. eta III. 1995ean", "XX. eta 5", "XX. eta XXI. 5",
+]
+
+
+@pytest.mark.parametrize("params", [None, NormalizationParams(clock="24h")], ids=["12h", "24h"])
+@pytest.mark.parametrize("text", IDEMPOTENT)
+def test_a_roman_numeral_reads_the_same_on_a_second_pass(text, params):
+    """Design section 11. A Roman numeral before a number stays as written, because the number reads as lowercase
+    words, and a second pass must not read the numeral before them. `1 °C` reads "gradu bat", and `gradu` is a noun
+    of the `roman_nouns` table, so a noun before `bat` is no evidence."""
+    once = normalize(text, "eu", params)
+    assert normalize(once, "eu", params) == once
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    ("XX. eta XXI. mendeetan", "hogeigarren eta hogeita batgarren mendeetan"),
+    ("XX. edo XXI. mendean", "hogeigarren edo hogeita batgarren mendean"),
+    ("VIII. gradura", "zortzigarren gradura"),
+    ("II. 1995ean sortu zen.", "II. mila bederatziehun eta laurogeita hamabostean sortu zen."),
+    ("XX. mende batean", "XX. mende batean"),
+])
+def test_a_roman_numeral_reads_only_on_evidence(text, expected):
+    """Araua 203, section 5, page 27: each ordinal of a coordination may take `-garren`, as in "XIX., XX. eta XXI.
+    mendeetan". Page 10 numbers a degree: "Mercalli eskalako VIII. gradura". A year after `II.` gives no evidence
+    for the numeral, and a noun before `bat` is the order of a unit reading (page 21), so both stay as written."""
+    assert normalize(text, "eu") == expected

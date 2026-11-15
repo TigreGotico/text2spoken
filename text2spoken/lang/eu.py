@@ -10,6 +10,14 @@ ovos-number-parser misreads `milioigarren` and five of the 17 fractions of the t
 A Basque case ending joins the digits, as in `2024ko`, `25ean` and `15:00etan`, and a hyphen joins it to a symbol,
 as in `1 €-etik` (Araua 197, section 6.4). `attach` joins the ending to the last spoken word by the rules of
 Araua 203, section 12.
+
+A Roman numeral and a full stop read as an ordinal only on evidence that no verbalizer of this file writes, so a
+second pass reads nothing that the first pass left as written (design section 11). The evidence is a noun of the
+`roman_nouns` table, a case ending on the numeral, the comma of a list, or a conjunction and a numeral that reads.
+The last one follows Araua 203, section 5, page 27: "Ordinal bat baino gehiago elkarren ondoan gertatzen direnean,
+aukerakoa da bakoitzean -garren atzizkia jartzea edo azkenean bakarrik jartzea", with the example "XIX., XX. eta
+XXI. mendeetan". A noun followed by `bat`, bare or with a case ending, is no evidence, because the measure
+verbalizer reads one unit noun first: `1 °C` is "gradu bat" (Araua 203, page 21).
 """
 from __future__ import annotations
 
@@ -354,6 +362,21 @@ def _noun_after(text: str, stop: int, nouns: Sequence[str], data) -> bool:
     return any(word.startswith(noun) and word[len(noun):] in endings for noun in nouns)
 
 
+def _one_after_noun(text: str, stop: int, data) -> bool:
+    """Whether the word after the noun that starts at text[stop + 1] is `bat`, bare or with a case ending of the
+    `case_suffixes` table: `batean`, `batan`, `batekin`. The measure verbalizer writes this order for one unit."""
+    end = stop + 1
+    while end < len(text) and is_letter(text[end]):
+        end += 1
+    if text[end:end + 1] != " ":
+        return False
+    last = end + 1
+    while last < len(text) and is_letter(text[last]):
+        last += 1
+    word = text[end + 1:last]
+    return word.startswith("bat") and word[3:] in ("", *data["case_suffixes"])
+
+
 def _name_before(text: str, start: int) -> bool:
     """Whether a capitalised word and one space come right before text[start:], as `Elisabet` in `Elisabet I.a`."""
     end = start - 1
@@ -373,28 +396,45 @@ class Roman:
     One capital letter and a full stop is also a label, as `A` to `D` label the rows of a table on page 13 of
     Araua 203, or an initial, as in `M. Zabala` (Araua 18, page 116). So a numeral of one letter reads as an
     ordinal only before a noun of the `roman_nouns` table, the nouns that pages 7 to 10 number with Roman
-    numerals, or when it is `I`, `V` or `X` with a case ending after a capitalised name, as in `Elisabet I.a`."""
+    numerals, or when it is `I`, `V` or `X` with a case ending after a capitalised name, as in `Elisabet I.a`.
+
+    A numeral of two letters or more reads before a noun of the `roman_nouns` table, with a case ending, before
+    the comma of a list, or before `eta` or `edo` and a numeral that reads, as in `XIX., XX. eta XXI. mendeetan`
+    (page 27). A space and another lowercase word are not enough, because a verbalizer writes lowercase words: in
+    `II. 1995ean` the year reads, and `II.` stays as written."""
     name: str = "roman"
     form: Form = Form.ROMAN
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        from text2spoken.core.roman import value as roman_value
-
         for match in re.finditer("[IVXLCDM]+[.]", text):
-            start, stop = match.span()
-            numeral = match.group()[:-1]
-            number = roman_value(numeral)
-            if number is None or (start and is_word_char(text[start - 1])):
-                continue
-            follower = _ordinal_follower(text, stop, request.data)
-            if follower is None:
-                continue
-            if len(numeral) == 1 and not (_noun_after(text, stop, request.data["roman_nouns"], request.data)
-                                          or (follower[1] and numeral in REGNAL_LETTERS
-                                              and _name_before(text, start))):
-                continue
-            yield Span(start, follower[0], Form.ROMAN,
-                       FrozenMap({"value": number, "role": "ordinal", "suffix": follower[1]}), recognizer=self.name)
+            read = _roman_reading(text, match.start(), request.data)
+            if read is not None:
+                yield Span(match.start(), read[0], Form.ROMAN,
+                           FrozenMap({"value": read[1], "role": "ordinal", "suffix": read[2]}), recognizer=self.name)
+
+
+def _roman_reading(text: str, start: int, data) -> tuple[int, int, str] | None:
+    """The end, the value and the case ending of the Roman ordinal at text[start:], or None when the text gives no
+    evidence for it that a verbalizer cannot write."""
+    from text2spoken.core.roman import value as roman_value
+
+    match = re.compile("[IVXLCDM]+[.]").match(text, start)
+    if match is None or (start and is_word_char(text[start - 1])):
+        return None
+    stop = match.end()
+    numeral = match.group()[:-1]
+    number = roman_value(numeral)
+    follower = _ordinal_follower(text, stop, data)
+    if number is None or follower is None:
+        return None
+    noun = _noun_after(text, stop, data["roman_nouns"], data) and not _one_after_noun(text, stop, data)
+    if len(numeral) == 1:
+        evidence = noun or (follower[1] and numeral in REGNAL_LETTERS and _name_before(text, start))
+    else:
+        link = re.match(" (?:eta|edo) ", text[stop:])
+        evidence = (noun or follower[1] or text.startswith(",", stop)
+                    or (link is not None and _roman_reading(text, stop + link.end(), data) is not None))
+    return (follower[0], number, follower[1]) if evidence else None
 
 
 @dataclass(frozen=True)
