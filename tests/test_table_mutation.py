@@ -96,6 +96,7 @@ ES_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "titles": "Dr.", "abbreviations": "etc.",
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
+    "abbreviation_plurals": "vol.",
 }
 ENTRIES = {
     "ar": AR_ENTRIES,

@@ -9,6 +9,14 @@ entry «fraccionarios» gives "un veintiunavo". It writes its own decimals, beca
 drops the written zero of `2,50`, and because the DLE entry «coma» (1.b) reads the decimal part as a number:
 "trescientos veinticinco coma ochenta y cinco".
 
+An abbreviation reads as its full word (DPD «abreviatura», 3: "deben leerse reponiendo la forma plena de la palabra
+abreviada"). A noun abbreviation after a number other than one reads as the plural of that word. The noun that such a
+number counts is plural, as in the examples of DPD «uno», 2.2: "Tengo veintiún años", "treinta y una novelas". The
+plural of a noun abbreviation stands for the plural noun (DPD «abreviatura», 7.a: "págs. por páginas"). So `21 vol.`
+reads "veintiún volúmenes". The plurals follow DPD «plural», 1.1 and 1.7.a ("ciclamen, pl. ciclámenes"). A pronoun
+such as `Ud.` counts no number, because a cardinal quantifies a noun (DPD «ordinales», 1) and `usted` is a personal
+pronoun (DPD «usted», 1).
+
 The varieties differ in the decimal mark (DPD «punto», 4.4; CLDR per region), the currency of `$` (DPD, appendix 4),
 the reading of `#` (DPD, appendix 4), the reading of the first day of the month (DPD «primero», 3) and of a whole
 percentage (DPD «ciento», 3).
@@ -104,8 +112,8 @@ DATA = freeze({
     "dimension_marks": ["x", "×"],
     "dimension_word": "por",
     "operators": {"+": "más", "−": "menos", "×": "por", "÷": "entre", "=": "igual a"},
-    "phone_words": ["teléfono", "tel", "tfno", "móvil", "celular", "llama", "llame", "llamá", "llamar", "marca",
-                    "marque", "fax"],
+    "phone_words": ["teléfono", "teléfonos", "tel", "tfno", "móvil", "celular", "llama", "llame", "llamá", "llamar",
+                    "marca", "marque", "fax"],
     "phone_links": ["al", "el"],
     "short_codes": ["061", "062", "091", "092", "112", "911"],
     "list_links": ["y", "o"],
@@ -120,6 +128,9 @@ DATA = freeze({
                       "Vd.": "usted", "Vds.": "ustedes", "pág.": "página", "págs.": "páginas", "art.": "artículo",
                       "cap.": "capítulo", "vol.": "volumen", "tel.": "teléfono", "admón.": "administración",
                       "avda.": "avenida", "Avda.": "avenida"},
+    "abbreviation_plurals": {"pág.": "páginas", "art.": "artículos", "cap.": "capítulos", "vol.": "volúmenes",
+                             "tel.": "teléfonos", "admón.": "administraciones", "avda.": "avenidas",
+                             "Avda.": "avenidas"},
     "sentence_final": ["etc."],
     "number_abbreviations": {"n.º": "número", "N.º": "número", "núm.": "número", "nro.": "número"},
     "symbols": {"%": "percent", "$": "money", "€": "money", "£": "money", "°": "measure", "×": "measure"},
@@ -221,10 +232,9 @@ def _plain(text: str) -> str:
 
 
 LARGEST = 10**28
-"""The first number that stays as written. `plural_category` evaluates the CLDR plural rule of `es` with a `Decimal`
-under the default precision of 28 digits. From 10**28 the rule `i % 1000000` reads a rounded value, so
-10**28 + 1 gets `many` and a wrong `de`, and from about 10**34 the rule raises `decimal.InvalidOperation`.
-ovos-number-parser raises `NotImplementedError` for an ordinal from 10**24, which declines the span."""
+"""The first number that stays as written. No test row with a source holds a reading from 10**28, so the file reads
+none. ovos-number-parser reads 10**42 + 1 as "uno por diez elevado a cuarenta y dos", which is the value of 10**42,
+and it raises `NotImplementedError` for an ordinal from 10**24, which declines the span."""
 
 
 def _below_largest(digits: str) -> None:
@@ -369,6 +379,15 @@ def _amount(amount: FrozenMap, request: Request, agree: Agreement | None = None)
     return signed(words, amount["sign"], request)
 
 
+def _counts_plural(before: Sequence[str], request: Request) -> bool:
+    """Whether the context word before a span is a whole written number whose CLDR plural category is not `one`."""
+    word = before[-1] if before else ""
+    number = next(iter(numbers_in(word, request)), None)
+    if number is None or number.start != 0 or number.end != len(word):
+        return False
+    return plural_category(request, written_amount(number.amount())) != "one"
+
+
 def _first_of_month(span: Span, after: Sequence[str], data) -> bool:
     """`1` before `de` and a month name, as in `el 1 de mayo`."""
     return (span.fields["digits"] == "1" and not span.fields["sign"] and len(after) >= 2 and after[0] == "de"
@@ -403,7 +422,8 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
 def speak_ordinal(span: Span, context: SpanContext) -> str:
     """The marker gives the gender and the number: `1.º`, `1.ª`, `1.os`. `1.er` and a masculine singular ordinal
     before its noun take the apocope `primer` and `tercer`, also at the end of a longer ordinal, as in
-    "vigesimoprimer" and "decimotercer" (DPD «ordinales», 4: "el vigesimoprimer aniversario")."""
+    "vigesimoprimer" and "decimotercer" (DPD «ordinales», 4: "el vigesimoprimer aniversario"). The apocope needs a
+    masculine noun after the ordinal, and `etc.` closes a list (DPD «etcétera», 1), so `3.º, etc.` reads "tercero"."""
     request = context.request
     kind = request.data["ordinal_marks"][span.fields["marker"]]
     gender = F if kind.startswith("feminine") else M
@@ -412,6 +432,7 @@ def speak_ordinal(span: Span, context: SpanContext) -> str:
         return " ".join(word + "s" for word in words.split())
     first = context.after[0] if context.after else ""
     before_noun = (first[:1].islower() and first.isalpha() and first not in request.data["function_words"]
+                   and f"{first}." not in request.data["sentence_final"]
                    and not first.endswith("s") and noun_gender(first, request.data) is not F)
     if kind == "apocope" or (gender is M and before_noun):
         *head, last = words.split()
@@ -556,12 +577,16 @@ def speak_percent(span: Span, context: SpanContext) -> str:
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
     """An abbreviation reads as the full word (DPD «abreviatura», 3). A title abbreviation has a capital, while
     the word is lowercase (DPD «abreviatura», 8.c), so the word takes a capital only where a clause starts. Any
-    other abbreviation keeps the case of its first letter."""
+    other abbreviation keeps the case of its first letter. A noun abbreviation after a number other than one reads
+    the plural: `2 tel.` reads "dos teléfonos"."""
     data = context.request.data
     key = span.fields["key"]
     for table in ("titles", "abbreviations", "number_abbreviations"):
         word = data[table].get(key)
         if word is not None:
+            plural = data["abbreviation_plurals"].get(key) if table == "abbreviations" else None
+            if plural is not None and _counts_plural(context.before, context.request):
+                word = plural
             capital = not context.before if table == "titles" else key[0].isupper()
             return word[0].upper() + word[1:] if capital else word
     raise LookupError(f"no abbreviation {key!r} for {context.request.tag}")
