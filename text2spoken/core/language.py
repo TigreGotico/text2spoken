@@ -2,17 +2,19 @@
 from __future__ import annotations
 
 import re
+import sys
 import warnings
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field, replace
-from decimal import Decimal
+from decimal import Decimal, getcontext, localcontext
 from functools import cache, lru_cache
 from importlib import import_module
 from importlib.resources import files
 from typing import TYPE_CHECKING
 
-from text2spoken.errors import (InvalidLanguageTagError, InvalidLexiconError, ParameterNotHonouredWarning,
-                                UndefinedGrammaticalGender, UnsupportedParameterError, require_type)
+from text2spoken.errors import (DeclinedReading, InvalidLanguageTagError, InvalidLexiconError,
+                                ParameterNotHonouredWarning, UndefinedGrammaticalGender, UnsupportedParameterError,
+                                require_type)
 from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams
 
 if TYPE_CHECKING:
@@ -23,6 +25,12 @@ if TYPE_CHECKING:
 def concatenate(spoken: str, prefix: str, suffix: str) -> str:
     """The core attachment: the prefix joins the first spoken word and the suffix joins the last."""
     return prefix + spoken + suffix
+
+
+def drop_affixes(spoken: str, prefix: str, suffix: str) -> str:
+    """The attachment of a language whose verbalizers already say each affix that it declares: the spoken words
+    alone."""
+    return spoken
 
 
 def infix_range(span: Span, following: Span, range_word: str) -> tuple[Span, Span]:
@@ -190,13 +198,47 @@ def cldr_locale(tag: str, available: Collection[str], language: LanguageSpec) ->
 
 
 def plural_category(request: Request, written: str) -> str:
-    """The CLDR plural category of a written ASCII number, such as `1.0` or `5`, in the variety of the request."""
-    from unicode_rbnf.plural_rules import get_plural_category
+    """The CLDR plural category of a written ASCII number, such as `1.0` or `5`, in the variety of the request.
+
+    The operands come from the fixed-point form of the number. `get_plural_category` of unicode_rbnf reads them
+    from `str(Decimal)`, which writes `0.0000001` as `1E-7`: it then finds no fraction digits, and `1.0E-7` raises
+    `ValueError`. So this function evaluates the rules of unicode_rbnf with operands of its own.
+
+    The rule runs at the precision of the number. Each operand of a CLDR rule has at most as many digits as the
+    number, and the quotient of `i % m` has at most as many digits as `i`, so that precision keeps the rule exact.
+    The default context rounds at 28 digits: `10**28 + 1` then takes the category of `10**28`, and `i % 10` raises
+    `InvalidOperation` from 10**29. A number can reach this function before a speller checks `DIGIT_BOUND`, so the
+    precision follows the number.
+
+    The plural operands `f` and `t` convert the fraction digits to an `int` from a string, and Python refuses a
+    string of more digits than `sys.get_int_max_str_digits()`. So a number whose fraction has more digits than that
+    limit raises `DeclinedReading`, and its span stays as written. An integer part of more digits than the limit
+    declines too, for another cause: the operand `i` comes from `int(Decimal)`, which has no limit, so the check
+    declines early what a speller declines later at `DIGIT_BOUND`, and saves the time of `int(Decimal)`. A limit of
+    0 is no limit."""
+    from unicode_rbnf.plural_rules import PluralType, _eval_condition, _load
 
     locale = cldr_locale(request.tag, plural_locales(), request.language)
     if locale is None:
         raise LookupError(f"no CLDR plural rules for {request.tag!r}")
-    return str(get_plural_category(locale, Decimal(written)))
+    number = Decimal(written)
+    _, digits, exponent = number.as_tuple()
+    fraction = max(-exponent, 0)
+    integer = max(len(digits) - fraction, 0)
+    limit = sys.get_int_max_str_digits()
+    if limit and max(fraction, integer) > limit:
+        raise DeclinedReading(f"a number of {integer} integer and {fraction} fraction digits passes the int string "
+                              f"limit of {limit} digits, so it has no plural category")
+    with localcontext(prec=max(len(digits), getcontext().prec)):
+        n = abs(number)
+        visible = format(n, "f").partition(".")[2]
+        trimmed = visible.rstrip("0")
+        operands = {"n": n, "i": Decimal(int(n)), "v": Decimal(len(visible)), "w": Decimal(len(trimmed)),
+                    "f": Decimal(int(visible or "0")), "t": Decimal(int(trimmed or "0")), "c": Decimal(0),
+                    "e": Decimal(0)}
+        rules = _load(PluralType.CARDINAL)[locale]
+        return next((category for category in ("zero", "one", "two", "few", "many") for rule, condition in rules
+                     if rule == category and _eval_condition(condition, operands)), "other")
 
 
 @cache
@@ -294,12 +336,13 @@ def _check_lexicon(request: Request) -> None:
 
 @lru_cache(maxsize=128)
 def _check_lexicon_once(tag: str, variety: Variety, language: LanguageSpec, params: NormalizationParams) -> None:
+    from text2spoken.core.emoji import emoji_view
     from text2spoken.core.spans import classify
-    from text2spoken.core.tokens import default_tokenizer
+    from text2spoken.core.tokens import cut_tokens, default_tokenizer
 
     request = Request(tag, variety, language, params)
     for written, spoken in lexicon_entries(request.tag, request.params.lexicon).items():
-        tokens = default_tokenizer(spoken, request.tag)
+        tokens = cut_tokens(default_tokenizer(spoken, request.tag), emoji_view(spoken, request.memo))
         for claimed in classify(spoken, tokens, (), request):
             if not (claimed.form is Form.LEXICON and claimed.fields["spoken"] == spoken[claimed.start:claimed.end]):
                 raise InvalidLexiconError(

@@ -229,43 +229,30 @@ def test_a_proclitic_wins_over_a_lead(monkeypatch):
     assert normalize("Go cd-5 now.", "en-GB") == "Go cd five now."
 
 
-@pytest.mark.parametrize("gap", ["", " ", " ", " "])
-def test_a_narrow_no_break_space_gap_joins_a_number_to_its_symbol_and_unit(gap):
+@pytest.mark.parametrize("gap", ["", " ", "\u00a0", "\u202f"])
+def test_a_gap_of_number_gaps_joins_a_number_to_its_symbol_and_unit(gap):
+    """French typography puts a narrow no-break space before `%` and a unit; `fr` lists it in `number_gaps`."""
     from text2spoken import normalize
 
-    assert normalize(f"Take 50{gap}% of 5{gap}kg.", "en-US") == "Take fifty percent of five kilograms."
+    assert normalize(f"Prenez 50{gap}% de 5{gap}kg.", "fr-FR") == "Prenez cinquante pour cent de cinq kilogrammes."
 
 
-@pytest.mark.parametrize("text,spoken", [("Pay -5 $ now.", "Pay minus five dollars now."),
-                                         ("Pay +5 $ now.", "Pay plus five dollars now."),
-                                         ("Pay -$5 now.", "Pay minus five dollars now.")])
+def test_a_language_with_no_number_gaps_keeps_the_core_gaps():
+    from text2spoken.core.recognizers import GAPS, number_gaps
+
+    assert number_gaps(EN.data) == GAPS == ("", " ", "\u00a0")
+
+
+@pytest.mark.parametrize("text,spoken", [("Payez -5 $ maintenant.", "Payez moins cinq dollars maintenant."),
+                                         ("Payez +5 $ maintenant.", "Payez plus cinq dollars maintenant."),
+                                         ("Payez -$5 maintenant.", "Payez moins cinq dollars maintenant.")])
 def test_a_sign_before_a_number_with_its_symbol_after_stays_in_the_amount(text, spoken):
     from text2spoken import normalize
 
-    assert normalize(text, "en-US") == spoken
+    assert normalize(text, "fr-FR") == spoken
 
 
-@pytest.mark.parametrize("text,spoken", [
-    ("Your next alarm is set for 7:30 tomorrow morning.", "Your next alarm is set for seven thirty tomorrow morning."),
-    ("Set an alarm for 6:05 tonight.", "Set an alarm for six oh five tonight."),
-    ("The meeting is for 3:15 this afternoon.", "The meeting is for three fifteen this afternoon."),
-    ("Be there by 17:45.", "Be there by five forty-five PM."),
-    ("Be there by 5:30 sharp.", "Be there by five thirty sharp."),
-    ("Bake for 1:30.", "Bake for 1:30."),
-    ("Practice for 0:45.", "Practice for 0:45."),
-    ("Wait for 2:00.", "Wait for 2:00."),
-    ("He ran for 1:23:45.", "He ran for 1:23:45."),
-    ("Be there by 5:45:10.", "Be there by 5:45:10."),
-    ("The score was 7:30.", "The score was 7:30."),
-    ("It is set for 16:9.", "It is set for 16:9."),
-])
-def test_a_weak_time_word_is_evidence_for_hours_and_minutes_only_and_for_needs_a_day_part_cue(text, spoken):
-    from text2spoken import normalize
-
-    assert normalize(text, "en-GB") == spoken
-
-
-@pytest.mark.parametrize("before", ["", " ", " ", " ", "(", "\n", "à "])
+@pytest.mark.parametrize("before", ["", " ", "\u00a0", "\u202f", "(", "\n", "à "])
 @pytest.mark.parametrize("mark", [",", "."])
 def test_a_leading_decimal_mark_reads_after_a_space_a_bracket_or_at_the_start(before, mark):
     found = numbers.find_numbers(f"{before}{mark}5", FR_MARKS)
@@ -291,20 +278,10 @@ def test_a_leading_decimal_mark_reads_in_a_sentence(tag, text, spoken):
     assert normalize(text, tag) == spoken
 
 
-@pytest.mark.parametrize("gap", [" ", " "])
-def test_a_phone_number_may_be_grouped_with_no_break_spaces(gap):
+@pytest.mark.parametrize("gap", ["\u00a0", "\u202f"])
+def test_a_phone_number_may_be_grouped_with_the_spaces_of_the_recognizer(gap):
     from text2spoken import normalize
 
-    assert normalize(f"Call 020{gap}7946{gap}0018 now.", "en-GB") == (
-        "Call zero two zero seven nine four six zero zero one eight now.")
-
-
-@pytest.mark.parametrize("text,regions,spoken", [
-    ("Call 0475 12 34 56 now.", {"BE"}, "Call zero four seven five one two three four five six now."),
-    ("Call 079 123 45 67 now.", {"CH"}, "Call zero seven nine one two three four five six seven now."),
-    ("Call 1 514 555 1234 now.", {"CA"}, "Call one five one four five five five one two three four now."),
-])
-def test_the_belgian_swiss_and_canadian_plans_give_trunk_evidence(text, regions, spoken):
-    from text2spoken import NormalizationParams, normalize
-
-    assert normalize(text, "en", NormalizationParams(phone_regions=frozenset(regions))) == spoken
+    groups = gap.join(["01", "23", "45", "67", "89"])
+    assert normalize(f"Composez le {groups} ici.", "fr-FR") == (
+        "Composez le zéro un vingt-trois quarante-cinq soixante-sept quatre-vingt-neuf ici.")

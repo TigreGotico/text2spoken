@@ -4,29 +4,55 @@ Number words come from CLDR RBNF, by the CLDR locale of the tag, so `fr-BE` and 
 "nonante", `fr-CH` says "huitante" (CLDR lists it for Switzerland), and every other region says "soixante-dix",
 "quatre-vingts" and "quatre-vingt-dix". The file writes the traditional spelling "vingt et un" and "soixante et
 onze" where CLDR hyphenates, and it builds the ordinals from the cardinals, because the CLDR ordinal rules give
-"quatre-vingt-et-unième" and "cent-et-unième" (Académie française, "Les nombres").
+"quatre-vingt-et-unième" and "cent-et-unième".
 
 Agreement. A number that ends in 1 says "un" or "une" with its noun: "vingt et un kilos", "vingt et une heures".
 The gender of a number comes, in this order, from the hint of the caller, from the noun after the number when
 it is in the table `feminine_nouns`, from `default_gender`, and from the file, which is masculine. A unit and a
 currency carry their own gender.
-"""
 
+The rules cite these sources, by rule family:
+
+- Cardinals, the agreement of "cent", "vingt" and "mille", and years: Académie française, Questions de langue,
+  "Nombres (écriture, lecture, accord)" (academie-francaise.fr/questions-de-langue). It gives the hyphen and "et"
+  rule, "quatre-vingts hommes" but "quatre-vingt-deux hommes", "deux cents euros" but "deux cent vingt euros",
+  "deux cents millions d'années", "Mille (ou mil) est toujours invariable", and the singular of a numeral that
+  stands for an ordinal: "page quatre-vingt", "l'an mille neuf cent".
+- Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
+  des ordinaux complexes (vingt-deuxième, etc.)".
+- Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
+  symbol `h` of the hour.
+- Number marks and gaps: BIPM, The International System of Units (SI Brochure), 9th edition. Section 5.4.4 says
+  that the decimal marker is the point or the comma on the line, and that the digits "may be divided into groups
+  of three by a space". Section 5.4.3 puts a space between a number and its unit symbol, and section 5.4.7 a space
+  between a number and `%`.
+- A half before a noun: Wiktionnaire, "demi", Notes: "reste invariable quand il le précède", "Une demi-heure.".
+- Elision: Wiktionnaire, "l’", Forme d'article défini: "Élision des articles définis le et la devant une voyelle
+  ou un h muet", so `3 l'an` holds an article and no litre.
+- Telephone numbers: ITU-T E.164 country codes (1 for Canada, 32 for Belgium, 33 for France, 41 for Switzerland)
+  and the ARCEP numbering plan of France for the ten digits read in pairs.
+- Abbreviations, amounts (`k`, `M`, `Md`) and Roman numerals after a sovereign or before `e`: Lexique des règles
+  typographiques en usage à l'Imprimerie nationale.
+- Unit, month and currency names: CLDR `common/main` `fr`, `fr_CA` and `fr_CH`, through Babel.
+
+The rows of `tests/data/fr.tsv` give the source of each expected reading. The rows of the telephone, abbreviation,
+date, money and Imprimerie nationale families say that their source was not fetched.
+"""
 from __future__ import annotations
 
-import logging
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from functools import lru_cache
 
+from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.numbers import Number
+from text2spoken.core.color import speak_color
+from text2spoken.core.numbers import Number, written_amount
 from text2spoken.core import roman
 from text2spoken.core.recognizers import (
-    GAPS,
     PHONE_PLANS,
     SHARED,
     Money,
@@ -34,11 +60,20 @@ from text2spoken.core.recognizers import (
     Telephone,
     TimeClock,
     _affixes,
+    _scale,
+    amount_words,
+    join_ranges,
+    number_gaps,
     numbers_in,
+    signed,
+    speak_abbreviation,
+    speak_decimal,
+    speak_expression,
+    speak_idiom,
     speak_lexicon,
 )
-from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import DigitSpeller, RbnfSpeller
+from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spellers import RbnfSpeller, spell_digits
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import (
     Token,
@@ -52,7 +87,6 @@ from text2spoken.core.tokens import (
 )
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, freeze
 
-LOG = logging.getLogger("text2spoken")
 FEMININE, MASCULINE = GrammaticalGender.FEMININE, GrammaticalGender.MASCULINE
 SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space: the gaps that French typography puts between a
@@ -263,6 +297,8 @@ its digits."""
 DATA = freeze(
     {
         "number_marks": {"Latn": [{"decimal": ".,", "group": GROUP}, {"decimal": ",.", "group": GROUP}]},
+        "number_gaps": ["", " ", "\u00a0", "\u202f"],
+        "elision_marks": ["'", "\u2019"],
         "defaults": {
             "date_order": "DMY",
             "clock": "24h",
@@ -287,7 +323,7 @@ DATA = freeze(
         "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"}],
         "dimension_marks": ["x", "×"],
         "dimension_word": "par",
-        "time_words": ["à", "vers", "dès", "avant", "après", "jusqu'à", "depuis", "pour", "est"],
+        "time_words": ["à", "vers", "dès", "avant", "après", "jusqu'à", "depuis"],
         "day_periods": {"am": ["am", "a.m.", "AM", "A.M."], "pm": ["pm", "p.m.", "PM", "P.M."]},
         "day_part_words": {"morning": "du matin", "afternoon": "de l'après-midi", "evening": "du soir"},
         "minute_phrases": {"15": "et quart", "30": "et demie", "45": "moins le quart"},
@@ -614,6 +650,19 @@ VARIETIES = (
 )
 
 
+PLANS = FrozenMap(
+    {
+        **PHONE_PLANS,
+        "BE": FrozenMap({"country_code": "32", "trunk": "0", "lengths": (8, 9)}),
+        "CA": FrozenMap({"country_code": "1", "trunk": "1", "lengths": (10,)}),
+        "CH": FrozenMap({"country_code": "41", "trunk": "0", "lengths": (9,)}),
+    }
+)
+"""The numbering plans of the core and those of Belgium, Canada and Switzerland, where French is an official
+language: the country calling code of ITU-T E.164, the trunk prefix and the lengths of the national significant
+number."""
+
+
 def _clock_edge(text: str, start: int, end: int) -> bool:
     """Whether no digit, and no mark of a number before a digit, continues text[start:end]. A dash does not
     continue it, so `9h-17h` is a range of two times."""
@@ -674,7 +723,7 @@ def _spell(words: str) -> str:
     in "deux cents millions" and "quatre-vingts millions", where CLDR gives "deux cent millions" and, for France,
     "quatre-vingt millions". "Quatre-vingt" takes none before "mille", and a hyphen before a unit, as in
     "quatre-vingt-un", where the CLDR rules of Belgium give "quatre-vingts mille" and "quatre-vingt un"
-    (Académie française, "Les nombres")."""
+    (Académie française, "Nombres")."""
     parts = words.replace("-et-", " et ").split(" ")
     out: list[str] = []
     for index, word in enumerate(parts):
@@ -731,7 +780,7 @@ class FrenchSpeller:
     def year(self, digits: str, features: Features, request: Request) -> str:
         """A year reads as a cardinal in which "cent" and "vingt" stay singular at its end, as numerals that
         stand for an ordinal do: "mille neuf cent", "mille neuf cent quatre-vingt", "deux mille quatre-vingt"
-        (Académie française, "Les nombres")."""
+        (Académie française, "Nombres")."""
         words = self.cardinal(digits, Features(), request)
         return words[:-1] if words.endswith(("cents", "quatre-vingts")) else words
 
@@ -744,14 +793,17 @@ class FrenchSpeller:
             zeros = ["zéro"] * (len(fraction) - len(rest))
             tail = " ".join([*zeros, *([self.cardinal(rest, Features(), request)] if rest else [])])
         else:
-            tail = DigitSpeller(request.data["digit_words"]).cardinal(fraction, Features(), request)
+            tail = spell_digits(fraction, request)
         return f"{whole} {request.data['decimal_word']} {tail}"
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
-        """ "un demi", "deux tiers", "trois quarts", "cinq huitièmes", "un centième"."""
-        top = self.cardinal(numerator, Features(), request)
+        """ "un demi", "deux tiers", "trois quarts", "cinq huitièmes", "un centième". The other fraction names are
+        masculine nouns, but "demi" before a noun agrees through its article only: "une demi-heure" (Wiktionnaire,
+        "demi"), so a half takes the gender of `features`."""
+        bottom = denominator.lstrip("0")
+        top = self.cardinal(numerator, features if bottom == "2" else Features(), request)
         plural = numerator.lstrip("0") != "1"
-        names = {"2": ("demi", "demis"), "3": ("tiers", "tiers"), "4": ("quart", "quarts")}.get(denominator.lstrip("0"))
+        names = {"2": ("demi", "demis"), "3": ("tiers", "tiers"), "4": ("quart", "quarts")}.get(bottom)
         if names is not None:
             return f"{top} {names[plural]}"
         return f"{top} {self.ordinal(denominator, Features(), request)}{'s' if plural else ''}"
@@ -778,20 +830,8 @@ def _cardinal(digits: str, request: Request, gender: GrammaticalGender | None = 
     return SPELLER.cardinal(digits, Features(gender=gender), request)
 
 
-def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
-
-
 def _amount(amount: FrozenMap, request: Request, gender: GrammaticalGender | None = None) -> str:
-    if amount["fraction"]:
-        words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
-    else:
-        words = _cardinal(amount["integer"], request, gender)
-    return _signed(words, amount["sign"], request)
-
-
-def _written(amount: FrozenMap) -> str:
-    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
+    return amount_words(amount, request, Features(gender=gender))
 
 
 def _name(record: FrozenMap, request: Request, written: str) -> str:
@@ -805,28 +845,21 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
-        words = DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
+        words = spell_digits(digits, request)
     else:
         words = _cardinal(digits, request, _gender(context))
-    if fields["sign"]:
-        words = f"{request.data['sign_words'][fields['sign']]} {words}"
+    words = signed(words, fields["sign"], request)
     if fields["lead"]:
         lead = request.data["leads"][fields["lead"]]
         words = f"{lead} {words}" if lead else f" {words}"
     return words
 
 
-def speak_decimal(span: Span, context: SpanContext) -> str:
-    return _amount(span.fields, context.request)
-
-
 def speak_fraction(span: Span, context: SpanContext) -> str:
-    fields = span.fields
-    return _signed(
-        SPELLER.fraction(fields["numerator"], fields["denominator"], Features(), context.request),
-        fields["sign"],
-        context.request,
-    )
+    """A fraction; a half before a feminine noun says "une demi", as in "une demi heure"."""
+    fields, features = span.fields, Features(gender=_gender(context))
+    words = SPELLER.fraction(fields["numerator"], fields["denominator"], features, context.request)
+    return signed(words, fields["sign"], context.request)
 
 
 def speak_range(span: Span, context: SpanContext) -> str:
@@ -878,7 +911,7 @@ def _day_part(hour: int, request: Request) -> str:
 
 def speak_time(span: Span, context: SpanContext) -> str:
     """ "14 h 30" is "quatorze heures trente", and "7 h 05" "sept heures cinq". Hour 12 reads "midi" and hour 0 or 24
-    reads "minuit" when a time word comes before it, as in `à 12 h`, on the 12-hour clock, after a written `am` or `pm`
+    reads "minuit" when a time word or "est" comes before it, as in `à 12 h`, on the 12-hour clock, after a written `am` or `pm`
     (which Tunisia and Algeria write, CLDR `fr_TN`) and in the phrase style,
     so `12 h` stays "douze heures" after "pendant". The phrase style, which `register="colloquial"` also
     selects, says "et quart", "et demie" and "moins le quart". The 12-hour clock adds "du matin", "de
@@ -890,7 +923,9 @@ def speak_time(span: Span, context: SpanContext) -> str:
     twelve = params.clock == "12h" or fields["period"] is not None
     phrase = params.minute_style == "phrase" or params.register == "colloquial"
     quarter = phrase and second is None and minute in (15, 30, 45)
-    cue = bool(context.before) and context.before[-1].lower() in request.data["time_words"]
+    # "est" names the hour, as in "il est midi", but it also comes before a ratio, so it is no time word for the
+    # colon form (design section 4.2).
+    cue = bool(context.before) and context.before[-1].lower() in (*request.data["time_words"], "est")
     named_ok = cue or twelve or quarter
 
     def noon_or_midnight(h: int) -> str | None:
@@ -936,7 +971,7 @@ def _scaled_money(fields: FrozenMap, amount: FrozenMap, currency: FrozenMap, req
             return f"{_cardinal(digits, request, gender)} {_name(currency, request, digits)}"
         return f"{_amount(FrozenMap({**amount, 'fraction': fraction}), request)} mille {currency['other']}"
     amount = FrozenMap({**amount, "fraction": fraction})
-    plural = "" if plural_category(request, _written(amount)) == "one" else "s"
+    plural = "" if plural_category(request, written_amount(amount)) == "one" else "s"
     return f"{_amount(amount, request)} {noun}{plural} {currency['many']}"
 
 
@@ -970,8 +1005,8 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = f"{major} {minor}"
     else:
-        words = f"{_amount(amount, request, gender(currency))} {_name(currency, request, _written(amount))}"
-    return _signed(words, fields["amount"]["sign"], request)
+        words = f"{_amount(amount, request, gender(currency))} {_name(currency, request, written_amount(amount))}"
+    return signed(words, fields["amount"]["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
@@ -981,7 +1016,7 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     unit = request.data["units"][span.fields["unit"]]
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
     joined = f" {link} ".join(_amount(a, request, GrammaticalGender(unit["gender"])) for a in amounts)
-    return f"{joined} {_name(unit, request, _written(amounts[-1]))}"
+    return f"{joined} {_name(unit, request, written_amount(amounts[-1]))}"
 
 
 def speak_percent(span: Span, context: SpanContext) -> str:
@@ -991,26 +1026,9 @@ def speak_percent(span: Span, context: SpanContext) -> str:
     return f"{_amount(span.fields['amount'], request)} {word}"
 
 
-def speak_abbreviation(span: Span, context: SpanContext) -> str:
-    data = context.request.data
-    key = span.fields["key"]
-    for table in ("titles", "abbreviations", "number_abbreviations"):
-        if data[table].get(key) is not None:
-            return data[table][key]
-    raise LookupError(f"no abbreviation {key!r} for {context.request.tag}")
-
-
-def speak_idiom(span: Span, context: SpanContext) -> str:
-    return context.request.data["idioms"][span.fields["key"]]
-
-
-def _digit_words(digits: str, request: Request) -> str:
-    return DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
-
-
 def _pair(pair: str, request: Request) -> str:
     """ "12" is "douze", "06" is "zéro six" and "00" is "zéro zéro"."""
-    return f"zéro {_digit_words(pair[1], request)}" if pair[0] == "0" else _cardinal(pair, request)
+    return f"zéro {spell_digits(pair[1], request)}" if pair[0] == "0" else _cardinal(pair, request)
 
 
 def _phone_group(group: str, request: Request) -> str:
@@ -1018,10 +1036,10 @@ def _phone_group(group: str, request: Request) -> str:
     digit; a longer group of an odd length reads its first digit and then pairs. The `phone_reading` of a variety
     set to `digits` reads every digit."""
     if request.data["phone_reading"] == "digits" or len(group) in (1, 3):
-        return _digit_words(group, request)
+        return spell_digits(group, request)
     head = group[:1] if len(group) % 2 else ""
     pairs = [_pair(group[i : i + 2], request) for i in range(len(head), len(group), 2)]
-    return " ".join([*([_digit_words(head, request)] if head else []), *pairs])
+    return " ".join([*([spell_digits(head, request)] if head else []), *pairs])
 
 
 def speak_telephone(span: Span, context: SpanContext) -> str:
@@ -1032,28 +1050,6 @@ def speak_telephone(span: Span, context: SpanContext) -> str:
     words = [_phone_group(group, request) for group in fields["groups"]]
     if fields["country_code"]:
         words.insert(0, f"{request.data['sign_words']['+']} {_phone_group(fields['country_code'], request)}")
-    return " ".join(words)
-
-
-def speak_color(span: Span, context: SpanContext) -> str:
-    """A colour with no name spells its digits as the text writes them: digits as words, letters as letters."""
-    request, fields = context.request, span.fields
-    name = request.data["colors"].get(fields["rgb"])
-    if fields["alpha"] is not None:
-        LOG.warning("unread alpha %r of colour #%s for %s", fields["alpha"], fields["rgb"], request.tag)
-    if name is not None:
-        return name
-    return " ".join(_digit_words(c, request) if c.isdigit() else c.upper() for c in fields["hex"])
-
-
-def speak_expression(span: Span, context: SpanContext) -> str:
-    """ "5+3=8" is "cinq plus trois égale huit"; the first operand may carry a sign: "-2+3=1" is "moins deux plus trois
-    égale un"."""
-    request = context.request
-    first = span.fields["operands"][0]
-    words = [_signed(_cardinal(first.lstrip("-−"), request), "-" if first[0] in "-−" else "", request)]
-    for operator, operand in zip(span.fields["operators"], span.fields["operands"][1:]):
-        words += [request.data["operators"][operator], _cardinal(operand, request)]
     return " ".join(words)
 
 
@@ -1073,55 +1069,41 @@ def speak_year(span: Span, context: SpanContext) -> str:
 
 @dataclass(frozen=True)
 class FrenchMoney(Money):
-    """The shared money recognizer, and an amount with a scale word before a symbol that follows the number:
-    `2 M€`, `1,5 Md$`, `5 k€`, `3 Mio CHF`. The scales of the language come from its `scales` table."""
+    """The shared money recognizer, with a scale word between the number and a symbol after it, as in `2 M€`, `5 k€`
+    and `3 Mio CHF`, and with a sign before a number whose symbol follows it: `-5 €` is "moins cinq euros"."""
+
+    scale_before_symbol: bool = True
 
     def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         yield from super()._amounts(text, tokens, request)
-        data = request.data
-        symbols = sorted(
-            ((symbol, code) for code, currency in data["currencies"].items() for symbol in currency["symbols"]),
-            key=lambda pair: len(pair[0]),
-            reverse=True,
-        )
-        scales = sorted(data["scales"], key=len, reverse=True)
+        symbols = currency_symbols(request)
+        scales = sorted(request.data["scales"], key=len, reverse=True)
+        gaps = number_gaps(request.data)
         for number in numbers_in(text, request):
-            found = self._scaled(text, number, symbols, scales, request)
-            if found is not None:
-                yield found
+            if number.sign:
+                found = self._after(text, number, symbols, scales, gaps, request)
+                if found is not None:
+                    yield found
 
-    def _scaled(
-        self, text: str, number: Number, symbols: list[tuple[str, str]], scales: list[str], request: Request
+    def _after(
+        self,
+        text: str,
+        number: Number,
+        symbols: Sequence[tuple[str, str]],
+        scales: Sequence[str],
+        gaps: Sequence[str],
+        request: Request,
     ) -> Span | None:
-        for gap in GAPS:
-            at = number.end + len(gap)
-            scale = next((s for s in scales if text.startswith(s, at)), None)
-            if scale is None:
-                continue
-            after = at + len(scale)
-            for gap_after in GAPS:
+        for scale, after in dict.fromkeys((_scale(text, number.end, scales, gaps), ("", number.end))):
+            for gap in gaps:
                 for symbol, code in symbols:
-                    end = after + len(gap_after) + len(symbol)
-                    if not text.startswith(gap_after + symbol, after):
-                        continue
-                    bounds = _affixes(text, number.start, end, request.data, ())
-                    if bounds is not None:
-                        return Span(
-                            bounds[0],
-                            bounds[1],
-                            Form.MONEY,
-                            FrozenMap(
-                                {
-                                    "amount": number.amount(),
-                                    "currency": code,
-                                    "written_symbol": symbol,
-                                    "scale": scale,
-                                    "prefix": bounds[2],
-                                    "suffix": bounds[3],
-                                }
-                            ),
-                            recognizer=self.name,
-                        )
+                    end = after + len(gap) + len(symbol)
+                    if text.startswith(gap + symbol, after) and (
+                        bounds := _affixes(text, number.start, end, request.data, ())
+                    ) is not None:
+                        fields = {"amount": number.amount(), "currency": code, "written_symbol": symbol}
+                        fields |= {"scale": scale, "prefix": bounds[2], "suffix": bounds[3]}
+                        return Span(bounds[0], bounds[1], Form.MONEY, FrozenMap(fields), recognizer=self.name)
         return None
 
 
@@ -1136,6 +1118,95 @@ class FrenchPercent(Percent):
             if "‰" in written or "%o" in written:
                 span = replace(span, fields=FrozenMap({**span.fields, "sign_position": "permille"}))
             yield span
+
+
+@dataclass(frozen=True)
+class Year:
+    """A year from 1000 to 2099 (design section 4.2): after a year word, as in `en 1984`; two years that a range
+    mark joins, the lower one first, as in `1939-1945`, or a year and a higher two-digit end after a year word, as
+    in `en 1939-45`; and a number that a link joins to a year, as in `en 1066 et 1215`. A comma alone links only
+    inside a list that a link word ends, as in `en 1066, 1215 et 1415`.
+
+    A count read as a year is wrong, so the follower of a linked list decides for all its years, and a range is
+    one link of a list. A lowercase word that is not in `function_words` blocks them, as in `en 1234 étapes`, and
+    so do a unit of the units table in any case, an operator and a dimension mark, as in `en 2048 Mo` and
+    `en 1920 × 1080`. The rule is the year rule of `en.py`, read with the French tables."""
+    name: str = "year"
+    form: Form = Form.YEAR
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return join_ranges(self._years(text, tokens, request), text, request)
+
+    def _years(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        year_words = frozenset(data["year_words"])
+        function_words = frozenset(data["function_words"])
+        marks = frozenset(data["range_marks"])
+        units = frozenset(unit.lower() for unit in data["units"])
+        signs = frozenset(data["operators"]) | frozenset(data["dimension_marks"]) | {"*", "/"}
+        word_link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") ")
+        words = context_words(tokens)
+        breaks = clause_breaks(text)
+        numbers = [n for n in numbers_in(text, request) if not n.sign and n.fraction is None
+                   and n.end - n.start in (2, 4) and is_bounded(text, n.start, n.end)]
+
+        def year(number: Number) -> bool:
+            return number.end - number.start == 4 and 1000 <= int(number.integer) <= 2099
+
+        def after_year_word(number: Number) -> bool:
+            before = clause_window(text, words, number.start, number.end, -1, limit=1, breaks=breaks)
+            return bool(before) and before[0].lower() in year_words
+
+        def free(end: int) -> bool:
+            start = end
+            while start < len(text) and text[start].isspace():
+                start += 1
+            if start in (end, len(text)):
+                return True
+            stop = start
+            while stop < len(text) and not text[stop].isspace():
+                stop += 1
+            follower = text[start:stop].rstrip(".,;:!?)")
+            if (text[start] in signs and not is_letter(text[start])) or follower.lower() in units:
+                return False
+            stop = start
+            while stop < len(text) and is_letter(text[stop]):
+                stop += 1
+            word = text[start:stop]
+            return not word.islower() or word in function_words
+
+        claimed = {}
+        partners = {}
+        for first, second in zip(numbers, numbers[1:]):
+            if not (year(first) and text[first.end:second.start] in marks):
+                continue
+            if year(second) and int(first.integer) < int(second.integer):
+                claimed |= {first: first.integer, second: second.integer}
+                partners |= {first: second, second: first}
+            elif (second.end - second.start == 2 and int(first.integer) % 100 < int(second.integer)
+                  and after_year_word(first)):
+                claimed |= {first: first.integer, second: first.integer[:2] + second.integer}
+                partners |= {first: second, second: first}
+        chains: list[list[Number]] = []
+        for number in numbers:
+            if not (year(number) or number in claimed):
+                continue
+            gap = text[chains[-1][-1].end:number.start] if chains else ""
+            if chains and (gap == ", " or word_link.fullmatch(gap) or partners.get(number) is chains[-1][-1]):
+                chains[-1].append(number)
+            elif number in claimed or after_year_word(number):
+                chains.append([number])
+        for chain in chains:
+            while len(chain) > 1 and text[chain[-2].end:chain[-1].start] == ", ":
+                chain.pop()
+            if free(chain[-1].end):
+                claimed |= {number: number.integer for number in chain if number not in claimed}
+            else:
+                for number in chain:
+                    claimed.pop(number, None)
+        for number, digits in claimed.items():
+            yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": digits, "suffix": ""}),
+                       recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -1269,7 +1340,9 @@ class FrenchTime(TimeClock):
                 start,
                 end,
                 Form.TIME,
-                FrozenMap({"hour": hour, "minute": minute or 0, "second": None, "period": None, "suffix": ""}),
+                FrozenMap(
+                    {"hour": hour, "minute": minute or 0, "second": None, "period": None, "prefix": "", "suffix": ""}
+                ),
                 recognizer=self.name,
                 keep=not valid,
             )
@@ -1436,11 +1509,11 @@ LANGUAGE = LanguageSpec(
         DateNamed(),
         SHARED["date_numeric"],
         FrenchTime(),
-        Telephone(),
+        Telephone(spaces=SPACES, plans=PLANS),
         FrenchMoney(),
         FrenchPercent(),
         SHARED["measure"],
-        SHARED["year"],
+        Year(),
         SHARED["expression"],
         SHARED["fraction"],
         SHARED["range"],
@@ -1491,7 +1564,7 @@ LANGUAGE = LanguageSpec(
         "scale": frozenset({"long"}),
         "register": frozenset({"formal", "colloquial"}),
         "default_gender": frozenset({"masculine", "feminine"}),
-        "phone_regions": frozenset(PHONE_PLANS),
+        "phone_regions": frozenset(PLANS),
     },
     not_applicable=frozenset(),
 )

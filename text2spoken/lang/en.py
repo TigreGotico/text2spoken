@@ -3,26 +3,89 @@
 Number words come from CLDR RBNF. American English writes no "and" in the whole part of a number, and
 British English writes "one hundred and one" (Wikipedia, "English numerals"), so each variety names its rule
 set. The design page `text2spoken-design.md`, section 5.4, gives the measured reason for each speller.
+
+Unit words come from CLDR 49 (`cldr-units-full`, the `long` patterns of en-GB and en). A symbol that cannot be a
+plain word, such as `km/h`, `°C` or `µm`, reads with no list. `unit_symbols` names the symbols made only of
+letters that read as units: the SI symbols `kg`, `g`, `mg`, `km`, `m`, `cm`, `mm` and `ml`, and `mph`, `MHz`,
+`GHz` and `MB`. Other CLDR symbols are also words or letters of running text, so `1 in 3`, `Plan 2 A` and
+`29 GB golds` read no unit. `GB` names Great Britain as often as gigabytes (design section 16), and `ft.` names
+"featuring" in a music credit, as in `Maroon 5 ft. Cardi B`.
+
+Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of en-GB, en-001
+and en), and a symbol with a currency sign reads with no list: `R$ 500` reads "five hundred Brazilian reals" and
+`₹50` "fifty Indian rupees". `currency_symbols` names the ISO 4217 codes that read, as in `CHF 20` and `20 EUR`.
+The `currencies` table replaces a CLDR name that carries the country. CLDR names USD "US dollar", GBP "British
+pound" and JPY "Japanese yen", and the CLDR 49 en annotations name the signs `$` "dollar", `£` "pound" and `¥`
+"yen", so these currencies read "dollar", "pound" and "yen". The table also assigns a shared sign. CLDR 49 en gives
+USD the symbol `$` and JPY the symbol `¥`, but en-001, the parent of en-GB, writes `US$` and `JP¥`, and en-GB
+shares the narrow `$` and `¥` between currencies. The en symbol and the en annotation name keep `$` for the dollar
+and `¥` for the yen in en-GB. en-US reads `US$`, the symbol of USD in CLDR en-001 and root, as the dollar too.
+
+A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
+`cldr-annotations-derived-full`): `©` reads "copyright", `→` "right-pointing arrow" and `¶` "paragraph mark".
+
+An e-mail or web address reads the name of each symbol. Wiktionary gives each name: "@" is "at" ("@", sense 2:
+the separator in an e-mail address, "at" the domain name), "." is "dot" ("dot", usage note: "In email addresses
+and URLs, it is conventionally read aloud as 'dot'"), "-" is "dash" ("dash", sense 1.1: "A hyphen or minus
+sign"), and "_", "/", ":", "~", "#", "?", "=", "&" and "+" are "underscore", "slash", "colon", "tilde", "hash",
+"question mark", "equals", "ampersand" and "plus" (the entries of the same names, and "hash", sense 3: "The #
+symbol"). The Wiktionary example "en.wiktionary.org", read aloud "E-N-dot-wiktionary-dot-org", spells the
+two-letter label and reads the longer labels as words. A letter reads by the name that Wikipedia, "English
+alphabet", Letter names, gives from the Oxford English Dictionary, with "zed" in British and "zee" in American
+English. C reads "see", another spelling of its name, because misaki, an English phonemizer, has no "cee" in its
+American lexicon (Wiktionary, "see", Etymology 3, Noun: "Alternative form of cee; the name of the Latin script
+letter C/c."). A keeps "a". English phonemizers read "a" inside a phrase as the article, but espeak-ng and misaki read
+it as the letter name before a full stop, as in "u ess a.". The other spelling "ay" reads as /aɪ/, the name of
+I, in espeak-ng.
+
+A run of capital letters reads by the `LETTERS` form (design section 4.6) when the caller turns the form on. A run
+that splits into English syllables stays as written, and any other run reads letter by letter. The syllable sets are
+the spellings of the clusters in Wikipedia, "English phonology", Phonotactics, a secondary source: it gives English
+"clusters of up to three consonants in the syllable onset and up to four consonants in the syllable coda" (citing
+Hansen 2004, p. 91), and its onset and coda tables carry a "Citation needed" mark. An onset is one of "All
+single-consonant phonemes except /ŋ/", or a cluster of the onset table, spelled as in its example words: play, blood,
+clean, glove, prize, bring, tree, dream, crowd, green, twin, dwarf, quick, floor, sleep, friend, three, shrimp, what,
+swoon, thwart, speak, stop, skill, smile, snow, sphere, split, sclera, spring, street, scream and square. The /sk/ of
+"sclera" and "scream" is spelled sc, so sc is an onset too. The letter x spells /ks/, which is no onset ("xylophone"
+begins with /z/), so x is no onset. A coda is one of "The single consonant phonemes except /h/, /w/, /j/", or a
+cluster of the coda table, spelled as in help, bulb, belt, hold, milk, belch, harp, orb, fort, beard, mark, morgue,
+arch, golf, solve, wealth, else, Welsh, dwarf, carve, north, Mars, marsh, film, kiln, arm, born, snarl, jump, tent,
+end, lunch, pink, sing, triumph, month, bronze, left, crisp, lost, ask, opt, act, fifth, depth, lapse, klutz, width,
+box, next and horst. The section above the coda table says: "Most (in theory, all) of the following except those that
+end with the sibilants /s/, /z/, /ʃ/, /ʒ/, /tʃ/ or /dʒ/ can be extended with /s/ or /z/ representing the morpheme
+-s/-z." So each coda that does not end in s, z, x, sh or ch also takes an s, as in the ds of AIDS, the rts of SPORTS
+and the nts of EVENTS. The tables give r and its clusters "in rhotic varieties" only, but en-GB writes the r that it
+does not say, so r stays a coda letter. ch, sh, th and ng spell one consonant each (Wikipedia, "English orthography":
+"chin", "shin", "thing", "strength"). The vowels are a, e, i, o and u, and the spellings with w and y in the table
+"Combinations of vowel letters" of Wikipedia, "English orthography", which "includes ⟨h, w, y⟩ when they represent
+vowel sounds": y as in myth and sky, aw as in flaw, ew as in dew, and ow as in owl. The rule reads CIA, IRS, USA, IBS
+and IDS as words, and Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/, USA /juː ɛs ˈeɪ/,
+IBS /aɪ.biːˈɛs/ and IDS /aɪ diː ɛs/. So `letter_runs` holds them.
 """
 from __future__ import annotations
 
-import logging
 import re
-from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
+from text2spoken.core.color import speak_color
+from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
+from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, numbers_in,
-                                          speak_cardinal, speak_lexicon)
-from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_window
-from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
+from text2spoken.core.letters import speak_letters
+from text2spoken.core.numbers import Number, written_amount
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, amount_words, join_ranges, numbers_in,
+                                          signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
+                                          speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
+                                          speak_range, speak_telephone)
+from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import twelve_hour
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
+from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, one_digit_set
+from text2spoken.core.units import unit_reading, unit_table
 from text2spoken.params import FrozenMap, Form, freeze
-
-LOG = logging.getLogger("text2spoken")
 
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
@@ -63,24 +126,10 @@ COLORS = {
 }
 """Seeded by `scripts/seed_colors.py en` from the ovos-color-parser palette `en-US/dot-net-colors.json`."""
 
-UNITS_GB = {
-    "kg": {"one": "kilogram", "other": "kilograms"},
-    "g": {"one": "gram", "other": "grams"},
-    "mg": {"one": "milligram", "other": "milligrams"},
-    "km": {"one": "kilometre", "other": "kilometres"},
-    "m": {"one": "metre", "other": "metres"},
-    "cm": {"one": "centimetre", "other": "centimetres"},
-    "mm": {"one": "millimetre", "other": "millimetres"},
-    "km/h": {"one": "kilometre per hour", "other": "kilometres per hour"},
-    "m/s": {"one": "metre per second", "other": "metres per second"},
-    "mph": {"one": "mile per hour", "other": "miles per hour"},
-    "ml": {"one": "millilitre", "other": "millilitres"},
-    "°C": {"one": "degree Celsius", "other": "degrees Celsius"},
-    "°F": {"one": "degree Fahrenheit", "other": "degrees Fahrenheit"},
-    "MHz": {"one": "megahertz", "other": "megahertz"},
-    "GHz": {"one": "gigahertz", "other": "gigahertz"},
-    "MB": {"one": "megabyte", "other": "megabytes"},
-}
+_CODAS = [*"bcdfgklmnprstvxz", "ch", "sh", "th", "ng", "lp", "lb", "lt", "ld", "lk", "lch", "rp", "rb",
+          "rt", "rd", "rk", "rg", "rch", "lf", "lv", "lth", "ls", "lsh", "rf", "rv", "rth", "rs", "rsh",
+          "lm", "ln", "rm", "rn", "rl", "mp", "nt", "nd", "nch", "nk", "mph", "nth", "nz", "ft", "sp",
+          "st", "sk", "pt", "ct", "fth", "pth", "ps", "tz", "dth", "xt", "rst"]
 
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ".", "group": ","}, {"decimal": ",", "group": "."}]},
@@ -100,9 +149,6 @@ DATA = freeze({
     "dimension_word": "by",
     "operators": {"+": "plus", "−": "minus", "×": "times", "÷": "divided by", "=": "equals"},
     "time_words": ["at", "from", "until", "till", "since", "before", "after", "around"],
-    "weak_time_words": ["by"],
-    "cued_time_words": ["for"],
-    "time_cue_words": ["morning", "afternoon", "evening", "night", "tomorrow", "today", "tonight", "noon", "midnight"],
     "year_words": ["in", "since", "until", "till", "during", "circa", "year"],
     "year_links": ["and", "or", "to"],
     "function_words": ["a", "an", "the", "and", "or", "but", "so", "then", "to", "in", "on", "at", "by",
@@ -117,16 +163,16 @@ DATA = freeze({
     "months": MONTHS,
     "numeric_date_reading": {"full": "the {day} of {month} {year}", "no_year": "the {day} of {month}"},
     "currencies": {
-        "USD": {"symbols": ["$", "US$"], "one": "dollar", "other": "dollars",
-                "minor": {"one": "cent", "other": "cents"}},
-        "GBP": {"symbols": ["£"], "one": "pound", "other": "pounds", "minor": {"one": "penny", "other": "pence"}},
-        "EUR": {"symbols": ["€"], "one": "euro", "other": "euros", "minor": {"one": "cent", "other": "cents"}},
-        "JPY": {"symbols": ["¥"], "one": "yen", "other": "yen", "minor": {"one": "sen", "other": "sen"}},
+        "USD": {"one": "dollar", "other": "dollars", "minor": {"one": "cent", "other": "cents"}},
+        "GBP": {"one": "pound", "other": "pounds", "minor": {"one": "penny", "other": "pence"}},
+        "EUR": {"minor": {"one": "cent", "other": "cents"}},
+        "JPY": {"one": "yen", "other": "yen", "minor": {"one": "sen", "other": "sen"}},
     },
+    "currency_symbols": ["USD", "EUR", "GBP", "JPY", "CHF"],
     "scales": {"thousand": "thousand", "million": "million", "billion": "billion", "trillion": "trillion",
                "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
-    "units": UNITS_GB,
+    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "mph", "ml", "MHz", "GHz", "MB"],
     "phone_words": ["phone", "telephone", "tel", "call", "dial", "ring", "text", "mobile", "cell", "fax"],
     "short_codes": ["000", "101", "111", "112", "211", "311", "411", "511", "611", "711", "811", "911", "988", "999"],
     "list_links": ["and", "or"],
@@ -144,8 +190,23 @@ DATA = freeze({
     "symbols": {"%": "percent", "$": "money", "£": "money", "€": "money", "¥": "money", "°": "measure",
                 "×": "measure"},
     "ordinal_marks": ["st", "nd", "rd", "th"],
+    "electronic_symbols": {"@": "at", ".": "dot", "-": "dash", "_": "underscore", "/": "slash", ":": "colon",
+                           "~": "tilde", "#": "hash", "?": "question mark", "=": "equals", "&": "ampersand",
+                           "+": "plus"},
+    "letter_names": dict(zip("abcdefghijklmnopqrstuvwxyz", (
+        "a", "bee", "see", "dee", "e", "ef", "gee", "aitch", "i", "jay", "kay", "el", "em", "en", "o", "pee", "cue",
+        "ar", "ess", "tee", "u", "vee", "double-u", "ex", "wye", "zed"))),
+    "electronic_vowels": ["a", "e", "i", "o", "u"],
+    "electronic_schemes": {"http": "read", "https": "read", "ftp": "read"},
+    "electronic_tlds": ["com", "org", "net", "edu", "gov", "uk"],
+    "letter_vowels": ["a", "e", "i", "o", "u", "y", "aw", "ew", "ow"],
+    "letter_onsets": [*"bcdfghjklmnprstvwyz", "ch", "sh", "th", "ph", "wh", "qu", "pl", "bl", "cl", "gl", "pr", "br",
+                      "tr", "dr", "cr", "gr", "tw", "dw", "fl", "sl", "fr", "thr", "shr", "sw", "thw", "sp", "st",
+                      "sk", "sm", "sn", "sph", "spl", "sc", "scl", "spr", "str", "scr", "squ"],
+    "letter_codas": [*_CODAS, *(coda + "s" for coda in _CODAS if not coda.endswith(("s", "z", "x", "sh", "ch")))],
+    "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters", "IBS": "letters", "IDS": "letters"},
     "patterns": {
-        "expression": "[-−]?[0-9]+(?: ?[+−×÷=] ?[-−]?[0-9]+)+",
+        "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
         "date_month_day": _MONTH + " ([0-9][0-9]?)" + _ORDINAL_MARK + "?(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_day_month": "([0-9][0-9]?)" + _ORDINAL_MARK + "? (?:of )?" + _MONTH + "(?:,? ([0-9][0-9][0-9][0-9]))?",
         "date_month_year": _MONTH + " ([0-9][0-9][0-9][0-9])",
@@ -154,14 +215,15 @@ DATA = freeze({
 
 VARIETIES = (
     Variety("en-GB", freeze({"colors": {code: name.replace("gray", "grey") for code, name in COLORS.items()
-                                        if "gray" in name}})),
+                                        if "gray" in name},
+                             "currencies": {"USD": {"symbols": ["$"]}, "JPY": {"symbols": ["¥"]}}})),
     Variety("en-US", freeze({
         "defaults": {"date_order": "MDY"},
+        "currencies": {"USD": {"symbols": ["US$"]}},
+        "letter_names": {"z": "zee"},
         "numeric_date_reading": {"full": "{month} {day} {year}", "no_year": "{month} {day}"},
         "percent": {"word": "percent"},
         "titles": {"Dr": None, "Mr": None, "Mrs": None},
-        "units": {unit: {category: word.replace("metre", "meter").replace("litre", "liter")
-                         for category, word in forms.items()} for unit, forms in UNITS_GB.items()},
     })),
 )
 
@@ -197,7 +259,7 @@ class EnglishSpeller:
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", features, request)
-        return f"{whole} {request.data['decimal_word']} {_digits(fraction, request)}"
+        return f"{whole} {request.data['decimal_word']} {spell_digits(fraction, request)}"
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """One-half, two-thirds, three-quarters, one one-hundredth (Wikipedia, "English numerals")."""
@@ -216,57 +278,8 @@ class EnglishSpeller:
 SPELLER = EnglishSpeller()
 
 
-def _digits(digits: str, request: Request) -> str:
-    return DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
-
-
 def _cardinal(digits: str, request: Request) -> str:
     return SPELLER.cardinal(digits, Features(), request)
-
-
-def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
-
-
-def _amount(amount: FrozenMap, request: Request) -> str:
-    if amount["fraction"]:
-        words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
-    else:
-        words = _cardinal(amount["integer"], request)
-    return _signed(words, amount["sign"], request)
-
-
-def _written(amount: FrozenMap) -> str:
-    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
-
-
-def speak_ordinal(span: Span, context: SpanContext) -> str:
-    return SPELLER.ordinal(span.fields["digits"], Features(), context.request)
-
-
-def speak_decimal(span: Span, context: SpanContext) -> str:
-    return _amount(span.fields, context.request)
-
-
-def speak_fraction(span: Span, context: SpanContext) -> str:
-    fields = span.fields
-    words = SPELLER.fraction(fields["numerator"], fields["denominator"], Features(), context.request)
-    return _signed(words, fields["sign"], context.request)
-
-
-def speak_range(span: Span, context: SpanContext) -> str:
-    request = context.request
-    return f"{_cardinal(span.fields['low'], request)} {request.data['range_word']} {_cardinal(span.fields['high'], request)}"
-
-
-def speak_expression(span: Span, context: SpanContext) -> str:
-    """The first operand may carry a sign, as in `-2+3=1`: "minus two plus three equals one"."""
-    request = context.request
-    first = span.fields["operands"][0]
-    words = [_signed(_cardinal(first.lstrip("-−"), request), "-" if first[0] in "-−" else "", request)]
-    for operator, operand in zip(span.fields["operators"], span.fields["operands"][1:]):
-        words += [request.data["operators"][operator], _cardinal(operand, request)]
-    return " ".join(words)
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -321,17 +334,18 @@ def speak_time(span: Span, context: SpanContext) -> str:
 
 
 def speak_money(span: Span, context: SpanContext) -> str:
-    """A scale word comes between the amount and the plural currency name: "two million dollars"."""
+    """A scale word comes between the amount and the plural currency name: "two million dollars". Two decimals
+    read as the minor unit when the currency names one: "five dollars and fifty cents"."""
     request = context.request
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
-    currency = request.data["currencies"][fields["currency"]]
+    currency = currency_table(request)[fields["currency"]]
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         amount = FrozenMap({**amount, "fraction": (fraction or "").rstrip("0")})
-        words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
-    elif len(fraction) == 2:
-        major = f"{_cardinal(integer, request)} {currency[plural_category(request, integer)]}"
+        words = f"{amount_words(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
+    elif len(fraction) == 2 and "minor" in currency:
+        major = f"{_cardinal(integer, request)} {currency_name(currency, plural_category(request, integer))}"
         minor_digits = str(int(fraction))
         minor = f"{_cardinal(minor_digits, request)} {currency['minor'][plural_category(request, minor_digits)]}"
         if int(fraction) == 0:
@@ -339,44 +353,18 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = minor if bounded_integer(integer) == 0 else f"{major} and {minor}"
     else:
-        words = f"{_amount(amount, request)} {currency[plural_category(request, _written(amount))]}"
-    return _signed(words, fields["amount"]["sign"], request)
+        category = plural_category(request, written_amount(amount))
+        words = f"{amount_words(amount, request)} {currency_name(currency, category)}"
+    return signed(words, fields["amount"]["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
-    unit = request.data["units"][span.fields["unit"]][plural_category(request, _written(amounts[-1]))]
+    pattern, _ = unit_reading(request, span.fields["unit"], plural_category(request, written_amount(amounts[-1])))
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
-    joined = f" {link} ".join(_amount(a, request) for a in amounts)
-    return f"{joined} {unit}"
-
-
-def speak_percent(span: Span, context: SpanContext) -> str:
-    request = context.request
-    return f"{_amount(span.fields['amount'], request)} {request.data['percent']['word']}"
-
-
-def speak_telephone(span: Span, context: SpanContext) -> str:
-    request = context.request
-    groups = [_digits(group, request) for group in span.fields["groups"]]
-    if span.fields["country_code"]:
-        groups.insert(0, f"{request.data['sign_words']['+']} {_digits(span.fields['country_code'], request)}")
-    return " ".join(groups)
-
-
-def speak_abbreviation(span: Span, context: SpanContext) -> str:
-    data = context.request.data
-    key = span.fields["key"]
-    for table in ("titles", "abbreviations", "number_abbreviations"):
-        if data[table].get(key) is not None:
-            return data[table][key]
-    raise LookupError(f"no abbreviation {key!r} for {context.request.tag}")
-
-
-def speak_idiom(span: Span, context: SpanContext) -> str:
-    return context.request.data["idioms"][span.fields["key"]]
+    return pattern.replace("{0}", f" {link} ".join(amount_words(a, request) for a in amounts))
 
 
 def speak_year(span: Span, context: SpanContext) -> str:
@@ -389,17 +377,6 @@ def speak_year(span: Span, context: SpanContext) -> str:
     if span.end - span.start == 2 and words.startswith(century):
         return words[len(century):]
     return words
-
-
-def speak_color(span: Span, context: SpanContext) -> str:
-    """A colour with no name spells its digits as the text writes them (section 12)."""
-    request = context.request
-    name = request.data["colors"].get(span.fields["rgb"])
-    if span.fields["alpha"] is not None:
-        LOG.warning("unread alpha %r of colour #%s for %s", span.fields["alpha"], span.fields["rgb"], request.tag)
-    if name is not None:
-        return name
-    return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
 
 
 def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_words: frozenset[str]) -> bool:
@@ -423,7 +400,7 @@ class EnglishTelephone(Telephone):
     A phone word also names a run up to three words back, where a function word does not count, when the run has
     the shape of a phone number, as in `Call us on 0800 123 456.` The same window names a short code of
     `short_codes` that ends its clause or that a function word follows, as in `Call the police on 999 now.`, and
-    not the count in `The phone rang 101 times.`
+    not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer.
 
     The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
     brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
@@ -444,25 +421,6 @@ class EnglishTelephone(Telephone):
                 or _hour_follows(text, after, day_periods, function_words)):
             return written[:cut]
         return written
-
-    def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-               request: Request) -> range:
-        """Three content words back, within eight words of the clause."""
-        function_words = frozenset(request.data.get("function_words", ()))
-        index = bisect_right(words, start, key=lambda word: word.end)
-        before = clause_window(text, words, start, end, -1, limit=8, breaks=breaks)
-        counted = [i for i in range(index - len(before), index) if words[i].text.lower() not in function_words]
-        return range(counted[-3] if len(counted) >= 3 else index - len(before), index)
-
-    def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-                   shaped: bool, short_code: bool, request: Request) -> bool:
-        if shaped:
-            return True
-        if not short_code:
-            return False
-        function_words = frozenset(request.data.get("function_words", ()))
-        following = clause_window(text, words, start, end, 1, limit=1, breaks=breaks)
-        return all(word.lower() in function_words for word in following)
 
 
 @dataclass(frozen=True)
@@ -485,26 +443,94 @@ class Ordinal:
 
 
 @dataclass(frozen=True)
-class Abbreviation:
-    """A title before a capitalised name, `No.` before a number, and the abbreviations of the table."""
-    name: str = "abbreviation"
-    form: Form = Form.ABBREVIATION
+class Year:
+    """A year from 1000 to 2099 (section 4.2): after a year word, as in `In 1984`; two years that a range mark
+    joins, the lower one first, as in `1939-1945`, or a year and a higher two-digit end after a year word, as in
+    `during 1939-45`; and a number that a link joins to a year, as in `In 1066 and 1215`. A comma alone links
+    only inside a list that a link word ends, as in `In 1066, 1215 and 1415`.
+
+    A count read as a year is wrong, so the follower of a linked list decides for all its years, and a range is
+    one link of a list. A lowercase word that is not in `function_words` blocks them, as in `in 1234 steps`, and
+    so do a symbol of `unit_symbols` in any case, another unit symbol in its own case, an operator and a dimension
+    mark, as in `in 2048 MB`, `in 2020 mA` and `in 1920 × 1080`. An acronym that only matches a unit symbol in
+    another case, such as `EV` or `MA`, is a capitalised name, so `In 2023 EV sales rose.` keeps its year."""
+    name: str = "year"
+    form: Form = Form.YEAR
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return join_ranges(self._years(text, tokens, request), text, request)
+
+    def _years(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
-        tables = (("titles", str.isupper), ("number_abbreviations", str.isdigit), ("abbreviations", lambda _: True))
-        final = frozenset(data["sentence_final"])
-        for table, follows in tables:
-            for key in sorted((k for k, v in data[table].items() if v is not None), key=len, reverse=True):
-                position = text.find(key)
-                while position != -1:
-                    end = position + len(key)
-                    following = next_visible(text, end)
-                    if is_bounded(text, position, end) and follows(following):
-                        sentence_end = key in final and (following == "" or following.isupper())
-                        yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
-                                   trail="." if sentence_end else "", recognizer=self.name)
-                    position = text.find(key, end)
+        year_words = frozenset(data["year_words"])
+        function_words = frozenset(data["function_words"])
+        marks = frozenset(data["range_marks"])
+        units = unit_table(request)
+        listed = frozenset(symbol.lower() for symbol in data["unit_symbols"])
+        signs = frozenset(data["operators"]) | frozenset(data["dimension_marks"]) | {"*", "/"}
+        word_link = re.compile(",? (?:" + "|".join(map(re.escape, data["year_links"])) + ") ")
+        words = context_words(tokens)
+        breaks = clause_breaks(text)
+        numbers = [n for n in numbers_in(text, request) if not n.sign and n.fraction is None
+                   and n.end - n.start in (2, 4) and is_bounded(text, n.start, n.end)]
+
+        def year(number: Number) -> bool:
+            return number.end - number.start == 4 and 1000 <= int(number.integer) <= 2099
+
+        def after_year_word(number: Number) -> bool:
+            before = clause_window(text, words, number.start, number.end, -1, limit=1, breaks=breaks)
+            return bool(before) and before[0].lower() in year_words
+
+        def free(end: int) -> bool:
+            start = end
+            while start < len(text) and text[start].isspace():
+                start += 1
+            if start in (end, len(text)):
+                return True
+            stop = start
+            while stop < len(text) and not text[stop].isspace():
+                stop += 1
+            follower = text[start:stop].rstrip(".,;:!?)")
+            if (text[start] in signs and not is_letter(text[start])) or follower in units or follower.lower() in listed:
+                return False
+            stop = start
+            while stop < len(text) and is_letter(text[stop]):
+                stop += 1
+            word = text[start:stop]
+            return not word.islower() or word in function_words
+
+        claimed = {}
+        partners = {}
+        for first, second in zip(numbers, numbers[1:]):
+            if not (year(first) and text[first.end:second.start] in marks):
+                continue
+            if year(second) and int(first.integer) < int(second.integer):
+                claimed |= {first: first.integer, second: second.integer}
+                partners |= {first: second, second: first}
+            elif (second.end - second.start == 2 and int(first.integer) % 100 < int(second.integer)
+                  and after_year_word(first)):
+                claimed |= {first: first.integer, second: first.integer[:2] + second.integer}
+                partners |= {first: second, second: first}
+        chains: list[list[Number]] = []
+        for number in numbers:
+            if not (year(number) or number in claimed):
+                continue
+            gap = text[chains[-1][-1].end:number.start] if chains else ""
+            if chains and (gap == ", " or word_link.fullmatch(gap) or partners.get(number) is chains[-1][-1]):
+                chains[-1].append(number)
+            elif number in claimed or after_year_word(number):
+                chains.append([number])
+        for chain in chains:
+            while len(chain) > 1 and text[chain[-2].end:chain[-1].start] == ", ":
+                chain.pop()
+            if free(chain[-1].end):
+                claimed |= {number: number.integer for number in chain if number not in claimed}
+            else:
+                for number in chain:
+                    claimed.pop(number, None)
+        for number, digits in claimed.items():
+            yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": digits, "suffix": ""}),
+                       recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -549,17 +575,20 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"], SHARED["measure"],
-                 SHARED["year"], SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Abbreviation(),
-                 SHARED["decimal"], SHARED["cardinal"]),
+    recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
+                 SHARED["date_numeric"], SHARED["time_clock"],
+                 EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
+                 SHARED["money"], SHARED["percent"], SHARED["measure"], Year(), SHARED["expression"],
+                 SHARED["fraction"], SHARED["range"], Ordinal(), SHARED["abbreviation"], SHARED["letters"],
+                 SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
-        Form.YEAR: speak_year,
+        Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic, Form.LETTERS: speak_letters,
+        Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},

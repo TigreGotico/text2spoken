@@ -22,9 +22,9 @@ from text2spoken import (
 )
 
 F, M = GrammaticalGender.FEMININE, GrammaticalGender.MASCULINE
-NB, NN = " ", " "
+NB, NN = "\u00a0", "\u202f"
 
-FRENCH_FORMS = set(Form) - {Form.IDENTIFIER, Form.LETTERS}
+FRENCH_FORMS = set(Form) - {Form.IDENTIFIER, Form.LETTERS, Form.ELECTRONIC, Form.SYMBOL, Form.EMOJI}
 FRANCE_TAGS = [
     "fr",
     "fr-FR",
@@ -380,7 +380,14 @@ def test_a_letter_after_the_h_is_no_time(text):
 
 def test_a_bare_colon_time_needs_a_time_word():
     assert normalize("Le score final 7:30 reste.", "fr") == "Le score final 7:30 reste."
-    assert normalize("Réglée pour 7:30 demain matin.", "fr") == "Réglée pour sept heures trente demain matin."
+    assert normalize("Réglée à 7:30 demain matin.", "fr") == "Réglée à sept heures trente demain matin."
+
+
+@pytest.mark.parametrize("text", ["Le format est 16:10.", "Le score est 21:15.", "Réglée pour 7:30 demain matin."])
+def test_a_word_that_comes_before_a_ratio_or_a_quantity_is_no_time_word(text):
+    """Design section 4.2: "A word that also comes before a ratio or a quantity ... is no time word". `est` comes
+    before a ratio or a score, and `pour` before a quantity, so the colon form after them stays as written."""
+    assert normalize(text, "fr") == text
 
 
 # agreement
@@ -691,6 +698,16 @@ def test_fractions(written, spoken):
     assert normalize(f"Il reste {written} ici.", "fr") == f"Il reste {spoken} ici."
 
 
+@pytest.mark.parametrize(
+    "written,spoken",
+    [("Il a attendu 1/2 heure.", "Il a attendu une demi heure."), ("Il a bu 1/2 verre.", "Il a bu un demi verre.")],
+)
+def test_a_half_before_a_noun_takes_the_gender_of_the_noun(written, spoken):
+    """Wiktionnaire, "demi", Notes: "Demi [...] reste invariable quand il le précède", with the example "Une
+    demi-heure.", so the article agrees with the noun. The spoken words need no hyphen. "verre" is masculine."""
+    assert normalize(written, "fr") == spoken
+
+
 @pytest.mark.parametrize("written", ["3/2", "1/1", "1/0", "1/2 kg", "1/2 l", "$1/2", "2/2"])
 def test_a_fraction_that_is_not_one_stays_as_written(written):
     assert written in normalize(f"Il reste {written} ici.", "fr")
@@ -875,7 +892,7 @@ def test_a_sentence_of_a_voice_assistant():
 
 
 def test_an_alarm_sentence():
-    assert normalize("Votre prochaine alarme est réglée pour 7:30 demain matin.", "fr-CA") == (
+    assert normalize("Votre prochaine alarme est réglée pour 7 h 30 demain matin.", "fr-CA") == (
         "Votre prochaine alarme est réglée pour sept heures trente demain matin."
     )
 

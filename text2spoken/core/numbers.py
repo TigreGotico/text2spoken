@@ -26,6 +26,11 @@ class Number:
                           "prefix": prefix, "suffix": suffix, "script": self.script})
 
 
+def written_amount(amount: FrozenMap) -> str:
+    """The `DECIMAL` record as plain digits, with a full stop before the fraction, for `plural_category`."""
+    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
+
+
 Marks = tuple[tuple[str, str, str], ...]
 """(script, decimal mark, group mark) for each script that a language declares."""
 
@@ -88,22 +93,32 @@ def _grouped(text: str, start: int, end: int) -> bool:
     return end - first <= 3 if first == start else end - first == 3
 
 
-def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
-    """Every written number in the text that parses whole by the declared marks.
+def _spaces(marks: Marks) -> frozenset[str]:
+    """The spaces of each run of group marks: a space joins only groups of three digits (`_grouped`), it is no
+    leading mark, and the tokenizer does not join at it. A single group mark that is a space, as the no-break space
+    of `ru`, joins every cluster."""
+    return frozenset(mark for _, _, group in marks if group and len(group) > 1 for mark in group if mark.isspace())
 
-    A cluster is a run of digits joined by single marks, colons or slashes. A cluster that does not parse
-    whole, such as `16:9`, `1.2.3` or `1,23` in a language whose group mark is the comma, gives no number.
+
+def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()) -> tuple[Number, ...]:
+    """Every written number in the text that parses whole by `marks`.
+
+    A cluster is a run of digits joined by single marks, colons or slashes. A mark of `marks` or of `declared`
+    joins a cluster. A cluster that does not parse whole by `marks`, such as `16:9`, `1.2.3` or `1,23` in a
+    language whose group mark is the comma, gives no number. So in a variety that declares a second set of marks,
+    such as de-CH, `,5` gives no number when the comma is not a mark of `marks`, as `0,5` gives none.
     """
     folded = fold_digits(text)
     by_script = {script: (decimal, group) for script, decimal, group in marks}
-    joiners = _CLUSTER_JOINERS | {mark for _, decimal, group in marks for mark in decimal + group}
-    leading = _CLUSTER_JOINERS | {mark for _, decimal, group in marks
-                                  for mark in decimal + (group if len(group) == 1 else "")}
+    joiners = _CLUSTER_JOINERS | declared | {mark for _, decimal, group in marks
+                                             for mark in (decimal or "") + (group or "")}
+    spaces = _spaces(marks)
+    leading = joiners - {mark for _, _, group in marks if group and len(group) > 1 for mark in group}
     numbers = []
     i = 0
     while i < len(text):
         leading_mark = (text[i] in leading and i + 1 < len(text) and is_digit(text[i + 1])
-                        and (i == 0 or text[i - 1].isspace()
+                        and (i == 0 or text[i - 1] in spaces
                              or not (is_word_char(text[i - 1]) or text[i - 1] in joiners)))
         if not (is_digit(text[i]) or leading_mark):
             i += 1
@@ -114,7 +129,7 @@ def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
             if is_digit(text[end]):
                 end += 1
             elif text[end] in joiners and end + 1 < len(text) and is_digit(text[end + 1]):
-                if text[end].isspace() and not _grouped(text, start, end):
+                if text[end] in spaces and not _grouped(text, start, end):
                     break
                 end += 1
             else:
@@ -148,7 +163,8 @@ def number_marks(data, decimal_mark: str | None) -> Marks:
 
 
 def declared_marks(data) -> frozenset[str]:
-    """Every decimal and group mark that the language declares, for the tokenizer join. A space is no mark here,
-    so the tokenizer keeps `1 000` as two tokens."""
+    """Every decimal and group mark that the language declares, for the tokenizer join. A space of a run of group
+    marks is no mark here, so the tokenizer keeps `1 000` as two tokens in French."""
     return frozenset(mark for entries in data.get("number_marks", {}).values() for entry in entries
-                     for mark in entry["decimal"] + entry["group"] if not mark.isspace())
+                     for mark in entry["decimal"] + entry["group"]
+                     if not (mark.isspace() and len(entry["group"]) > 1))

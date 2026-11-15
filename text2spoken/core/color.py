@@ -1,18 +1,21 @@
 """The colour recognizer: the `COLOR` rows of design section 4.2."""
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from itertools import accumulate
 
 from text2spoken.core.language import Request
-from text2spoken.core.spans import Clauses, Span, clause_breaks, context_words
+from text2spoken.core.spans import Clauses, Span, SpanContext, clause_breaks, context_words
+from text2spoken.core.spellers import spell_digits
 from text2spoken.core.tokens import Token, is_word_char
 from text2spoken.params import FrozenMap, Form
 
 _HEX = re.compile("#(?:[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])(?:[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])?(?:[0-9A-Fa-f][0-9A-Fa-f])?")
 _DIGITS = frozenset("0123456789")
+LOG = logging.getLogger("text2spoken")
 
 
 def hex_fields(code: str) -> FrozenMap | None:
@@ -24,6 +27,21 @@ def hex_fields(code: str) -> FrozenMap | None:
     if len(digits) in (6, 8):
         return FrozenMap({"rgb": digits[:6], "alpha": digits[6:] or None, "hex": code[1:7]})
     return None
+
+
+def spell_hex(written: str, request: Request) -> str:
+    """The hex digits of a colour as the text writes them: each digit by its word, each letter as a capital."""
+    return " ".join(spell_digits(c, request) if c.isdigit() else c.upper() for c in written)
+
+
+def speak_color(span: Span, context: SpanContext) -> str:
+    """The name of the six `rgb` digits in the `colors` table of the language, else the hex digits as the text
+    writes them. The alpha has no reading, so it is logged as unread (design section 12)."""
+    request = context.request
+    if span.fields["alpha"] is not None:
+        LOG.warning("unread alpha %r of colour #%s for %s", span.fields["alpha"], span.fields["rgb"], request.tag)
+    name = request.data.get("colors", FrozenMap()).get(span.fields["rgb"])
+    return name if name is not None else spell_hex(span.fields["hex"], request)
 
 
 def _is_color_word(word: str, color_words: frozenset[str]) -> bool:

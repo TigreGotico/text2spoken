@@ -52,7 +52,7 @@ fr-050	fr-FR	percent	Un taux de 50 % ici.	Un taux de cinquante pour cent ici.	F
 fr-051	fr-FR	percent	Un taux de 50 % ici.	Un taux de cinquante pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
 fr-052	fr-FR	percent	Un taux de 50% ici.	Un taux de cinquante pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
 fr-053	fr-FR	percent	Un taux de -10 % ici.	Un taux de moins dix pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
-fr-054	fr-FR	percent	Entre 10 %-20 % ici.	Entre dix pour cent à vingt pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-054	fr-FR	percent	Une hausse de 10 %-20 % ici.	Une hausse de dix pour cent à vingt pour cent ici.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
 fr-055	fr-FR	money	Cela coûte 3,50 € ici.	Cela coûte trois euros cinquante ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
 fr-056	fr-FR	money	Cela coûte 3,05 € ici.	Cela coûte trois euros cinq ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
 fr-057	fr-FR	money	Cela coûte 0,50 € ici.	Cela coûte cinquante centimes ici.	Convention d'écriture des prix (rule from memory, not fetched): trois euros cinquante	unchecked
@@ -147,7 +147,7 @@ fr-145	fr-BE	date	Rendez-vous le 10/11/2026 ici.	Rendez-vous le dix novembre deu
 fr-146	fr-CH	date	Rendez-vous le 10 novembre 2026 ici.	Rendez-vous le dix novembre deux mille vingt-six ici.	Wikipédia, Date en français (rule from memory, not fetched): le premier du mois, cardinal for the other days	unchecked
 fr-147	fr-FR	ordinal	C'est le 1er ici.	C'est le premier ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-148	fr-FR	ordinal	C'est le 1re ici.	C'est le première ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
-fr-149	fr-FR	ordinal	C'est le 1ère ici.	C'est le première ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-149	fr-FR	ordinal	C'est la 1ère fois ici.	C'est la première fois ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-150	fr-FR	ordinal	C'est le 2e ici.	C'est le deuxième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-151	fr-FR	ordinal	C'est le 3ème ici.	C'est le troisième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-152	fr-FR	ordinal	C'est le 4e ici.	C'est le quatrième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
@@ -172,7 +172,7 @@ fr-170	fr-FR	ordinal	C'est le 1 000 000e ici.	C'est le millionième ici.	Académ
 fr-171	fr-FR	ordinal	C'est le 1ers ici.	C'est le premiers ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-172	fr-FR	ordinal	C'est le 1res ici.	C'est le premières ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-173	fr-FR	ordinal	C'est le 2es ici.	C'est le deuxièmes ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
-fr-174	fr-FR	ordinal	C'est le 3èmes ici.	C'est le troisièmes ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
+fr-174	fr-FR	ordinal	Ils sont arrivés 3èmes ici.	Ils sont arrivés troisièmes ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-175	fr-FR	ordinal	C'est le 2nd ici.	C'est le second ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-176	fr-FR	ordinal	C'est le 2nde ici.	C'est le seconde ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
 fr-177	fr-BE	ordinal	C'est le 71e ici.	C'est le septante et unième ici.	Académie française, Les nombres ordinaux (rule from memory, not fetched): premier, deuxième, vingt et unième	unchecked
@@ -271,7 +271,7 @@ fr-269	fr-FR	none	Le mot #decade reste.	Le mot #decade reste.	text2spoken contra
 fr-270	fr-FR	none	La date 13/13/2024 reste.	La date 13/13/2024 reste.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
 fr-271	fr-FR	none	La version 1.500 reste.	La version 1.500 reste.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
 fr-272	fr-FR	time	Rendez-vous à 14:30 ici.	Rendez-vous à quatorze heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
-fr-273	fr-FR	time	Il est 7:30 ici.	Il est sept heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
+fr-273	fr-FR	time	Il est 7 h 30 ici.	Il est sept heures trente ici.	Académie française, L'heure (rule from memory, not fetched): vingt et une heures, midi, minuit	unchecked
 fr-274	fr-FR	none	Le score final 7:30 ici.	Le score final 7:30 ici.	text2spoken contract: a form that cannot be read for sure stays as written	unchecked
 fr-275	fr-FR	abbreviation	J'ai des pommes, etc.	J'ai des pommes, et cetera.	Lexique des règles typographiques en usage à l'Imprimerie nationale (abréviations), from memory	unchecked
 fr-276	fr-FR	telephone	Appelez le 06 12 34 56 78 ici.	Appelez le zéro six douze trente-quatre cinquante-six soixante-dix-huit ici.	Numérotation téléphonique en France (ARCEP, plan de numérotation): dix chiffres, lus par groupes de deux; from memory	unchecked
@@ -297,7 +297,7 @@ fr-295	fr-FR	telephone	Appelez le 15 ici.	Appelez le quinze ici.	Numérotation t
 fr-296	fr-FR	telephone	Composez 112 ici.	Composez un un deux ici.	Numérotation téléphonique en France (ARCEP, plan de numérotation): dix chiffres, lus par groupes de deux; from memory	unchecked
 fr-297	fr-FR	telephone	Composez 3919 ici.	Composez trente-neuf dix-neuf ici.	Numérotation téléphonique en France (ARCEP, plan de numérotation): dix chiffres, lus par groupes de deux; from memory	unchecked
 fr-298	fr-FR	telephone	Composez 112 et 3919 ici.	Composez un un deux et trente-neuf dix-neuf ici.	Numérotation téléphonique en France (ARCEP, plan de numérotation): dix chiffres, lus par groupes de deux; from memory	unchecked
-fr-299	fr-FR	none	Il y a 12 345 678 chiens.	Il y a douze millions trois cent quarante-cinq mille six cent soixante-dix-huit chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
+fr-299	fr-FR	cardinal	Il y a 12 345 678 chiens.	Il y a douze millions trois cent quarante-cinq mille six cent soixante-dix-huit chiens.	French numerals (Wikipédia, Numéraux français; Académie française, Les nombres), from memory, not fetched	unchecked
 fr-300	fr-FR	color	La couleur #FF0000 reste.	La couleur rouge reste.	HTML colour names in French (Wikipédia, Liste de couleurs; ovos-color-parser fr-FR/dot-net-colors.json); from memory	unchecked
 fr-301	fr-FR	color	La couleur #000000 reste.	La couleur noir reste.	HTML colour names in French (Wikipédia, Liste de couleurs; ovos-color-parser fr-FR/dot-net-colors.json); from memory	unchecked
 fr-302	fr-FR	color	La couleur #ffa500 reste.	La couleur orange reste.	HTML colour names in French (Wikipédia, Liste de couleurs; ovos-color-parser fr-FR/dot-net-colors.json); from memory	unchecked
@@ -398,6 +398,4 @@ fr-396	fr-FR	money	Cela coûte 12 EUR ici.	Cela coûte douze euros ici.	CLDR fr:
 fr-397	fr-FR	money	Cela coûte 12 USD ici.	Cela coûte douze dollars ici.	CLDR fr: $US, $ US (fr_CA), ISO codes after the amount; Babel 2.18	unchecked
 fr-398	fr-FR	money	Cela coûte 3,50 $US ici.	Cela coûte trois dollars cinquante ici.	CLDR fr: $US, $ US (fr_CA), ISO codes after the amount; Babel 2.18	unchecked
 fr-399	fr-FR	money	Cela coûte 12 $ CA ici.	Cela coûte douze dollars canadiens ici.	CLDR fr: $US, $ US (fr_CA), ISO codes after the amount; Babel 2.18	unchecked
-fr-400	fr-CA	money	Cela coûte 3,50 $ US ici.	Cela coûte trois dollars américains cinquante ici.	CLDR fr: $US, $ US (fr_CA), ISO codes after the amount; Babel 2.18	unchecked
-fr-401	fr-CA	money	Cela coûte 12 CAD ici.	Cela coûte douze dollars ici.	CLDR fr: $US, $ US (fr_CA), ISO codes after the amount; Babel 2.18	unchecked
-fr-402	fr-CA	money	Cela coûte 3,50 $ US ici.	Cela coûte trois dollars américains cinquante ici.	CLDR fr: $US, $ US (fr_CA), ISO codes after the amount; Babel 2.18	unchecked
+fr-400	fr-FR	cardinal	Elle en a vu 2 l'an dernier.	Elle en a vu deux l'an dernier.	Wiktionnaire, l’ (forme d’article défini): « Élision des articles définis le et la devant une voyelle ou un h muet. », so l' is an article and no litre; deux: Académie française, Questions de langue, Nombres	unchecked

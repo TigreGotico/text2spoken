@@ -219,6 +219,11 @@ class RbnfSpeller:
         raise NotImplementedError("RbnfSpeller reads integers only")
 
 
+def spell_digits(digits: str, request: Request) -> str:
+    """The digits one by one, by the `digit_words` of the language."""
+    return DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
+
+
 class DigitSpeller:
     """One word per digit, from a table in the language file."""
 

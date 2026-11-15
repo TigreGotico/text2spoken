@@ -1,12 +1,14 @@
 """Spellers, CLDR locales and plural categories (design sections 5.3 and 5.4)."""
 import json
+import logging
 import subprocess
 import sys
 from dataclasses import replace
+from decimal import Decimal, localcontext
 
 import pytest
 
-from text2spoken import DeclinedReading, Features, GrammaticalGender, NormalizationParams
+from text2spoken import DeclinedReading, Features, GrammaticalGender, NormalizationParams, UnreadFormError, normalize
 from text2spoken.core.language import Request, Variety, plural_category
 from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, rbnf_engine,
                                        words)
@@ -367,8 +369,157 @@ def test_plural_category_refuses_a_locale_with_no_rules(gendered):
         plural_category(Request("tlh", Variety("tlh"), language, NormalizationParams()), "1")
 
 
+# CLDR 49, common/supplemental/plurals.xml, read by hand:
+#   es        one:  n = 1
+#   fr pt     one:  i = 0..1
+#   pt_PT     one:  i = 1 and v = 0
+#   es, pt, pt_PT  many: e = 0 and i != 0 and i % 1000000 = 0 and v = 0 or e != 0..5
+#   ru uk     one:  v = 0 and i % 10 = 1 and i % 100 != 11
+#             few:  v = 0 and i % 10 = 2..4 and i % 100 != 12..14
+#             many: v = 0 and i % 10 = 0 or v = 0 and i % 10 = 5..9 or v = 0 and i % 100 = 11..14
+def cldr_integer_category(code: str, i: int) -> str:
+    """The category of a written integer above 1 (v = 0, e = 0) by the rules above, in Python int arithmetic."""
+    if code == "ru":
+        if i % 10 == 1 and i % 100 != 11:
+            return "one"
+        if 2 <= i % 10 <= 4 and not 12 <= i % 100 <= 14:
+            return "few"
+        return "many" if i % 10 == 0 or 5 <= i % 10 <= 9 or 11 <= i % 100 <= 14 else "other"
+    return "many" if i % 1000000 == 0 else "other"
+
+
+LARGE_INTEGERS = [10**28, 10**28 + 1, 10**29, 10**29 + 1, 10**29 + 2, 10**29 + 11, 10**34, 10**34 + 1,
+                  int("1" * 400)]
+
+
+@pytest.mark.parametrize("tag", ["es", "pt-BR", "pt-PT", "ru"])
+@pytest.mark.parametrize("number", LARGE_INTEGERS, ids=lambda number: f"{len(str(number))}digits-{number % 100}")
+def test_the_plural_category_of_a_large_integer_is_exact(gendered, tag, number):
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    category = plural_category(Request(tag, Variety(tag), language, NormalizationParams()), str(number))
+    assert category == cldr_integer_category(tag.split("-")[0], number)
+
+
+@pytest.mark.parametrize("tag", ["es", "pt-BR", "pt-PT"])
+def test_one_more_than_ten_to_the_twenty_eight_is_other(gendered, tag):
+    # (10**28 + 1) % 1000000 == 1, so many fails; n and i are not 1 or 0..1, so one fails.
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    assert plural_category(Request(tag, Variety(tag), language, NormalizationParams()), str(10**28 + 1)) == "other"
+
+
+@pytest.mark.parametrize("tag", ["es", "pt-BR", "pt-PT", "ru"])
+def test_a_long_decimal_keeps_its_visible_fraction(gendered, tag):
+    # v = 1, so neither many nor any ru category applies; n and i are far from 1.
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    written = "1" + "0" * 30 + ".5"
+    assert plural_category(Request(tag, Variety(tag), language, NormalizationParams()), written) == "other"
+
+
+def test_the_plural_category_is_exact_under_a_caller_context_of_low_precision(gendered):
+    # ru 1000001: i % 10 = 1 and i % 100 = 1, so one.
+    language = replace(gendered.LANGUAGE, code="ru", cldr_aliases=())
+    with localcontext(prec=6) as caller:
+        assert plural_category(Request("ru", Variety("ru"), language, NormalizationParams()), "1000001") == "one"
+        assert caller.prec == 6
+
+
+@pytest.mark.parametrize(("tag", "text", "form"), [
+    ("en-GB", "It is 1.{} km.", "measure"),
+    ("en-GB", "It costs £1.{}.", "money"),
+    ("de-DE", "Es sind 1,{} km.", "measure"),
+    ("pt-PT", "Mede 1,{} km.", "measure"),
+])
+def test_a_fraction_past_the_int_string_limit_keeps_the_written_form(tag, text, form, caplog):
+    """unicode_rbnf converts the fraction digits to an `int`, and Python converts no string longer than
+    `sys.get_int_max_str_digits()`, 4300 by default. The plural category declines, so the span stays as written with
+    one warning, and strict mode raises `UnreadFormError` (design section 10)."""
+    limit = sys.get_int_max_str_digits()
+    text = text.format("1" * (limit + 1))
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize(text, tag) == text
+    [warning] = [record.getMessage() for record in caplog.records if record.getMessage().startswith(f"unread {form} ")]
+    assert warning.endswith(f": a number of 1 integer and {limit + 1} fraction digits passes the int string limit of "
+                            f"{limit} digits, so it has no plural category")
+    with pytest.raises(UnreadFormError) as raised:
+        normalize(text, tag, NormalizationParams(strict=True))
+    assert type(raised.value.__cause__) is DeclinedReading
+
+
+@pytest.mark.parametrize("tag", ["en", "de", "pt-PT", "ru"])
+def test_a_number_at_the_int_string_limit_has_a_plural_category(gendered, tag):
+    # en, de, pt_PT one: i = 1 and v = 0; every ru category above needs v = 0. So a decimal of v > 0 is other.
+    limit = sys.get_int_max_str_digits()
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    request = Request(tag, Variety(tag), language, NormalizationParams())
+    assert plural_category(request, "1." + "1" * limit) == "other"
+    for written in ("1." + "1" * (limit + 1), "1" * (limit + 1), "1" * (limit + 1) + ".5"):
+        with pytest.raises(DeclinedReading):
+            plural_category(request, written)
+
+
+def test_a_fraction_at_the_int_string_limit_reads():
+    limit = sys.get_int_max_str_digits()
+    text = normalize("It is 1." + "1" * limit + " km.", "en-GB")
+    assert text == "It is one point" + " one" * limit + " kilometres."
+
+
+INT_LIMIT_PROBE = """
+from text2spoken import DeclinedReading, NormalizationParams
+from text2spoken.core.language import Request, Variety, plural_category
+from text2spoken.lang.en import LANGUAGE
+
+request = Request(tag="en", variety=Variety("en"), language=LANGUAGE, params=NormalizationParams())
+for digits in (640, 641, 4301):
+    try:
+        print(plural_category(request, "1." + "1" * digits))
+    except DeclinedReading:
+        print("declined")
+"""
+
+
+def test_the_plural_category_reads_the_int_string_limit_at_call_time():
+    """The lowest limit Python allows, 640, declines a fraction of 641 digits. A limit of 0 is no limit."""
+    runs = [subprocess.run([sys.executable, *flags, "-c", INT_LIMIT_PROBE], capture_output=True, text=True,
+                           check=True).stdout for flags in (["-X", "int_max_str_digits=640"],
+                                                            ["-X", "int_max_str_digits=0"])]
+    assert runs == ["other\ndeclined\ndeclined\n", "other\nother\nother\n"]
+
+
 def test_the_private_plural_locale_list_has_its_shape():
-    from unicode_rbnf.plural_rules import PluralType, _load
+    from unicode_rbnf.plural_rules import PluralType, _eval_condition, _load
 
     table = _load(PluralType.CARDINAL)
     assert isinstance(table, dict) and {"en", "pt", "pt_PT", "ru", "ar"} <= set(table)
+    assert ("one", "i = 1 and v = 0") in table["en"]
+    operands = {name: Decimal(0) for name in "ivwftce"}
+    assert _eval_condition("i = 1 and v = 0", {**operands, "n": Decimal(1), "i": Decimal(1)})
+    assert not _eval_condition("i = 1 and v = 0", {**operands, "n": Decimal("1.0"), "i": Decimal(1), "v": Decimal(1)})
+
+
+# The CLDR 49 rules of plurals.xml, applied by hand. The visible fraction digits give v, so v > 0 for each number.
+# en, de, pt_PT: one is i = 1 and v = 0, so other. ru: one, few and many need v = 0, so other. pt: one is i = 0..1,
+# and i = 0, so one. ar: each rule reads n, and n is no integer, so other.
+SMALL_DECIMALS = [("en", "0.00000010", "other"), ("de", "0.0000001", "other"), ("pt-PT", "0.0000001", "other"),
+                  ("pt-BR", "0.00000010", "one"), ("ru", "0.0000001", "other"), ("ru", "0.00000010", "other"),
+                  ("ar", "0.0000001", "other"), ("ru", "0." + "0" * 30 + "1", "other")]
+
+
+@pytest.mark.parametrize(("tag", "written", "category"), SMALL_DECIMALS)
+def test_a_decimal_with_more_than_six_zeros_after_the_point_has_its_plural_category(gendered, tag, written, category):
+    """`str(Decimal)` writes such a number with an exponent, as `1E-7`, so the operands read the fixed-point form."""
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    assert plural_category(Request(tag, Variety(tag), language, NormalizationParams()), written) == category
+
+
+@pytest.mark.parametrize("tag", ["en", "de", "pt-PT", "pt-BR", "ru", "ar"])
+def test_the_plural_category_agrees_with_unicode_rbnf_where_it_reads_no_exponent(gendered, tag):
+    from unicode_rbnf.plural_rules import get_plural_category
+
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    request = Request(tag, Variety(tag), language, NormalizationParams())
+    locale = {"pt-PT": "pt_PT", "pt-BR": "pt"}.get(tag, tag)
+    for written in ("0", "1", "1.0", "2", "3", "5", "11", "12", "21", "22", "25", "101", "111", "0.5", "1.5", "2.50",
+                    "10.0", "100", "1000000", "2000000", "0.000001", "0.0000010", "12.345", "1" + "0" * 27 + "1"):
+        with localcontext(prec=40):
+            expected = get_plural_category(locale, Decimal(written))
+        assert plural_category(request, written) == expected, written

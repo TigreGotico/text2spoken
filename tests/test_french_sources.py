@@ -1,13 +1,20 @@
 """French cross-checks against independent sources: num2words, ovos-number-parser and CLDR through Babel.
 
-Each test skips when its source is not installed. Where a source has a known defect, the test names it and
+The sources are in the `test` extra. Where a source has a known defect, the test names it and
 corrects it with the grammar rule (Académie française, "Les nombres") before it compares."""
 
 import datetime as dt
 import logging
 import re
 
+import babel
 import pytest
+from babel import dates, numbers
+from babel.dates import format_time, get_month_names
+from babel.numbers import get_currency_name
+from babel.units import format_unit
+from num2words import num2words
+from ovos_number_parser import pronounce_number
 
 from text2spoken import normalize
 from text2spoken.lang.fr import MONTHS, UNITS, DATA
@@ -44,14 +51,12 @@ def fix_num2words(words: str) -> str:
 
 @pytest.mark.parametrize("tag,lang", [("fr-FR", "fr"), ("fr-BE", "fr_BE"), ("fr-CH", "fr_CH")])
 def test_cardinals_agree_with_num2words(tag, lang):
-    num2words = pytest.importorskip("num2words").num2words
     for number in NUMBERS:
         assert normalize(str(number), tag) == fix_num2words(num2words(number, lang=lang)), number
 
 
 @pytest.mark.parametrize("tag,lang", [("fr-FR", "fr"), ("fr-BE", "fr_BE"), ("fr-CH", "fr_CH")])
 def test_ordinals_agree_with_num2words(tag, lang):
-    num2words = pytest.importorskip("num2words").num2words
     for number in range(2, 2001):
         words = num2words(number, lang=lang, to="ordinal")
         words = re.sub(r"(quatre-vingt|cent)s(?=ième)", r"\1", words)
@@ -68,14 +73,12 @@ def test_ordinals_agree_with_num2words(tag, lang):
 
 
 def test_cardinals_agree_with_ovos_number_parser():
-    pronounce_number = pytest.importorskip("ovos_number_parser").pronounce_number
     for number in NUMBERS:
         assert normalize(str(number), "fr-FR") == pronounce_number(number, "fr-FR").replace("-et-", " et "), number
 
 
 def test_month_names_agree_with_cldr():
-    names = pytest.importorskip("babel.dates").get_month_names
-    assert [names("wide", locale="fr")[i] for i in range(1, 13)] == MONTHS
+    assert [get_month_names("wide", locale="fr")[i] for i in range(1, 13)] == MONTHS
 
 
 # Not compared: kWh (CLDR writes "kilowatt-heure", the BIPM "kilowattheure"), mm² and t (not in Babel).
@@ -129,10 +132,9 @@ CLDR_UNITS = {
 
 @pytest.mark.parametrize("symbol,unit", sorted(CLDR_UNITS.items()))
 def test_unit_names_agree_with_cldr(symbol, unit):
-    format_unit = pytest.importorskip("babel.units").format_unit
     ours = UNITS[symbol]
     for count, form in ((1, "one"), (2, "other"), (1.5, "one")):
-        cldr = re.sub(r"^[\d,\s  ]+", "", format_unit(count, unit, locale="fr", length="long"))
+        cldr = re.sub(r"^[\d,\s\u00a0\u202f]+", "", format_unit(count, unit, locale="fr", length="long"))
         assert cldr == ours[form], (symbol, count)
 
 
@@ -145,8 +147,7 @@ def test_unit_names_agree_with_cldr(symbol, unit):
     ],
 )
 def test_currency_names_agree_with_cldr(code, one, other):
-    name = pytest.importorskip("babel.numbers").get_currency_name
-    assert (name(code, count=1, locale="fr"), name(code, count=2, locale="fr")) == (one, other)
+    assert tuple(get_currency_name(code, count=count, locale="fr") for count in (1, 2)) == (one, other)
     currency = DATA["currencies"][code]
     assert (currency["one"], currency["other"]) == (one, other)
 
@@ -165,8 +166,6 @@ def test_currency_names_agree_with_cldr(code, one, other):
     ],
 )
 def test_the_formats_that_cldr_writes_for_each_region_read(locale, tag):
-    babel = pytest.importorskip("babel")
-    numbers, dates = pytest.importorskip("babel.numbers"), pytest.importorskip("babel.dates")
     assert normalize(numbers.format_decimal(1234567.5, locale=locale), tag) == (
         "un million deux cent trente-quatre mille cinq cent soixante-sept virgule cinq"
         if tag != "fr-CH"
@@ -183,13 +182,13 @@ def test_the_formats_that_cldr_writes_for_each_region_read(locale, tag):
 
 
 def test_cldr_writes_quebec_times_as_14_h_30_and_others_as_14_colon_30():
-    time = pytest.importorskip("babel.dates").format_time
-    assert time(dt.time(14, 30), "short", locale="fr_CA") == "14 h 30"
-    assert normalize("à " + time(dt.time(14, 30), "short", locale="fr_CA"), "fr-CA") == "à quatorze heures trente"
-    assert normalize("à " + time(dt.time(14, 30), "short", locale="fr_FR"), "fr-FR") == "à quatorze heures trente"
-    assert normalize("à " + time(dt.time(14, 30), "short", locale="fr_TN").replace(" ", " "), "fr-TN") == (
-        "à deux heures trente de l'après-midi"
-    )
+    def written(locale: str) -> str:
+        return "à " + format_time(dt.time(14, 30), "short", locale=locale).replace("\u202f", " ")
+
+    assert format_time(dt.time(14, 30), "short", locale="fr_CA") == "14 h 30"
+    assert normalize(written("fr_CA"), "fr-CA") == "à quatorze heures trente"
+    assert normalize(written("fr_FR"), "fr-FR") == "à quatorze heures trente"
+    assert normalize(written("fr_TN"), "fr-TN") == "à deux heures trente de l'après-midi"
 
 
 @pytest.mark.parametrize("two_digit_year", ["10/11/26", "10.11.26"])

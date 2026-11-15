@@ -5,25 +5,33 @@ runs them over every file in `text2spoken/lang/`, and over broken specs to show 
 """
 import ast
 import json
-import random
 import re
 import subprocess
 import sys
+from functools import cache
 from importlib.metadata import requires
 from importlib.resources import files
 from importlib.util import find_spec
 from pathlib import Path
+from re import _parser
+from types import ModuleType
 
 import linguatag
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from tests.data_keys import OPTIONAL, PHONE_SHAPE_KEYS, READERS, SHAPES
+from tests.data_keys import ALTERNATIVES, OPTIONAL, PHONE_SHAPE_KEYS, READERS, SHAPES
 from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
+from text2spoken.core import recognizers
+from text2spoken.core.color import speak_color
+from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
+from text2spoken.core.letters import speak_letters
 from text2spoken.core.spans import FIELDS, Span
-from text2spoken.core.recognizers import SHARED, digit_run_matches, speak_cardinal, speak_lexicon
+from text2spoken.core.recognizers import (SHARED, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
+                                          speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
+                                          speak_range, speak_telephone)
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import OPTIONS, Form, FrozenMap
@@ -42,15 +50,21 @@ DISTRIBUTIONS = {"linguatag": "linguatag", "ovos_number_parser": "ovos-number-pa
 SPELLER_DISTRIBUTIONS = {OvosNumberSpeller: "ovos-number-parser", RbnfSpeller: "unicode-rbnf"}
 """The distribution that each core speller imports when it speaks."""
 PATTERN_REFUSED = re.compile(r"\\[dDwWsSbB1-9]|\(\?(?!:)")
-DIGIT_RUN_KEYS = ("expression",)
-"""The `patterns` keys that a recognizer of a language file passes to `digit_run_matches`."""
-LITERAL_RUN = re.compile(r"[^][()?*+{}|\\^$.0-9]+")
-"""A run of a pattern source with no regex syntax and no digit."""
+DIGIT_RUN = [(_parser.IN, [(_parser.RANGE, (ord("0"), ord("9")))])]
+"""`[0-9]`, as the parser reads it."""
+REPEATS = (_parser.MAX_REPEAT, _parser.MIN_REPEAT)
+"""A greedy or a lazy repeat, as the parser reads it."""
 
 
 def language_files() -> list[str]:
     return sorted(e.name[:-3] for e in files("text2spoken.lang").iterdir()
                   if e.name.endswith(".py") and not e.name.startswith("_"))
+
+
+def language_modules() -> list[str]:
+    """The language files and their private modules, such as `_pt_electronic`."""
+    return sorted(e.name[:-3] for e in files("text2spoken.lang").iterdir()
+                  if e.name.endswith(".py") and e.name != "__init__.py")
 
 
 def request_for(spec: LanguageSpec, variety_index: int = 0) -> Request:
@@ -144,7 +158,9 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
             shape(data[key], f"{where}.{key}")
 
 
-SHARED_VERBALIZERS = {"speak_cardinal": speak_cardinal, "speak_lexicon": speak_lexicon}
+SHARED_VERBALIZERS = {verbalizer.__name__: verbalizer for verbalizer in (
+    speak_cardinal, speak_lexicon, speak_electronic, speak_letters, speak_decimal, speak_fraction, speak_ordinal,
+    speak_range, speak_percent, speak_expression, speak_telephone, speak_abbreviation, speak_idiom, speak_color)}
 """The verbalizers of the core that a file can name, by their name in `READERS`."""
 
 
@@ -167,6 +183,10 @@ def clause_6(name: str, spec: LanguageSpec) -> None:
         data = request_for(spec, index).data
         check_data_keys(data, variety.tag)
         missing = required - set(data)
+        for keys in ALTERNATIVES:
+            missing -= keys
+            if keys & required and not keys & set(data):
+                missing.add(" or ".join(sorted(keys)))
         assert not missing, f"{variety.tag}: no {sorted(missing)}, which its shared recognizers and verbalizers read"
 
 
@@ -176,36 +196,91 @@ def check_pattern(pattern: str) -> None:
     re.compile(pattern)
 
 
-def digit_run_patterns(spec: LanguageSpec) -> set[str]:
-    """Each pattern of the file that reaches `digit_run_matches`, in each variety: the `patterns` entries of
-    `DIGIT_RUN_KEYS`, and the range pattern that the core builds from `range_marks`."""
-    found = set()
-    for index in range(len(spec.varieties)):
-        data = request_for(spec, index).data
-        patterns = data.get("patterns", FrozenMap())
-        found |= {patterns[key] for key in DIGIT_RUN_KEYS if key in patterns}
-        if marks := data.get("range_marks"):
-            found.add("[0-9]+(?:" + "|".join(map(re.escape, marks)) + ")[0-9]+")
-    return found
+def routed_patterns(name: str, spec: LanguageSpec) -> set[re.Pattern]:
+    """Each pattern that reaches `digit_run_matches` while the recognizers of the file read its samples, in each
+    variety. For the run, each module that holds the helper holds a recording wrapper in its place. The wrapper
+    gives no matches for a pattern without the shape, so no recognizer reads a match that the helper misreads."""
+    helper = recognizers.digit_run_matches
+    routed = set()
+
+    def recording(pattern, folded):
+        routed.add(re.compile(pattern))
+        return helper(pattern, folded) if has_digit_run_shape(pattern) else iter(())
+
+    holders = [vars(m) for m in list(sys.modules.values())
+               if isinstance(m, ModuleType) and vars(m).get("digit_run_matches") is helper]
+    for holder in holders:
+        holder["digit_run_matches"] = recording
+    try:
+        for index in range(len(spec.varieties)):
+            request = request_for(spec, index)
+            for text in samples(name):
+                tokens = default_tokenizer(text, request.tag)
+                for recognizer in spec.recognizers:
+                    list(recognizer.find(text, tokens, request))
+    finally:
+        for holder in holders:
+            holder["digit_run_matches"] = helper
+    return routed
 
 
-def check_digit_run_pattern(pattern: str, texts: int = 1000) -> None:
+def _no_digit_character(items: list) -> bool:
+    """Whether the parsed items are one character, or one class of characters, with no digit."""
+    if len(items) != 1 or items[0][0] not in (_parser.LITERAL, _parser.IN):
+        return False
+    op, arg = items[0]
+    return all(o is _parser.LITERAL and not "0" <= chr(a) <= "9"
+               or o is _parser.RANGE and (a[1] < ord("0") or a[0] > ord("9"))
+               for o, a in ([items[0]] if op is _parser.LITERAL else arg))
+
+
+def _starts_with_digit_run(items: list) -> bool:
+    """Whether the parsed items start with an optional character that is no digit and then a greedy `[0-9]+`, or
+    with an alternation whose every branch does. A lazy run can end a match inside a digit run, and the helper
+    tries one match for each run."""
+    if items and items[0][0] is _parser.BRANCH:
+        return all(_starts_with_digit_run(list(branch)) for branch in items[0][1][1])
+    if items and items[0][0] in REPEATS and items[0][1][:2] == (0, 1) and _no_digit_character(list(items[0][1][2])):
+        items = items[1:]
+    return (bool(items) and items[0][0] is _parser.MAX_REPEAT and items[0][1][:2] == (1, _parser.MAXREPEAT)
+            and list(items[0][1][2]) == DIGIT_RUN)
+
+
+def _ends_at_a_run_end(items: list) -> bool:
+    """Whether each match of the parsed items ends at the end of a digit run or after a character that is no digit.
+    The helper tries one match for each digit run, so a match that ends inside a run hides the next match there. An
+    item that can match nothing passes the question on to the item before it."""
+    for op, arg in reversed(items):
+        if op in REPEATS and arg[0] == 0:
+            if not _ends_at_a_run_end(list(arg[2])):
+                return False
+        elif op is _parser.MAX_REPEAT and arg[1] == _parser.MAXREPEAT and list(arg[2]) == DIGIT_RUN:
+            return True
+        elif op in REPEATS:
+            return _ends_at_a_run_end(list(arg[2]))
+        elif op is _parser.BRANCH:
+            return all(_ends_at_a_run_end(list(branch)) for branch in arg[1])
+        elif op is _parser.SUBPATTERN:
+            return _ends_at_a_run_end(list(arg[3]))
+        else:
+            return _no_digit_character([(op, arg)])
+    return False
+
+
+@cache
+def has_digit_run_shape(pattern: re.Pattern | str) -> bool:
     """`digit_run_matches` gives the matches of `finditer` only for a pattern that starts with an optional character
-    that is no digit and then `[0-9]+`. Seeded texts of digit runs, joined by punctuation and by the literal runs of
-    the pattern, show a pattern of another shape."""
-    rng = random.Random(0)
-    literals = LITERAL_RUN.findall(pattern)
-    marks = sorted({" ", "/", ".", ",", "-", "−", "+", ":", *literals,
-                    *(c for run in literals for c in run if not c.isalpha())})
-    for _ in range(texts):
-        text = ""
-        for _ in range(rng.randint(1, 5)):
-            text += "".join(rng.choice(marks) for _ in range(rng.randint(0, 2)))
-            text += rng.choice(["1", "12", "007", "1" * 30])
-        text += "".join(rng.choice(marks) for _ in range(rng.randint(0, 2)))
-        expected = [m.span() for m in re.finditer(pattern, text)]
-        found = [m.span() for m in digit_run_matches(pattern, text)]
-        assert found == expected, f"digit_run_matches gives {found} for {pattern!r} on {text!r}, finditer {expected}"
+    that is no digit and then `[0-9]+`, or for an alternation of such patterns, and whose every match ends at the end
+    of a digit run or after a character that is no digit. The check reads the parsed pattern."""
+    pattern = re.compile(pattern)
+    items = list(_parser.parse(pattern.pattern, pattern.flags))
+    return _starts_with_digit_run(items) and _ends_at_a_run_end(items)
+
+
+def check_digit_run_pattern(pattern: re.Pattern | str) -> None:
+    assert has_digit_run_shape(pattern), (
+        f"{re.compile(pattern).pattern!r} reaches digit_run_matches, and does not start with an optional character"
+        " that is no digit and then a greedy [0-9]+, or can end a match inside a digit run")
 
 
 def clause_7(name: str, spec: LanguageSpec) -> None:
@@ -215,7 +290,7 @@ def clause_7(name: str, spec: LanguageSpec) -> None:
         for pattern in (*data.get("patterns", FrozenMap()).values(),
                         *(shape for key in PHONE_SHAPE_KEYS for shape in data.get(key, ()))):
             check_pattern(pattern)
-    for pattern in digit_run_patterns(spec):
+    for pattern in routed_patterns(name, spec):
         check_digit_run_pattern(pattern)
 
 
@@ -241,15 +316,20 @@ def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = N
     cells = [row["expected"] for row in rows(name)] if expected_cells is None else expected_cells
     speller = spec.spellers.get(Form.CARDINAL)
     request = request_for(spec)
+    # Values may differ in one case only, as German masculine "einen" and neuter "ein" in the accusative, so the
+    # check also reads each case that an RBNF cardinal map of the file names.
+    cases = (None, *sorted({key.case for s in _rbnf_spellers(spec) for key in s.cardinal_sets if key.case}))
+    keys = [(n, case) for n in ("1", "2") for case in cases]
     for field, values in (("gender", spec.genders), ("animacy", spec.animacies), ("noun_class", spec.noun_classes),
                           ("numeral_system", spec.numeral_systems)):
+        def spoken(value) -> dict:
+            return {(n, case): speller.cardinal(n, Features(**{field: value}, case=case), request) for n, case in keys}
         for value in values:
-            words = {n: speller.cardinal(n, Features(**{field: value}), request) for n in ("1", "2")}
+            words = spoken(value)
             for other in values - {value}:
-                others = {n: speller.cardinal(n, Features(**{field: other}), request) for n in ("1", "2")}
-                assert any(words[n] != others[n] for n in words), f"{value} and {other} give the same words"
-            distinct = [w for n, w in words.items()
-                        if all(w != speller.cardinal(n, Features(**{field: o}), request) for o in values - {value})]
+                others = spoken(other)
+                assert any(words[k] != others[k] for k in words), f"{value} and {other} give the same words"
+            distinct = [w for k, w in words.items() if all(w != spoken(o)[k] for o in values - {value})]
             assert any(any(w in cell.split() for cell in cells) for w in distinct), f"no row holds a {value} word"
 
 
@@ -304,6 +384,25 @@ def check_imports(source: str) -> None:
     stdlib = set(sys.stdlib_module_names) | {"__future__"}
     assert top <= stdlib | ALLOWED_IMPORTS | {"text2spoken"}, f"imports {sorted(top - stdlib - ALLOWED_IMPORTS)}"
     assert nested <= stdlib | ALLOWED_IMPORTS | LAZY_ONLY | {"text2spoken"}, f"imports {sorted(nested)}"
+
+
+def check_core_only(source: str, code: str) -> None:
+    """Of the package, a language file imports only the core and its own private modules, such as
+    `text2spoken.lang._pt_electronic` for `pt`: a module of `text2spoken.lang` whose name starts with `_<code>_`."""
+    own = f"_{code}_"
+    foreign = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            modules = [a.name for a in node.names]
+        elif isinstance(node, ast.ImportFrom) and node.module == "text2spoken.lang":
+            modules = [f"text2spoken.lang.{a.name}" for a in node.names]
+        elif isinstance(node, ast.ImportFrom):
+            modules = [node.module or ""]
+        else:
+            continue
+        foreign.update(m for m in modules if m.startswith("text2spoken.lang.")
+                       and not m.removeprefix("text2spoken.lang.").startswith(own))
+    assert not foreign, f"imports the language files {sorted(foreign)}; a language file imports only the core"
 
 
 def declared(requirements: list[str], extra: str) -> set[str]:
@@ -362,10 +461,42 @@ def sandbox_import(module: str, allowed_dir: str, path: str = "") -> tuple[list[
     return ast.literal_eval(out.strip().splitlines()[-1])
 
 
+_ALONE = """
+import sys
+from importlib.abc import MetaPathFinder
+module, own = sys.argv[1], sys.argv[2]
+blocked = []
+class Block(MetaPathFinder):
+    def find_spec(self, name, path=None, target=None):
+        rest = name.removeprefix("text2spoken.lang.")
+        if rest != name and name != module and not rest.startswith(own):
+            blocked.append(name)
+            raise ImportError(f"{name} is blocked")
+        return None
+sys.meta_path.insert(0, Block())
+__import__(module)
+print(repr(blocked))
+"""
+
+
+def import_alone(module: str, code: str, path: str = "") -> None:
+    """Imports `module` in a fresh interpreter in which each module of `text2spoken.lang` is blocked, except
+    `module` itself and the private modules of the language `code`, whose names start with `_<code>_`. The import
+    must succeed and must try no blocked module, so an import that `importlib`, `__import__` or a caught
+    `ImportError` hides from the static check of clause 12 still fails here."""
+    env = {**__import__("os").environ, "PYTHONPATH": path} if path else None
+    run = subprocess.run([sys.executable, "-c", _ALONE, module, f"_{code}_"], capture_output=True, text=True,
+                         env=env)
+    assert run.returncode == 0, f"{module} does not import alone: {run.stderr.strip().splitlines()[-1:]}"
+    blocked = ast.literal_eval(run.stdout.strip().splitlines()[-1])
+    assert not blocked, f"{module} imports the language files {blocked}; a language file imports only the core"
+
+
 def clause_12(name: str, spec: LanguageSpec, source: str | None = None, requirements: list[str] | None = None) -> None:
     path = Path(find_spec(f"text2spoken.lang.{name}").origin) if source is None else None
     text = source if path is None else path.read_text(encoding="utf-8")
     check_imports(text)
+    check_core_only(text, spec.code)
     check_declared(text, spec.code, requirements)
     check_speller_dependencies(spec, requirements)
     if path is not None:

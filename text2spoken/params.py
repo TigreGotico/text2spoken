@@ -86,6 +86,14 @@ class Form(StrEnum):
     IDIOM = "idiom"
     ROMAN = "roman"
     COLOR = "color"
+    ELECTRONIC = "electronic"
+    SYMBOL = "symbol"
+    EMOJI = "emoji"
+
+
+DEFAULT_FORMS = frozenset(Form) - {Form.LETTERS, Form.EMOJI}
+"""The forms that `NormalizationParams()` reads: every form except `LETTERS` and `EMOJI`, which a caller turns on with
+`NormalizationParams().plus(Form.LETTERS)` and `NormalizationParams().plus(Form.EMOJI)`."""
 
 
 class GrammaticalGender(StrEnum):
@@ -116,7 +124,7 @@ OPTIONS = ("date_order", "clock", "minute_style", "decimal_mark", "scale", "defa
 
 @dataclass(frozen=True, kw_only=True)
 class NormalizationParams:
-    forms: frozenset[Form] = frozenset(Form)
+    forms: frozenset[Form] = DEFAULT_FORMS
     date_order: Literal["DMY", "MDY", "YMD"] | None = None
     clock: Literal["12h", "24h"] | None = None
     minute_style: Literal["number", "phrase"] | None = None
@@ -166,6 +174,9 @@ class NormalizationParams:
 
     def without(self, *forms: Form) -> NormalizationParams:
         return replace(self, forms=self.forms - _form_set(forms))
+
+    def plus(self, *forms: Form) -> NormalizationParams:
+        return replace(self, forms=self.forms | _form_set(forms))
 
 
 def _form_set(forms: tuple) -> frozenset[Form]:
