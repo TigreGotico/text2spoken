@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a49](https://github.com/TigreGotico/text2spoken/tree/0.0.2a49) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a48...0.0.2a49)
+
+**Merged pull requests:**
+
+- fix: read small decimals, en scaled amounts, hex alpha logs and de-CH marks [\#103](https://github.com/TigreGotico/text2spoken/pull/103) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- docs: correct core docstrings and check clause 12 at runtime [\#102](https://github.com/TigreGotico/text2spoken/pull/102) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a48](https://github.com/TigreGotico/text2spoken/tree/0.0.2a48) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a47...0.0.2a48)
