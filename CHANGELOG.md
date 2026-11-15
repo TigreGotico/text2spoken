@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a45](https://github.com/TigreGotico/text2spoken/tree/0.0.2a45) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a44...0.0.2a45)
+
+**Merged pull requests:**
+
+- feat\(es\): Spanish language file [\#63](https://github.com/TigreGotico/text2spoken/pull/63) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.0.2a44](https://github.com/TigreGotico/text2spoken/tree/0.0.2a44) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a43...0.0.2a44)
