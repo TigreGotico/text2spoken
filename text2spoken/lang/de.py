@@ -19,25 +19,26 @@ de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR
 - de.wikipedia, "Präposition", sections Rektion and Zeitlich.
 - en.wikipedia, "Grammatical gender in German", the tables of masculine, feminine and neuter endings.
 
-`Abbreviation` comes from `en.py`, and `Expression` is a shared recognizer. Both read only the data tables of the
-language.
+`Abbreviation` and `Expression` are shared recognizers, and read only the data tables of the language.
 """
 from __future__ import annotations
 
 import re
-from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
+from text2spoken.core.color import spell_hex
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.recognizers import PHONE_PLANS, SHARED, Telephone, join_ranges, numbers_in, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
+from text2spoken.core.numbers import written_amount
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Abbreviation, Telephone, amount_words, join_ranges,
+                                          numbers_in, signed, speak_abbreviation, speak_decimal, speak_expression,
+                                          speak_fraction, speak_idiom, speak_lexicon, speak_range, speak_telephone)
+from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, next_visible, one_digit_set
 from text2spoken.errors import DeclinedReading
-from text2spoken.lang.en import Abbreviation
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
 M, F, N = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE, GrammaticalGender.NEUTER
@@ -48,7 +49,6 @@ MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August"
 MONTHS_AT = ["Jänner", *MONTHS[1:]]
 """CLDR `de-AT`, ca-gregorian, months, format, wide."""
 _MONTH = "(" + "|".join(dict.fromkeys(MONTHS + MONTHS_AT)) + ")"
-_SIGNS = "-−+"
 
 UNITS = {
     "kg": {"one": "Kilogramm", "other": "Kilogramm", "gender": "neuter"},
@@ -261,7 +261,7 @@ class GermanSpeller:
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", Features(), request)
-        return f"{whole} {request.data['decimal_word']} {_digits(fraction, request)}"
+        return f"{whole} {request.data['decimal_word']} {spell_digits(fraction, request)}"
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """A fraction is a neuter noun of the ordinal stem and -tel or -stel: "ein Drittel", "drei Viertel",
@@ -278,16 +278,8 @@ class GermanSpeller:
 SPELLER = GermanSpeller()
 
 
-def _digits(digits: str, request: Request) -> str:
-    return DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
-
-
 def _counted(digits: str, request: Request) -> str:
     return SPELLER.cardinal(digits, Features(), request)
-
-
-def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
 
 
 def _case(before: Sequence[str], data, noun: str | None = None, price: bool = False) -> str | None:
@@ -370,28 +362,16 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
-        words = _digits(digits, request)
+        words = spell_digits(digits, request)
     elif fields["lead"]:
         words = _counted(digits, request)
     else:
         words = SPELLER.cardinal(digits, _features(context), request)
-    words = _signed(words, fields["sign"], request)
+    words = signed(words, fields["sign"], request)
     if fields["lead"]:
         lead = request.data["leads"][fields["lead"]]
         words = f"{lead} {words}" if lead else f" {words}"
     return words
-
-
-def _amount(amount: FrozenMap, request: Request, features: Features) -> str:
-    if amount["fraction"]:
-        words = SPELLER.decimal(amount["integer"], amount["fraction"], features, request)
-    else:
-        words = SPELLER.cardinal(amount["integer"] or "0", features, request)
-    return _signed(words, amount["sign"], request)
-
-
-def _written(amount: FrozenMap) -> str:
-    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
 
 
 def _unit_features(context: SpanContext, gender: str) -> Features:
@@ -430,37 +410,6 @@ def speak_ordinal(span: Span, context: SpanContext) -> str:
     noun = _noun_after(context.after)
     gender = noun_gender(noun, context.request.data) if noun else None
     return SPELLER.ordinal(span.fields["digits"], _ordinal_features(context, gender), context.request)
-
-
-def speak_decimal(span: Span, context: SpanContext) -> str:
-    return _amount(span.fields, context.request, Features())
-
-
-def speak_fraction(span: Span, context: SpanContext) -> str:
-    fields = span.fields
-    words = SPELLER.fraction(fields["numerator"], fields["denominator"], Features(), context.request)
-    return _signed(words, fields["sign"], context.request)
-
-
-def speak_range(span: Span, context: SpanContext) -> str:
-    request = context.request
-    low, high = _counted(span.fields["low"], request), _counted(span.fields["high"], request)
-    return f"{low} {request.data['range_word']} {high}"
-
-
-def _signed_operand(operand: str, request: Request) -> str:
-    sign = {"−": "-"}.get(operand[0], operand[0]) if operand[0] in _SIGNS else ""
-    return _signed(_counted(operand.lstrip(_SIGNS), request), sign, request)
-
-
-def speak_expression(span: Span, context: SpanContext) -> str:
-    """Duden, "plus": "fünf plus drei [ist] gleich acht"."""
-    request = context.request
-    operands = span.fields["operands"]
-    words = [_signed_operand(operands[0], request)]
-    for operator, operand in zip(span.fields["operators"], operands[1:]):
-        words += [request.data["operators"][operator], _signed_operand(operand, request)]
-    return " ".join(words)
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -514,7 +463,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
         trimmed = FrozenMap({**amount, "fraction": fraction.rstrip("0")})
         if trimmed["fraction"] or bounded_integer(integer) != 1:
             scale = request.data["scale_plurals"][scale]
-        words = f"{_amount(trimmed, request, Features(gender=F))} {scale} {currency['other']}"
+        words = f"{amount_words(trimmed, request, Features(gender=F))} {scale} {currency['other']}"
     elif len(fraction) == 2:
         major = f"{SPELLER.cardinal(integer, gender, request)} {currency[plural_category(request, integer)]}"
         minor_digits = str(int(fraction))
@@ -526,8 +475,8 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = f"{major} {_counted(minor_digits, request)}"
     else:
-        words = f"{_amount(amount, request, gender)} {currency[plural_category(request, _written(amount))]}"
-    return _signed(words, fields["amount"]["sign"], request)
+        words = f"{amount_words(amount, request, gender)} {currency[plural_category(request, written_amount(amount))]}"
+    return signed(words, fields["amount"]["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
@@ -537,36 +486,15 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     unit = request.data["units"][span.fields["unit"]]
     features = _unit_features(context, unit["gender"])
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
-    joined = f" {link} ".join(_amount(a, request, features) for a in amounts)
-    return f"{joined} {unit[plural_category(request, _written(amounts[-1]))]}"
+    joined = f" {link} ".join(amount_words(a, request, features) for a in amounts)
+    return f"{joined} {unit[plural_category(request, written_amount(amounts[-1]))]}"
 
 
 def speak_percent(span: Span, context: SpanContext) -> str:
     """Duden, "Prozent": "5 Prozent oder 5 %", and the noun stays unchanged after a number."""
     percent = context.request.data["percent"]
     features = _unit_features(context, percent["gender"])
-    return f"{_amount(span.fields['amount'], context.request, features)} {percent['word']}"
-
-
-def speak_telephone(span: Span, context: SpanContext) -> str:
-    request = context.request
-    groups = [_digits(group, request) for group in span.fields["groups"]]
-    if span.fields["country_code"]:
-        groups.insert(0, f"{request.data['sign_words']['+']} {_digits(span.fields['country_code'], request)}")
-    return " ".join(groups)
-
-
-def speak_abbreviation(span: Span, context: SpanContext) -> str:
-    data = context.request.data
-    key = span.fields["key"]
-    for table in ("titles", "abbreviations", "number_abbreviations"):
-        if data[table].get(key) is not None:
-            return data[table][key]
-    raise LookupError(f"no abbreviation {key!r} for {context.request.tag}")
-
-
-def speak_idiom(span: Span, context: SpanContext) -> str:
-    return context.request.data["idioms"][span.fields["key"]]
+    return f"{amount_words(span.fields['amount'], context.request, features)} {percent['word']}"
 
 
 def speak_year(span: Span, context: SpanContext) -> str:
@@ -577,8 +505,7 @@ def speak_year(span: Span, context: SpanContext) -> str:
 def speak_color(span: Span, context: SpanContext) -> str:
     """The German palettes of ovos-color-parser hold catalogue names, so no table is seeded (design section 12),
     and a colour spells its digits as the text writes them."""
-    request = context.request
-    return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
+    return spell_hex(span.fields["hex"], context.request)
 
 
 def _swiss_verbalizer(verbalizer):
@@ -589,19 +516,10 @@ def _swiss_verbalizer(verbalizer):
     return speak
 
 
-class GermanTelephone(Telephone):
-    """The shared telephone recognizer, where a phone word up to three words back also names a run with the shape
-    of a phone number, as in `Das Telefon hat die Nummer 030 1234567.` Two years that a dash joins have no phone
-    shape (`no_phone_shapes`), so `Das Telefon war 1990-2000 grau.` reads a range of years."""
-
-    def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-               request: Request) -> range:
-        index = bisect_right(words, start, key=lambda word: word.end)
-        return range(index - len(clause_window(text, words, start, end, -1, limit=3, breaks=breaks)), index)
-
-    def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-                   shaped: bool, short_code: bool, request: Request) -> bool:
-        return shaped
+TELEPHONE = Telephone(reach=3, names_shaped=True)
+"""The shared telephone recognizer, where a phone word up to three words back also names a run with the shape of a
+phone number, as in `Das Telefon hat die Nummer 030 1234567.` Two years that a dash joins have no phone shape
+(`no_phone_shapes`), so `Das Telefon war 1990-2000 grau.` reads a range of years."""
 
 
 @dataclass(frozen=True)
@@ -683,7 +601,7 @@ class Fraction:
 
 @dataclass(frozen=True)
 class TitleAbbreviation(Abbreviation):
-    """The abbreviations of `en.py`, where a title reads before a capitalised name. A title also reads before `#`,
+    """The shared abbreviations, where a title reads before a capitalised name. A title also reads before `#`,
     because the lead and the colour read as capitalised words, "Nummer" and "F", and a second pass would read the
     title before them."""
 
@@ -813,7 +731,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 Time(), GermanTelephone(), Money(), SHARED["percent"], SHARED["measure"],
+                 Time(), TELEPHONE, Money(), SHARED["percent"], SHARED["measure"],
                  Year(), SHARED["expression"], Fraction(), SHARED["range"], Ordinal(), TitleAbbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon,

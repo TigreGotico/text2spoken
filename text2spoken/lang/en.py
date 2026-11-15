@@ -66,23 +66,25 @@ from __future__ import annotations
 
 import logging
 import re
-from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
+from text2spoken.core.color import spell_hex
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.letters import speak_letters
-from text2spoken.core.numbers import Number
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, join_ranges, numbers_in,
-                                          speak_cardinal, speak_lexicon)
-from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import DigitSpeller, RbnfSpeller, bounded_integer
+from text2spoken.core.numbers import Number, written_amount
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, join_ranges, numbers_in, signed,
+                                          speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
+                                          speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
+                                          speak_range, speak_telephone)
+from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import twelve_hour
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, next_visible, one_digit_set
+from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, one_digit_set
 from text2spoken.core.units import unit_reading, unit_table
 from text2spoken.params import FrozenMap, Form, freeze
 
@@ -93,7 +95,6 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
 _MONTH = "(" + "|".join(MONTHS) + ")"
 _ORDINAL_MARK = "(?:st|nd|rd|th)"
 _TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
-_SIGNS = "-−+"
 
 COLORS = {
     "000000": "black", "0000cd": "medium blue", "0000ff": "blue", "006400": "dark green", "008000": "green",
@@ -261,7 +262,7 @@ class EnglishSpeller:
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", features, request)
-        return f"{whole} {request.data['decimal_word']} {_digits(fraction, request)}"
+        return f"{whole} {request.data['decimal_word']} {spell_digits(fraction, request)}"
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """One-half, two-thirds, three-quarters, one one-hundredth (Wikipedia, "English numerals")."""
@@ -280,16 +281,8 @@ class EnglishSpeller:
 SPELLER = EnglishSpeller()
 
 
-def _digits(digits: str, request: Request) -> str:
-    return DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
-
-
 def _cardinal(digits: str, request: Request) -> str:
     return SPELLER.cardinal(digits, Features(), request)
-
-
-def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
 
 
 def _amount(amount: FrozenMap, request: Request) -> str:
@@ -297,46 +290,7 @@ def _amount(amount: FrozenMap, request: Request) -> str:
         words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
     else:
         words = _cardinal(amount["integer"], request)
-    return _signed(words, amount["sign"], request)
-
-
-def _written(amount: FrozenMap) -> str:
-    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
-
-
-def speak_ordinal(span: Span, context: SpanContext) -> str:
-    return SPELLER.ordinal(span.fields["digits"], Features(), context.request)
-
-
-def speak_decimal(span: Span, context: SpanContext) -> str:
-    return _amount(span.fields, context.request)
-
-
-def speak_fraction(span: Span, context: SpanContext) -> str:
-    fields = span.fields
-    words = SPELLER.fraction(fields["numerator"], fields["denominator"], Features(), context.request)
-    return _signed(words, fields["sign"], context.request)
-
-
-def speak_range(span: Span, context: SpanContext) -> str:
-    request = context.request
-    return f"{_cardinal(span.fields['low'], request)} {request.data['range_word']} {_cardinal(span.fields['high'], request)}"
-
-
-def _signed_operand(operand: str, request: Request) -> str:
-    sign = {"−": "-"}.get(operand[0], operand[0]) if operand[0] in _SIGNS else ""
-    return _signed(_cardinal(operand.lstrip(_SIGNS), request), sign, request)
-
-
-def speak_expression(span: Span, context: SpanContext) -> str:
-    """Each operand may carry a sign, as in `-2+3=1` and `3 − −3`: "minus two plus three equals one", "three minus
-    minus three"."""
-    request = context.request
-    operands = span.fields["operands"]
-    words = [_signed_operand(operands[0], request)]
-    for operator, operand in zip(span.fields["operators"], operands[1:]):
-        words += [request.data["operators"][operator], _signed_operand(operand, request)]
-    return " ".join(words)
+    return signed(words, amount["sign"], request)
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -410,43 +364,18 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = minor if bounded_integer(integer) == 0 else f"{major} and {minor}"
     else:
-        words = f"{_amount(amount, request)} {currency_name(currency, plural_category(request, _written(amount)))}"
-    return _signed(words, fields["amount"]["sign"], request)
+        category = plural_category(request, written_amount(amount))
+        words = f"{_amount(amount, request)} {currency_name(currency, category)}"
+    return signed(words, fields["amount"]["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
-    pattern, _ = unit_reading(request, span.fields["unit"], plural_category(request, _written(amounts[-1])))
+    pattern, _ = unit_reading(request, span.fields["unit"], plural_category(request, written_amount(amounts[-1])))
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
     return pattern.replace("{0}", f" {link} ".join(_amount(a, request) for a in amounts))
-
-
-def speak_percent(span: Span, context: SpanContext) -> str:
-    request = context.request
-    return f"{_amount(span.fields['amount'], request)} {request.data['percent']['word']}"
-
-
-def speak_telephone(span: Span, context: SpanContext) -> str:
-    request = context.request
-    groups = [_digits(group, request) for group in span.fields["groups"]]
-    if span.fields["country_code"]:
-        groups.insert(0, f"{request.data['sign_words']['+']} {_digits(span.fields['country_code'], request)}")
-    return " ".join(groups)
-
-
-def speak_abbreviation(span: Span, context: SpanContext) -> str:
-    data = context.request.data
-    key = span.fields["key"]
-    for table in ("titles", "abbreviations", "number_abbreviations"):
-        if data[table].get(key) is not None:
-            return data[table][key]
-    raise LookupError(f"no abbreviation {key!r} for {context.request.tag}")
-
-
-def speak_idiom(span: Span, context: SpanContext) -> str:
-    return context.request.data["idioms"][span.fields["key"]]
 
 
 def speak_year(span: Span, context: SpanContext) -> str:
@@ -469,7 +398,7 @@ def speak_color(span: Span, context: SpanContext) -> str:
         LOG.warning("unread alpha %r of colour #%s for %s", span.fields["alpha"], span.fields["rgb"], request.tag)
     if name is not None:
         return name
-    return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
+    return spell_hex(span.fields["hex"], request)
 
 
 def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_words: frozenset[str]) -> bool:
@@ -493,7 +422,7 @@ class EnglishTelephone(Telephone):
     A phone word also names a run up to three words back, where a function word does not count, when the run has
     the shape of a phone number, as in `Call us on 0800 123 456.` The same window names a short code of
     `short_codes` that ends its clause or that a function word follows, as in `Call the police on 999 now.`, and
-    not the count in `The phone rang 101 times.`
+    not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer.
 
     The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
     brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
@@ -514,25 +443,6 @@ class EnglishTelephone(Telephone):
                 or _hour_follows(text, after, day_periods, function_words)):
             return written[:cut]
         return written
-
-    def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-               request: Request) -> range:
-        """Three content words back, within eight words of the clause."""
-        function_words = frozenset(request.data.get("function_words", ()))
-        index = bisect_right(words, start, key=lambda word: word.end)
-        before = clause_window(text, words, start, end, -1, limit=8, breaks=breaks)
-        counted = [i for i in range(index - len(before), index) if words[i].text.lower() not in function_words]
-        return range(counted[-3] if len(counted) >= 3 else index - len(before), index)
-
-    def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-                   shaped: bool, short_code: bool, request: Request) -> bool:
-        if shaped:
-            return True
-        if not short_code:
-            return False
-        function_words = frozenset(request.data.get("function_words", ()))
-        following = clause_window(text, words, start, end, 1, limit=1, breaks=breaks)
-        return all(word.lower() in function_words for word in following)
 
 
 @dataclass(frozen=True)
@@ -646,29 +556,6 @@ class Year:
 
 
 @dataclass(frozen=True)
-class Abbreviation:
-    """A title before a capitalised name, `No.` before a number, and the abbreviations of the table."""
-    name: str = "abbreviation"
-    form: Form = Form.ABBREVIATION
-
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        data = request.data
-        tables = (("titles", str.isupper), ("number_abbreviations", str.isdigit), ("abbreviations", lambda _: True))
-        final = frozenset(data["sentence_final"])
-        for table, follows in tables:
-            for key in sorted((k for k, v in data[table].items() if v is not None), key=len, reverse=True):
-                position = text.find(key)
-                while position != -1:
-                    end = position + len(key)
-                    following = next_visible(text, end)
-                    if is_bounded(text, position, end) and follows(following):
-                        sentence_end = key in final and (following == "" or following.isupper())
-                        yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
-                                   trail="." if sentence_end else "", recognizer=self.name)
-                    position = text.find(key, end)
-
-
-@dataclass(frozen=True)
 class DateNamed:
     """`March 12, 2024`, `12th of March 2024`, `March 2024`: a date with a month name."""
     name: str = "date_named"
@@ -711,10 +598,11 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
-                 SHARED["date_numeric"], SHARED["time_clock"], EnglishTelephone(), SHARED["money"], SHARED["percent"],
-                 SHARED["measure"], Year(), SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(),
-                 Abbreviation(), SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"],
-                 SHARED["symbol"]),
+                 SHARED["date_numeric"], SHARED["time_clock"],
+                 EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
+                 SHARED["money"], SHARED["percent"], SHARED["measure"], Year(), SHARED["expression"],
+                 SHARED["fraction"], SHARED["range"], Ordinal(), SHARED["abbreviation"], SHARED["letters"],
+                 SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,

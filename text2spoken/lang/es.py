@@ -17,15 +17,17 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from bisect import bisect_right
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.recognizers import PHONE_PLANS, SHARED, Telephone, numbers_in, speak_lexicon
+from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
+from text2spoken.core.numbers import written_amount
+from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, numbers_in, signed, speak_decimal,
+                                          speak_expression, speak_lexicon, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_window
-from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_integer
-from text2spoken.core.times import twelve_hour
+from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
+from text2spoken.core.times import day_hour, twelve_hour
 from text2spoken.core.tokens import Token, is_bounded, is_word_char, next_visible
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
@@ -352,10 +354,6 @@ def agreement(span: Span, context: SpanContext) -> Agreement:
     return Agreement(context.request.params.default_gender.get(LANGUAGE.code), None)
 
 
-def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
-
-
 def _plain_cardinal(digits: str, request: Request) -> str:
     return SPELLER.cardinal(digits, Features(), request)
 
@@ -368,11 +366,7 @@ def _amount(amount: FrozenMap, request: Request, agree: Agreement | None = None)
         words = agree.read(amount["integer"] or "0", request)
     else:
         words = _plain_cardinal(amount["integer"] or "0", request)
-    return _signed(words, amount["sign"], request)
-
-
-def _written(amount: FrozenMap) -> str:
-    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
+    return signed(words, amount["sign"], request)
 
 
 def _first_of_month(span: Span, after: Sequence[str], data) -> bool:
@@ -392,7 +386,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     digits = fields["digits"]
     if fields["lead"]:
         if len(digits) > 1 and digits[0] == "0":
-            words = DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
+            words = spell_digits(digits, request)
         else:
             words = _plain_cardinal(digits, request)
         lead = request.data["leads"][fields["lead"]]
@@ -403,11 +397,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     words = agree.read(digits, request)
     if agree.noun is not None and plural_category(request, digits) == "many":
         words += " de"
-    return _signed(words, fields["sign"], request)
-
-
-def speak_decimal(span: Span, context: SpanContext) -> str:
-    return _amount(span.fields, context.request)
+    return signed(words, fields["sign"], request)
 
 
 def speak_ordinal(span: Span, context: SpanContext) -> str:
@@ -438,27 +428,13 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
         words = "media" if agree.gender is F else "medio"
     else:
         words = SPELLER.fraction(fields["numerator"], fields["denominator"], Features(), request)
-    return _signed(words, fields["sign"], request)
+    return signed(words, fields["sign"], request)
 
 
 def speak_range(span: Span, context: SpanContext) -> str:
     request = context.request
     high = agreement(span, context).read(span.fields["high"], request)
     return f"{_plain_cardinal(span.fields['low'], request)} {request.data['range_word']} {high}"
-
-
-def _signed_operand(operand: str, request: Request) -> str:
-    sign = {"−": "-"}.get(operand[0], operand[0]) if operand[0] in "-−+" else ""
-    return _signed(_plain_cardinal(operand.lstrip("-−+"), request), sign, request)
-
-
-def speak_expression(span: Span, context: SpanContext) -> str:
-    request = context.request
-    operands = span.fields["operands"]
-    words = [_signed_operand(operands[0], request)]
-    for operator, operand in zip(span.fields["operators"], operands[1:]):
-        words += [request.data["operators"][operator], _signed_operand(operand, request)]
-    return " ".join(words)
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -510,18 +486,18 @@ def speak_time(span: Span, context: SpanContext) -> str:
         if hour != 1 and (fields["suffix"] or not minute):
             words.append("horas")
         return " ".join(words)
-    day_hour = hour if period is None else hour % 12 + (12 if period == "pm" else 0)
-    face = twelve_hour(day_hour)
+    hour = day_hour(hour, period)
+    face = twelve_hour(hour)
     phrase = data["minute_phrases"].get(str(minute))
     if minute == 0:
         words = [_hour(face, request)] if period is not None else [_hour(face, request), phrase]
     elif minute <= 30:
         words = [_hour(face, request), phrase or f"y {_plain_cardinal(str(minute), request)}"]
     else:
-        words = [_hour(twelve_hour(day_hour + 1), request),
+        words = [_hour(twelve_hour(hour + 1), request),
                  phrase or f"menos {_plain_cardinal(str(60 - minute), request)}"]
-    if period is not None or day_hour == 0 or day_hour >= 13:
-        words.append(data["day_period_words"][_day_period(day_hour)])
+    if period is not None or hour == 0 or hour >= 13:
+        words.append(data["day_period_words"][_day_period(hour)])
     return " ".join(words)
 
 
@@ -547,8 +523,8 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = minor if bounded_integer(integer) == 0 else f"{major} con {minor}"
     else:
-        words = f"{_amount(amount, request, agree)} {currency[plural_category(request, _written(amount))]}"
-    return _signed(words, fields["amount"]["sign"], request)
+        words = f"{_amount(amount, request, agree)} {currency[plural_category(request, written_amount(amount))]}"
+    return signed(words, fields["amount"]["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
@@ -559,7 +535,7 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     unit = request.data["units"][span.fields["unit"]]
     for amount in amounts:
         _below_largest(amount["integer"] or "0")
-    words = unit[plural_category(request, _written(amounts[-1]))]
+    words = unit[plural_category(request, written_amount(amounts[-1]))]
     agree = Agreement(GrammaticalGender(unit["gender"]), words)
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
     read = [_amount(a, request) for a in amounts[:-1]] + [_amount(amounts[-1], request, agree)]
@@ -575,16 +551,6 @@ def speak_percent(span: Span, context: SpanContext) -> str:
     if amount["integer"] == "100" and not amount["fraction"] and not amount["sign"]:
         return percent["whole"]
     return f"{_amount(amount, request)} {percent['word']}"
-
-
-def speak_telephone(span: Span, context: SpanContext) -> str:
-    request = context.request
-    digit_words = DigitSpeller(request.data["digit_words"])
-    groups = [digit_words.cardinal(group, Features(), request) for group in span.fields["groups"]]
-    if span.fields["country_code"]:
-        groups.insert(0, f"{request.data['sign_words']['+']} "
-                         f"{digit_words.cardinal(span.fields['country_code'], Features(), request)}")
-    return " ".join(groups)
 
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
@@ -622,12 +588,8 @@ class Clock:
 
 class SpanishTelephone(Telephone):
     """The shared telephone recognizer, where an article may stand between the phone word and the run, as in
-    `Llama al 112.`, and a phone word up to three words back names a run with the shape of a phone number."""
-
-    def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-               request: Request) -> range:
-        index = bisect_right(words, start, key=lambda word: word.end)
-        return range(index - len(clause_window(text, words, start, end, -1, limit=3, breaks=breaks)), index)
+    `Llama al 112.`, and a phone word up to three words back names a run with the shape of a phone number. The
+    `LANGUAGE` spec sets the reach of three words."""
 
     def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                    shaped: bool, short_code: bool, request: Request) -> bool:
@@ -675,34 +637,11 @@ def _after_initial(text: str, position: int, titles) -> bool:
 
 
 @dataclass(frozen=True)
-class Abbreviation:
-    """A title before a capitalised name, `n.º` before a number, and the abbreviations of the table (DPD,
-    appendix 2). `D.` after an initial, as in `J. D. Salinger`, is an initial too."""
-    name: str = "abbreviation"
-    form: Form = Form.ABBREVIATION
+class Abbreviation(CoreAbbreviation):
+    """The shared abbreviations (DPD, appendix 2). `D.` after an initial, as in `J. D. Salinger`, is an initial too."""
 
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        data = request.data
-        tables = (("titles", str.isupper), ("number_abbreviations", str.isdigit), ("abbreviations", lambda _: True))
-        final = frozenset(data["sentence_final"])
-        for table, follows in tables:
-            for key in sorted(data[table], key=len, reverse=True):
-                position = text.find(key)
-                while position != -1:
-                    end = position + len(key)
-                    following = next_visible(text, end)
-                    initial = table == "titles" and _after_initial(text, position, data["titles"])
-                    if is_bounded(text, position, end) and follows(following) and not initial:
-                        sentence_end = key in final and (following == "" or following.isupper())
-                        yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
-                                   trail="." if sentence_end else "", recognizer=self.name)
-                    position = text.find(key, end)
-
-
-def attach(spoken: str, prefix: str, suffix: str) -> str:
-    """Spanish declares no proclitic and no case ending. The one suffix is the time symbol `h`, which the time
-    verbalizer reads."""
-    return spoken
+    def refuses(self, text: str, position: int, table: str, data) -> bool:
+        return table == "titles" and _after_initial(text, position, data["titles"])
 
 
 LANGUAGE = LanguageSpec(
@@ -711,7 +650,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(), SHARED["money"],
+    recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(reach=3), SHARED["money"],
                  SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"], SHARED["range"],
                  Ordinal(), Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
@@ -722,7 +661,7 @@ LANGUAGE = LanguageSpec(
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
-    attach=attach,
+    attach=drop_affixes,  # the one suffix, the time symbol `h`, is a word of the time reading
     genders=frozenset({M, F}),
     default_gender=M,
     animacies=frozenset(),

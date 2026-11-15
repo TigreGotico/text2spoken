@@ -22,7 +22,8 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.recognizers import SHARED, DateNumeric, numbers_in, speak_lexicon
+from text2spoken.core.numbers import written_amount
+from text2spoken.core.recognizers import SHARED, DateNumeric, _sentence_period, numbers_in, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext, Word, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
@@ -444,10 +445,6 @@ def _signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}"
 
 
-def _written(amount: FrozenMap) -> str:
-    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
-
-
 def _amount(amount: FrozenMap, gender: GrammaticalGender, case: str, request: Request) -> str:
     if amount["fraction"]:
         words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(case=case), request)
@@ -460,11 +457,11 @@ def _counted_amount(span: Span, amount: FrozenMap, noun: FrozenMap, context: Spa
     """An amount and its noun. The first number of a range, which takes the range word as its trail, reads alone:
     "десять — двадцать процентов"."""
     request = context.request
-    case = governed_case(context, digits=_written(amount))
+    case = governed_case(context, digits=written_amount(amount))
     words = _amount(amount, GrammaticalGender(noun["gender"]), case, request)
     if span.trail.strip() == request.data["range_word"]:
         return words
-    return f"{words} {counted(noun, _written(amount), case, request)}"
+    return f"{words} {counted(noun, written_amount(amount), case, request)}"
 
 
 def _adjectival(word: str) -> bool:
@@ -542,7 +539,7 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     case = governed_case(context)
     words = [_amount(amount, GrammaticalGender(noun["gender"]), case, request) for amount in amounts]
     link = request.data["dimension_word" if span.fields["relation"] == "dimension" else "range_word"]
-    return f"{f' {link} '.join(words)} {counted(noun, _written(amounts[-1]), case, request)}"
+    return f"{f' {link} '.join(words)} {counted(noun, written_amount(amounts[-1]), case, request)}"
 
 
 def _number_and_noun(digits: str, noun: FrozenMap, case: str, request: Request) -> str:
@@ -561,7 +558,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     if fields["scale"]:
         scale = request.data["scale_nouns"][request.data["scales"][fields["scale"]]]
         words = (f"{_amount(amount, GrammaticalGender(scale['gender']), case, request)} "
-                 f"{counted(scale, _written(amount), case, request)} {major['plural'][1]}")
+                 f"{counted(scale, written_amount(amount), case, request)} {major['plural'][1]}")
     elif len(amount["fraction"]) == 2:
         integer, cents = amount["integer"] or "0", str(int(amount["fraction"]))
         parts = [(integer, major)] if cents == "0" else [(cents, minor)] if bounded_integer(integer) == 0 \
@@ -767,11 +764,6 @@ def _framed(text: str, span: Span, words: Sequence[Word], request: Request) -> S
     return replace(span, end=stop + 1, trail=text[end:stop + 1])
 
 
-def _sentence_end(text: str, end: int) -> bool:
-    following = next_visible(text, end)
-    return following == "" or following.isupper()
-
-
 @dataclass(frozen=True)
 class Clock:
     """`в 14:30`, `до 9:05`, `с 8:00:15`: an hour 0-23 and two minute digits, and seconds the same way, after a
@@ -816,7 +808,7 @@ class Year:
                 continue
             suffix = match.group(2) or ""
             yield Span(start, end, Form.YEAR, FrozenMap({"digits": match.group(1), "suffix": suffix}),
-                       trail="." if suffix and _sentence_end(text, end) else "", recognizer=self.name)
+                       trail="." if suffix and _sentence_period(text, end) else "", recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -853,7 +845,7 @@ class DateNamed:
             yield _framed(text, Span(start, end, Form.DATE,
                                      FrozenMap({"year": year, "month": month, "day": day, "written_order": "DMY",
                                                 "month_written": "name", "prefix": "", "suffix": suffix}),
-                                     trail="." if suffix and _sentence_end(text, end) else "", recognizer=self.name),
+                                     trail="." if suffix and _sentence_period(text, end) else "", recognizer=self.name),
                           words, request)
 
 
@@ -961,7 +953,7 @@ class Abbreviation:
                     if wanted and is_bounded(text, position, end):
                         stop = table == "scales" and text[end:end + 1] == "."
                         trail = "." if table != "titles" and (key.endswith(".") or stop) \
-                            and _sentence_end(text, end + stop) else ""
+                            and _sentence_period(text, end + stop) else ""
                         yield Span(position, end + stop, Form.ABBREVIATION, FrozenMap({"key": key}), trail=trail,
                                    recognizer=self.name)
                     position = text.find(key, end)

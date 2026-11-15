@@ -42,6 +42,10 @@ def script(value, where: str) -> None:
         f"{where}: {value!r} is not an ISO 15924 script code such as 'Latn'"
 
 
+def reading(value, where: str) -> None:
+    assert value is None or type(value) is str, f"{where}: {value!r} is neither a string nor None"
+
+
 def boolean(value, where: str) -> None:
     assert type(value) is bool, f"{where}: {value!r} is not true or false"
 
@@ -92,6 +96,7 @@ def record(optional: dict[str, Shape] | None = None, **fields: Shape) -> Shape:
 WORDS = list_of(word)
 
 SHAPES: dict[str, Shape] = {
+    "abbreviations": map_of(word, reading),
     "case_suffixes": WORDS,
     "clock_marks": list_of(record(mark=word, seconds=boolean, needs=one_of("evidence", "day_period", "none"),
                                   optional={"closes_hour": boolean})),
@@ -107,6 +112,7 @@ SHAPES: dict[str, Shape] = {
     "electronic_symbols": map_of(character, word),
     "electronic_tlds": WORDS,
     "electronic_vowels": list_of(one_of(*"abcdefghijklmnopqrstuvwxyz"), minimum=1),
+    "function_words": WORDS,
     "idioms": map_of(word, text),
     "leads": map_of(word, text),
     "letter_names": map_of(one_of(*"abcdefghijklmnopqrstuvwxyz"), word),
@@ -116,10 +122,12 @@ SHAPES: dict[str, Shape] = {
     "letter_runs": map_of(capitals, one_of("word", "letters")),
     "letter_vowels": list_of(lower, minimum=1),
     "list_links": WORDS,
+    "number_abbreviations": map_of(word, reading),
     "number_marks": map_of(script, list_of(record(decimal=word, group=text), minimum=1)),
     "operators": map_of(character, word),
     "patterns": map_of(word, word),
-    "percent": record(signs=list_of(word, minimum=1), position=one_of("after", "before", "either")),
+    "percent": record(signs=list_of(word, minimum=1), position=one_of("after", "before", "either"),
+                      optional={"word": word}),
     "no_phone_shapes": WORDS,
     "phone_kept_shapes": WORDS,
     "phone_shapes": WORDS,
@@ -129,12 +137,14 @@ SHAPES: dict[str, Shape] = {
     "range_marks": WORDS,
     "range_word": text,
     "scales": map_of(word, text),
+    "sentence_final": WORDS,
     "short_codes": list_of(digits),
     "sign_words": map_of(one_of(*SIGNS.values()), word),
     "symbols": map_of(word, one_of(*Form)),
     "symbol_names": map_of(character, word),
     "time_suffixes": WORDS,
     "time_words": WORDS,
+    "titles": map_of(word, reading),
     "unit_symbols": WORDS,
     "units": map_of(word, anything),
 }
@@ -164,10 +174,12 @@ READERS: dict[str, frozenset[str]] = {
                         "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
-                          "case_suffixes"}) | SYMBOL_KEYS,
+                          "case_suffixes", "function_words"}) | SYMBOL_KEYS,
     "expression": frozenset({"operators", "patterns", "symbols"}),
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
+    "abbreviation": frozenset({"titles", "number_abbreviations", "abbreviations", "sentence_final"}),
+    "space_groups": frozenset(),
     "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_free_consonants",
                           "letter_runs"}),
     "symbol": SYMBOL_KEYS,
@@ -177,12 +189,22 @@ READERS: dict[str, frozenset[str]] = {
     "speak_electronic": frozenset({"electronic_symbols", "letter_names", "electronic_vowels", "electronic_labels",
                                    "electronic_schemes", "digit_words", "symbol_names"}),
     "speak_letters": frozenset({"letter_names", "digit_words"}),
+    "speak_decimal": frozenset({"sign_words"}),
+    "speak_fraction": frozenset({"sign_words"}),
+    "speak_ordinal": frozenset(),
+    "speak_range": frozenset({"range_word"}),
+    "speak_percent": frozenset({"percent", "sign_words"}),
+    "speak_expression": frozenset({"operators", "sign_words"}),
+    "speak_telephone": frozenset({"digit_words", "sign_words"}),
+    "speak_abbreviation": frozenset({"titles", "abbreviations", "number_abbreviations"}),
+    "speak_idiom": frozenset({"idioms"}),
     "render": frozenset({"symbols"}),
     "effective_params": frozenset({"defaults"}),
 }
-"""The keys that each shared recognizer reads, by its name in `SHARED`. Then the keys that the shared verbalizers
-`speak_cardinal`, `speak_lexicon`, `speak_electronic` and `speak_letters` read, and the keys of the unread check of
-`render` and of the option defaults of `effective_params`. `speak_electronic` also reads the keys of the `symbol`
+"""The keys that each shared recognizer reads, by its name in `SHARED`. Then the keys that each shared verbalizer
+reads, by its name in the core, and the keys of the unread check of `render` and of the option defaults of
+`effective_params`. The telephone reader reads `function_words` only when its `content_words` or
+`names_short_codes` field is set. `speak_electronic` also reads the keys of the `symbol`
 reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
 them to find a character that `SYMBOL` reads between a phone word and the digits."""
 
@@ -191,7 +213,7 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
-    "letter_runs", "letter_free_consonants", "symbol_names",
+    "letter_runs", "letter_free_consonants", "symbol_names", "function_words",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.
 Design section 4.2 lets a language have no range word: "A language that marks a range with case endings has no

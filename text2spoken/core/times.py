@@ -19,3 +19,9 @@ def twelve_hour(hour: int) -> int:
     """The hour on a 12-hour clock face: 0 and 12 are 12."""
     return hour % 12 or 12
 
+
+def day_hour(hour: int, period: str | None) -> int:
+    """The hour of the 24-hour clock for an hour 1-12 with a written day period: `12 am` is 0 and `12 pm` is 12
+    (Wikipedia, "12-hour clock"). With no period, the hour stays."""
+    return hour if period is None else hour % 12 + (12 if period == "pm" else 0)
+

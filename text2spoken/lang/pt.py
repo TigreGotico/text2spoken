@@ -130,28 +130,31 @@ from __future__ import annotations
 
 import re
 from bisect import bisect_right
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 
+from text2spoken.core.color import spell_hex
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
-from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
+from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
 from text2spoken.core.letters import speak_letters
+from text2spoken.core.numbers import written_amount
+from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney
-from text2spoken.core.recognizers import PHONE_PLANS, SHARED, Telephone, TimeClock, digit_run_matches, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import DigitSpeller, OvosNumberSpeller, bounded_integer
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
+                                          speak_decimal, speak_expression, speak_fraction, speak_lexicon,
+                                          speak_percent, speak_telephone)
+from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
-from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, next_visible, one_digit_set
+from text2spoken.core.times import clock_fields, day_hour
+from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, one_digit_set
 from text2spoken.core.units import unit_reading
 from text2spoken.errors import DeclinedReading
 from text2spoken.lang import _pt_electronic
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
 MASCULINE, FEMININE = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE
-_SIGNS = "-−+"
-
 MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro",
           "novembro", "dezembro"]
 _MONTH = "(" + "|".join(f"[{m[0]}{m[0].upper()}]{m[1:]}" for m in MONTHS) + ")"
@@ -320,22 +323,6 @@ def _counted(forms: FrozenMap, request: Request, written: str) -> str:
     return forms.get(_plural(request, written), forms["other"])
 
 
-def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
-
-
-def _amount(amount: FrozenMap, request: Request, gender: GrammaticalGender | None = None) -> str:
-    if amount["fraction"]:
-        words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
-    else:
-        words = _cardinal(amount["integer"] or "0", request, gender)
-    return _signed(words, amount["sign"], request)
-
-
-def _written(amount: FrozenMap) -> str:
-    return (amount["integer"] or "0") + ("." + amount["fraction"] if amount["fraction"] else "")
-
-
 _LEXICON_GENDERS = {"m": "masculine", "f": "feminine"}
 _PARTITIVES = ("das", "dos")
 
@@ -415,13 +402,13 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
-        words = DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
+        words = spell_digits(digits, request)
     else:
         words = _cardinal(digits, request, agreement(context))
         if _SCALE_WORD.fullmatch(words.split()[-1]) and context.after \
                 and context.after[0].lower() not in request.data["function_words"]:
             words += " de"
-    words = _signed(words, fields["sign"], request)
+    words = signed(words, fields["sign"], request)
     if fields["lead"]:
         lead = request.data["leads"][fields["lead"]]
         words = f"{lead} {words}" if lead else f" {words}"
@@ -433,17 +420,6 @@ def speak_ordinal(span: Span, context: SpanContext) -> str:
     marker = span.fields["marker"][-1]
     gender = GrammaticalGender(context.request.data["ordinal_marks"][marker])
     return SPELLER.ordinal(span.fields["digits"], Features(gender=gender), context.request)
-
-
-def speak_decimal(span: Span, context: SpanContext) -> str:
-    return _amount(span.fields, context.request)
-
-
-def speak_fraction(span: Span, context: SpanContext) -> str:
-    """`um meio`, `três quartos`, `três onze avos` (Priberam, "avo": "doze vinte e cinco avos = 12/25")."""
-    fields = span.fields
-    words = SPELLER.fraction(fields["numerator"], fields["denominator"], Features(), context.request)
-    return _signed(words, fields["sign"], context.request)
 
 
 def _range_word(before: Sequence[str], high: str, request: Request) -> str:
@@ -473,18 +449,12 @@ def speak_date(span: Span, context: SpanContext) -> str:
         raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
 
 
-def _hour(fields: FrozenMap) -> int:
-    """The hour of the 24-hour clock. A written `a.m.` or `p.m.` gives it (Priberam, "a.m.": "antes do meio-dia";
-    "p.m.": "depois do meio-dia")."""
-    hour = fields["hour"]
-    return hour if fields["period"] is None else hour % 12 + (12 if fields["period"] == "pm" else 0)
-
-
 def _day_point(fields: FrozenMap) -> int | None:
     """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds. A `prefix`
     of None marks a time whose word of `time_contractions` stays as written, so its hour reads the 24-hour form that
-    the plural article agrees with."""
-    hour = _hour(fields)
+    the plural article agrees with. A written `a.m.` or `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.":
+    "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
+    hour = day_hour(fields["hour"], fields["period"])
     whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"] and fields["prefix"] is not None
     return hour if whole and hour in (0, 12) else None
 
@@ -512,7 +482,7 @@ def speak_time(span: Span, context: SpanContext) -> str:
     fields = span.fields
     request = context.request
     tag = request.variety.tag
-    hour, minute = _hour(fields), fields["minute"]
+    hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
     try:
         if _day_point(fields) is not None:
             reading = spoken_time(tag, hour, clock="12h", period=True)
@@ -545,7 +515,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         scale = request.data["scales"][fields["scale"]]
-        number = _amount(amount, request, gender if fields["scale"] == "mil" else None)
+        number = amount_words(amount, request, Features(gender=gender if fields["scale"] == "mil" else None))
         words = f"{number} {scale} {_currency(currency, 'other')}"
     elif len(fraction) == 2 and "minor" in currency:
         major = f"{_cardinal(integer, request, gender)} {_currency(currency, _plural(request, integer))}"
@@ -556,8 +526,9 @@ def speak_money(span: Span, context: SpanContext) -> str:
         else:
             words = minor if bounded_integer(integer) == 0 else f"{major} e {minor}"
     else:
-        words = f"{_amount(amount, request, gender)} {_currency(currency, _plural(request, _written(amount)))}"
-    return _signed(words, fields["amount"]["sign"], request)
+        category = _plural(request, written_amount(amount))
+        words = f"{amount_words(amount, request, Features(gender=gender))} {_currency(currency, category)}"
+    return signed(words, fields["amount"]["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
@@ -568,7 +539,7 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
-    category = _plural(request, _written(amounts[-1]))
+    category = _plural(request, written_amount(amounts[-1]))
     pattern, gender = unit_reading(request, span.fields["unit"], category)
     if gender is None:
         gender = _gender_of(pattern.replace("{0}", "").split()[0], request)
@@ -577,39 +548,8 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     if category == "many":
         pattern = pattern.replace("{0}", "{0} de", 1)
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
-    return pattern.replace("{0}", f" {link} ".join(_amount(a, request, gender) for a in amounts))
-
-
-def speak_percent(span: Span, context: SpanContext) -> str:
-    request = context.request
-    return f"{_amount(span.fields['amount'], request)} {request.data['percent']['word']}"
-
-
-def _signed_operand(operand: str, request: Request) -> str:
-    sign = {"−": "-"}.get(operand[0], operand[0]) if operand[0] in _SIGNS else ""
-    return _signed(_cardinal(operand.lstrip(_SIGNS), request), sign, request)
-
-
-def speak_expression(span: Span, context: SpanContext) -> str:
-    """Each operand may carry a sign: `-2+3=1` reads `menos dois mais três igual a um`."""
-    request = context.request
-    operands = span.fields["operands"]
-    words = [_signed_operand(operands[0], request)]
-    for operator, operand in zip(span.fields["operators"], operands[1:]):
-        words += [request.data["operators"][operator], _signed_operand(operand, request)]
-    return " ".join(words)
-
-
-def _digits(digits: str, request: Request) -> str:
-    return DigitSpeller(request.data["digit_words"]).cardinal(digits, Features(), request)
-
-
-def speak_telephone(span: Span, context: SpanContext) -> str:
-    request = context.request
-    groups = [_digits(group, request) for group in span.fields["groups"]]
-    if span.fields["country_code"]:
-        groups.insert(0, f"{request.data['sign_words']['+']} {_digits(span.fields['country_code'], request)}")
-    return " ".join(groups)
+    features = Features(gender=gender)
+    return pattern.replace("{0}", f" {link} ".join(amount_words(a, request, features) for a in amounts))
 
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
@@ -652,38 +592,14 @@ def speak_color(span: Span, context: SpanContext) -> str:
     name = request.data["colors"].get(span.fields["rgb"])
     if name is not None:
         return name
-    return " ".join(_digits(c, request) if c.isdigit() else c.upper() for c in span.fields["hex"])
+    return spell_hex(span.fields["hex"], request)
 
 
-def attach(spoken: str, prefix: str, suffix: str) -> str:
-    """Portuguese declares no proclitic and no case ending. Its one suffix is the `h` of `14:30h`, which the time
-    reading already says, so it adds no word."""
-    return spoken
-
-
-class PortugueseTelephone(Telephone):
-    """The shared telephone recognizer, where a phone word also names a run up to three words back, and a function
-    word does not count, as in `Ligue para o 112.` The window names a run with the shape of a phone number, and a
-    short code that ends its clause or that a function word follows. Two years that a dash joins have no phone
-    shape (`no_phone_shapes`), so `Os telemóveis de 2010-2020` reads a range."""
-
-    def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-               request: Request) -> range:
-        function_words = frozenset(request.data["function_words"])
-        index = bisect_right(words, start, key=lambda word: word.end)
-        before = clause_window(text, words, start, end, -1, limit=8, breaks=breaks)
-        counted = [i for i in range(index - len(before), index) if words[i].text.lower() not in function_words]
-        return range(counted[-3] if len(counted) >= 3 else index - len(before), index)
-
-    def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-                   shaped: bool, short_code: bool, request: Request) -> bool:
-        if shaped:
-            return True
-        if not short_code:
-            return False
-        function_words = frozenset(request.data["function_words"])
-        following = clause_window(text, words, start, end, 1, limit=1, breaks=breaks)
-        return all(word.lower() in function_words for word in following)
+TELEPHONE = Telephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True)
+"""The shared telephone recognizer, where a phone word also names a run up to three words back, and a function word
+does not count, as in `Ligue para o 112.` The window names a run with the shape of a phone number, and a short code
+that ends its clause or that a function word follows. Two years that a dash joins have no phone shape
+(`no_phone_shapes`), so `Os telemóveis de 2010-2020` reads a range."""
 
 
 @dataclass(frozen=True)
@@ -849,37 +765,6 @@ class Ordinal:
 
 
 @dataclass(frozen=True)
-class Expression:
-    """`5+3`, `2 × 2 = 4`, `-2+3=1`: operators between integers, with no letter on either side, as in `en.py`.
-    Each integer may carry one sign right before its digits. An operator right after the last integer, two signs
-    before one integer, or a symbol of the `symbols` table next to the expression keep it as written."""
-    name: str = "expression"
-    form: Form = Form.EXPRESSION
-
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        operators = re.escape("".join(request.data["operators"]))
-        open_operator = re.compile(f" ?[{operators}]")
-        symbols = request.data["symbols"]
-        for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
-            start, end = match.span()
-            if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
-                    or open_operator.match(text, end)):
-                continue
-            written = match.group().replace(" ", "")
-            first = re.match(f"[{_SIGNS}]?[0-9]+", written).group()
-            pairs = re.findall(f"([{operators}])([{_SIGNS}]*[0-9]+)", written[len(first):])
-            if not pairs:
-                continue
-            signs, others = zip(*pairs)
-            unclear = (any(len(operand) - len(operand.lstrip(_SIGNS)) > 1 for operand in others)
-                       or (start > 0 and (text[start - 1] in symbols
-                                          or (text[start - 1] in _SIGNS and not first[0].isdigit())))
-                       or (end < len(text) and text[end] in symbols))
-            yield Span(start, end, Form.EXPRESSION, FrozenMap({"operands": (first, *others), "operators": signs}),
-                       recognizer=self.name, keep=unclear)
-
-
-@dataclass(frozen=True)
 class DateNamed:
     """`1 de março de 2024`, `15 de maio`: a day, `de`, a month name and perhaps `de` and a year."""
     name: str = "date_named"
@@ -949,30 +834,16 @@ class Roman:
 
 
 @dataclass(frozen=True)
-class Abbreviation:
-    """A title before a capitalised name, `D.` before a name, `n.º` before a number, a title written in lowercase,
-    and the abbreviations of the table."""
-    name: str = "abbreviation"
-    form: Form = Form.ABBREVIATION
+class Abbreviation(CoreAbbreviation):
+    """The shared abbreviations, with `D.` before a name and the keys of `abbreviations_any_case`, which also read
+    in lowercase, as in `dr. Silva`."""
 
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        data = request.data
-        tables = ((data["titles"], str.isupper), (data["honorific_before_name"], str.isupper),
-                  (data["number_abbreviations"], str.isdigit),
-                  (dict.fromkeys(data["abbreviations_any_case"]), lambda _: True),
-                  (data["abbreviations"], lambda _: True))
-        final = frozenset(data["sentence_final"])
-        for table, follows in tables:
-            for key in sorted(table, key=len, reverse=True):
-                position = text.find(key)
-                while position != -1:
-                    end = position + len(key)
-                    following = next_visible(text, end)
-                    if is_bounded(text, position, end) and follows(following):
-                        sentence_end = key in final and (following == "" or following.isupper())
-                        yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
-                                   trail="." if sentence_end else "", recognizer=self.name)
-                    position = text.find(key, end)
+    def tables(self, data) -> tuple[tuple[str, Iterable[str], Callable[[str], bool]], ...]:
+        return (("titles", data["titles"], str.isupper),
+                ("honorific_before_name", data["honorific_before_name"], str.isupper),
+                ("number_abbreviations", data["number_abbreviations"], str.isdigit),
+                ("abbreviations_any_case", dict.fromkeys(data["abbreviations_any_case"]), lambda _: True),
+                ("abbreviations", data["abbreviations"], lambda _: True))
 
 
 LANGUAGE = LanguageSpec(
@@ -982,7 +853,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 PortugueseTelephone(), Money(), SHARED["percent"], SHARED["measure"], Expression(),
+                 TELEPHONE, Money(), SHARED["percent"], SHARED["measure"], SHARED["expression"],
                  SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(), SHARED["letters"],
                  SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
@@ -995,7 +866,7 @@ LANGUAGE = LanguageSpec(
         Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
-    attach=attach,
+    attach=drop_affixes,  # the one suffix, the `h` of `14:30h`, is a word of the time reading
     genders=frozenset({MASCULINE, FEMININE}),
     default_gender=MASCULINE,
     animacies=frozenset(),

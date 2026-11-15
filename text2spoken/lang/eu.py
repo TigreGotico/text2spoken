@@ -18,6 +18,11 @@ The last one follows Araua 203, section 5, page 27: "Ordinal bat baino gehiago e
 aukerakoa da bakoitzean -garren atzizkia jartzea edo azkenean bakarrik jartzea", with the example "XIX., XX. eta
 XXI. mendeetan". A noun followed by `bat`, bare or with a case ending, is no evidence, because the measure
 verbalizer reads one unit noun first: `1 °C` is "gradu bat" (Araua 203, page 21).
+
+The `operators` table holds the words of the same page: `5 x 0 = 0` is "bost bider zero berdin zero". Digits in
+groups of three with a space between them, which Araua 203, section 3.2.1.1, page 12, recommends, as in `36 524`,
+stay as written through the shared `space_groups` recognizer: the group mark of this file is `.`, so each group
+would read as a number of its own.
 """
 from __future__ import annotations
 
@@ -28,11 +33,13 @@ from dataclasses import dataclass, replace
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety
 from text2spoken.core.numbers import SIGNS, Number
-from text2spoken.core.recognizers import (SHARED, _affixes, _cluster_edge, _free_before, _period_after, _prefix,
-                                          _sentence_period, _suffix, numbers_in, speak_cardinal, speak_lexicon)
+from text2spoken.core.recognizers import (SHARED, _affixes, _cluster_edge, _free_before, _per_unit, _period_after,
+                                          _prefix, _sentence_period, _suffix, numbers_in, signed, speak_cardinal,
+                                          speak_decimal, speak_expression, speak_fraction, speak_lexicon,
+                                          speak_ordinal)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, _integer
-from text2spoken.core.times import clock_fields, twelve_hour
+from text2spoken.core.times import clock_fields, day_hour, twelve_hour
 from text2spoken.core.tokens import (Token, digit_script, fold_digits, is_bounded, is_letter, is_mark, is_word_char,
                                      next_visible)
 from text2spoken.params import FrozenMap, Form, freeze
@@ -42,11 +49,6 @@ GAPS = ("", " ", "\u00a0")
 
 RANGE_MARKS = ("-", "–")
 """The marks that join two amounts as a range, as in `% 2-% 5` (Araua 203, section 7.1, page 32)."""
-
-SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{1,3})*)?"
-                          "|[0-9]+,[0-9]{3}(?:[ \u00a0\u202f][0-9]{1,3})+")
-"""Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the
-whole part or in the fraction: `36 524`, `123 456 789,987 546`, `0,264 7` (Araua 203, section 3.2.1.1, page 12)."""
 
 ROMAN_NUMERAL = re.compile("[IVXLCDM]+[.]")
 """An upper-case Roman numeral and the full stop of an ordinal."""
@@ -168,10 +170,6 @@ def _cardinal(digits: str, request: Request) -> str:
     return SPELLER.cardinal(digits, Features(), request)
 
 
-def _signed(words: str, sign: str, request: Request) -> str:
-    return f"{request.data['sign_words'][sign]} {words}" if sign else words
-
-
 def _number(amount: FrozenMap, request: Request) -> str:
     if amount["fraction"]:
         return SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
@@ -186,37 +184,8 @@ def _counted(amount: FrozenMap, noun: str, request: Request) -> str:
     return f"{_number(amount, request)} {noun}"
 
 
-def speak_ordinal(span: Span, context: SpanContext) -> str:
-    return SPELLER.ordinal(span.fields["digits"], Features(), context.request)
-
-
 def speak_roman(span: Span, context: SpanContext) -> str:
     return SPELLER.ordinal(str(span.fields["value"]), Features(), context.request)
-
-
-def speak_decimal(span: Span, context: SpanContext) -> str:
-    return _signed(_number(span.fields, context.request), span.fields["sign"], context.request)
-
-
-def speak_fraction(span: Span, context: SpanContext) -> str:
-    fields = span.fields
-    words = SPELLER.fraction(fields["numerator"], fields["denominator"], Features(), context.request)
-    return _signed(words, fields["sign"], context.request)
-
-
-def speak_expression(span: Span, context: SpanContext) -> str:
-    """`5 x 0 = 0` reads "bost bider zero berdin zero" (Araua 203, page 21)."""
-    request = context.request
-    operands = span.fields["operands"]
-
-    def operand(written: str) -> str:
-        sign = SIGNS.get(written[0], "")
-        return _signed(_cardinal(written.lstrip("-−+"), request), sign, request)
-
-    words = [operand(operands[0])]
-    for operator, written in zip(span.fields["operators"], operands[1:]):
-        words += [request.data["operators"][operator], operand(written)]
-    return " ".join(words)
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -249,8 +218,7 @@ def speak_time(span: Span, context: SpanContext) -> str:
     data = request.data
     fields = span.fields
     hour, minute = fields["hour"], fields["minute"]
-    if fields["period"] is not None:
-        hour = hour % 12 + (12 if fields["period"] == "pm" else 0)
+    hour = day_hour(hour, fields["period"])
     twelve = request.params.clock == "12h"
     face = twelve_hour(hour) if twelve else hour
     stem = data["hour_words"].get(str(face)) or _cardinal(str(face), request)
@@ -284,13 +252,13 @@ def speak_money(span: Span, context: SpanContext) -> str:
             words = f"{_counted(major, currency['word'], request)} eta {_counted(cents, minor, request)}"
     else:
         words = _counted(amount, currency["word"], request)
-    return _signed(words, amount["sign"], request)
+    return signed(words, amount["sign"], request)
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
     request = context.request
     amount = span.fields["amount"]
-    return _signed(_counted(amount, request.data["units"][span.fields["unit"]], request), amount["sign"], request)
+    return signed(_counted(amount, request.data["units"][span.fields["unit"]], request), amount["sign"], request)
 
 
 def speak_percent(span: Span, context: SpanContext) -> str:
@@ -298,7 +266,7 @@ def speak_percent(span: Span, context: SpanContext) -> str:
     "minus ehuneko lau" (Araua 203, sections 7.1 and 7.2, pages 30 to 32)."""
     request = context.request
     amount = span.fields["amount"]
-    return _signed(f"{request.data['percent']['word']} {_number(amount, request)}", amount["sign"], request)
+    return signed(f"{request.data['percent']['word']} {_number(amount, request)}", amount["sign"], request)
 
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
@@ -448,26 +416,6 @@ def _roman_reading(text: str, match: re.Match, data, readings: Mapping[int, tupl
         evidence = (noun or follower[1] or text.startswith(",", stop)
                     or (link is not None and link.end() in readings))
     return (follower[0], number, follower[1]) if evidence else None
-
-
-@dataclass(frozen=True)
-class SpaceGroups:
-    """`36 524`, `Duela 30 000 urte`: digits in groups of three with a space between them, which Araua 203,
-    section 3.2.1.1, page 12, recommends. The group mark of this file is `.`, so each group would read as a number
-    of its own, and the span stays as written."""
-    name: str = "space_groups"
-    form: Form = Form.CARDINAL
-
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in SPACE_GROUPS.finditer(fold_digits(text)):
-            start, end = match.span()
-            script = digit_script(text[start:end])
-            if script is None or (start and is_word_char(text[start - 1])) or not _cluster_edge(text, start, end):
-                continue
-            digits = re.sub("[^0-9]", "", match.group())
-            yield Span(start, end, Form.CARDINAL,
-                       FrozenMap({"digits": digits, "sign": "", "lead": "", "prefix": "", "suffix": "",
-                                  "script": script}), recognizer=self.name, keep=True)
 
 
 @dataclass(frozen=True)
@@ -624,11 +572,6 @@ def _kept_ranges(spans: Iterable[Span], text: str) -> Iterator[Span]:
               if text[spans[pair].end:spans[pair + 1].start] in RANGE_MARKS for index in (pair, pair + 1)}
     for index, span in enumerate(spans):
         yield replace(span, keep=True) if index in ranged else span
-
-
-def _per_unit(text: str, end: int) -> bool:
-    """Whether a slash and a letter continue a unit, as in `m/s` when the table holds only `m`."""
-    return end + 1 < len(text) and text[end] == "/" and is_letter(text[end + 1])
 
 
 @dataclass(frozen=True)
@@ -806,7 +749,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=(Variety("eu-ES"),),
     data=DATA,
-    recognizers=(SHARED["lexicon"], RomanMonthDate(), SpaceGroups(), LetterCode(), LawNumber(),
+    recognizers=(SHARED["lexicon"], RomanMonthDate(), SHARED["space_groups"], LetterCode(), LawNumber(),
                  SHARED["date_numeric"], BasqueTime(), BasqueMoney(), BasquePercent(), BasqueMeasure(),
                  SHARED["expression"], SHARED["fraction"], BasqueOrdinal(), Roman(), BasqueAbbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
