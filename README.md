@@ -37,7 +37,7 @@ Alone: rewrite text into spoken words before a voice, a phonemizer or a word err
 
 In the stack: the normalisation stage. A phonemizer library or a TTS frontend calls `normalize` first and phonemizes its output. text2spoken calls no phonemizer and no model.
 
-Through scriptconv: `pip install scriptconv[normalize]`.
+Through scriptconv: `uv pip install --prerelease=allow "scriptconv[normalize]"`.
 
 ## Languages
 

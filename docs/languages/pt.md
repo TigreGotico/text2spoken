@@ -38,29 +38,30 @@ Known limits of the form in Portuguese:
 - Portuguese has no address form, so the form spells only the run in an address. `geral@RTP.pt` reads "geral@érre tê pê.pt" in pt-PT.
 - A Portuguese syllable inside a run closes with one consonant. So a word in capitals that needs two consonants at the end of a syllable reads letter by letter: `INSTITUTO` (ins-ti-tu-to) reads "i éne ésse tê i tê u tê ó".
 - The Portuguese rule reads some runs that Wiktionary spells, such as `EPI` ({{pt-IPA|ê-pê-i}}) and `ODE` ({{pt-IPA|ó-dê-é}}). It spells some runs that Wiktionary reads as words, such as `WAN`, because `w` starts no Portuguese syllable.
-- A span that waits on a joined character on the first pass can read on a second pass, after the form spells a run next to it. `Sala 9#D. RTP.` reads "Sala 9#D. érre tê pê.", and a second pass reads "nove".
 
 The limits that Portuguese shares with English are on the [How it reads text](../how-it-reads.md#runs-of-capital-letters) page.
 
 ## Limits of units, currencies and symbols
 
-Some unit readings are wrong or stay as written:
-
 - Portuguese `min` and `s` read as units also where they abbreviate other words. `12 min e 20 máx.` reads "doze minutos", and `2 s/ uso` reads "dois segundos/ uso".
 - A pt-BR decimal below 2 takes the singular, by the CLDR plural rule. `1,5 min` reads "um vírgula cinco minuto".
 - A decimal takes no unit gender. `2,5h` reads "dois vírgula cinco horas".
 - `1,5h` reads, but `1,5 h` with a space stays as written.
-- Portuguese has no address form, so a unit inside a Portuguese address reads as a measure. `Veja www.x.pt/5µm` reads "www.x.pt/cinco micrómetros".
-- For the same reason, a symbol inside a Portuguese address reads by its name. `x@a©b.pt` reads "x@a direitos de autor b.pt".
-
-Some currency and symbol readings are wrong or stay as written:
-
 - A symbol name is the CLDR name, with no agreement and no context. `8 ÷ 2` reads "oito sinal de divisão dois" in Portuguese.
 - Portuguese text in capitals cannot tell the city Córdoba from the currency, because the currency gender entry matches the word as written. So `PAGUEI 2 CÓRDOBAS.` reads "duas", and `Paguei 2 córdobas.` reads "dois".
 - The Portuguese paʻanga reads as a feminine noun, so `2 T$` reads "duas paʻangas tonganesas". The CLDR adjective "tonganesas" agrees with it, but Priberam gives a masculine noun: "paanga": "nome masculino [...] Unidade monetária de Tonga (código: TOP)".
-- A doubled mark reads its singular name twice. `Veja os §§ 2 e 3.` reads "Veja os parágrafo parágrafo dois e três".
 
 The limits that Portuguese shares with English are on the [How it reads text](../how-it-reads.md#units-currencies-and-symbols) page.
+
+## Edge cases
+
+These cases come from tests that feed the library unusual text. A reader of ordinary prose rarely meets them.
+
+- A span that waits on a joined character on the first pass can read on a second pass, after the `LETTERS` form spells a run next to it. `Sala 9#D. RTP.` reads "Sala 9#D. érre tê pê.", and a second pass reads "nove".
+- Portuguese has no address form, so a unit inside a Portuguese address reads as a measure. `Veja www.x.pt/5µm` reads "www.x.pt/cinco micrómetros".
+- For the same reason, a symbol inside a Portuguese address reads by its name. `x@a©b.pt` reads "x@a direitos de autor b.pt".
+
+The edge cases that Portuguese shares with English are on the [How it reads text](../how-it-reads.md#edge-cases) page.
 
 ---
 [← Basque](eu.md) · [Home](../index.md) · [Russian →](ru.md)

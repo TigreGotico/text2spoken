@@ -25,5 +25,3 @@ Each language page gives the varieties of the language, the codes that it serves
 | Basque | [eu](languages/eu.md) |
 | Portuguese | [pt](languages/pt.md) |
 | Russian | [ru](languages/ru.md) |
-
-The language pages come after [Errors and warnings](errors.md) in the reading order, and [Adding a language](adding-a-language.md) comes after them.

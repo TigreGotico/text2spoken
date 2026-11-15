@@ -36,7 +36,7 @@ The test rows in `tests/data/ru.tsv` cite Грамматика-80, Розент�
 
 ## Limits
 
-Some Russian readings are still wrong:
+Some Russian readings are wrong:
 
 - `Нас было 2` reads "два", not "двое".
 - An object before the verb, as in `3 детей я видел`, reads "трое", not "троих".
@@ -44,11 +44,16 @@ Some Russian readings are still wrong:
 - A date before a dash reads in the genitive, also after "сегодня": `Сегодня 1 мая — День весны` reads "первого мая".
 - A date before a comma, a colon or a bracket reads in the genitive, also where it is the subject: `Было 1 мая, шёл дождь`, `Сегодня 1 мая, в субботу, мы идём на парад`, `«Сегодня 1 мая», — сказал он` and `Сегодня (1 мая) праздник`. A dateline such as `1 мая, вторник` and a label before a comma such as `Дата: 9 мая, вторник` read in the genitive too.
 - `Да здравствует 1 мая!` reads "первого", although the date is the subject of "здравствует".
-- A quoted title of a date word before the date makes the date read in the nominative: `«Завтра» 1 мая.` and `Я купил «Завтра» и «Сегодня» 1 мая.` read "первое".
-- A date after a comma with no space is not taken as a date, so the number reads as a cardinal: `Он сказал: «Сегодня,1 мая».` reads "Сегодня,одна мая".
 - A phrase with "у", "в" or "во" that does not open the clause stays as written: `В семье у нас 3 детей`. So does a phrase that the three words before the number do not show whole: `У нас в семье 3 детей`.
 - The prepositional in `-е` or `-ии` and some nouns in `-ь` read masculine without a gender hint.
 - A count after a verb reads the nominative, and an animate accusative reads the cardinal.
+
+## Edge cases
+
+These cases come from tests that feed the library unusual text. A reader of ordinary prose rarely meets them.
+
+- A quoted title of a date word before the date makes the date read in the nominative: `«Завтра» 1 мая.` and `Я купил «Завтра» и «Сегодня» 1 мая.` read "первое".
+- A date after a comma with no space is not taken as a date, so the number reads as a cardinal: `Он сказал: «Сегодня,1 мая».` reads "Сегодня,одна мая".
 
 ---
 [← Portuguese](pt.md) · [Home](../index.md) · [Adding a language →](../adding-a-language.md)

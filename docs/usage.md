@@ -52,7 +52,7 @@ speak("Meet at 14:30.", "en-GB")
 # 'Meet at fourteen thirty.'
 ```
 
-scriptconv has such a hook. `pip install scriptconv[normalize]` installs text2spoken, and `scriptconv.frontend.spoken_normalizer()` returns `normalize` for the `normalizer` field of its `FrontendConfig`.
+scriptconv has such a hook. `uv pip install --prerelease=allow "scriptconv[normalize]"` installs text2spoken, and `scriptconv.frontend.spoken_normalizer()` returns `normalize` for the `normalizer` field of its `FrontendConfig`.
 
 ## Text that must stay as written
 

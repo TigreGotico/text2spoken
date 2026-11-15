@@ -20,9 +20,9 @@ The file reads `00:00ak` as "gaueko hamabiak" and `01:00ak` as "goizeko ordu bat
 
 ## Sources
 
-The rules come from the norms of Euskaltzaindia, the Basque academy: Araua 7 (cardinals), Araua 196 (abbreviations), Araua 197 (symbols) and Araua 203, "Zenbakizko adierazpenak". The docstring of [`eu.py`](../../text2spoken/lang/eu.py) gives the section of each rule.
+The rules come from the norms of Euskaltzaindia, the Basque academy: Araua 7 (cardinals), Araua 196 (abbreviations), Araua 197 (symbols) and Araua 203, "Zenbakizko adierazpenak". The rule for a code noun and a number pair also cites EIMA, *Ortotipografia*, the style guide of the Basque Government. The docstring of [`eu.py`](../../text2spoken/lang/eu.py) gives the section of each rule.
 
-In `tests/data/eu.tsv`, 125 rows cite a page of the norm, and one of them, eu-002, is silver. The 7 guard rows eu-080, eu-081, eu-082, eu-088, eu-091, eu-093 and eu-112 cite design section 4.2. No native speaker has checked the rows.
+In `tests/data/eu.tsv`, 123 rows cite a page of the norm, and one of them is silver. 2 rows cite EIMA, *Ortotipografia*. 7 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 ## Limits
 
@@ -36,6 +36,10 @@ These forms stay as written in Basque:
 - A Roman numeral of two letters or more, unless a noun of the `roman_nouns` table, a case ending, the comma of a list, or `eta` or `edo` and a numeral that reads follows it. So `XIX., XX. eta XXI. mendeetan` reads, and `II. 1995ean sortu zen.` keeps `II.` as written.
 - A Roman numeral before a noun of the `roman_nouns` table and the word `bat`, as in `XX. mende batean`. The measure reading writes one unit in that order, as `1 °C` reads "gradu bat" (Araua 203, page 21), so the noun is no evidence there.
 - A clock time with no case ending and no day period, as in a timetable.
+
+## Edge cases
+
+The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093 and eu-112. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko` and `U2`.
 
 ---
 [← Spanish](es.md) · [Home](../index.md) · [Portuguese →](pt.md)

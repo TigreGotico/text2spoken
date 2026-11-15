@@ -138,7 +138,16 @@ normalize("Comprei 2.", "pt-PT", NormalizationParams(default_gender=FrozenMap({"
 # 'Comprei duas.'
 ```
 
-`phone_regions=None` takes the region of the tag. With no plan for a region, only a number with a `+` or `00` prefix and a country code reads as a phone number.
+`phone_regions=None` takes the region of the tag, when the language has a numbering plan for it. A run of digits reads as a phone number on any of four kinds of evidence: a `+` or `00` prefix and a country code, a trunk prefix of a region in `phone_regions`, a phone shape of the language, such as `(212) 555-0123`, or a phone word before the run, such as `Call`. With no plan for a region, the other three still apply:
+
+```python
+normalize("Room 02079460958.", "en-GB")
+# 'Room zero two zero seven nine four six zero nine five eight.'
+normalize("Room 02079460958.", "en-GB", NormalizationParams(phone_regions=frozenset()))
+# 'Room 02079460958.'
+normalize("Call 02079460958.", "en-GB", NormalizationParams(phone_regions=frozenset()))
+# 'Call zero two zero seven nine four six zero nine five eight.'
+```
 
 `FrozenMap` is an immutable, hashable mapping, sorted by key. `FrozenMap({"pt": FrozenMap({"ACME": "ácmi"})})` builds a lexicon.
 

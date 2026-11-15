@@ -24,7 +24,7 @@ In `de-CH` the full stop is also the decimal mark, so a time with a full stop ne
 
 The rules cite the amtliche Regelwerk of the Rat für deutsche Rechtschreibung, the CLDR data of `de`, `de_AT` and `de_CH`, Duden online, de.wiktionary, de.wikipedia and en.wikipedia. The docstring of [`de.py`](../../text2spoken/lang/de.py) gives each entry.
 
-The test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia, and no native speaker has checked them. Of the 119 rows, 34 mark at least one part of their reading as silver: no fetched source holds that part.
+The test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia, and no native speaker has checked them. Of the 119 rows, 34 mark at least one part of their reading as silver: that part comes from memory, and no source was read for it.
 
 ## Limits
 
