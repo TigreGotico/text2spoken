@@ -428,6 +428,32 @@ def test_clause_12_admits_the_core_and_the_own_private_modules(source):
     contract.clause_12("pt", replace(STUB, code="pt"), source=source, requirements=[])
 
 
+@pytest.mark.parametrize("name", contract.language_modules())
+def test_clause_12_each_module_imports_with_the_other_language_files_blocked(name):
+    contract.import_alone(f"text2spoken.lang.{name}", name.split("_")[1] if name.startswith("_") else name)
+
+
+@pytest.mark.parametrize("source", ['import importlib\nimportlib.import_module("text2spoken.lang.en")\n',
+                                    '__import__("text2spoken.lang.en")\n',
+                                    "try:\n    from text2spoken.lang import en\nexcept ImportError:\n    pass\n",
+                                    "from text2spoken.lang import _pt_electronic\n"])
+def test_clause_12_runtime_check_bites(tmp_path, source):
+    import os
+    import sys
+
+    (tmp_path / "qac_plant.py").write_text(source, encoding="utf-8")
+    with pytest.raises(AssertionError, match="qac_plant"):
+        contract.import_alone("qac_plant", "qac", path=os.pathsep.join([str(tmp_path), *sys.path]))
+
+
+def test_clause_12_runtime_check_admits_the_own_private_modules(tmp_path):
+    import os
+    import sys
+
+    (tmp_path / "qac_plant.py").write_text("from text2spoken.lang import _pt_electronic\n", encoding="utf-8")
+    contract.import_alone("qac_plant", "pt", path=os.pathsep.join([str(tmp_path), *sys.path]))
+
+
 def test_clause_12_admits_no_other_extra():
     source = "def f():\n    import tugalex\n"
     with pytest.raises(AssertionError, match="does not hold"):

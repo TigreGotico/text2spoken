@@ -430,15 +430,16 @@ def test_the_plural_category_is_exact_under_a_caller_context_of_low_precision(ge
     ("pt-PT", "Mede 1,{} km.", "measure"),
 ])
 def test_a_fraction_past_the_int_string_limit_keeps_the_written_form(tag, text, form, caplog):
-    """unicode_rbnf converts the fraction digits to an `int`, and under the default limit of 4300 digits Python
-    converts no longer string. The plural category declines, so the span stays as written with one warning, and
-    strict mode raises `UnreadFormError` (design section 10)."""
-    text = text.format("1" * 4301)
+    """unicode_rbnf converts the fraction digits to an `int`, and Python converts no string longer than
+    `sys.get_int_max_str_digits()`, 4300 by default. The plural category declines, so the span stays as written with
+    one warning, and strict mode raises `UnreadFormError` (design section 10)."""
+    limit = sys.get_int_max_str_digits()
+    text = text.format("1" * (limit + 1))
     with caplog.at_level(logging.WARNING, logger="text2spoken"):
         assert normalize(text, tag) == text
     [warning] = [record.getMessage() for record in caplog.records if record.getMessage().startswith(f"unread {form} ")]
-    assert warning.endswith(": a number of 1 integer and 4301 fraction digits passes the int string limit of 4300 "
-                            "digits, so it has no plural category")
+    assert warning.endswith(f": a number of 1 integer and {limit + 1} fraction digits passes the int string limit of "
+                            f"{limit} digits, so it has no plural category")
     with pytest.raises(UnreadFormError) as raised:
         normalize(text, tag, NormalizationParams(strict=True))
     assert type(raised.value.__cause__) is DeclinedReading
@@ -446,18 +447,20 @@ def test_a_fraction_past_the_int_string_limit_keeps_the_written_form(tag, text, 
 
 @pytest.mark.parametrize("tag", ["en", "de", "pt-PT", "ru"])
 def test_a_number_at_the_int_string_limit_has_a_plural_category(gendered, tag):
-    # en, de, pt_PT one: i = 1 and v = 0; every ru category above needs v = 0. So a decimal of v = 4300 is other.
+    # en, de, pt_PT one: i = 1 and v = 0; every ru category above needs v = 0. So a decimal of v > 0 is other.
+    limit = sys.get_int_max_str_digits()
     language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
     request = Request(tag, Variety(tag), language, NormalizationParams())
-    assert plural_category(request, "1." + "1" * 4300) == "other"
-    for written in ("1." + "1" * 4301, "1" * 4301, "1" * 4301 + ".5"):
+    assert plural_category(request, "1." + "1" * limit) == "other"
+    for written in ("1." + "1" * (limit + 1), "1" * (limit + 1), "1" * (limit + 1) + ".5"):
         with pytest.raises(DeclinedReading):
             plural_category(request, written)
 
 
 def test_a_fraction_at_the_int_string_limit_reads():
-    text = normalize("It is 1." + "1" * 4300 + " km.", "en-GB")
-    assert text == "It is one point" + " one" * 4300 + " kilometres."
+    limit = sys.get_int_max_str_digits()
+    text = normalize("It is 1." + "1" * limit + " km.", "en-GB")
+    assert text == "It is one point" + " one" * limit + " kilometres."
 
 
 INT_LIMIT_PROBE = """

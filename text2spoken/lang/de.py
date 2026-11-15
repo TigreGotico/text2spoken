@@ -19,7 +19,9 @@ de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR
 - de.wikipedia, "Präposition", sections Rektion and Zeitlich.
 - en.wikipedia, "Grammatical gender in German", the tables of masculine, feminine and neuter endings.
 
-`Abbreviation` and `Expression` are shared recognizers, and read only the data tables of the language.
+`Abbreviation` and `Expression` are shared recognizers, and read only the data tables of the language. An
+expression reads each operator by its word in `operators`, and "=" as "gleich": Duden, "plus": "fünf plus drei
+[ist] gleich acht".
 """
 from __future__ import annotations
 
