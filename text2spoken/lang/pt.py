@@ -133,7 +133,7 @@ from bisect import bisect_right
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 
-from text2spoken.core.color import spell_hex
+from text2spoken.core.color import speak_color
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
@@ -584,15 +584,6 @@ def speak_roman(span: Span, context: SpanContext) -> str:
     else:
         words = _cardinal(value, request)
     return words[0].upper() + words[1:] if capital else words
-
-
-def speak_color(span: Span, context: SpanContext) -> str:
-    """A colour with no name spells its digits as the text writes them."""
-    request = context.request
-    name = request.data["colors"].get(span.fields["rgb"])
-    if name is not None:
-        return name
-    return spell_hex(span.fields["hex"], request)
 
 
 TELEPHONE = Telephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True)

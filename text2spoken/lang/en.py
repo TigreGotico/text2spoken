@@ -64,20 +64,19 @@ IBS /aɪ.biːˈɛs/ and IDS /aɪ diː ɛs/. So `letter_runs` holds them.
 """
 from __future__ import annotations
 
-import logging
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from text2spoken.core.color import spell_hex
+from text2spoken.core.color import speak_color
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number, written_amount
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, join_ranges, numbers_in, signed,
-                                          speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, amount_words, join_ranges, numbers_in,
+                                          signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
                                           speak_range, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
@@ -87,8 +86,6 @@ from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, one_digit_set
 from text2spoken.core.units import unit_reading, unit_table
 from text2spoken.params import FrozenMap, Form, freeze
-
-LOG = logging.getLogger("text2spoken")
 
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
@@ -285,14 +282,6 @@ def _cardinal(digits: str, request: Request) -> str:
     return SPELLER.cardinal(digits, Features(), request)
 
 
-def _amount(amount: FrozenMap, request: Request) -> str:
-    if amount["fraction"]:
-        words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
-    else:
-        words = _cardinal(amount["integer"], request)
-    return signed(words, amount["sign"], request)
-
-
 def speak_date(span: Span, context: SpanContext) -> str:
     request = context.request
     fields = span.fields
@@ -354,7 +343,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         amount = FrozenMap({**amount, "fraction": (fraction or "").rstrip("0")})
-        words = f"{_amount(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
+        words = f"{amount_words(amount, request)} {request.data['scales'][fields['scale']]} {currency['other']}"
     elif len(fraction) == 2 and "minor" in currency:
         major = f"{_cardinal(integer, request)} {currency_name(currency, plural_category(request, integer))}"
         minor_digits = str(int(fraction))
@@ -365,7 +354,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
             words = minor if bounded_integer(integer) == 0 else f"{major} and {minor}"
     else:
         category = plural_category(request, written_amount(amount))
-        words = f"{_amount(amount, request)} {currency_name(currency, category)}"
+        words = f"{amount_words(amount, request)} {currency_name(currency, category)}"
     return signed(words, fields["amount"]["sign"], request)
 
 
@@ -375,7 +364,7 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
     pattern, _ = unit_reading(request, span.fields["unit"], plural_category(request, written_amount(amounts[-1])))
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
-    return pattern.replace("{0}", f" {link} ".join(_amount(a, request) for a in amounts))
+    return pattern.replace("{0}", f" {link} ".join(amount_words(a, request) for a in amounts))
 
 
 def speak_year(span: Span, context: SpanContext) -> str:
@@ -388,17 +377,6 @@ def speak_year(span: Span, context: SpanContext) -> str:
     if span.end - span.start == 2 and words.startswith(century):
         return words[len(century):]
     return words
-
-
-def speak_color(span: Span, context: SpanContext) -> str:
-    """A colour with no name spells its digits as the text writes them (section 12)."""
-    request = context.request
-    name = request.data["colors"].get(span.fields["rgb"])
-    if span.fields["alpha"] is not None:
-        LOG.warning("unread alpha %r of colour #%s for %s", span.fields["alpha"], span.fields["rgb"], request.tag)
-    if name is not None:
-        return name
-    return spell_hex(span.fields["hex"], request)
 
 
 def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_words: frozenset[str]) -> bool:
