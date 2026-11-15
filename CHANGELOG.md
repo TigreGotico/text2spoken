@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a52](https://github.com/TigreGotico/text2spoken/tree/0.0.2a52) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a51...0.0.2a52)
+
+**Merged pull requests:**
+
+- docs: short README and a docs folder [\#107](https://github.com/TigreGotico/text2spoken/pull/107) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a51](https://github.com/TigreGotico/text2spoken/tree/0.0.2a51) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a50...0.0.2a51)
@@ -384,10 +392,6 @@
 ## [0.0.2a2](https://github.com/TigreGotico/text2spoken/tree/0.0.2a2) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a1...0.0.2a2)
-
-**Merged pull requests:**
-
-- feat: rebuild text2spoken as a shared core with one file per language [\#4](https://github.com/TigreGotico/text2spoken/pull/4) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a1](https://github.com/TigreGotico/text2spoken/tree/0.0.2a1) (2026-11-06)
 
