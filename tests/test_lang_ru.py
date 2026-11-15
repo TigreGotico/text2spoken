@@ -27,3 +27,8 @@ def test_the_default_gender_reads_a_number_with_no_noun():
 def test_a_second_pass_reads_a_date_before_a_glued_mark_the_same_way(text):
     once = normalize(text, "ru-RU")
     assert normalize(once, "ru-RU") == once
+
+
+def test_a_cardinal_of_30_digits_reads():
+    # "сто" takes the genitive plural, and 10**27 is "октиллион" on the short scale (from memory, not fetched).
+    assert normalize("1" + "0" * 29, "ru-RU") == "сто октиллионов"

@@ -110,3 +110,15 @@ def test_a_contracted_word_in_capitals_takes_only_a_first_capital(text, expected
     run of two capitals."""
     params = NormalizationParams(forms=NormalizationParams().forms | {Form.LETTERS})
     assert normalize(text, "pt-PT") == normalize(text, "pt-PT", params) == expected
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), [
+    ("pt-PT", "Mede 1" + "0" * 34 + " km.", "Mede dez mil quintiliões de quilómetros."),
+    ("pt-BR", "Mede 1" + "0" * 34 + " km.", "Mede dez decilhões de quilômetros."),
+    ("pt-PT", "Custa 1" + "0" * 28 + "1 €.", "Custa cem mil quatriliões e um euros."),
+    ("pt-PT", "Mede 1" + "0" * 27 + "1 km.", "Mede dez mil quatriliões e um quilómetros."),
+])
+def test_a_number_past_28_digits_takes_de_only_on_a_multiple_of_a_million(tag, text, expected):
+    """CLDR gives `many`, and so `de`, to a multiple of 1000000 only (`i % 1000000 = 0`): 10**34 takes it, and
+    10**29 + 1 and 10**28 + 1 do not."""
+    assert normalize(text, tag) == expected
