@@ -35,12 +35,12 @@ test = [
     "packaging",
     "ovos-number-parser>=0.24.51a1",
     "ovos-color-parser>=0.12.4a1",
-    "ovos-date-parser>=0.36.0a1",
+    "ovos-date-parser>=0.36.2a1",
     "tugalex>=2.0.3a1",
 ]
 pt = [
     "ovos-number-parser>=0.24.51a1",
-    "ovos-date-parser>=0.36.0a1",
+    "ovos-date-parser>=0.36.2a1",
     "tugalex>=2.0.3a1",
 ]
 
