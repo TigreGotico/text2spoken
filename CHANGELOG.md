@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2a51](https://github.com/TigreGotico/text2spoken/tree/0.0.2a51) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a50...0.0.2a51)
+
+**Merged pull requests:**
+
+- fix\(es\): plural abbreviations after a number, ordinals before etc. [\#101](https://github.com/TigreGotico/text2spoken/pull/101) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a50](https://github.com/TigreGotico/text2spoken/tree/0.0.2a50) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a49...0.0.2a50)
+
 ## [0.0.2a49](https://github.com/TigreGotico/text2spoken/tree/0.0.2a49) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a48...0.0.2a49)
