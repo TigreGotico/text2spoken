@@ -31,8 +31,15 @@ ru = ["ovos-number-parser>=0.24.35a1"]
 test = [
     "pytest",
     "packaging",
-    "ovos-number-parser>=0.24.45a1",
+    "ovos-number-parser>=0.24.51a1",
     "ovos-color-parser>=0.12.4a1",
+    "ovos-date-parser>=0.36.0a1",
+    "tugalex>=2.0.3a1",
+]
+pt = [
+    "ovos-number-parser>=0.24.51a1",
+    "ovos-date-parser>=0.36.0a1",
+    "tugalex>=2.0.3a1",
 ]
 
 [tool.setuptools.dynamic]
@@ -41,3 +48,6 @@ version = {attr = "text2spoken.version.__version__"}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["text2spoken*"]
+
+[tool.setuptools.package-data]
+text2spoken = ["data/cldr/*.json", "data/cldr/LICENSE"]

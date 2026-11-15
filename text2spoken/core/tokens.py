@@ -29,8 +29,19 @@ def default_tokenizer(text: str, lang: str) -> tuple[Token, ...]:
     return tuple(Token(start, end, word) for start, end, word in quebra_frases.span_indexed_word_tokenize(text))
 
 
+EMOJI_MARKS = frozenset("\ufe0e\ufe0f\u20e3")
+"""The variation selectors U+FE0E and U+FE0F and the combining enclosing keycap U+20E3. They belong to an emoji
+sequence, so they are no part of a word at the edge of another form: `❤️2 cats` reads the number as `😀2 cats` does
+(design section 4.7)."""
+
+
+STAND_IN = "\ufffc"
+"""U+FFFC OBJECT REPLACEMENT CHARACTER, which stands in the view of `text2spoken.core.emoji.emoji_view` for a
+character of an emoji sequence."""
+
+
 def is_mark(char: str) -> bool:
-    return unicodedata.category(char).startswith("M")
+    return unicodedata.category(char).startswith("M") and char not in EMOJI_MARKS
 
 
 def is_letter(char: str) -> bool:
@@ -108,6 +119,24 @@ def join_split_words(tokens: Sequence[Token], text: str, number_marks: frozenset
         extended.append(token if end == token.end
                         else Token(token.start, end, text[token.start:end], clause_end=token.clause_end))
     return tuple(extended)
+
+
+def cut_tokens(tokens: Sequence[Token], view: str) -> tuple[Token, ...]:
+    """The tokens, each cut where the view holds `STAND_IN`. That character belongs to an emoji sequence, so it is no
+    part of a word: `5km1️⃣` gives the token `5km`, as `5km😀` does (design section 4.7)."""
+    cut: list[Token] = []
+    for token in tokens:
+        pieces, start = [], token.start
+        for index in range(token.start, token.end + 1):
+            if index == token.end or view[index] == STAND_IN:
+                if any(char not in EMOJI_MARKS and not char.isspace() for char in view[start:index]):
+                    pieces.append((start, index))
+                start = index + 1
+        for number, (start, end) in enumerate(pieces, 1):
+            text = token.text[start - token.start:end - token.start]
+            cut.append(token if (start, end) == (token.start, token.end)
+                       else Token(start, end, text, clause_end=token.clause_end and number == len(pieces)))
+    return tuple(cut)
 
 
 def protect_blocks(text: str) -> tuple[tuple[int, int], ...]:

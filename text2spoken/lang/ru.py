@@ -792,7 +792,8 @@ class Clock:
             if fields is not None:
                 hour, minute, second = fields
                 yield Span(start, end, Form.TIME, FrozenMap({"hour": hour, "minute": minute, "second": second,
-                                                             "period": None, "suffix": ""}), recognizer=self.name)
+                                                             "period": None, "prefix": "", "suffix": ""}),
+                           recognizer=self.name)
 
 
 @dataclass(frozen=True)

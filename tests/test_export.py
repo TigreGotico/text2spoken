@@ -27,7 +27,7 @@ def test_a_tag_exports_the_file_that_normalize_selects(tag):
     assert result.stdout == run("en").stdout
 
 
-@pytest.mark.parametrize("tag", ["de", "de-AT", "xx"])
+@pytest.mark.parametrize("tag", ["lb", "lb-LU", "xx"])
 def test_a_valid_tag_with_no_language_file_is_one_error_line(tag):
     assert language_file(tag.split("-")[0]) is None
     result = run(tag)
