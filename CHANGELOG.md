@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a48](https://github.com/TigreGotico/text2spoken/tree/0.0.2a48) (2026-11-15)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a47...0.0.2a48)
+
+**Merged pull requests:**
+
+- refactor: move shared language helpers into the core [\#96](https://github.com/TigreGotico/text2spoken/pull/96) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a47](https://github.com/TigreGotico/text2spoken/tree/0.0.2a47) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a46...0.0.2a47)
