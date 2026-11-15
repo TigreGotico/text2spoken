@@ -1,4 +1,5 @@
 """German readings outside the sentence rows: second passes, random text and strict mode."""
+import logging
 import random
 
 import pytest
@@ -60,3 +61,14 @@ def test_a_noun_with_no_known_gender_takes_the_dative_of_the_default_gender():
     # Wikipedia, German declension (fetched): indefinite article table, dative feminine "einer".
     params = NormalizationParams(default_gender=FrozenMap({"de": GrammaticalGender.FEMININE}))
     assert normalize("Ich fahre mit 1 Freundin.", "de-DE", params) == "Ich fahre mit einer Freundin."
+
+
+def test_a_leading_comma_in_de_ch_stays_as_written_as_a_comma_decimal_does(caplog):
+    """CLDR de_CH writes the decimal point, the default mark of de-CH, so `,5` does not parse whole, as `0,5` does
+    not. With `decimal_mark=","`, de-CH reads the amount as de-DE does."""
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize("Das kostet CHF ,5 Mio.", "de-CH") == "Das kostet CHF ,5 Mio."
+    assert [r.getMessage() for r in caplog.records] == ["unread written form ',5' for de-CH"]
+    comma = NormalizationParams(decimal_mark=",")
+    assert normalize("Das kostet CHF ,5 Mio.", "de-CH", comma) == normalize("Das kostet CHF ,5 Mio.", "de-DE")
+    assert normalize("Das kostet CHF ,5 Mio.", "de-DE") == "Das kostet null Komma fünf Millionen Franken."

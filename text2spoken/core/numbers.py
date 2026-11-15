@@ -51,15 +51,17 @@ def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, s
     return integer, fraction
 
 
-def find_numbers(text: str, marks: Marks) -> tuple[Number, ...]:
-    """Every written number in the text that parses whole by the declared marks.
+def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()) -> tuple[Number, ...]:
+    """Every written number in the text that parses whole by `marks`.
 
-    A cluster is a run of digits joined by single marks, colons or slashes. A cluster that does not parse
-    whole, such as `16:9`, `1.2.3` or `1,23` in a language whose group mark is the comma, gives no number.
+    A cluster is a run of digits joined by single marks, colons or slashes. A mark of `marks` or of `declared`
+    joins a cluster. A cluster that does not parse whole by `marks`, such as `16:9`, `1.2.3` or `1,23` in a
+    language whose group mark is the comma, gives no number. So in a variety that declares a second set of marks,
+    such as de-CH, `,5` gives no number when the comma is not a mark of `marks`, as `0,5` gives none.
     """
     folded = fold_digits(text)
     by_script = {script: (decimal, group) for script, decimal, group in marks}
-    joiners = _CLUSTER_JOINERS | {mark for _, decimal, group in marks for mark in (decimal, group) if mark}
+    joiners = _CLUSTER_JOINERS | declared | {mark for _, decimal, group in marks for mark in (decimal, group) if mark}
     numbers = []
     i = 0
     while i < len(text):

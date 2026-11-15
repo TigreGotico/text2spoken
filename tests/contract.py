@@ -24,6 +24,7 @@ from tests.data_keys import ALTERNATIVES, OPTIONAL, PHONE_SHAPE_KEYS, READERS, S
 from text2spoken import Features, NormalizationParams
 from text2spoken.core import language as loader
 from text2spoken.core import recognizers
+from text2spoken.core.color import speak_color
 from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
 from text2spoken.core.letters import speak_letters
@@ -159,7 +160,7 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
 
 SHARED_VERBALIZERS = {verbalizer.__name__: verbalizer for verbalizer in (
     speak_cardinal, speak_lexicon, speak_electronic, speak_letters, speak_decimal, speak_fraction, speak_ordinal,
-    speak_range, speak_percent, speak_expression, speak_telephone, speak_abbreviation, speak_idiom)}
+    speak_range, speak_percent, speak_expression, speak_telephone, speak_abbreviation, speak_idiom, speak_color)}
 """The verbalizers of the core that a file can name, by their name in `READERS`."""
 
 

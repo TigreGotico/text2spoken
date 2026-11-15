@@ -6,6 +6,9 @@ that a preposition before it governs, and "eins" when no noun follows. The ordin
 endings -e, -en, -er, -es and -em. The design page `text2spoken-design.md`, section 5.4, gives the measured
 reason for each speller.
 
+The German palettes of ovos-color-parser hold catalogue names, so the file has no `colors` table (design section
+12), and the shared colour verbalizer spells the digits of a colour as the text writes them.
+
 The amtliche Regelwerk is the rule source for spelling. Its § 25 E2 lets Switzerland always write ss for ß, so
 de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR gives the Austrian month name
 "Jänner" and the Swiss number marks. The rules cite these sources:
@@ -29,7 +32,7 @@ import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
-from text2spoken.core.color import spell_hex
+from text2spoken.core.color import speak_color
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import written_amount
@@ -502,12 +505,6 @@ def speak_percent(span: Span, context: SpanContext) -> str:
 def speak_year(span: Span, context: SpanContext) -> str:
     """Regelwerk § 36 (1.6): "neunzehnhundertneunundachtzig"."""
     return SPELLER.year(span.fields["digits"], Features(), context.request)
-
-
-def speak_color(span: Span, context: SpanContext) -> str:
-    """The German palettes of ovos-color-parser hold catalogue names, so no table is seeded (design section 12),
-    and a colour spells its digits as the text writes them."""
-    return spell_hex(span.fields["hex"], context.request)
 
 
 def _swiss_verbalizer(verbalizer):

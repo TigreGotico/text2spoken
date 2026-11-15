@@ -37,6 +37,11 @@ def digits(value, where: str) -> None:
     assert type(value) is str and value.isascii() and value.isdigit(), f"{where}: {value!r} is not ASCII digits"
 
 
+def rgb(value, where: str) -> None:
+    assert type(value) is str and len(value) == 6 and all(c in "0123456789abcdef" for c in value), \
+        f"{where}: {value!r} is not six lowercase hex digits"
+
+
 def script(value, where: str) -> None:
     assert type(value) is str and len(value) == 4 and value.isalpha() and value.istitle(), \
         f"{where}: {value!r} is not an ISO 15924 script code such as 'Latn'"
@@ -101,6 +106,7 @@ SHAPES: dict[str, Shape] = {
     "clock_marks": list_of(record(mark=word, seconds=boolean, needs=one_of("evidence", "day_period", "none"),
                                   optional={"closes_hour": boolean})),
     "color_words": WORDS,
+    "colors": map_of(rgb, word),
     "currencies": map_of(word, record(optional={"symbols": list_of(word, minimum=1)})),
     "currency_symbols": WORDS,
     "day_periods": map_of(word, WORDS),
@@ -198,6 +204,7 @@ READERS: dict[str, frozenset[str]] = {
     "speak_telephone": frozenset({"digit_words", "sign_words"}),
     "speak_abbreviation": frozenset({"titles", "abbreviations", "number_abbreviations"}),
     "speak_idiom": frozenset({"idioms"}),
+    "speak_color": frozenset({"colors", "digit_words"}),
     "render": frozenset({"symbols"}),
     "effective_params": frozenset({"defaults"}),
 }
@@ -213,7 +220,7 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
-    "letter_runs", "letter_free_consonants", "symbol_names", "function_words",
+    "letter_runs", "letter_free_consonants", "symbol_names", "function_words", "colors",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.
 Design section 4.2 lets a language have no range word: "A language that marks a range with case endings has no

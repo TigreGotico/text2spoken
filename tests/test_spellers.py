@@ -4,7 +4,7 @@ import logging
 import subprocess
 import sys
 from dataclasses import replace
-from decimal import localcontext
+from decimal import Decimal, localcontext
 
 import pytest
 
@@ -486,7 +486,40 @@ def test_the_plural_category_reads_the_int_string_limit_at_call_time():
 
 
 def test_the_private_plural_locale_list_has_its_shape():
-    from unicode_rbnf.plural_rules import PluralType, _load
+    from unicode_rbnf.plural_rules import PluralType, _eval_condition, _load
 
     table = _load(PluralType.CARDINAL)
     assert isinstance(table, dict) and {"en", "pt", "pt_PT", "ru", "ar"} <= set(table)
+    assert ("one", "i = 1 and v = 0") in table["en"]
+    operands = {name: Decimal(0) for name in "ivwftce"}
+    assert _eval_condition("i = 1 and v = 0", {**operands, "n": Decimal(1), "i": Decimal(1)})
+    assert not _eval_condition("i = 1 and v = 0", {**operands, "n": Decimal("1.0"), "i": Decimal(1), "v": Decimal(1)})
+
+
+# The CLDR 49 rules of plurals.xml, applied by hand. The visible fraction digits give v, so v > 0 for each number.
+# en, de, pt_PT: one is i = 1 and v = 0, so other. ru: one, few and many need v = 0, so other. pt: one is i = 0..1,
+# and i = 0, so one. ar: each rule reads n, and n is no integer, so other.
+SMALL_DECIMALS = [("en", "0.00000010", "other"), ("de", "0.0000001", "other"), ("pt-PT", "0.0000001", "other"),
+                  ("pt-BR", "0.00000010", "one"), ("ru", "0.0000001", "other"), ("ru", "0.00000010", "other"),
+                  ("ar", "0.0000001", "other"), ("ru", "0." + "0" * 30 + "1", "other")]
+
+
+@pytest.mark.parametrize(("tag", "written", "category"), SMALL_DECIMALS)
+def test_a_decimal_with_more_than_six_zeros_after_the_point_has_its_plural_category(gendered, tag, written, category):
+    """`str(Decimal)` writes such a number with an exponent, as `1E-7`, so the operands read the fixed-point form."""
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    assert plural_category(Request(tag, Variety(tag), language, NormalizationParams()), written) == category
+
+
+@pytest.mark.parametrize("tag", ["en", "de", "pt-PT", "pt-BR", "ru", "ar"])
+def test_the_plural_category_agrees_with_unicode_rbnf_where_it_reads_no_exponent(gendered, tag):
+    from unicode_rbnf.plural_rules import get_plural_category
+
+    language = replace(gendered.LANGUAGE, code=tag.split("-")[0], cldr_aliases=())
+    request = Request(tag, Variety(tag), language, NormalizationParams())
+    locale = {"pt-PT": "pt_PT", "pt-BR": "pt"}.get(tag, tag)
+    for written in ("0", "1", "1.0", "2", "3", "5", "11", "12", "21", "22", "25", "101", "111", "0.5", "1.5", "2.50",
+                    "10.0", "100", "1000000", "2000000", "0.000001", "0.0000010", "12.345", "1" + "0" * 27 + "1"):
+        with localcontext(prec=40):
+            expected = get_plural_category(locale, Decimal(written))
+        assert plural_category(request, written) == expected, written

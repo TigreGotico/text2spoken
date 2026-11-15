@@ -200,6 +200,10 @@ def cldr_locale(tag: str, available: Collection[str], language: LanguageSpec) ->
 def plural_category(request: Request, written: str) -> str:
     """The CLDR plural category of a written ASCII number, such as `1.0` or `5`, in the variety of the request.
 
+    The operands come from the fixed-point form of the number. `get_plural_category` of unicode_rbnf reads them
+    from `str(Decimal)`, which writes `0.0000001` as `1E-7`: it then finds no fraction digits, and `1.0E-7` raises
+    `ValueError`. So this function evaluates the rules of unicode_rbnf with operands of its own.
+
     The rule runs at the precision of the number. Each operand of a CLDR rule has at most as many digits as the
     number, and the quotient of `i % m` has at most as many digits as `i`, so that precision keeps the rule exact.
     The default context rounds at 28 digits: `10**28 + 1` then takes the category of `10**28`, and `i % 10` raises
@@ -212,7 +216,7 @@ def plural_category(request: Request, written: str) -> str:
     declines too, for another cause: the operand `i` comes from `int(Decimal)`, which has no limit, so the check
     declines early what a speller declines later at `DIGIT_BOUND`, and saves the time of `int(Decimal)`. A limit of
     0 is no limit."""
-    from unicode_rbnf.plural_rules import get_plural_category
+    from unicode_rbnf.plural_rules import PluralType, _eval_condition, _load
 
     locale = cldr_locale(request.tag, plural_locales(), request.language)
     if locale is None:
@@ -226,7 +230,15 @@ def plural_category(request: Request, written: str) -> str:
         raise DeclinedReading(f"a number of {integer} integer and {fraction} fraction digits passes the int string "
                               f"limit of {limit} digits, so it has no plural category")
     with localcontext(prec=max(len(digits), getcontext().prec)):
-        return str(get_plural_category(locale, number))
+        n = abs(number)
+        visible = format(n, "f").partition(".")[2]
+        trimmed = visible.rstrip("0")
+        operands = {"n": n, "i": Decimal(int(n)), "v": Decimal(len(visible)), "w": Decimal(len(trimmed)),
+                    "f": Decimal(int(visible or "0")), "t": Decimal(int(trimmed or "0")), "c": Decimal(0),
+                    "e": Decimal(0)}
+        rules = _load(PluralType.CARDINAL)[locale]
+        return next((category for category in ("zero", "one", "two", "few", "many") for rule, condition in rules
+                     if rule == category and _eval_condition(condition, operands)), "other")
 
 
 @cache

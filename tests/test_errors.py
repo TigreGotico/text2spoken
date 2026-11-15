@@ -240,6 +240,20 @@ def test_an_unread_alpha_logs(caplog):
     assert any("alpha" in r.message for r in caplog.records)
 
 
+@pytest.mark.parametrize(("tag", "text", "reading"), [
+    ("en-GB", "The colour is #ff000080.", "The colour is red."),
+    ("de-DE", "Die Farbe ist #ff000080.", "Die Farbe ist F F null null null null."),
+    ("de-CH", "Die Farbe ist #ff000080.", "Die Farbe ist F F null null null null."),
+    ("pt-PT", "A cor é #ff000080.", "A cor é vermelho."),
+    ("pt-BR", "A cor é #ff000080.", "A cor é vermelho."),
+])
+def test_an_unread_alpha_logs_in_each_language_with_colours(tag, text, reading, caplog):
+    """Design section 12: with no alpha template, the colour reads without its alpha, and the alpha is logged."""
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize(text, tag) == reading
+    assert [r.getMessage() for r in caplog.records] == [f"unread alpha '80' of colour #ff0000 for {tag}"]
+
+
 def test_a_colour_with_no_table_entry_spells_its_digits():
     assert normalize("The colour is #12ab34.", "en") == "The colour is one two A B three four."
 

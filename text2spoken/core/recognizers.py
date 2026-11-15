@@ -21,7 +21,7 @@ from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.letters import LETTERS
-from text2spoken.core.numbers import SIGNS, Number, find_numbers, number_marks
+from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
@@ -51,7 +51,8 @@ def numbers_in(text: str, request: Request) -> tuple[Number, ...]:
     """The numbers of the text, found once for each text in one request."""
     key = ("numbers", text)
     if key not in request.memo:
-        request.memo[key] = find_numbers(text, number_marks(request.data, request.params.decimal_mark))
+        request.memo[key] = find_numbers(text, number_marks(request.data, request.params.decimal_mark),
+                                         declared_marks(request.data))
     return request.memo[key]
 
 
