@@ -22,7 +22,7 @@ verbalizer reads one unit noun first: `1 °C` is "gradu bat" (Araua 203, page 21
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
@@ -47,6 +47,12 @@ SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,3}(
                           "|[0-9]+,[0-9]{3}(?:[ \u00a0\u202f][0-9]{1,3})+")
 """Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the
 whole part or in the fraction: `36 524`, `123 456 789,987 546`, `0,264 7` (Araua 203, section 3.2.1.1, page 12)."""
+
+ROMAN_NUMERAL = re.compile("[IVXLCDM]+[.]")
+"""An upper-case Roman numeral and the full stop of an ordinal."""
+
+COORDINATION = re.compile(" (?:eta|edo) ")
+"""The conjunctions that join two ordinals (Araua 203, section 5, page 27)."""
 
 REGNAL_LETTERS = frozenset("IVX")
 """The one-letter Roman numerals that follow a name as a regnal or series number, as in `Elisabet I.a` (Araua 203,
@@ -406,22 +412,29 @@ class Roman:
     form: Form = Form.ROMAN
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in re.finditer("[IVXLCDM]+[.]", text):
-            read = _roman_reading(text, match.start(), request.data)
+        matches = list(ROMAN_NUMERAL.finditer(text))
+        readings: dict[int, tuple[int, int, str]] = {}
+        for match in reversed(matches):
+            read = _roman_reading(text, match, request.data, readings)
             if read is not None:
-                yield Span(match.start(), read[0], Form.ROMAN,
-                           FrozenMap({"value": read[1], "role": "ordinal", "suffix": read[2]}), recognizer=self.name)
+                readings[match.start()] = read
+        for match in matches:
+            if match.start() in readings:
+                end, value, suffix = readings[match.start()]
+                yield Span(match.start(), end, Form.ROMAN,
+                           FrozenMap({"value": value, "role": "ordinal", "suffix": suffix}), recognizer=self.name)
 
 
-def _roman_reading(text: str, start: int, data) -> tuple[int, int, str] | None:
-    """The end, the value and the case ending of the Roman ordinal at text[start:], or None when the text gives no
-    evidence for it that a verbalizer cannot write."""
+def _roman_reading(text: str, match: re.Match, data, readings: Mapping[int, tuple[int, int, str]]
+                   ) -> tuple[int, int, str] | None:
+    """The end, the value and the case ending of the Roman ordinal that `match` finds, or None when the text gives
+    no evidence for it that a verbalizer cannot write. `readings` holds the readings of the numerals after it, by
+    start offset, so that a coordinated numeral looks up the next one and the pass stays linear."""
     from text2spoken.core.roman import value as roman_value
 
-    match = re.compile("[IVXLCDM]+[.]").match(text, start)
-    if match is None or (start and is_word_char(text[start - 1])):
+    start, stop = match.span()
+    if start and is_word_char(text[start - 1]):
         return None
-    stop = match.end()
     numeral = match.group()[:-1]
     number = roman_value(numeral)
     follower = _ordinal_follower(text, stop, data)
@@ -431,9 +444,9 @@ def _roman_reading(text: str, start: int, data) -> tuple[int, int, str] | None:
     if len(numeral) == 1:
         evidence = noun or (follower[1] and numeral in REGNAL_LETTERS and _name_before(text, start))
     else:
-        link = re.match(" (?:eta|edo) ", text[stop:])
+        link = COORDINATION.match(text, stop)
         evidence = (noun or follower[1] or text.startswith(",", stop)
-                    or (link is not None and _roman_reading(text, stop + link.end(), data) is not None))
+                    or (link is not None and link.end() in readings))
     return (follower[0], number, follower[1]) if evidence else None
 
 

@@ -12,6 +12,7 @@ import pytest
 from packaging.requirements import Requirement
 
 from text2spoken import NormalizationParams, normalize
+from text2spoken.lang import eu
 
 TWENTY_FOUR = NormalizationParams(clock="24h", strict=True)
 
@@ -76,3 +77,21 @@ def test_a_roman_numeral_reads_only_on_evidence(text, expected):
     mendeetan". Page 10 numbers a degree: "Mercalli eskalako VIII. gradura". A year after `II.` gives no evidence
     for the numeral, and a noun before `bat` is the order of a unit reading (page 21), so both stay as written."""
     assert normalize(text, "eu") == expected
+
+
+def test_a_chain_of_coordinated_numerals_takes_linear_work(monkeypatch):
+    """Design section 16: the claim loop is linear. Each numeral of a chain joined by `eta` looks up the reading of
+    the next one, so the pass reads each numeral once, and a long chain raises no `RecursionError`."""
+    calls = 0
+    reading = eu._roman_reading
+
+    def counted(*args):
+        nonlocal calls
+        calls += 1
+        return reading(*args)
+
+    monkeypatch.setattr(eu, "_roman_reading", counted)
+    count = 3000
+    assert normalize("XX. eta " * count + "XXI. mendeetan", "eu") == (
+        "hogeigarren eta " * count + "hogeita batgarren mendeetan")
+    assert calls == count + 1
