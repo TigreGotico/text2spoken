@@ -22,8 +22,9 @@ Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the
 `5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because
 CLDR gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`,
 reads with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`,
-`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "o símbolo da unidade hora
-é h e a abreviatura de minuto é min").
+`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "o símbolo da unidade hora é h
+e a abreviatura de minuto é min"). `unjoined_symbols` holds `ML`, the CLDR symbol of the megalitre, because CLDR
+also names `mL` the millilitre, so `ML` in capitals may be either unit, and `2ML` stays as written.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of pt-PT and pt), and
 a symbol with a currency sign reads with no list: `20 CHF` reads "vinte francos suíços" and `₹50` "cinquenta rupias
@@ -170,30 +171,44 @@ an acronym in capitals looks like a numeral. A measurement ran the recognizer, w
 devtest and the 500,000 sentences of "meio milhão de frases": of 1,050 runs, 25 are acronyms (CD, DC, DL, MC, MI, MV
 and MX), and each has a value above 30, as `O DJ MIX` and `A Rádio MIX FM` do. Each run is judged in
 `knowledge/wiki/audits/text2spoken-langs/letters-limits/evidence/roman-runs.tsv`. The word before the numeral reads
-it only when spaces alone part them, so the items of a list, as `V, III e VI`, and the volume of a citation, as
-`Port., VII`, stay as written. In a code that a hyphen joins to digits, the cap leaves `CX` in `Mazda CX-5`, so the
-digits read and the code reads "CX cinco", and a numeral up to 30, as in `Bell XV-15`, keeps the code as written,
-because the digits wait on it.
+it only when spaces alone part them, so the volume of a citation, as `Port., VII`, stays as written. In a code that
+a hyphen joins to digits, the cap leaves `CX` in `Mazda CX-5`, so the digits read and the code reads "CX cinco", and
+a numeral up to 30, as in `Bell XV-15`, keeps the code as written, because the digits wait on it.
+
+`roman_words` holds the numerals that are also an acronym or a word. After a noun of `roman_nouns`, a numeral reads
+with no cap, as `capítulo XL`, but a numeral of `roman_words` reads only up to 30 there, so `Classe CL`, `Classe ML`
+and `grupo MC` stay as written. Each entry names a sentence of the measurement, or a source: CC (Wiktionary, "CC",
+Portuguese: "init of cartão de cidadão"), CD (mmf-135478 "Qual CD você quer escutar?"), CDI (mmf-493941 "O CDI
+varia"), CDL (mmf-065245 "O CDL alega"), CI (mmf-358222 "A CI-Distribuição"), CL (mmf-091888 "O CL Financial"), CM
+(mmf-407703 "O CM aprovou"), CML (mmf-044814 "A CML mandou"; Wiktionary, "CML", Portuguese: "Câmara Municipal de
+Lisboa"), CV (mmf-110811 "O CV está organizado"), DC (mmf-089621 "Washington DC"), DL (mmf-128115 "O DL 66/2011"),
+MC (mmf-074274 "Racionais MC's"), MCI (mmf-102234 "O MCI quer"), MD (mmf-199580 "dezenas de minidiscos (MD)"), MDC
+(mmf-093312 "Os MDC"), MI (mmf-376946 "Pode MI-me"; Priberam, "mi": "Terceira nota musical"), MIX (Priberam, "mix":
+"nome masculino", "Mistura de coisas diversas"), ML (Wikipedia, "Mercedes-Benz M-Class": "ML" badging, "e.g. ML
+320"), MM (mmf-053612 "O MM."), MV (mmf-294652 "Porquê MV ( máquina virtual)") and MX (mmf-028904 "Behringer MX
+882").
 
 The ordinal after a capitalised word takes its gender from a list, never from the ending of the word: the regnal
-title before the name, as `rainha` in `Rainha Elizabeth II`, then the given-name list of tugalex
-(`TugaLexicon.get_given_name_gender`, which holds regnal names, the Brazilian census names that match a Wikidata
-given name, and the Wikidata given names marked Portuguese), then the common noun, as `região` in `Região III`,
-which the word list of tugalex holds as a feminine noun, else the masculine. So `Elizabeth II` reads "Segunda",
-`Nicholas II` and `Godzilla II` "Segundo", and `Lula III`, a name of both sexes, "Terceiro". The word list of
-tugalex holds no plural, so `noun_gender` names the plurals of the feminine nouns of `roman_nouns`, which Priberam
-gives as "nome feminino": `nas Seções IV e VI` reads "Seções Quarta". Without the extra, the `noun_gender` table
-gives the gender of the titles, of these plurals and of a few names.
+title before the name, as `rainha` in `Rainha Elizabeth II`, then the common noun, as `região` in `Região III` and
+`lei` in `Lei III`, which the `noun_gender` table or the word list of tugalex holds as a feminine noun, then the
+given-name list of tugalex (`TugaLexicon.get_given_name_gender`, which holds regnal names, the Brazilian census
+names that match a Wikidata given name, and the Wikidata given names marked Portuguese), else the masculine. So
+`Elizabeth II` reads "Segunda", and `Nicholas II` and `Godzilla II` "Segundo". `noun_gender` comes before tugalex,
+so it names a name that is also a common noun of another gender: "Lula", the name by which Luiz Inácio Lula da Silva
+is known (Wikipedia, "Luiz Inácio Lula da Silva": "known mononymously as Lula"), so `Lula III` reads "Terceiro". The
+word list of tugalex holds no plural, so `noun_gender` names the plurals of the feminine nouns of `roman_nouns`,
+which Priberam gives as "nome feminino": `nas Seções IV e VI` reads "Seções Quarta". Without the extra, which brings
+the number library, a Roman numeral stays as written, and one log warning names the extra.
 
 A numeral right after a word of `letter_words`, such as a pronoun, does not read, because a numeral follows a noun
-or a name: `Eu LI o livro` stays as written. Nor does a numeral that is a word of the language in a clause in
-capitals: `letter_words` holds "vi", the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito
-perfeito do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito
-do indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
-After a word of `function_words`, which starts many sentences in capitals, as the article in `O XV de Portugal`, a
-numeral reads only from 11 to 30, as a cardinal, so `O XV` reads "O Quinze" and `A II Guerra Mundial` stays as
-written. A capital alone outside a clause in capitals, as the article `O`, is no word of `letter_words` for this
-rule.
+or a name: `Eu LI o livro` stays as written. In a clause in capitals, the word before the numeral does not decide
+this, and the numeral itself does: it is a word of the clause only when `letter_words` holds it or tugalex knows it.
+`letter_words` holds "vi", the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito perfeito
+do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito do
+indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
+After a word of `function_words` in any case, which starts many sentences in capitals, as the article in `O XV de
+Portugal`, a numeral reads only from 11 to 30, as a cardinal, so `O XV` and `O XV DE PORTUGAL VENCEU` read "O
+Quinze", and `A II Guerra Mundial` stays as written. A function word is never the capitalised word before a numeral.
 
 In a clause in capitals, a run of `letter_words` reads as a word, so `SAIA DA SALA` keeps `DA`. A clause in capitals
 is the text between two marks of a clause, a full stop, a comma, a semicolon, a colon, a bracket, a quote or the
@@ -303,6 +318,7 @@ DATA = freeze({
                        "8": "oitavo", "9": "nono", "10": "décimo", "100": "centésimo"},
     "fraction_word": "avos",
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml", "h", "min", "s"],
+    "unjoined_symbols": ["ML"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
                     "contacto", "contato", "celular"],
     "short_codes": ["112", "190", "192", "193", "199"],
@@ -332,6 +348,8 @@ DATA = freeze({
                     "título": "masculine", "secção": "feminine", "seção": "feminine", "canto": "masculine",
                     "ato": "masculine", "acto": "masculine", "cena": "feminine", "fase": "feminine",
                     "grupo": "masculine", "nível": "masculine", "categoria": "feminine", "guerra mundial": "feminine"},
+    "roman_words": ["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DL", "MC", "MCI", "MD", "MDC",
+                    "MI", "MIX", "ML", "MM", "MV", "MX"],
     "roman_letter_nouns": ["capítulo", "volume", "tomo", "livro", "parte", "ato", "acto", "cena", "título", "artigo",
                            "secção", "seção", "canto", "cláusula"],
     "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine", "às": "feminine",
@@ -345,6 +363,7 @@ DATA = freeze({
         "noites": "feminine", "tarde": "feminine", "tardes": "feminine", "parte": "feminine", "partes": "feminine",
         "mulher": "feminine", "mulheres": "feminine", "flor": "feminine", "flores": "feminine",
         "Isabel": "feminine", "Leonor": "feminine", "Beatriz": "feminine", "Inês": "feminine", "Maria": "feminine",
+        "Lula": "masculine",
         "rainha": "feminine", "imperatriz": "feminine", "princesa": "feminine", "infanta": "feminine",
         "dona": "feminine", "doutora": "feminine", "secções": "feminine", "seções": "feminine",
         "classes": "feminine", "fases": "feminine", "cenas": "feminine", "cláusulas": "feminine",
@@ -464,10 +483,10 @@ def _tugalex_words(region: str) -> frozenset[str]:
 
 
 @cache
-def _warn_no_tugalex() -> None:
+def _warn_no_extra() -> None:
     logging.getLogger("text2spoken").warning(
-        "tugalex is not installed, so a word in capitals reads as a word only when letter_words holds it; "
-        "install text2spoken[pt]")
+        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it, and "
+        "a Roman numeral stays as written; install text2spoken[pt]")
 
 
 def _known_word(word: str, request: Request) -> bool:
@@ -477,7 +496,7 @@ def _known_word(word: str, request: Request) -> bool:
     try:
         import tugalex  # noqa: F401
     except ImportError:
-        _warn_no_tugalex()
+        _warn_no_extra()
         return False
     return word in _tugalex_words("rjx" if request.variety.tag == "pt-BR" else "lbx")
 
@@ -726,20 +745,24 @@ def speak_roman(span: Span, context: SpanContext) -> str:
     value = str(span.fields["value"])
     before = context.before
     last = before[-1] if before else ""
-    noun = request.memo.get("roman_series", {}).get(span.start) or _roman_noun(before, data["roman_nouns"])
+    noun = request.memo.get("pt_roman_series", {}).get(span.start) or _roman_noun(before, data["roman_nouns"])
     if noun in data["century_words"] or last.lower() in data["century_words"]:
         gender, capital = MASCULINE, False
     elif noun is not None:
         gender, capital = GrammaticalGender(data["roman_nouns"][noun]), False
     elif not before:
-        title = request.memo.get("roman_titles", {}).get(span.start, "")
+        title = request.memo.get("pt_roman_titles", {}).get(span.start, "")
         gender, capital = _title_gender(title, request), True
     else:
         gender, capital = _name_gender(before, request), True
-    if span.fields["role"] == "ordinal":
-        words = SPELLER.ordinal(value, Features(gender=gender), request)
-    else:
-        words = _cardinal(value, request)
+    try:
+        if span.fields["role"] == "ordinal":
+            words = SPELLER.ordinal(value, Features(gender=gender), request)
+        else:
+            words = _cardinal(value, request)
+    except ImportError as error:
+        _warn_no_extra()
+        raise DeclinedReading(f"no number library reads {value}") from error
     return words[0].upper() + words[1:] if capital else words
 
 
@@ -944,6 +967,31 @@ def _roman_noun(before: Sequence[str], nouns: FrozenMap) -> str | None:
     return None
 
 
+def _list_members(text: str, end: int, links: frozenset[str]) -> list[tuple[int, int, str]]:
+    """The numerals of a list that starts with the numeral that ends at `end`: `N1, N2, … e|ou Nk`, with a comma and a
+    space between the members and a word of `list_links`, in any case, before the last one. Without that last link,
+    the numerals after a comma are no list, so `No Grupo II, CD Tondela venceu.` gives none."""
+    found: list[tuple[int, int, str]] = []
+    position = end
+    while (match := _LIST_COMMA.match(text, position)) and is_bounded(text, *match.span(1)):
+        found.append((match.start(1), match.end(1), match.group(1)))
+        position = match.end(1)
+    match = _LIST_LINK.match(text, position)
+    if match is None or match.group(1).lower() not in links or not is_bounded(text, *match.span(2)):
+        return []
+    return [*found, (match.start(2), match.end(2), match.group(2))]
+
+
+_LIST_COMMA = re.compile(", ([IVXLCDM]+)")
+_LIST_LINK = re.compile(",? ([A-Za-z]+) ([IVXLCDM]+)")
+
+
+def _initial(text: str, end: int) -> bool:
+    """Whether the letter that ends at `end` is an initial: a full stop, a space and a capital follow it, as in `V.
+    Silva`."""
+    return text.startswith(". ", end) and text[end + 2:end + 3].isupper()
+
+
 def _title_gender(title: str, request: Request) -> GrammaticalGender:
     """The gender of a title with its full stop: the gender of its reading in `titles`, else masculine, as `D.`
     reads `Dom` with no name after it."""
@@ -952,13 +1000,15 @@ def _title_gender(title: str, request: Request) -> GrammaticalGender:
 
 
 def _noun_gender(word: str, request: Request) -> GrammaticalGender | None:
-    """The gender of a common noun with no guess from its ending: tugalex for a word that it knows, else the
-    `noun_gender` table. A noun of two genders has none."""
+    """The gender of a common noun with no guess from its ending: the `noun_gender` table, else tugalex for a word that
+    it knows. A noun of two genders has none."""
+    entry = _listed_gender(word, request.data)
+    if entry:
+        return GrammaticalGender(entry)
     if _known_word(word.lower(), request):
         name = _LEXICON_GENDERS.get(_lexicon_gender(word.lower()) or "")
         return GrammaticalGender(name) if name else None
-    entry = _listed_gender(word, request.data)
-    return GrammaticalGender(entry) if entry else None
+    return None
 
 
 def _given_name_gender(name: str, request: Request) -> GrammaticalGender | None:
@@ -977,8 +1027,8 @@ def _given_name_gender(name: str, request: Request) -> GrammaticalGender | None:
 
 def _name_gender(before: Sequence[str], request: Request) -> GrammaticalGender:
     """The gender of a numeral after a capitalised word, with no guess from an ending (design section 4.2): the
-    gender of a regnal title before the name, as `rainha` in `Rainha Elizabeth II`, then the given name, as
-    `Isabel` in `Isabel II`, then the common noun, as `Região` in `Região III`, else masculine, as `Godzilla II`.
+    gender of a regnal title before the name, as `rainha` in `Rainha Elizabeth II`, then the common noun, as `Região`
+    in `Região III`, then the given name, as `Isabel` in `Isabel II`, else masculine, as `Godzilla II`.
     `D.`, which reads `Dom` or `Dona`, gives no gender."""
     last = before[-1]
     if len(before) >= 2 and len(before[-2]) > 1 and before[-2].lower() in {
@@ -986,7 +1036,7 @@ def _name_gender(before: Sequence[str], request: Request) -> GrammaticalGender:
         title = _noun_gender(before[-2], request)
         if title is not None:
             return title
-    return _given_name_gender(last, request) or _noun_gender(last, request) or MASCULINE
+    return _noun_gender(last, request) or _given_name_gender(last, request) or MASCULINE
 
 
 @dataclass(frozen=True)
@@ -996,19 +1046,24 @@ class Roman:
 
     After a noun of `century_words`, any well-formed numeral up to XXX reads. After a noun of `roman_nouns`, a
     numeral of two letters or more reads, and so do `I`, `V` and `X` after a noun of `roman_letter_nouns`, as in `o
-    capítulo V`. After a capitalised name, a value up to 30 reads when a regnal title comes right before the name, as
-    in `D. João V` and `papa Pio X`. A numeral of two letters or more also reads after any other capitalised word, as
-    in `João Paulo II` and `Luís XIV`, and right after a title and its full stop, as in `D. XIV`. In these two cases
-    the value is at most 30, so an acronym such as `MIX` stays as written, and the word before the numeral reads it
-    only when spaces alone part them. After a word of `function_words`, a numeral from 11 to 30 reads as a cardinal,
-    as in `O XV`. No numeral reads right after a word of `letter_words`, as `LI` in `Eu LI`, unless that word is a
-    capital alone outside a clause in capitals. Nor does a numeral that is a word of the language in a clause in
-    capitals, a word of `letter_words` or a word that tugalex knows, as `VI` in `EU VI`. A short numeral after
-    another capitalised word, as in `Malcolm X`, stays as written.
+    capítulo V`, but a numeral of `roman_words` reads there only up to 30, so `Classe CL` stays as written. After a
+    capitalised name, a value up to 30 reads when a regnal title comes right before the name, as in `D. João V` and
+    `papa Pio X`. A numeral of two letters or more also reads after any other capitalised word, as in `João Paulo
+    II` and `Luís XIV`, and right after a title and its full stop, as in `D. XIV`. In these two cases the value is
+    at most 30, so an acronym such as `MIX` stays as written, and the word before the numeral reads it only when
+    spaces alone part them. After a word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in `O
+    XV`. Outside a clause in capitals, no numeral reads right after a word of `letter_words` that is no function
+    word, as `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a word of `letter_words` or a word
+    that tugalex knows, as `VI` in `EU VI`. A short numeral after another capitalised word, as in `Malcolm X`, stays
+    as written.
 
-    A numeral that a comma, `e` or `ou` joins to a numeral read after `século` or a noun of `roman_nouns` belongs to
-    the same list and reads with that noun, as in `séculos XI, XII e XIII` and `capítulo V e VI`. A numeral after
-    any other numeral reads only off the word before it, so `485, V, III e VI` stays as written."""
+    A list after `século` or a noun of `roman_nouns` reads with that noun: `N1, N2, … e Nk`, with a comma and a
+    space between the members and a word of `list_links`, in any case, before the last one, as in `séculos XI, XII e
+    XIII` and `capítulo V e VI`. Each member passes the test of the first numeral and holds a larger value than the
+    numeral before it, and a letter that a full stop, a space and a capital follow is an initial, as `V.` in `V.
+    Silva`. The list ends at the first numeral that fails, so `capítulo IV, MDC e MMC` reads only `IV`. A numeral
+    after a comma with no closing link is no member, so `No Grupo II, CD Tondela venceu.` keeps `CD`, and a numeral
+    after any other numeral reads only off the word before it, so `485, V, III e VI` stays as written."""
     name: str = "roman"
     form: Form = Form.ROMAN
 
@@ -1024,11 +1079,19 @@ class Roman:
         letter_words = frozenset(data["letter_words"])
         letter_nouns = frozenset(data["roman_letter_nouns"])
         function_words = frozenset(data["function_words"])
+        numeral_words = frozenset(data["roman_words"])
+        links = frozenset(link.lower() for link in data["list_links"])
         words = context_words(tokens)
         breaks = clause_breaks(text)
         clauses = capital_clauses(text, request)
-        links = {", ", *(f" {link} " for link in data["list_links"]), *(f", {link} " for link in data["list_links"])}
-        series: tuple[int, str] | None = None
+        members: dict[int, str] = {}
+
+        def in_series(numeral: str, value: int, key: str) -> bool:
+            if key in centuries:
+                return value <= 30
+            return (len(numeral) >= 2 or (numeral in "IVX" and key in letter_nouns)) \
+                and (numeral not in numeral_words or value <= 30)
+
         for match in re.finditer("[IVXLCDM]+", text):
             start, end = match.span()
             numeral = match.group()
@@ -1039,24 +1102,19 @@ class Roman:
             if index < 1:
                 continue
             previous = words[index - 1]
-            if series is not None and text[series[0]:start] in links:
-                key = series[1]
-                reads = value <= 30 if key in centuries \
-                    else len(numeral) >= 2 or (numeral in "IVX" and key in letter_nouns)
-                if reads:
-                    request.memo.setdefault("roman_series", {})[start] = key
-                    series = (end, key)
-                    yield self._span(start, end, value, data)
+            if start in members:
+                request.memo.setdefault("pt_roman_series", {})[start] = members[start]
+                yield self._span(start, end, value, data)
                 continue
-            series = None
+            key = None
             in_clause = any(first <= previous.start and end <= last for first, last in clauses)
             function_word = previous.text.lower() in function_words
-            is_word = previous.text.upper() in letter_words and (in_clause or not function_word) \
+            is_word = previous.text.upper() in letter_words and not in_clause and not function_word \
                 or in_clause and (numeral in letter_words or _known_word(numeral.lower(), request))
             if previous.text in title_keys and text[previous.end:start] == ". ":
                 reads = len(numeral) >= 2 and not is_word and value <= 30
                 if reads:
-                    request.memo.setdefault("roman_titles", {})[start] = previous.text + "."
+                    request.memo.setdefault("pt_roman_titles", {})[start] = previous.text + "."
             else:
                 before = clause_window(text, words, start, end, -1, limit=2, breaks=breaks)
                 if not before or not text[previous.end:start].isspace():
@@ -1064,12 +1122,9 @@ class Roman:
                 title = index >= 2 and words[index - 2].text in titles \
                     and text[words[index - 2].end:previous.start] in (" ", ". ")
                 noun = _roman_noun(before, nouns)
-                if before[-1].lower() in centuries:
-                    reads = value <= 30
-                    series = (end, before[-1].lower()) if reads else None
-                elif noun is not None:
-                    reads = len(numeral) >= 2 or (numeral in "IVX" and noun in letter_nouns)
-                    series = (end, noun) if reads else None
+                if before[-1].lower() in centuries or noun is not None:
+                    key = before[-1].lower() if before[-1].lower() in centuries else noun
+                    reads = in_series(numeral, value, key)
                 elif previous.text in not_names or not before[-1][0].isupper():
                     reads = False
                 elif function_word:
@@ -1080,6 +1135,15 @@ class Roman:
                     reads = len(numeral) >= 2 and not is_word and value <= 30
             if reads:
                 yield self._span(start, end, value, data)
+                if key is not None:
+                    last_value = value
+                    for member_start, member_end, member in _list_members(text, end, links):
+                        member_value = roman_value(member) or 0
+                        if member_value <= last_value or not in_series(member, member_value, key) \
+                                or len(member) == 1 and _initial(text, member_end):
+                            break
+                        members[member_start] = key
+                        last_value = member_value
 
     def _span(self, start: int, end: int, value: int, data) -> Span:
         role = "ordinal" if value <= data["roman_ordinal_limit"] else "cardinal"

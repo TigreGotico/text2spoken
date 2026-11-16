@@ -238,18 +238,38 @@ def test_without_tugalex_only_letter_words_read_and_one_warning_names_the_extra(
     when `letter_words` holds it, and one log warning names the extra."""
     pt = import_module("text2spoken.lang.pt")
     monkeypatch.setitem(sys.modules, "tugalex", None)
-    pt._warn_no_tugalex.cache_clear()
+    pt._warn_no_extra.cache_clear()
     try:
         with caplog.at_level("WARNING", logger="text2spoken"):
             first = normalize("A RTP NO AR", "pt-PT", LETTERS_ON)
             second = normalize("EU VI O AR", "pt-BR", LETTERS_ON)
     finally:
-        pt._warn_no_tugalex.cache_clear()
+        pt._warn_no_extra.cache_clear()
     assert first == "A érre tê pê no á érre"
     assert second == "eu vi O á érre"
-    assert [r.getMessage() for r in caplog.records if "tugalex" in r.getMessage()] == [
-        "tugalex is not installed, so a word in capitals reads as a word only when letter_words holds it; "
-        "install text2spoken[pt]"]
+    assert [r.getMessage() for r in caplog.records if "text2spoken[pt]" in r.getMessage()] == [
+        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it, and "
+        "a Roman numeral stays as written; install text2spoken[pt]"]
+
+
+@pytest.mark.parametrize(("text", "expected"), [("Leia o capítulo V.", "Leia o capítulo V."), ("Classe II", "Classe II"),
+                                                ("A D. XIV.", "A Dom XIV."),
+                                                ("Rainha Elizabeth II", "Rainha Elizabeth II"),
+                                                ("No capítulo II, V. Silva.", "No capítulo II, V. Silva.")])
+def test_without_the_pt_extra_a_roman_numeral_stays_as_written(monkeypatch, caplog, text, expected):
+    """Design section 10: without the `pt` extra, which brings the number library, a Roman numeral stays as written,
+    as on dev, one log warning names the extra, and no `ModuleNotFoundError` reaches the caller."""
+    pt = import_module("text2spoken.lang.pt")
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser.util", None)
+    pt._warn_no_extra.cache_clear()
+    try:
+        with caplog.at_level("WARNING", logger="text2spoken"):
+            assert normalize(text, "pt-PT") == expected
+    finally:
+        pt._warn_no_extra.cache_clear()
+    assert len([r for r in caplog.records if "text2spoken[pt]" in r.getMessage()]) == 1
 
 
 @pytest.mark.parametrize(("text", "expected"), [("MP3", "éme pê três"), ("A25", "á dois cinco"),

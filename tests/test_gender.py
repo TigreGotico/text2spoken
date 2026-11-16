@@ -119,13 +119,14 @@ SUFFIX_READINGS = {
     "pt-371": "Combater a á i dê ésse.",
     "pt-394": "Ligações para a Região Terceiro.",
     "pt-396": "Elizabeth Segundo é a rainha da Inglaterra.",
+    "pt-445": "Reda Segundo venceu.",
 }
 """The Portuguese rows that need tugalex, read without it. The `gender_suffixes` of pt.py alone give the gender: a
 noun that no ending matches takes the masculine default, and `-as` reads feminine. Only `letter_words` makes a run of
 capitals read as a word, so `AR`, `IR`, `TI` and `AIDS` read as they read with no word check, and a word of
 `letter_words` next to them, as `NO` in pt-336, is written in lower case. A Roman numeral after a capitalised word
 takes its gender from a list, never from an ending, and the `noun_gender` table names few nouns and names, so
-`Região III` and `Elizabeth II` read the masculine."""
+`Região III`, `Elizabeth II` and `Reda II` read the masculine."""
 
 
 @pytest.mark.parametrize("row", rows("pt"), ids=lambda row: row["id"])

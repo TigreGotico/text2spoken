@@ -83,11 +83,12 @@ def _joined_table(tag: str, excluded: tuple[str, ...], listed: tuple[str, ...]) 
 
 def joined_table(request: Request) -> FrozenMap:
     """The CLDR symbols of two capital letters or more that read as units only when they touch the digits, as `GB`
-    in `10GB`, apart from those of `unjoined_symbols`. A run of capitals joined to digits is no word of running text,
-    so `10GB` reads "ten gigabytes", and `29 GB golds`, with a space, reads no unit. A symbol of `unit_symbols` in
-    lowercase reads in capitals too when no other CLDR symbol differs from it only in case, so `5KM` reads as `5km`,
-    and `ML`, which may be `mL` or `ML`, reads no unit. A language file with no `unit_symbols` reads no CLDR units, and
-    none of these."""
+    in `10GB`, apart from those of `unjoined_symbols`. A run of capitals joined to digits is no word of running
+    text, so `10GB` reads "ten gigabytes", and `29 GB golds`, with a space, reads no unit. A symbol of
+    `unit_symbols` in lowercase reads in capitals too when no other CLDR symbol differs from it only in case, so
+    `5KM` reads as `5km`, and `ml` gives no `ML`, because CLDR also names `mL`. `unjoined_symbols` holds `ML`
+    itself, the CLDR megalitre, so `2ML` stays as written. A language file with no `unit_symbols` reads no CLDR
+    units, and none of these."""
     data = request.data
     if "unit_symbols" not in data:
         return FrozenMap()

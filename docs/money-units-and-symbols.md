@@ -42,7 +42,7 @@ A unit symbol that cannot be a word, such as `km/h`, `°C`, `kWh` or `µm`, read
 | `Only 1 in 3 passed.` | Only one in three passed. |
 | `He won 29 GB golds.` | He won twenty-nine GB golds. |
 
-A CLDR symbol of two capitals or more that touches the digits before it reads as a unit, with no list, because a run of capitals joined to digits is no word of running text. The `unjoined_symbols` table of the language holds the symbols that name something else when joined, as `CD` does in English:
+A CLDR symbol of two capitals or more that touches the digits before it reads as a unit, with no list, because a run of capitals joined to digits is no word of running text. The `unjoined_symbols` table of the language holds the symbols that name something else when joined, as `CD` does in English, and `ML`, the CLDR megalitre, which a writer may mean as `mL`, the millilitre:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -50,6 +50,7 @@ A CLDR symbol of two capitals or more that touches the digits before it reads as
 | `Tenho 10GB livres.` | `pt-PT` | Tenho dez gigabytes livres. |
 | `Uma central de 5MW.` | `pt-PT` | Uma central de cinco megawatts. |
 | `A 2CD set.` | `en-US` | stays as written |
+| `Usei 2ML de xarope.` | `pt-PT` | stays as written |
 
 `a/b` reads with the CLDR `per` pattern, and `²` and `³` read with the square and cubic patterns. A listed symbol that differs from a CLDR symbol only in case reads as that unit: `ml` reads as the CLDR `mL`. A Portuguese number takes the gender of its unit, as `2 h` shows.
 

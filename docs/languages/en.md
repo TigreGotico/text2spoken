@@ -48,19 +48,22 @@ The test rows in `tests/data/en.tsv` name their source. The `checked_by` column 
 
 ## Roman numerals
 
-A Roman numeral after the name of a monarch or a pope reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". The `regnal_names` table holds the names, from the Wikipedia lists of monarchs, popes and emperors, and a regnal title such as King, Queen, Pope, Saint, Emperor or Tsar before a name also reads the ordinal. A generational suffix from II to IV after a given name and a surname reads the same way. Wikipedia, "Name suffix", says: "he can use the II suffix, which is pronounced "the second"". The `given_names` table holds the 100 names of each sex that the US Social Security Administration records most often from 1900 to 2008. After any other capitalised word, the numeral reads as a cardinal, and only up to 30. After a noun of a series, the numeral reads as a cardinal with no limit. The nouns of the `roman_nouns` table are chapter, volume, book, act, grade, part, phase, class, level, stage, type, war, and the names World War and Super Bowl.
+A Roman numeral after a capitalised name reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". Wikipedia, "Name suffix", says the same of a generational suffix: "he can use the II suffix, which is pronounced "the second"". After a capitalised word, the numeral reads only up to 30. A numeral of one letter reads only after a regnal title and a name, such as King, Queen, Pope, Saint, Emperor or Tsar before the name, and after a noun of two words. After a noun of a series, the numeral reads as a cardinal with no limit. A numeral of the `roman_words` table, such as `MX` or `CD`, is also an initialism, so it reads after a noun of a series only up to 30. The nouns of the `roman_nouns` table are chapter, volume, book, act, grade, part, phase, class, level, stage, type, war, and the names World War and Super Bowl.
+
+Telling a title of a work from a name needs context that the library does not have. So a title of a work reads as a name, as the `Rocky II` row of the table shows.
 
 | Written | Spoken (`en-GB`) | Note |
 | --- | --- | --- |
 | `Henry VIII had six wives.` | Henry the Eighth had six wives. | A regnal number. |
 | `King Harald V of Norway.` | King Harald the Fifth of Norway. | One letter reads after a regnal title and a name. |
 | `John Smith III spoke.` | John Smith the Third spoke. | A generational suffix after a given name and a surname. |
-| `Article III applies.` | Article Three applies. | Any other capitalised word reads the cardinal. |
-| `Hank Williams III sang.` | Hank Williams Three sang. | Limit: `given_names` does not hold Hank, so the suffix reads as a cardinal. |
+| `Hank Williams III sang.` | Hank Williams the Third sang. | A generational suffix after a name. |
+| `Rocky II was a hit.` | Rocky the Second was a hit. | Limit: a title of a work reads as a name. |
 | `Read Chapter IV.` | Read Chapter Four. | A noun of a series. |
 | `Type II diabetes.` | Type Two diabetes. | A noun of a series. |
+| `It is a type MX record.` | stays as written | `MX` is an initialism of `roman_words`, and its value is above 30. |
 | `World War I began.` | World War One began. | One letter reads after a noun of two words. |
-| `Malcolm X spoke.` | stays as written | One letter after a name needs a regnal title. Malcolm is also the name of four kings of Scotland, so a list of names cannot tell them apart. |
+| `Malcolm X spoke.` | stays as written | One letter after a name needs a regnal title. Malcolm is also the name of four kings of Scotland. |
 | `Baltimore MD is far.` | stays as written | After a capitalised word, a numeral reads only up to 30, so the initialism `MD` stays as written. |
 
 ## Runs of capital letters

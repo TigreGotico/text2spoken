@@ -81,7 +81,7 @@ English, Portuguese and Basque read a Roman numeral when the text around it show
 | `Super Bowl LVII was close.` | `en-US` | Super Bowl Fifty-Seven was close. |
 | `XX. mendean.` | `eu-ES` | hogeigarren mendean. |
 
-Portuguese reads an ordinal up to ten and a cardinal from eleven, and pt-BR stops the ordinal at nine, as Ciberdúvidas gives the rule. English reads "the" and an ordinal after the name of a monarch or a pope, and after a given name and a surname. It reads a cardinal after any other capitalised word. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
+Portuguese reads an ordinal up to ten and a cardinal from eleven, and pt-BR stops the ordinal at nine, as Ciberdúvidas gives the rule. English reads "the" and an ordinal after a capitalised word, as after a name, and a cardinal after a noun of a series. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
 
 A numeral stays as written when the text does not show that it is a number:
 
@@ -95,14 +95,15 @@ A numeral stays as written when the text does not show that it is a number:
 | `Eu LI o livro.` | `pt-PT` | stays as written | A numeral right after a pronoun does not read. |
 | `EU VI O FILME.` | `pt-PT` | stays as written | `VI` is a word in a clause in capitals. |
 | `Use the Linux CLI.` | `en-US` | stays as written | After a capitalised word, a numeral reads only up to 30. |
+| `No Grupo II, CD Tondela venceu.` | `pt-PT` | No Grupo segundo, CD Tondela venceu. | No link word closes a list, so `CD` is no member of it. |
 | `485, V, III e VI, do CPC.` | `pt-PT` | quatrocentos e oitenta e cinco, V, III e VI, do CPC. | A comma parts each numeral from the word before it, and no century or noun of a series starts the list. |
 | `I bought a Mazda CX-5.` | `en-US` | I bought a Mazda CX five. | `CX` (110) is above 30, so the code reads its digits. |
 
-English reads the cardinal after a title of a work, because the title is no name of a monarch or a person. Portuguese reads the ordinal after any capitalised word, as for a name, because telling a title from a name needs context that the library does not have:
+English and Portuguese read the ordinal after any capitalised word, as for a name, because telling a title from a name needs context that the library does not have:
 
 | Written | Tag | Spoken | Note |
 | --- | --- | --- | --- |
-| `Rocky II was a hit.` | `en-US` | Rocky Two was a hit. | A title of a work reads the cardinal. |
+| `Rocky II was a hit.` | `en-US` | Rocky the Second was a hit. | Limit: a title of a work reads as a name. |
 | `Vi o Avatar II.` | `pt-PT` | Vi o Avatar Segundo. | Limit: a title of a work reads as a name. |
 
 ## Telephone numbers

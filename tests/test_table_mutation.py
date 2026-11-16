@@ -35,7 +35,7 @@ EN_ENTRIES = {
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
     "electronic_symbols": "@", "letter_names": "w", "electronic_vowels": "i", "electronic_schemes": "https",
     "electronic_tlds": "uk", "letter_vowels": "a", "letter_onsets": "n", "letter_codas": "ng", "letter_runs": "IRS",
-    "regnal_titles": "King", "regnal_names": "Henry", "given_names": "Thomas", "roman_nouns": "chapter",
+    "regnal_titles": "King", "roman_nouns": "chapter", "roman_words": "MX",
     "letter_words": "TO", "unjoined_symbols": "CD",
 }
 DE_ENTRIES = {
@@ -74,8 +74,8 @@ PT_ENTRIES = {
     "time_contractions": "às", "time_article_prepositions": "as",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
-    "letter_free_consonants": "b", "roman_nouns": "capítulo", "letter_words": "DA",
-    "roman_letter_nouns": "capítulo",
+    "letter_free_consonants": "b", "roman_nouns": "capítulo", "roman_words": "MC", "letter_words": "DA",
+    "roman_letter_nouns": "capítulo", "unjoined_symbols": "ML",
     "roman_ordinal_limit": DELETE,
 }
 AR_ENTRIES = {
