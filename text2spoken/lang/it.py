@@ -1,14 +1,12 @@
 """Italian: it-IT, the default variety, it-CH and it-SM.
 
-Number words come from CLDR RBNF `it` (design section 5.4). A cardinal reads the `spellout-numbering` rule set, which
-writes the full form of a compound in uno: "ventuno", "centouno", "milleuno". The Enciclopedia dell'Italiano Treccani,
-"numerali", Pronuncia e grafia, allows both forms before a noun: "Nei composti (ventuno, trentuno, ecc.) accompagnati da
-un nome, questo è invariabile se il numerale segue il nome, ma può essere apocopato se il numerale precede il nome". The
-same section corrects one RBNF form: "con cento seguito da una decina o da un'unità, l'elisione è poco comune con uno,
-otto e undici [...] (29) centootto [raramente centotto]". So every "centotto" of RBNF reads "centootto", as in 108 and
-1108. The same section gives "I composti di tre vanno accentati", and RBNF writes "milletre" for 1003 and "duemilatre"
-for 2003, so a compound word that ends in tre ends in "tré". A number of 10**18 or more stays as written, because RBNF
-`it` has no rule for it.
+Cardinals and ordinals come from ovos-number-parser (design section 5.4), the `it` extra. Its forms agree with the
+Enciclopedia dell'Italiano Treccani, "numerali", Pronuncia e grafia. A compound in uno keeps its full form, as
+"ventuno", "centouno" and "ventunomila", and the same section allows both forms before a noun: "Nei composti
+(ventuno, trentuno, ecc.) accompagnati da un nome, questo è invariabile se il numerale segue il nome, ma può essere
+apocopato se il numerale precede il nome". 108 reads "centootto": "con cento seguito da una decina o da un'unità,
+l'elisione è poco comune con uno, otto e undici [...] (29) centootto [raramente centotto]". 1003 reads "milletré": "I
+composti di tre vanno accentati". CLDR RBNF `it` writes "centotto" and "milletre" for these numbers.
 
 Of the cardinals, only uno changes with the noun (Treccani, "numerali", Cardinali: "In italiano sono invariabili, a
 eccezione di uno, che varia secondo il genere [...] e che al femminile assume la forma una"). Without a noun, 1
@@ -38,18 +36,17 @@ and the plus sign "più" ("più": "stamattina il termometro segna appena più tr
 
 An ordinal is written with "il piccolo segno esponenziale ‹º› per il genere maschile o ‹ª› per il genere femminile"
 ("numerali", Pronuncia e grafia), as the CLDR RBNF `it` rules `digits-ordinal-masculine` and
-`digits-ordinal-feminine` write it. Up to 100 it reads `spellout-ordinal-masculine` or `spellout-ordinal-feminine`.
-Above 100 RBNF writes "centoottantesimo" for 180, so the file builds the ordinal by the rule of the Vocabolario
-Treccani, "ordinale": the ordinals after decimo "si formano dal tema del corrispondente cardinale ital. con l'aggiunta
-della terminazione -èsimo: così undicesimo, [...] ventitreesimo, [...] centunesimo, [...] millesimo, duemillesimo,
-[...] diecimillesimo". The stem drops the last vowel of the cardinal. A cardinal in tré keeps the e, as in
-"ventitreesimo", and a cardinal in sei keeps the i, as in the RBNF "ventiseiesimo". mila becomes mill, as in
-"duemillesimo", and the stem of "centouno" is "centun", as in "centunesimo", so the stem of "centootto" is "centott".
-So 180 reads "centottantesimo", 108 "centottesimo" and 1000 "millesimo". The same entry gives the separate form for
-the ordinals "per i quali l'altro tipo sarebbe sentito come poco eufonico: centesimo decimo, millesimo primo,
-millesimo secondo, millesimo decimo, millesimo undecimo o undicesimo, ecc. (in questi casi la grafia staccata è
-preferita)". `SEPARATE_ORDINALS` holds these five numbers, so 110 reads "centesimo decimo" and 1001 "millesimo
-primo"; any other ordinal follows the stem rule. An ordinal above 999999 stays as written.
+`digits-ordinal-feminine` write it. The Vocabolario Treccani, "ordinale", gives the rule of the ordinals after
+decimo: they "si formano dal tema del corrispondente cardinale ital. con l'aggiunta della terminazione -èsimo: così
+undicesimo, [...] ventitreesimo, [...] centunesimo, [...] millesimo, duemillesimo, [...] diecimillesimo". So 108
+reads "centoottesimo", from "centootto", and 180 "centottantesimo". The same entry gives the separate form for the
+ordinals "per i quali l'altro tipo sarebbe sentito come poco eufonico: centesimo decimo, millesimo primo, millesimo
+secondo, millesimo decimo, millesimo undecimo o undicesimo, ecc. (in questi casi la grafia staccata è preferita)".
+`SEPARATE_ORDINALS` holds these five numbers. ovos-number-parser follows the rule, with two differences, where the
+file follows the Treccani entry: it writes "centodecimo" for 110, and it writes "decimo" at the end of every other
+number above 100 that ends in 10, as "duecentodecimo" for 210, where the rule gives "duecentodiecesimo" from
+"duecentodieci". An ordinal above 999999 stays as written, because ovos-number-parser writes
+"tremilionecinquantamilasimo" for 3500000.
 
 The degree sign writes an ordinal too (Vocabolario Treccani, "centesimo": "in scrittura numerica 100°"; "articolo":
 "l'a. 1° della Costituzione"; "gennaio": "cominciare l'anno dal 1° marzo"). `noun_ordinal_marks` names it. Before a
@@ -129,7 +126,7 @@ from text2spoken.core.recognizers import speak_cardinal as core_speak_cardinal
 from text2spoken.core.recognizers import speak_fraction as core_speak_fraction
 from text2spoken.core.recognizers import speak_lexicon, speak_percent
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.tokens import Token, is_bounded, is_word_char
 from text2spoken.core.units import cldr_data, unit_reading
@@ -179,10 +176,12 @@ VARIETIES = (
     Variety("it-SM"),
 )
 
-LARGEST_RBNF_ORDINAL = 100
-"""The last ordinal that RBNF `it` writes. Above it RBNF writes "centoottantesimo" for 180, so the file builds the
-ordinal from the cardinal."""
+LARGEST_PLURAL_ORDINAL = 100
+"""The last plural ordinal that a fraction reads, by RBNF `it`. The core fraction recognizer reads no larger
+denominator."""
 LARGEST_ORDINAL = 999_999
+"""The last ordinal that reads. From a million up ovos-number-parser writes "tremilionecinquantamilasimo" for
+3500000."""
 SEPARATE_ORDINALS = frozenset({110, 1001, 1002, 1010, 1011})
 """The ordinals that the Vocabolario Treccani, "ordinale", writes as two words: "centesimo decimo, millesimo primo,
 millesimo secondo, millesimo decimo, millesimo undecimo o undicesimo"."""
@@ -190,44 +189,29 @@ VOWELS = "aeiouàèéìíòóù"
 
 
 class ItalianSpeller:
-    """CLDR RBNF `it` integers, with "una" for a feminine 1, decimals by the RBNF `x.x` rule, and fractions."""
+    """ovos-number-parser for integers and ordinals, with the Treccani forms where the parser differs from them;
+    decimals by the RBNF `x.x` rule; fractions with the plural ordinals of RBNF."""
 
     def __init__(self):
-        self.rbnf = RbnfSpeller(cardinal={Features(): "spellout-numbering"},
-                                ordinal={Features(): "spellout-ordinal-masculine",
-                                         Features(gender=F): "spellout-ordinal-feminine"})
+        self.parser = OvosNumberSpeller({M: "masculine", F: "feminine"})
         self.plural = RbnfSpeller(cardinal={Features(): "spellout-numbering"},
                                   ordinal={Features(): "spellout-ordinal-masculine-plural"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        if features.gender is F and bounded_integer(digits) == 1:
-            return "una"
-        words = self.rbnf.cardinal(digits, Features(), request).replace("centotto", "centootto")
-        return " ".join(w[:-3] + "tré" if w.endswith("tre") and w != "tre" else w for w in words.split(" "))
+        return self.parser.cardinal(digits, Features(gender=features.gender), request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         value = bounded_integer(digits)
         if value is None or value > LARGEST_ORDINAL:
             raise DeclinedReading(f"no ordinal above {LARGEST_ORDINAL}")
-        if value <= LARGEST_RBNF_ORDINAL:
-            return self.rbnf.ordinal(digits, features, request)
+        features = Features(gender=features.gender)
         if value in SEPARATE_ORDINALS:
             head = 100 if value < 1000 else 1000
             return f"{self.ordinal(str(head), features, request)} {self.ordinal(str(value - head), features, request)}"
-        words = self.cardinal(digits, Features(), request)
-        if words.endswith("tré"):
-            stem = words[:-1] + "e"
-        elif words.endswith("sei"):
-            stem = words
-        elif words.endswith("mila"):
-            stem = words[:-3] + "ill"
-        elif words.endswith("ouno"):
-            stem = words[:-4] + "un"
-        elif words.endswith("ootto"):
-            stem = words[:-5] + "ott"
-        else:
-            stem = words[:-1]
-        return stem + ("esima" if features.gender is F else "esimo")
+        if value > 100 and value % 100 == 10:
+            stem = self.cardinal(digits, Features(), request)[:-1]
+            return stem + ("esima" if features.gender is F else "esimo")
+        return self.parser.ordinal(digits, features, request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", Features(), request)
@@ -235,13 +219,11 @@ class ItalianSpeller:
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         if bounded_integer(numerator) == 1:
-            if (bounded_integer(denominator) or 0) > LARGEST_RBNF_ORDINAL:
-                raise DeclinedReading(f"no fraction with a denominator above {LARGEST_RBNF_ORDINAL}")
             bottom = "mezzo" if bounded_integer(denominator) == 2 else self.ordinal(denominator, Features(), request)
             return f"un {bottom}"
         value = bounded_integer(denominator)
-        if value is None or value > LARGEST_RBNF_ORDINAL:
-            raise DeclinedReading(f"no fraction with a denominator above {LARGEST_RBNF_ORDINAL}")
+        if value is None or value > LARGEST_PLURAL_ORDINAL:
+            raise DeclinedReading(f"no plural ordinal above {LARGEST_PLURAL_ORDINAL}")
         bottom = self.plural.ordinal(denominator, Features(), request)
         return f"{self.cardinal(numerator, Features(), request)} {bottom}"
 

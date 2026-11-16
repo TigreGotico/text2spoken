@@ -1,6 +1,6 @@
 # Italian
 
-The file `text2spoken/lang/it.py` reads Italian. It needs no extra: its number words come from the CLDR spell-out rules, which the core install holds.
+The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for its number words, which come from `ovos-number-parser`.
 
 ## What it reads
 
@@ -27,6 +27,7 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `Compra 1/2 lattuga.` | `it-IT` | Compra mezza lattuga. |
 | `È la 2ª volta.` | `it-IT` | È la seconda volta. |
 | `Il 180º giorno.` | `it-IT` | Il centottantesimo giorno. |
+| `Il 108º giorno.` | `it-IT` | Il centoottesimo giorno. |
 | `Il 1° maggio.` | `it-IT` | Il primo maggio. |
 | `Nel 21° secolo.` | `it-IT` | Nel ventunesimo secolo. |
 | `Il biglietto costa 15 €.` | `it-IT` | Il biglietto costa quindici euro. |
@@ -80,7 +81,7 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 The rules cite the Vocabolario Treccani and the Enciclopedia dell'Italiano Treccani, entry "numerali". The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 114 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 119 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
@@ -95,6 +96,7 @@ Italian leaves these forms as written:
 | `Ruota di 90° verso destra.` | `it-IT` | stays as written | `°` before a word that is not a noun that the number counts writes an angle, and `°` alone reads no unit. |
 | `Abito al 3° piano.` | `it-IT` | stays as written | The same rule: piano is also an adverb. Write `3º`. |
 | `Fa 30° oggi.` | `it-IT` | stays as written | The same rule. `°C` reads as degrees Celsius. |
+| `È il 2500000º cliente.` | `it-IT` | stays as written | An ordinal above 999999 stays as written, because ovos-number-parser writes a wrong form for it. |
 | `Il totale è 6.000 franchi.` | `it-CH` | stays as written | In `it-CH` the point is the decimal mark, and a number with a point stays as written. A text from Italy writes the thousands group with the point. |
 | `La riunione è alle 8.00.` | `it-CH` | stays as written | The same rule: the point also writes a clock time. |
 | `Il 3,5% dei voti.` | `it-CH` | stays as written | `it-CH` reads no decimal comma. |
