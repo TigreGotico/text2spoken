@@ -166,27 +166,31 @@ the measurement below found `Grupo C` and `classe C`, and "meio milhão de frase
 goleadas` (mmf-210324), a group of a series from A. So `Grupo I`, `Fase I`, `classe A`, `anexo C` and `vitamina C`
 stay as written, and `Grupo II` reads "Grupo segundo".
 
-After a capitalised word that is no noun of `roman_nouns`, the value is at most 30, as after a regnal title, because
-an acronym in capitals looks like a numeral. A measurement ran the recognizer, with no such limit, over the FLORES+
-devtest and the 500,000 sentences of "meio milhão de frases": of 1,050 runs, 25 are acronyms (CD, DC, DL, MC, MI, MV
-and MX), and each has a value above 30, as `O DJ MIX` and `A Rádio MIX FM` do. Each run is judged in
-`knowledge/wiki/audits/text2spoken-langs/letters-limits/evidence/roman-runs.tsv`. The word before the numeral reads
-it only when spaces alone part them, so the volume of a citation, as `Port., VII`, stays as written. In a code that
-a hyphen joins to digits, the cap leaves `CX` in `Mazda CX-5`, so the digits read and the code reads "CX cinco", and
-a numeral up to 30, as in `Bell XV-15`, keeps the code as written, because the digits wait on it.
+After a capitalised word that is no noun of `roman_nouns`, the value is at most 30, as after a regnal title, because an
+acronym in capitals looks like a numeral. A measurement ran the recognizer, with no such limit, over the FLORES+ devtest
+and the 500,000 sentences of "meio milhão de frases": of 1,050 runs, 25 are acronyms (CD, DC, DL, MC, MI, MV and MX),
+and each has a value above 30, as `O DJ MIX` and `A Rádio MIX FM` do. Each run is judged in
+`knowledge/wiki/audits/text2spoken-langs/letters-limits/evidence/roman-runs.tsv`. These rules read a numeral only when
+spaces alone part it from the word before it. When a comma or another mark parts them, a numeral from 11 to 30 after a
+capitalised word reads as a cardinal, as `XX` in `No século XIX, XX pessoas`, and a smaller one stays as written, as the
+volume of a citation in `Port., VII`. In a code that a hyphen joins to digits, the cap leaves `CX` in `Mazda CX-5`, so
+the digits read and the code reads "CX cinco", and a numeral up to 30, as in `Bell XV-15`, keeps the code as written,
+because the digits wait on it.
 
-`roman_words` holds the numerals that are also an acronym or a word. After a noun of `roman_nouns`, a numeral reads
-with no cap, as `capítulo XL`, but a numeral of `roman_words` reads only up to 30 there, so `Classe CL`, `Classe ML`
-and `grupo MC` stay as written. Each entry names a sentence of the measurement, or a source: CC (Wiktionary, "CC",
-Portuguese: "init of cartão de cidadão"), CD (mmf-135478 "Qual CD você quer escutar?"), CDI (mmf-493941 "O CDI
-varia"), CDL (mmf-065245 "O CDL alega"), CI (mmf-358222 "A CI-Distribuição"), CL (mmf-091888 "O CL Financial"), CM
-(mmf-407703 "O CM aprovou"), CML (mmf-044814 "A CML mandou"; Wiktionary, "CML", Portuguese: "Câmara Municipal de
-Lisboa"), CV (mmf-110811 "O CV está organizado"), DC (mmf-089621 "Washington DC"), DL (mmf-128115 "O DL 66/2011"),
-MC (mmf-074274 "Racionais MC's"), MCI (mmf-102234 "O MCI quer"), MD (mmf-199580 "dezenas de minidiscos (MD)"), MDC
-(mmf-093312 "Os MDC"), MI (mmf-376946 "Pode MI-me"; Priberam, "mi": "Terceira nota musical"), MIX (Priberam, "mix":
-"nome masculino", "Mistura de coisas diversas"), ML (Wikipedia, "Mercedes-Benz M-Class": "ML" badging, "e.g. ML
-320"), MM (mmf-053612 "O MM."), MV (mmf-294652 "Porquê MV ( máquina virtual)") and MX (mmf-028904 "Behringer MX
-882").
+`roman_words` holds the numerals that are also an acronym or a word. After a noun of `roman_nouns`, a numeral of
+`roman_words` reads only when no word in lowercase follows it, because the word that follows a size or an acronym names
+the thing it qualifies: `capítulo XL,` reads "capítulo quarenta", and `categoria XL masculina`, `Classe CL usado` and
+`grupo MC venceu` stay as written. So `capítulo XL e XLI` stays as written, and a member of `roman_words` ends a list,
+as `MDC` in `capítulo IV, MDC e MMC`. Any other numeral after a noun of `roman_nouns` reads with no cap. Each entry
+names a sentence of the measurement, or a source: CC (Wiktionary, "CC", Portuguese: "init of cartão de cidadão"), CD
+(mmf-135478 "Qual CD você quer escutar?"), CDI (mmf-493941 "O CDI varia"), CDL (mmf-065245 "O CDL alega"), CI
+(mmf-358222 "A CI-Distribuição"), CL (mmf-091888 "O CL Financial"), CM (mmf-407703 "O CM aprovou"), CML (mmf-044814 "A
+CML mandou"; Wiktionary, "CML", Portuguese: "Câmara Municipal de Lisboa"), CV (mmf-110811 "O CV está organizado"), DC
+(mmf-089621 "Washington DC"), DL (mmf-128115 "O DL 66/2011"), MC (mmf-074274 "Racionais MC's"), MCI (mmf-102234 "O MCI
+quer"), MD (mmf-199580 "dezenas de minidiscos (MD)"), MDC (mmf-093312 "Os MDC"), MI (mmf-376946 "Pode MI-me"; Priberam,
+"mi": "Terceira nota musical"), MIX (Priberam, "mix": "nome masculino", "Mistura de coisas diversas"), ML (Wikipedia,
+"Mercedes-Benz M-Class": "ML" badging, "e.g. ML 320"), MM (mmf-053612 "O MM."), MV (mmf-294652 "Porquê MV ( máquina
+virtual)"), MX (mmf-028904 "Behringer MX 882") and XL (mmf-281415 "Os XL medem").
 
 The ordinal after a capitalised word takes its gender from a list, never from the ending of the word: the regnal
 title before the name, as `rainha` in `Rainha Elizabeth II`, then the common noun, as `região` in `Região III` and
@@ -349,7 +353,7 @@ DATA = freeze({
                     "ato": "masculine", "acto": "masculine", "cena": "feminine", "fase": "feminine",
                     "grupo": "masculine", "nível": "masculine", "categoria": "feminine", "guerra mundial": "feminine"},
     "roman_words": ["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DL", "MC", "MCI", "MD", "MDC",
-                    "MI", "MIX", "ML", "MM", "MV", "MX"],
+                    "MI", "MIX", "ML", "MM", "MV", "MX", "XL"],
     "roman_letter_nouns": ["capítulo", "volume", "tomo", "livro", "parte", "ato", "acto", "cena", "título", "artigo",
                            "secção", "seção", "canto", "cláusula"],
     "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine", "às": "feminine",
@@ -1044,31 +1048,34 @@ class Roman:
     """A Roman numeral after a name, after `século`, after a noun of `roman_nouns` or after a title: `D. Maria II`,
     `Luís XIV`, `século XIX`, `capítulo V`, `Classe II`, `D. XIV`.
 
-    After a noun of `century_words`, any well-formed numeral up to XXX reads. After a noun of `roman_nouns`, a
-    numeral of two letters or more reads, and so do `I`, `V` and `X` after a noun of `roman_letter_nouns`, as in `o
-    capítulo V`, but a numeral of `roman_words` reads there only up to 30, so `Classe CL` stays as written. After a
-    capitalised name, a value up to 30 reads when a regnal title comes right before the name, as in `D. João V` and
-    `papa Pio X`. A numeral of two letters or more also reads after any other capitalised word, as in `João Paulo
-    II` and `Luís XIV`, and right after a title and its full stop, as in `D. XIV`. In these two cases the value is
-    at most 30, so an acronym such as `MIX` stays as written, and the word before the numeral reads it only when
-    spaces alone part them. After a word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in `O
-    XV`. Outside a clause in capitals, no numeral reads right after a word of `letter_words` that is no function
-    word, as `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a word of `letter_words` or a word
-    that tugalex knows, as `VI` in `EU VI`. A short numeral after another capitalised word, as in `Malcolm X`, stays
-    as written.
+    After a noun of `century_words`, any well-formed numeral up to XXX reads. After a noun of `roman_nouns`, a numeral
+    of two letters or more reads, and so do `I`, `V` and `X` after a noun of `roman_letter_nouns`, as in `o capítulo V`,
+    but a numeral of `roman_words` reads there only when no word in lowercase follows it, so `capítulo XL.` reads and
+    `Classe CL usado` stays as written. After a capitalised name, a value up to 30 reads when a regnal title comes right
+    before the name, as in `D. João V` and `papa Pio X`. A numeral of two letters or more also reads after any other
+    capitalised word, as in `João Paulo II` and `Luís XIV`, and right after a title and its full stop, as in `D. XIV`.
+    In these two cases the value is at most 30, so an acronym such as `MIX` stays as written. These rules need spaces
+    alone between the word before the numeral and the numeral. When a comma or another mark parts them, a numeral from
+    11 to 30 after a capitalised word reads as a cardinal, as `XX` in `No século XIX, XX pessoas`, and a smaller one
+    stays as written, unless a regnal title comes before the word. After a word of `function_words`, a numeral from 11
+    to 30 reads as a cardinal, as in `O XV`. Outside a clause in capitals, no numeral reads right after a word of
+    `letter_words` that is no function word, as `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a
+    word of `letter_words` or a word that tugalex knows, as `VI` in `EU VI`. A short numeral after another capitalised
+    word, as in `Malcolm X`, stays as written.
 
-    A list after `século` or a noun of `roman_nouns` reads with that noun: `N1, N2, … e Nk`, with a comma and a
-    space between the members and a word of `list_links`, in any case, before the last one, as in `séculos XI, XII e
-    XIII` and `capítulo V e VI`. Each member passes the test of the first numeral and holds a larger value than the
-    numeral before it, and a letter that a full stop, a space and a capital follow is an initial, as `V.` in `V.
-    Silva`. The list ends at the first numeral that fails, so `capítulo IV, MDC e MMC` reads only `IV`. A numeral
-    after a comma with no closing link is no member, so `No Grupo II, CD Tondela venceu.` keeps `CD`, and a numeral
-    after any other numeral reads only off the word before it, so `485, V, III e VI` stays as written."""
+    A list after `século` or a noun of `roman_nouns` reads with that noun: `N1, N2, … e Nk`, with a comma and a space
+    between the members and a word of `list_links`, in any case, before the last one, as in `séculos XI, XII e XIII` and
+    `capítulo V e VI`. Each member passes the test of the first numeral and holds a larger value than the numeral before
+    it, and a letter that a full stop, a space and a capital follow is an initial, as `V.` in `V. Silva`. The list ends
+    at the first numeral that fails, so `capítulo IV, MDC e MMC` reads only `IV`. A numeral after a comma with no
+    closing link is no member. A numeral that is no member reads as the rule for a numeral after a mark gives, so `No
+    Grupo II, CD Tondela venceu.` keeps `CD`, `485, V, III e VI` stays as written, and `O título II, XI capítulos` reads
+    `XI` as a cardinal."""
     name: str = "roman"
     form: Form = Form.ROMAN
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        from text2spoken.core.roman import value as roman_value
+        from text2spoken.core.roman import value as roman_value, word_follows
 
         data = request.data
         titles = frozenset(data["regnal_titles"])
@@ -1086,11 +1093,11 @@ class Roman:
         clauses = capital_clauses(text, request)
         members: dict[int, str] = {}
 
-        def in_series(numeral: str, value: int, key: str) -> bool:
+        def in_series(numeral: str, value: int, key: str, end: int) -> bool:
             if key in centuries:
                 return value <= 30
             return (len(numeral) >= 2 or (numeral in "IVX" and key in letter_nouns)) \
-                and (numeral not in numeral_words or value <= 30)
+                and (numeral not in numeral_words or not word_follows(text, end))
 
         for match in re.finditer("[IVXLCDM]+", text):
             start, end = match.span()
@@ -1117,14 +1124,17 @@ class Roman:
                     request.memo.setdefault("pt_roman_titles", {})[start] = previous.text + "."
             else:
                 before = clause_window(text, words, start, end, -1, limit=2, breaks=breaks)
-                if not before or not text[previous.end:start].isspace():
+                if not before:
                     continue
                 title = index >= 2 and words[index - 2].text in titles \
                     and text[words[index - 2].end:previous.start] in (" ", ". ")
                 noun = _roman_noun(before, nouns)
-                if before[-1].lower() in centuries or noun is not None:
+                if not text[previous.end:start].isspace():
+                    reads = previous.text not in not_names and before[-1][0].isupper() and value <= 30 \
+                        and (title or len(numeral) >= 2 and value >= 11)
+                elif before[-1].lower() in centuries or noun is not None:
                     key = before[-1].lower() if before[-1].lower() in centuries else noun
-                    reads = in_series(numeral, value, key)
+                    reads = in_series(numeral, value, key, end)
                 elif previous.text in not_names or not before[-1][0].isupper():
                     reads = False
                 elif function_word:
@@ -1139,7 +1149,7 @@ class Roman:
                     last_value = value
                     for member_start, member_end, member in _list_members(text, end, links):
                         member_value = roman_value(member) or 0
-                        if member_value <= last_value or not in_series(member, member_value, key) \
+                        if member_value <= last_value or not in_series(member, member_value, key, member_end) \
                                 or len(member) == 1 and _initial(text, member_end):
                             break
                         members[member_start] = key
