@@ -887,15 +887,15 @@ class Roman:
 @dataclass(frozen=True)
 class Abbreviation(CoreAbbreviation):
     """The shared abbreviations, with `D.` before a name and the keys of `abbreviations_any_case`, which also read
-    in lowercase, as in `dr. Silva`. A title whose full stop is the last character of the text or of its line also
-    ends the sentence, so it keeps the full stop as the trail of the span: `Falei com a sra.` reads "Falei com a
-    senhora." (Dicio, "Quando usar ponto final": "Quando o período termina com uma abreviatura, o ponto acumula duas
-    funções: indicá-la e finalizar a frase")."""
+    in lowercase, as in `dr. Silva`. A title whose full stop ends the text also ends the sentence, so it keeps the
+    full stop as the trail of the span: `Falei com a sra.` reads "Falei com a senhora." (Dicio, "Quando usar ponto
+    final": "Quando o período termina com uma abreviatura, o ponto acumula duas funções: indicá-la e finalizar a
+    frase"). A line break is no end of the text, because the name can follow on the next line."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         titles = {*request.data["titles"], *request.data["abbreviations_any_case"]}
         for span in super().find(text, tokens, request):
-            if span.fields["key"] in titles and text[span.end:].lstrip(" \t")[:1] in ("", "\n", "\r"):
+            if span.fields["key"] in titles and not text[span.end:].strip():
                 span = replace(span, trail=".")
             yield span
 

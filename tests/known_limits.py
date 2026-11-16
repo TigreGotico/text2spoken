@@ -114,8 +114,8 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
         if span.form is not Form.MONEY:
             return False
         symbol = span.fields["written_symbol"]
-        return any(text.startswith(symbol, claim.start) and span.start < start == span.end - len(symbol)
-                   and once.startswith(symbol, start) for claim, start, _ in readings)
+        return any(text.startswith(symbol, claim.start) and span.start < start and once[start:span.end] == symbol
+                   for claim, start, _ in readings)
 
     if all(month_at_edge(span) for span in second):
         return "month at claim edge"
