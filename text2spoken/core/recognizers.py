@@ -599,18 +599,17 @@ class Money:
 
 def _comma_decimals(text: str, request: Request) -> tuple[Number, ...]:
     """In a variety whose decimal mark is the point, the numbers with a decimal comma and one or two digits after
-    it, which the marks of the variety do not parse, as in `23,88`. The comma is no group mark there, because a
-    group has three digits (CLDR 49 decimal format `#,##0.###` of en, es and de). CLDR 49 writes a euro amount
+    it, as in `23,88`. The marks of the variety do not parse such a number, because a group has three digits (CLDR
+    49 decimal format `#,##0.###` of en, es and de), and only a script that declares the decimal comma gives one. CLDR
+    49 writes a euro amount
     with this comma in de, es, fr and it (currency format `#,##0.00 ¤`, decimal mark `,`)."""
     if request.params.decimal_mark != ".":
         return ()
-    comma = number_marks(request.data, ",")
-    if all(decimal != "," for _, decimal, _ in comma):
+    comma = tuple(marks for marks in number_marks(request.data, ",") if marks[1] == ",")
+    if not comma:
         return ()
-    found = {(number.start, number.end) for number in numbers_in(text, request)}
     return tuple(number for number in find_numbers(text, comma, declared_marks(request.data))
-                 if number.fraction is not None and len(number.fraction) <= 2
-                 and (number.start, number.end) not in found)
+                 if number.fraction is not None and len(number.fraction) <= 2)
 
 
 def _scale(text: str, end: int, scales: Sequence[str]) -> tuple[str, int]:

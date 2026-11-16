@@ -122,3 +122,15 @@ def test_a_number_past_28_digits_takes_de_only_on_a_multiple_of_a_million(tag, t
     """CLDR gives `many`, and so `de`, to a multiple of 1000000 only (`i % 1000000 = 0`): 10**34 takes it, and
     10**29 + 1 and 10**28 + 1 do not."""
     assert normalize(text, tag) == expected
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), [
+    ("pt-PT", "Falei com a dra.\nDepois saí.", "Falei com a doutora.\nDepois saí."),
+    ("pt-BR", "Falei com o sr. \r\nDepois saí.", "Falei com o senhor. \r\nDepois saí."),
+    ("pt-PT", "Falei com a sra. Depois saí.", "Falei com a senhora Depois saí."),
+])
+def test_a_title_at_the_end_of_a_line_keeps_the_full_stop(tag, text, expected):
+    """When a text ends with an abbreviation, its full stop also ends the sentence (Dicio, "Quando usar ponto
+    final"). The end of a line ends it too. Before a capital word the title comes before a name, so it keeps no full
+    stop."""
+    assert normalize(text, tag) == expected

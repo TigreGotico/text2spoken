@@ -150,7 +150,7 @@ from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
 from text2spoken.core.letters import speak_letters
-from text2spoken.core.numbers import Number, written_amount
+from text2spoken.core.numbers import SIGNS, Number, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
@@ -160,7 +160,7 @@ from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_bre
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
-from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, one_digit_set
+from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char, one_digit_set
 from text2spoken.core.units import unit_reading
 from text2spoken.errors import DeclinedReading
 from text2spoken.lang import _pt_electronic
@@ -761,6 +761,18 @@ class SpacedMoney(Money):
     `+351 912 345 678 €`, is no amount."""
     name: str = "money_space_groups"
 
+    def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        """A sign before the digits reads with the amount, as before a symbol that comes first, and with the rule
+        of a written number: no word character touches the sign. So `-1 500 €` and `−1 500 €` read "menos mil e
+        quinhentos euros", and `+1 500 €` "mais mil e quinhentos euros"."""
+        for span in super()._amounts(text, tokens, request):
+            start = span.start
+            if start and text[start].isdigit() and text[start - 1] in SIGNS \
+                    and (start == 1 or not is_word_char(text[start - 2])):
+                amount = FrozenMap({**span.fields["amount"], "sign": SIGNS[text[start - 1]]})
+                span = replace(span, start=start - 1, fields=FrozenMap({**span.fields, "amount": amount}))
+            yield span
+
     def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
         if not request.data.get("space_group_money"):
             return ()
@@ -875,7 +887,17 @@ class Roman:
 @dataclass(frozen=True)
 class Abbreviation(CoreAbbreviation):
     """The shared abbreviations, with `D.` before a name and the keys of `abbreviations_any_case`, which also read
-    in lowercase, as in `dr. Silva`."""
+    in lowercase, as in `dr. Silva`. A title whose full stop is the last character of the text or of its line also
+    ends the sentence, so it keeps the full stop as the trail of the span: `Falei com a sra.` reads "Falei com a
+    senhora." (Dicio, "Quando usar ponto final": "Quando o período termina com uma abreviatura, o ponto acumula duas
+    funções: indicá-la e finalizar a frase")."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        titles = {*request.data["titles"], *request.data["abbreviations_any_case"]}
+        for span in super().find(text, tokens, request):
+            if span.fields["key"] in titles and text[span.end:].lstrip(" \t")[:1] in ("", "\n", "\r"):
+                span = replace(span, trail=".")
+            yield span
 
     def tables(self, data) -> tuple[tuple[str, Iterable[str], Callable[[str], bool]], ...]:
         return (("titles", data["titles"], str.isupper),

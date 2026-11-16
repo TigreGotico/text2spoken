@@ -21,6 +21,8 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Luís XIV reinou no século XVII.` | `pt-PT` | Luís Catorze reinou no século dezassete. |
 | `A Sra. Sousa e a Dr.ª Lima.` | `pt-PT` | A Senhora Sousa e a Doutora Lima. |
 | `Custa 250 000 €.` | `pt-PT` | Custa duzentos e cinquenta mil euros. |
+| `O saldo é de -1 500 €.` | `pt-PT` | O saldo é de menos mil e quinhentos euros. |
+| `Falei com a sra.` | `pt-PT` | Falei com a senhora. |
 
 A number agrees with the noun that it counts. The gender of a common noun comes from the noun lexicon of `tugalex`, and a number before a unit takes the gender of the unit.
 
@@ -58,7 +60,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 293 rows in `tests/data/pt.tsv`, 13 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 303 rows in `tests/data/pt.tsv`, 15 are marked silver.
 
 ## Runs of capital letters
 

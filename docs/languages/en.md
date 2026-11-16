@@ -46,7 +46,7 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 491 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 493 rows.
 
 ## Runs of capital letters
 
@@ -93,7 +93,7 @@ Some English letter names do not read right in every English phonemizer, and no 
 
 ### Addresses on a second pass
 
-A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Three rules cause it:
+A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Four rules cause it:
 
 | Written | Spoken (`en-GB`) | Second pass (`en-GB`) | Why |
 | --- | --- | --- | --- |
@@ -102,6 +102,8 @@ A word of a spoken address can become the key or the context of another form on 
 | `Write x.com@ (9:30)` | Write ex dot com at (9:30) | Write ex dot com at (nine thirty) | The same holds inside brackets. |
 | `See example.com/May 05 for details.` | See example dot com slash May 05 for details. | See example dot com slash May fifth for details. | A month name as the first or the last label of an address forms a date with the digits next to it. |
 | `On 05 May@x.com we met.` | On 05 May at ex dot com we met. | On the fifth of May at ex dot com we met. | The same rule, with the month name as the first label. |
+| `Pay 2,51 €m.www.x.in` | Pay 2,51 € em dot double-u double-u double-u dot ex dot i en | Pay two euros and fifty-one cents em dot double-u double-u double-u dot ex dot i en | A currency sign that starts an address stays as written in its reading. The first pass keeps the number before it, because the sign touches the letter after it. The reading puts a space after the sign, and a second pass reads the number and the sign as money. |
+| `No.00 €1,000.www.x.in` | No.00 € one , zero zero zero dot double-u double-u double-u dot ex dot i en | No.zero euros one , zero zero zero dot double-u double-u double-u dot ex dot i en | The same rule, with a digit after the sign. |
 
 ### Currency signs next to other text
 

@@ -180,15 +180,15 @@ def test_normalize_with_the_form_on_is_idempotent_on_random_text(seed):
 
 @pytest.mark.parametrize(("text", "lang", "expected"), [
     ("Sala 9#D. RTP.", "pt-PT", "released by a spelled run"), ("Sala 9-D. RTP.", "pt-PT", "released by a spelled run"),
-    ("00 $‍52a@b.com... CD", "en", None),
+    ("00 $‍52a@b.com... CD", "en", "symbol at claim start"),
 ])
 def test_the_limit_of_the_form_holds_only_a_text_that_the_form_breaks(text, lang, expected):
     """Each text changes on a second pass with the form on. The last one changes with the form off too, so the spelled
-    run `CD` does not cause the change."""
+    run `CD` does not cause the change: the `$` at the start of the address does."""
     once = normalize(text, lang, LETTERS_ON)
     assert normalize(once, lang, LETTERS_ON) != once
     off = normalize(text, lang)
-    assert (normalize(off, lang) != off) == (expected is None)
+    assert (normalize(off, lang) != off) == (expected != "released by a spelled run")
     assert known_limit(text, lang, LETTERS_ON) == expected
 
 
