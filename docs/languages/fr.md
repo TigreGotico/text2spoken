@@ -57,9 +57,9 @@ A space, a no-break space, a narrow no-break space and, in Switzerland, an apost
 
 *Million* and *milliard* are nouns, so they take *de* before the noun that they count. A range whose high end is a round million takes it too. A number with a lower part, such as 1 200 000, ends in no noun and takes no *de*.
 
-Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunction or adverb after the number takes none: the table `no_de_words` holds each such word of the Wiktionnaire categories that ends in *s*, *x* or *z*. An adjective after the number takes none if the table `no_de_adjectives` holds it. A word of one letter, a mark or the end of the text takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*, unless the table `invariable_plurals` holds it. A word with a hyphen counts as one word.
+Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunction or adverb after the number takes none: the table `no_de_words` holds each such word of the Wiktionnaire categories that ends in *s*, *x* or *z*, such as *ailleurs* and *là-bas*. An adjective after the number takes none if the table `no_de_adjectives` holds it, and a participle after a sum of money takes none if the table `no_de_participles` holds it. A verb with an inverted subject, such as *disent-ils*, takes none. A word of one letter, a mark or the end of the text takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*, unless the table `invariable_plurals` holds it. A word with a hyphen counts as one word.
 
-*De* becomes *d'* before a vowel or a mute h. It stays *de* before a word that starts as a word of the OQLF list of aspirated h does, before a capitalised h, before a y other than in *yeux* and *ypérite*, and before *oui* and *ouistiti*.
+*De* becomes *d'* before a vowel or a mute h. It stays *de* before a word that starts as a word of the OQLF list of aspirated h does, before a y other than in *yeux* and *ypérite*, and before *oui* and *ouistiti*. It also stays *de* before a capitalised h, because most proper nouns with h take no elision. The OQLF calls this a tendency with exceptions, and *Haïti* and its derived words elide. A word all in capitals follows the rules of its lowercase form.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -72,9 +72,14 @@ Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunctio
 | `Ils étaient 1 000 000 environ.` | `fr-FR` | Ils étaient un million environ. |
 | `Il en a vendu 3 000 000 depuis 2010.` | `fr-FR` | Il en a vendu trois millions depuis deux mille dix. |
 | `Il faut 2 000 000 supplémentaires pour finir.` | `fr-FR` | Il faut deux millions supplémentaires pour finir. |
+| `Il a reçu 2 000 000 versés en deux fois.` | `fr-FR` | Il a reçu deux millions versés en deux fois. |
+| `Ils étaient 2 000 000 là-bas.` | `fr-FR` | Ils étaient deux millions là-bas. |
+| `Ils étaient 2 000 000 disent-ils.` | `fr-FR` | Ils étaient deux millions disent-ils. |
 | `Il faut 1 000 000-2 000 000 personnes.` | `fr-FR` | Il faut un million à deux millions de personnes. |
 | `Il y a 2 000 000 handicapés.` | `fr-FR` | Il y a deux millions de handicapés. |
 | `Il y a 2 000 000 Hongrois.` | `fr-FR` | Il y a deux millions de Hongrois. |
+| `Il y a 2 000 000 Haïtiens.` | `fr-FR` | Il y a deux millions d'Haïtiens. |
+| `Il y a 2 000 000 HABITANTS.` | `fr-FR` | Il y a deux millions d'HABITANTS. |
 | `Il y a 2 000 000 yachts.` | `fr-FR` | Il y a deux millions de yachts. |
 | `Il y a 2 000 000 yeux.` | `fr-FR` | Il y a deux millions d'yeux. |
 | `Il y a 2 000 000 sans-abri.` | `fr-FR` | Il y a deux millions de sans-abri. |
@@ -142,7 +147,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second"), the Office québécois de la langue française for the aspirated h, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
-Of the 474 test rows in `tests/data/fr.tsv`, 76 quote a source that was fetched, and 372 say that a rule comes from memory or that no source was fetched. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
+Of the 500 test rows in `tests/data/fr.tsv`, 102 quote a source that was fetched, and 366 say that a rule comes from memory or that no source was fetched. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
 
 ## Limits
 
@@ -161,6 +166,10 @@ French leaves these forms as written or reads them in a limited way:
 | `Il pèse 1.500 kg.` | `fr-FR` | stays as written | The marks do not settle the number: it is 1,5 or 1500. A warning names it. |
 | `Il faut 1'000-2'000 francs.` | `fr-CH` | stays as written | A range, a fraction and an expression read a number grouped with a space, and not one grouped with an apostrophe. |
 | `Il en reste 2 000 000 entiers.` | `fr-FR` | Il en reste deux millions d'entiers. | An adjective after a round million that `no_de_adjectives` lacks takes *de*, as a noun does. The class is open, and the table holds the adjectives that a count of Tatoeba and FLORES+ found after a number. |
+| `Il a 2 000 000 hérités de son père.` | `fr-FR` | Il a deux millions d'hérités de son père. | A participle after a round million that `no_de_participles` lacks takes *de*. The class is open, and the table holds the common participles after a sum of money. |
+| `Il a écrit 1 000 000 vers.` | `fr-FR` | Il a écrit un million vers. | *Vers* (verses) is also a preposition of `no_de_words`, so it takes no *de*, where French says *un million de vers*. |
+| `Il a gagné 2 000 000 sous.` | `fr-FR` | Il a gagné deux millions sous. | *Sous* (coins) is also a preposition of `no_de_words`, so it takes no *de*, where French says *deux millions de sous*. |
+| `Il y a 2 000 000 Hommes.` | `fr-FR` | Il y a deux millions de Hommes. | A common noun with a capital letter takes no elision, as a proper noun with h does. |
 | `Il y a 2 000 000 très grandes villes.` | `fr-FR` | Il y a deux millions très grandes villes. | An adverb of `no_de_words` before a preposed adjective takes no *de*, where French says *deux millions de très grandes villes*. |
 | `Il y a 2 000 000 harkis.` | `fr-FR` | Il y a deux millions d'harkis. | *De* elides before an aspirated h that the OQLF list does not reach. Of 415 Tatoeba words that the Wiktionnaire marks as aspirated, the list reaches 245. |
 | `Il y a 1/2 million habitants.` | `fr-FR` | Il y a un demi million habitants. | A fraction before *million* takes no *de*. |

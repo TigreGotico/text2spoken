@@ -71,7 +71,7 @@ FR_ENTRIES = {
     "roman_names": "Louis", "scales": "M", "day_periods": "pm", "number_gaps": "\u202f", "elision_marks": "'",
     "ordinal_nouns": "page", "scale_nouns": "million", "no_de_words": "dans", "aspirated_h": "haricot",
     "no_de_adjectives": "supplémentaires", "invariable_plurals": "sans-abri", "mute_h": "hallucin", "eliding_y": "yeux",
-    "no_elision": "ouistiti",
+    "no_elision": "ouistiti", "no_de_participles": "versés", "inverted_pronouns": "ils", "eliding_h": "haïti",
 }
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
