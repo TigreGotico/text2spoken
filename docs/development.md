@@ -48,15 +48,29 @@ Each expected value comes from a cited rule, from arithmetic done by hand, or fr
 
 ## Keep the docs true
 
-`tests/test_docs_examples.py` runs every example of the docs, so CI fails when a change of the code changes an output that a page shows. It checks three kinds of example:
+`tests/test_docs_examples.py` runs every example of the docs, so CI fails when a change of the code changes an output that a page shows. When the change is on purpose, run the example and paste its new output into the page.
 
-- A `python` code block with `>>>` lines runs as a doctest. The blocks of one page share one namespace.
+These are the examples that the test runs:
+
+- A `python` code block with `>>>` lines runs as a doctest. The blocks of one page share one namespace. A `text stderr` block after a doctest holds the log lines that the doctest writes, and the test compares them.
 - A table with a `Written` column holds examples. Each column whose header holds `Spoken` or `Second pass` must equal the output of `normalize`. The header, or a `Tag` column, gives the tag in backticks. A form name in backticks with `on` or `off` after it, such as `` `EMOJI` on ``, and a param in backticks, such as `` `clock="24h"` ``, give the params. A cell that says `stays as written` expects the text unchanged.
 - A table whose first column is `Option` gives the values and the defaults of each option, as `supports` and `effective_params` give them.
 
-The test also refuses an output claim in prose: a written form in backticks, the word `reads`, and then words in quotes. No test checks such a claim, so put the example in a table instead. When a change of the code changes an output on purpose, run the example, and paste its new output into the page.
+The test also holds the docs to these rules:
 
-`docs/adding-a-language.md` builds an example language file. A code block whose info string is `python text2spoken/lang/id.py` holds a part of that file, and each doctest after it runs with the file as it stands.
+- A table with a `Spoken` or `Second pass` column must have a `Written` column, because the test runs only the rows of such a table.
+- An output claim in prose fails: a written form in backticks, the word `reads`, and then words in quotes or guillemets. Put the example in a table instead.
+- Each page holds at least the number of examples that `MINIMUM` gives for it, so a page that loses its examples fails. A new page in `docs/` needs an entry in `MINIMUM`. A language page that `MINIMUM` does not list needs at least `LANGUAGE_MINIMUM` examples: one row of what the file reads, the values of the eight options and one limit.
+- Each relative link names a file that exists, and each anchor a heading of that file.
+
+`docs/adding-a-language.md` builds the example language `id`. The test follows the page on a copy of the checkout:
+
+- A code block whose info string is `python text2spoken/lang/id.py` holds the whole file. An info string with a `+` before the path, such as `python +text2spoken/lang/id.py`, holds a part of the file, and the paragraph before the block says "Add to" and the path in backticks. The test puts each statement of the part in place of the statement of the same name, and a statement with a new name before `LANGUAGE`. A `text tests/data/id.tsv` block writes the test rows, and a `text +tests/data/id.tsv` block adds rows. A `python +tests/test_table_mutation.py` block adds a line to `ENTRIES`.
+- Each doctest runs with the file as it stands at that step, and each test row must read as its expected value.
+- A `bash` block that starts with `pytest` runs in the copy. The `text output` block after it holds lines of the real output: the `E` lines, the start of the `FAILED` lines and the counts of the last line. Each command has one output block.
+- The last whole file must equal the sum of the steps.
+- The tables of the shared recognizers and verbalizers must give the data keys that `READERS` and `OPTIONAL` in `tests/data_keys.py` give.
+- The checkout must not ship `text2spoken/lang/id.py`, so that a reader starts from a language with no file. A reader's copy of the finished file passes. If a file for `id` ships, move the walk-through to a language that still has no file.
 
 ## The CLDR data
 

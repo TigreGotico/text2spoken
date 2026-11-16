@@ -283,7 +283,7 @@ pytest tests/test_table_mutation.py -k "[id] or id-"
 
 1. If the file imports a package that text2spoken does not install, add it to an extra with the name of the language code in `pyproject.toml`, and to the `test` extra. Import it inside a function. Clause 12 accepts only the modules that `tests/contract.py` names, so add the module to `LAZY_ONLY` and to `DISTRIBUTIONS` in that file. The Indonesian file needs no extra, because `RbnfSpeller` uses `unicode-rbnf`, which text2spoken always installs.
 2. Run the whole suite with `pytest tests`. Every test passes.
-3. Add a page for the language to `docs/languages/`, in the template of the other language pages: what it reads, its varieties, its options, its sources and its limits.
+3. Add a page for the language to `docs/languages/`, in the template of the other language pages: what it reads, its varieties, its options, its sources and its limits. Give what it reads and its limits in tables with a `Written` column, and give all eight options in the options table. The docs check runs these examples, and a new language page needs at least 10 of them. Then run `pytest tests` again.
 4. Add the language to the tables of `README.md` and `docs/index.md`.
 
 ## The finished file

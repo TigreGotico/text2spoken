@@ -50,10 +50,13 @@ MINIMUM = {
     "es.md": 50, "eu.md": 28, "pt.md": 46, "ru.md": 49,
 }
 """The fewest examples that each page holds, so that a page that loses its examples fails."""
+LANGUAGE_MINIMUM = 10
+"""The fewest examples of a language page that `MINIMUM` does not list: one row of what the file reads, the values
+of each of the eight options, and one limit."""
 FENCE = re.compile(r"^```(\S*)(?: (\S+))?\n(.*?)^```$", re.M | re.S)
 NAMES = {"frozenset": frozenset, "FrozenMap": FrozenMap, "GrammaticalGender": GrammaticalGender}
 """The names that a param in a column header may use."""
-CLAIM = re.compile(r"`[^`\n]+` reads [\"'“‘]")
+CLAIM = re.compile(r"`[^`\n]+` reads [\"'“‘«„]")
 
 
 def tables(text: str) -> list[list[list[str]]]:
@@ -192,8 +195,13 @@ def test_every_page_holds_its_examples():
         doctests = sum(len(re.findall(r"^>>> ", body, re.M)) for lang, _, body in fences(page) if lang == "python")
         counts[page.name] = (doctests + sum(e[0].startswith(f"{page.name}:") for e in TABLE_EXAMPLES)
                              + sum(c[0].startswith(f"{page.name}:") for c in OPTION_ROWS))
-    assert set(counts) == set(MINIMUM)
-    assert {name: n for name, n in counts.items() if n < MINIMUM[name]} == {}
+    languages = {page.name for page in PAGES if page.parent.name == "languages"}
+    assert set(MINIMUM) <= set(counts), f"MINIMUM lists pages that do not exist: {set(MINIMUM) - set(counts)}"
+    assert set(counts) <= set(MINIMUM) | languages, \
+        f"Add these pages to MINIMUM in tests/test_docs_examples.py: {set(counts) - set(MINIMUM) - languages}"
+    short = [f"{name} has {n} of its minimum of {MINIMUM.get(name, LANGUAGE_MINIMUM)} examples"
+             for name, n in counts.items() if n < MINIMUM.get(name, LANGUAGE_MINIMUM)]
+    assert not short, "; ".join(short)
 
 
 def merge(source: str, part: str) -> str:
@@ -282,7 +290,9 @@ def test_the_example_language_ships_no_file():
     assert not path.exists() or ast.dump(ast.parse(path.read_text(encoding="utf-8"))) == \
         ast.dump(ast.parse(finished_file())), (
         f"{EXAMPLE_FILE} ships, so docs/adding-a-language.md no longer starts from a language with no file. "
-        "Move the walk-through to a language that still has no file.")
+        "Move the walk-through to a language that still has no file. If you followed the walk-through and then "
+        "changed your practice file, set your practice language aside before you run the suite, for example with "
+        "`git stash --include-untracked`.")
 
 
 def test_each_added_block_says_what_it_adds_to():
@@ -360,7 +370,7 @@ def test_walkthrough(tmp_path):
                 else:
                     assert line == summary(output), output
             outputs += 1
-    assert (commands, outputs) >= (5, 5)
+    assert commands >= 5 and outputs == commands, (commands, outputs)
 
 
 def shared_table(first: str) -> list[list[str]]:
