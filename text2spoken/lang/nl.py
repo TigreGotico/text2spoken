@@ -1,0 +1,323 @@
+"""Dutch: nl-NL, the default variety, nl-BE and nl-SR.
+
+The sources are the advice pages of the Nederlandse Taalunie (taaladvies.net), the advice pages of Genootschap Onze Taal
+(onzetaal.nl/taalloket), the Dutch Wiktionary and CLDR 49.
+
+Cardinals come from ovos-number-parser (design section 5.4), the `nl` extra. Its words follow Taaladvies.net,
+"Aaneenschrijven van telwoorden (algemeen)", Hoofdtelwoorden: "21 eenentwintig", "43 drieënveertig", "800 achthonderd",
+"135 honderdvijfendertig", "101 honderdeen of honderdeneen". The number 1 alone reads "één": Onze Taal, "een van de /
+één van de", "Eén is juist als het telwoord één bedoeld is en er ook nadruk op één ligt", with "Ik moet rijden, dus ik
+neem maar één biertje. (duidelijker)". A digit writes the numeral and never the article, and a digit that a reader sees
+is a count that the speaker stresses. The same Taaladvies.net page puts a space after "duizend" ("4002 vierduizend
+twee", "6028 zesduizend achtentwintig"), and Onze Taal, "Getallen uitschrijven", says "Na duizend komt een spatie".
+ovos-number-parser writes no space there, as in "tweeduizenddriehonderdvijftig", and so does CLDR RBNF `nl`. The sound
+is the same, and the spelling waits on the parser.
+
+A minus sign reads "min": CLDR RBNF `nl`, `spellout-cardinal`, `-x: min →→`, and Wiktionary, "min", "minus, verminderd
+met (-)". `digit_words` holds the CLDR RBNF words of 0 to 9, with "één" for 1 by the Onze Taal rule above. A number
+after the lead `nr. ` reads "nummer" (Wiktionary, "nr.", "afkorting van nummer"), and its digits read one by one when
+the first is 0.
+
+An ordinal is written as the number and `e`, `de` or `ste`: Taaladvies.net, "1°, 2°, 3° / 1ᵉ, 2ᵉ, 3ᵉ / 1ste, 2de, 3de /
+1e, 2e, 3e", "Correcte weergaven zijn 1ste, 2de, 3de en 1e, 2e, 3e [...] Tussen de cijfers en de letters komt geen
+koppelteken". Onze Taal, "1ste / 1e", gives "1ste, 2de, 8ste, 12de, 1000ste" and "1e, 2e, 8e, 12e, 1000e". The ending
+`e` goes with every number. `de` and `ste` go with the number whose ordinal word ends in them: "In samengestelde
+rangtelwoorden ga je van het laatste deel uit: negenhonderdzevende, driehonderdachtste, honderdeneerste" (Onze Taal,
+"Honderdeneende / honderdeneerste"). So `ste` follows a number that ends in 1 or 8 after a ten digit 0, or in 00, or
+that has a ten digit of 2 or more, and `de` follows the others: `3de`, `21ste`, `12de`, `100ste`. Any other ending, as
+in `3ste`, stays as written. The ordinal words come from CLDR RBNF `nl`, `spellout-ordinal`, which writes
+"honderdeerste" (Onze Taal gives "honderdeerste" as correct) and "honderdtweede". ovos-number-parser writes
+"honderdeenste" and "honderdtweeste", so the file does not read ordinals through it. RBNF writes the ordinal of a
+million as "eenmiljoenste", and Taaladvies.net writes "4 000 000e vier miljoenste" with no "een", so an ordinal above
+999999 stays as written.
+
+A decimal reads the CLDR RBNF `nl` rule `x.x: ←← komma →→` of `spellout-cardinal`: the whole part, "komma", then each
+digit of the decimal part, so `3,14` reads "drie komma één vier" and the zero of `2,50` stays. The decimal mark is the
+comma (Taaladvies.net, "Komma of punt bij decimale getallen": "We zetten een komma voor decimalen"), and the group mark
+is the full stop (Onze Taal, "Komma of punt in getal": "In het Nederlands komen punten voor in hele getallen van vier
+cijfers of meer. Je gebruikt ze om de cijfers per drie te groeperen"). Taaladvies.net, "10.000.000 / 10 000 000", gives
+the space of the ISO norm too, "De ISO-norm en de BIN-norm schrijven de spatie als scheidingsteken voor (10 000 000),
+maar in de praktijk is ook de schrijfwijze met punten gebruikelijk". The core reads one group mark for a script, so the
+`space_groups` recognizer keeps a number with spaces between its groups as written.
+
+A fraction is a cardinal and an ordinal, written apart: Taaladvies.net, "Aaneenschrijven van telwoorden", Breukgetallen:
+"Bij breuken is de teller een hoofdtelwoord en de noemer een rangtelwoord [...] Teller en noemer worden los van elkaar
+geschreven", "Twee derde van de tekst", and "Het rangtelwoord in de noemer krijgt meestal geen meervouds -n". The
+numerator 1 reads "een", as Onze Taal, "telwoord", writes "Breuken bestaan uit een hoofdtelwoord en een rangtelwoord:
+een derde, drie vierde". 1/2 stays as written: its word "half" takes the form "halve" before some nouns (Wiktionary,
+"half", "een halve fles water"), and the file does not know the noun.
+
+A percentage reads the number and "procent" (Taaladvies.net, "Een percentage van 25 procent"; Wiktionary, "procent",
+"een honderdste deel, weergegeven met symbool %").
+
+An expression reads `+` as "plus", `−` as "min" and `=` as "is": Wiktionary, "plus", "Een plus een is twee", and "min",
+"minus, verminderd met (-)".
+
+Unit words come from CLDR 49 (`cldr-units-full`, the `long` patterns of the variety): `5 km` reads "vijf kilometer". The
+unit stays singular after a number, as Taaladvies.net, "Enkelvoudsvorm / meervoudsvorm bij hoeveelheidsaanduidende
+zelfstandige naamwoorden (algemeen)", gives: "vijfhonderd meter, drie hectare [...] tien euro", and a time unit takes
+the plural, "veertig dagen [...] zoveel seconden". The CLDR names agree. `unit_symbols` names the symbols of letters
+only that read as units, which Taaladvies.net, "Cm. / cm, kg. / kg", calls symbols: "cm, kg, km, h enzovoort". A measure
+with a dimension mark, as in `3 × 4 m`, stays as written, because no source gives the word for the mark.
+
+Currency names and symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of the variety). `15 €` and `€ 15`
+read "vijftien euro", as the name after a number stays singular ("tien euro", above). Taaladvies.net, "Euro: valutateken
+voor of achter het bedrag?", names the signs: "de tekens voor het Britse pond (£), de dollar ($), de Japanse yen (¥) en
+de euro (€)". So in nl-NL and nl-BE `$` reads "dollar", where CLDR `nl` gives `$` to no currency and names USD
+"Amerikaanse dollar", and `¥` reads "Japanse yen", where CLDR shares it between the yen and the yuan. In nl-SR, CLDR
+`nl_SR` gives `$` to the Surinamese dollar, and the file keeps it. `EUR` after an amount reads as the euro too
+(Taaladvies.net, "Euro / EUR / euroteken": "377 EUR"). A minus sign after the symbol reads "min" before the amount:
+Taaladvies.net, "Euro: – € 12 / € -12", "Voor negatieve bedragen is het aan te bevelen € -12 te schrijven", and "euro
+voluit te schrijven: -12 euro". A whole amount written `€ 5,–`, `€ 5,-` or `€ 5,00` reads "vijf euro": Taaladvies.net,
+"Euro: komma en streepje in de notatie van hele bedragen?", "Komt er achter een bedrag in hele euro's een komma met twee
+nullen (€ 5,00), een komma met een streep (€ 5,–) of niets (€ 5)? [...] De drie notaties zijn correct". Another amount
+with decimals reads as a decimal before the currency name. A scale word after the amount reads before the currency name:
+Onze Taal, "Getallen uitschrijven", "25.000.000 euro: 25 miljoen euro, € 25 miljoen".
+
+A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
+`cldr-annotations-derived-full`) of the variety.
+
+A title reads as its full word: Taaladvies.net, "Dr, ir, mr / dr., ir., mr.", "Schrijf dus dr., drs., ing., ir., lic.,
+mr., prof. [...] We spreken de afkortingen uit als de woorden waar ze voor staan: doctor, doctorandus, ingenieur,
+licentiaat, meester, professor". `dhr.` reads "de heer" (Taaladvies.net, "Afkortingen: gebruik (algemeen)", "de heer in
+plaats van dhr."; Wiktionary, "dhr.", an abbreviation of "de heer") and `mevr.` "mevrouw" (Wiktionary, "mevr.", an
+abbreviation of "mevrouw"). These abbreviations are written in lowercase, and a capital starts a sentence, so the
+capital form reads the word with a capital. `ing.` also abbreviates "ingenaaid" and "ingeënt" (Wiktionary, "ing."), so
+it reads only before a capital, as a title before a name. `Mr.` with a capital stays as written, because it also writes
+the English title. The other abbreviations come from Wiktionary: "bijv." and "bv." ("bijvoorbeeld"; Taaladvies.net lists
+"bv. of bijv."), "enz." ("de afkorting van enzovoort"), "o.a." ("onder andere"), "d.w.z." ("dat wil zeggen"), "i.p.v."
+("in plaats van"), "m.b.t." ("met betrekking tot"), "ca." ("circa"), "evt." ("eventueel") and, before a number, "blz."
+("bladzijde"). "enz." at the end of a sentence keeps its full stop.
+
+The words of a date, a clock time and a year need `ovos_date_parser.spoken`, which reads no Dutch, so a numeric date
+stays as written, and a year reads as a cardinal. A clock time such as `14.30 uur` or `14:30` is no number, so it stays
+as written."""
+from __future__ import annotations
+
+import re
+from collections.abc import Iterator, Sequence
+from dataclasses import dataclass, replace
+
+from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
+from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
+from text2spoken.core.numbers import written_amount
+from text2spoken.core.recognizers import (SHARED, amount_words, numbers_in, signed, speak_abbreviation, speak_cardinal,
+                                          speak_decimal, speak_expression, speak_lexicon, speak_ordinal, speak_percent)
+from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
+from text2spoken.core.spans import Features, Span, SpanContext
+from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.symbols import speak_emoji, speak_symbol
+from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char
+from text2spoken.core.units import unit_reading
+from text2spoken.errors import DeclinedReading
+from text2spoken.params import OPTIONS, FrozenMap, Form, freeze
+
+LARGEST_ORDINAL = 999999
+"""The largest ordinal that reads: RBNF writes "eenmiljoenste" for 1000000, and no source writes the "een"."""
+
+FRACTION_ONE = "een"
+"""The numerator 1 of a fraction, as Onze Taal writes "een derde"."""
+
+WHOLE_AMOUNT_MARKS = (",–", ",-")
+"""The comma and the dash after a whole amount in euros, as in `€ 5,–`."""
+
+DATA = freeze({
+    "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
+    "sign_words": {"-": "min", "+": "plus"},
+    "digit_words": ["nul", "één", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen"],
+    "decimal_word": "komma",
+    "leads": {"nr. ": "nummer", "Nr. ": "Nummer"},
+    "ordinal_marks": ["ste", "de", "e"],
+    "percent": {"signs": ["%"], "position": "after", "word": "procent"},
+    "currency_symbols": ["EUR"],
+    "currencies": {"JPY": {"symbols": ["¥"]}},
+    "scales": {"miljoen": "miljoen", "miljard": "miljard"},
+    "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml"],
+    "dimension_marks": ["x", "×"],
+    "operators": {"+": "plus", "−": "min", "=": "is"},
+    "patterns": {"expression": "[-−+]?[0-9]+(?: ?[+−=] ?[-−+]*[0-9]+)+"},
+    "titles": {"ing.": "ingenieur", "Ing.": "Ingenieur"},
+    "abbreviations": {"dr.": "doctor", "Dr.": "Doctor", "drs.": "doctorandus", "Drs.": "Doctorandus",
+                      "ir.": "ingenieur", "Ir.": "Ingenieur", "prof.": "professor", "Prof.": "Professor",
+                      "mr.": "meester", "dhr.": "de heer", "Dhr.": "De heer", "mevr.": "mevrouw", "Mevr.": "Mevrouw",
+                      "bijv.": "bijvoorbeeld", "bv.": "bijvoorbeeld", "enz.": "enzovoort", "o.a.": "onder andere",
+                      "d.w.z.": "dat wil zeggen", "i.p.v.": "in plaats van", "m.b.t.": "met betrekking tot",
+                      "ca.": "circa", "evt.": "eventueel"},
+    "sentence_final": ["enz."],
+    "number_abbreviations": {"blz.": "bladzijde"},
+    "symbols": {"%": "percent", "€": "money", "$": "money", "£": "money", "¥": "money", "°": "measure",
+                "×": "measure"},
+})
+
+DOLLAR = {"currencies": {"USD": {"symbols": ["$"], "one": "dollar", "other": "dollar"}}}
+"""`$` is the dollar in the Netherlands and Belgium (Taaladvies.net, "de dollar ($)")."""
+
+VARIETIES = (
+    Variety("nl-NL", freeze(DOLLAR)),
+    Variety("nl-BE", freeze(DOLLAR)),
+    Variety("nl-SR"),
+)
+
+
+def ordinal_ending(number: int) -> str:
+    """The ending `ste` or `de` of the ordinal word of a number, by its last two digits."""
+    last = number % 100
+    return "ste" if last == 0 or last >= 20 or last in (1, 8) else "de"
+
+
+class DutchSpeller:
+    """Cardinals through ovos-number-parser, ordinals through CLDR RBNF, and decimals and fractions built from both."""
+
+    def __init__(self):
+        self.words = OvosNumberSpeller({})
+        self.rbnf = RbnfSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"})
+
+    def cardinal(self, digits: str, features: Features, request: Request) -> str:
+        return self.words.cardinal(digits, features, request)
+
+    def ordinal(self, digits: str, features: Features, request: Request) -> str:
+        value = bounded_integer(digits)
+        if value is None or value > LARGEST_ORDINAL:
+            raise DeclinedReading(f"no source writes the ordinal of a number above {LARGEST_ORDINAL}")
+        return self.rbnf.ordinal(digits, features, request)
+
+    def year(self, digits: str, features: Features, request: Request) -> str:
+        raise NotImplementedError("the Dutch file reads no year")
+
+    def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
+        whole = self.cardinal(integer or "0", features, request)
+        return f"{whole} {request.data['decimal_word']} {spell_digits(fraction, request)}"
+
+    def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
+        top = FRACTION_ONE if bounded_integer(numerator) == 1 else self.cardinal(numerator, features, request)
+        if bounded_integer(denominator) == 2:
+            return f"{top} half"
+        return f"{top} {self.ordinal(denominator, features, request)}"
+
+
+SPELLER = DutchSpeller()
+
+
+@dataclass(frozen=True)
+class KeptDate:
+    """A numeric date such as `12-03-2024`, kept as written: no source of the file gives its words, so the span
+    keeps its digits from the cardinal recognizer, as the core language does (design section 6.1)."""
+    name: str = "kept_date"
+    form: Form = Form.CARDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in SHARED["date_numeric"].find(text, tokens, request):
+            written = text[span.start:span.end]
+            yield Span(span.start, span.end, Form.CARDINAL,
+                       FrozenMap({"digits": re.sub("[^0-9]", "", fold_digits(written)), "sign": "", "lead": "",
+                                  "prefix": "", "suffix": "", "script": digit_script(written)}),
+                       recognizer=self.name, keep=True)
+
+
+@dataclass(frozen=True)
+class Ordinal:
+    """`1e`, `3de`, `21ste`: a whole number and an ending of `ordinal_marks` that agrees with its ordinal word."""
+    name: str = "ordinal"
+    form: Form = Form.ORDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for number in numbers_in(text, request):
+            if number.sign or number.fraction is not None:
+                continue
+            marker = next((m for m in request.data["ordinal_marks"] if text.startswith(m, number.end)), None)
+            if marker is None or not is_bounded(text, number.start, number.end + len(marker)):
+                continue
+            value = bounded_integer(number.integer)
+            if marker != "e" and (value is None or ordinal_ending(value) != marker):
+                continue
+            yield Span(number.start, number.end + len(marker), Form.ORDINAL,
+                       FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
+                                  "script": number.script}), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class Money(CoreMoney):
+    """The shared money recognizer, with a negative amount after the symbol, as in `€ -12`, and the comma and the
+    dash of a whole amount, as in `€ 5,–`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in (*super().find(text, tokens, request), *self._negative(text, request)):
+            end = span.end + 2
+            if (not span.fields["amount"]["fraction"] and text[span.end:end] in WHOLE_AMOUNT_MARKS
+                    and (end == len(text) or not is_word_char(text[end]))):
+                span = replace(span, end=end)
+            yield span
+
+    def _negative(self, text: str, request: Request) -> Iterator[Span]:
+        for number in numbers_in(text, request):
+            if not number.sign:
+                continue
+            for symbol, code in currency_symbols(request):
+                start = next((number.start - len(gap) - len(symbol) for gap in ("", " ", "\u00a0")
+                              if text[:number.start].endswith(symbol + gap)), None)
+                if start is not None and is_bounded(text, start, number.end):
+                    yield Span(start, number.end, Form.MONEY,
+                               FrozenMap({"amount": number.amount(), "currency": code, "written_symbol": symbol,
+                                          "scale": "", "prefix": "", "suffix": ""}), recognizer=self.name)
+                    break
+
+
+def speak_fraction(span: Span, context: SpanContext) -> str:
+    """The fraction, except 1/2: its word "half" takes the form "halve" before some nouns, and the file does not know
+    the noun."""
+    if bounded_integer(span.fields["denominator"]) == 2:
+        raise DeclinedReading("the Dutch word for a half agrees with the noun after it")
+    return core_speak_fraction(span, context)
+
+
+def speak_money(span: Span, context: SpanContext) -> str:
+    """The amount, a scale word when the text writes one, and the currency name. Zero decimals read as a whole
+    amount."""
+    request = context.request
+    fields = span.fields
+    amount = FrozenMap({**fields["amount"], "sign": ""})
+    if not amount["fraction"].strip("0"):
+        amount = FrozenMap({**amount, "fraction": ""})
+    currency = currency_table(request)[fields["currency"]]
+    words = amount_words(amount, request)
+    if fields["scale"]:
+        words = f"{words} {request.data['scales'][fields['scale']]} {currency_name(currency, 'other')}"
+    else:
+        words = f"{words} {currency_name(currency, plural_category(request, written_amount(amount)))}"
+    return signed(words, fields["amount"]["sign"], request)
+
+
+def speak_measure(span: Span, context: SpanContext) -> str:
+    request = context.request
+    if span.fields["relation"]:
+        raise DeclinedReading("no source gives the Dutch word for a dimension mark")
+    amount = span.fields["amount"]
+    pattern, _ = unit_reading(request, span.fields["unit"], plural_category(request, written_amount(amount)))
+    return pattern.replace("{0}", amount_words(amount, request))
+
+
+LANGUAGE = LanguageSpec(
+    code="nl",
+    serves=(),
+    cldr_aliases=(),
+    varieties=VARIETIES,
+    data=DATA,
+    recognizers=(SHARED["lexicon"], SHARED["space_groups"], KeptDate(), Money(), SHARED["percent"],
+                 SHARED["measure"], SHARED["expression"], SHARED["fraction"], Ordinal(), SHARED["abbreviation"],
+                 SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+    verbalizers={
+        Form.LEXICON: speak_lexicon, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
+        Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
+        Form.ORDINAL: speak_ordinal, Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal,
+        Form.CARDINAL: speak_cardinal, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
+    },
+    spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
+    genders=frozenset(),
+    default_gender=None,
+    animacies=frozenset(),
+    noun_classes=frozenset(),
+    numeral_systems=frozenset(),
+    context_words=True,
+    options={},
+    not_applicable=frozenset(OPTIONS),
+)

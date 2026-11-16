@@ -118,6 +118,12 @@ ENTRIES = {
         "currencies": "EUR", "units": "kg", "operators": "+", "patterns": "expression", "abbreviations": "etab.",
         "sentence_final": "etab.",
     },
+    "nl": {
+        "number_marks": "Latn", "sign_words": "-", "digit_words": "nul", "decimal_word": DELETE, "leads": "nr. ",
+        "ordinal_marks": "ste", "percent": "word", "currency_symbols": "EUR", "currencies": "JPY", "scales": "miljoen",
+        "unit_symbols": "km", "dimension_marks": "×", "operators": "=", "patterns": "expression", "titles": "ing.",
+        "abbreviations": "dr.", "sentence_final": "enz.", "number_abbreviations": "blz.",
+    },
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",
         "range_word": DELETE, "range_marks": "-", "dimension_marks": "×", "dimension_word": DELETE, "time_words": "в",
