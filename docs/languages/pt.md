@@ -60,11 +60,42 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 304 rows in `tests/data/pt.tsv`, 15 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 480 rows in `tests/data/pt.tsv`, 15 are marked silver.
+
+## Roman numerals
+
+A Roman numeral reads after a century word, after a noun of a part, a class or a series, after a capitalised word, and after a title and its full stop. It reads as an ordinal up to ten and as a cardinal from eleven. Ciberdúvidas 9067 gives the pt-BR limit: "os numerais se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono)". The noun or the title before the numeral gives the gender. After a name, the gender comes from the title before it, then from a common noun that tugalex knows, then from the given-name list of tugalex, and a name that no list holds takes the masculine. After a capitalised word that is no noun of a series, the value is at most 30, and the word reads the numeral only when spaces alone part them. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as a cardinal, and a smaller one stays as written. After an article, as in `O XV de Portugal`, a numeral from 11 to 30 reads as a cardinal. A numeral of one letter, `I`, `V` or `X`, reads only after a noun of the `roman_letter_nouns` table: the parts of a work, such as `capítulo`, `livro`, `parte`, `cena`, `secção`, `canto`, `cláusula` and `artigo`. Ciberdúvidas 11716 applies the ordinal rule "a todas as partes em que se divide uma obra". A group, a class or a phase is labelled with letters too, so `Grupo I` stays as written. A numeral of the `roman_words` table, such as `XL`, `CL` or `MC`, is also a word or an initialism, so it reads after a noun of a series only when no word in lowercase follows it. No numeral reads after a word of the `letter_words` table, such as the pronoun `EU`. In a clause in capitals, a numeral is a word only when `letter_words` holds it or tugalex knows it, as `VI` in `EU VI`. A list after a century word or a noun of a series reads with that noun: a comma and a space part its numerals, and `e` or `ou`, in any case, comes before the last one. Each numeral of the list passes the same checks as the first and holds a larger value than the numeral before it, and the list ends at the first numeral that fails. A numeral after a comma with no closing link word is no member, and it reads as a numeral after a comma reads. A letter that a full stop and a capitalised word follow is an initial, as `V.` in `V. Silva`. Without the `pt` extra, a Roman numeral stays as written, and one log warning names the extra.
+
+| Written | Tag | Spoken | Note |
+| --- | --- | --- | --- |
+| `A parte III do livro.` | `pt-PT` | A parte terceira do livro. | The noun gives the gender. |
+| `Veja o artigo XXIII.` | `pt-PT` | Veja o artigo vinte e três. | A cardinal from eleven. |
+| `Leia o capítulo V e VI.` | `pt-PT` | Leia o capítulo quinto e sexto. | A list after a noun of a series. |
+| `Dos séculos XI, XII e XIII.` | `pt-PT` | Dos séculos onze, doze e treze. | A list after a century word. |
+| `No Grupo II, CD Tondela venceu.` | `pt-PT` | No Grupo segundo, CD Tondela venceu. | No link word closes a list, so `CD` stays as written. |
+| `Comprei um Mercedes Classe CL usado.` | `pt-PT` | stays as written | `CL` is an initialism of `roman_words`, and a word in lowercase follows it. |
+| `Leia o capítulo XL.` | `pt-PT` | Leia o capítulo quarenta. | `XL` is a word of `roman_words`, and no word in lowercase follows it. |
+| `No século XIX, XX pessoas morreram.` | `pt-PT` | No século dezanove, Vinte pessoas morreram. | `XX` is no member of a list, and it reads as a numeral from 11 to 30 after a comma. |
+| `A cena V começa.` | `pt-PT` | A cena quinta começa. | One letter after a part of a work. |
+| `O Grupo II joga hoje.` | `pt-PT` | O Grupo segundo joga hoje. | Two letters after a noun of a series. |
+| `No Grupo I, houve duas goleadas.` | `pt-PT` | stays as written | A group is labelled with letters too. |
+| `Veja o artigo X.` | `pt-PT` | Veja o artigo décimo. | pt-PT reads the tenth as an ordinal. |
+| `Veja o artigo X.` | `pt-BR` | Veja o artigo dez. | pt-BR reads it as a cardinal. |
+| `Isabel II reinou.` | `pt-PT` | Isabel Segunda reinou. | After a name, the numeral agrees with the name and takes a capital. |
+| `A Dra. IV saiu.` | `pt-PT` | A Doutora Quarta saiu. | After a title and its full stop, the title gives the gender. |
+| `A classe A viaja.` | `pt-PT` | stays as written | A class is labelled with letters. |
+| `Fui a Washington DC.` | `pt-PT` | stays as written | After a capitalised word, a numeral reads only up to 30, so the acronym `DC` stays as written. |
+| `O XV de Portugal venceu.` | `pt-PT` | O Quinze de Portugal venceu. | After an article, a numeral from 11 to 30 reads as a cardinal. |
+| `Ligações para a Região III.` | `pt-PT` | Ligações para a Região Terceira. | tugalex gives the gender of the noun "região". |
+| `Lei III foi aprovada.` | `pt-PT` | Lei Terceira foi aprovada. | A common noun gives the gender before the given-name list. |
+| `Vi o Godzilla II no cinema.` | `pt-PT` | Vi o Godzilla Segundo no cinema. | A name that no list holds takes the masculine. |
+| `EU LI O LIVRO` | `pt-PT` | stays as written | `LI` follows the pronoun `EU`, and `letter_words` holds it, the verb form of "ler". |
 
 ## Runs of capital letters
 
-A run that splits into Portuguese syllables stays as written, and any other run reads each letter by its name. In Portuguese, a consonant can also stand where a reader adds a vowel. A table in the language file holds the runs that the rule reads wrong: `EUA`, `APPO` and `OCDE` read letter by letter.
+A run that splits into Portuguese syllables stays as written, and any other run reads each letter by its name. In Portuguese, a consonant can also stand where a reader adds a vowel. A table in the language file holds the runs that the rule reads wrong: `EUA`, `APPO`, `OCDE`, `ANS` and `ONS` read letter by letter. A syllable can close with `ns`, as AO1990 Base XX divides "ins- crição" and "trans- gredir".
+
+A run of three letters or more that tugalex knows reads as a word anywhere. A clause in capitals is the text between two marks of a clause where every word with a letter is in capitals, and that holds two words or more. A word is a run that reads as a word, so a code that reads letter by letter, such as `AGR` in `AO 1334 AGR`, does not count. In a clause in capitals, a word of the `letter_words` table, or a two-letter word form that tugalex knows, reads as a word. Without the `pt` extra, only `letter_words` reads, and one log warning names the missing extra.
 
 | Written | Spoken (`pt-PT`, `LETTERS` on) | Note |
 | --- | --- | --- |
@@ -72,10 +103,18 @@ A run that splits into Portuguese syllables stays as written, and any other run 
 | `A CIAV, a OVNI e os PALOP.` | stays as written | The same rule. |
 | `Os EUA e a OCDE.` | Os é u á e a ó cê dê é. | The table spells them. |
 | `O IBGE.` | stays as written | Limit: no source in the language file names it, so the rule reads it as a word. |
-| `DIV, CIV e LIV.` | dê i vê, cê i vê e éle i vê. | Limit: a well-formed Roman numeral is spelled. |
+| `O DIV, o CIV e o LIV.` | O dê i vê, o cê i vê e o éle i vê. | Limit: a well-formed Roman numeral that the `ROMAN` form does not read is spelled. |
 | `A WEB.` | A dâblio é bê. | Limit: Portuguese has no onset or coda with `k`, `w` or `y`, which AO1990 keeps for foreign names. |
 | `geral@RTP.pt` | geral@érre tê pê.pt | Limit: Portuguese has no address form, so the form spells only the run in an address. |
-| `INSTITUTO` | i éne ésse tê i tê u tê ó | Limit: a syllable inside a run closes with one consonant, so a word that needs two consonants at the end of a syllable (ins-ti-tu-to) reads letter by letter. |
+| `EU VI O FILME` | stays as written | A clause in capitals: `letter_words` holds `VI`, the verb form of "ver". |
+| `AR CONDICIONADO` | stays as written | A clause in capitals: tugalex knows "ar". |
+| `INSTITUTO DE ESTUDOS` | stays as written | The run splits into ins-ti-tu-to. |
+| `Visitei o INSTITUTO.` | stays as written | The same rule, outside a clause. |
+| `O AR` | stays as written | `O` counts as a word of the clause. |
+| `A EM é uma doença.` | A é éme é uma doença. | Words in lower case make no clause, so the initialism is spelled. |
+| `A ANS propõe regras.` | A á éne ésse propõe regras. | The table spells it. |
+| `Eu LI o livro.` | Eu éle i o livro. | Limit: a run of two letters outside a clause in capitals reads letter by letter, so a word written in capitals for stress is spelled. |
+| `DEPARTAMENTO DE TI` | stays as written | Limit: tugalex knows the pronoun "ti", so the acronym `TI` reads as the pronoun in a clause in capitals. |
 | `EPI e ODE.` | stays as written | Limit: the rule reads some runs that Wiktionary spells, such as `EPI` ({{pt-IPA\|ê-pê-i}}) and `ODE` ({{pt-IPA\|ó-dê-é}}). |
 | `A WAN.` | A dâblio á éne. | Limit: the rule spells some runs that Wiktionary reads as words, because `w` starts no Portuguese syllable. |
 

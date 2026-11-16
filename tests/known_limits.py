@@ -1,5 +1,5 @@
 """The known limits of idempotency that the README lists. In each, a word of a reading becomes the key or the context
-of another form on a second pass, so the second pass changes the first. Four come from the address claim of design
+of another form on a second pass, so the second pass changes the first. Five come from the address claim of design
 section 4.5, and one from the `LETTERS` form of section 4.6. The idempotency tests exclude exactly these cases and
 nothing broader."""
 from dataclasses import replace
@@ -57,6 +57,9 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
     `released by a spelled run`: with `LETTERS` on, the first pass spells a run, and each span of the second pass is
     a candidate of the first pass that waited on a joined character and stayed unread, as in `Sala 9#D. RTP`. With
     the form off, a second pass changes nothing.
+    `numeral by a claim`: each span of the second pass is a Roman numeral inside the reading of a claim, which keeps
+    the numeral as written, as in `Paulo XIV٢http://x`, or a numeral whose two words of context hold the end of the
+    reading of a claim, as in `www.a.comM25World War I`.
     `symbol at claim start`: each span of the second pass is an amount whose currency symbol is the first character
     of a claim, which its reading keeps as written, and whose number stands before the claim. The first pass keeps
     the number as written, because the symbol touches the letter or the digit after it. As in `Pay 2,51 €m.www.x.in`
@@ -119,6 +122,10 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
 
     if all(month_at_edge(span) for span in second):
         return "month at claim edge"
+    if all(span.form is Form.ROMAN
+           and any(start <= span.start and (span.end <= end or len(once[end:span.start].split()) < 2)
+                   for _, start, end in readings) for span in second):
+        return "numeral by a claim"
     if all(symbol_at_claim_start(span) for span in second):
         return "symbol at claim start"
     return None

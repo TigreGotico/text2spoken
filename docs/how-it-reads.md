@@ -55,7 +55,7 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 | `LETTERS` | A run of capital letters: `NATO`, `BMW`, `MP3` | Off | en, pt |
 | `ABBREVIATION` | `Dr.`, `n.º`, `etc.` | On | de, en, es, eu, pt, ru |
 | `IDIOM` | `24/7`, `50/50`, from a table of the language | On | de, en |
-| `ROMAN` | `Luís XIV`, `XX. mendea`, `século XIX` | On | eu, pt |
+| `ROMAN` | `Luís XIV`, `XX. mendea`, `século XIX`, `Henry VIII` | On | en, eu, pt |
 | `COLOR` | `#FF0000` | On | de, en, pt |
 | `ELECTRONIC` | An e-mail or web address: `ann@example.com`, `www.example.org` | On | en |
 | `SYMBOL` | A character with a CLDR name, such as `©`, `§` or `→`, when no other form claims it | On | en, pt |
