@@ -4,7 +4,7 @@ The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for i
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
+The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`, unless a noun that it counts comes next, as in `la gara 1 anno fa`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -18,11 +18,13 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `Porta 1 zaino.` | `it-IT` | Porta uno zaino. |
 | `Ho 1 amica a Roma.` | `it-IT` | Ho un'amica a Roma. |
 | `Ho visto 1 uomo.` | `it-IT` | Ho visto un uomo. |
-| `Il binario 1 porta a Roma.` | `it-IT` | Il binario uno porta a Roma. |
+| `Il binario 1 è chiuso.` | `it-IT` | Il binario uno è chiuso. |
+| `Ha vinto la gara 1 anno fa.` | `it-IT` | Ha vinto la gara un anno fa. |
 | `Leggi pagina 1 oggi.` | `it-IT` | Leggi pagina uno oggi. |
 | `La partita è finita 1 a 0.` | `it-IT` | La partita è finita uno a zero. |
 | `Ne ho visto 1 di loro.` | `it-IT` | Ne ho visto uno di loro. |
 | `Sono 2.000.000 persone.` | `it-IT` | Sono due milioni di persone. |
+| `La città conta 2.000.000 abitanti.` | `it-IT` | La città conta due milioni di abitanti. |
 | `Sono arrivati 108 ospiti.` | `it-IT` | Sono arrivati centootto ospiti. |
 | `Nel 2003 si è laureato.` | `it-IT` | Nel duemilatré si è laureato. |
 | `Il valore è 3,14.` | `it-IT` | Il valore è tre virgola uno quattro. |
@@ -41,6 +43,7 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `Nel 21° secolo.` | `it-IT` | Nel ventunesimo secolo. |
 | `Abito al 3° piano.` | `it-IT` | Abito al terzo piano. |
 | `Il 1/2/2003 è festa.` | `it-IT` | Il primo febbraio duemilatré è festa. |
+| `Ci vediamo il 5/6.` | `it-IT` | Ci vediamo il cinque giugno. |
 | `Ci vediamo il 12/03/2024 alle 14:30.` | `it-IT` | Ci vediamo il dodici marzo duemilaventiquattro alle quattordici e trenta. |
 | `Ci vediamo alle 12:00.` | `it-IT` | Ci vediamo a mezzogiorno. |
 | `Ci vediamo alle 1:30.` | `it-IT` | Ci vediamo all'una e trenta. |
@@ -57,7 +60,7 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `4 + 5 = 9` | `it-IT` | quattro più cinque è uguale a nove |
 | `Leggi l'art. 3 della Costituzione.` | `it-IT` | Leggi l'articolo tre della Costituzione. |
 
-A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. After a feminine determiner, such as `la`, `prof.`, `dott.` and `Dr.` read the feminine word:
+A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. When the noun phrase has a feminine determiner, such as `la`, `sig.`, `prof.`, `dott.` and `Dr.` read the feminine word. Possessives and one adjective may come between the determiner and the title:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -65,6 +68,8 @@ A title reads as the word that stands before a name, in lowercase, and takes a c
 | `Scrivo al sig. Mario Rossi.` | `it-IT` | Scrivo al signor Mario Rossi. |
 | `Sig. Rossi, prego.` | `it-SM` | Signor Rossi, prego. |
 | `La prof. Gallo insegna latino.` | `it-IT` | La professoressa Gallo insegna latino. |
+| `Ho parlato con la nostra Dott. Ferri.` | `it-IT` | Ho parlato con la nostra dottoressa Ferri. |
+| `Ho scritto alla sig. Rossi.` | `it-IT` | Ho scritto alla signora Rossi. |
 
 ## Varieties
 
@@ -99,11 +104,11 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 169 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 192 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
-Italian leaves these forms as written:
+Italian leaves these forms as written, or reads them as shown:
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
@@ -116,7 +121,8 @@ Italian leaves these forms as written:
 | `Costa 2.500 ¥.` | `it-IT` | stays as written | `¥` belongs to the yen and the yuan in CLDR, so an amount next to it stays as written. |
 | `Le corsie sono larghe 3,50 metri.` | `it-IT` | Le corsie sono larghe tre virgola cinque zero metri. | The digits after the decimal mark read one by one, as the CLDR spell-out rule reads them. |
 | `Antonio oggi compie 41 anni.` | `it-IT` | Antonio oggi compie quarantuno anni. | A compound in uno keeps its full form. Before a noun the short form "quarantun anni" is also correct. |
-| `Ci sono 1.000.000 abitanti.` | `it-IT` | Ci sono un milione abitanti. | "di" stands after a scale word only before a noun that the file finds in the noun list, by its singular. The list leaves out the nouns of both genders, such as abitante. |
+| `Il binario 1 porta a Roma.` | `it-IT` | Il binario una porta a Roma. | After a label noun, 1 counts a noun of the noun list. The verb "porta" is also a noun, so 1 reads as its article. |
+| `La squadra 1 punto sopra di noi.` | `it-IT` | La squadra uno punto sopra di noi. | After a label noun, 1 counts no word that the noun list also marks as a function word. "punto" is also an adverb, so 1 reads as a label. |
 
 ---
 [← Basque](eu.md) · [Home](../index.md) · [Portuguese →](pt.md)

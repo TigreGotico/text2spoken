@@ -41,23 +41,27 @@ the list names the nouns that are also a function word.
 (Vocabolario Treccani, "uno": "in costruzioni partitive: uno di loro e una di voi"; "si alzò uno dei presenti"), so `1
 di loro` reads "uno di loro" and `1 delle città` "una delle città". Before or after a preposition of `score_words` ("a",
 "su", "contro") it is a score, a ratio or a pronoun, read as the bare number (Vocabolario Treccani, "vincere": "v. per
-quattro a due"; "contro": "essere dieci c. uno"): `1 a 0` reads "uno a zero", `2 a 1` "due a uno" and `1 contro 3` "uno
-contro tre". A preposition takes no article, so 1 before it is no article. Before another word it takes the masculine
-article form, as in `1 altro libro`: "un altro libro". Before "e" or "o" (`kept_links`) it stays as written, because its
-noun comes later, as in `tra 1 e 2 ore`. A number right after a label noun is a label, and reads the bare "uno" whatever
-follows (Vocabolario Treccani, "uno": "il numero uno, a pagina uno"; "numero": "il n. 5, il n. 11"). A label noun is a
+quattro a due"; "contro": "scommettere dieci c. uno"): `1 a 0` reads "uno a zero", `2 a 1` "due a uno" and `1 contro 3`
+"uno contro tre". A preposition takes no article, so 1 before it is no article. Before another word it takes the
+masculine article form, as in `1 altro libro`: "un altro libro". Before "e" or "o" (`kept_links`) it stays as written,
+because its noun comes later, as in `tra 1 e 2 ore`. A number right after a label noun is a label, and reads the bare
+"uno" (Vocabolario Treccani, "uno": "il numero uno, a pagina uno"; "numero": "il n. 5, il n. 11"). A label noun is a
 noun of `label_nouns`, a noun of the list after a determiner of `label_determiners`, elided forms included, as in `il
 binario 1` and `l'articolo 1`, or an abbreviation of `label_abbreviations`, as in `art. 1`. The clitic in `C'era 1 sola
 persona` is no determiner. A noun of the list with no determiner may be a participle or a verb, as "visto" in `Ho visto
 1 film`, so it is no label. A noun of the list with a capital inside a sentence starts a name, as `Formula` in `il
-mondiale di Formula 1`, and is a label noun.
+mondiale di Formula 1`, and is a label noun. After a label noun other than an abbreviation or a noun of `label_nouns`,
+the number counts the next word when that word is a unit name or a noun of the list that is no function word: `la gara 1
+anno fa` reads "la gara un anno fa", and `Marco 1 settimana fa` "Marco una settimana fa". So a verb that is also a noun
+counts too: `il binario 1 porta` reads "il binario una porta".
 
 A scale word before a noun takes "di" (Treccani, "numerali", Cardinali: milione, miliardo "devono essere [...] seguiti –
-qualora precedano un altro nome – dalla preposizione di"), also when it comes from digits: `1.000.000 €` reads "un
-milione di euro" and `3.000.000 km` "tre milioni di chilometri". Before a plural noun, the file finds the singular by
-the regular endings (Vocabolario Treccani, "plurale": "I nomi e gli aggettivi maschili in -o e in -e hanno il plur. in
--i [...]; i femminili hanno il plur. -e se terminano in -a [...], -i se terminano in -e"), so `2.000.000 persone` reads
-"due milioni di persone". `scale_words` holds the scale nouns of ovos-number-parser.
+qualora precedano un altro nome – dalla preposizione di"; Vocabolario Treccani, "milione": "un m. di volte", "un m. di
+amici"), also when it comes from digits: `1.000.000 €` reads "un milione di euro" and `3.000.000 km` "tre milioni di
+chilometri". The word after the scale word takes "di" whether or not the noun list holds it, as a loanword or a noun of
+both genders: `2.000.000 abitanti` reads "due milioni di abitanti" and `10.000.000 follower` "dieci milioni di
+follower". A conjunction, a preposition or an article of `scale_links`, `label_determiners` and `partitive_words` takes
+no "di", as in `2.000.000 circa`. `scale_words` holds the scale nouns of ovos-number-parser.
 
 A decimal reads the CLDR RBNF `it` rule `x.x: ←← virgola →→` of `spellout-numbering`: the whole part, "virgola", then
 each digit of the decimal part, so `3,14` reads "tre virgola uno quattro" and the zero of `2,50` stays. The minus sign
@@ -74,11 +78,9 @@ come poco eufonico: centesimo decimo, millesimo primo, millesimo secondo, milles
 undicesimo, ecc. (in questi casi la grafia staccata è preferita)". ovos-number-parser, the `it` extra, writes the
 ordinals, the separate forms included: "millesimo primo" for 1001, "millesimo undicesimo" for 1011, and every number
 above 100 that ends in 10 as the ordinal of the number without the 10 and "decimo": "centesimo decimo" for 110,
-"duecentesimo decimo" for 210, "trecentesima decima" in the feminine. Giorgio De Rienzo, Corriere della Sera,
-"Scioglilingua", 24 September 2004, gives for these numbers "O 'centodecesimo' (perché in questi casi il 'dieci' perde
-la 'i') o 'centesimo decimo', decisamente più elegante, anche se più antiquato". From a million up the parser writes one
-word with a singular scale word, as "tremilionecinquecentomillesimo" for 3500000, and no source gives that form, so an
-ordinal above 999999 stays as written until a sourced form exists.
+"duecentesimo decimo" for 210, "trecentesima decima" in the feminine. From a million up the parser writes one word with
+a singular scale word, as "tremilionecinquecentomillesimo" for 3500000, and no source gives that form, so an ordinal
+above 999999 stays as written until a sourced form exists.
 
 The degree sign writes an ordinal too (Vocabolario Treccani, "primo": "Numerale ordinale (indicato con 1° se si
 utilizzano cifre arabiche"; "centesimo": "in scrittura numerica 100°"). It also writes an angle and a coordinate, as in
@@ -105,17 +107,17 @@ An expression reads its operators by the Vocabolario Treccani: "più" ("quattro 
 `=`. The dimension mark `×` of a measure reads "per" too.
 
 Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of the variety): `5 km`
-reads "cinque chilometri" and `1 h` "una ora", because CLDR gives `duration-hour` the feminine gender. A unit with no
-CLDR gender takes the gender of its first word in the noun list, and the article form una elides as before a noun: `1 h`
-reads "un'ora". A symbol that cannot be a plain word, such as `km/h` or `°C`, reads with no list. `unit_symbols` names
-the symbols made only of letters that read as units.
+reads "cinque chilometri". CLDR gives `duration-hour` the feminine gender, and the article form una elides as before a
+noun, so `1 h` reads "un'ora". A unit with no CLDR gender takes the gender of its first word in the noun list. A symbol
+that cannot be a plain word, such as `km/h` or `°C`, reads with no list. `unit_symbols` names the symbols made only of
+letters that read as units.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of the variety): `15 €`
 reads "quindici euro", because CLDR `it` gives the euro one name for every plural category, and the Vocabolario
 Treccani, "euro", marks it "s. m. [...] invar.". The word "euro" after an amount reads as the sign does, so `8,50 euro`
 reads as `8,50 €`. `currency_symbols` names the ISO 4217 codes that read, because a symbol of letters reads only from
 that list. CLDR gives a currency no gender, so 1 takes the gender of the first word of the currency name in the noun
-list: "un euro", "una sterlina britannica". `$` and `USD` read as "dollaro", as the German and Spanish files read them:
+list: "un euro", "una sterlina britannica". `$` and `USD` read as "dollaro", as the German and English files read them:
 the word also names the dollar of other countries (Vocabolario Treccani, "dollaro": "Anche unità monetaria di altri
 paesi [...]: d. canadese, australiano"). An amount next to `¥` stays as written, with its number, because CLDR `it`
 gives the sign to the yen and the yuan; `kept_currency_signs` names it. Two decimals read as the minor unit after "e",
@@ -137,11 +139,15 @@ sig.ra Luisa Rossi"), "sig.na" ("signorina": "Alla sig.na Claudia Bianchi"), "do
 dottoressa in dott.ssa") and "prof.ssa" ("prof.": "per il femm. professoressa si usa o prof. o, volendo evitare
 equivoco, prof.ssa"). Those entries also let the short form name a woman: "Le stesse abbreviazioni si possono usare
 anche con riferimento a donna" ("dott."), and "per il femm. professoressa si usa o prof." ("prof."). So `prof.`, `dott.`
-and `Dr.` read the feminine word, "professoressa" or "dottoressa", right after a feminine determiner of
-`feminine_determiners`, as in `la prof. Gallo`, and the masculine word in other places. The word is lowercase, as these
-entries write it, and takes a capital only where a clause starts. "ecc." reads "eccetera" ("ecc.": "Abbreviazione di
-eccetera"), "art." before a number "articolo" ("art.": "Abbreviazione grafica di articolo"), and "pag." before a number
-"pagina" ("pagina": "vedi a pagina (abbrev. p. o pag.) 40").
+and `Dr.` read the feminine word, "professoressa" or "dottoressa", when the determiner of their noun phrase is a word of
+`feminine_determiners`, as in `la prof. Gallo`, and the masculine word in other places. Between the determiner and the
+title may come possessives of `possessives` and one adjective in -a or -e: `la nostra Dott. Ferri` reads "la nostra
+dottoressa Ferri", and `La cara prof. Marini` "La cara professoressa Marini". The Vocabolario Treccani, "sig.", gives
+only "Abbreviazione di signore", and "signora" gives "sig.ra" for the feminine. After a feminine determiner `sig.` reads
+"signora", the title that agrees with the determiner, as in `La sig. Rossi`. The word is lowercase, as these entries
+write it, and takes a capital only where a clause starts. "ecc." reads "eccetera" ("ecc.": "Abbreviazione di eccetera"),
+"art." before a number "articolo" ("art.": "Abbreviazione grafica di articolo"), and "pag." before a number "pagina"
+("pagina": "vedi a pagina (abbrev. p. o pag.) 40").
 
 it-IT and it-SM write the decimal comma and the group mark `.`, and it-CH the decimal point and the group mark `'` (CLDR
 49 number symbols of `it`, `it_SM` and `it_CH`). In it-CH a decimal point reads as a decimal, as in `2.5 km`, `3.14159`
@@ -156,7 +162,10 @@ The words of a date, a clock time and a year come from `ovos_date_parser.spoken`
 and so do the month names. A numeric date reads in the order day, month, year. In `25 dicembre 2024` the day and the
 month read as a date, and the year as a cardinal. The first day of a month is an ordinal: the Accademia della Crusca,
 consulenza 1077, "per il giorno iniziale di un mese si usa l'ordinale: il primo ottobre (o il 1° ottobre)", and
-consulenza 86, "il 1/2/2003 (cioè il primo febbraio duemilatré)". A year reads as one cardinal word, as
+consulenza 86, "il 1/2/2003 (cioè il primo febbraio duemilatré)". A day and a month with a slash and no year, right
+after a definite article or a preposition joined with one of `date_words`, read as a date too, and never as a fraction:
+`il 5/6` reads "il cinque giugno" and `Il 1/5` "Il primo maggio". Before a form of di and a word, as in `Il 2/3 dei
+voti`, the pair may be a fraction with a wrong article, and it stays as written. A year reads as one cardinal word, as
 "duemilaventidue" (the Accademia della Crusca, consulenza 20176, which reports the media form "venti ventidue anziché
 [...] duemilaventidue"). A clock time with `:` or `.` reads after a word of `time_words`, as in `alle 14:30`: "alle
 quattordici e trenta". A whole hour 0 or 12 reads "mezzanotte" or "mezzogiorno" (Vocabolario Treccani, "mezzanotte": "in
@@ -168,6 +177,7 @@ generalizzato l'uso di l' / all'una", so `alle 1:30` reads "all'una e trenta". `
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
@@ -226,6 +236,8 @@ DATA = freeze({
                           "negli", "nelle", "sul", "sullo", "sulla", "sull'", "sui", "sugli", "sulle", "questo",
                           "questa", "quest'", "quel", "quello", "quella", "quell'"],
     "score_words": ["a", "su", "contro"],
+    "scale_links": ["e", "ed", "o", "od", "ma", "né", "che", "se", "come", "di", "a", "ad", "da", "in", "con", "su",
+                    "per", "tra", "fra", "circa", "contro", "verso", "entro", "oltre", "sopra", "sotto"],
     "kept_links": ["e", "o"],
     "partitive_words": {"di": "masculine", "del": "masculine", "dello": "masculine", "dei": "masculine",
                         "degli": "masculine", "della": "feminine", "delle": "feminine", "tra": "masculine",
@@ -236,13 +248,16 @@ DATA = freeze({
     "time_articles": {"alle": {"0": "a", "1": "all'", "12": "a"}, "dalle": {"0": "da", "1": "dall'", "12": "da"},
                       "delle": {"0": "di", "1": "dell'", "12": "di"}, "sulle": {"1": "sull'"}, "le": {"1": "l'"},
                       "ore": {}},
+    "date_words": ["il", "l'", "dal", "dall'", "al", "all'", "del", "dell'", "nel", "nell'", "sul", "sull'"],
+    "of_words": ["di", "del", "dello", "della", "dei", "degli", "delle"],
     "titles": {"Sig.": "signor", "sig.": "signor", "Sig.ra": "signora", "sig.ra": "signora", "Sig.na": "signorina",
                "sig.na": "signorina", "Dott.": "dottor", "dott.": "dottor", "Dr.": "dottor", "dr.": "dottor",
                "Dott.ssa": "dottoressa", "dott.ssa": "dottoressa", "Prof.": "professor", "prof.": "professor",
                "Prof.ssa": "professoressa", "prof.ssa": "professoressa"},
-    "feminine_titles": {"Dott.": "dottoressa", "dott.": "dottoressa", "Dr.": "dottoressa", "dr.": "dottoressa",
-                        "Prof.": "professoressa", "prof.": "professoressa"},
+    "feminine_titles": {"Sig.": "signora", "sig.": "signora", "Dott.": "dottoressa", "dott.": "dottoressa",
+                        "Dr.": "dottoressa", "dr.": "dottoressa", "Prof.": "professoressa", "prof.": "professoressa"},
     "feminine_determiners": ["la", "una", "alla", "della", "dalla", "nella", "sulla", "colla", "quella", "questa"],
+    "possessives": ["mia", "tua", "sua", "nostra", "vostra", "loro"],
     "abbreviations": {"ecc.": "eccetera"},
     "sentence_final": ["ecc."],
     "number_abbreviations": {"art.": "articolo"},
@@ -417,13 +432,11 @@ def counted_noun(word: str, request: Request) -> str | None:
     return noun_genders().get(word) or unit_nouns(request.variety.tag).get(word)
 
 
-def plural_noun(word: str, request: Request) -> bool:
-    """Whether the word is the plural of a counted noun by a regular ending: -i for -o, -e or -a, and -e for -a, as
-    "chilometri" and "persone". A function word, or a word of three letters or fewer, is none."""
-    if len(word) < 4 or word in function_nouns():
-        return False
-    stems = {"i": [word[:-1] + end for end in "oea"], "e": [word[:-1] + "a"]}.get(word[-1], [])
-    return any(counted_noun(stem, request) is not None for stem in stems)
+def counts_after_label(word: str, request: Request) -> bool:
+    """Whether 1 after a label noun counts the word: a CLDR unit name, as "ora", or a noun of the list that is no
+    function word, as "anno". A function word of the list may be a word that the number does not count, as "oggi" in
+    `pagina 1 oggi`."""
+    return word in unit_nouns(request.variety.tag) or (word in noun_genders() and word not in function_nouns())
 
 
 def word_before(text: str, start: int) -> str:
@@ -437,18 +450,16 @@ def word_before(text: str, start: int) -> str:
 
 
 def is_label(text: str, start: int, request: Request) -> bool:
-    """Whether the number at text[start:] is a label: right after an abbreviation of `label_abbreviations`, as in
-    `art. 1`, a noun of `label_nouns`, as in `pagina 1`, or a noun of the noun list that a determiner of
-    `label_determiners` comes before, as in `il binario 1` and `l'articolo 1`. A noun with no determiner may be a
-    verb or a participle, as "visto" in `Ho visto 1 film`, so it makes no label. A noun of the list with a capital
-    inside a sentence starts a name, as in `il mondiale di Formula 1`, and makes a label."""
+    """Whether a noun right before the number at text[start:] makes it a label: a noun of the noun list that a
+    determiner of `label_determiners` comes before, as in `il binario 1` and `l'articolo 1`. A noun with no
+    determiner may be a verb or a participle, as "visto" in `Ho visto 1 film`, so it makes no label. A noun of the
+    list with a capital inside a sentence starts a name, as in `il mondiale di Formula 1`, and makes a label. The
+    words of `label_abbreviations` and `label_nouns` make a label in every place, and `BeforeWord` reads them."""
     data = request.data
     word = word_before(text, start)
     lower = word.lower()
     if lower.endswith("."):
-        return lower in data["label_abbreviations"]
-    if lower in data["label_nouns"]:
-        return True
+        return False
     begin = start - 1 - len(word)
     if word[:1].isupper() and text[:begin].endswith(" ") and is_word_char(text[begin - 2:begin - 1]):
         return lower in noun_genders()
@@ -575,13 +586,30 @@ def _currency_amount(integer: str, currency: FrozenMap, request: Request) -> str
     return _counted(integer, currency_name(currency, plural_category(request, integer)), request)
 
 
+def feminine_phrase(before: Sequence[str], data: FrozenMap) -> bool:
+    """Whether the determiner of the noun phrase that ends at a title is a word of `feminine_determiners`. The walk
+    back from the title steps over the words of `possessives` and over one adjective, a lowercase word that ends in -a
+    or -e, as in `la nostra Dott.` and `La cara prof.`."""
+    adjective = True
+    for word in reversed(before):
+        lower = word.lower()
+        if lower in data["feminine_determiners"]:
+            return True
+        if lower in data["possessives"]:
+            continue
+        if not (adjective and word.islower() and word.endswith(("a", "e"))):
+            return False
+        adjective = False
+    return False
+
+
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
-    """The full word of the abbreviation, with a capital where a clause starts. A title of `feminine_titles` right
-    after a word of `feminine_determiners` reads its feminine word: "la prof. Gallo" reads "la professoressa
-    Gallo"."""
+    """The full word of the abbreviation, with a capital where a clause starts. A title of `feminine_titles` in a
+    noun phrase with a feminine determiner reads its feminine word: "la prof. Gallo" reads "la professoressa Gallo",
+    and "la nostra Dott. Ferri" "la nostra dottoressa Ferri"."""
     data = context.request.data
     key = span.fields["key"]
-    if key in data["feminine_titles"] and context.before and context.before[-1].lower() in data["feminine_determiners"]:
+    if key in data["feminine_titles"] and feminine_phrase(context.before, data):
         return data["feminine_titles"][key]
     word = next(data[table][key] for table in ("titles", "abbreviations", "number_abbreviations")
                 if data[table].get(key) is not None)
@@ -630,15 +658,16 @@ def speak_time(span: Span, context: SpanContext) -> str:
 class BeforeWord:
     """A whole number and one space before a lowercase word that ends the word. For 1, the recognizer name of each span
     ends in a role:
-    `label` after a noun or a label abbreviation (`binario 1`, `art. 1`), after a number and a word of `score_words`
+    `label` after a label abbreviation or a noun of `label_nouns` (`art. 1`, `numero 1`), after another label noun
+    before a word that it does not count (`binario 1`, `Formula 1 è`), after a number and a word of `score_words`
     (`2 a 1`), and before a word of `score_words` (`1 a 0`, `1 su 3`, `1 contro tutti`), a preposition that no
     article comes before: "uno";
     `noun` before a noun that it counts: the article of the noun, "un anno", "uno zaino", "una gatta", "un'ora";
     `pronoun` before a word of `partitive_words`: "uno di loro", "una delle città";
     `article` before another word: the masculine article form, "un altro", "uno strano".
     Before a word of `kept_links`, as in `tra 1 e 2 ore`, 1 stays as written: its noun comes later. A number of
-    another value whose words end in a scale word takes the role `scale` before the plural of a noun that it counts:
-    "due milioni di persone"."""
+    another value whose words end in a scale word takes the role `scale` before a word that is no link of
+    `scale_links`, `label_determiners` or `partitive_words`: "due milioni di persone", "due milioni di abitanti"."""
     name: str = "before_word"
     form: Form = Form.CARDINAL
 
@@ -655,13 +684,15 @@ class BeforeWord:
             if rest[:1] and is_word_char(rest[0]):
                 continue
             end, keep = number.end, False
-            label = is_label(text, number.start, request) or after_score(text, number.start, request)
             if number.integer != "1" or number.end - number.start != 1:
-                if label or not plural_noun(word, request) or word in data["scales"] \
-                        or SPELLER.cardinal(number.integer, Features(), request).split()[-1] not in scale_words():
+                if (word in data["scales"] or word in data["scale_links"] or word in data["label_determiners"]
+                        or word in data["partitive_words"] or rest[:1] in ("'", "’")
+                        or SPELLER.cardinal(number.integer, Features(), request).split()[-1] not in scale_words()):
                     continue
                 role = "scale"
-            elif label or word in data["score_words"]:
+            elif (word in data["score_words"] or after_score(text, number.start, request)
+                  or word_before(text, number.start).lower() in {*data["label_abbreviations"], *data["label_nouns"]}
+                  or (is_label(text, number.start, request) and not counts_after_label(word, request))):
                 role = "label"
             elif word in data["kept_links"]:
                 role, keep = "label", True
@@ -741,6 +772,34 @@ class DateNamed:
 
 
 @dataclass(frozen=True)
+class DateDayMonth:
+    """`il 5/6`, `dal 2/6`, `l'8/5`: a day 1 to 31, a slash and a month 1 to 12 right after a word of `date_words`,
+    a definite article or a preposition joined with one, read as a date with no year. In that place the pair is no
+    fraction. Before a form of di of `of_words` and a word, as in `Il 2/3 dei voti`, the pair may be a fraction with a
+    wrong article, and it stays as written."""
+    name: str = "date_day_month"
+    form: Form = Form.DATE
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for match in re.finditer(r"(?<![0-9/])([0-9]{1,2})/([0-9]{1,2})(?![0-9/])", text):
+            start, end = match.span()
+            if text[start - 1:start] in ("'", "’"):
+                word = "".join(takewhile(str.isalpha, reversed(text[:start - 1])))[::-1] + "'"
+            else:
+                word = word_before(text, start)
+            day, month = int(match[1]), int(match[2])
+            after = text[end:].split(" ", 2)
+            partitive = (text.startswith(" ", end) and len(after) == 3
+                         and after[1] in request.data["of_words"] and after[2][:1].isalpha())
+            if (word.lower() in request.data["date_words"] and is_bounded(text, start, end)
+                    and is_valid(None, month, day)):
+                yield Span(start, end, Form.DATE,
+                           FrozenMap({"year": None, "month": month, "day": day, "written_order": "DMY",
+                                      "month_written": "digits", "prefix": "", "suffix": ""}), recognizer=self.name,
+                           keep=partitive)
+
+
+@dataclass(frozen=True)
 class Clock(TimeClock):
     """The clock times of the core, with `:` or `.` between the hour and the minutes and a word of `time_words`
     before them. A word of `time_articles` with a form for the hour, right before a whole hour 0 or 12 or before the
@@ -790,10 +849,10 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], DateNamed(), SHARED["date_numeric"], Clock(), KeptDecimal(), SHARED["money"],
-                 KeptMoney(), SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"],
-                 Ordinal(), SHARED["abbreviation"], KeptDecimal(name="kept_clock", clock=True), SHARED["decimal"],
-                 BeforeWord(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+    recognizers=(SHARED["lexicon"], DateNamed(), DateDayMonth(), SHARED["date_numeric"], Clock(), KeptDecimal(),
+                 SHARED["money"], KeptMoney(), SHARED["percent"], SHARED["measure"], SHARED["expression"],
+                 SHARED["fraction"], Ordinal(), SHARED["abbreviation"], KeptDecimal(name="kept_clock", clock=True),
+                 SHARED["decimal"], BeforeWord(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
