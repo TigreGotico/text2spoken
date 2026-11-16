@@ -1062,3 +1062,39 @@ def test_a_swiss_year_says_huitante():
     assert normalize("10/11/1980 et le 5 mai 2080", "fr-CH") == (
         "dix novembre mille neuf cent huitante et le cinq mai deux mille huitante"
     )
+
+
+@pytest.mark.parametrize("tag", ["fr", "fr-CA", "fr-CH", "fr-BE"])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "%4h/2",
+        "€4h/2",
+        "̈4h/2",
+        "/4h 305",
+        "9l'٥1 3e",
+        "1er%٧5 2e",
+    ],
+)
+def test_a_second_pass_changes_nothing_next_to_a_time_or_a_mixed_digit_run(tag, text):
+    """Section 11 on short texts that the French fuzz found: a time that a slash and a digit follow, minutes that a
+    digit continues, and a run of mixed digits before an ordinal."""
+    once = normalize(text, tag)
+    assert normalize(once, tag) == once
+
+
+@pytest.mark.parametrize(
+    "written,spoken",
+    [
+        ("Ouvert 9h/17h ici.", "Ouvert neuf heures/dix-sept heures ici."),
+        ("Le train de 4h 305 places.", "Le train de quatre heures trois cent cinq places."),
+    ],
+)
+def test_a_time_next_to_a_slash_or_a_number_reads_in_one_pass(written, spoken):
+    assert normalize(written, "fr-FR") == spoken
+
+
+@pytest.mark.parametrize("text", ["+41123 45 672e", "+312 34 56 783e"])
+def test_a_second_pass_changes_nothing_after_a_telephone_run_that_a_word_continues(text):
+    once = normalize(text, "fr-FR")
+    assert normalize(once, "fr-FR") == once

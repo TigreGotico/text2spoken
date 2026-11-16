@@ -21,7 +21,7 @@ from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, lexicon_entries
 from text2spoken.core.letters import LETTERS
-from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, number_marks
+from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
@@ -316,14 +316,37 @@ def digit_run_matches(pattern: re.Pattern | str, folded: str) -> Iterator[re.Mat
                 break
 
 
-def _affixed_matches(pattern: re.Pattern, text: str, data) -> Iterator[tuple[re.Match, int, int, str, str]]:
-    """Matches in the folded text, each with its declared affixes, the start and the end of the span, that no
-    word character, digit or cluster mark continues on either side."""
-    for match in digit_run_matches(pattern, fold_digits(text)):
-        bounds = _affixes(text, *match.span(), data)
-        start, end, prefix, suffix = bounds if bounds is not None else (*match.span(), "", "")
+def grouped_matches(pattern: re.Pattern | str, text: str, request: Request) -> Iterator[tuple[str, int, int]]:
+    """The matches of `digit_run_matches` in the folded text, each as the text it matched and its span in `text`.
+
+    The pattern reads the text without the spaces that `find_numbers` reads as group marks (`group_spaces`), so a
+    `[0-9]+` of the pattern reads `1 000` whole, as `find_numbers` does: `1 000-2 000` is one range of two numbers,
+    and no match starts or ends inside `1 000`. A language with no space in a run of group marks reads the folded
+    text as it is."""
+    key = ("grouped", text)
+    if key not in request.memo:
+        folded = fold_digits(text)
+        spaces = frozenset(group_spaces(text, number_marks(request.data, request.params.decimal_mark),
+                                        declared_marks(request.data)))
+        kept = tuple(i for i in range(len(text)) if i not in spaces)
+        request.memo[key] = ("".join(folded[i] for i in kept), kept) if spaces else (folded, None)
+    view, kept = request.memo[key]
+    for match in digit_run_matches(pattern, view):
+        start, end = match.span()
+        if kept is not None:
+            start, end = kept[start], kept[end - 1] + 1
+        yield match.group(), start, end
+
+
+def _affixed_matches(pattern: re.Pattern, text: str, request: Request) \
+        -> Iterator[tuple[str, int, int, int, int, str, str]]:
+    """The matches of `grouped_matches`, each with the span it matched, and the start and the end of the span with
+    its declared affixes, which no word character, digit or cluster mark continues on either side."""
+    for written, matched_start, matched_end in grouped_matches(pattern, text, request):
+        bounds = _affixes(text, matched_start, matched_end, request.data)
+        start, end, prefix, suffix = bounds if bounds is not None else (matched_start, matched_end, "", "")
         if _edge(text, start, end):
-            yield match, start, end, prefix, suffix
+            yield written, matched_start, matched_end, start, end, prefix, suffix
 
 
 GAPS = ("", " ", "\u00a0")
@@ -352,14 +375,15 @@ class Fraction:
         as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets."""
         symbols = request.data.get("symbols", FrozenMap())
         units = unit_table(request)
-        for match, start, end, prefix, suffix in _affixed_matches(_FRACTION, text, request.data):
-            written = match.group()
+        for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(_FRACTION, text,
+                                                                                                 request):
             sign = "-" if written[0] in "-−" else "+" if written[0] == "+" else ""
             numerator, denominator = written.lstrip("-+−").split("/")
-            if sign and match.start() > 0 and is_word_char(text[match.start() - 1]):
+            if sign and matched_start > 0 and is_word_char(text[matched_start - 1]):
                 continue
             unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols))
-                       or _unit_after(text, end, units, number_gaps(request.data)) or not one_digit_set(text[match.start():match.end()]))
+                       or _unit_after(text, end, units, number_gaps(request.data))
+                       or not one_digit_set(text[matched_start:matched_end]))
             top, bottom = bounded_integer(numerator), bounded_integer(denominator)
             if unclear or (bottom is not None and 2 <= bottom <= 100 and top is not None and top < bottom):
                 yield Span(start, end, Form.FRACTION,
@@ -397,14 +421,14 @@ class Range:
         if not marks:
             return
         mark = "|".join(map(re.escape, marks))
-        for match, start, end, prefix, suffix in _affixed_matches(re.compile(f"[0-9]+(?:{mark})[0-9]+"), text,
-                                                                  request.data):
-            low, high = re.split(mark, match.group())
+        for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(
+                re.compile(f"[0-9]+(?:{mark})[0-9]+"), text, request):
+            low, high = re.split(mark, written)
             low_value, high_value = bounded_integer(low), bounded_integer(high)
             descending = high_value is not None and (low_value is None or low_value >= high_value)
             yield Span(start, end, Form.RANGE,
                        FrozenMap({"low": low, "high": high, "prefix": prefix, "suffix": suffix}), recognizer=self.name,
-                       keep=descending or not one_digit_set(text[match.start():match.end()]))
+                       keep=descending or not one_digit_set(text[matched_start:matched_end]))
 
 
 @dataclass(frozen=True)
@@ -1067,12 +1091,11 @@ class Expression:
         operators = re.escape("".join(request.data["operators"]))
         open_operator = re.compile(f" ?[{operators}]")
         symbols = request.data["symbols"]
-        for match in digit_run_matches(request.data["patterns"]["expression"], fold_digits(text)):
-            start, end = match.span()
+        for written, start, end in grouped_matches(request.data["patterns"]["expression"], text, request):
             if (not (is_bounded(text, start, end) and one_digit_set(text[start:end]))
                     or open_operator.match(text, end)):
                 continue
-            written = match.group().replace(" ", "")
+            written = written.replace(" ", "")
             first = re.match(f"[{_OPERAND_SIGNS}]?[0-9]+", written).group()
             pairs = re.findall(f"([{operators}])([{_OPERAND_SIGNS}]*[0-9]+)", written[len(first):])
             if not pairs:

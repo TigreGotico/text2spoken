@@ -66,9 +66,10 @@ FR_ENTRIES = {
     "number_abbreviations": "n°", "ordinal_marks": "masculine", "feminine_nouns": "pommes", "patterns": "date_day_month",
     "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
     "operators": "+", "colors": "ff0000", "color_words": "couleur", "year_words": "en", "year_links": "et",
-    "function_words": "il", "phone_words": "composez", "short_codes": "112", "list_links": "et",
+    "function_words": "il", "phone_words": "composez", "short_codes": "3919", "list_links": "et",
     "phone_unit_shapes": "0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}", "phone_reading": DELETE, "roman_headings": "chapitre",
     "roman_names": "Louis", "scales": "M", "day_periods": "pm", "number_gaps": "\u202f", "elision_marks": "'",
+    "ordinal_nouns": "page",
 }
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,

@@ -282,6 +282,24 @@ def test_normalize_is_idempotent_and_never_crashes_on_random_text(seed):
         assert normalize(once, lang) == once or known_limit(text, lang), (text, once)
 
 
+GROUPED = ["1 000", "1\u202f000", "2\u00a0500 000", "–", "1 000-", "1 000–", "1 000/", "1 000+", "1 000 = ",
+           "1 000 × ", "1\u202f000-", "-2 000", "–2 000", "/2 000", "+2 000", "= 2 000", "× 2 000"]
+"""Numbers grouped with a space next to a range mark, a fraction slash or an operator. A language whose group marks
+hold a space reads `1 000` as one number, and a recognizer that read `[0-9]+` on its own split it."""
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_a_number_grouped_with_a_space_reads_the_same_on_a_second_pass(seed):
+    """Section 11 for French, which groups digits with a space, on random text with the atoms of `GROUPED`."""
+    rng = random.Random(seed)
+    atoms = ATOMS + GROUPED
+    for _ in range(500):
+        lang = rng.choice(["fr", "fr-FR", "fr-CA", "fr-CH", "fr-BE"])
+        text = "".join(rng.choice(atoms) for _ in range(rng.randint(1, 30)))
+        once = normalize(text, lang)
+        assert normalize(once, lang) == once or known_limit(text, lang), (text, once)
+
+
 def test_run_time_grows_linearly_with_the_input():
     unit = "Dr. Smith paid $5 at 14:30 on 12/03/2024. "
     normalize(unit, "en")

@@ -17,7 +17,10 @@ The rules cite these sources, by rule family:
   "Nombres (écriture, lecture, accord)" (academie-francaise.fr/questions-de-langue). It gives the hyphen and "et"
   rule, "quatre-vingts hommes" but "quatre-vingt-deux hommes", "deux cents euros" but "deux cent vingt euros",
   "deux cents millions d'années", "Mille (ou mil) est toujours invariable", and the singular of a numeral that
-  stands for an ordinal: "page quatre-vingt", "l'an mille neuf cent".
+  stands for an ordinal: "Ils restent également invariables lorsqu'ils sont employés comme adjectifs numéraux
+  ordinaux : page deux cent ; page quatre-vingt ; l'an mille neuf cent." The file reads that singular in an
+  ordinal ("deux cent millionième"), in a year, and in a number after the two nouns that the passage names,
+  "page" and "an", which the table `ordinal_nouns` holds.
 - Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
   des ordinaux complexes (vingt-deuxième, etc.)".
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
@@ -320,6 +323,7 @@ DATA = freeze(
         },
         "range_word": "à",
         "range_marks": ["-", "–"],
+        "ordinal_nouns": ["page", "an"],
         "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"}],
         "dimension_marks": ["x", "×"],
         "dimension_word": "par",
@@ -665,12 +669,13 @@ number."""
 
 def _clock_edge(text: str, start: int, end: int) -> bool:
     """Whether no digit, and no mark of a number before a digit, continues text[start:end]. A dash does not
-    continue it, so `9h-17h` is a range of two times."""
+    continue it, so `9h-17h` is a range of two times. A slash after it does not either: the claim waits on the
+    digit that the slash joins, so `4h/2` stays as written and `9h/17h` reads both times."""
     before = start == 0 or not (
         is_digit(text[start - 1]) or (text[start - 1] in "/:.," and start > 1 and is_digit(text[start - 2]))
     )
     after = end == len(text) or not (
-        is_digit(text[end]) or (text[end] in "/:.," and end + 1 < len(text) and is_digit(text[end + 1]))
+        is_digit(text[end]) or (text[end] in ":.," and end + 1 < len(text) and is_digit(text[end + 1]))
     )
     return before and after
 
@@ -741,6 +746,13 @@ def _spell(words: str) -> str:
     return " ".join(out)
 
 
+def _invariable(words: str) -> str:
+    """The words of a numeral that stands for an ordinal: "cent" and "vingt" take no "s" (Académie française,
+    "Nombres": "page deux cent ; page quatre-vingt ; l'an mille neuf cent"). "Millions" and "milliards" are nouns
+    and keep theirs."""
+    return " ".join(word[:-1] if word in ("cents", "quatre-vingts") else word for word in words.split(" "))
+
+
 class FrenchSpeller:
     """RBNF cardinals with the masculine and the feminine rule sets, ordinals built from the cardinals, and decimals
     that read the digits after the comma as one number when there are one or two of them."""
@@ -754,8 +766,9 @@ class FrenchSpeller:
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         """The ordinal of a cardinal: "premier", "deuxième", "vingt et unième", "quatre-vingt-unième", "centième",
-        "millionième". A last word that ends in "e" loses it, "cinq" takes "u" and "neuf" turns to "neuv"."""
-        words = self.cardinal(digits, Features(), request)
+        "millionième", "deux cent millionième". A last word that ends in "e" loses it, "cinq" takes "u" and "neuf"
+        turns to "neuv". "Cent" and "vingt" take no "s" in an ordinal (`_invariable`)."""
+        words = _invariable(self.cardinal(digits, Features(), request))
         if words in ("un million", "un milliard"):
             words = words[3:]
         if words == "un":
@@ -765,7 +778,7 @@ class FrenchSpeller:
         last = last or prefix
         if prefix and last == prefix:
             prefix = ""
-        for plural in ("cents", "vingts", "millions", "milliards"):
+        for plural in ("millions", "milliards"):
             if last == plural:
                 last = last[:-1]
         if last == "cinq":
@@ -781,8 +794,7 @@ class FrenchSpeller:
         """A year reads as a cardinal in which "cent" and "vingt" stay singular at its end, as numerals that
         stand for an ordinal do: "mille neuf cent", "mille neuf cent quatre-vingt", "deux mille quatre-vingt"
         (Académie française, "Nombres")."""
-        words = self.cardinal(digits, Features(), request)
-        return words[:-1] if words.endswith(("cents", "quatre-vingts")) else words
+        return _invariable(self.cardinal(digits, Features(), request))
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         """ "trois virgule cinq", "trois virgule quatorze", "trois virgule zéro cinq". A fraction of three digits or
@@ -839,13 +851,28 @@ def _name(record: FrozenMap, request: Request, written: str) -> str:
     return record.get(plural_category(request, written), record["other"])
 
 
+def _after_ordinal_noun(context: SpanContext) -> bool:
+    """Whether a noun of `ordinal_nouns` stands right before the number, with or without an elided article, or as
+    its abbreviation, as in "page 80", "l'an 800" and "p. 80". The number then stands for an ordinal."""
+    if not context.before:
+        return False
+    data = context.request.data
+    word = context.before[-1].lower().replace("\u2019", "'").rpartition("'")[2]
+    abbreviations = data["number_abbreviations"]
+    noun = abbreviations.get(word) or abbreviations.get(word + ".") or word
+    return noun in data["ordinal_nouns"]
+
+
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """A cardinal with the gender of the agreement order. Digits with a leading zero, which only a lead admits,
-    read one by one."""
+    read one by one. After a noun of `ordinal_nouns` the number stands for an ordinal, so it is masculine and
+    "cent" and "vingt" take no "s": "page quatre-vingt"."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         words = spell_digits(digits, request)
+    elif _after_ordinal_noun(context):
+        words = _invariable(_cardinal(digits, request))
     else:
         words = _cardinal(digits, request, _gender(context))
     words = signed(words, fields["sign"], request)
@@ -1045,9 +1072,14 @@ def _phone_group(group: str, request: Request) -> str:
 def speak_telephone(span: Span, context: SpanContext) -> str:
     """
     "06 12 34 56 78" is "zéro six douze trente-quatre cinquante-six soixante-dix-huit", and "+33 6 12 34 56 78" is "plus
-    trente-trois six douze trente-quatre cinquante-six soixante-dix-huit"."""
+    trente-trois six douze trente-quatre cinquante-six soixante-dix-huit". A short code of three digits reads as one
+    number, "112" as "cent douze", as it does after an article ("le 112"), unless the variety reads every digit."""
     request, fields = context.request, span.fields
-    words = [_phone_group(group, request) for group in fields["groups"]]
+    groups = fields["groups"]
+    if (not fields["country_code"] and len(groups) == 1 and len(groups[0]) == 3
+            and groups[0] in request.data["short_codes"] and request.data["phone_reading"] != "digits"):
+        return _cardinal(groups[0], request)
+    words = [_phone_group(group, request) for group in groups]
     if fields["country_code"]:
         words.insert(0, f"{request.data['sign_words']['+']} {_phone_group(fields['country_code'], request)}")
     return " ".join(words)
@@ -1065,6 +1097,18 @@ def speak_year(span: Span, context: SpanContext) -> str:
         if words.startswith(head):
             return words[len(head) :]
     return words
+
+
+@dataclass(frozen=True)
+class FrenchTelephone(Telephone):
+    """The shared telephone recognizer. A run that mixes two digit sets stays as written, less a last group that a
+    word continues, as `3` in `٥1 3e`: that group belongs to the word, here the ordinal `3e`."""
+
+    def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
+        cut, end = max(written.rfind(space) for space in self.spaces), start + len(written)
+        if cut != -1 and end < len(text) and is_word_char(text[end]) and not one_digit_set(text[start:end]):
+            return written[:cut]
+        return written
 
 
 @dataclass(frozen=True)
@@ -1313,23 +1357,24 @@ class FrenchTime(TimeClock):
     shared recognizer. The letter `h` is evidence enough: `21 h` is "vingt et une heures" as a time and as a
     duration. A time that cannot be one, such as `25 h 99`, `12 h 60` or `24 h 30`, stays as written with a
     warning. An hour above 24 with no minutes, as in `100 h`, is a duration for the measure reader, and so is an
-    hour and minutes that `min` or `s` follows, as in `1 h 30 min`."""
+    hour and minutes that `min` or `s` follows, as in `1 h 30 min`. Minutes that a digit continues are no minutes,
+    so `4h 305` reads the hour alone and then the number."""
 
     def _times(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         yield from super()._times(text, tokens, request)
         pattern = re.compile(request.data["patterns"]["clock_hour"])
         folded = fold_digits(text)
         for match in pattern.finditer(folded):
-            start, end = match.span()
-            if (
-                not _clock_edge(text, start, end)
-                or (start and text[start - 1].isalnum())
-                or not one_digit_set(text[start:end])
-                or (end < len(text) and text[end].isalnum())
-            ):
+            start = match.start()
+            ends = [match.end()]
+            if match.group(2) is not None:
+                ends.append(start + match.group().lower().index("h") + 1)
+            end = next((end for end in ends if _clock_edge(text, start, end)
+                        and not (end < len(text) and text[end].isalnum())), None)
+            if end is None or (start and text[start - 1].isalnum()) or not one_digit_set(text[start:end]):
                 continue
             hour = int(match.group(1))
-            minute = None if match.group(2) is None else int(match.group(2))
+            minute = None if end < match.end() or match.group(2) is None else int(match.group(2))
             rest = text[end:].lstrip(SPACES)
             if next((w for w in ("min", "s") if rest.startswith(w) and is_bounded(rest, 0, len(w))), None):
                 continue
@@ -1509,7 +1554,7 @@ LANGUAGE = LanguageSpec(
         DateNamed(),
         SHARED["date_numeric"],
         FrenchTime(),
-        Telephone(spaces=SPACES, plans=PLANS),
+        FrenchTelephone(spaces=SPACES, plans=PLANS),
         FrenchMoney(),
         FrenchPercent(),
         SHARED["measure"],

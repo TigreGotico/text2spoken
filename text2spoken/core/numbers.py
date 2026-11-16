@@ -1,6 +1,7 @@
 """Number parsing by the marks that a language declares for each digit script (design section 5.3)."""
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 from text2spoken.core.tokens import digit_script, fold_digits, is_digit, is_word_char, one_digit_set
@@ -100,21 +101,15 @@ def _spaces(marks: Marks) -> frozenset[str]:
     return frozenset(mark for _, _, group in marks if group and len(group) > 1 for mark in group if mark.isspace())
 
 
-def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()) -> tuple[Number, ...]:
-    """Every written number in the text that parses whole by `marks`.
+def _clusters(text: str, marks: Marks, declared: frozenset[str]) -> Iterator[tuple[int, int, tuple[int, ...]]]:
+    """Each cluster of the text: its start, its end, and the offset of each space in it that groups digits.
 
     A cluster is a run of digits joined by single marks, colons or slashes. A mark of `marks` or of `declared`
-    joins a cluster. A cluster that does not parse whole by `marks`, such as `16:9`, `1.2.3` or `1,23` in a
-    language whose group mark is the comma, gives no number. So in a variety that declares a second set of marks,
-    such as de-CH, `,5` gives no number when the comma is not a mark of `marks`, as `0,5` gives none.
-    """
-    folded = fold_digits(text)
-    by_script = {script: (decimal, group) for script, decimal, group in marks}
+    joins a cluster. A space of a run of group marks joins it only between groups of three (`_grouped`)."""
     joiners = _CLUSTER_JOINERS | declared | {mark for _, decimal, group in marks
                                              for mark in (decimal or "") + (group or "")}
     spaces = _spaces(marks)
     leading = joiners - {mark for _, _, group in marks if group and len(group) > 1 for mark in group}
-    numbers = []
     i = 0
     while i < len(text):
         leading_mark = (text[i] in leading and i + 1 < len(text) and is_digit(text[i + 1])
@@ -125,16 +120,42 @@ def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()
             continue
         start = end = i
         end += 1
+        grouping = []
         while end < len(text):
             if is_digit(text[end]):
                 end += 1
             elif text[end] in joiners and end + 1 < len(text) and is_digit(text[end + 1]):
-                if text[end] in spaces and not _grouped(text, start, end):
-                    break
+                if text[end] in spaces:
+                    if not _grouped(text, start, end):
+                        break
+                    grouping.append(end)
                 end += 1
             else:
                 break
         i = end
+        yield start, end, tuple(grouping)
+
+
+def group_spaces(text: str, marks: Marks, declared: frozenset[str] = frozenset()) -> tuple[int, ...]:
+    """The offset of each space that `find_numbers` reads as a group mark between two groups of digits, as in
+    `1 000`. A recognizer that reads digits with a pattern of its own drops these spaces first, so that it reads
+    `1 000` whole, as `find_numbers` does. A language with no run of group marks that holds a space has none."""
+    if not _spaces(marks):
+        return ()
+    return tuple(offset for _, _, grouping in _clusters(text, marks, declared) for offset in grouping)
+
+
+def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()) -> tuple[Number, ...]:
+    """Every written number in the text that parses whole by `marks`.
+
+    A cluster (`_clusters`) that does not parse whole by `marks`, such as `16:9`, `1.2.3` or `1,23` in a
+    language whose group mark is the comma, gives no number. So in a variety that declares a second set of marks,
+    such as de-CH, `,5` gives no number when the comma is not a mark of `marks`, as `0,5` gives none.
+    """
+    folded = fold_digits(text)
+    by_script = {script: (decimal, group) for script, decimal, group in marks}
+    numbers = []
+    for start, end, _ in _clusters(text, marks, declared):
         script = digit_script(text[start:end])
         if script is None or not one_digit_set(text[start:end]):
             continue
