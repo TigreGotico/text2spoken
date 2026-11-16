@@ -6,6 +6,9 @@ that a preposition before it governs, and "eins" when no noun follows. The ordin
 endings -e, -en, -er, -es and -em. The design page `text2spoken-design.md`, section 5.4, gives the measured
 reason for each speller.
 
+de-CH, whose decimal mark is the point, reads a decimal comma next to `€`, as in `23,88 €`, because CLDR 49 de
+writes the euro with that comma (`#,##0.00 ¤`).
+
 The German palettes of ovos-color-parser hold catalogue names, so the file has no `colors` table (design section
 12), and the shared colour verbalizer spells the digits of a colour as the text writes them.
 

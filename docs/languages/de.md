@@ -18,6 +18,7 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Am 3. Januar.` | `de-AT` | Am dritten Jänner. |
 | `um 14.30 Uhr` | `de-CH` | um vierzehn Uhr dreissig |
 | `um 1.15 Franken` | `de-CH` | um eins Komma eins fünf Franken |
+| `Das Buch kostet 23,88 €.` | `de-CH` | Das Buch kostet dreiundzwanzig Euro achtundachtzig. |
 | `von 9:00 bis 17:00 Uhr` | `de-DE` | von neun Uhr bis siebzehn Uhr |
 
 A German number takes the gender and the case of its noun, and the word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time. A form of the verb `kosten` gives the accusative to a price. Any other noun after the verb is its subject. A noun with no known gender takes the masculine, and only the dative of a preposition.
@@ -51,7 +52,7 @@ In `de-CH` the full stop is also the decimal mark, so a time with a full stop ne
 
 The rules cite the amtliche Regelwerk of the Rat für deutsche Rechtschreibung, the CLDR data of `de`, `de_AT` and `de_CH`, Duden online, de.wiktionary, de.wikipedia and en.wikipedia. The docstring of [`de.py`](../../text2spoken/lang/de.py) gives each entry.
 
-Most test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia. Some cite CLDR or the design of text2spoken. No native speaker has checked them. Of the 119 rows, 34 mark at least one part of their reading as silver: that part comes from memory, and no source was read for it.
+Most test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia. Some cite CLDR or the design of text2spoken. No native speaker has checked them. Of the 120 rows, 34 mark at least one part of their reading as silver: that part comes from memory, and no source was read for it.
 
 ## Limits
 
