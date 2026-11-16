@@ -246,7 +246,19 @@ def test_without_tugalex_only_letter_words_read_and_one_warning_names_the_extra(
     finally:
         pt._warn_no_tugalex.cache_clear()
     assert first == "A érre tê pê no á érre"
-    assert second == "EU VI O á érre"
+    assert second == "eu vi O á érre"
     assert [r.getMessage() for r in caplog.records if "tugalex" in r.getMessage()] == [
         "tugalex is not installed, so a word in capitals reads as a word only when letter_words holds it; "
         "install text2spoken[pt]"]
+
+
+@pytest.mark.parametrize(("text", "expected"), [("MP3", "éme pê três"), ("A25", "á dois cinco"),
+                                                ("O F16", "O éfe um seis"), ("B52", "bê cinco dois"),
+                                                ("IC19", "i cê um nove")])
+def test_without_the_pt_extra_digits_read_one_by_one(monkeypatch, text, expected):
+    """Design section 10: without the `pt` extra, which brings the number library, the digits of a run read by
+    their words in `digit_words`, and no `ModuleNotFoundError` reaches the caller."""
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser.util", None)
+    assert normalize(text, "pt-PT", LETTERS_ON) == expected

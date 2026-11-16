@@ -65,21 +65,33 @@ def _cldr_table(tag: str, listed: tuple[str, ...]) -> FrozenMap:
 
 
 @lru_cache(maxsize=64)
-def _joined_table(tag: str, excluded: tuple[str, ...]) -> FrozenMap:
+def _joined_table(tag: str, excluded: tuple[str, ...], listed: tuple[str, ...]) -> FrozenMap:
     units = [unit for unit in cldr_data(tag)["units"].values() if all(map(_words_only, unit["names"].values()))]
-    return FrozenMap({symbol: unit for unit in units for symbol in unit["symbols"]
-                      if len(symbol) > 1 and symbol.isalpha() and symbol.isupper() and symbol not in excluded})
+    by_symbol = {symbol: unit for unit in units for symbol in unit["symbols"]}
+    table = {symbol: unit for symbol, unit in by_symbol.items()
+             if len(symbol) > 1 and symbol.isalpha() and symbol.isupper() and symbol not in excluded}
+    cases: dict[str, set[str]] = {}
+    for unit in cldr_data(tag)["units"].values():
+        for symbol in unit["symbols"]:
+            cases.setdefault(symbol.lower(), set()).add(symbol)
+    for symbol in listed:
+        if len(symbol) > 1 and symbol.isalpha() and cases.get(symbol) == {symbol} and symbol in by_symbol \
+                and symbol.upper() not in excluded:
+            table[symbol.upper()] = by_symbol[symbol]
+    return FrozenMap(table)
 
 
 def joined_table(request: Request) -> FrozenMap:
     """The CLDR symbols of two capital letters or more that read as units only when they touch the digits, as `GB`
     in `10GB`, apart from those of `unjoined_symbols`. A run of capitals joined to digits is no word of running text,
-    so `10GB` reads "ten gigabytes", and `29 GB golds`, with a space, reads no unit. A symbol matches in its CLDR case
-    only, so `5KM` reads no unit. A language file with no `unit_symbols` reads no CLDR units, and none of these."""
+    so `10GB` reads "ten gigabytes", and `29 GB golds`, with a space, reads no unit. A symbol of `unit_symbols` in
+    lowercase reads in capitals too when no other CLDR symbol differs from it only in case, so `5KM` reads as `5km`,
+    and `ML`, which may be `mL` or `ML`, reads no unit. A language file with no `unit_symbols` reads no CLDR units, and
+    none of these."""
     data = request.data
     if "unit_symbols" not in data:
         return FrozenMap()
-    return _joined_table(request.variety.tag, tuple(data.get("unjoined_symbols", ())))
+    return _joined_table(request.variety.tag, tuple(data.get("unjoined_symbols", ())), tuple(data["unit_symbols"]))
 
 
 def unit_table(request: Request) -> FrozenMap:

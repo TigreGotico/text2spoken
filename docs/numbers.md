@@ -70,6 +70,7 @@ English, Portuguese and Basque read a Roman numeral when the text around it show
 | --- | --- | --- |
 | `Luís XIV reinou.` | `pt-PT` | Luís Catorze reinou. |
 | `No século XIX.` | `pt-PT` | No século dezanove. |
+| `Dos séculos XI, XII e XIII.` | `pt-PT` | Dos séculos onze, doze e treze. |
 | `Leia o capítulo V.` | `pt-PT` | Leia o capítulo quinto. |
 | `A D. XIV.` | `pt-PT` | A Dom Catorze. |
 | `O papa Pio X reinou.` | `pt-PT` | O papa Pio Décimo reinou. |
@@ -80,7 +81,7 @@ English, Portuguese and Basque read a Roman numeral when the text around it show
 | `Super Bowl LVII was close.` | `en-US` | Super Bowl Fifty-Seven was close. |
 | `XX. mendean.` | `eu-ES` | hogeigarren mendean. |
 
-Portuguese reads an ordinal up to ten and a cardinal from eleven, and pt-BR stops the ordinal at nine, as Ciberdúvidas gives the rule. English reads "the" and an ordinal after a name, and a cardinal after a noun of a series. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
+Portuguese reads an ordinal up to ten and a cardinal from eleven, and pt-BR stops the ordinal at nine, as Ciberdúvidas gives the rule. English reads "the" and an ordinal after the name of a monarch or a pope, and after a given name and a surname. It reads a cardinal after any other capitalised word. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
 
 A numeral stays as written when the text does not show that it is a number:
 
@@ -88,18 +89,21 @@ A numeral stays as written when the text does not show that it is a number:
 | --- | --- | --- | --- |
 | `Malcolm X spoke.` | `en-GB` | stays as written | A numeral of one letter after a name needs a regnal title before the name. |
 | `The book I read.` | `en-GB` | stays as written | `I` is the pronoun. |
-| `Fly to Washington DC.` | `en-GB` | stays as written | `DC` is an acronym, in the `roman_words` table. |
+| `Fly to Washington DC.` | `en-GB` | stays as written | After a capitalised word, a numeral reads only up to 30, so the acronym `DC` stays as written. |
 | `Tome vitamina C.` | `pt-PT` | stays as written | One letter reads only as `I`, `V` or `X` after a noun that takes numbers and never letters. |
 | `No Grupo I, houve duas goleadas.` | `pt-PT` | stays as written | A group is labelled with letters too, so one letter after `Grupo` stays as written. |
 | `Eu LI o livro.` | `pt-PT` | stays as written | A numeral right after a pronoun does not read. |
-| `EU VI O FILME.` | `pt-PT` | stays as written | `VI` is a word after a word in capitals. |
+| `EU VI O FILME.` | `pt-PT` | stays as written | `VI` is a word in a clause in capitals. |
+| `Use the Linux CLI.` | `en-US` | stays as written | After a capitalised word, a numeral reads only up to 30. |
+| `485, V, III e VI, do CPC.` | `pt-PT` | quatrocentos e oitenta e cinco, V, III e VI, do CPC. | A comma parts each numeral from the word before it, and no century or noun of a series starts the list. |
+| `I bought a Mazda CX-5.` | `en-US` | I bought a Mazda CX five. | `CX` (110) is above 30, so the code reads its digits. |
 
-A title of a work reads its numeral as a name does, because telling a title from a name needs context that the library does not have:
+English reads the cardinal after a title of a work, because the title is no name of a monarch or a person. Portuguese reads the ordinal after any capitalised word, as for a name, because telling a title from a name needs context that the library does not have:
 
-| Written | Tag | Spoken | Limit |
+| Written | Tag | Spoken | Note |
 | --- | --- | --- | --- |
-| `Rocky II was a hit.` | `en-US` | Rocky the Second was a hit. | A title of a work reads as a name. |
-| `Vi o Avatar II.` | `pt-PT` | Vi o Avatar Segundo. | A title of a work reads as a name. |
+| `Rocky II was a hit.` | `en-US` | Rocky Two was a hit. | A title of a work reads the cardinal. |
+| `Vi o Avatar II.` | `pt-PT` | Vi o Avatar Segundo. | Limit: a title of a work reads as a name. |
 
 ## Telephone numbers
 

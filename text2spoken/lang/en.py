@@ -62,14 +62,25 @@ vowel sounds": y as in myth and sky, aw as in flaw, ew as in dew, and ow as in o
 and IDS as words, and Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/, USA /juː ɛs ˈeɪ/,
 IBS /aɪ.biːˈɛs/ and IDS /aɪ diː ɛs/. So `letter_runs` holds them.
 
-A Roman numeral after a capitalised name is the number of a person in a line, and it reads "the" and the ordinal:
-`Henry VIII` reads "Henry the Eighth", and `John Smith III` reads "John Smith the Third". Wikipedia, "Roman
-numerals", Modern use: "Names of monarchs and popes, e.g. Elizabeth II of the United Kingdom, Pope Leo XIV. These are
-referred to as regnal numbers and are usually read as ordinals; e.g. II is pronounced "the second"." The BBC News
-style guide, "royalty", writes the numeral: "We use Roman numerals with names (eg: Henry VIII, Charles III)".
-Wikipedia, "Name suffix", gives the same reading for a generational suffix: "he can use the II suffix, which is
-pronounced "the second"". The regnal titles are those that Wikipedia, "Regnal number", names: "kings, queens
-regnant, popes, and rarely princes and princesses".
+A Roman numeral after a name of a monarch or a pope is a regnal number, and it reads "the" and the ordinal: `Henry
+VIII` reads "Henry the Eighth". Wikipedia, "Roman numerals", Modern use: "Names of monarchs and popes, e.g.
+Elizabeth II of the United Kingdom, Pope Leo XIV. These are referred to as regnal numbers and are usually read as
+ordinals; e.g. II is pronounced "the second"." The BBC News style guide, "royalty", writes the numeral: "We use
+Roman numerals with names (eg: Henry VIII, Charles III)". The ordinal reads after a regnal title and a name, as in
+`King Harald V`, and after a name of `regnal_names`. The regnal titles are those that Wikipedia, "Regnal number",
+names: "kings, queens regnant, popes, and rarely princes and princesses", with Saint, Emperor, Empress, Tsar and
+Tsarina. `regnal_names` holds names that carry a regnal number in the Wikipedia lists of English monarchs,
+Scottish monarchs, French monarchs, Spanish monarchs, popes, Holy Roman emperors, Russian emperors and Byzantine
+emperors, in their English form, for Spain in their Spanish form as well, and for the German and Austrian emperors
+in their German form: Wilhelm, Franz and Karl.
+
+A generational suffix from II to IV after a given name and a surname reads the ordinal too: `John Smith III` reads
+"John Smith the Third". Wikipedia, "Name suffix": "he can use the II suffix, which is pronounced "the second"".
+`given_names` holds the given names: the 100 names of each sex with the largest summed share of births in the
+baby-name data of the US Social Security Administration from 1900 to 2008, a public-domain record. After any other
+capitalised word the numeral reads as a cardinal, because a title of a work, a product or a council is no person in
+a line: `Rocky II` reads "Rocky Two", `Vatican II` "Vatican Two" and `Article III` "Article Three". A name outside
+both lists reads the cardinal too, so `Hank Williams III` reads "Hank Williams Three".
 
 After a noun of `roman_nouns`, which names a series, a numeral reads as a cardinal: `World War II` reads "World War
 Two", `Super Bowl LVII` "Super Bowl Fifty-Seven" and `chapter IV` "chapter four". The BBC News style guide, "World
@@ -82,28 +93,26 @@ a capital on each word after a capitalised noun, as the BBC writes "World War Tw
 
 A numeral of one letter reads only after a regnal title and a name, as in `King Henry V`, and after a noun of two
 words, as in `World War I`. So `the book I read` keeps its pronoun, and `Malcolm X` stays as written: Malcolm is
-also the name of four kings of Scotland, so a list of names cannot tell the two apart. `roman_words` holds the
-numerals that are also an initialism or a word, from the same measurement as `pt.py` (FLORES+ devtest and "meio
-milhão de frases", judged in `knowledge/wiki/audits/text2spoken-langs/letters-limits/evidence/roman-runs.tsv`) and
-from Wiktionary, which gives each one an English sense: CC ("init of carbon copy"), CD ("initialism of compact
-disc"), CDI ("capacitor discharge ignition"), CDL ("commercial driver's licence"), CI ("cochlear implant"), CL
-("light cruiser"), CM ("chief minister"), CML ("capital market line"), CV ("curriculum vitae"), DC ("District of
-Columbia"), DIV ("div": "A section"), DL ("download"), MC ("master of ceremonies"), MCI ("mild cognitive
-impairment"), MD ("Maryland"), MDC ("Metropolitan Detention Center"), MI ("Michigan"), MIX ("mix": "To stir
-together"), MM ("Master of Music"), MV ("motor vehicle"), MX ("mail exchanger") and XL ("extra large"). Such a
-numeral reads only after a regnal title and a name. A word of `function_words`, such as the `The` that starts a
-sentence, reads no numeral.
+also the name of four kings of Scotland, so a list of names cannot tell the two apart. After a capitalised word that
+is no noun of `roman_nouns`, the value is at most 30, because an initialism in capitals looks like a numeral: the
+measurement of `pt.py` found 25 initialisms in its corpus, each with a value above 30, and `Linux CLI`, `Detective
+DCI` and `Room CIV` stay as written, and `Mazda CX-5` reads "CX five". The word before the numeral reads it only
+when spaces alone part them. A word of `function_words`, such as the `The` that starts a sentence, reads no
+numeral.
 
-In a clause in capitals, two runs of capitals or more, a two-letter run of `letter_words` reads as a word, so `DO
-NOT ENTER` keeps `DO`, and `IF IT IS` keeps each word. English has no word lexicon in the stack of this library, so
-`letter_words` is its only word check. Wiktionary gives each word a part of speech of its English section: "do",
-"is", "be" and "go" are verbs, "no" and "my" determiners, "to", "in", "on", "at", "of", "up" and "by" prepositions,
-"it", "we", "me" and "he" pronouns, "so", "or", "as" and "if" conjunctions, and "an" an article. "us" is a pronoun
-too, and it stays out of the set, because `US` names the United States in a text in capitals as often as the
-pronoun. The capitals alone "I", a pronoun, and "A", an article, are words of `letter_words` too, so they count as
-runs of a clause, and `I DO` keeps `DO`. Outside a text in capitals, a run of two letters reads letter by letter, so
-`TV` and `PC` are spelled. A Roman numeral right after a word of `letter_words` does not read, because a numeral
-follows a name or a noun, so `IF XIV` keeps `XIV` as a run.
+In a clause in capitals, a two-letter run of `letter_words` reads as a word, so `DO NOT ENTER` keeps `DO`, and `IF
+IT IS` keeps each word. A clause in capitals is the text between two marks of a clause, a full stop, a comma, a
+semicolon, a colon, a bracket, a quote or the edge of the text, where every word with a letter is in capitals, and
+that holds two words or more. A word is a run that reads as a word, so a code that reads letter by letter, such as
+`AGR` in `AO 1334 AGR`, does not count. English has no word lexicon in the stack of this library, so `letter_words`
+is its only word check. Wiktionary gives each word a part of speech of its English section: "do", "is", "be", "go"
+and "am" are verbs, "no" and "my" determiners, "to", "in", "on", "at", "of", "up" and "by" prepositions, "it", "we",
+"me" and "he" pronouns, "so", "or", "as" and "if" conjunctions, and "an" an article. "us" is a pronoun too, and it
+stays out of the set, because `US` names the United States in a text in capitals as often as the pronoun. The
+capitals alone "I", a pronoun, and "A", an article, are words of `letter_words` too, so `I DO` and `I AM ON IT` keep
+each word. Outside a text in capitals, a run of two letters reads letter by letter, so `TV` and `PC` are spelled. A
+Roman numeral right after a word of `letter_words` does not read, because a numeral follows a name or a noun, so `IF
+XIV` keeps `XIV` as a run.
 
 The digits of a run read as a cardinal when the letters read as a word, as in `COVID19` ("COVID nineteen"), or when
 they are one to three digits with no leading zero, as in `B52` ("bee fifty-two") and `M25` ("em twenty-five"). No
@@ -131,6 +140,8 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge,
                                           signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
                                           speak_range, speak_telephone)
+from bisect import bisect_right
+
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
@@ -257,13 +268,46 @@ DATA = freeze({
                       "tr", "dr", "cr", "gr", "tw", "dw", "fl", "sl", "fr", "thr", "shr", "sw", "thw", "sp", "st",
                       "sk", "sm", "sn", "sph", "spl", "sc", "scl", "spr", "str", "scr", "squ"],
     "letter_codas": [*_CODAS, *(coda + "s" for coda in _CODAS if not coda.endswith(("s", "z", "x", "sh", "ch")))],
-    "regnal_titles": ["King", "Queen", "Pope", "Prince", "Princess", "king", "queen", "pope", "prince", "princess"],
+    "regnal_titles": ["King", "Queen", "Pope", "Prince", "Princess", "Saint", "Emperor", "Empress", "Tsar", "Tsarina",
+                      "king", "queen", "pope", "prince", "princess", "saint", "emperor", "empress", "tsar", "tsarina"],
+    "regnal_names": [
+        "Adrian", "Agapetus", "Albert", "Alexander", "Alexios", "Alfonso", "Amadeo", "Anastasius", "Andronikos",
+        "Basil", "Benedict", "Boniface", "Callixtus", "Carlos", "Carloman", "Catherine", "Celestine", "Charles",
+        "Clement", "Clovis", "Conrad", "Constantine", "Dagobert", "Damasus", "David", "Donald", "Duncan", "Edmund",
+        "Edward", "Elizabeth", "Eugene", "Felipe", "Felix", "Ferdinand", "Fernando", "Francis", "Franz",
+        "Frederick", "Gelasius", "George", "Gregory", "Hadrian", "Harold", "Henry", "Honorius", "Innocent", "Isaac",
+        "Isabella", "Ivan", "James", "John", "Joseph", "Julius", "Justinian", "Karl", "Kenneth", "Leo", "Leopold",
+        "Lothair", "Louis", "Lucius", "Luis", "Malcolm", "Manuel", "Marcellus", "Marinus", "Martin", "Mary",
+        "Matthias", "Maximilian", "Michael", "Napoleon", "Nicholas", "Otto", "Paschal", "Paul", "Pelagius", "Peter",
+        "Philip", "Pius", "Richard", "Robert", "Romanos", "Rudolf", "Sergius", "Sigismund", "Sixtus", "Stephen",
+        "Sylvester", "Theodore", "Theodosius", "Urban", "Victor", "Wilhelm", "William",
+    ],
+    "given_names": [
+        "John", "James", "Robert", "William", "Michael", "David", "Joseph", "Charles", "Richard", "Thomas", "George",
+        "Edward", "Christopher", "Donald", "Daniel", "Paul", "Frank", "Kenneth", "Anthony", "Matthew", "Mark", "Andrew",
+        "Ronald", "Steven", "Raymond", "Brian", "Walter", "Henry", "Kevin", "Joshua", "Timothy", "Jason", "Harold",
+        "Gary", "Jeffrey", "Jack", "Arthur", "Stephen", "Larry", "Albert", "Eric", "Willie", "Nicholas", "Samuel",
+        "Harry", "Ryan", "Carl", "Scott", "Jacob", "Jerry", "Jonathan", "Joe", "Ralph", "Justin", "Peter", "Patrick",
+        "Benjamin", "Gregory", "Lawrence", "Roy", "Dennis", "Louis", "Brandon", "Fred", "Eugene", "Clarence",
+        "Douglas", "Gerald", "Howard", "Alexander", "Jose", "Earl", "Roger", "Aaron", "Ernest", "Adam", "Francis",
+        "Billy", "Jesse", "Russell", "Tyler", "Nathan", "Leonard", "Stanley", "Keith", "Zachary", "Wayne", "Philip",
+        "Terry", "Kyle", "Herbert", "Alfred", "Bruce", "Jeremy", "Norman", "Martin", "Sean", "Vincent", "Bobby",
+        "Frederick",
+        "Mary", "Elizabeth", "Margaret", "Dorothy", "Patricia", "Helen", "Barbara", "Linda", "Jennifer", "Betty",
+        "Ruth", "Anna", "Nancy", "Sarah", "Susan", "Jessica", "Karen", "Virginia", "Carol", "Lisa", "Frances",
+        "Shirley", "Sandra", "Donna", "Laura", "Marie", "Alice", "Catherine", "Mildred", "Kimberly", "Michelle",
+        "Martha", "Kathleen", "Amanda", "Evelyn", "Rebecca", "Sharon", "Ashley", "Melissa", "Emily", "Rose",
+        "Stephanie", "Katherine", "Amy", "Deborah", "Doris", "Cynthia", "Angela", "Carolyn", "Lillian", "Joan",
+        "Janet", "Jean", "Christine", "Joyce", "Ann", "Florence", "Grace", "Emma", "Brenda", "Irene", "Pamela",
+        "Rachel", "Annie", "Louise", "Maria", "Nicole", "Julia", "Edna", "Heather", "Ruby", "Gladys", "Diane",
+        "Judith", "Ethel", "Kathryn", "Debra", "Julie", "Lois", "Gloria", "Josephine", "Theresa", "Samantha",
+        "Christina", "Kelly", "Marilyn", "Jane", "Janice", "Beverly", "Sara", "Edith", "Victoria", "Jacqueline",
+        "Hazel", "Phyllis", "Thelma", "Cheryl", "Clara", "Marjorie", "Judy",
+    ],
     "roman_nouns": ["chapter", "volume", "book", "act", "grade", "part", "phase", "class", "level", "stage", "type",
                     "war", "world war", "super bowl"],
-    "roman_words": ["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DIV", "DL", "MC", "MCI", "MD",
-                    "MDC", "MI", "MIX", "MM", "MV", "MX", "XL"],
     "letter_words": ["I", "A", "DO", "NO", "TO", "IN", "ON", "AT", "OF", "IT", "IS", "BE", "WE", "ME", "MY", "SO", "UP",
-                     "OR", "AN", "AS", "BY", "GO", "HE", "IF"],
+                     "OR", "AN", "AS", "BY", "GO", "HE", "IF", "AM"],
     "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters", "IBS": "letters", "IDS": "letters"},
     "patterns": {
         "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
@@ -617,12 +661,14 @@ class Roman:
     """A Roman numeral after a noun of `roman_nouns`, a capitalised word, or a regnal title and a name.
 
     After a noun of `roman_nouns`, which names a series, as in `chapter IV`, `World War II` and `Super Bowl LVII`, the
-    numeral reads as a cardinal. After a regnal title and a capitalised name, as in `King Harald V`, and after any
-    other capitalised word, as in `Henry VIII` and `John Smith III`, it is the number of a person in a line, and it
-    reads as an ordinal. A numeral of one letter reads only after a regnal title and a name, and after a noun of
-    `roman_nouns` that holds two words, as `World War I` does. So the pronoun in `the book I read` stays a pronoun,
-    and `Malcolm X` stays as written. A numeral of `roman_words`, an initialism, reads only after a regnal title and
-    a name. A word of `function_words`, as the `The` that starts a sentence, reads no numeral."""
+    numeral reads as a cardinal. It reads "the" and the ordinal after a regnal title and a capitalised name, as in
+    `King Harald V`, after a name of `regnal_names`, as in `Henry VIII`, and, for II to IV, after a given name of
+    `given_names` and a surname, as in `John Smith III`. After any other capitalised word, as in `Vatican II` and
+    `Rocky II`, it reads as a cardinal. After a capitalised word, the value is at most 30, so `Linux CLI` and `Room
+    CIV` stay as written. The word before the numeral reads it only when spaces alone part them. A numeral of one
+    letter reads only after a regnal title and a name, and after a noun of `roman_nouns` that holds two words, as
+    `World War I` does. So the pronoun in `the book I read` stays a pronoun, and `Malcolm X` stays as written. A word
+    of `function_words`, as the `The` that starts a sentence, reads no numeral."""
     name: str = "roman"
     form: Form = Form.ROMAN
 
@@ -631,9 +677,10 @@ class Roman:
 
         data = request.data
         titles = frozenset(data["regnal_titles"])
+        regnal_names = frozenset(data["regnal_names"])
+        given_names = frozenset(data["given_names"])
         nouns = frozenset(data["roman_nouns"])
         function_words = frozenset(data["function_words"])
-        numeral_words = frozenset(data["roman_words"])
         letter_words = frozenset(data["letter_words"])
         words = context_words(tokens)
         breaks = clause_breaks(text)
@@ -643,23 +690,28 @@ class Roman:
             value = roman_value(numeral)
             if value is None or not is_bounded(text, start, end) or not text.endswith(" ", 0, start):
                 continue
-            before = clause_window(text, words, start, end, -1, limit=2, breaks=breaks)
-            if not before or before[-1].lower() in function_words or before[-1].lower() in titles:
+            index = bisect_right(words, start, key=lambda word: word.end)
+            before = clause_window(text, words, start, end, -1, limit=3, breaks=breaks)
+            if not before or index < 1 or not text[words[index - 1].end:start].isspace() \
+                    or before[-1].lower() in function_words or before[-1].lower() in titles:
                 continue
             last = before[-1]
-            is_word = numeral in numeral_words or last.upper() in letter_words
-            regnal = len(before) == 2 and before[0] in titles and last[0].isupper()
-            two_words = len(before) == 2 and " ".join(before).lower() in nouns
+            is_word = last.upper() in letter_words
+            regnal = len(before) >= 2 and before[-2] in titles and last[0].isupper()
+            two_words = len(before) >= 2 and " ".join(before[-2:]).lower() in nouns
             if regnal:
                 role = "ordinal"
             elif len(numeral) == 1 and not (two_words and numeral in "IVX") or is_word:
                 continue
             elif two_words or last.lower() in nouns:
                 role = "cardinal"
-            elif last[0].isupper():
+            elif not last[0].isupper() or value > 30:
+                continue
+            elif last in regnal_names or (2 <= value <= 4 and len(before) >= 2 and all(
+                    word[0].isupper() for word in before[-2:]) and any(word in given_names for word in before[:-1])):
                 role = "ordinal"
             else:
-                continue
+                role = "cardinal"
             yield Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": role, "suffix": ""}),
                        recognizer=self.name)
 

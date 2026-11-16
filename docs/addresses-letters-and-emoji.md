@@ -42,14 +42,15 @@ The digits of a run read as a number when they can name one. After letters that 
 | `Agent B007.` | `en-GB` | Agent bee zero zero seven. |
 | `A sigla ÇB.` | `pt-PT` | A sigla cê cedilhado bê. |
 
-A clause in capitals is a chain of two runs of capitals or more that only spaces part. Every run counts, however it reads, and so does a capital alone that the `letter_words` table holds, such as `I` and `A` in English or `A`, `E` and `O` in Portuguese. Any other capital alone links the chain. In a clause, a word of the `letter_words` table reads as a word, and so does a two-letter word that the word check of the language knows. Portuguese asks tugalex, behind the `pt` extra, and English has `letter_words` only. A two-letter acronym in no such list stays an acronym:
+A clause in capitals is the text between two marks of a clause. Every word with a letter in it is in capitals, and the clause holds two words or more. A word is a run that reads as a word, so a code that reads letter by letter, such as `AGR` in `AO 1334 AGR`, does not count. The marks are the edges of the text and these signs: `. , ; : ! ? ( )` and the quotes. The full stop of a title, as in `D. ANA DA SILVA`, is no mark.
+
+A capital alone that the `letter_words` table holds counts as a word, such as `I` and `A` in English or `A`, `E` and `O` in Portuguese. A text with words in lower case holds no clause, so `A EM é uma doença` spells `EM`. In a clause, a word of the `letter_words` table reads as a word, and so does a two-letter word that the word check of the language knows. Portuguese asks tugalex, behind the `pt` extra, and English has `letter_words` only. A two-letter acronym in no such list stays an acronym:
 
 | Written | Tag | Spoken, `LETTERS` on |
 | --- | --- | --- |
 | `SAIA DA SALA` | `pt-PT` | stays as written |
 | `DO NOT ENTER` | `en-GB` | stays as written |
 | `IF IT IS` | `en-GB` | stays as written |
-| `A RTP NO AR` | `pt-PT` | A érre tê pê NO AR |
 | `THE US AND UK` | `en-GB` | THE u ess AND u kay |
 | `I DO` | `en-US` | stays as written |
 | `ÇAÇA` | `pt-PT` | stays as written |
@@ -60,9 +61,10 @@ A word of a clause stays in capitals while a part next to it stays in capitals. 
 | --- | --- | --- |
 | `CAPÍTULO VI DE` | `pt-PT` | CAPÍTULO sexto de |
 | `A RTP NO` | `pt-PT` | A érre tê pê no |
-| `IF XIV` | `en-US` | if ex i vee |
+| `A RTP NO AR` | `pt-PT` | A érre tê pê no ar |
+| `IF XIV IS` | `en-US` | if ex i vee is |
 
-A Roman numeral right after a word of `letter_words` does not read, because a numeral follows a name or a noun. So `XIV` in `IF XIV` is a run, and it is spelled.
+A Roman numeral right after a word of `letter_words` does not read, because a numeral follows a name or a noun. So `XIV` in `IF XIV IS` is a run, and it is spelled. A run that reads letter by letter is no word of a clause. So `IF XIV` alone is no clause, and `AO 1334 AGR` spells `AO`.
 
 English and Portuguese offer the form. A language with no letter names keeps each run as written. The rules of each language are on the [English](languages/en.md#runs-of-capital-letters) and [Portuguese](languages/pt.md#runs-of-capital-letters) pages.
 
@@ -73,12 +75,13 @@ The form does not take a run with a lowercase letter (`ONGs`, `PhD`), a run with
 | `Call the BBC at 9 AM.` | `en-US` | Call the bee bee see at nine a em. |
 | `Mail help@IRS.gov now.` | `en-US` | Mail help at i ar ess dot gov now. |
 
-These limits hold in both languages:
+Digits joined to a unit symbol in capitals read as a measure when two conditions hold. The lowercase form is a unit symbol of the language, and no other CLDR unit symbol differs from it only in case:
 
-| Written | Tag | Spoken, `LETTERS` on | Limit |
-| --- | --- | --- | --- |
-| `O XIV chegou.` | `pt-PT` | O xis i vê chegou. | A Roman numeral that the `ROMAN` form does not read is a run. A run that is a Roman numeral cannot use a consonant that a reader sounds with an unwritten vowel, so `XIV` is spelled. |
-| `Corri 5KM.` | `pt-PT` | Corri cinco capa éme. | A unit symbol matches in its CLDR case only, so `5KM` is a run and not a measure. |
+| Written | Tag | Spoken, `LETTERS` on |
+| --- | --- | --- |
+| `Corri 5KM.` | `pt-PT` | Corri cinco quilómetros. |
+| `Pesa 3KG.` | `pt-PT` | Pesa três quilogramas. |
+| `I ran 5KM today.` | `en-GB` | I ran five kilometres today. |
 
 ## Abbreviations
 
