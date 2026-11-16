@@ -5,12 +5,15 @@ This page is for maintainers: how to run the tests, write the row files, keep th
 ## Set up and run the tests
 
 ```bash
+git clone https://github.com/TigreGotico/text2spoken
+cd text2spoken
 uv venv
+source .venv/bin/activate
 uv pip install --prerelease=allow -e ".[test]"
 pytest tests
 ```
 
-The `test` extra installs the dependencies of every language extra, so the suite runs every language file.
+The `test` extra installs the dependencies of every language extra, so the suite runs every language file. `source .venv/bin/activate` puts `pytest` on your path. In a new shell, run it again before you run the tests.
 
 ## The row files
 

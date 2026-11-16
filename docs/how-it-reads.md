@@ -33,7 +33,7 @@ The output depends only on the text, the tag, the params and the tokenizer. A se
 
 ## The forms
 
-Each written form has a `Form` value. `NormalizationParams().forms` holds every form except `LETTERS` and `EMOJI`, which are off by default. A language reads only the forms that its file offers, and `supports(lang).forms` lists them.
+Each written form has a `Form` value. `NormalizationParams().forms` holds every form except `LETTERS` and `EMOJI`, which are off by default. A language reads only the forms that its file offers, and `supports(lang).forms` lists them. Each character of the text belongs to one form at most. When two forms find the same characters, the form whose recognizer comes first in the language file claims them, and the other form does not read them.
 
 | Form | What it reads | Default | Languages |
 | --- | --- | --- | --- |

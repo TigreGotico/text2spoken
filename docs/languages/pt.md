@@ -28,7 +28,7 @@ The words of a date, a clock time and a year come from `ovos-date-parser`. A clo
 | --- | --- |
 | `Chega às 0:00.` | Chega às zero horas. |
 
-[How it reads text](../how-it-reads.md) describes the emoji, and the units, currencies and symbols of CLDR, which Portuguese reads.
+[Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the emoji.
 
 ## Varieties
 
@@ -100,7 +100,7 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 
 | Written | Spoken (`pt-PT`, `LETTERS` on) | Second pass (`pt-PT`, `LETTERS` on) | Why |
 | --- | --- | --- | --- |
-| `Sala 9#D. RTP.` | Sala 9#D. érre tê pê. | Sala nove#D. érre tê pê. | A span that waits on a joined character on the first pass can read on a second pass, after the `LETTERS` form spells a run next to it. |
+| `Sala 9#D. RTP.` | Sala 9#D. érre tê pê. | Sala nove#D. érre tê pê. | A number that one character joins to other text stays as written on the first pass. It can read on a second pass, after the `LETTERS` form spells a run next to it. |
 
 | Written | Spoken (`pt-PT`) | Why |
 | --- | --- | --- |

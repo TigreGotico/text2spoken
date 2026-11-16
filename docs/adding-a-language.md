@@ -30,9 +30,18 @@ A language with no file reads cardinal numbers from the CLDR spell-out rules, an
 ['CARDINAL', 'LEXICON']
 ```
 
+The library also logs a WARNING for each written form that stays as written. In a Python session, these lines appear on stderr:
+
+```text stderr
+unread written form '1.250' for id-ID
+unread written form '12/03/2024.' for id-ID
+```
+
+Each line names a form that a file for the language could read. [Errors and warnings](errors.md#when-a-reading-stays-as-written) explains the log.
+
 ## Step 2: write the smallest file
 
-Write `text2spoken/lang/id.py`. The file exports one name, `LANGUAGE`, a `LanguageSpec`:
+Create the file `text2spoken/lang/id.py` with this text. The file exports one name, `LANGUAGE`, a `LanguageSpec`:
 
 ```python text2spoken/lang/id.py
 """Indonesian: id-ID.
@@ -80,9 +89,11 @@ Run it. `1.250` now reads, because the file gives the group mark:
 
 ## Step 3: add a date form
 
-A date needs the month names and a verbalizer that puts the words in order. The shared recognizer `date_numeric` finds `12/03/2024` and `2024-03-12`, and gives the day, the month and the year as fields. Add the month names to `DATA`, add a `speak_date` function, and add both to `LANGUAGE`. The docstring gets the sources of the new rule:
+A date needs the month names and a verbalizer that puts the words in order. The shared recognizer `date_numeric` finds `12/03/2024` and `2024-03-12`, and gives the day, the month and the year as fields. The [shared recognizers](#the-shared-recognizers-and-verbalizers) table lists the other forms that the core can find for you.
 
-```python text2spoken/lang/id.py
+This block holds only the parts of the file that change. Each part replaces the part of the same name in your file: the docstring, the import from `text2spoken.core.spans`, `DATA` and `LANGUAGE`. `speak_date` is new, so put it above `LANGUAGE`. Add to `text2spoken/lang/id.py`:
+
+```python +text2spoken/lang/id.py
 """Indonesian: id-ID.
 
 Number words come from CLDR RBNF, the `spellout-cardinal` rule set of `id`. The decimal mark `,` and the group mark
@@ -118,7 +129,7 @@ LANGUAGE = LanguageSpec(
 )
 ```
 
-The order of `recognizers` is the claim order: when two recognizers find the same characters, the earlier one claims them. Run it:
+The order of `recognizers` is the claim order: when two recognizers find the same characters, the earlier one takes them. Run it:
 
 ```python
 >>> normalize("Rapat pada 12/03/2024.", "id")
@@ -129,9 +140,9 @@ The order of `recognizers` is the claim order: when two recognizers find the sam
 
 ## Step 4: add test rows
 
-Real sentences are the tests. Write `tests/data/id.tsv`, with one row for each form. The columns are separated by tabs:
+Real sentences are the tests. Create the file `tests/data/id.tsv`, with one row for each form. A tab separates the columns:
 
-```text
+```text tests/data/id.tsv
 id	tag	form	text	expected	source	checked_by
 id-001	id-ID	cardinal	Saya punya 3 kucing.	Saya punya tiga kucing.	CLDR 49 RBNF id: spellout-cardinal	unchecked
 id-002	id-ID	date	Rapat pada 12/03/2024.	Rapat pada dua belas Maret dua ribu dua puluh empat.	CLDR 49 id: the long date pattern d MMMM y and the wide month names; silver: no source gives the cardinal day	unchecked
@@ -141,27 +152,31 @@ Write the `expected` value from your source, never from a run of the code. The `
 
 ## Step 5: run the contract test
 
-`tests/test_contract.py` checks each clause of the contract on every language file. Run it on your file:
+`tests/test_contract.py` checks each of the 12 clauses of the contract on every language file. The selector `-k "id-clause"` runs the 12 checks of your file only:
 
 ```bash
-pytest tests/test_contract.py -k "id-"
+pytest tests/test_contract.py -k "id-clause"
 ```
 
 One clause fails. The output holds these lines:
 
-```text
+```text output
 E           AssertionError: id-ID: no ['digit_words', 'leads', 'sign_words', 'symbols'], which its shared recognizers and verbalizers read
-FAILED tests/test_contract.py::test_language_file_passes[id-clause_6] - Asser...
-================= 1 failed, 11 passed, 221 deselected in 0.61s =================
+FAILED tests/test_contract.py::test_language_file_passes[id-clause_6]
+1 failed, 11 passed
 ```
+
+The last line also counts the deselected tests and gives the time. Those numbers change with each language file, so this page leaves them out.
 
 Clause 6 failed. The shared `cardinal` recognizer and `speak_cardinal` read four tables that `DATA` does not have. The core reads each table with `data.get`, so a missing table turns a rule off with no error. The calls of steps 2 and 3 worked, but a negative number such as `-5` stays as written, and so does a number with a leading zero after a lead word, such as `No. 007`.
 
 ## Step 6: fix it
 
-Add the four tables, and give their sources in the docstring. `sign_words` gives the word of the minus sign, and `leads` gives the words that a number can follow, such as `No. `. `digit_words` reads a number with a leading zero after a lead, digit by digit. `symbols` gives the characters that belong to other forms, and it stays empty here:
+`sign_words` gives the word of the minus sign, and `leads` gives the words that a number can follow, such as `No. `. `digit_words` reads a number with a leading zero after a lead, digit by digit. `symbols` gives the characters that belong to other forms, and it stays empty here.
 
-```python text2spoken/lang/id.py
+This block holds the docstring, with the sources of the new tables, and `DATA`, with the four tables. Each replaces the part of the same name in your file. Add to `text2spoken/lang/id.py`:
+
+```python +text2spoken/lang/id.py
 """Indonesian: id-ID.
 
 Number words come from CLDR RBNF, the `spellout-cardinal` rule set of `id`. The decimal mark `,` and the group mark
@@ -190,70 +205,90 @@ DATA = freeze({
 'Kamar nomor nol nol tujuh.'
 ```
 
-Add a row for each new table to `tests/data/id.tsv`, then run the contract test again:
+Each new table needs a row that reads it. Add to `tests/data/id.tsv`:
 
-```text
+```text +tests/data/id.tsv
 id-003	id-ID	cardinal	Ada 1.250 buku.	Ada seribu dua ratus lima puluh buku.	CLDR 49 id: the group mark .; CLDR 49 RBNF id: spellout-cardinal	unchecked
 id-004	id-ID	cardinal	Suhu -5 derajat.	Suhu negatif lima derajat.	CLDR 49 RBNF id: the negative rule of spellout-cardinal	unchecked
 id-005	id-ID	cardinal	Kamar No. 007.	Kamar nomor nol nol tujuh.	CLDR 49 RBNF id: the words of 0 to 9; silver: no source read for No. as nomor	unchecked
 ```
 
-```text
-====================== 12 passed, 221 deselected in 0.41s ======================
+Run the contract test again:
+
+```bash
+pytest tests/test_contract.py -k "id-clause"
+```
+
+```text output
+12 passed
 ```
 
 ## Step 7: pass the other checks
 
-Two more test files check every language file. Run the row test:
+Two more test files check every language file. The row test runs each row, and checks that the rows cover the file. The selector `-k "[id] or id-0"` runs the tests of your file and of your rows only:
 
 ```bash
-pytest tests/test_rows.py
+pytest tests/test_rows.py -k "[id] or id-0"
 ```
 
-```text
+```text output
 E           AssertionError: 16:9
-FAILED tests/test_rows.py::test_rows_cover_every_form_and_variety[id] - Asser...
-================ 1 failed, 4205 passed, 238 warnings in 12.40s =================
+FAILED tests/test_rows.py::test_rows_cover_every_form_and_variety[id]
+1 failed, 15 passed
 ```
 
-The rows of each file must cover each form that the file declares, except `LEXICON`, and each variety. They must also hold four texts that stay as written: `16:9`, `3:16`, `#decade` and `13/13/2024`. These guard rows prove that the file does not read a ratio, a verse, a hashtag or a date that does not exist. Add them with the form `none`:
+The rows of each file must cover each form that the file declares, except `LEXICON`, and each variety. They must also hold four texts that stay as written: `16:9`, `3:16`, `#decade` and `13/13/2024`. These guard rows prove that the file does not read a ratio, a verse, a hashtag or a date that does not exist. Add to `tests/data/id.tsv`, with the form `none`:
 
-```text
+```text +tests/data/id.tsv
 id-006	id-ID	none	Rasio 16:9 dan ayat 3:16.	Rasio 16:9 dan ayat 3:16.	text2spoken-design section 4.2: the file reads no time	unchecked
 id-007	id-ID	none	Tagar #decade.	Tagar #decade.	text2spoken-design section 4.2: # is no lead in id	unchecked
 id-008	id-ID	none	Tanggal 13/13/2024.	Tanggal 13/13/2024.	text2spoken-design section 4.2: no month 13	unchecked
 ```
 
-Then run the mutation test:
+```bash
+pytest tests/test_rows.py -k "[id] or id-0"
+```
+
+```text output
+25 passed
+```
+
+Then run the mutation test. It drops one entry of each table and checks that a row fails, which proves that each table reaches a row:
 
 ```bash
-pytest tests/test_table_mutation.py -k id
+pytest tests/test_table_mutation.py -k "[id] or id-"
 ```
 
-```text
+```text output
 E       AssertionError: assert {'symbols'} == {'digit_words...s', 'symbols'}
 FAILED tests/test_table_mutation.py::test_every_table_has_an_entry_to_drop[id]
-================= 1 failed, 3 passed, 313 deselected in 2.42s ==================
+1 failed
 ```
 
-The mutation test drops one entry of each table and checks that a row fails. It proves that each table reaches a row. Name one entry of each table in `ENTRIES` in `tests/test_table_mutation.py`. `symbols` needs no entry, because only strict mode reads it:
+The test needs one entry of each table to drop. `symbols` needs no entry, because only strict mode reads it. Add to `tests/test_table_mutation.py` this line, inside the `ENTRIES` dict:
 
-```python
+```python +tests/test_table_mutation.py
     "id": {"number_marks": "Latn", "digit_words": "nol", "sign_words": "-", "leads": "No. ", "months": "Maret"},
 ```
 
-```text
-====================== 9 passed, 313 deselected in 2.45s =======================
+```bash
+pytest tests/test_table_mutation.py -k "[id] or id-"
+```
+
+```text output
+6 passed
 ```
 
 ## Step 8: finish
 
 1. If the file imports a package that text2spoken does not install, add it to an extra with the name of the language code in `pyproject.toml`, and to the `test` extra. Import it inside a function. Clause 12 accepts only the modules that `tests/contract.py` names, so add the module to `LAZY_ONLY` and to `DISTRIBUTIONS` in that file. The Indonesian file needs no extra, because `RbnfSpeller` uses `unicode-rbnf`, which text2spoken always installs.
-2. Run the whole suite: `pytest tests`.
+2. Run the whole suite with `pytest tests`. Every test passes.
 3. Add a page for the language to `docs/languages/`, in the template of the other language pages: what it reads, its varieties, its options, its sources and its limits.
 4. Add the language to the tables of `README.md` and `docs/index.md`.
 
 ## The finished file
+
+After the steps above, `text2spoken/lang/id.py` holds this text:
 
 ```python text2spoken/lang/id.py
 """Indonesian: id-ID.
@@ -331,6 +366,56 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `options` | The values that each option of `NormalizationParams` can take in the language |
 | `not_applicable` | The options that change nothing in the language |
 | `attach`, `join_range` | Optional. How a prefix and a suffix join the spoken words, and how two spans join into a range |
+
+### The shared recognizers and verbalizers
+
+`SHARED` in `text2spoken.core.recognizers` holds the recognizers of the core, by name. To add a form, put its recognizer in `recognizers`, and give `DATA` each key that the recognizer needs. Clause 6 fails when a needed key is missing, as Step 5 shows. An optional key that the file leaves out means that the language has no such words. A form with no shared verbalizer, such as `DATE`, needs a verbalizer in the file, as `speak_date` is in Step 3.
+
+| Recognizer | Form | Needed data keys | Optional data keys |
+| --- | --- | --- | --- |
+| `lexicon` | `LEXICON` | none | none |
+| `cardinal` | `CARDINAL` | `leads`, `number_marks`, `sign_words`, `symbols` | `case_suffixes`, `proclitics` |
+| `decimal` | `DECIMAL` | `number_marks`, `symbols` | `case_suffixes`, `proclitics` |
+| `fraction` | `FRACTION` | `symbols`, `unit_symbols`, `units` | `case_suffixes`, `proclitics` |
+| `idiom` | `IDIOM` | `idioms` | `case_suffixes`, `proclitics` |
+| `range` | `RANGE` | `symbols` | `case_suffixes`, `proclitics`, `range_marks` |
+| `date_numeric` | `DATE` | `symbols` | `case_suffixes`, `proclitics` |
+| `time_clock` | `TIME` | `clock_marks`, `time_words` | `day_periods`, `range_marks`, `range_word`, `time_suffixes` |
+| `percent` | `PERCENT` | `number_marks`, `percent` | `case_suffixes`, `proclitics`, `range_marks`, `range_word` |
+| `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `proclitics`, `range_marks`, `range_word` |
+| `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `proclitics`, `range_marks` |
+| `telephone` | `TELEPHONE` | `currencies`, `currency_symbols`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names` |
+| `expression` | `EXPRESSION` | `operators`, `patterns`, `symbols` | none |
+| `abbreviation` | `ABBREVIATION` | `abbreviations`, `number_abbreviations`, `sentence_final`, `titles` | none |
+| `space_groups` | `CARDINAL` | none | none |
+| `color` | `COLOR` | `color_words` | none |
+| `electronic` | `ELECTRONIC` | `electronic_schemes`, `electronic_tlds` | none |
+| `letters` | `LETTERS` | `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_runs` |
+| `symbol` | `SYMBOL` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
+| `emoji` | `EMOJI` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
+
+Of `units` and `unit_symbols`, and of `currencies` and `currency_symbols`, a file gives at least one. `proclitics` and `case_suffixes` give the words that a language joins to a number, such as an article or a case ending.
+
+The shared verbalizers read these keys:
+
+| Verbalizer | Needed data keys | Optional data keys |
+| --- | --- | --- |
+| `speak_cardinal` | `digit_words`, `leads`, `sign_words` | none |
+| `speak_lexicon` | none | none |
+| `speak_electronic` | `digit_words`, `electronic_schemes`, `electronic_symbols`, `electronic_vowels`, `letter_names` | `electronic_labels`, `symbol_names` |
+| `speak_letters` | `digit_words`, `letter_names` | none |
+| `speak_decimal` | `sign_words` | none |
+| `speak_fraction` | `sign_words` | none |
+| `speak_ordinal` | none | none |
+| `speak_range` | none | `range_word` |
+| `speak_percent` | `percent`, `sign_words` | none |
+| `speak_expression` | `operators`, `sign_words` | none |
+| `speak_telephone` | `digit_words`, `sign_words` | none |
+| `speak_abbreviation` | `abbreviations`, `number_abbreviations`, `titles` | none |
+| `speak_idiom` | `idioms` | none |
+| `speak_color` | `digit_words` | `colors` |
+
+`READERS` and `OPTIONAL` in `tests/data_keys.py` list the same keys, and `SHAPES` gives the shape of each key.
 
 ### The contract
 

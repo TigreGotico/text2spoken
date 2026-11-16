@@ -16,7 +16,7 @@ The file reads every form except Roman numerals and identifiers. The `LETTERS` a
 | `Call 911 now.` | `en-US` | Call nine one one now. |
 | `© 2024` | `en-GB` | copyright two thousand and twenty-four |
 
-[How it reads text](../how-it-reads.md) describes the addresses, the emoji, and the units, currencies and symbols of CLDR, which English reads.
+[Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which English reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
 ## Varieties
 
@@ -60,7 +60,7 @@ A run that splits into English syllables stays as written, and any other run rea
 | `Check ITS data.` | stays as written | Limit: as for `ABS`. |
 | `IBS and IDS.` | i bee ess and i dee ess. | `letter_runs` lists the ones that a source spells. |
 
-The limits that English shares with Portuguese are on the [Addresses, letters and emoji](../addresses-letters-and-emoji.md#runs-of-capital-letters) page. [Edge cases](#edge-cases) gives how English phonemizers read the letter names.
+The limits that English shares with Portuguese are on the [Addresses, letters and emoji](../addresses-letters-and-emoji.md#runs-of-capital-letters) page. [Letter names in English phonemizers](#letter-names-in-english-phonemizers) gives how English phonemizers read the letter names.
 
 ## Limits
 

@@ -83,7 +83,7 @@ Some Arabic readings wait for a native speaker:
 | `الساعة 12:45` | stays as written | `12:45` names the next hour, so it stays as written too. |
 | `الساعة 0:30` | stays as written | A time from 0:00 to 0:59 stays as written. The CLDR name of its day period is "في المساء", which no source here confirms for midnight. |
 | `النسبة 0.05` | stays as written | A fraction part with a leading zero stays as written, because no source gives its reading. |
-| `دفعت 800 دولار` | دفعت ثمانمئة دولار | 800 reads ثمانمئة, where Ryding (2005, p. 348) writes thamaanii mi'at-in. |
+| `دفعت 800 دولار` | دفعت ثمانمئة دولار | 800 reads ثمانمئة, where Ryding (2005, p. 348) writes thamaanii mi'at-in. Not fetched: no copy of that page was read. |
 | `دفعت 45001 دولار` | دفعت خمسة وأربعون ألف وواحد دولار | 45,001 reads with no tamyiz ending on the thousand, as ovos-number-parser writes it. |
 
 ---

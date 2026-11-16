@@ -47,7 +47,7 @@ These limits hold in both languages:
 | --- | --- | --- | --- |
 | `Classe II` | `pt-PT` | Classe i i | A Roman numeral that the `ROMAN` form does not read is a run. |
 | `World War II` | `en-GB` | World War i i | A Roman numeral that the `ROMAN` form does not read is a run. |
-| `A D. XIV.` | `pt-PT` | A Dom xis i vê. | Portuguese gives such a run no free consonant. |
+| `A D. XIV.` | `pt-PT` | A Dom xis i vê. | A run that is a Roman numeral cannot use a consonant that a reader sounds with an unwritten vowel, so `XIV` does not read as a word and is spelled. |
 | `COVID19` | `en-GB` | stays as written | A run that reads as a word and holds a digit stays as written. |
 | `ÇAÇA` | `pt-PT` | stays as written | A run with a letter that has no name stays as written when it does not split into syllables. |
 | `SAIA DA SALA` | `pt-PT` | SAIA dê á SALA | Text in capitals spells its two-letter words. The rule stays, because two-letter acronyms such as `TV`, `PC`, `UE` and `IA` are frequent. |
@@ -124,7 +124,7 @@ An emoji sequence is one character for every other form, with the `EMOJI` form o
 | `1😀2😀3` | stays as written | one grinning face two grinning face three | A sequence between two spans joins them as one character. |
 | `10+4 ₡👍🏽+4 ₴` | 10+4 ₡👍🏽plus four ₴ | stays as written | With the form on, it stays as `10+4 ₡😂+4 ₴` does. |
 | `10+4 ₡😂+4 ₴` | stays as written | stays as written | The comparison for the row above. |
-| `10+4 ₡-😂+4 ₴` | 10+4 ₡-😂plus four ₴ | 10+4 ₡-😂plus four ₴ | The form claims before `SYMBOL`, so this reads as `10+4 ₡-©+4 ₴` does. |
+| `10+4 ₡-😂+4 ₴` | 10+4 ₡-😂plus four ₴ | 10+4 ₡-😂plus four ₴ | The `EMOJI` form takes its characters before `SYMBOL` does, so this reads as `10+4 ₡-©+4 ₴` does. |
 | `10+4 ₡-©+4 ₴` | 10+4 ₡-©plus four ₴ | 10+4 ₡-©plus four ₴ | The comparison for the row above. |
 | `🇵🇵🇹` | stays as written | stays as written | Regional indicators pair from the start of a run, so `🇵🇵` names no flag and `🇹` is alone. |
 
@@ -146,7 +146,7 @@ The pairing of regional indicators follows rules GB12 and GB13 of UAX #29: "Do n
 | `5km/next1️⃣` | `five kilometres/next1️⃣` | `five kilometres/next1️⃣` | The measure reads. |
 | `5km/next😀` | stays as written | 5km/next grinning face | The text stays as written. |
 
-The join check of the core leaves a digit to a second pass when a name follows it. The `EMOJI` form inherits this from `SYMBOL`, which does the same with the default params:
+A digit that touches a name, such as the `1` of `1😀`, stays as written on the first pass, and a second pass reads it. The `EMOJI` form has this rule from `SYMBOL`, which does the same with the default params:
 
 | Written | Spoken (`en-GB`, `EMOJI` on) | Second pass (`en-GB`, `EMOJI` on) |
 | --- | --- | --- |
