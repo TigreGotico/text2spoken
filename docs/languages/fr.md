@@ -57,7 +57,7 @@ A space, a no-break space, a narrow no-break space and, in Switzerland, an apost
 
 *Million* and *milliard* are nouns, so they take *de* before the noun that they count. A range whose high end is a round million takes it too. A number with a lower part, such as 1 200 000, ends in no noun and takes no *de*.
 
-Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunction or adverb after the number takes none: the table `no_de_words` holds each such word of the Wiktionnaire categories that ends in *s*, *x* or *z*, such as *ailleurs* and *là-bas*. An adjective after the number takes none if the table `no_de_adjectives` holds it, and a participle after a sum of money takes none if the table `no_de_participles` holds it. A verb with an inverted subject, such as *disent-ils* or *vois-tu*, takes none. A word of one letter, a mark or the end of the text takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*, unless the table `invariable_plurals` holds it. A word with a hyphen counts as one word, and it is plural when any of its parts is, as in *années-lumière*.
+Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunction or adverb after the number takes none: the table `no_de_words` holds each such word of the Wiktionnaire categories that ends in *s*, *x* or *z*, such as *ailleurs* and *là-bas*. An adjective after the number takes none if the table `no_de_adjectives` holds it, and a participle after a sum of money takes none if the table `no_de_participles` holds it. A verb with an inverted subject, such as *disent-ils* or *vois-tu*, takes none. An imperative with an object pronoun, such as *croyez-moi* or *allez-y*, takes none either. A word of one letter, a mark or the end of the text takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*, unless the table `invariable_plurals` holds it. A word with a hyphen counts as one word, and it is plural when any of its parts is, as in *années-lumière*.
 
 *De* becomes *d'* before a vowel or a mute h. It stays *de* before a word that starts as a word of the OQLF list of aspirated h does, before a y and a vowel other than in *yeux* and *yeuse*, and before *oui* and *ouistiti*. A y before a consonant is a vowel, so *de* elides before it. It also stays *de* before a capitalised h, because most proper nouns with h take no elision. The OQLF calls this a tendency with exceptions, and *Haïti* and its derived words elide. A word all in capitals follows the rules of its lowercase form.
 
@@ -75,6 +75,7 @@ Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunctio
 | `Il a reçu 2 000 000 versés en deux fois.` | `fr-FR` | Il a reçu deux millions versés en deux fois. |
 | `Ils étaient 2 000 000 là-bas.` | `fr-FR` | Ils étaient deux millions là-bas. |
 | `Ils étaient 2 000 000 disent-ils.` | `fr-FR` | Ils étaient deux millions disent-ils. |
+| `Il y en a 2 000 000 croyez-moi.` | `fr-FR` | Il y en a deux millions croyez-moi. |
 | `Il faut 1 000 000-2 000 000 personnes.` | `fr-FR` | Il faut un million à deux millions de personnes. |
 | `Il y a 2 000 000 handicapés.` | `fr-FR` | Il y a deux millions de handicapés. |
 | `Il y a 2 000 000 Hongrois.` | `fr-FR` | Il y a deux millions de Hongrois. |
@@ -149,7 +150,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second"), the Office québécois de la langue française for the aspirated h, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
-Of the 522 test rows in `tests/data/fr.tsv`, 124 quote a source that was fetched. 366 say that a rule comes from memory, and 6 more say that no source was fetched for a guard row. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
+Of the 538 test rows in `tests/data/fr.tsv`, 139 quote a source that was fetched. 366 say that a rule comes from memory, and 6 more say that no source was fetched for a guard row. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
 
 ## Limits
 

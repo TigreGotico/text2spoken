@@ -29,7 +29,8 @@ The rules cite these sources, by rule family:
   writes before one, takes "de" before the noun that it counts: "un million d'habitants". The rule reads a range
   whose high end is a round million so too. A word that is not that noun takes none: a function word of
   `no_de_words`, an adjective of `no_de_adjectives`, a participle of `no_de_participles`, a verb with an inverted
-  subject ("disent-ils"), a word of one letter, a mark or the end of the text.
+  subject ("disent-ils"), an imperative with an object pronoun ("croyez-moi"), a word of one letter, a mark or the
+  end of the text.
 - The noun that a million counts is plural, and a plural noun ends in "s", "x" or "z": Office québécois de la
   langue française, Banque de dépannage linguistique, "Pluriel des mots d'origine étrangère : rectifications":
   such words "suivent la règle générale du singulier et du pluriel des mots français. Ils prennent donc un s au
@@ -278,6 +279,14 @@ INVERTED_PRONOUNS = ("je", "tu", "il", "elle", "on", "nous", "vous", "ils", "ell
 hyphenated word with one of them after its first part is that verb and takes no "de", unless `invariable_plurals`
 holds it."""
 
+IMPERATIVE_PRONOUNS = ("moi", "toi", "le", "la", "les", "lui", "leur", "y", "en")
+"""The object pronouns that close a verb in the imperative: "croyez-moi", "allez-y", "avouons-le". Office québécois
+de la langue française, Banque de dépannage linguistique, "Trait d'union pour unir différents éléments du discours":
+"Le trait d'union unit également le pronom personnel complément, qu'il soit complément direct ou indirect", as in
+"Repose-toi" and "Dites-le-moi"; and "Ajout d'un S entre le verbe et les pronoms EN et Y": "Vas-y sans tarder",
+"Manges-en autant que tu en veux". A hyphenated word whose last part is one of them is that verb and takes no "de",
+unless `invariable_plurals` holds it. Only the last part counts, so "cessez-le-feu" and "va-t-en-guerre" stay nouns."""
+
 INVARIABLE_PLURALS = ("abat-jour", "graffiti", "people", "rendez-vous", "garde-à-vous")
 """Nouns whose plural is the singular, and which take "de" after a round million. The plural check stops "abat-jour",
 "graffiti" and "people", which have no part that ends in "s", "x" or "z". The pronoun check stops "rendez-vous" and
@@ -293,11 +302,11 @@ ASPIRATED_H = (
     "hisser", "hocher", "hockey", "hollande", "homard", "hongr", "honte", "hoquet", "horde", "hors", "hotte", "houblon",
     "houle", "housse", "huard", "hublot", "huche", "huer", "huit", "humer", "hurler", "huron", "husky", "hutte",
 )
-"""The principal words with an aspirated h, as the Office québécois de la langue française lists them, with the
-starts "hongr" and "hambourg" from its page "Noms propres : quand faire l'élision": "(par exemple, hongrois : de
-Hongrie)", "les habitants de Hambourg". A word that
-starts with one of them, less a final "e", "er" or "ir" when four letters remain, has an aspirated h, as the
-derived words of the list do: "handicapés", "hauteurs", "hockeyeurs", "harceleurs", "hérissons"."""
+"""The principal words with an aspirated h, as the Office québécois de la langue française lists them, with the starts
+"hongr" and "hambourg" from its page "Noms propres : quand faire l'élision": "(par exemple, hongrois : de Hongrie)",
+"les habitants de Hambourg". The French Wiktionnaire marks "Hambourg" and the noun "hambourgeois" as "h aspiré". A
+word that starts with one of them, less a final "e", "er" or "ir" when four letters remain, has an aspirated h, as
+the derived words of the list do: "handicapés", "hauteurs", "hockeyeurs", "harceleurs", "hérissons"."""
 
 MUTE_H = (
     "hallucin", "halogèn", "haltè", "haltér", "hallali", "hallo", "hippiq", "hippism", "huitre", "hurluberlu",
@@ -464,6 +473,7 @@ DATA = freeze(
         "no_de_adjectives": NO_DE_ADJECTIVES,
         "no_de_participles": NO_DE_PARTICIPLES,
         "inverted_pronouns": INVERTED_PRONOUNS,
+        "imperative_pronouns": IMPERATIVE_PRONOUNS,
         "invariable_plurals": INVARIABLE_PLURALS,
         "aspirated_h": ASPIRATED_H,
         "mute_h": MUTE_H,
@@ -1055,11 +1065,12 @@ def _elides(word: str, data: FrozenMap) -> bool:
 
 
 def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
-    """The text between a number that ends at `end` and the noun it counts, with a written noun of `scale_nouns`
-    in it if the text gives one, and whether "de" elides before the noun. None when spaces and a word do not follow,
-    or when the word has one letter, is in `no_de_words`, `no_de_adjectives` or `no_de_participles`, is a verb with
-    an inverted subject, or does not end as a plural noun does and is not in `invariable_plurals`. A word with a
-    hyphen counts as one word, which is plural when any part is: "sans-abri", "années-lumière"."""
+    """The text between a number that ends at `end` and the noun it counts, with a written noun of `scale_nouns` in
+    it if the text gives one, and whether "de" elides before the noun. None when spaces and a word do not follow, or
+    when the word has one letter, is in `no_de_words`, `no_de_adjectives` or `no_de_participles`, is a verb with an
+    inverted subject or an imperative with an object pronoun, or does not end as a plural noun does and is not in
+    `invariable_plurals`. A word with a hyphen counts as one word, which is plural when any part is: "sans-abri",
+    "années-lumière"."""
     position = end
     while position < len(text) and text[position] in SPACES:
         position += 1
@@ -1079,13 +1090,15 @@ def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
         stop += 1
     word = text[position:stop].lower()
     parts = word.split("-")
-    inverted = any(part in data["inverted_pronouns"] for part in parts[1:])
+    verb = len(parts) > 1 and (
+        any(part in data["inverted_pronouns"] for part in parts[1:]) or parts[-1] in data["imperative_pronouns"]
+    )
     if (
         len(word) < 2
         or word in data["no_de_words"]
         or word in data["no_de_adjectives"]
         or word in data["no_de_participles"]
-        or inverted and word not in data["invariable_plurals"]
+        or verb and word not in data["invariable_plurals"]
         or not (any(part.endswith(("s", "x", "z")) for part in parts) or word in data["invariable_plurals"])
     ):
         return None
