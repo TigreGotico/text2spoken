@@ -22,6 +22,20 @@ The rules cite these sources, by rule family:
   ordinal ("deux cent millionième"), in a year, and in a number that labels a page or a year, as the passage
   writes them: "page" and "l'an", which the table `ordinal_nouns` holds, with only spaces before the number.
   Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix".
+- A noun after a round million or milliard: the same entry, "vingt et cent varient devant millier, million,
+  milliard, qui sont des noms et non des adjectifs numéraux : [...] deux cents millions d'années ; trois cents
+  milliers d'habitants." A noun counts a noun with "de", so a number whose words end in a noun of `scale_nouns`,
+  or a number that the text writes before one, takes "de" before the word that follows it: "un million
+  d'habitants". A word of `no_de_words` after the number takes none, and nor does a mark or the end of the text.
+- The noun that a million counts is plural, and a plural noun ends in "s", "x" or "z": Office québécois de la
+  langue française, Banque de dépannage linguistique, "Pluriel des mots d'origine étrangère : rectifications":
+  such words "suivent la règle générale du singulier et du pluriel des mots français. Ils prennent donc un s au
+  pluriel, sauf s'ils se terminent par un s, un x ou un z". So a word with another ending takes no "de", such as
+  the verb in "2 000 000 manifestent".
+- "De" before a vowel or a mute h elides to "d'". The words of `aspirated_h` begin with an aspirated h, which
+  takes no elision: Office québécois de la langue française, Banque de dépannage linguistique, "La prononciation
+  du h aspiré": "Voici une liste des principaux mots qui commencent par un h aspiré", and "dans le cas du h
+  aspiré, on ne peut faire l'élision".
 - Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
   des ordinaux complexes (vingt-deuxième, etc.)".
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
@@ -60,6 +74,7 @@ from text2spoken.core.recognizers import (
     PHONE_PLANS,
     SHARED,
     Cardinal,
+    Decimal as DecimalRecognizer,
     Money,
     Percent,
     Range,
@@ -177,6 +192,34 @@ _FEMININE_SINGULAR = (
     "recette",
 )
 FEMININE_NOUNS = tuple(w for noun in _FEMININE_SINGULAR for w in ((noun,) if noun == "fois" else (noun, noun + "s")))
+
+
+NO_DE_WORDS = (
+    # prepositions
+    "à", "au", "aux", "après", "avant", "avec", "chez", "contre", "dans", "de", "des", "du", "en", "entre", "par",
+    "parmi", "pour", "sans", "selon", "sous", "sur", "vers",
+    # conjunctions
+    "et", "ou", "mais", "ni", "donc", "car", "que", "qui", "si", "comme", "quand",
+    # adverbs
+    "environ", "seulement", "plus", "moins", "près", "presque", "ici", "là", "déjà", "encore", "aussi", "alors",
+    "ensuite", "puis", "même", "pas", "ne", "non", "oui", "tout", "toutes", "tous",
+    # pronouns and the verb forms that follow a number as its subject
+    "il", "elle", "ils", "elles", "on", "nous", "vous", "y", "ont", "sont", "est", "a", "avaient", "étaient", "seront",
+    "auront",
+)
+"""The words after a round million or milliard that take no "de": a preposition, a conjunction, an adverb, a
+pronoun, or a verb whose subject is the number, as in "un million environ" and "ils sont un million"."""
+
+ASPIRATED_H = (
+    "hache", "hagard", "haie", "haillon", "haine", "haïr", "hall", "halo", "halte", "hamac", "hamburger", "hameau",
+    "hampe", "hamster", "hanche", "handicap", "hangar", "hanter", "happer", "harceler", "hardi", "harem", "hareng",
+    "harfang", "hargne", "haricot", "harnais", "harpe", "hasard", "hâte", "hausse", "haut", "havre", "hennir",
+    "hérisser", "hernie", "héron", "héros", "hêtre", "heurter", "hibou", "hic", "hideur", "hiérarchie", "hippie",
+    "hisser", "hocher", "hockey", "hollande", "homard", "honte", "hoquet", "horde", "hors", "hotte", "houblon",
+    "houle", "housse", "huard", "hublot", "huche", "huer", "huit", "humer", "hurler", "huron", "husky", "hutte",
+)
+"""The principal words with an aspirated h, as the Office québécois de la langue française lists them. A word
+counts with its plural in "s" or "x", so "haricots" and "hiboux" take "de"."""
 
 
 def _unit(one: str, gender: str = "masculine", other: str | None = None, many: str | None = None) -> dict:
@@ -328,6 +371,12 @@ DATA = freeze(
         "range_word": "à",
         "range_marks": ["-", "–"],
         "ordinal_nouns": ["page", "l'an"],
+        "scale_nouns": [
+            "million", "millions", "milliard", "milliards", "billion", "billions", "billiard", "billiards",
+            "trillion", "trillions",
+        ],
+        "no_de_words": NO_DE_WORDS,
+        "aspirated_h": ASPIRATED_H,
         "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"}],
         "dimension_marks": ["x", "×"],
         "dimension_word": "par",
@@ -860,11 +909,10 @@ _LABELLED = "fr_labelled"
 governs, as `FrenchCardinal` and `FrenchRange` find them."""
 
 
-def _labelled(text: str, start: int, data: FrozenMap) -> bool:
-    """Whether a label of `ordinal_nouns`, or its abbreviation, ends right before text[start:] with only spaces
-    between, as in "page 80", "p. 80" and "l'an 800". A comma, a full stop or a word between them ends the label,
-    so "Depuis un an, 21 personnes" holds none."""
-    nouns = data["ordinal_nouns"]
+def _labelled(text: str, start: int, data: FrozenMap, nouns: Sequence[str]) -> bool:
+    """Whether one of `nouns`, or its abbreviation in `number_abbreviations`, ends right before text[start:] with
+    only spaces between, as in "page 80", "p. 80" and "l'an 800". A comma, a full stop or a word between them ends
+    the label, so "Depuis un an, 21 personnes" holds none."""
     end = start
     while end and text[end - 1] in SPACES:
         end -= 1
@@ -875,6 +923,60 @@ def _labelled(text: str, start: int, data: FrozenMap) -> bool:
         ):
             return True
     return False
+
+
+_COUNTED = "fr_counted"
+"""The key of `Request.memo` that maps the start of a cardinal or decimal span that a noun follows to the text
+between the number and the noun, as `_counted` finds it, and to whether "de" elides before the noun."""
+
+_ELIDING = frozenset("aeiouyàâäéèêëîïôöùûüœæ")
+
+
+def _elides(word: str, data: FrozenMap) -> bool:
+    """Whether "de" elides before `word`: a vowel, or an h that `aspirated_h` does not list with its plural."""
+    word = word.lower()
+    if word[0] == "h":
+        return not any(word in (h, h + "s", h + "x") for h in data["aspirated_h"])
+    return word[0] in _ELIDING
+
+
+def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
+    """The text between a number that ends at `end` and the noun it counts, with a written noun of `scale_nouns`
+    in it if the text gives one, and whether "de" elides before the noun. None when spaces and a word do not follow,
+    or when the word is in `no_de_words`, does not end as a plural noun does, or is elided, as "d'" is."""
+    position = end
+    while position < len(text) and text[position] in SPACES:
+        position += 1
+    if position == end:
+        return None
+    for noun in data["scale_nouns"]:
+        stop = position + len(noun)
+        if text.startswith(noun, position) and stop < len(text) and text[stop] in SPACES:
+            position = stop
+            while position < len(text) and text[position] in SPACES:
+                position += 1
+            break
+    stop = position
+    while stop < len(text) and is_letter(text[stop]):
+        stop += 1
+    word = text[position:stop]
+    if (
+        not word
+        or word.lower() in data["no_de_words"]
+        or not word.lower().endswith(("s", "x", "z"))
+        or text[stop:stop + 1] in ("'", "\u2019")
+    ):
+        return None
+    return text[end:position], _elides(word, data)
+
+
+def _with_de(words: str, span: Span, request: Request) -> str:
+    """The words of a number with "de" or "d'" before the noun that `_counted` found after it."""
+    found = request.memo.get(_COUNTED, {}).get(span.start)
+    if found is None:
+        return words
+    between, elided = found
+    return words + between.rstrip(SPACES) + (" d'" if elided else " de ")
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
@@ -888,7 +990,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     elif span.start in request.memo.get(_LABELLED, ()):
         words = _invariable(_cardinal(digits, request))
     else:
-        words = _cardinal(digits, request, _gender(context))
+        words = _with_de(_cardinal(digits, request, _gender(context)), span, request)
     words = signed(words, fields["sign"], request)
     if fields["lead"]:
         lead = request.data["leads"][fields["lead"]]
@@ -1115,16 +1217,55 @@ def speak_year(span: Span, context: SpanContext) -> str:
     return words
 
 
+def _count(span: Span, text: str, request: Request, round_million: bool) -> Span:
+    """The span, through the text before the noun that `_counted` finds after it, when the number is a round
+    million, whose words end in a noun of `scale_nouns`, or when the text writes such a noun after it. The span
+    then holds the spaces before the noun, so that "de" elides onto it. The text between goes into `Request.memo`
+    under `_COUNTED`."""
+    if span.fields["suffix"]:
+        return span
+    found = _counted(text, span.end, request.data)
+    if found is None or not (round_million or found[0].strip(SPACES)):
+        return span
+    request.memo.setdefault(_COUNTED, {})[span.start] = found
+    return replace(span, end=span.end + len(found[0]))
+
+
 @dataclass(frozen=True)
 class FrenchCardinal(Cardinal):
     """The shared cardinal recognizer. The start of a span that a label of `ordinal_nouns` governs, with no lead or
-    prefix between them, goes into `Request.memo` under `_LABELLED`."""
+    prefix between them, goes into `Request.memo` under `_LABELLED`. A round million or milliard that a noun
+    follows reaches to the noun, as `_count` gives it, unless a noun of `number_abbreviations` labels it, as in
+    "n° 1 000 000", which names a number and counts nothing."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in super().find(text, tokens, request):
-            if not span.fields["lead"] and not span.fields["prefix"] and _labelled(text, span.start, request.data):
+            if span.fields["lead"] or span.fields["prefix"]:
+                yield span
+                continue
+            if _labelled(text, span.start, request.data, request.data["ordinal_nouns"]):
                 request.memo.setdefault(_LABELLED, set()).add(span.start)
-            yield span
+                yield span
+                continue
+            if _labelled(text, span.start, request.data, tuple(request.data["number_abbreviations"].values())):
+                yield span
+                continue
+            digits = span.fields["digits"]
+            yield _count(span, text, request, len(digits) > 6 and not digits[-6:].strip("0"))
+
+
+@dataclass(frozen=True)
+class FrenchDecimal(DecimalRecognizer):
+    """The shared decimal recognizer. A decimal before a written noun of `scale_nouns` and a noun reaches to the
+    noun, as `_count` gives it: "1,5 million habitants"."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            yield _count(span, text, request, False)
+
+
+def speak_french_decimal(span: Span, context: SpanContext) -> str:
+    return _with_de(speak_decimal(span, context), span, context.request)
 
 
 @dataclass(frozen=True)
@@ -1133,7 +1274,7 @@ class FrenchRange(Range):
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in super().find(text, tokens, request):
-            if not span.fields["prefix"] and _labelled(text, span.start, request.data):
+            if not span.fields["prefix"] and _labelled(text, span.start, request.data, request.data["ordinal_nouns"]):
                 request.memo.setdefault(_LABELLED, set()).add(span.start)
             yield span
 
@@ -1604,7 +1745,7 @@ LANGUAGE = LanguageSpec(
         Roman(),
         Ordinal(),
         Abbreviation(),
-        SHARED["decimal"],
+        FrenchDecimal(),
         FrenchCardinal(),
     ),
     verbalizers={
@@ -1624,7 +1765,7 @@ LANGUAGE = LanguageSpec(
         Form.ROMAN: speak_roman,
         Form.ORDINAL: speak_ordinal,
         Form.ABBREVIATION: speak_abbreviation,
-        Form.DECIMAL: speak_decimal,
+        Form.DECIMAL: speak_french_decimal,
         Form.CARDINAL: speak_cardinal,
     },
     spellers={

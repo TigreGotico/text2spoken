@@ -50,8 +50,24 @@ A space, a no-break space, a narrow no-break space and, in Switzerland, an apost
 | --- | --- | --- |
 | `Il faut 1 000-2 000 personnes.` | `fr-FR` | Il faut mille à deux mille personnes. |
 | `On a 1 000 + 500 = 1 500.` | `fr-FR` | On a mille plus cinq cents égale mille cinq cents. |
-| `Il y a 1.000.000 habitants.` | `fr-FR` | Il y a un million habitants. |
+| `Il y a 1.000.000 habitants.` | `fr-FR` | Il y a un million d'habitants. |
 | `Il y a 1'000 habitants.` | `fr-CH` | Il y a mille habitants. |
+
+### A noun after a million or a milliard
+
+*Million* and *milliard* are nouns, so they take *de* before the noun that they count. *De* becomes *d'* before a vowel or a mute h, and stays *de* before an aspirated h. A number with a lower part, such as 1 200 000, ends in no noun and takes no *de*. A preposition, a conjunction, an adverb, a mark or the end of the text after the number takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Il y a 1 000 000 habitants.` | `fr-FR` | Il y a un million d'habitants. |
+| `La Terre comptait 3 000 000 000 personnes.` | `fr-FR` | La Terre comptait trois milliards de personnes. |
+| `On a récolté 2 000 000 haricots.` | `fr-FR` | On a récolté deux millions de haricots. |
+| `Il y a 1,5 million habitants.` | `fr-FR` | Il y a un virgule cinq million d'habitants. |
+| `Cela coûte 3 000 000 €.` | `fr-FR` | Cela coûte trois millions d'euros. |
+| `Il y a 1 200 000 habitants.` | `fr-FR` | Il y a un million deux cent mille habitants. |
+| `Ils étaient 1 000 000 environ.` | `fr-FR` | Ils étaient un million environ. |
+| `On attend 2 000 000 de visiteurs.` | `fr-FR` | On attend deux millions de visiteurs. |
+| `Selon la police, 2 000 000 manifestent.` | `fr-FR` | Selon la police, deux millions manifestent. |
 
 ### A number that stands for an ordinal
 
@@ -112,9 +128,9 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 ## Sources
 
-The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second"), the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
+The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second"), the Office québécois de la langue française for the aspirated h, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
-Of the 420 test rows in `tests/data/fr.tsv`, 22 quote a source that was fetched, and 366 say that a rule comes from memory or that no source was fetched. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
+Of the 434 test rows in `tests/data/fr.tsv`, 36 quote a source that was fetched, and 372 say that a rule comes from memory or that no source was fetched. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
 
 ## Limits
 

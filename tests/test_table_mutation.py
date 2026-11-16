@@ -69,7 +69,7 @@ FR_ENTRIES = {
     "function_words": "il", "phone_words": "composez", "short_codes": "3919", "list_links": "et",
     "phone_unit_shapes": "0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}", "phone_reading": DELETE, "roman_headings": "chapitre",
     "roman_names": "Louis", "scales": "M", "day_periods": "pm", "number_gaps": "\u202f", "elision_marks": "'",
-    "ordinal_nouns": "page",
+    "ordinal_nouns": "page", "scale_nouns": "million", "no_de_words": "dans", "aspirated_h": "haricot",
 }
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
