@@ -55,7 +55,11 @@ A space, a no-break space, a narrow no-break space and, in Switzerland, an apost
 
 ### A noun after a million or a milliard
 
-*Million* and *milliard* are nouns, so they take *de* before the noun that they count. *De* becomes *d'* before a vowel or a mute h, and stays *de* before an aspirated h. A number with a lower part, such as 1 200 000, ends in no noun and takes no *de*. A preposition, a conjunction, an adverb, a mark or the end of the text after the number takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*.
+*Million* and *milliard* are nouns, so they take *de* before the noun that they count. A range whose high end is a round million takes it too. A number with a lower part, such as 1 200 000, ends in no noun and takes no *de*.
+
+Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunction or adverb after the number takes none: the table `no_de_words` holds each such word of the Wiktionnaire categories that ends in *s*, *x* or *z*. An adjective after the number takes none if the table `no_de_adjectives` holds it. A word of one letter, a mark or the end of the text takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*, unless the table `invariable_plurals` holds it. A word with a hyphen counts as one word.
+
+*De* becomes *d'* before a vowel or a mute h. It stays *de* before a word that starts as a word of the OQLF list of aspirated h does, before a capitalised h, before a y other than in *yeux* and *ypérite*, and before *oui* and *ouistiti*.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -66,6 +70,14 @@ A space, a no-break space, a narrow no-break space and, in Switzerland, an apost
 | `Cela coûte 3 000 000 €.` | `fr-FR` | Cela coûte trois millions d'euros. |
 | `Il y a 1 200 000 habitants.` | `fr-FR` | Il y a un million deux cent mille habitants. |
 | `Ils étaient 1 000 000 environ.` | `fr-FR` | Ils étaient un million environ. |
+| `Il en a vendu 3 000 000 depuis 2010.` | `fr-FR` | Il en a vendu trois millions depuis deux mille dix. |
+| `Il faut 2 000 000 supplémentaires pour finir.` | `fr-FR` | Il faut deux millions supplémentaires pour finir. |
+| `Il faut 1 000 000-2 000 000 personnes.` | `fr-FR` | Il faut un million à deux millions de personnes. |
+| `Il y a 2 000 000 handicapés.` | `fr-FR` | Il y a deux millions de handicapés. |
+| `Il y a 2 000 000 Hongrois.` | `fr-FR` | Il y a deux millions de Hongrois. |
+| `Il y a 2 000 000 yachts.` | `fr-FR` | Il y a deux millions de yachts. |
+| `Il y a 2 000 000 yeux.` | `fr-FR` | Il y a deux millions d'yeux. |
+| `Il y a 2 000 000 sans-abri.` | `fr-FR` | Il y a deux millions de sans-abri. |
 | `On attend 2 000 000 de visiteurs.` | `fr-FR` | On attend deux millions de visiteurs. |
 | `Selon la police, 2 000 000 manifestent.` | `fr-FR` | Selon la police, deux millions manifestent. |
 
@@ -130,7 +142,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second"), the Office québécois de la langue française for the aspirated h, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
-Of the 434 test rows in `tests/data/fr.tsv`, 36 quote a source that was fetched, and 372 say that a rule comes from memory or that no source was fetched. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
+Of the 474 test rows in `tests/data/fr.tsv`, 76 quote a source that was fetched, and 372 say that a rule comes from memory or that no source was fetched. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
 
 ## Limits
 
@@ -148,7 +160,14 @@ French leaves these forms as written or reads them in a limited way:
 | `Rendez-vous le 10/11/26.` | `fr-FR` | stays as written | A date with a two-digit year stays as written. |
 | `Il pèse 1.500 kg.` | `fr-FR` | stays as written | The marks do not settle the number: it is 1,5 or 1500. A warning names it. |
 | `Il faut 1'000-2'000 francs.` | `fr-CH` | stays as written | A range, a fraction and an expression read a number grouped with a space, and not one grouped with an apostrophe. |
+| `Il en reste 2 000 000 entiers.` | `fr-FR` | Il en reste deux millions d'entiers. | An adjective after a round million that `no_de_adjectives` lacks takes *de*, as a noun does. The class is open, and the table holds the adjectives that a count of Tatoeba and FLORES+ found after a number. |
+| `Il y a 2 000 000 très grandes villes.` | `fr-FR` | Il y a deux millions très grandes villes. | An adverb of `no_de_words` before a preposed adjective takes no *de*, where French says *deux millions de très grandes villes*. |
+| `Il y a 2 000 000 harkis.` | `fr-FR` | Il y a deux millions d'harkis. | *De* elides before an aspirated h that the OQLF list does not reach. Of 415 Tatoeba words that the Wiktionnaire marks as aspirated, the list reaches 245. |
+| `Il y a 1/2 million habitants.` | `fr-FR` | Il y a un demi million habitants. | A fraction before *million* takes no *de*. |
+| `Il y a 2 000 000 après-midi.` | `fr-FR` | Il y a deux millions après-midi. | A noun with an invariable plural that `invariable_plurals` lacks takes no *de*. |
 | `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after *page* takes the invariable form, also where it counts the next noun. |
+
+The *de* rule reads only spaces between a number and the noun that it counts. A line break between them stops the rule, and the noun on the next line takes no *de*.
 
 ---
 [← Basque](eu.md) · [Home](../index.md) · [Portuguese →](pt.md)

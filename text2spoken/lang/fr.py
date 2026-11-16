@@ -24,18 +24,25 @@ The rules cite these sources, by rule family:
   Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix".
 - A noun after a round million or milliard: the same entry, "vingt et cent varient devant millier, million,
   milliard, qui sont des noms et non des adjectifs numéraux : [...] deux cents millions d'années ; trois cents
-  milliers d'habitants." A noun counts a noun with "de", so a number whose words end in a noun of `scale_nouns`,
-  or a number that the text writes before one, takes "de" before the word that follows it: "un million
-  d'habitants". A word of `no_de_words` after the number takes none, and nor does a mark or the end of the text.
+  milliers d'habitants." Larousse, "million", Difficultés: "Le nom complément de million ou de milliard se
+  construit toujours avec de". So a number whose words end in a noun of `scale_nouns`, or a number that the text
+  writes before one, takes "de" before the noun that it counts: "un million d'habitants". The rule reads a range
+  whose high end is a round million so too. A word that is not that noun takes none: a function word of
+  `no_de_words`, an adjective of `no_de_adjectives`, a word of one letter, a mark or the end of the text.
 - The noun that a million counts is plural, and a plural noun ends in "s", "x" or "z": Office québécois de la
   langue française, Banque de dépannage linguistique, "Pluriel des mots d'origine étrangère : rectifications":
   such words "suivent la règle générale du singulier et du pluriel des mots français. Ils prennent donc un s au
   pluriel, sauf s'ils se terminent par un s, un x ou un z". So a word with another ending takes no "de", such as
-  the verb in "2 000 000 manifestent".
-- "De" before a vowel or a mute h elides to "d'". The words of `aspirated_h` begin with an aspirated h, which
-  takes no elision: Office québécois de la langue française, Banque de dépannage linguistique, "La prononciation
-  du h aspiré": "Voici une liste des principaux mots qui commencent par un h aspiré", and "dans le cas du h
-  aspiré, on ne peut faire l'élision".
+  the verb in "2 000 000 manifestent", unless `invariable_plurals` holds it. A word with a hyphen counts as one.
+- "De" before a vowel or a mute h elides to "d'". The words of `aspirated_h` and the words derived from them begin
+  with an aspirated h, which takes no elision: Office québécois de la langue française, Banque de dépannage
+  linguistique, "La prononciation du h aspiré": "Voici une liste des principaux mots qui commencent par un h
+  aspiré, dont plusieurs comportent des dérivés", and "dans le cas du h aspiré, on ne peut faire l'élision". The
+  page "Élision interdite" of the same bank gives the other cases: "C'est le cas de la plupart des noms propres
+  qui commencent par un h", so a capitalised h takes no elision; "Devant les mots étrangers commençant par y, il
+  ne faut pas faire d'élision", so a y takes none outside `eliding_y`, which holds "yeux" ("Élision
+  obligatoire": "Elle n'a d'yeux que pour lui") and "ypérite" (Wiktionnaire: "de l'ypérite"); and "Il ne faut
+  pas faire d'élision devant les mots oui et ouistiti", which `no_elision` holds.
 - Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
   des ordinaux complexes (vingt-deuxième, etc.)".
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
@@ -195,20 +202,52 @@ FEMININE_NOUNS = tuple(w for noun in _FEMININE_SINGULAR for w in ((noun,) if nou
 
 
 NO_DE_WORDS = (
-    # prepositions
-    "à", "au", "aux", "après", "avant", "avec", "chez", "contre", "dans", "de", "des", "du", "en", "entre", "par",
-    "parmi", "pour", "sans", "selon", "sous", "sur", "vers",
-    # conjunctions
-    "et", "ou", "mais", "ni", "donc", "car", "que", "qui", "si", "comme", "quand",
-    # adverbs
-    "environ", "seulement", "plus", "moins", "près", "presque", "ici", "là", "déjà", "encore", "aussi", "alors",
-    "ensuite", "puis", "même", "pas", "ne", "non", "oui", "tout", "toutes", "tous",
-    # pronouns and the verb forms that follow a number as its subject
-    "il", "elle", "ils", "elles", "on", "nous", "vous", "y", "ont", "sont", "est", "a", "avaient", "étaient", "seront",
-    "auront",
+    "adementiers", "adens", "adoncques", "aels", "ailleurs", "alakons", "alias", "alles", "alors", "als", "après",
+    "aprés", "assez", "assés", "aucunefois", "aucunes", "aucunesfois", "aucuns", "auprès", "autrefois", "aux",
+    "auxdites", "auxdits", "auxquelles", "auxquels", "avecques", "bis", "celles", "celleux", "certaines",
+    "certains", "certes", "ces", "cesdites", "cesdits", "ceulles", "ceuss", "ceusses", "ceux", "ceuxelles",
+    "chacunes", "chacuns", "chacunx", "chaques", "cheux", "chez", "clas", "class", "combiennièmes", "combientièmes",
+    "céans", "dans", "decies", "dedans", "dehors", "depuis", "des", "desdites", "desdits", "desquelles", "desquels",
+    "dessous", "dessus", "devers", "directos", "discrétos", "ds", "duodecies", "duotricies", "dès", "désormais",
+    "elles", "elleux", "embas", "emprès", "endéans", "entretemps", "envers", "esdites", "esdits", "eusses", "eux",
+    "exprès", "extramuros", "fors", "gratis", "gratos", "guères", "hormis", "hors", "icelles", "iceux", "iels",
+    "ilelles", "illes", "ils", "intramuros", "jadis", "jamais", "jusques", "labès", "lars", "les", "lesdites",
+    "lesdits", "lesquelles", "lesquels", "leurs", "leursdites", "leursdits", "leurszigues", "leurzigues", "lez",
+    "lombienquess", "longtemps", "longtems", "lors", "lès", "léans", "maintefois", "maintes", "maints", "mais",
+    "malgrés", "max", "mes", "mesdites", "mesdits", "mesmes", "miennes", "miens", "mieux", "minoribus", "moins",
+    "mordicus", "mouais", "moultes", "moults", "naguères", "nix", "nonies", "nos", "noszigues", "nous",
+    "novovicies", "nozigues", "néanmoins", "nôtres", "octies", "octotricies", "octovicies", "ols", "oncques",
+    "onques", "orains", "ordoncques", "ores", "parfois", "parmis", "pedibus", "peinardos", "pis", "plus",
+    "plusieurs", "près", "puis", "pus", "qqns", "quantes", "quaterdecies", "quatertricies", "quelquefois",
+    "quelques", "quindecies", "quinquies", "quintricies", "quinvicies", "quèques", "raiz", "rapidos", "rasibus",
+    "razibus", "rez", "rémotis", "sans", "septies", "septtricies", "septvicies", "ses", "sexies", "sextricies",
+    "sexvicies", "siennes", "siens", "soubs", "sous", "souventefois", "ss", "sus", "tandis", "terdecies",
+    "tertricies", "tes", "tiennes", "tiens", "tjrs", "tjs", "toujours", "tous", "toustes", "toutefois", "toutes",
+    "toutxs", "touz", "toûjours", "tranquillos", "tricies", "très", "ts", "ttes", "uls", "undecies", "untricies",
+    "unx", "vers", "versus", "vicies", "volontiers", "vos", "voszigues", "vous", "vozigues", "vs", "vôtres", "yels",
+    "æls", "çauz", "ès",
 )
-"""The words after a round million or milliard that take no "de": a preposition, a conjunction, an adverb, a
-pronoun, or a verb whose subject is the number, as in "un million environ" and "ils sont un million"."""
+"""The French function words that end in "s", "x" or "z", which take no "de" after a round million: the determiners,
+pronouns, prepositions, conjunctions and adverbs of the French Wiktionnaire part-of-speech categories, such as
+"Prépositions en français", "Adverbes en français", "Pronoms personnels en français" and "Déterminants possessifs
+en français", that are one word. The words that also read as a noun or a preposed adjective after a number are not in
+the table, so "un million de fois", "un million de pas" and "un million d'autres choses" keep their "de"."""
+
+NO_DE_ADJECTIVES = (
+    "derniers", "dernières", "premiers", "premières", "précédents", "précédentes", "inclus", "incluses", "passés",
+    "passées", "déversés", "déversées", "supplémentaires", "nets", "nettes", "bruts", "brutes", "annuels",
+    "annuelles", "restants", "restantes", "cumulés", "cumulées",
+)
+"""The adjectives and participles that follow a bare amount with no noun between them, as in "deux millions
+supplémentaires". The table holds each one that a measurement found right after a number, in figures or written
+as a scale noun, in Tatoeba French (730,700 sentences) and the FLORES+ French dev and devtest splits, with its
+other genders, and the adjectives "supplémentaires", "nets", "bruts", "annuels", "restants" and "cumulés". The
+class is open, so an adjective that the table lacks takes a wrong "de"."""
+
+INVARIABLE_PLURALS = ("sans-abri", "abat-jour", "graffiti", "people")
+"""Nouns whose plural ends in no "s", "x" or "z", and which take "de" after a round million: the French Wiktionnaire
+gives "sans-abri" and "abat-jour" as invariable in the traditional spelling, "graffiti" as a plural of "graffito",
+and "people" as its own plural."""
 
 ASPIRATED_H = (
     "hache", "hagard", "haie", "haillon", "haine", "haïr", "hall", "halo", "halte", "hamac", "hamburger", "hameau",
@@ -218,8 +257,13 @@ ASPIRATED_H = (
     "hisser", "hocher", "hockey", "hollande", "homard", "honte", "hoquet", "horde", "hors", "hotte", "houblon",
     "houle", "housse", "huard", "hublot", "huche", "huer", "huit", "humer", "hurler", "huron", "husky", "hutte",
 )
-"""The principal words with an aspirated h, as the Office québécois de la langue française lists them. A word
-counts with its plural in "s" or "x", so "haricots" and "hiboux" take "de"."""
+"""The principal words with an aspirated h, as the Office québécois de la langue française lists them. A word that
+starts with one of them, less a final "e", "er" or "ir" when four letters remain, has an aspirated h, as the
+derived words of the list do: "handicapés", "hauteurs", "hockeyeurs", "harceleurs", "hérissons"."""
+
+MUTE_H = ("hallucin", "halogèn", "haltè", "haltér", "hallali", "hallo", "hippiq", "huitre", "hurluberlu")
+"""The starts of words with a mute h that the start of an `aspirated_h` word would match, as the French Wiktionnaire
+gives them with no aspirated-h mark: "hallucination", "halogène", "haltère", "hippique", "huitre"."""
 
 
 def _unit(one: str, gender: str = "masculine", other: str | None = None, many: str | None = None) -> dict:
@@ -376,7 +420,12 @@ DATA = freeze(
             "trillion", "trillions",
         ],
         "no_de_words": NO_DE_WORDS,
+        "no_de_adjectives": NO_DE_ADJECTIVES,
+        "invariable_plurals": INVARIABLE_PLURALS,
         "aspirated_h": ASPIRATED_H,
+        "mute_h": MUTE_H,
+        "eliding_y": ["yeux", "ypérite"],
+        "no_elision": ["oui", "ouistiti"],
         "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"}],
         "dimension_marks": ["x", "×"],
         "dimension_word": "par",
@@ -929,21 +978,40 @@ _COUNTED = "fr_counted"
 """The key of `Request.memo` that maps the start of a cardinal or decimal span that a noun follows to the text
 between the number and the noun, as `_counted` finds it, and to whether "de" elides before the noun."""
 
-_ELIDING = frozenset("aeiouyàâäéèêëîïôöùûüœæ")
+_ELIDING = frozenset("aeiouàâäéèêëîïôöùûüœæ")
+
+
+def _aspirated_start(word: str) -> str:
+    """The start that a word of `aspirated_h` gives its family: the word less a final "e", "er" or "ir" when four
+    letters remain, so "hausse" gives "hauss" and "harceler" gives "harcel", and "huer" stays whole."""
+    for ending in ("er", "ir", "e"):
+        if word.endswith(ending) and len(word) - len(ending) >= 4:
+            return word[: -len(ending)]
+    return word
 
 
 def _elides(word: str, data: FrozenMap) -> bool:
-    """Whether "de" elides before `word`: a vowel, or an h that `aspirated_h` does not list with its plural."""
-    word = word.lower()
-    if word[0] == "h":
-        return not any(word in (h, h + "s", h + "x") for h in data["aspirated_h"])
-    return word[0] in _ELIDING
+    """Whether "de" elides before `word`. An h elides unless the word is capitalised or starts as a word of
+    `aspirated_h` does, and not as a word of `mute_h`. A y elides only in a word of `eliding_y`. The words of
+    `no_elision` and their plurals take none. Any other vowel elides."""
+    lower = word.lower()
+    if lower[0] == "h":
+        if word[0] == "H":
+            return False
+        aspirated = lower.startswith(tuple(_aspirated_start(h) for h in data["aspirated_h"]))
+        return not aspirated or lower.startswith(tuple(data["mute_h"]))
+    if lower[0] == "y":
+        return lower.startswith(tuple(data["eliding_y"]))
+    if any(lower in (w, w + "s") for w in data["no_elision"]):
+        return False
+    return lower[0] in _ELIDING
 
 
 def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
     """The text between a number that ends at `end` and the noun it counts, with a written noun of `scale_nouns`
     in it if the text gives one, and whether "de" elides before the noun. None when spaces and a word do not follow,
-    or when the word is in `no_de_words`, does not end as a plural noun does, or is elided, as "d'" is."""
+    or when the word has one letter, is in `no_de_words` or `no_de_adjectives`, or does not end as a plural noun
+    does and is not in `invariable_plurals`. A word with a hyphen counts as one word: "sans-abri"."""
     position = end
     while position < len(text) and text[position] in SPACES:
         position += 1
@@ -957,17 +1025,19 @@ def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
                 position += 1
             break
     stop = position
-    while stop < len(text) and is_letter(text[stop]):
+    while stop < len(text) and (
+        is_letter(text[stop]) or text[stop] == "-" and stop + 1 < len(text) and is_letter(text[stop + 1])
+    ):
         stop += 1
-    word = text[position:stop]
+    word = text[position:stop].lower()
     if (
-        not word
-        or word.lower() in data["no_de_words"]
-        or not word.lower().endswith(("s", "x", "z"))
-        or text[stop:stop + 1] in ("'", "\u2019")
+        len(word) < 2
+        or word in data["no_de_words"]
+        or word in data["no_de_adjectives"]
+        or not (word.endswith(("s", "x", "z")) or word in data["invariable_plurals"])
     ):
         return None
-    return text[end:position], _elides(word, data)
+    return text[end:position], _elides(text[position:stop], data)
 
 
 def _with_de(words: str, span: Span, request: Request) -> str:
@@ -1006,14 +1076,15 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
 
 
 def speak_range(span: Span, context: SpanContext) -> str:
-    """A range. After a label of `ordinal_nouns` both ends read as `speak_cardinal` reads a labelled number."""
+    """A range. After a label of `ordinal_nouns` both ends read as `speak_cardinal` reads a labelled number. A
+    range whose high end is a round million takes "de" before its noun, as a cardinal does."""
     request = context.request
     if span.start in request.memo.get(_LABELLED, ()):
         low, high = (_invariable(_cardinal(span.fields[end], request)) for end in ("low", "high"))
-    else:
-        gender = _gender(context)
-        low, high = (_cardinal(span.fields[end], request, gender) for end in ("low", "high"))
-    return f"{low} {request.data['range_word']} {high}"
+        return f"{low} {request.data['range_word']} {high}"
+    gender = _gender(context)
+    low, high = (_cardinal(span.fields[end], request, gender) for end in ("low", "high"))
+    return _with_de(f"{low} {request.data['range_word']} {high}", span, request)
 
 
 def _ordinal_words(digits: str, marker: str, request: Request) -> str:
@@ -1217,6 +1288,11 @@ def speak_year(span: Span, context: SpanContext) -> str:
     return words
 
 
+def _round_million(digits: str) -> bool:
+    """Whether the words of `digits` end in a noun of `scale_nouns`: a million or more, with six zeros at the end."""
+    return len(digits) > 6 and not digits[-6:].strip("0")
+
+
 def _count(span: Span, text: str, request: Request, round_million: bool) -> Span:
     """The span, through the text before the noun that `_counted` finds after it, when the number is a round
     million, whose words end in a noun of `scale_nouns`, or when the text writes such a noun after it. The span
@@ -1250,8 +1326,7 @@ class FrenchCardinal(Cardinal):
             if _labelled(text, span.start, request.data, tuple(request.data["number_abbreviations"].values())):
                 yield span
                 continue
-            digits = span.fields["digits"]
-            yield _count(span, text, request, len(digits) > 6 and not digits[-6:].strip("0"))
+            yield _count(span, text, request, _round_million(span.fields["digits"]))
 
 
 @dataclass(frozen=True)
@@ -1270,13 +1345,18 @@ def speak_french_decimal(span: Span, context: SpanContext) -> str:
 
 @dataclass(frozen=True)
 class FrenchRange(Range):
-    """The shared range recognizer. A labelled range goes into `Request.memo` as in `FrenchCardinal`."""
+    """The shared range recognizer. A labelled range goes into `Request.memo` as in `FrenchCardinal`. A range whose
+    high end is a round million reaches to the noun after it, as `_count` gives it."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in super().find(text, tokens, request):
-            if not span.fields["prefix"] and _labelled(text, span.start, request.data, request.data["ordinal_nouns"]):
+            if span.fields["prefix"]:
+                yield span
+            elif _labelled(text, span.start, request.data, request.data["ordinal_nouns"]):
                 request.memo.setdefault(_LABELLED, set()).add(span.start)
-            yield span
+                yield span
+            else:
+                yield _count(span, text, request, _round_million(span.fields["high"]))
 
 
 @dataclass(frozen=True)
