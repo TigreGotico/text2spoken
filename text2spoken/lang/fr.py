@@ -19,8 +19,9 @@ The rules cite these sources, by rule family:
   "deux cents millions d'années", "Mille (ou mil) est toujours invariable", and the singular of a numeral that
   stands for an ordinal: "Ils restent également invariables lorsqu'ils sont employés comme adjectifs numéraux
   ordinaux : page deux cent ; page quatre-vingt ; l'an mille neuf cent." The file reads that singular in an
-  ordinal ("deux cent millionième"), in a year, and in a number after the two nouns that the passage names,
-  "page" and "an", which the table `ordinal_nouns` holds.
+  ordinal ("deux cent millionième"), in a year, and in a number that labels a page or a year, as the passage
+  writes them: "page" and "l'an", which the table `ordinal_nouns` holds, with only spaces before the number.
+  Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix".
 - Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
   des ordinaux complexes (vingt-deuxième, etc.)".
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
@@ -58,8 +59,10 @@ from text2spoken.core import roman
 from text2spoken.core.recognizers import (
     PHONE_PLANS,
     SHARED,
+    Cardinal,
     Money,
     Percent,
+    Range,
     Telephone,
     TimeClock,
     _affixes,
@@ -171,6 +174,7 @@ _FEMININE_SINGULAR = (
     "carte",
     "touche",
     "marche",
+    "recette",
 )
 FEMININE_NOUNS = tuple(w for noun in _FEMININE_SINGULAR for w in ((noun,) if noun == "fois" else (noun, noun + "s")))
 
@@ -323,7 +327,7 @@ DATA = freeze(
         },
         "range_word": "à",
         "range_marks": ["-", "–"],
-        "ordinal_nouns": ["page", "an"],
+        "ordinal_nouns": ["page", "l'an"],
         "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"}],
         "dimension_marks": ["x", "×"],
         "dimension_word": "par",
@@ -851,27 +855,37 @@ def _name(record: FrozenMap, request: Request, written: str) -> str:
     return record.get(plural_category(request, written), record["other"])
 
 
-def _after_ordinal_noun(context: SpanContext) -> bool:
-    """Whether a noun of `ordinal_nouns` stands right before the number, with or without an elided article, or as
-    its abbreviation, as in "page 80", "l'an 800" and "p. 80". The number then stands for an ordinal."""
-    if not context.before:
-        return False
-    data = context.request.data
-    word = context.before[-1].lower().replace("\u2019", "'").rpartition("'")[2]
-    abbreviations = data["number_abbreviations"]
-    noun = abbreviations.get(word) or abbreviations.get(word + ".") or word
-    return noun in data["ordinal_nouns"]
+_LABELLED = "fr_labelled"
+"""The key of `Request.memo` that holds the starts of the cardinal and range spans that a label of `ordinal_nouns`
+governs, as `FrenchCardinal` and `FrenchRange` find them."""
+
+
+def _labelled(text: str, start: int, data: FrozenMap) -> bool:
+    """Whether a label of `ordinal_nouns`, or its abbreviation, ends right before text[start:] with only spaces
+    between, as in "page 80", "p. 80" and "l'an 800". A comma, a full stop or a word between them ends the label,
+    so "Depuis un an, 21 personnes" holds none."""
+    nouns = data["ordinal_nouns"]
+    end = start
+    while end and text[end - 1] in SPACES:
+        end -= 1
+    for label in (*nouns, *(key for key, noun in data["number_abbreviations"].items() if noun in nouns)):
+        begin = end - len(label)
+        if begin >= 0 and text[begin:end].lower().replace("\u2019", "'") == label.lower() and not (
+            begin and is_word_char(text[begin - 1])
+        ):
+            return True
+    return False
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """A cardinal with the gender of the agreement order. Digits with a leading zero, which only a lead admits,
-    read one by one. After a noun of `ordinal_nouns` the number stands for an ordinal, so it is masculine and
-    "cent" and "vingt" take no "s": "page quatre-vingt"."""
+    read one by one. A number that labels a page or a year stands for an ordinal, so it is masculine and "cent"
+    and "vingt" take no "s": "page quatre-vingt"."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         words = spell_digits(digits, request)
-    elif _after_ordinal_noun(context):
+    elif span.start in request.memo.get(_LABELLED, ()):
         words = _invariable(_cardinal(digits, request))
     else:
         words = _cardinal(digits, request, _gender(context))
@@ -890,12 +904,14 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
 
 
 def speak_range(span: Span, context: SpanContext) -> str:
+    """A range. After a label of `ordinal_nouns` both ends read as `speak_cardinal` reads a labelled number."""
     request = context.request
-    gender = _gender(context)
-    return (
-        f"{_cardinal(span.fields['low'], request, gender)} {request.data['range_word']} "
-        f"{_cardinal(span.fields['high'], request, gender)}"
-    )
+    if span.start in request.memo.get(_LABELLED, ()):
+        low, high = (_invariable(_cardinal(span.fields[end], request)) for end in ("low", "high"))
+    else:
+        gender = _gender(context)
+        low, high = (_cardinal(span.fields[end], request, gender) for end in ("low", "high"))
+    return f"{low} {request.data['range_word']} {high}"
 
 
 def _ordinal_words(digits: str, marker: str, request: Request) -> str:
@@ -1097,6 +1113,29 @@ def speak_year(span: Span, context: SpanContext) -> str:
         if words.startswith(head):
             return words[len(head) :]
     return words
+
+
+@dataclass(frozen=True)
+class FrenchCardinal(Cardinal):
+    """The shared cardinal recognizer. The start of a span that a label of `ordinal_nouns` governs, with no lead or
+    prefix between them, goes into `Request.memo` under `_LABELLED`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            if not span.fields["lead"] and not span.fields["prefix"] and _labelled(text, span.start, request.data):
+                request.memo.setdefault(_LABELLED, set()).add(span.start)
+            yield span
+
+
+@dataclass(frozen=True)
+class FrenchRange(Range):
+    """The shared range recognizer. A labelled range goes into `Request.memo` as in `FrenchCardinal`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            if not span.fields["prefix"] and _labelled(text, span.start, request.data):
+                request.memo.setdefault(_LABELLED, set()).add(span.start)
+            yield span
 
 
 @dataclass(frozen=True)
@@ -1561,12 +1600,12 @@ LANGUAGE = LanguageSpec(
         Year(),
         SHARED["expression"],
         SHARED["fraction"],
-        SHARED["range"],
+        FrenchRange(),
         Roman(),
         Ordinal(),
         Abbreviation(),
         SHARED["decimal"],
-        SHARED["cardinal"],
+        FrenchCardinal(),
     ),
     verbalizers={
         Form.LEXICON: speak_lexicon,
