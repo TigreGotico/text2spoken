@@ -64,13 +64,47 @@ The `decimal_mark` option sets the decimal mark of the written numbers, where th
 
 ## Roman numerals
 
-Portuguese and Basque read a Roman numeral when the text around it shows that it is a number, such as a king's name or a century:
+English, Portuguese and Basque read a Roman numeral when the text around it shows that it is a number, such as a name, a century, or a noun of a series:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Luís XIV reinou.` | `pt-PT` | Luís Catorze reinou. |
 | `No século XIX.` | `pt-PT` | No século dezanove. |
+| `Dos séculos XI, XII e XIII.` | `pt-PT` | Dos séculos onze, doze e treze. |
+| `Leia o capítulo V.` | `pt-PT` | Leia o capítulo quinto. |
+| `A D. XIV.` | `pt-PT` | A Dom Catorze. |
+| `O papa Pio X reinou.` | `pt-PT` | O papa Pio Décimo reinou. |
+| `O papa Pio X reinou.` | `pt-BR` | O papa Pio Dez reinou. |
+| `Henry VIII had six wives.` | `en-GB` | Henry the Eighth had six wives. |
+| `John Smith III spoke.` | `en-US` | John Smith the Third spoke. |
+| `World War II ended.` | `en-GB` | World War Two ended. |
+| `Super Bowl LVII was close.` | `en-US` | Super Bowl Fifty-Seven was close. |
 | `XX. mendean.` | `eu-ES` | hogeigarren mendean. |
+
+Portuguese reads an ordinal up to ten and a cardinal from eleven, and pt-BR stops the ordinal at nine, as Ciberdúvidas gives the rule. English reads "the" and an ordinal after a regnal title and a name, after a name of a monarch or a pope, and after a given name and a surname, and a cardinal after a noun of a series. Any other English numeral stays as written. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
+
+A numeral stays as written when the text does not show that it is a number:
+
+| Written | Tag | Spoken | Why |
+| --- | --- | --- | --- |
+| `Malcolm X spoke.` | `en-GB` | stays as written | A numeral of one letter after a name needs a regnal title before the name. |
+| `The book I read.` | `en-GB` | stays as written | `I` is the pronoun. |
+| `Fly to Washington DC.` | `en-GB` | stays as written | No rule names `Washington`, so the acronym `DC` stays as written. |
+| `Tome vitamina C.` | `pt-PT` | stays as written | One letter reads only as `I`, `V` or `X` after a noun that takes numbers and never letters. |
+| `No Grupo I, houve duas goleadas.` | `pt-PT` | stays as written | A group is labelled with letters too, so one letter after `Grupo` stays as written. |
+| `Eu LI o livro.` | `pt-PT` | stays as written | A numeral right after a pronoun does not read. |
+| `EU VI O FILME.` | `pt-PT` | stays as written | `VI` is a word in a clause in capitals. |
+| `Use the Linux CLI.` | `en-US` | stays as written | No rule names `Linux`. |
+| `Rocky II was a hit.` | `en-US` | stays as written | No rule names `Rocky`, so a title of a work keeps its numeral. |
+| `No Grupo II, CD Tondela venceu.` | `pt-PT` | No Grupo segundo, CD Tondela venceu. | No link word closes a list, so `CD` is no member of it. |
+| `485, V, III e VI, do CPC.` | `pt-PT` | quatrocentos e oitenta e cinco, V, III e VI, do CPC. | A comma parts each numeral from the word before it, so a numeral up to ten stays as written, and no century or noun of a series starts the list. |
+| `I bought a Mazda CX-5.` | `en-US` | I bought a Mazda CX five. | `CX` (110) is above 30, so the code reads its digits. |
+
+Portuguese reads the ordinal after any capitalised word, as for a name, because telling a title from a name needs context that the library does not have:
+
+| Written | Tag | Spoken | Note |
+| --- | --- | --- | --- |
+| `Vi o Avatar II.` | `pt-PT` | Vi o Avatar Segundo. | Limit: a title of a work reads as a name. |
 
 ## Telephone numbers
 

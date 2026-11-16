@@ -186,9 +186,10 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
                    "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"], "letter_vowels": ["a"],
                    "letter_onsets": ["q"], "letter_codas": ["c"], "phone_words": ["fon"], "phone_shapes": [],
                    "phone_unit_shapes": [], "phone_kept_shapes": [], "no_phone_shapes": [], "short_codes": [],
-                   "list_links": [], "operators": {}, "unit_symbols": [], "currency_symbols": []})
+                   "list_links": [], "operators": {}, "unit_symbols": [], "currency_symbols": [],
+                   "dimension_marks": []})
     readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["telephone"],
-               SHARED["electronic"], SHARED["letters"])
+               SHARED["electronic"], SHARED["letters"], SHARED["measure"])
     verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic,
                    Form.LETTERS: contract.speak_letters, Form.COLOR: contract.speak_color}
     spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers), verbalizers=verbalizers)

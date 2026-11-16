@@ -6,7 +6,7 @@ import logging
 import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import KW_ONLY, dataclass
+from dataclasses import KW_ONLY, dataclass, replace
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
@@ -36,7 +36,7 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.PERCENT: frozenset({"amount", "sign_position", "prefix", "suffix"}),
     Form.TELEPHONE: frozenset({"country_code", "groups", "prefix", "suffix"}),
     Form.IDENTIFIER: frozenset({"head", "digits"}),
-    Form.LETTERS: frozenset({"letters", "reading"}),
+    Form.LETTERS: frozenset({"letters", "reading", "clause"}),
     Form.ABBREVIATION: frozenset({"key"}),
     Form.IDIOM: frozenset({"key", "prefix", "suffix"}),
     Form.ROMAN: frozenset({"value", "role", "suffix"}),
@@ -169,6 +169,13 @@ def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None],
     return any(side(joiner, beyond) for joiner, beyond in sides)
 
 
+def _in_clause(span: Span, other: bytearray) -> bool:
+    """Whether every other part of the clause of a `LETTERS` span stays as written in capitals: it is a run of the
+    kind `stays`, and no span of another form reads it."""
+    return all(kind == "stays" and not any(other[start:end])
+               for start, end, kind in span.fields["clause"] if (start, end) != (span.start, span.end))
+
+
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
     """The spans that the recognizers claim, in claim order, by the rules of sections 2.1 and 4.2.
 
@@ -182,6 +189,11 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     a symbol or an emoji. So with a key `cats`, `2,cats` reads "two,kats", and with a key `GPT-4`, `©` or `#️⃣`,
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
+
+    A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
+    stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
+    letter, as `ROMAN` claims `VI` in `CAPÍTULO VI DE`, the word reads in lower case, so a second pass, which sees
+    words in lower case and so no clause there, keeps it a word.
 
     An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
     `😀` in place of the sequence (design section 4.7). The recognizers read the view of `emoji_view`, in which the
@@ -201,6 +213,7 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     before = {end: start for start, end in sequences}
     after = dict(sequences)
     read = bytearray(len(text))
+    other = bytearray(len(text))
     holder: list[Span | None] = [None] * len(text)
     neighbours: dict[int, list[int]] = {}
     claimed: list[Span] = []
@@ -223,9 +236,13 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
             for position in (position for side in sides for position in side):
                 neighbours.setdefault(position, []).append(index)
             continue
+        if span.form is Form.LETTERS and span.fields["clause"] and not _in_clause(span, other):
+            span = replace(span, fields=FrozenMap({**span.fields, "reading": "lower"}), keep=False)
         read[span.start:span.end] = b"\x01" * (span.end - span.start)
         if not span.keep:
             claimed.append(span)
+            if span.form is not Form.LETTERS:
+                other[span.start:span.end] = b"\x01" * (span.end - span.start)
         for position in range(span.start, span.end):
             for waiting in neighbours.pop(position, ()):
                 heapq.heappush(queue, waiting)
@@ -398,7 +415,7 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
         try:
             spoken = language.verbalizers[span.form](span, context)
             if letters and span.form not in (Form.LETTERS, Form.LEXICON):
-                spoken = respell(spoken, request.data)
+                spoken = respell(spoken, request)
             spoken = language.attach(spoken, span.fields.get("prefix", ""), span.fields.get("suffix", ""))
             out.append(span.lead + spoken + span.trail)
         except DECLINED as error:

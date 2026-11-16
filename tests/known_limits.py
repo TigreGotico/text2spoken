@@ -57,6 +57,9 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
     `released by a spelled run`: with `LETTERS` on, the first pass spells a run, and each span of the second pass is
     a candidate of the first pass that waited on a joined character and stayed unread, as in `Sala 9#D. RTP`. With
     the form off, a second pass changes nothing.
+    `numeral by a claim`: each span of the second pass is a Roman numeral inside the reading of a claim, which keeps
+    the numeral as written, as in `Paulo XIV٢http://x`, or a numeral whose two words of context hold the end of the
+    reading of a claim, as in `www.a.comM25World War I`.
     """
     once = normalize(text, lang, params)
     first = analyze(text, lang, params)
@@ -108,4 +111,8 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
         return "time after @"
     if all(month_at_edge(span) for span in second):
         return "month at claim edge"
+    if all(span.form is Form.ROMAN
+           and any(start <= span.start and (span.end <= end or len(once[end:span.start].split()) < 2)
+                   for _, start, end in readings) for span in second):
+        return "numeral by a claim"
     return None
