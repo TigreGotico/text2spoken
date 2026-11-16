@@ -46,13 +46,13 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 609 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 617 rows.
 
 ## Roman numerals
 
 A Roman numeral reads only where a rule gives its reading. Every other numeral stays as written, because a capitalised word alone does not tell a title of a work, a product or a council from a name.
 
-A regnal number reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". A regnal number follows a regnal title and a name, such as King, Queen, Pope, Saint, Emperor or Tsar before the name, or a name of the `regnal_names` table. Only spaces part the title, the name and the numeral. A comma, a bracket or a quote can also part the title from a name of `regnal_names`, as an apposition does in `the Holy Roman Emperor, Henry V` and `our king [Charles I]`. A slash, a colon or any other mark after the title leaves the text as written, and so does any mark before a name outside `regnal_names`. The `regnal_names` table holds the names from the Wikipedia lists of monarchs, popes and emperors that the docstring of `en.py` names, such as Adrian, the name of six popes, and Gustav, the name of five kings of Sweden.
+A regnal number reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". A regnal number follows a regnal title and a name, such as King, Queen, Pope, Saint, Emperor or Tsar before the name, or a name of the `regnal_names` table. Only spaces part the title, the name and the numeral. One mark can also part the title from a name of `regnal_names`, as an apposition does in `the Holy Roman Emperor, Henry V` and `our king [Charles I]`. The marks are the comma, the parentheses, the square brackets, the straight and curly double quotes, the single quotes and the guillemets `«` and `»`. A single quote, `'` or `’`, is also an apostrophe, as in `the princess' Charles`, so it parts the title from the name only when it opens a quote: a space comes before it and the name comes after it. A slash, a colon, two marks or any other mark after the title leaves the text as written, and so does any mark before a name outside `regnal_names`. The `regnal_names` table holds the names from the Wikipedia lists of monarchs, popes and emperors that the docstring of `en.py` names, such as Adrian, the name of six popes, and Gustav, the name of five kings of Sweden.
 
 A generational suffix from II to IV reads the same way. Wikipedia, "Name suffix", says: "he can use the II suffix, which is pronounced "the second"". The suffix follows exactly two words: a given name and a surname. The file `text2spoken/data/en/given_names.json` holds 6,515 given names, the 1,000 names of each sex that the US Social Security Administration records most often in each year from 1900 to 2020. The file `text2spoken/data/en/surnames.json` holds the 1,000 most frequent surnames of the 2010 US census. Many given names are also words, such as Star or Golden, and the surname check keeps a title of a work such as `Star Trek II` as written. A title of a work, a company, a product or a place that is built from a given name and a surname of the two files reads as a person, as `Harry Potter IV` and `Morgan Stanley III` do. The text alone does not tell such a name from a person.
 
@@ -78,6 +78,8 @@ After a noun of a series, the numeral reads as a cardinal. The nouns of the `rom
 | `Venice gets a queen / Best I've ever seen.` | stays as written | A slash parts the title from the next word. |
 | `The first Bosnian King, Tvrtko I, held the fortress.` | The first Bosnian King, Tvrtko the First, held the fortress. | A comma before a name of `regnal_names` is an apposition. |
 | `I pray God our king [Charles I] may follow him.` | I pray God our king [Charles the First] may follow him. | A bracket before a name of `regnal_names` opens an apposition. |
+| `The emperor «Pedro I» signed the decree.` | The emperor «Pedro the First» signed the decree. | A guillemet opens an apposition. |
+| `Was it the princess' Charles I danced with?` | stays as written | The apostrophe of a possessive opens no apposition, so `I` stays a pronoun. |
 | `Hail the king: Henry V opens tonight.` | stays as written | A colon parts the title from the name. |
 | `Harry Potter IV was a working title.` | Harry Potter the Fourth was a working title. | A title built from a given name and a surname reads as a person. |
 | `Baltimore MD is far.` | stays as written | No rule names `Baltimore`, so the initialism `MD` stays as written. |
@@ -106,6 +108,7 @@ The limits that English shares with Portuguese are on the [Addresses, letters an
 | `It is 6 ft tall.` | `en-GB` | It is six ft tall. | The same rule keeps `ft` as written after a number. |
 | `A 5 µm hole.` | `en-GB` | A five micrometres hole. | A unit before a noun reads in the plural. |
 | `It costs $23,88.` | `en-US` | stays as written | A decimal comma reads only next to `€`, the currency that CLDR writes with the comma in German, Spanish, French and Italian. |
+| `On 5 Jan II Corps attacked.` | `en-GB` | On five Jan the Second Corps attacked. | A name of `regnal_names` reads its numeral anywhere, also in the name of a ship, a club or a military unit. Jan is the name of three kings of Poland and also the short form of January, so a corps after a date reads as a regnal number. |
 
 The limits that English shares with Portuguese are on the [Money, units and symbols](../money-units-and-symbols.md#limits) page.
 
