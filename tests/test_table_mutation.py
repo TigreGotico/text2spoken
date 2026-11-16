@@ -114,6 +114,13 @@ ENTRIES = {
         "currencies": "EUR", "units": "kg", "operators": "+", "patterns": "expression", "abbreviations": "etab.",
         "sentence_final": "etab.",
     },
+    "it": {
+        "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "decimal_word": DELETE, "leads": "pag. ",
+        "percent": "word", "currency_symbols": "CHF", "currency_genders": "GBP", "kept_currency_signs": "$",
+        "scales": "milione", "unit_symbols": "kg", "dimension_marks": "×", "dimension_word": DELETE, "operators": "+", "ordinal_marks": "ª",
+        "half_links": "di", "titles": "Dr.", "abbreviations": "ecc.", "sentence_final": "ecc.",
+        "number_abbreviations": "art.", "patterns": "expression",
+    },
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",
         "range_word": DELETE, "range_marks": "-", "dimension_marks": "×", "dimension_word": DELETE, "time_words": "в",

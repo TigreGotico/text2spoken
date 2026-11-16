@@ -1,0 +1,83 @@
+id	tag	form	text	expected	source	checked_by
+it-001	it-IT	cardinal	Il libro ha 21 pagine.	Il libro ha ventuno pagine.	Treccani Vocabolario, uno: verbatim ventuno pagine; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-002	it-IT	cardinal	Antonio oggi compie 41 anni.	Antonio oggi compie quarantuno anni.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: the compound può essere apocopato before its noun, (25) quarantun anni, so the full form also stands; Treccani Vocabolario, ventuno: i ventuno (o i ventun) giorni; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-003	it-IT	cardinal	Nel libro ci sono 1.250 pagine.	Nel libro ci sono milleduecentocinquanta pagine.	CLDR 49 it number symbols: group mark .; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-004	it-IT	cardinal	Il termometro segna -4.	Il termometro segna meno quattro.	Treccani Vocabolario, meno: verbatim il termometro segna m. quattro (-4); CLDR 49 RBNF it: -x: meno	unchecked
+it-005	it-IT	cardinal	Leggi il capitolo 1.	Leggi il capitolo uno.	Treccani Vocabolario, uno, 1: il numero uno, a pagina uno; Treccani Vocabolario, ventuno: il capitolo ventuno	unchecked
+it-006	it-IT	cardinal	C'è 1 milione di abitanti.	C'è un milione di abitanti.	Treccani Vocabolario, milione: un milione di euro; Treccani Enciclopedia dell'Italiano, numerali: uno subisce apocope là dove la subirebbe l'articolo indeterminativo	unchecked
+it-007	it-IT	cardinal	Sono arrivati 108 ospiti.	Sono arrivati centootto ospiti.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: (29) centootto [raramente centotto]	unchecked
+it-008	it-IT	cardinal	Le pagine sono 101.	Le pagine sono centouno.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: (28) centouno [raramente centuno]; Treccani Vocabolario, uno: centouno o, raro, centuno	unchecked
+it-009	it-IT	cardinal	Nel 1983 aveva 23 anni.	Nel millenovecentottantatré aveva ventitré anni.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: I composti di tre vanno accentati, Ventitré anni; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-010	it-IT	cardinal	Siamo nel 2021.	Siamo nel duemilaventuno.	CLDR 49 RBNF it, spellout-numbering; Treccani Vocabolario, mila: duemila	unchecked
+it-011	it-IT	cardinal	Ho visto 1 gatto.	Ho visto 1 gatto.	Treccani Enciclopedia dell'Italiano, numerali, Cardinali: uno varia secondo il genere; the file does not know the gender of the word after 1, so 1 stays as written	unchecked
+it-012	it-IT	cardinal	Arrivano tra 1 e 2 ore.	Arrivano tra 1 e due ore.	Treccani Enciclopedia dell'Italiano, numerali, Cardinali: uno varia secondo il genere; the noun ore comes after the 1, so 1 stays as written; 2 reads due by CLDR 49 RBNF it	unchecked
+it-013	it-CH	cardinal	Ci sono 1'000 persone.	Ci sono mille persone.	CLDR 49 it_CH number symbols: group mark '; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-014	it-SM	cardinal	Ci sono 1.000 persone.	Ci sono mille persone.	CLDR 49 it_SM number symbols, from it: group mark .; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-015	it-IT	cardinal	Vedi a pag. 40.	Vedi a pagina quaranta.	Treccani Vocabolario, pagina: verbatim vedi a pagina (abbrev. p. o pag.) 40	unchecked
+it-016	it-IT	decimal	Il valore è 3,14.	Il valore è tre virgola uno quattro.	CLDR 49 RBNF it, spellout-numbering: x.x: ←← virgola →→, the digits after the mark one by one; CLDR 49 it number symbols: decimal mark ,	unchecked
+it-017	it-IT	decimal	Il prezzo medio è 2,50.	Il prezzo medio è due virgola cinque zero.	CLDR 49 RBNF it, spellout-numbering: x.x: ←← virgola →→, the digits after the mark one by one	unchecked
+it-018	it-CH	decimal	La media è 3.5.	La media è 3.5.	it-CH keeps a number with a decimal point as written: Italian text also writes a thousands group with the point (CLDR 49 it number symbols: group mark .), and CGPM 2003 Resolution 10 allows the point and the comma as decimal markers	unchecked
+it-019	it-SM	decimal	La media è 3,5.	La media è tre virgola cinque.	CLDR 49 it_SM number symbols, from it: decimal mark ,; CLDR 49 RBNF it, spellout-numbering: x.x: ←← virgola →→	unchecked
+it-020	it-IT	percent	L'interesse è del 9%.	L'interesse è del nove per cento.	Treccani Vocabolario, per cento: n per cento (simbolo: n%), Interesse del 9%	unchecked
+it-021	it-IT	percent	Il 3,5% dei voti.	Il tre virgola cinque per cento dei voti.	Treccani Vocabolario, per cento; CLDR 49 RBNF it, spellout-numbering: x.x: ←← virgola →→	unchecked
+it-022	it-CH	percent	Il 3.5% dei voti.	Il 3.5% dei voti.	it-CH keeps a number with a decimal point as written: Italian text also writes a thousands group with the point (CLDR 49 it number symbols: group mark .), and CGPM 2003 Resolution 10 allows the point and the comma as decimal markers	unchecked
+it-023	it-IT	fraction	Ancora 1/2 di vino.	Ancora un mezzo di vino.	Treccani Vocabolario, mezzo (1), 1: verbatim ancora un mezzo di vino; mezzo (1), 5: un mezzo, una metà	unchecked
+it-024	it-IT	fraction	I 3/4 della popolazione.	I tre quarti della popolazione.	Treccani Enciclopedia dell'Italiano, numerali, Frazionari: un aggettivo numerale cardinale e un ordinale (un terzo, due quinti, quattro decimi); CLDR 49 RBNF it, spellout-ordinal-masculine-plural	unchecked
+it-025	it-IT	fraction	Ha vinto 1/3 dei voti.	Ha vinto un terzo dei voti.	Treccani Enciclopedia dell'Italiano, numerali, Frazionari: verbatim un terzo	unchecked
+it-026	it-IT	fraction	Mancano 2/5 del percorso.	Mancano due quinti del percorso.	Treccani Enciclopedia dell'Italiano, numerali, Frazionari: verbatim due quinti	unchecked
+it-027	it-IT	fraction	Ne restano 4/10.	Ne restano quattro decimi.	Treccani Enciclopedia dell'Italiano, numerali, Frazionari: verbatim quattro decimi	unchecked
+it-028	it-IT	fraction	Mi dia 1/2 chilo.	Mi dia 1/2 chilo.	Treccani Enciclopedia dell'Italiano, numerali, Frazionari: mezzo chilo di patate e mezza lattuga, mezzo agrees with its noun, so 1/2 before a noun stays as written	unchecked
+it-029	it-IT	ordinal	È arrivato 8º.	È arrivato ottavo.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: (41) sono arrivato soltanto ottavo, (42) 8°, the sign ‹º› per il genere maschile	unchecked
+it-030	it-IT	ordinal	È la 2ª volta.	È la seconda volta.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: ‹ª› per il genere femminile; CLDR 49 RBNF it, spellout-ordinal-feminine	unchecked
+it-031	it-IT	ordinal	Festeggiano il 25º anniversario.	Festeggiano il venticinquesimo anniversario.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: (46) Nel giorno del 25esimo anniversario; CLDR 49 RBNF it, spellout-ordinal-masculine	unchecked
+it-032	it-IT	ordinal	Il 150º anniversario.	Il 150º anniversario.	CLDR 49 RBNF it writes centoottantesimo for 180, so the file reads no ordinal above 100	unchecked
+it-033	it-IT	ordinal	Il 1° maggio.	Il 1° maggio.	CLDR 49 it units: ° is the symbol of both angle-degree and temperature-generic, so the degree sign is no ordinal mark	unchecked
+it-034	it-IT	money	Il biglietto costa 15 €.	Il biglietto costa quindici euro.	CLDR 49 it currencies: EUR other euro; Treccani Vocabolario, euro (1): s. m. [...] invar.	unchecked
+it-035	it-IT	money	Il caffè costa 1 €.	Il caffè costa un euro.	CLDR 49 it currencies: EUR; Treccani Vocabolario, euro (1): s. m.; Treccani Enciclopedia dell'Italiano, numerali: uno subisce apocope là dove la subirebbe l'articolo indeterminativo	unchecked
+it-036	it-IT	money	Costa 1 £.	Costa una sterlina britannica.	CLDR 49 it currencies: GBP one sterlina britannica; Treccani Vocabolario, sterlina: s. f.	unchecked
+it-037	it-IT	money	Costa 21 £.	Costa ventuno sterline britanniche.	CLDR 49 it currencies: GBP other sterline britanniche; Treccani Vocabolario, uno: ventuno pagine	unchecked
+it-038	it-IT	money	Costano € 2 milioni.	Costano due milioni di euro.	Treccani Enciclopedia dell'Italiano, numerali, Cardinali: milione, miliardo seguiti dalla preposizione di qualora precedano un altro nome; CLDR 49 it currencies: EUR	unchecked
+it-039	it-CH	money	Costa 20 CHF.	Costa venti franchi svizzeri.	CLDR 49 it_CH currencies: CHF other franchi svizzeri	unchecked
+it-040	it-IT	money	Costa 30 USD.	Costa trenta dollari statunitensi.	CLDR 49 it currencies: USD other dollari statunitensi	unchecked
+it-041	it-SM	money	Costa 5 €.	Costa cinque euro.	CLDR 49 it_SM currencies, from it: EUR other euro	unchecked
+it-042	it-IT	money	Costa 12,50 €.	Costa 12,50 €.	no source of this file gives the reading of the minor unit, so an amount with decimals stays as written	unchecked
+it-043	it-IT	measure	Pesa 5 kg.	Pesa cinque chilogrammi.	CLDR 49 it units: mass-kilogram long other {0} chilogrammi	unchecked
+it-044	it-IT	measure	Ho camminato 1 km.	Ho camminato un chilometro.	Treccani Vocabolario, uno: verbatim camminai un chilometro; CLDR 49 it units: length-kilometer one, gender masculine	unchecked
+it-045	it-IT	measure	Il film dura 1 h.	Il film dura una ora.	CLDR 49 it units: duration-hour one {0} ora, gender feminine; Treccani Vocabolario, uno: il femm. sing. una può subire elisione	unchecked
+it-046	it-IT	measure	Aspetta 1 min.	Aspetta un minuto.	Treccani Vocabolario, uno: verbatim un minuto; CLDR 49 it units: duration-minute, gender masculine	unchecked
+it-047	it-IT	measure	Va a 50 km/h.	Va a cinquanta chilometri orari.	CLDR 49 it units: speed-kilometer-per-hour other {0} chilometri orari	unchecked
+it-048	it-IT	measure	Fuori ci sono 25 °C.	Fuori ci sono venticinque gradi Celsius.	CLDR 49 it units: temperature-celsius other {0} gradi Celsius	unchecked
+it-049	it-IT	measure	Il tavolo misura 15 × 8 cm.	Il tavolo misura quindici per otto centimetri.	Treccani Vocabolario, per, 5: a × b [...] si legge: a per b; CLDR 49 it units: length-centimeter	unchecked
+it-050	it-IT	measure	Sono 1,5 km.	Sono uno virgola cinque chilometri.	CLDR 49 RBNF it, spellout-numbering: x.x: ←← virgola →→; CLDR 49 plural rules it: one is i = 1 and v = 0, so 1,5 takes other	unchecked
+it-051	it-CH	measure	La strada è lunga 2.5 km.	La strada è lunga 2.5 km.	it-CH keeps a number with a decimal point as written: Italian text also writes a thousands group with the point (CLDR 49 it number symbols: group mark .), and CGPM 2003 Resolution 10 allows the point and the comma as decimal markers	unchecked
+it-052	it-IT	measure	Fa 30° oggi.	Fa 30° oggi.	CLDR 49 it units: ° is the symbol of both angle-degree and temperature-generic, so it reads no unit	unchecked
+it-053	it-IT	expression	4 + 5 = 9	quattro più cinque è uguale a nove	Treccani Vocabolario, più: verbatim quattro più cinque è uguale a nove (in simboli: 4 + 5 = 9)	unchecked
+it-054	it-IT	expression	13 − 8 = 5	tredici meno otto è uguale a cinque	Treccani Vocabolario, meno: verbatim tredici meno otto è uguale a cinque (in cifre: 13-8=5)	unchecked
+it-055	it-IT	expression	3 × 4 = 12	tre per quattro è uguale a dodici	Treccani Vocabolario, per, 5: a × b [...] si legge: a per b; Treccani Vocabolario, più: è uguale a	unchecked
+it-056	it-IT	abbreviation	Il Dr. Rossi ha 10 pazienti.	Il dottor Rossi ha dieci pazienti.	Treccani Vocabolario, dr.: Scrittura abbreviata di dottore; dottore, 4: il dottor Graziano	unchecked
+it-057	it-IT	abbreviation	Il Sig. Bianchi ha 20 anni.	Il signor Bianchi ha venti anni.	Treccani Vocabolario, sig.: Abbreviazione di signore; signore, 2: il signor Rossi	unchecked
+it-058	it-IT	abbreviation	La Sig.ra Verdi ha comprato 4 arance.	La signora Verdi ha comprato quattro arance.	Treccani Vocabolario, signora: Alla sig.ra Luisa Rossi	unchecked
+it-059	it-IT	abbreviation	La Sig.na Russo ha 23 anni.	La signorina Russo ha ventitré anni.	Treccani Vocabolario, signorina: Alla sig.na Claudia Bianchi	unchecked
+it-060	it-IT	abbreviation	La Dott.ssa Neri lavora qui da 10 anni.	La dottoressa Neri lavora qui da dieci anni.	Treccani Vocabolario, dott.: abbreviando dottoressa in dott.ssa	unchecked
+it-061	it-IT	abbreviation	Il Prof. Gallo ha 2 lezioni.	Il professor Gallo ha due lezioni.	Treccani Vocabolario, prof.: Abbreviazione frequente di professore; professore: il professor Moretti	unchecked
+it-062	it-IT	abbreviation	La prof.ssa Moretti spiega.	La professoressa Moretti spiega.	Treccani Vocabolario, prof.: per il femm. professoressa si usa o prof. o [...] prof.ssa	unchecked
+it-063	it-IT	abbreviation	Scrivo al sig. Mario Rossi.	Scrivo al signor Mario Rossi.	Treccani Vocabolario, signore, 2: verbatim al sig. Mario Rossi, il signor Mario Rossi	unchecked
+it-064	it-IT	abbreviation	Il dott. Bruni è in ferie.	Il dottor Bruni è in ferie.	Treccani Vocabolario, dott.: Scrittura abbreviata di dottore; dottore, 4: il dottor Graziano	unchecked
+it-065	it-SM	abbreviation	Sig. Rossi, prego.	Signor Rossi, prego.	Treccani Vocabolario, signore, 2: il signor Rossi; the word takes a capital where the clause starts	unchecked
+it-066	it-IT	abbreviation	Leggi l'art. 3 della Costituzione.	Leggi l'articolo tre della Costituzione.	Treccani Vocabolario, art.: Abbreviazione grafica di articolo	unchecked
+it-067	it-IT	abbreviation	Compra pane, latte, ecc.	Compra pane, latte, eccetera.	Treccani Vocabolario, ecc.: Abbreviazione di eccetera	unchecked
+it-068	it-IT	symbol	© 2024 Rossi.	copyright duemilaventiquattro Rossi.	CLDR 49 it annotations: © tts copyright; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-069	it-IT	symbol	Premi →.	Premi freccia verso destra.	CLDR 49 it annotations: → tts freccia verso destra	unchecked
+it-070	it-IT	emoji	Che ridere 😂	Che ridere faccina con lacrime di gioia	CLDR 49 it annotations: 😂 tts faccina con lacrime di gioia	unchecked
+it-071	it-IT	none	Il formato è 16:9 e il versetto è 3:16.	Il formato è 16:9 e il versetto è 3:16.	text2spoken-design section 4.2: the file reads no time	unchecked
+it-072	it-IT	none	Seguimi su #decade.	Seguimi su #decade.	text2spoken-design section 4.2: # is no lead in it	unchecked
+it-073	it-IT	none	La data 13/13/2024 non esiste.	La data 13/13/2024 non esiste.	text2spoken-design section 4.2: no month 13	unchecked
+it-074	it-IT	none	Ci vediamo il 12/03/2024 alle 14:30.	Ci vediamo il 12/03/2024 alle 14:30.	ovos-date-parser 0.36.4a1 spoken_date and spoken_time raise UnsupportedForm for it-IT, so the file reads no date and no time	unchecked
+it-075	it-IT	cardinal	Nel 2003 si è laureato.	Nel duemilatré si è laureato.	Treccani Enciclopedia dell'Italiano, numerali, Pronuncia e grafia: I composti di tre vanno accentati; CLDR 49 RBNF it, spellout-numbering	unchecked
+it-076	it-IT	money	Costa 10 EUR.	Costa dieci euro.	CLDR 49 it currencies: EUR other euro, the ISO 4217 code as a symbol	unchecked
+it-077	it-IT	cardinal	Il termometro segna +3.	Il termometro segna più tre.	Treccani Vocabolario, più: verbatim stamattina il termometro segna appena più tre (+ 3)	unchecked
+it-078	it-CH	none	La riunione è alle 8.00.	La riunione è alle 8.00.	it-CH keeps a number with a decimal point as written: Italian text also writes a thousands group with the point (CLDR 49 it number symbols: group mark .), and CGPM 2003 Resolution 10 allows the point and the comma as decimal markers; FLORES-200 devtest writes a clock time as alle 8.00	unchecked
+it-079	it-CH	none	Il totale è 6.000 franchi.	Il totale è 6.000 franchi.	it-CH keeps a number with a decimal point as written: Italian text also writes a thousands group with the point (CLDR 49 it number symbols: group mark .), and CGPM 2003 Resolution 10 allows the point and the comma as decimal markers; a lone point before three digits fits both readings	unchecked
+it-080	it-IT	money	Le banconote da 5 $ e 100 $.	Le banconote da 5 $ e 100 $.	CLDR 49 it currencies: $ is the narrow symbol of USD and of other dollars, so the extractor leaves it out and the amount stays as written	unchecked
+it-081	it-IT	money	Costa 2.500 ¥.	Costa 2.500 ¥.	CLDR 49 it currencies: ¥ is the narrow symbol of JPY and CNY, so the extractor leaves it out and the amount stays as written	unchecked
+it-082	it-CH	none	Negli anni '60 si ballava.	Negli anni '60 si ballava.	CLDR 49 it_CH number symbols: the group mark is ', so a ' before digits joins the cluster and the number gives no reading (text2spoken core, numbers.find_numbers)	unchecked

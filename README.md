@@ -48,6 +48,7 @@ A tag with no language file reads cardinal numbers from the CLDR spell-out rules
 | [English](docs/languages/en.md) | `en-GB`, `en-US` | none |
 | [Spanish](docs/languages/es.md) | `es-ES`, `es-419` and eleven American varieties | `es` |
 | [Basque](docs/languages/eu.md) | `eu-ES` | `eu` |
+| [Italian](docs/languages/it.md) | `it-IT`, `it-CH`, `it-SM` | none |
 | [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` | `pt` |
 | [Russian](docs/languages/ru.md) | `ru-RU` | `ru` |
 

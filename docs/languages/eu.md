@@ -72,4 +72,4 @@ These forms stay as written in Basque:
 | `Trena 15:00 irteten da.` | stays as written | A clock time with no case ending and no day period stays as written, as in a timetable. |
 
 ---
-[← Spanish](es.md) · [Home](../index.md) · [Portuguese →](pt.md)
+[← Spanish](es.md) · [Home](../index.md) · [Italian →](it.md)
