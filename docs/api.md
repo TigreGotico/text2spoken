@@ -1,6 +1,6 @@
 # API
 
-Every name on this page imports from `text2spoken`.
+This page gives each function, param and record of text2spoken. Every name on this page imports from `text2spoken`.
 
 | Function | Returns |
 | --- | --- |
@@ -15,10 +15,9 @@ Every name on this page imports from `text2spoken`.
 ## normalize
 
 ```python
-from text2spoken import normalize
-
-normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB")
-# 'Doctor Smith paid three pounds and fifty pence for two tickets on the fourteenth of March twenty twenty-four.'
+>>> from text2spoken import normalize
+>>> normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB")
+'Doctor Smith paid three pounds and fifty pence for two tickets on the fourteenth of March twenty twenty-four.'
 ```
 
 `params=None` gives `NormalizationParams()`, the defaults of the language variety. `tokenizer=None` gives the default tokenizer.
@@ -28,13 +27,12 @@ normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB")
 `analyze` finds the spans and reads nothing. `render` reads the spans of an `Analysis`. A frontend that knows more about a sentence than the library, such as the gender of a noun, calls the two steps and gives `render` a hint:
 
 ```python
-from text2spoken import analyze, render
-
-analysis = analyze("Gate 7 opens at 9:15.", "en-US")
-[(span.start, span.end, span.form) for span in analysis.spans]
-# [(5, 6, <Form.CARDINAL: 'cardinal'>), (16, 20, <Form.TIME: 'time'>)]
-render(analysis)
-# 'Gate seven opens at nine fifteen.'
+>>> from text2spoken import analyze, render
+>>> analysis = analyze("Gate 7 opens at 9:15.", "en-US")
+>>> [(span.start, span.end, span.form) for span in analysis.spans]
+[(5, 6, <Form.CARDINAL: 'cardinal'>), (16, 20, <Form.TIME: 'time'>)]
+>>> render(analysis)
+'Gate seven opens at nine fifteen.'
 ```
 
 An `Analysis` has these fields:
@@ -54,20 +52,27 @@ A `Span` has `start` and `end`, the code point offsets of the span in the text, 
 In many languages a number agrees with its noun. `hints` maps the start offset of a span to `Features`, for example a grammatical gender:
 
 ```python
-from text2spoken import Features, GrammaticalGender
-
-analysis = analyze("Comprei 2 e paguei 3 €.", "pt-PT")
-render(analysis)
-# 'Comprei dois e paguei três euros.'
-render(analysis, {8: Features(gender=GrammaticalGender.FEMININE)})
-# 'Comprei duas e paguei três euros.'
+>>> from text2spoken import Features, GrammaticalGender
+>>> analysis = analyze("Comprei 2 e paguei 3 €.", "pt-PT")
+>>> render(analysis)
+'Comprei dois e paguei três euros.'
+>>> render(analysis, {8: Features(gender=GrammaticalGender.FEMININE)})
+'Comprei duas e paguei três euros.'
 ```
 
 `Features` has the fields `gender` (a `GrammaticalGender`), `animacy` (an `Animacy`), `noun_class`, `number` (`"singular"`, `"plural"` or `"dual"`), `case`, `numeral_system` and `definite`. Each field is `None` by default. A language names its own cases, noun classes and numeral systems, such as `"genitive"`.
 
-A hint replaces the features that the context of the span gives. So a hint gives each feature that the reading needs: in Russian, `в 1 квартире` reads "в одной квартире" with `Features(gender=GrammaticalGender.FEMININE, case="prepositional")`, and "в одна квартире" with the gender alone.
+For a German number and a Russian cardinal, a hint replaces all the features that the context of the span gives, so the hint gives each feature that the reading needs. Other readings, such as an Arabic number or a Russian decimal, keep each context feature that the hint does not set. In Russian, the hint below needs the case as well as the gender:
 
-A hint is data. It does not change which forms the library finds. A hint for a span whose reading takes no features has no effect. A hint at an offset where no span starts gives a `HintWarning`, or `InvalidHintError` in strict mode. A language with no genders ignores a gender in a hint. [Errors and warnings](errors.md) gives the case of a gender that a language does not have.
+```python
+>>> analysis = analyze("в 1 квартире", "ru-RU")
+>>> render(analysis, {2: Features(gender=GrammaticalGender.FEMININE, case="prepositional")})
+'в одной квартире'
+>>> render(analysis, {2: Features(gender=GrammaticalGender.FEMININE)})
+'в одна квартире'
+```
+
+A hint is data. It does not change which forms the library finds. A hint for a span whose reading takes no features has no effect. A hint at an offset where no span starts gives a `HintWarning`, or `InvalidHintError` in strict mode. A language with no genders ignores a gender in a hint. [Errors and warnings](errors.md#genders) gives the case of a gender that a language does not have.
 
 `GrammaticalGender` has the values `MASCULINE`, `FEMININE`, `NEUTER` and `COMMON`. `Animacy` has the values `ANIMATE`, `INANIMATE` and `PERSONAL`. `supports(lang).genders` and `supports(lang).animacies` give the values that a language reads.
 
@@ -90,12 +95,11 @@ A hint is data. It does not change which forms the library finds. A hint for a s
 `effective_params(lang, params)` gives the params that apply to a call. Each `None` becomes the default of the language variety. A value that the language cannot produce becomes the value that applies instead, with a `ParameterNotHonouredWarning`:
 
 ```python
-from text2spoken import NormalizationParams, effective_params
-
-effective_params("en-US").date_order
-# 'MDY'
-effective_params("pt-BR").scale
-# 'short'
+>>> from text2spoken import NormalizationParams, effective_params
+>>> effective_params("en-US").date_order
+'MDY'
+>>> effective_params("pt-BR").scale
+'short'
 ```
 
 A test can assert the effective params of a call, with no log to read.
@@ -114,71 +118,41 @@ A test can assert the effective params of a call, with no log to read.
 | `scale` | `short`, `long`: `10^9` as a billion or a thousand million |
 | `default_gender` | A `FrozenMap` of language code to `GrammaticalGender` |
 | `register` | `formal`, `colloquial` |
-| `phone_regions` | ISO 3166 region codes for telephone number plans |
-| `lexicon` | A `FrozenMap` of language tag to a `FrozenMap` of written form to spoken words |
+| `phone_regions` | ISO 3166 region codes for telephone number plans. [Numbers](numbers.md#telephone-numbers) shows the evidence that reads a phone number |
+| `lexicon` | A `FrozenMap` of language tag to a `FrozenMap` of written form to spoken words. [Usage](usage.md#add-your-own-words) gives the matching rules |
 | `strict` | `True` raises an error where the default mode logs a warning |
 
 ```python
-from text2spoken import Form
-
-normalize("Due 12/03/2024.", "en-GB", NormalizationParams(date_order="MDY"))
-# 'Due the third of December twenty twenty-four.'
-normalize("Pagou 1000000000 €.", "pt-PT", NormalizationParams(scale="short"))
-# 'Pagou um bilião de euros.'
-normalize("Meet at 2:30.", "en-GB", NormalizationParams(minute_style="phrase"))
-# 'Meet at half past two.'
+>>> from text2spoken import Form
+>>> normalize("Due 12/03/2024.", "en-GB", NormalizationParams(date_order="MDY"))
+'Due the third of December twenty twenty-four.'
+>>> normalize("Pagou 1000000000 €.", "pt-PT", NormalizationParams(scale="short"))
+'Pagou um bilião de euros.'
+>>> normalize("Meet at 2:30.", "en-GB", NormalizationParams(minute_style="phrase"))
+'Meet at half past two.'
 ```
 
 `default_gender` holds one gender for each language, keyed by the code of the language file. It gives the gender of a number when the context gives none:
 
 ```python
-from text2spoken import FrozenMap
-
-normalize("Comprei 2.", "pt-PT", NormalizationParams(default_gender=FrozenMap({"pt": GrammaticalGender.FEMININE})))
-# 'Comprei duas.'
-```
-
-`phone_regions=None` takes the region of the tag, when the language has a numbering plan for it. A run of digits reads as a phone number on any of four kinds of evidence: a `+` or `00` prefix and a country code, a trunk prefix of a region in `phone_regions`, a phone shape of the language, such as `(212) 555-0123`, or a phone word before the run, such as `Call`. With no plan for a region, the other three still apply:
-
-```python
-normalize("Room 02079460958.", "en-GB")
-# 'Room zero two zero seven nine four six zero nine five eight.'
-normalize("Room 02079460958.", "en-GB", NormalizationParams(phone_regions=frozenset()))
-# 'Room 02079460958.'
-normalize("Call 02079460958.", "en-GB", NormalizationParams(phone_regions=frozenset()))
-# 'Call zero two zero seven nine four six zero nine five eight.'
+>>> from text2spoken import FrozenMap
+>>> normalize("Comprei 2.", "pt-PT", NormalizationParams(default_gender=FrozenMap({"pt": GrammaticalGender.FEMININE})))
+'Comprei duas.'
 ```
 
 `FrozenMap` is an immutable, hashable mapping, sorted by key. `FrozenMap({"pt": FrozenMap({"ACME": "ácmi"})})` builds a lexicon.
-
-### The lexicon
-
-A lexicon entry reads a form your way:
-
-```python
-params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"NHS": "N H S"})}))
-normalize("Ask the NHS today.", "en-GB", params)
-# 'Ask the N H S today.'
-```
-
-An entry matches a whole written form, with its case. The character before the match and the character after it must not be a letter, a digit or a combining mark. An apostrophe counts as a limit, so `ACME` matches in `ACME's` and in `l'ACME`. When two keys match at one position, the longer key wins. The library takes the entries of the primary language subtag, then the entries of the full tag, which replace them key by key. `without(Form.LEXICON)` turns the lexicon off for one call.
-
-A lexicon value that holds a form that the library reads raises `InvalidLexiconError`, because a second pass would read it. An entry that keeps its key, such as `{"MIX": "MIX"}`, is allowed.
 
 ## Your own tokenizer
 
 The `tokenizer` argument takes a callable `(text, lang)` that returns a sequence of `Token(start, end, text)`. Give it when your pipeline already splits text into tokens, so that the spans and the context words follow your tokens. With no tokenizer, the library uses its default, `default_tokenizer`.
 
 ```python
-import re
-
-from text2spoken import Token
-
-def by_space(text, lang):
-    return [Token(m.start(), m.end(), m.group()) for m in re.finditer(r"\S+", text)]
-
-normalize("Pay $5 now.", "en-US", tokenizer=by_space)
-# 'Pay five dollars now.'
+>>> import re
+>>> from text2spoken import Token
+>>> def by_space(text, lang):
+...     return [Token(m.start(), m.end(), m.group()) for m in re.finditer(r"\S+", text)]
+>>> normalize("Pay $5 now.", "en-US", tokenizer=by_space)
+'Pay five dollars now.'
 ```
 
 Each offset counts Unicode code points of the text as the caller gives it. A token must match the text at its offsets, and the tokens must be in order with no overlap. A tokenizer that breaks one of these rules raises `TokenizerError`. A token can set `clause_end=True` to mark the end of a clause, so that no reading looks at the words after it. `Tokenizer` is the protocol of such a callable.
@@ -194,4 +168,4 @@ python -m text2spoken.export en
 If the tag is not valid, or if no language file reads the tag, the command writes one error line and exits with code 1.
 
 ---
-[← How it reads text](how-it-reads.md) · [Home](index.md) · [Errors and warnings →](errors.md)
+[← Addresses, letters and emoji](addresses-letters-and-emoji.md) · [Home](index.md) · [Errors and warnings →](errors.md)
