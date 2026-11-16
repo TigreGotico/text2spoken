@@ -15,6 +15,8 @@ The file reads every form except identifiers. The `LETTERS` and `EMOJI` forms ar
 | `Write to ann@example.com.` | `en-GB` | Write to ann at example dot com. |
 | `Call 911 now.` | `en-US` | Call nine one one now. |
 | `© 2024` | `en-GB` | copyright two thousand and twenty-four |
+| `The Prof. arrived.` | `en-US` | The Professor arrived. |
+| `It costs 23,88 €.` | `en-US` | It costs twenty-three euros and eighty-eight cents. |
 
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which English reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
@@ -44,17 +46,17 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 581 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 609 rows.
 
 ## Roman numerals
 
 A Roman numeral reads only where a rule gives its reading. Every other numeral stays as written, because a capitalised word alone does not tell a title of a work, a product or a council from a name.
 
-A regnal number reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". A regnal number follows a regnal title and a name, such as King, Queen, Pope, Saint, Emperor or Tsar before the name, or a name of the `regnal_names` table. That table holds the names from the Wikipedia lists of monarchs, popes and emperors that the docstring of `en.py` names.
+A regnal number reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". A regnal number follows a regnal title and a name, such as King, Queen, Pope, Saint, Emperor or Tsar before the name, or a name of the `regnal_names` table. Only spaces part the title, the name and the numeral. A comma, a bracket or a quote can also part the title from a name of `regnal_names`, as an apposition does in `the Holy Roman Emperor, Henry V` and `our king [Charles I]`. A slash, a colon or any other mark after the title leaves the text as written, and so does any mark before a name outside `regnal_names`. The `regnal_names` table holds the names from the Wikipedia lists of monarchs, popes and emperors that the docstring of `en.py` names, such as Adrian, the name of six popes, and Gustav, the name of five kings of Sweden.
 
-A generational suffix from II to IV reads the same way. Wikipedia, "Name suffix", says: "he can use the II suffix, which is pronounced "the second"". The suffix follows exactly two words: a given name and a surname. The file `text2spoken/data/en/given_names.json` holds 6,515 given names, the 1,000 names of each sex that the US Social Security Administration records most often in each year from 1900 to 2020. The file `text2spoken/data/en/surnames.json` holds the 1,000 most frequent surnames of the 2010 US census. Many given names are also words, such as Star or Golden, and the surname check keeps a title of a work such as `Star Trek II` as written.
+A generational suffix from II to IV reads the same way. Wikipedia, "Name suffix", says: "he can use the II suffix, which is pronounced "the second"". The suffix follows exactly two words: a given name and a surname. The file `text2spoken/data/en/given_names.json` holds 6,515 given names, the 1,000 names of each sex that the US Social Security Administration records most often in each year from 1900 to 2020. The file `text2spoken/data/en/surnames.json` holds the 1,000 most frequent surnames of the 2010 US census. Many given names are also words, such as Star or Golden, and the surname check keeps a title of a work such as `Star Trek II` as written. A title of a work, a company, a product or a place that is built from a given name and a surname of the two files reads as a person, as `Harry Potter IV` and `Morgan Stanley III` do. The text alone does not tell such a name from a person.
 
-After a noun of a series, the numeral reads as a cardinal. The nouns of the `roman_nouns` table are chapter, volume, book, act, grade, episode, section, part, phase, class, level, stage, type, war, and the names World War and Super Bowl. A numeral of the `roman_words` table, such as `XL`, `MX` or `CD`, is also a word or an initialism, so after a noun of a series it reads only when no word in lowercase follows it. A numeral of one letter reads only after a regnal title and a name, and after a noun of two words. After a name, the numeral reads only up to 30.
+After a noun of a series, the numeral reads as a cardinal. The nouns of the `roman_nouns` table are chapter, volume, book, act, grade, episode, section, part, phase, class, level, stage, type, war, and the names World War and Super Bowl. A numeral of the `roman_words` table, such as `XL`, `MX` or `CD`, is also a word or an initialism. It reads only after a noun of the `roman_letter_nouns` table, whose members take numbers and never letters (chapter, volume, book, act, episode, war, World War and Super Bowl), and only when no word in lowercase follows it. A class, a type, a part, a phase, a grade, a section, a stage and a level are labelled with letters too, so after these nouns a numeral of `roman_words` stays as written. A numeral of one letter reads only after a regnal title and a name, and after a noun of two words. After a name, the numeral reads only up to 30.
 
 | Written | Spoken (`en-GB`) | Note |
 | --- | --- | --- |
@@ -68,8 +70,16 @@ After a noun of a series, the numeral reads as a cardinal. The nouns of the `rom
 | `Read Chapter XL.` | Read Chapter Forty. | `XL` is a word of `roman_words`, and no word in lowercase follows it. |
 | `Type II diabetes.` | Type Two diabetes. | A noun of a series. |
 | `It is a type MX record.` | stays as written | `MX` is an initialism of `roman_words`, and a word in lowercase follows it. |
+| `He drove a Class CL.` | stays as written | A class is labelled with letters too. |
+| `The Super Bowl XL Champions came home.` | The Super Bowl Forty Champions came home. | Super Bowl takes numbers and never letters. |
 | `World War I began.` | World War One began. | One letter reads after a noun of two words. |
 | `Malcolm X spoke.` | stays as written | One letter after a name needs a regnal title. Malcolm is also the name of four kings of Scotland. |
+| `Adrian IV was the only English pope.` | Adrian the Fourth was the only English pope. | A name of `regnal_names`. |
+| `Venice gets a queen / Best I've ever seen.` | stays as written | A slash parts the title from the next word. |
+| `The first Bosnian King, Tvrtko I, held the fortress.` | The first Bosnian King, Tvrtko the First, held the fortress. | A comma before a name of `regnal_names` is an apposition. |
+| `I pray God our king [Charles I] may follow him.` | I pray God our king [Charles the First] may follow him. | A bracket before a name of `regnal_names` opens an apposition. |
+| `Hail the king: Henry V opens tonight.` | stays as written | A colon parts the title from the name. |
+| `Harry Potter IV was a working title.` | Harry Potter the Fourth was a working title. | A title built from a given name and a surname reads as a person. |
 | `Baltimore MD is far.` | stays as written | No rule names `Baltimore`, so the initialism `MD` stays as written. |
 
 ## Runs of capital letters
@@ -95,7 +105,7 @@ The limits that English shares with Portuguese are on the [Addresses, letters an
 | `Maroon 5 ft. Cardi B` | `en-GB` | Maroon five ft. Cardi B | `ft` does not read as feet, because `ft.` also names "featuring" in a music credit. |
 | `It is 6 ft tall.` | `en-GB` | It is six ft tall. | The same rule keeps `ft` as written after a number. |
 | `A 5 µm hole.` | `en-GB` | A five micrometres hole. | A unit before a noun reads in the plural. |
-| `It costs €12,50.` | `en-GB` | stays as written | A euro amount with a comma for the decimal mark stays as written. |
+| `It costs $23,88.` | `en-US` | stays as written | A decimal comma reads only next to `€`, the currency that CLDR writes with the comma in German, Spanish, French and Italian. |
 
 The limits that English shares with Portuguese are on the [Money, units and symbols](../money-units-and-symbols.md#limits) page.
 
@@ -117,7 +127,7 @@ Some English letter names do not read right in every English phonemizer, and no 
 
 ### Addresses on a second pass
 
-A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Four rules cause it:
+A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Five rules cause it:
 
 | Written | Spoken (`en-GB`) | Second pass (`en-GB`) | Why |
 | --- | --- | --- | --- |
@@ -126,6 +136,8 @@ A word of a spoken address can become the key or the context of another form on 
 | `Write x.com@ (9:30)` | Write ex dot com at (9:30) | Write ex dot com at (nine thirty) | The same holds inside brackets. |
 | `See example.com/May 05 for details.` | See example dot com slash May 05 for details. | See example dot com slash May fifth for details. | A month name as the first or the last label of an address forms a date with the digits next to it. |
 | `On 05 May@x.com we met.` | On 05 May at ex dot com we met. | On the fifth of May at ex dot com we met. | The same rule, with the month name as the first label. |
+| `Pay 2,51 €m.www.x.in` | Pay 2,51 € em dot double-u double-u double-u dot ex dot i en | Pay two euros and fifty-one cents em dot double-u double-u double-u dot ex dot i en | A currency sign that starts an address stays as written in its reading. The first pass keeps the number before it, because the sign touches the letter after it. The reading puts a space after the sign, and a second pass reads the number and the sign as money. |
+| `No.00 €1,000.www.x.in` | No.00 € one , zero zero zero dot double-u double-u double-u dot ex dot i en | No.zero euros one , zero zero zero dot double-u double-u double-u dot ex dot i en | The same rule, with a digit after the sign. |
 | `Chapter XIV٢http://x` | Chapter XIV two aitch tee tee pee colon slash slash ex | Chapter Fourteen two aitch tee tee pee colon slash slash ex | An address keeps a Roman numeral as written, and a second pass reads it. |
 
 ### Currency signs next to other text

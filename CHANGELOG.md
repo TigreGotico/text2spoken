@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.2a56](https://github.com/TigreGotico/text2spoken/tree/0.0.2a56) (2026-11-16)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a55...0.0.2a56)
+
+**Merged pull requests:**
+
+- fix: read fewer initialisms and cut titles as Roman numerals [\#116](https://github.com/TigreGotico/text2spoken/pull/116) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a55](https://github.com/TigreGotico/text2spoken/tree/0.0.2a55) (2026-11-16)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a54...0.0.2a55)
+
+**Merged pull requests:**
+
+- fix: read titles and forms the old dialog normaliser read [\#113](https://github.com/TigreGotico/text2spoken/pull/113) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a54](https://github.com/TigreGotico/text2spoken/tree/0.0.2a54) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a53...0.0.2a54)
@@ -369,10 +385,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a6...0.0.2a7)
 
-**Merged pull requests:**
-
-- fix: raise a verbalizer defect instead of leaving the span as written [\#14](https://github.com/TigreGotico/text2spoken/pull/14) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a6](https://github.com/TigreGotico/text2spoken/tree/0.0.2a6) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a5...0.0.2a6)
@@ -380,10 +392,6 @@
 ## [0.0.2a5](https://github.com/TigreGotico/text2spoken/tree/0.0.2a5) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a4...0.0.2a5)
-
-**Merged pull requests:**
-
-- test: require the data keys of the shared verbalizers [\#11](https://github.com/TigreGotico/text2spoken/pull/11) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a4](https://github.com/TigreGotico/text2spoken/tree/0.0.2a4) (2026-11-09)
 

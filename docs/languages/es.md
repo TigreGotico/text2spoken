@@ -20,6 +20,8 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Llame al #5.` | `es-MX` | Llame al número cinco. |
 | `Subió un 100 %.` | `es-ES` | Subió un cien por cien. |
 | `Subió un 100 %.` | `es-MX` | Subió un ciento por ciento. |
+| `Cuesta 23,88 €.` | `es-MX` | Cuesta veintitrés euros con ochenta y ocho céntimos. |
+| `Hay 1000000000000000000000000000000000 granos.` | `es-ES` | Hay mil quintillones de granos. |
 
 ## Varieties
 
@@ -48,9 +50,9 @@ The varieties also differ in the currency of `$`, the reading of `#`, the readin
 
 ## Sources
 
-Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The docstring of [`es.py`](../../text2spoken/lang/es.py) names the entry of each rule.
+Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The long-scale words from `cuatrillón` to `sextillón` cite Wiktionary es. The docstring of [`es.py`](../../text2spoken/lang/es.py) names the entry of each rule.
 
-Of the 123 test rows in `tests/data/es.tsv`, 111 name a source for their reading. The other 12 are marked silver: 11 of them say that no source was found for the reading. Two of the silver test rows, es-059 and es-091, name no source at all. No native speaker has checked any row.
+Of the 127 test rows in `tests/data/es.tsv`, 115 name a source for their reading. The other 12 are marked silver: 11 of them say that no source was found for the reading. Two of the silver test rows, es-059 and es-091, name no source at all. No native speaker has checked any row.
 
 ## Limits
 
@@ -58,7 +60,7 @@ Spanish leaves these forms as written or reads them in a limited way:
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
-| `Hay 10000000000000000000000000001 granos.` | `es-ES` | stays as written | A number of 10^28 or more stays as written, because no test row with a source holds such a reading. ovos-number-parser reads 10^42 + 1 as "uno por diez elevado a cuarenta y dos", the value of 10^42. |
+| `Hay 1000000000000000000000000000000000000000001 granos.` | `es-ES` | stays as written | A number of 10^42 or more stays as written. ovos-number-parser reads 10^42 + 1 as "uno por diez elevado a cuarenta y dos", the value of 10^42. |
 | `Hay 21 vol.` | `es-ES` | Hay veintiún volúmenes | A noun abbreviation that an integer other than one counts reads in the plural. No source states this rule. The file infers it from DPD «abreviatura» 3, which reads an abbreviation as its full word, from the plural noun in the examples of DPD «uno» 2.2, and from DPD «plural» 1. |
 | `Ver cap. 2, pág. 10` | `es-ES` | Ver capítulo dos, página diez | The integer counts the abbreviation only when spaces alone stand between them and no digit follows the abbreviation, so these keep the singular. |
 | `Ley 30 art. 21` | `es-ES` | Ley treinta artículo veintiuno | The same rule. |
@@ -77,7 +79,7 @@ Spanish leaves these forms as written or reads them in a limited way:
 | `Cuesta $5.` | `es-419` | stays as written | `$` follows the 2005 text of DPD appendix 4. It stays as written in `es-419`, `es-CO`, `es-VE`, `es-BO`, `es-PY` and `es-CR`, because it can be a peso or a dollar there. |
 | `Cuesta $5.` | `es-CU` | stays as written | `es-CU`, `es-SV` and `es-PA` get `es-419`, so `$` stays as written there too. |
 | `Mide 1,5 m.` | `es-419` | stays as written | In `es-419` and the varieties that get it, the comma is the group mark. |
-| `Cuesta 2,50 €.` | `es-419` | stays as written | The same rule. |
+| `Cuesta $2,50.` | `es-MX` | stays as written | A decimal comma reads only next to `€`, the currency that CLDR writes with the comma. |
 | `Son 1 000 000.` | `es-CR` | stays as written | `es-CR` reads the point as the group mark, as `es` does. CLDR gives a space for `es_CR`, and a number grouped with spaces stays as written. |
 | `Llega a las 8:30 p. m.` | `es-ES` | Llega a las ocho y media de la noche. | The night starts at 20:00 for a time with `p. m.`. The DPD starts it at nightfall. |
 
