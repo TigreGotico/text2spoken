@@ -31,6 +31,42 @@ def test_numbers_parse_by_the_declared_marks(text, expected):
     assert [(n.sign, n.integer, n.fraction) for n in found] == expected
 
 
+FR_MARKS = (("Latn", ",.", " \u00a0\u202f'\u2019"),)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("1 234,5", [("", "1234", "5")]), ("3,5", [("", "3", "5")]), ("3.5", [("", "3", "5")]),
+    ("12\u00a0345", [("", "12345", None)]), ("12\u202f345", [("", "12345", None)]),
+    ("1'000", [("", "1000", None)]), ("1\u2019000", [("", "1000", None)]), ("1 000 000", [("", "1000000", None)]),
+    ("1.000.000", [("", "1000000", None)]), ("1.234,5", [("", "1234", "5")]), ("1 234.5", [("", "1234", "5")]),
+    ("-3,5", [("-", "3", "5")]), (",5", [("", "", "5")]), (".5", [("", "", "5")]),
+    ("1.500", []), ("10.000", []), ("1.5.2", []), ("1,5,2", []), ("16:9", []),
+    ("12 34", [("", "12", None), ("", "34", None)]), ("70 90 80", [("", "70", None), ("", "90", None), ("", "80", None)]),
+    ("1 000 5", [("", "1000", None), ("", "5", None)]), ("1234 567", [("", "1234", None), ("", "567", None)]),
+    ("5 123 6", [("", "5123", None), ("", "6", None)]),
+])
+def test_several_decimal_and_group_marks_read_one_number_or_none(text, expected):
+    found = numbers.find_numbers(text, FR_MARKS)
+    assert [(n.sign, n.integer, n.fraction) for n in found] == expected
+
+
+def test_a_lone_other_decimal_mark_with_three_digits_is_neither_decimal_nor_group():
+    assert numbers.find_numbers("3.141", FR_MARKS) == ()
+    assert [n.fraction for n in numbers.find_numbers("3.14", FR_MARKS)] == ["14"]
+    assert numbers.find_numbers("3.1415", FR_MARKS)[0].fraction == "1415"
+
+
+def test_a_space_group_leaves_a_quote_before_a_number_alone():
+    assert [(n.integer, n.start) for n in numbers.find_numbers("dit '5' fois", FR_MARKS)] == [("5", 5)]
+
+
+def test_the_entry_of_the_decimal_mark_starts_with_it_and_a_space_is_no_token_mark():
+    data = FrozenMap({"number_marks": FrozenMap({"Latn": ({"decimal": ".,", "group": " '"}, {"decimal": ",.", "group": " '"})})})
+    assert numbers.number_marks(data, ",") == (("Latn", ",.", " '"),)
+    assert numbers.number_marks(data, None) == (("Latn", ".,", " '"),)
+    assert numbers.declared_marks(data) == {".", ",", "'"}
+
+
 def test_an_undeclared_script_reads_integers_only():
     assert [(n.integer, n.fraction) for n in numbers.find_numbers("١٢٫٥", EN_MARKS)] == [("12", None), ("5", None)]
     assert [(n.integer, n.fraction) for n in numbers.find_numbers("١٢٫٥", (("Arab", "٫", "٬"),))] == [("12", "5")]
@@ -191,3 +227,61 @@ def test_a_proclitic_wins_over_a_lead(monkeypatch):
     monkeypatch.setattr(language, "_registry", lambda: {"en": replace(en.LANGUAGE, data=data)})
     assert normalize("Go ab-5 now.", "en-GB") == "Go ab-five now."
     assert normalize("Go cd-5 now.", "en-GB") == "Go cd five now."
+
+
+@pytest.mark.parametrize("gap", ["", " ", "\u00a0", "\u202f"])
+def test_a_gap_of_number_gaps_joins_a_number_to_its_symbol_and_unit(gap):
+    """French typography puts a narrow no-break space before `%` and a unit; `fr` lists it in `number_gaps`."""
+    from text2spoken import normalize
+
+    assert normalize(f"Prenez 50{gap}% de 5{gap}kg.", "fr-FR") == "Prenez cinquante pour cent de cinq kilogrammes."
+
+
+def test_a_language_with_no_number_gaps_keeps_the_core_gaps():
+    from text2spoken.core.recognizers import GAPS, number_gaps
+
+    assert number_gaps(EN.data) == GAPS == ("", " ", "\u00a0")
+
+
+@pytest.mark.parametrize("text,spoken", [("Payez -5 $ maintenant.", "Payez moins cinq dollars maintenant."),
+                                         ("Payez +5 $ maintenant.", "Payez plus cinq dollars maintenant."),
+                                         ("Payez -$5 maintenant.", "Payez moins cinq dollars maintenant.")])
+def test_a_sign_before_a_number_with_its_symbol_after_stays_in_the_amount(text, spoken):
+    from text2spoken import normalize
+
+    assert normalize(text, "fr-FR") == spoken
+
+
+@pytest.mark.parametrize("before", ["", " ", "\u00a0", "\u202f", "(", "\n", "à "])
+@pytest.mark.parametrize("mark", [",", "."])
+def test_a_leading_decimal_mark_reads_after_a_space_a_bracket_or_at_the_start(before, mark):
+    found = numbers.find_numbers(f"{before}{mark}5", FR_MARKS)
+    assert [(n.integer, n.fraction, n.start) for n in found] == [("", "5", len(before))]
+
+
+@pytest.mark.parametrize("text", ["1.,5", "1,.5", "x,5", "a.5", "1.5.,5"])
+def test_a_mark_that_continues_a_cluster_or_a_word_is_no_leading_mark(text):
+    assert all(n.integer for n in numbers.find_numbers(text, FR_MARKS))
+
+
+@pytest.mark.parametrize("tag,text,spoken", [
+    ("fr", "Il a ,5 de moyenne.", "Il a zéro virgule cinq de moyenne."),
+    ("fr", "Il a .5 de moyenne.", "Il a zéro virgule cinq de moyenne."),
+    ("fr", f"Il a{chr(0xa0)},5 de moyenne.", f"Il a{chr(0xa0)}zéro virgule cinq de moyenne."),
+    ("fr", f"Il a{chr(0x202f)},5 de moyenne.", f"Il a{chr(0x202f)}zéro virgule cinq de moyenne."),
+    ("fr", "(,5)", "(zéro virgule cinq)"), ("fr", ",5", "zéro virgule cinq"),
+    ("en-US", "It is .5 now.", "It is zero point five now."),
+])
+def test_a_leading_decimal_mark_reads_in_a_sentence(tag, text, spoken):
+    from text2spoken import normalize
+
+    assert normalize(text, tag) == spoken
+
+
+@pytest.mark.parametrize("gap", ["\u00a0", "\u202f"])
+def test_a_phone_number_may_be_grouped_with_the_spaces_of_the_recognizer(gap):
+    from text2spoken import normalize
+
+    groups = gap.join(["01", "23", "45", "67", "89"])
+    assert normalize(f"Composez le {groups} ici.", "fr-FR") == (
+        "Composez le zéro un vingt-trois quarante-cinq soixante-sept quatre-vingt-neuf ici.")

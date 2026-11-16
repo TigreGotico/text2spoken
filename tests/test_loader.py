@@ -77,8 +77,8 @@ def test_a_language_with_no_file_reads_cardinals_through_rbnf():
 # README: "A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms
 # as written." Each text holds one form other than a cardinal, so it stays whole.
 WRITTEN_FORMS = [
-    ("fr-FR", "Il a payé £5."), ("fr-FR", "Il a payé 5 €."), ("fr-FR", "Il a payé 5\u00a0€."), ("fr-FR", "50%"),
-    ("fr-FR", "C'est 25 % moins cher."), ("lb-LU", "Et kascht $5."), ("lb-LU", "Et kascht 50%."),
+    ("ca-ES", "Ha pagat £5."), ("ca-ES", "Ha pagat 5 €."), ("ca-ES", "Ha pagat 5\u00a0€."), ("ca-ES", "50%"),
+    ("ca-ES", "És un 25 % més barat."), ("lb-LU", "Et kascht $5."), ("lb-LU", "Et kascht 50%."),
     ("lb-LU", "Et weit 5 kg."), ("lb-LU", "Et huet 25°."), ("lb-LU", "Mir fueren 50 km/h."), ("lb-LU", "den 3. Mee"),
     ("lb-LU", "Hie gouf 2. Sieger."), ("mt-MT", "Il-prezz: $5."), ("mt-MT", "Jiswa R$5."), ("gl-ES", "o 1.º de maio"),
     ("gl-ES", "a 2.ª vez"), ("nl-NL", "Het kost 5 € per dag."), ("nl-NL", "Op 12/03/2024 om 7:30."),
@@ -96,11 +96,11 @@ def test_a_language_with_no_file_keeps_the_forms_it_cannot_read_as_written(tag, 
 
 
 def test_a_language_with_no_file_reads_the_cardinals_next_to_a_kept_form():
-    assert normalize("Il a payé £5 et 5 € pour 3 pommes.", "fr-FR") == "Il a payé £5 et 5 € pour trois pommes."
+    # Wiktionary, tres: Catalan "three".
+    assert normalize("Ha pagat £5 i 5 € per 3 pomes.", "ca-ES") == "Ha pagat £5 i 5 € per tres pomes."
     # Wiktionary, dräi (fetched): Luxembourgish "three".
     assert normalize("Den 3. Mee kaaft ech 3.", "lb-LU") == "Den 3. Mee kaaft ech dräi."
-    # CLDR `digits-ordinal` writes 3e in French and 3.º in Portuguese, so a full stop and a space end a sentence.
-    assert normalize("J'en ai 3. Il pleut.", "fr-FR") == "J'en ai trois. Il pleut."
+    # CLDR `digits-ordinal` writes 3.º in Portuguese, so a full stop and a space end a sentence.
     assert normalize("Tenho 3. Ele tem 2.", "pt-PT") == "Tenho três. Ele tem dois."
 
 

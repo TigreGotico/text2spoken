@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from tests.conftest import DATA, rows
 from tests.contract import SHARED_VERBALIZERS
 from tests.data_keys import OPTIONAL, READERS
 from text2spoken import Form, FrozenMap, GrammaticalGender, NormalizationParams, effective_params, normalize, supports
@@ -47,7 +48,7 @@ MINIMUM = {
     "README.md": 3, "index.md": 0, "quickstart.md": 8, "usage.md": 16, "how-it-reads.md": 3, "numbers.md": 26,
     "dates-and-times.md": 24, "money-units-and-symbols.md": 45, "addresses-letters-and-emoji.md": 92, "api.md": 20,
     "errors.md": 8, "adding-a-language.md": 7, "development.md": 0, "ar.md": 36, "de.md": 51, "en.md": 50,
-    "es.md": 50, "eu.md": 28, "pt.md": 46, "ru.md": 49,
+    "es.md": 50, "eu.md": 28, "fr.md": 131, "pt.md": 46, "ru.md": 49,
 }
 """The fewest examples that each page holds, so that a page that loses its examples fails."""
 LANGUAGE_MINIMUM = 10
@@ -57,6 +58,8 @@ FENCE = re.compile(r"^```(\S*)(?: (\S+))?\n(.*?)^```$", re.M | re.S)
 NAMES = {"frozenset": frozenset, "FrozenMap": FrozenMap, "GrammaticalGender": GrammaticalGender}
 """The names that a param in a column header may use."""
 CLAIM = re.compile(r"`[^`\n]+` reads [\"'“‘«„]")
+ROW_COUNT = re.compile(r"\b(?:the|are) ([\d,]+) (?:test )?rows\b")
+"""The sentence of a language page that gives the number of rows of its file in tests/data."""
 
 
 def tables(text: str) -> list[list[list[str]]]:
@@ -409,6 +412,13 @@ def test_no_unchecked_output_in_prose(page):
     text = FENCE.sub("", page.read_text(encoding="utf-8"))
     prose = [line for line in text.splitlines() if not line.startswith("|")]
     assert not [line for line in prose if CLAIM.search(line)]
+
+
+@pytest.mark.parametrize("page", [p for p in PAGES if (DATA / f"{p.stem}.tsv").exists()], ids=lambda p: p.name)
+def test_a_language_page_gives_its_row_count(page):
+    """A language page gives the number of rows of its file in tests/data once, and the file holds that many."""
+    stated = [int(n.replace(",", "")) for n in ROW_COUNT.findall(page.read_text(encoding="utf-8"))]
+    assert stated == [len(rows(page.stem))]
 
 
 @pytest.mark.parametrize("page", PAGES, ids=lambda p: p.name)

@@ -257,7 +257,7 @@ def test_a_named_date_after_a_symbol_reads_the_same_on_a_second_pass():
 
 
 def test_a_negative_number_stays_as_written_in_a_language_with_no_sign_words(caplog):
-    assert normalize("It is -5 now.", "fr") == "It is -5 now."
+    assert normalize("It is -5 now.", "ca") == "It is -5 now."
     assert "unread written form '-5'" in caplog.text and "sign_words" not in caplog.text
 
 
@@ -278,6 +278,24 @@ def test_normalize_is_idempotent_and_never_crashes_on_random_text(seed):
     for _ in range(500):
         lang = rng.choice(["en", "en-US", "fr", "xx"])
         text = "".join(rng.choice(ATOMS) for _ in range(rng.randint(1, 30)))
+        once = normalize(text, lang)
+        assert normalize(once, lang) == once or known_limit(text, lang), (text, once)
+
+
+GROUPED = ["1 000", "1\u202f000", "2\u00a0500 000", "–", "1 000-", "1 000–", "1 000/", "1 000+", "1 000 = ",
+           "1 000 × ", "1\u202f000-", "-2 000", "–2 000", "/2 000", "+2 000", "= 2 000", "× 2 000"]
+"""Numbers grouped with a space next to a range mark, a fraction slash or an operator. A language whose group marks
+hold a space reads `1 000` as one number, and a recognizer that read `[0-9]+` on its own split it."""
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_a_number_grouped_with_a_space_reads_the_same_on_a_second_pass(seed):
+    """Section 11 for French, which groups digits with a space, on random text with the atoms of `GROUPED`."""
+    rng = random.Random(seed)
+    atoms = ATOMS + GROUPED
+    for _ in range(500):
+        lang = rng.choice(["fr", "fr-FR", "fr-CA", "fr-CH", "fr-BE"])
+        text = "".join(rng.choice(atoms) for _ in range(rng.randint(1, 30)))
         once = normalize(text, lang)
         assert normalize(once, lang) == once or known_limit(text, lang), (text, once)
 
@@ -431,7 +449,7 @@ def test_a_digit_next_to_a_span_is_no_joiner():
 
 
 def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():
-    assert normalize("Il a １2 chambres.", "fr") == "Il a １2 chambres."
+    assert normalize("Ha １2 stanze.", "it") == "Ha １2 stanze."
 
 
 @pytest.mark.parametrize("space", [" ", "\t", "\n"])

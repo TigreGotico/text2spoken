@@ -135,4 +135,4 @@ Italian leaves these forms as written, or reads them as shown:
 | `Ha 10.000.000 follower.` | `it-IT` | stays as written | A number that ends in a scale word reads before a noun of the noun list, its regular plural and a function word that is no noun. The loanword "follower" is in neither list, and a word that no list holds may be a verb. |
 
 ---
-[← Basque](eu.md) · [Home](../index.md) · [Portuguese →](pt.md)
+[← French](fr.md) · [Home](../index.md) · [Portuguese →](pt.md)

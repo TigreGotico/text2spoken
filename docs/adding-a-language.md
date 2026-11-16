@@ -376,16 +376,16 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `lexicon` | `LEXICON` | none | none |
 | `cardinal` | `CARDINAL` | `leads`, `number_marks`, `sign_words`, `symbols` | `case_suffixes`, `proclitics` |
 | `decimal` | `DECIMAL` | `number_marks`, `symbols` | `case_suffixes`, `proclitics` |
-| `fraction` | `FRACTION` | `symbols`, `unit_symbols`, `units` | `case_suffixes`, `proclitics` |
+| `fraction` | `FRACTION` | `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `number_gaps`, `proclitics` |
 | `idiom` | `IDIOM` | `idioms` | `case_suffixes`, `proclitics` |
-| `range` | `RANGE` | `symbols` | `case_suffixes`, `proclitics`, `range_marks` |
+| `range` | `RANGE` | `number_marks`, `symbols` | `case_suffixes`, `proclitics`, `range_marks` |
 | `date_numeric` | `DATE` | `symbols` | `case_suffixes`, `proclitics` |
 | `time_clock` | `TIME` | `clock_marks`, `time_words` | `day_periods`, `range_marks`, `range_word`, `time_suffixes` |
-| `percent` | `PERCENT` | `number_marks`, `percent` | `case_suffixes`, `proclitics`, `range_marks`, `range_word` |
-| `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `proclitics`, `range_marks`, `range_word` |
-| `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `proclitics`, `range_marks`, `unjoined_symbols` |
+| `percent` | `PERCENT` | `number_marks`, `percent` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
+| `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
+| `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `elision_marks`, `number_gaps`, `proclitics`, `range_marks`, `unjoined_symbols` |
 | `telephone` | `TELEPHONE` | `currencies`, `currency_symbols`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names` |
-| `expression` | `EXPRESSION` | `operators`, `patterns`, `symbols` | none |
+| `expression` | `EXPRESSION` | `number_marks`, `operators`, `patterns`, `symbols` | none |
 | `abbreviation` | `ABBREVIATION` | `abbreviations`, `number_abbreviations`, `sentence_final`, `titles` | none |
 | `space_groups` | `CARDINAL` | none | none |
 | `color` | `COLOR` | `color_words` | none |
