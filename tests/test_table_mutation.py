@@ -116,10 +116,11 @@ ENTRIES = {
     },
     "it": {
         "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "decimal_word": DELETE, "leads": "pag. ",
-        "percent": "word", "currency_symbols": "CHF", "currency_genders": "GBP", "kept_currency_signs": "$",
-        "scales": "milione", "unit_symbols": "kg", "dimension_marks": "×", "dimension_word": DELETE, "operators": "+", "ordinal_marks": "ª",
-        "half_links": "di", "titles": "Dr.", "abbreviations": "ecc.", "sentence_final": "ecc.",
-        "number_abbreviations": "art.", "patterns": "expression",
+        "percent": "word", "currency_symbols": "CHF", "currencies": "EUR", "kept_currency_signs": "$",
+        "scales": "milione", "unit_symbols": "kg", "dimension_marks": "×", "dimension_word": DELETE, "operators": "+",
+        "ordinal_marks": "ª", "noun_ordinal_marks": "°", "months": "maggio", "lo_onsets": "z", "half_links": "di",
+        "titles": "Dr.", "abbreviations": "ecc.", "sentence_final": "ecc.", "number_abbreviations": "art.",
+        "patterns": "expression",
     },
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",

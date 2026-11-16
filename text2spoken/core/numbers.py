@@ -57,7 +57,8 @@ def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()
     A cluster is a run of digits joined by single marks, colons or slashes. A mark of `marks` or of `declared`
     joins a cluster. A cluster that does not parse whole by `marks`, such as `16:9`, `1.2.3` or `1,23` in a
     language whose group mark is the comma, gives no number. So in a variety that declares a second set of marks,
-    such as de-CH, `,5` gives no number when the comma is not a mark of `marks`, as `0,5` gives none.
+    such as de-CH, `,5` gives no number when the comma is not a mark of `marks`, as `0,5` gives none. The group mark
+    `'` joins only digits on both sides: before digits it is an apostrophe, as in `anni '60`, so `60` is a number.
     """
     folded = fold_digits(text)
     by_script = {script: (decimal, group) for script, decimal, group in marks}
@@ -65,7 +66,7 @@ def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()
     numbers = []
     i = 0
     while i < len(text):
-        leading_mark = (text[i] in joiners and i + 1 < len(text) and is_digit(text[i + 1])
+        leading_mark = (text[i] in joiners and text[i] != "'" and i + 1 < len(text) and is_digit(text[i + 1])
                         and (i == 0 or not (is_word_char(text[i - 1]) or text[i - 1] in joiners)))
         if not (is_digit(text[i]) or leading_mark):
             i += 1
