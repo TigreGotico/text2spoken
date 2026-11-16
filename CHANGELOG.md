@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a54](https://github.com/TigreGotico/text2spoken/tree/0.0.2a54) (2026-11-16)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a53...0.0.2a54)
+
+**Merged pull requests:**
+
+- feat: read Roman numerals, text in capitals and letter-digit codes [\#111](https://github.com/TigreGotico/text2spoken/pull/111) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a53](https://github.com/TigreGotico/text2spoken/tree/0.0.2a53) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a52...0.0.2a53)
@@ -368,10 +376,6 @@
 ## [0.0.2a6](https://github.com/TigreGotico/text2spoken/tree/0.0.2a6) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a5...0.0.2a6)
-
-**Merged pull requests:**
-
-- refactor: give every form that holds a number a prefix and a suffix [\#8](https://github.com/TigreGotico/text2spoken/pull/8) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a5](https://github.com/TigreGotico/text2spoken/tree/0.0.2a5) (2026-11-09)
 

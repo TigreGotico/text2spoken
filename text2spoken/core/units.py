@@ -64,6 +64,37 @@ def _cldr_table(tag: str, listed: tuple[str, ...]) -> FrozenMap:
     return FrozenMap(table)
 
 
+@lru_cache(maxsize=64)
+def _joined_table(tag: str, excluded: tuple[str, ...], listed: tuple[str, ...]) -> FrozenMap:
+    units = [unit for unit in cldr_data(tag)["units"].values() if all(map(_words_only, unit["names"].values()))]
+    by_symbol = {symbol: unit for unit in units for symbol in unit["symbols"]}
+    table = {symbol: unit for symbol, unit in by_symbol.items()
+             if len(symbol) > 1 and symbol.isalpha() and symbol.isupper() and symbol not in excluded}
+    cases: dict[str, set[str]] = {}
+    for unit in cldr_data(tag)["units"].values():
+        for symbol in unit["symbols"]:
+            cases.setdefault(symbol.lower(), set()).add(symbol)
+    for symbol in listed:
+        if len(symbol) > 1 and symbol.isalpha() and cases.get(symbol) == {symbol} and symbol in by_symbol \
+                and symbol.upper() not in excluded:
+            table[symbol.upper()] = by_symbol[symbol]
+    return FrozenMap(table)
+
+
+def joined_table(request: Request) -> FrozenMap:
+    """The CLDR symbols of two capital letters or more that read as units only when they touch the digits, as `GB`
+    in `10GB`, apart from those of `unjoined_symbols`. A run of capitals joined to digits is no word of running
+    text, so `10GB` reads "ten gigabytes", and `29 GB golds`, with a space, reads no unit. A symbol of
+    `unit_symbols` in lowercase reads in capitals too when no other CLDR symbol differs from it only in case, so
+    `5KM` reads as `5km`, and `ml` gives no `ML`, because CLDR also names `mL`. `unjoined_symbols` holds `ML`
+    itself, the CLDR megalitre, so `2ML` stays as written. A language file with no `unit_symbols` reads no CLDR
+    units, and none of these."""
+    data = request.data
+    if "unit_symbols" not in data:
+        return FrozenMap()
+    return _joined_table(request.variety.tag, tuple(data.get("unjoined_symbols", ())), tuple(data["unit_symbols"]))
+
+
 def unit_table(request: Request) -> FrozenMap:
     """The units that the request reads, by written symbol. With `unit_symbols`, a CLDR symbol of the variety reads
     when it cannot be a plain word or when the list names it. Without it, the `units` table of the language."""
@@ -114,7 +145,7 @@ def _pattern(names: FrozenMap, category: str) -> str:
 
 
 def _simple(request: Request, unit: str, category: str) -> tuple[str, str | None] | None:
-    table = unit_table(request)
+    table = {**joined_table(request), **unit_table(request)}
     if unit in table:
         return _pattern(table[unit]["names"], category), table[unit].get("gender")
     if unit[-1:] in POWERS and unit[:-1] in table and _takes_power(unit[:-1]):
