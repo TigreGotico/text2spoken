@@ -72,18 +72,27 @@ use: "Names of monarchs and popes, e.g. Elizabeth II of the United Kingdom, Pope
 regnal numbers and are usually read as ordinals; e.g. II is pronounced "the second"." The BBC News style guide,
 "royalty", writes the numeral: "We use Roman numerals with names (eg: Henry VIII, Charles III)". A regnal number follows
 a regnal title and a name, as in `King Charles III`, or a name of `regnal_names`. Only spaces part the title, the name
-and the numeral, or a comma alone parts the title from a name of `regnal_names`, as an apposition does in `the Holy
-Roman Emperor, Henry V`. So `the title of king, Which I conceive` and `a queen / Best I've` keep the pronoun. A comma
-before a name outside `regnal_names`, as in `the Polish king, Jan III Sobieski`, and any other mark leave the numeral as
-written. `Coretta Scott King, Malcolm X` reads "Malcolm the Tenth", because the surname King is also a title and Malcolm
-is the name of four kings of Scotland. The regnal titles are those that Wikipedia, "Regnal number", names: "kings,
-queens regnant, popes, and rarely princes and princesses", with Saint, Emperor, Empress, Tsar and Tsarina.
-`regnal_names` holds the names that carry a regnal number in the Wikipedia lists of English monarchs, Scottish monarchs,
-French monarchs, Frankish kings, Spanish monarchs, popes, Holy Roman emperors, Russian emperors and Byzantine emperors,
-in their English form, such as Adrian, the name of six popes (Wikipedia, "List of popes": "Adrian I" to "Adrian VI"), so
-`Adrian IV` reads "Adrian the Fourth". It also holds the Spanish forms of the Spanish list, such as Isabel ("Isabel II,
-la de los Tristes Destinos"), the German forms of the German and Austrian emperors (Wilhelm, Franz and Karl), and
-Valentinian, the name of two Roman emperors of the West (Wikipedia, "Valentinian II" and "Valentinian III").
+and the numeral, or one mark of `apposition_marks`, a comma, a bracket or a quote, parts the title from a name of
+`regnal_names`, as an apposition does in `the Holy Roman Emperor, Henry V`, `our king [Charles I]` and `Kaiser (Emperor)
+Wilhelm I`. So `the title of king, Which I conceive` and `a queen / Best I've` keep the pronoun, and a colon, a slash, a
+dash or a mark before a name outside `regnal_names` leaves the numeral as written. `Coretta Scott King, Malcolm X` reads
+"Malcolm the Tenth", because the surname King is also a title and Malcolm is the name of four kings of Scotland. The
+regnal titles are those that Wikipedia, "Regnal number", names: "kings, queens regnant, popes, and rarely princes and
+princesses", with Saint, Emperor, Empress, Tsar and Tsarina. `regnal_names` holds the names that carry a regnal number
+in the Wikipedia lists of English monarchs, Scottish monarchs, French monarchs, Frankish kings, Spanish monarchs, popes,
+Holy Roman emperors, Russian emperors and Byzantine emperors, in their English form, such as Adrian, the name of six
+popes (Wikipedia, "List of popes": "Adrian I" to "Adrian VI"), so `Adrian IV` reads "Adrian the Fourth". It also holds
+the Spanish forms of the Spanish list, such as Isabel ("Isabel II, la de los Tristes Destinos"), the German forms of the
+German and Austrian emperors (Wilhelm, Franz and Karl), Konrad, the German form of four German kings (German Wikipedia,
+"Liste der römisch-deutschen Herrscher": "Konrad I" to "Konrad IV"), and Valentinian, the name of two Roman emperors of
+the West (Wikipedia, "Valentinian II" and "Valentinian III"). It holds the names as they stand in the Wikipedia lists of
+Polish (Jan, Władysław, Stanisław), Hungarian (Béla, also written Bela, and Ladislaus), Bosnian (Tvrtko), Portuguese
+(João, Maria, Pedro), Swedish (Gustav, Carl), Danish (Christian), Armenian (Tiridates, Tigranes), Mercian (Ceolwulf),
+Spartan (Cleomenes), Sri Lankan (Parakramabahu) and Jordanian (Abdullah) monarchs, of the pharaohs (Amenhotep) and of
+the rulers of Bavaria (Welf), and in the Wikipedia articles on the monarchs of Jerusalem (Baldwin) and Cambodia
+(Jayavarman), the Kabakas of Buganda (Mutesa), the Grand Princes of Kiev (Vladimir), the tlatoque (Moctezuma), the Duchy
+of Masovia (Siemowit), Lazica (Tzath), Huahine (Tehaapapa), the Chalukya and Pallava dynasties (Kirtivarman,
+Vikramaditya, Narasimhavarman), the Achaemenid Empire (Darius, Artaxerxes) and the Indo-Greek Kingdom (Menander).
 
 A generational suffix from II to IV reads the ordinal too: `Hank Williams III` reads "Hank Williams the Third".
 Wikipedia, "Name suffix": "he can use the II suffix, which is pronounced "the second"". The suffix follows exactly two
@@ -321,19 +330,25 @@ DATA = freeze({
     "letter_codas": [*_CODAS, *(coda + "s" for coda in _CODAS if not coda.endswith(("s", "z", "x", "sh", "ch")))],
     "regnal_titles": ["King", "Queen", "Pope", "Prince", "Princess", "Saint", "Emperor", "Empress", "Tsar", "Tsarina",
                       "king", "queen", "pope", "prince", "princess", "saint", "emperor", "empress", "tsar", "tsarina"],
-    "regnal_names": ["Adrian", "Agapetus", "Albert", "Alexander", "Alexios", "Alfonso", "Amadeo", "Anastasius",
-                    "Andronikos", "Basil", "Benedict", "Boniface", "Callixtus", "Carloman", "Carlos", "Catherine",
-                    "Celestine", "Charibert", "Charles", "Childebert", "Childeric", "Chilperic", "Chlothar", "Clement",
-                    "Clovis", "Conrad", "Constans", "Constantine", "Constantius", "Dagobert", "Damasus", "David",
-                    "Donald", "Duncan", "Edmund", "Edward", "Elizabeth", "Eugene", "Felipe", "Felix", "Ferdinand",
-                    "Fernando", "Francis", "Franz", "Frederick", "Gelasius", "George", "Gregory", "Hadrian", "Harold",
-                    "Henry", "Honorius", "Innocent", "Isaac", "Isabel", "Isabella", "Ivan", "James", "John", "Joseph",
-                    "Julius", "Justin", "Justinian", "Karl", "Kenneth", "Leo", "Leopold", "Lothair", "Louis", "Lucius",
-                    "Luis", "Malcolm", "Manuel", "Marcellus", "Marinus", "Martin", "Mary", "Matthias", "Maximilian",
-                    "Michael", "Napoleon", "Nicholas", "Nikephoros", "Otto", "Paschal", "Paul", "Pelagius", "Peter",
-                    "Philip", "Pius", "Richard", "Robert", "Romanos", "Rudolf", "Sergius", "Sigebert", "Sigismund",
-                    "Sixtus", "Stephen", "Sylvester", "Theodore", "Theodosius", "Theudebert", "Theuderic", "Tiberius",
-                    "Urban", "Valentinian", "Victor", "Wilhelm", "William"],
+    "apposition_marks": [",", "(", "[", '"', "“", "‘", ")", "]", "”", "’"],
+    "regnal_names": ["Abdullah", "Adrian", "Agapetus", "Albert", "Alexander", "Alexios", "Alfonso", "Amadeo",
+                    "Amenhotep", "Anastasius", "Andronikos", "Artaxerxes", "Baldwin", "Basil", "Bela", "Béla",
+                    "Benedict", "Boniface", "Callixtus", "Carl", "Carloman", "Carlos", "Catherine", "Celestine",
+                    "Ceolwulf", "Charibert", "Charles", "Childebert", "Childeric", "Chilperic", "Chlothar", "Christian",
+                    "Clement", "Cleomenes", "Clovis", "Conrad", "Constans", "Constantine", "Constantius", "Dagobert",
+                    "Damasus", "Darius", "David", "Donald", "Duncan", "Edmund", "Edward", "Elizabeth", "Eugene",
+                    "Felipe", "Felix", "Ferdinand", "Fernando", "Francis", "Franz", "Frederick", "Gelasius", "George",
+                    "Gregory", "Gustav", "Hadrian", "Harold", "Henry", "Honorius", "Innocent", "Isaac", "Isabel",
+                    "Isabella", "Ivan", "James", "Jan", "Jayavarman", "João", "John", "Joseph", "Julius", "Justin",
+                    "Justinian", "Karl", "Kenneth", "Kirtivarman", "Konrad", "Ladislaus", "Leo", "Leopold", "Lothair",
+                    "Louis", "Lucius", "Luis", "Malcolm", "Manuel", "Marcellus", "Maria", "Marinus", "Martin", "Mary",
+                    "Matthias", "Maximilian", "Menander", "Michael", "Moctezuma", "Mutesa", "Napoleon",
+                    "Narasimhavarman", "Nicholas", "Nikephoros", "Otto", "Parakramabahu", "Paschal", "Paul", "Pedro",
+                    "Pelagius", "Peter", "Philip", "Pius", "Richard", "Robert", "Romanos", "Rudolf", "Sergius",
+                    "Siemowit", "Sigebert", "Sigismund", "Sixtus", "Stanisław", "Stephen", "Sylvester", "Tehaapapa",
+                    "Theodore", "Theodosius", "Theudebert", "Theuderic", "Tiberius", "Tigranes", "Tiridates", "Tvrtko",
+                    "Tzath", "Urban", "Valentinian", "Victor", "Vikramaditya", "Vladimir", "Władysław", "Welf",
+                    "Wilhelm", "William"],
     "roman_words": ["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DIV", "DL", "MC", "MCI", "MD",
                     "MDC", "MI", "MIX", "ML", "MM", "MV", "MX", "XL"],
     "roman_nouns": ["chapter", "volume", "book", "act", "grade", "episode", "section", "part", "phase", "class",
@@ -697,14 +712,14 @@ class Roman:
     After a noun of `roman_nouns`, which names a series, as in `chapter IV`, `World War II` and `Super Bowl LVII`, the
     numeral reads as a cardinal, but a numeral of `roman_words` reads there only after a noun of `roman_letter_nouns`
     and when no word in lowercase follows it, so `Chapter XL.` reads and `type MX record` and `Class CL.` stay as
-    written. After a regnal title and a capitalised name that only spaces or a comma before a name of `regnal_names`
-    part, as in `King Charles III`, after a name of `regnal_names`, as in `Henry VIII`, and, for II to IV, after exactly
-    two words, a given name and a surname of the name files, as in `Hank Williams III`, it reads "the" and the ordinal,
-    and the value is at most 30. Every other numeral stays as written, as in `Apollo XIII` and `Rocky II`. The word
-    before the numeral reads it only when spaces alone part them. A numeral of one letter reads only after a regnal
-    title and a name, and after a noun of `roman_nouns` that holds two words, as `World War I` does. So the pronoun in
-    `the book I read` stays a pronoun, and `Malcolm X` stays as written. A word of `function_words` in any case, as the
-    `The` that starts a sentence, reads no numeral."""
+    written. After a regnal title and a capitalised name that only spaces, or a mark of `apposition_marks` before a name
+    of `regnal_names`, part, as in `King Charles III`, after a name of `regnal_names`, as in `Henry VIII`, and, for II
+    to IV, after exactly two words, a given name and a surname of the name files, as in `Hank Williams III`, it reads
+    "the" and the ordinal, and the value is at most 30. Every other numeral stays as written, as in `Apollo XIII` and
+    `Rocky II`. The word before the numeral reads it only when spaces alone part them. A numeral of one letter reads
+    only after a regnal title and a name, and after a noun of `roman_nouns` that holds two words, as `World War I` does.
+    So the pronoun in `the book I read` stays a pronoun, and `Malcolm X` stays as written. A word of `function_words` in
+    any case, as the `The` that starts a sentence, reads no numeral."""
     name: str = "roman"
     form: Form = Form.ROMAN
 
@@ -714,6 +729,7 @@ class Roman:
         data = request.data
         titles = frozenset(data["regnal_titles"])
         regnal_names = frozenset(data["regnal_names"])
+        apposition_marks = frozenset(data["apposition_marks"])
         given_names = _names("given_names.json")
         surnames = _names("surnames.json")
         nouns = frozenset(data["roman_nouns"])
@@ -737,7 +753,7 @@ class Roman:
             last = before[-1]
             gap = text[words[index - 2].end:words[index - 1].start] if len(before) >= 2 else ""
             regnal = len(before) >= 2 and before[-2] in titles and last[0].isupper() \
-                and (gap.isspace() or gap.strip() == "," and last in regnal_names)
+                and (gap.isspace() or gap.strip() in apposition_marks and last in regnal_names)
             pair = " ".join(before[-2:]).lower()
             two_words = len(before) >= 2 and pair in nouns
             noun = pair if two_words else last.lower()
