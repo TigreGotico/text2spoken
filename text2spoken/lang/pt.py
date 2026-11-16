@@ -158,12 +158,12 @@ pronunciarem como cardinais". So `Pio X` reads "Pio Décimo" in pt-PT and "Pio D
 
 A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun
 of `roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
-letters: the parts of a work and of a law (capítulo, volume, tomo, livro, parte, ato, acto, cena, título, artigo),
-as Ciberdúvidas 11716 applies the rule "a todas as partes em que se divide uma obra". A group, a class, a category,
-a level and a phase are labelled with letters as well as numbers: the measurement for `roman_words` below found
-`Grupo C` and `classe C`, and "meio milhão de frases" holds `No Grupo I, houve duas goleadas` (mmf-210324), a group
-of a series from A. So `Grupo I`, `Fase I`, `classe A`, `anexo C` and `vitamina C` stay as written, and `Grupo II`
-reads "Grupo segundo".
+letters: the parts of a work and of a law (capítulo, volume, tomo, livro, parte, ato, acto, cena, título, artigo,
+secção, seção), as Ciberdúvidas 11716 applies the rule "a todas as partes em que se divide uma obra". A group, a
+class, a category, a level and a phase are labelled with letters as well as numbers: the measurement for
+`roman_words` below found `Grupo C` and `classe C`, and "meio milhão de frases" holds `No Grupo I, houve duas
+goleadas` (mmf-210324), a group of a series from A. So `Grupo I`, `Fase I`, `classe A`, `anexo C` and `vitamina C`
+stay as written, and `Grupo II` reads "Grupo segundo".
 
 `roman_words` holds the numerals that are also an acronym or a word, so they do not read after a capitalised word or
 a title. The list comes from a measurement: the recognizer, with an empty `roman_words`, ran over the FLORES+
@@ -317,7 +317,8 @@ DATA = freeze({
                     "título": "masculine", "secção": "feminine", "seção": "feminine", "canto": "masculine",
                     "ato": "masculine", "acto": "masculine", "cena": "feminine", "fase": "feminine",
                     "grupo": "masculine", "nível": "masculine", "categoria": "feminine", "guerra mundial": "feminine"},
-    "roman_letter_nouns": ["capítulo", "volume", "tomo", "livro", "parte", "ato", "acto", "cena", "título", "artigo"],
+    "roman_letter_nouns": ["capítulo", "volume", "tomo", "livro", "parte", "ato", "acto", "cena", "título", "artigo",
+                           "secção", "seção"],
     "roman_words": ["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DL", "MC", "MCI", "MDC", "MI", "MM",
                     "MV", "MX", "XL"],
     "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine", "às": "feminine",
