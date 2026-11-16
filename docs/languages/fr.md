@@ -1,72 +1,138 @@
 # French
 
-The file `text2spoken/lang/fr.py` reads French. Its number words come from the CLDR spell-out rules, which the core dependency `unicode-rbnf` holds. The `fr` extra declares the floor of that dependency.
-
-```python
-normalize("Rendez-vous le 10/11/2026 à 14 h 30, pour 3,50 € ou 21 h 5.", "fr")
-# 'Rendez-vous le dix novembre deux mille vingt-six à quatorze heures trente, pour trois euros cinquante ou vingt et une heures cinq.'
-normalize("Il a 71 ans et 6 °C.", "fr-BE")
-# 'Il a septante et un ans et six degrés Celsius.'
-```
-
-## Varieties and codes
-
-| Tag | Notes |
-| --- | --- |
-| `fr-FR` | The default variety. Every region with no variety of its own, such as `fr-BE`, `fr-LU`, `fr-SN` or `fr-HT`, reads as `fr-FR` |
-| `fr-CA` | Reads `$` as the Canadian dollar and `US$` as *dollars américains*. Reads a telephone number digit by digit |
-| `fr-CH` | Reads `CHF`, `Fr.` and `fr.` as *francs suisses* |
-
-`fr` serves every French tag. The number words follow the CLDR locale of the tag, so `fr-BE` and `fr-CH` say *septante* and *nonante*, `fr-CH` says *huitante*, and every other region says *soixante-dix*, *quatre-vingts* and *quatre-vingt-dix*.
+The file `text2spoken/lang/fr.py` reads French. Its number words come from the CLDR spell-out rules, which the core dependency `unicode-rbnf` holds. Install `text2spoken[fr]` for the floor of `unicode-rbnf` that the file needs.
 
 ## What it reads
 
 The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, percentages and per mille, money, measures, times, dates, years, telephone numbers, colours, Roman numerals, abbreviations, idioms and lexicon entries. It does not read addresses, symbols, emoji, letter codes or identifiers.
 
-| Written | Spoken |
+A number that ends in 1 says *un* or *une* with its noun. The gender comes from the hint of the caller, then from the noun after the number when the table `feminine_nouns` holds it, then from `default_gender`, and then from the file, which is masculine. A unit and a currency carry their own gender.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Il y a 21 pommes.` | `fr-FR` | Il y a vingt et une pommes. |
+| `Il y a 80 places.` | `fr-FR` | Il y a quatre-vingts places. |
+| `Il y a 280 places.` | `fr-FR` | Il y a deux cent quatre-vingts places. |
+| `Rendez-vous à 21 h.` | `fr-FR` | Rendez-vous à vingt et une heures. |
+| `Rendez-vous à 14h30.` | `fr-FR` | Rendez-vous à quatorze heures trente. |
+| `Rendez-vous à 14:30.` | `fr-FR` | Rendez-vous à quatorze heures trente. |
+| `Il est 7 h 30.` | `fr-FR` | Il est sept heures trente. |
+| `Il est 12 h.` | `fr-FR` | Il est midi. |
+| `Il dort 12 h.` | `fr-FR` | Il dort douze heures. |
+| `C'est la 1re fois.` | `fr-FR` | C'est la première fois. |
+| `Le 21e siècle avance.` | `fr-FR` | Le vingt et unième siècle avance. |
+| `Le XXe siècle finit.` | `fr-FR` | Le vingtième siècle finit. |
+| `Le roi Louis XIV règne.` | `fr-FR` | Le roi Louis quatorze règne. |
+| `Rendez-vous le 10/11/2026.` | `fr-FR` | Rendez-vous le dix novembre deux mille vingt-six. |
+| `Il part le 1er mars.` | `fr-FR` | Il part le premier mars. |
+| `Cela coûte 3,50 €.` | `fr-FR` | Cela coûte trois euros cinquante. |
+| `Cela coûte 0,50 €.` | `fr-FR` | Cela coûte cinquante centimes. |
+| `Il gagne 1 000 000 €.` | `fr-FR` | Il gagne un million d'euros. |
+| `Il fait 6 °C.` | `fr-FR` | Il fait six degrés Celsius. |
+| `Il pèse 3,5 kg.` | `fr-FR` | Il pèse trois virgule cinq kilogrammes. |
+| `Il pèse 3,14159 kg.` | `fr-FR` | Il pèse trois virgule un quatre un cinq neuf kilogrammes. |
+| `Le prix monte de 50 %.` | `fr-FR` | Le prix monte de cinquante pour cent. |
+| `Le taux est de 5 ‰.` | `fr-FR` | Le taux est de cinq pour mille. |
+| `Il prend 1/2 heure.` | `fr-FR` | Il prend une demi heure. |
+| `Il mange 3/4 du gâteau.` | `fr-FR` | Il mange trois quarts du gâteau. |
+| `Il faut 5-8 kg.` | `fr-FR` | Il faut cinq à huit kilogrammes. |
+| `Appelez le 06 12 34 56 78.` | `fr-FR` | Appelez le zéro six douze trente-quatre cinquante-six soixante-dix-huit. |
+| `Composez 112 ici.` | `fr-FR` | Composez cent douze ici. |
+| `M. Dupont et Mme Martin arrivent.` | `fr-FR` | Monsieur Dupont et Madame Martin arrivent. |
+| `Le Dr Martin habite à St-Denis.` | `fr-FR` | Le Docteur Martin habite à Saint-Denis. |
+| `Lisez le n° 5.` | `fr-FR` | Lisez le numéro cinq. |
+
+### Numbers grouped with a space
+
+A space, a no-break space, a narrow no-break space and, in Switzerland, an apostrophe group the digits of a number, three at a time. A comma and a full stop both mark a decimal, and a full stop that repeats groups digits. A range, a fraction and an expression read a number grouped with a space as one number.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Il faut 1 000-2 000 personnes.` | `fr-FR` | Il faut mille à deux mille personnes. |
+| `On a 1 000 + 500 = 1 500.` | `fr-FR` | On a mille plus cinq cents égale mille cinq cents. |
+| `Il y a 1.000.000 habitants.` | `fr-FR` | Il y a un million habitants. |
+| `Il y a 1'000 habitants.` | `fr-CH` | Il y a mille habitants. |
+
+### A number that stands for an ordinal
+
+*Cent* and *vingt* take no *s* when the number stands for an ordinal: in an ordinal, in a year, and in a number that labels a page or a year. The Académie française names two labels, *page* and *l'an*. Only spaces can stand between the label and the number. A comma, a full stop or another word ends the label, so the number after it agrees with its noun.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Le 200 000 000e visiteur arrive.` | `fr-FR` | Le deux cent millionième visiteur arrive. |
+| `Ouvrez le livre page 80.` | `fr-FR` | Ouvrez le livre page quatre-vingt. |
+| `Voir p. 80 ici.` | `fr-FR` | Voir page quatre-vingt ici. |
+| `Voir la page 80-90 ici.` | `fr-FR` | Voir la page quatre-vingt à quatre-vingt-dix ici. |
+| `Il est mort en l'an 800.` | `fr-FR` | Il est mort en l'an huit cent. |
+| `Depuis un an, 21 personnes attendent.` | `fr-FR` | Depuis un an, vingt et une personnes attendent. |
+| `Sur cette page, 21 recettes vous attendent.` | `fr-FR` | Sur cette page, vingt et une recettes vous attendent. |
+
+## Varieties
+
+| Tag | What differs |
 | --- | --- |
-| `21 h`, `14h30`, `14 h 30`, `à 14:30` | vingt et une heures, quatorze heures trente |
-| `à 12 h`, `à 0 h`, `il dort 12 h` | à midi, à minuit, il dort douze heures |
-| `1er`, `2e`, `3ème`, `21e`, `1re`, `2es`, `2nd` | premier, deuxième, troisième, vingt et unième, première, deuxièmes, second |
-| `10/11/2026`, `le 1er mars`, `10 novembre 2026` | dix novembre deux mille vingt-six, le premier mars, dix novembre deux mille vingt-six |
-| `3,50 €`, `0,50 €`, `12 $`, `5 £`, `1 000 000 €` | trois euros cinquante, cinquante centimes, douze dollars, cinq livres, un million d'euros |
-| `3,5`, `0,05`, `50 %`, `-3°`, `6 °C` | trois virgule cinq, zéro virgule zéro cinq, cinquante pour cent, moins trois degrés, six degrés Celsius |
-| `1/2`, `3/4`, `5/8`, `5-8 kg`, `2 000 000 km` | un demi, trois quarts, cinq huitièmes, cinq à huit kilogrammes, deux millions de kilomètres |
-| `M.`, `Mme`, `Dr`, `St-Denis`, `n° 5`, `etc.` | Monsieur, Madame, Docteur, Saint-Denis, numéro cinq, et cetera |
+| `fr-FR` (the default variety) | The base readings. `fr` and every region with no variety of its own read as `fr-FR` |
+| `fr-CA` | `$` is the Canadian dollar. A telephone number reads digit by digit. `register="colloquial"` says *piastres* and *cennes* |
+| `fr-CH` | `CHF`, `Fr.` and `fr.` are Swiss francs. An apostrophe groups digits |
 
-A number that ends in 1 says *un* or *une* with its noun: *vingt et un kilos*, *vingt et une heures*. The gender comes from the hint of the caller, then from the noun after the number when the table `feminine_nouns` holds it, then from `default_gender`, and then from the file, which is masculine. A unit and a currency carry their own gender. A half before a noun takes the gender of the noun: `1/2 heure` reads *une demi heure*.
+The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *septante* and *nonante*, `fr-CH` says *huitante*, and every other region says *soixante-dix*, *quatre-vingts* and *quatre-vingt-dix*. CLDR gives *huitante* for all of Switzerland, and Geneva, Neuchâtel and Jura do not use it.
 
-*Cent* and *quatre-vingt* take their *s* only where the grammar says: *deux cents*, *deux cent un*, *quatre-vingts*, *quatre-vingt-un*, *quatre-vingt mille*, *deux cents millions*. A numeral that stands for an ordinal keeps both singular: a year, *en mille neuf cent quatre-vingt*, an ordinal, *deux cent millionième*, and a number that labels a page or a year: *page quatre-vingt*, *p. 80* and *l'an huit cent*. Both ends of a page range read so: `page 80-90` is *page quatre-vingt à quatre-vingt-dix*. The Académie française names these two labels, *page* and *l'an*. Only spaces can stand between the label and the number, so `Depuis un an, 21 personnes` reads *vingt et une personnes*.
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Il y a 71 places.` | `fr-BE` | Il y a septante et une places. |
+| `Il y a 80 places.` | `fr-BE` | Il y a quatre-vingts places. |
+| `Il y a 80 places.` | `fr-CH` | Il y a huitante places. |
+| `Il y a 91 places.` | `fr-CA` | Il y a quatre-vingt-onze places. |
+| `Cela coûte 12 $.` | `fr-CA` | Cela coûte douze dollars. |
+| `Cela coûte 5 CHF.` | `fr-CH` | Cela coûte cinq francs suisses. |
+| `Composez 112 ici.` | `fr-CA` | Composez un un deux ici. |
 
-A space, a no-break space, a narrow no-break space and an apostrophe (`1'000`, as in Switzerland) group the digits of a number, three at a time. So `1 000` is one number and `70 90 80` is three. A range, a fraction and an expression read a number grouped with a space whole: `1 000-2 000` is *mille à deux mille*, and `1 000 + 500` is *mille plus cinq cents*. A comma and a full stop both mark a decimal, and a full stop that repeats groups digits, as in `1.000.000`. A number that the marks do not settle, such as `1.500`, stays as written with a warning, because it is 1,5 or 1500. A narrow no-break space may also stand between a number and its unit, its currency, its percent sign or its scale word.
+## Options
 
-One or two digits after the decimal mark read as a number, *trois virgule quatorze*, and three or more read digit by digit.
+| Option | Values | Default (`fr-FR`) | Default (`fr-CA`) | Default (`fr-CH`) |
+| --- | --- | --- | --- | --- |
+| `date_order` | `DMY`, `MDY` | `DMY` | `DMY` | `DMY` |
+| `clock` | `12h`, `24h` | `24h` | `24h` | `24h` |
+| `minute_style` | `number`, `phrase` | `number` | `number` | `number` |
+| `decimal_mark` | `,`, `.` | `,` | `,` | `,` |
+| `scale` | `long` | `long` | `long` | `long` |
+| `default_gender` | `feminine`, `masculine` | `masculine` | `masculine` | `masculine` |
+| `phone_regions` | `AE`, `BE`, `BR`, `CA`, `CH`, `EG`, `ES`, `FR`, `GB`, `PT`, `SA`, `US` | `FR` | `CA` | `CH` |
+| `register` | `colloquial`, `formal` | `formal` | `formal` | `formal` |
 
-The letter `h` is evidence of a time by itself, so `21 h` is *vingt et une heures* as a time and as a duration. The colon form needs a time word before it, such as `à`, `vers` or `dès`. *Midi* and *minuit* come only with a time word or *est* before the hour, on the 12-hour clock and in the phrase style. So `il est 12 h` reads *il est midi*, and a duration `12 h` stays *douze heures*. `clock="12h"` adds *du matin*, *de l'après-midi* or *du soir*. `minute_style="phrase"` and `register="colloquial"` say *et quart*, *et demie* and *moins le quart*.
+`clock="12h"` adds *du matin*, *de l'après-midi* or *du soir*. `minute_style="phrase"` and `register="colloquial"` say *et quart*, *et demie* and *moins le quart*.
 
-Telephone numbers read in pairs: `06 12 34 56 78` is *zéro six douze trente-quatre cinquante-six soixante-dix-huit*. A group of one or three digits reads digit by digit. A short code of three digits reads as one number: `Composez 112.` is *Composez cent douze.* `fr-CA` reads every digit. A number reads when a phone word stands right before it, when it has the French national shape, a country code, or the trunk prefix of the region of the tag. The file adds the numbering plans of Belgium, Canada and Switzerland to those of the core.
+| Written | Spoken (`fr-FR`, `clock="12h"`) | Spoken (`fr-FR`, `minute_style="phrase"`) |
+| --- | --- | --- |
+| `Rendez-vous à 14 h 15.` | Rendez-vous à deux heures quinze de l'après-midi. | Rendez-vous à quatorze heures et quart. |
 
-An ordinal marker after a Roman numeral is the evidence that it is a number: `XXe siècle` is *vingtième siècle* and `Ve République` *cinquième République*. A bare numeral reads after the first name of a sovereign or a pope, as in `Louis XIV`, and after a heading word, as in `Acte II`.
-
-In `fr-CA`, `register="colloquial"` says *piastres* and *cennes*.
+| Written | Spoken (`fr-CA`, `register="colloquial"`) |
+| --- | --- |
+| `Cela coûte 3,50 $.` | Cela coûte trois piastres cinquante. |
 
 ## Sources
 
 The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second"), the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
-The test rows in `tests/data/fr.tsv` name their source. Most of them say that the rule comes from memory and that no source was fetched, and no native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
+Of the 420 test rows in `tests/data/fr.tsv`, 22 quote a source that was fetched, and 366 say that a rule comes from memory or that no source was fetched. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
 
 ## Limits
 
-Some French readings are wrong or stay as written:
+French leaves these forms as written or reads them in a limited way:
 
-- `est` and `pour` are no time words, because they also come before a ratio or a quantity. `Il est 7:30.` and `Réglée pour 7:30.` stay as written. `Il est 7 h 30.` reads.
-- A range after `entre` reads with `à`: `entre 10 %-20 %` reads *entre dix pour cent à vingt pour cent*, where French says *entre ... et ...*.
-- A half after a whole number and its noun reads apart: `2 ans 1/2` reads *deux ans un demi*, where French says *deux ans et demi*.
-- A fraction other than a half before a noun reads with no *de*: `1/4 heure` reads *un quart heure*.
-- A short code after `le` and before another word reads as a cardinal: `Composez le 3615 maintenant.` reads *trois mille six cent quinze*.
-- A date with a two-digit year, such as `10/11/26`, stays as written.
-- `fr-CH` follows CLDR with *huitante* for 80, which Geneva, Neuchâtel and Jura do not use.
+| Written | Tag | Spoken | Limit |
+| --- | --- | --- | --- |
+| `Il est 7:30.` | `fr-FR` | stays as written | The colon form needs a time word before it, such as `à`, `vers` or `dès`. `est` and `pour` are no time words, because they also come before a ratio or a quantity. |
+| `Réglée pour 7:30.` | `fr-FR` | stays as written | The same rule. |
+| `Il varie entre 10 %-20 %.` | `fr-FR` | Il varie entre dix pour cent à vingt pour cent. | A range after `entre` reads with *à*, where French says *entre … et …*. |
+| `Il a 2 ans 1/2.` | `fr-FR` | Il a deux ans un demi. | A half after a whole number and its noun reads apart, where French says *deux ans et demi*. |
+| `Il attend 1/4 heure.` | `fr-FR` | Il attend un quart heure. | A fraction other than a half before a noun reads with no *de*. |
+| `Composez le 3615 maintenant.` | `fr-FR` | Composez le trois mille six cent quinze maintenant. | A short code after `le` and before another word reads as a cardinal. |
+| `Composez 911 ici.` | `fr-CA` | Composez neuf cent onze ici. | `fr-CA` reads a telephone number digit by digit, but a short code of three digits as one number. No source for either reading was fetched. |
+| `Rendez-vous le 10/11/26.` | `fr-FR` | stays as written | A date with a two-digit year stays as written. |
+| `Il pèse 1.500 kg.` | `fr-FR` | stays as written | The marks do not settle the number: it is 1,5 or 1500. A warning names it. |
+| `Il faut 1'000-2'000 francs.` | `fr-CH` | stays as written | A range, a fraction and an expression read a number grouped with a space, and not one grouped with an apostrophe. |
+| `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after *page* takes the invariable form, also where it counts the next noun. |
 
 ---
 [← Basque](eu.md) · [Home](../index.md) · [Portuguese →](pt.md)
