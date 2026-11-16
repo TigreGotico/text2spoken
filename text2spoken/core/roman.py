@@ -18,3 +18,9 @@ _VALUES = {to_roman(n): n for n in range(1, 4000)}
 def value(numeral: str) -> int | None:
     """The value of a canonical upper-case Roman numeral from 1 to 3999; `IIII` and `IC` give None."""
     return _VALUES.get(numeral)
+
+
+def word_follows(text: str, end: int) -> bool:
+    """Whether a word in lowercase follows the numeral that ends at `end`, after one space, as `size` follows `XL` in
+    `Grade XL size`."""
+    return text.startswith(" ", end) and text[end + 1:end + 2].islower()

@@ -28,6 +28,15 @@ def lower(value, where: str) -> None:
     assert type(value) is str and value and value == value.lower(), f"{where}: {value!r} is not a lowercase string"
 
 
+def lower_letter(value, where: str) -> None:
+    assert type(value) is str and len(value) == 1 and value.isalpha() and value == value.lower(), \
+        f"{where}: {value!r} is not one lowercase letter"
+
+
+def capital_word(value, where: str) -> None:
+    assert type(value) is str and value.isalpha() and value.isupper(), f"{where}: {value!r} is not a word in capitals"
+
+
 def capitals(value, where: str) -> None:
     assert type(value) is str and len(value) >= 2 and all(c.isupper() for c in value), \
         f"{where}: {value!r} is not a run of two or more capital letters"
@@ -121,11 +130,12 @@ SHAPES: dict[str, Shape] = {
     "function_words": WORDS,
     "idioms": map_of(word, text),
     "leads": map_of(word, text),
-    "letter_names": map_of(one_of(*"abcdefghijklmnopqrstuvwxyz"), word),
+    "letter_names": map_of(lower_letter, word),
     "letter_codas": list_of(lower),
     "letter_free_consonants": list_of(lower),
     "letter_onsets": list_of(lower),
     "letter_runs": map_of(capitals, one_of("word", "letters")),
+    "letter_words": list_of(capital_word),
     "letter_vowels": list_of(lower, minimum=1),
     "list_links": WORDS,
     "number_abbreviations": map_of(word, reading),
@@ -152,6 +162,7 @@ SHAPES: dict[str, Shape] = {
     "time_words": WORDS,
     "titles": map_of(word, reading),
     "unit_symbols": WORDS,
+    "unjoined_symbols": list_of(capitals),
     "units": map_of(word, anything),
 }
 """Each key that the core reads, with its shape. A shape names only what the core reads: the value of a unit is
@@ -176,8 +187,8 @@ READERS: dict[str, frozenset[str]] = {
     "percent": frozenset({"number_marks", "percent", "range_word", "range_marks", "proclitics", "case_suffixes"}),
     "money": frozenset({"number_marks", "currencies", "currency_symbols", "scales", "range_word", "range_marks",
                       "proclitics", "case_suffixes"}),
-    "measure": frozenset({"number_marks", "symbols", "units", "unit_symbols", "dimension_marks", "range_marks",
-                        "proclitics", "case_suffixes"}),
+    "measure": frozenset({"number_marks", "symbols", "units", "unit_symbols", "unjoined_symbols", "dimension_marks",
+                        "range_marks", "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes", "function_words"}) | SYMBOL_KEYS,
@@ -187,14 +198,15 @@ READERS: dict[str, frozenset[str]] = {
     "abbreviation": frozenset({"titles", "number_abbreviations", "abbreviations", "sentence_final"}),
     "space_groups": frozenset(),
     "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_free_consonants",
-                          "letter_runs"}),
+                          "letter_runs", "letter_words"}),
     "symbol": SYMBOL_KEYS,
     "emoji": SYMBOL_KEYS,
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
     "speak_lexicon": frozenset(),
     "speak_electronic": frozenset({"electronic_symbols", "letter_names", "electronic_vowels", "electronic_labels",
                                    "electronic_schemes", "digit_words", "symbol_names"}),
-    "speak_letters": frozenset({"letter_names", "digit_words"}),
+    "speak_letters": frozenset({"letter_names", "digit_words", "letter_vowels", "letter_onsets", "letter_codas",
+                                "letter_free_consonants", "letter_runs"}),
     "speak_decimal": frozenset({"sign_words"}),
     "speak_fraction": frozenset({"sign_words"}),
     "speak_ordinal": frozenset(),
@@ -220,7 +232,8 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
-    "letter_runs", "letter_free_consonants", "symbol_names", "function_words", "colors",
+    "letter_runs", "letter_free_consonants", "letter_words", "unjoined_symbols", "symbol_names", "function_words",
+    "colors",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.
 Design section 4.2 lets a language have no range word: "A language that marks a range with case endings has no

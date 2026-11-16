@@ -2,8 +2,10 @@
 exception table, and the properties of section 11. Each expected value comes from the clause and the tables of the
 language file, worked out by hand."""
 import random
+import sys
 import time
 from dataclasses import replace
+from importlib import import_module
 
 import pytest
 
@@ -67,46 +69,50 @@ def test_a_language_with_no_letter_names_does_not_offer_the_form(code):
     (PT, "eua"), (PT, "pib"), (PT, "tap"), (PT, "ciav"), (PT, "palop"), (PT, "ovni"), (PT, "técnico"), (PT, "chip"),
     (EN, "nato"), (EN, "uefa"), (EN, "warning"), (EN, "first"), (EN, "help"), (EN, "irs"),
     (EN, "usa"), (EN, "cia"), (EN, "scuba"), (EN, "aids"), (EN, "sports"), (EN, "events"), (EN, "results"),
+    (PT, "instituto"), (PT, "transporte"),
 ])
 def test_a_run_that_splits_into_syllables(spec, word):
     """na-to, o-nu, i-va, si-da, u-e-fa, e-tar, a-ten-ção, e-u-a; pi-b, ta-p, ci-a-v, pa-lo-p and chi-p with a free
     consonant after the last syllable, and ov-ni and téc-ni-co with a free consonant that closes a syllable;
     war-ning, first with coda rst, help with coda lp, irs with coda rs, u-sa, ci-a; scu-ba with onset sc, and a-ids,
-    sports, e-vents and re-sults with a coda that takes the s of the -s/-z morpheme."""
+    sports, e-vents and re-sults with a coda that takes the s of the -s/-z morpheme; ins-ti-tu-to and trans-por-te
+    with the coda ns of AO1990 Base XX, 3."""
     assert splits_into_syllables(word, *_sets(spec))
 
 
 @pytest.mark.parametrize(("spec", "word"), [
     (PT, "rtp"), (PT, "ctt"), (PT, "cplp"), (PT, "bmw"), (PT, "irs"), (PT, "anp"), (PT, "hiv"), (PT, "nih"),
-    (PT, "instituto"), (EN, "bbc"), (EN, "fbi"), (EN, "ibm"), (EN, "bmw"), (EN, "zdf"),
+    (PT, "irst"), (EN, "bbc"), (EN, "fbi"), (EN, "ibm"), (EN, "bmw"), (EN, "zdf"),
 ])
 def test_a_run_that_does_not_split_into_syllables(spec, word):
     """No vowel (rtp, ctt, cplp, bmw, bbc, zdf), no free consonant after the last syllable of a run with no consonant
     before a vowel (irs, anp) or with an h outside ch, lh and nh (hiv, nih), no two consonants that close a syllable
-    in Portuguese (ns of instituto), no onset fb, and no coda b before a lone m (fbi, ibm)."""
+    in Portuguese other than ns (rst of irst), no onset fb, and no coda b before a lone m (fbi, ibm)."""
     assert not splits_into_syllables(word, *_sets(spec))
 
 
 @pytest.mark.parametrize(("run", "expected"), [
     ("ONU", "word"), ("ON", "letters"), ("A", None), ("A1", "letters"), ("4G", "letters"), ("12AB34", "letters"),
     ("TAP", "word"), ("EUA", "letters"), ("XIV", "letters"), ("LIV", "letters"), ("MIX", "word"), ("CIC", "word"),
-    ("UEFA2", None), ("ONGs", None), ("PhD", None), ("ÇX", None), ("ΒΓΔ", None), ("ATENÇÃO", None), ("A٣", None),
+    ("UEFA2", "word"), ("ONGs", None), ("PhD", None), ("ÇX", "letters"), ("ΒΓΔ", None), ("ATENÇÃO", None),
+    ("A٣", None), ("DA", "letters"),
 ])
 def test_the_reading_of_a_run(run, expected):
-    """Two letters read letter by letter, and one letter needs a digit. A run that reads as a word and holds a digit
-    is not taken. A letter with no name, a lowercase letter, a combining mark and a digit outside ASCII end the
-    run. A run that is a well-formed Roman numeral takes no free consonant, so XIV and LIV read letter by letter. MIX,
-    with the coda x, reads as a word, and CIC, which is no Roman numeral, reads ci-c with a free c."""
+    """Two letters read letter by letter, and one letter needs a digit. A run that reads as a word may hold digits,
+    which read as a cardinal. A letter with no name, a lowercase letter, a combining mark and a digit outside ASCII
+    end the run. A run that is a well-formed Roman numeral takes no free consonant, so XIV and LIV read letter by
+    letter. MIX, with the coda x, reads as a word, and CIC, which is no Roman numeral, reads ci-c with a free c. Ç has
+    a name, "cê cedilhado", so ÇX reads letter by letter. DA alone sits in no text in capitals."""
     assert reading(run, PT.data) == expected
 
 
 def test_the_fields_and_a_word_reading_that_keeps_its_text():
     request = analyze("A NATO e os CTT.", "pt-PT", LETTERS_ON).request
     found = [(s.start, s.end, dict(s.fields), s.keep) for s in letters.LETTERS.find("A NATO e os CTT.", (), request)]
-    assert found == [(2, 6, {"letters": "NATO", "reading": "word"}, True),
-                     (12, 15, {"letters": "CTT", "reading": "letters"}, False)]
+    assert found == [(2, 6, {"letters": "NATO", "reading": "word", "clause": ()}, True),
+                     (12, 15, {"letters": "CTT", "reading": "letters", "clause": ()}, False)]
     assert [(s.form, dict(s.fields)) for s in analyze("A NATO e os CTT.", "pt-PT", LETTERS_ON).spans] == [
-        (Form.LETTERS, {"letters": "CTT", "reading": "letters"})]
+        (Form.LETTERS, {"letters": "CTT", "reading": "letters", "clause": ()})]
 
 
 def test_a_lexicon_value_that_the_form_reads_raises_and_a_word_does_not():
@@ -135,7 +141,9 @@ def _failing_rows() -> set[str]:
 
 @pytest.mark.parametrize(("verdict", "expected"), [(False, WORD_ROWS), (True, LETTER_ROWS)])
 def test_the_syllable_rule_bites(monkeypatch, verdict, expected):
+    """Without tugalex, so that no word that it knows reads as a word by the word check."""
     assert _failing_rows() == set()
+    monkeypatch.setitem(sys.modules, "tugalex", None)
     monkeypatch.setattr(letters, "splits_into_syllables", lambda *args: verdict)
     assert _failing_rows() >= expected
 
@@ -202,3 +210,75 @@ def test_a_long_run_of_capitals_takes_linear_time(unit, lang):
     normalize(unit, lang, LETTERS_ON)
     small, large = min(seconds(500) for _ in range(3)), min(seconds(4000) for _ in range(3))
     assert large < 20 * small, (small, large)
+
+
+NUMERALS_AND_CODES = ["SAIA ", "DA ", "DO ", "NOT ", "NO ", "IF ", "SALA", "ENTER", "COVID", "COVID19", "A25", "B52",
+                      "B007", "M25", "GB", "MB", "TB", "10", "5", "Classe ", "capítulo ", "parte ", "World War ",
+                      "Guerra Mundial ", "Henry ", "Paulo ", "King ", "Pope ", "D. ", "Dra. ", "Sr. ", "I", "II", "V",
+                      "VI", "XIV", "LVII", "MIX", "CD", "DC", "Ç", "ÇAÇA", "ÇB", "EU ", "The ", "O "]
+JOINERS = list("0123456789٢ .,;:!?-'/%#@()") + ["\t", "\u00a0", "www.", ".com", "http://", "a@b.com.", "km/h", "1/2"]
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_numerals_text_in_capitals_and_codes_are_idempotent(seed):
+    """Section 11 for the Roman numerals, the text in capitals and the codes of letters and digits, with `LETTERS`
+    off and on: a second pass changes nothing, except in the known limits of the README. The joiners put digits,
+    marks, spaces and claims next to the runs."""
+    rng = random.Random(seed)
+    for _ in range(2000):
+        lang = rng.choice(["en", "en-US", "pt-PT", "pt-BR"])
+        params = rng.choice([None, LETTERS_ON])
+        text = "".join(rng.choice(JOINERS + CAPITALS + NUMERALS_AND_CODES) for _ in range(rng.randint(1, 30)))
+        once = normalize(text, lang, params)
+        assert normalize(once, lang, params) == once or known_limit(text, lang, params), (text, lang, params, once)
+
+
+def test_without_tugalex_only_letter_words_read_and_one_warning_names_the_extra(monkeypatch, caplog):
+    """Design section 4.6 and section 10: without the `pt` extra, a run of a clause in capitals reads as a word only
+    when `letter_words` holds it, and one log warning names the extra."""
+    pt = import_module("text2spoken.lang.pt")
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    pt._warn_no_extra.cache_clear()
+    try:
+        with caplog.at_level("WARNING", logger="text2spoken"):
+            first = normalize("A RTP NO AR", "pt-PT", LETTERS_ON)
+            second = normalize("EU VI O AR", "pt-BR", LETTERS_ON)
+    finally:
+        pt._warn_no_extra.cache_clear()
+    assert first == "A érre tê pê no á érre"
+    assert second == "eu vi O á érre"
+    assert [r.getMessage() for r in caplog.records if "text2spoken[pt]" in r.getMessage()] == [
+        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it, and "
+        "a Roman numeral stays as written; install text2spoken[pt]"]
+
+
+@pytest.mark.parametrize(("text", "expected"), [("Leia o capítulo V.", "Leia o capítulo V."), ("Classe II", "Classe II"),
+                                                ("A D. XIV.", "A Dom XIV."),
+                                                ("Rainha Elizabeth II", "Rainha Elizabeth II"),
+                                                ("No capítulo II, V. Silva.", "No capítulo II, V. Silva.")])
+def test_without_the_pt_extra_a_roman_numeral_stays_as_written(monkeypatch, caplog, text, expected):
+    """Design section 10: without the `pt` extra, which brings the number library, a Roman numeral stays as written,
+    as on dev, one log warning names the extra, and no `ModuleNotFoundError` reaches the caller."""
+    pt = import_module("text2spoken.lang.pt")
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser.util", None)
+    pt._warn_no_extra.cache_clear()
+    try:
+        with caplog.at_level("WARNING", logger="text2spoken"):
+            assert normalize(text, "pt-PT") == expected
+    finally:
+        pt._warn_no_extra.cache_clear()
+    assert len([r for r in caplog.records if "text2spoken[pt]" in r.getMessage()]) == 1
+
+
+@pytest.mark.parametrize(("text", "expected"), [("MP3", "éme pê três"), ("A25", "á dois cinco"),
+                                                ("O F16", "O éfe um seis"), ("B52", "bê cinco dois"),
+                                                ("IC19", "i cê um nove")])
+def test_without_the_pt_extra_digits_read_one_by_one(monkeypatch, text, expected):
+    """Design section 10: without the `pt` extra, which brings the number library, the digits of a run read by
+    their words in `digit_words`, and no `ModuleNotFoundError` reaches the caller."""
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser", None)
+    monkeypatch.setitem(sys.modules, "ovos_number_parser.util", None)
+    assert normalize(text, "pt-PT", LETTERS_ON) == expected

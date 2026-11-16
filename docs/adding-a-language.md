@@ -383,14 +383,14 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `time_clock` | `TIME` | `clock_marks`, `time_words` | `day_periods`, `range_marks`, `range_word`, `time_suffixes` |
 | `percent` | `PERCENT` | `number_marks`, `percent` | `case_suffixes`, `proclitics`, `range_marks`, `range_word` |
 | `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `proclitics`, `range_marks`, `range_word` |
-| `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `proclitics`, `range_marks` |
+| `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `proclitics`, `range_marks`, `unjoined_symbols` |
 | `telephone` | `TELEPHONE` | `currencies`, `currency_symbols`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names` |
 | `expression` | `EXPRESSION` | `operators`, `patterns`, `symbols` | none |
 | `abbreviation` | `ABBREVIATION` | `abbreviations`, `number_abbreviations`, `sentence_final`, `titles` | none |
 | `space_groups` | `CARDINAL` | none | none |
 | `color` | `COLOR` | `color_words` | none |
 | `electronic` | `ELECTRONIC` | `electronic_schemes`, `electronic_tlds` | none |
-| `letters` | `LETTERS` | `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_runs` |
+| `letters` | `LETTERS` | `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_runs`, `letter_words` |
 | `symbol` | `SYMBOL` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
 | `emoji` | `EMOJI` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
 
@@ -403,7 +403,7 @@ The shared verbalizers read these keys:
 | `speak_cardinal` | `digit_words`, `leads`, `sign_words` | none |
 | `speak_lexicon` | none | none |
 | `speak_electronic` | `digit_words`, `electronic_schemes`, `electronic_symbols`, `electronic_vowels`, `letter_names` | `electronic_labels`, `symbol_names` |
-| `speak_letters` | `digit_words`, `letter_names` | none |
+| `speak_letters` | `digit_words`, `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_runs` |
 | `speak_decimal` | `sign_words` | none |
 | `speak_fraction` | `sign_words` | none |
 | `speak_ordinal` | none | none |
