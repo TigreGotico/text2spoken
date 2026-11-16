@@ -1,20 +1,24 @@
 # text2spoken documentation
 
-text2spoken rewrites written forms, such as `12/03/2024`, `£3.50` or `Dr`, into the words that a speaker says. The pages below go from a first call to the contract of a language file. Read them in this order.
+text2spoken rewrites written forms, such as `12/03/2024`, `£3.50` or `Dr`, into the words that a speaker says. Find the page for your question below. The pages are in reading order, from a first call to the contract of a language file.
 
-| Page | What it tells you |
+| Question | Page |
 | --- | --- |
-| [Quickstart](quickstart.md) | Install, the first call, and how to see what a tag reads |
-| [Usage](usage.md) | Text to speech, phonemizers and word error rate, with examples |
-| [How it reads text](how-it-reads.md) | Each written form, what it reads, and which forms are off by default |
-| [API](api.md) | `normalize`, `analyze`, `render`, `supports`, `effective_params`, the params, hints and tokenizers |
-| [Errors and warnings](errors.md) | Each error and warning, strict mode, and when a reading stays as written |
-| [Adding a language](adding-a-language.md) | The contract of a language file |
-| [Development](development.md) | The tests, the row files and CI |
+| How do I install it and get spoken text? | [Quickstart](quickstart.md) |
+| How do I turn a form off or on, pick a variety, or add my own words? | [Usage](usage.md) |
+| Why did a text read this way, and what stays as written? | [How it reads text](how-it-reads.md) |
+| How does it read numbers? | [Numbers](numbers.md) |
+| How does it read dates, times and years? | [Dates and times](dates-and-times.md) |
+| How does it read money, units, percentages and symbols? | [Money, units and symbols](money-units-and-symbols.md) |
+| How does it read addresses, capital letters, abbreviations and emoji? | [Addresses, letters and emoji](addresses-letters-and-emoji.md) |
+| What does each function, param and field do? | [API](api.md) |
+| What does each error and warning mean? | [Errors and warnings](errors.md) |
+| How do I add my language? | [Adding a language](adding-a-language.md) |
+| How do I run the tests, write the row files, or release? | [Development](development.md) |
 
 ## Languages
 
-Each language page gives the varieties of the language, the codes that it serves, what it reads, its sources and its limits.
+Each language page gives what the language reads, its varieties and the codes that it serves, its options, its sources and its limits.
 
 | Language | Page |
 | --- | --- |
@@ -25,3 +29,5 @@ Each language page gives the varieties of the language, the codes that it serves
 | Basque | [eu](languages/eu.md) |
 | Portuguese | [pt](languages/pt.md) |
 | Russian | [ru](languages/ru.md) |
+
+The language pages come after [Errors and warnings](errors.md) in the reading order.
