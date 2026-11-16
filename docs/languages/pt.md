@@ -60,7 +60,7 @@ The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name the
 
 ## Roman numerals
 
-A Roman numeral reads after a century word, after a noun of a part, a class or a series, after a capitalised word, and after a title and its full stop. It reads as an ordinal up to ten and as a cardinal from eleven. Ciberdúvidas 9067 gives the pt-BR limit: "os numerais se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono)". The noun or the title before the numeral gives the gender. After a noun of the `roman_nouns` table, one letter reads when it is `I`, `V` or `X`.
+A Roman numeral reads after a century word, after a noun of a part, a class or a series, after a capitalised word, and after a title and its full stop. It reads as an ordinal up to ten and as a cardinal from eleven. Ciberdúvidas 9067 gives the pt-BR limit: "os numerais se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono)". The noun or the title before the numeral gives the gender. A numeral of one letter, `I`, `V` or `X`, reads only after a noun of the `roman_letter_nouns` table: the parts of a work, such as `capítulo`, `livro`, `parte`, `cena` and `artigo`. Ciberdúvidas 11716 applies the ordinal rule "a todas as partes em que se divide uma obra". A group, a class or a phase is labelled with letters too, so `Grupo I` stays as written. No numeral reads after a word of the `letter_words` table, such as the pronoun `EU`.
 
 | Written | Tag | Spoken | Note |
 | --- | --- | --- | --- |
@@ -98,6 +98,7 @@ A run of three letters or more that tugalex knows reads as a word anywhere. In a
 | `Visitei o INSTITUTO.` | stays as written | The same rule, outside a clause. |
 | `O AR` | stays as written | `O` counts as a run of the clause. |
 | `A ANS propõe regras.` | A á éne ésse propõe regras. | The table spells it. |
+| `Eu LI o livro.` | Eu éle i o livro. | Limit: a run of two letters outside a clause in capitals reads letter by letter, so a word written in capitals for stress is spelled. |
 | `DEPARTAMENTO DE TI` | stays as written | Limit: tugalex knows the pronoun "ti", so the acronym `TI` reads as the pronoun in a clause in capitals. |
 | `EPI e ODE.` | stays as written | Limit: the rule reads some runs that Wiktionary spells, such as `EPI` ({{pt-IPA\|ê-pê-i}}) and `ODE` ({{pt-IPA\|ó-dê-é}}). |
 | `A WAN.` | A dâblio á éne. | Limit: the rule spells some runs that Wiktionary reads as words, because `w` starts no Portuguese syllable. |
