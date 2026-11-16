@@ -19,6 +19,8 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Fica entre as 0:00 e as 2:00.` | `pt-PT` | Fica entre a meia-noite e as duas horas. |
 | `Chega às 0h.` | `pt-PT` | Chega às zero horas. |
 | `Luís XIV reinou no século XVII.` | `pt-PT` | Luís Catorze reinou no século dezassete. |
+| `A Sra. Sousa e a Dr.ª Lima.` | `pt-PT` | A Senhora Sousa e a Doutora Lima. |
+| `Custa 250 000 €.` | `pt-PT` | Custa duzentos e cinquenta mil euros. |
 
 A number agrees with the noun that it counts. The gender of a common noun comes from the noun lexicon of `tugalex`, and a number before a unit takes the gender of the unit.
 
@@ -56,7 +58,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 283 rows in `tests/data/pt.tsv`, 13 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 293 rows in `tests/data/pt.tsv`, 13 are marked silver.
 
 ## Runs of capital letters
 
@@ -87,6 +89,8 @@ The limits that Portuguese shares with English are on the [Addresses, letters an
 | `2,5h` | `pt-PT` | dois vírgula cinco horas | A decimal takes no unit gender. |
 | `1,5h` | `pt-PT` | um vírgula cinco horas | The unit `h` reads when it touches the number. |
 | `1,5 h` | `pt-PT` | stays as written | With a space between the number and `h`, the measure stays as written. |
+| `A Drª. Sousa.` | `pt-PT` | stays as written | The full stop of an abbreviation comes before the letter in superscript, as in `Dr.ª` (Dicio), so `Drª.` and `Dª` are no titles of the file. |
+| `Custa 250 000 €.` | `pt-BR` | stays as written | A space reads as the group mark of an amount only in `pt-PT`, where CLDR gives it. CLDR gives the full stop for `pt-BR`. |
 | `8 ÷ 2` | `pt-PT` | oito sinal de divisão dois | A symbol name is the CLDR name, with no agreement and no context. |
 | `PAGUEI 2 CÓRDOBAS.` | `pt-PT` | PAGUEI duas CÓRDOBAS. | Text in capitals cannot tell the city Córdoba from the currency, because the currency gender entry matches the word as written. |
 | `Paguei 2 córdobas.` | `pt-PT` | Paguei dois córdobas. | The comparison for the row above. |

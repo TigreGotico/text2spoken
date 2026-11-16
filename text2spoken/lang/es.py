@@ -21,6 +21,11 @@ noun (DPD «ordinales», 1) and `usted` is a personal pronoun (DPD «usted», 1)
 The varieties differ in the decimal mark (DPD «punto», 4.4; CLDR per region), the currency of `$` (DPD, appendix 4),
 the reading of `#` (DPD, appendix 4), the reading of the first day of the month (DPD «primero», 3) and of a whole
 percentage (DPD «ciento», 3).
+
+The long scale reads to 10**42: DLE «cuatrillón», «quintillón» ("Un millón de cuatrillones, que se expresa por la
+unidad seguida de 30 ceros") and «sextillón» ("Un millón de quintillones, que se expresa por la unidad seguida de 36
+ceros"). A variety with the decimal point reads a decimal comma next to `€`, as in `23,88 €`, because CLDR 49 es
+writes the euro with that comma (`#,##0.00 ¤`).
 """
 from __future__ import annotations
 
@@ -232,16 +237,18 @@ def _plain(text: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
 
 
-LARGEST = 10**28
-"""The first number that stays as written. No test row with a source holds a reading from 10**28, so the file reads
-none. ovos-number-parser reads 10**42 + 1 as "uno por diez elevado a cuarenta y dos", which is the value of 10**42,
-and it raises `NotImplementedError` for an ordinal from 10**24, which declines the span."""
+LARGEST = 10**42
+"""The first number that stays as written. The DLE names each long-scale word up to 10**36: «quintillón», "Un millón
+de cuatrillones, que se expresa por la unidad seguida de 30 ceros", and «sextillón», "Un millón de quintillones, que
+se expresa por la unidad seguida de 36 ceros". ovos-number-parser reads 10**42 + 1 as "uno por diez elevado a
+cuarenta y dos", which is the value of 10**42, and it raises `NotImplementedError` for an ordinal from 10**24, which
+declines the span."""
 
 
 def _below_largest(digits: str) -> None:
     value = bounded_integer(digits)
     if value is None or value >= LARGEST:
-        raise DeclinedReading(f"{len(digits)} digits reach 10**28, which this file leaves as written")
+        raise DeclinedReading(f"{len(digits)} digits reach 10**42, which this file leaves as written")
 
 
 class SpanishSpeller:

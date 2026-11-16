@@ -15,6 +15,8 @@ The file reads every form except Roman numerals and identifiers. The `LETTERS` a
 | `Write to ann@example.com.` | `en-GB` | Write to ann at example dot com. |
 | `Call 911 now.` | `en-US` | Call nine one one now. |
 | `© 2024` | `en-GB` | copyright two thousand and twenty-four |
+| `The Prof. arrived.` | `en-US` | The Professor arrived. |
+| `It costs 23,88 €.` | `en-US` | It costs twenty-three euros and eighty-eight cents. |
 
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which English reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
@@ -44,7 +46,7 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 482 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 491 rows.
 
 ## Runs of capital letters
 
@@ -69,7 +71,7 @@ The limits that English shares with Portuguese are on the [Addresses, letters an
 | `Maroon 5 ft. Cardi B` | `en-GB` | Maroon five ft. Cardi B | `ft` does not read as feet, because `ft.` also names "featuring" in a music credit. |
 | `It is 6 ft tall.` | `en-GB` | It is six ft tall. | The same rule keeps `ft` as written after a number. |
 | `A 5 µm hole.` | `en-GB` | A five micrometres hole. | A unit before a noun reads in the plural. |
-| `It costs €12,50.` | `en-GB` | stays as written | A euro amount with a comma for the decimal mark stays as written. |
+| `It costs $23,88.` | `en-US` | stays as written | A decimal comma reads only next to `€`, the currency that CLDR writes with the comma in German, Spanish, French and Italian. |
 
 The limits that English shares with Portuguese are on the [Money, units and symbols](../money-units-and-symbols.md#limits) page.
 

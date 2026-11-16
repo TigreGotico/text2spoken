@@ -21,6 +21,11 @@ USD the symbol `$` and JPY the symbol `¥`, but en-001, the parent of en-GB, wri
 shares the narrow `$` and `¥` between currencies. The en symbol and the en annotation name keep `$` for the dollar
 and `¥` for the yen in en-GB. en-US reads `US$`, the symbol of USD in CLDR en-001 and root, as the dollar too.
 
+`Prof.` reads "Professor" also where no name follows it, as in `The Prof. arrived.`: Wiktionary, "Prof.", gives an
+English noun, with the plural `Profs.`, that abbreviates Professor (after the Collins English Dictionary). A decimal
+comma before or after `€`, as in `23,88 €`, reads in both varieties, because CLDR 49 writes the euro with that comma in
+de, es, fr and it, and an en group has three digits.
+
 A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
 `cldr-annotations-derived-full`): `©` reads "copyright", `→` "right-pointing arrow" and `¶` "paragraph mark".
 
@@ -184,8 +189,9 @@ DATA = freeze({
     "colors": COLORS,
     "titles": {"Dr.": "Doctor", "Mr.": "Mister", "Mrs.": "Missus", "Prof.": "Professor",
                "Dr": "Doctor", "Mr": "Mister", "Mrs": "Missus"},
-    "abbreviations": {"etc.": "et cetera", "e.g.": "for example", "i.e.": "that is", "vs.": "versus"},
-    "sentence_final": ["etc."],
+    "abbreviations": {"etc.": "et cetera", "e.g.": "for example", "i.e.": "that is", "vs.": "versus",
+                      "Prof.": "Professor"},
+    "sentence_final": ["etc.", "Prof."],
     "number_abbreviations": {"No.": "number"},
     "symbols": {"%": "percent", "$": "money", "£": "money", "€": "money", "¥": "money", "°": "measure",
                 "×": "measure"},

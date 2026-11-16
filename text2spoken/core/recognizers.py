@@ -550,10 +550,14 @@ class Money:
         Each symbol next to a number gives a candidate, before the number and after it, and the claim takes the first
         that no earlier span holds. So a symbol that one amount reads is not the symbol of the next number: in
         `5 R$ 10£` the second amount is `10£`. A symbol that a phone number holds is still free for the amount after
-        it: `Call 999 £ 5 now.` reads "five pounds"."""
-        symbols = currency_symbols(request)
+        it: `Call 999 £ 5 now.` reads "five pounds". A number with a decimal comma in a variety with the decimal
+        point reads only next to `€` (`_comma_decimals`)."""
+        every_symbol = currency_symbols(request)
+        euro = tuple((symbol, code) for symbol, code in every_symbol if code == "EUR")
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
-        for number in numbers_in(text, request):
+        numbers = [(number, every_symbol) for number in self.numbers(text, tokens, request)]
+        numbers += [(number, euro) for number in _comma_decimals(text, request)]
+        for number, symbols in numbers:
             if number.sign:
                 continue
             for symbol, code in symbols:
@@ -562,6 +566,10 @@ class Money:
                                FrozenMap({"amount": FrozenMap({**number.amount(), "sign": sign}), "currency": code,
                                           "written_symbol": symbol, "scale": scale, "prefix": prefix,
                                           "suffix": suffix}), recognizer=self.name)
+
+    def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
+        """The numbers that a currency symbol may stand next to."""
+        return numbers_in(text, request)
 
     def _sides(self, text: str, number: Number, symbol: str, scales: Sequence[str],
                request: Request) -> Iterator[tuple[tuple[int, int, str, str], str, str]]:
@@ -587,6 +595,22 @@ class Money:
                         and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
                     yield bounds, "", scale
                     return
+
+
+def _comma_decimals(text: str, request: Request) -> tuple[Number, ...]:
+    """In a variety whose decimal mark is the point, the numbers with a decimal comma and one or two digits after
+    it, which the marks of the variety do not parse, as in `23,88`. The comma is no group mark there, because a
+    group has three digits (CLDR 49 decimal format `#,##0.###` of en, es and de). CLDR 49 writes a euro amount
+    with this comma in de, es, fr and it (currency format `#,##0.00 ¤`, decimal mark `,`)."""
+    if request.params.decimal_mark != ".":
+        return ()
+    comma = number_marks(request.data, ",")
+    if all(decimal != "," for _, decimal, _ in comma):
+        return ()
+    found = {(number.start, number.end) for number in numbers_in(text, request)}
+    return tuple(number for number in find_numbers(text, comma, declared_marks(request.data))
+                 if number.fraction is not None and len(number.fraction) <= 2
+                 and (number.start, number.end) not in found)
 
 
 def _scale(text: str, end: int, scales: Sequence[str]) -> tuple[str, int]:
@@ -1060,7 +1084,8 @@ class Expression:
 class Abbreviation:
     """A title before a capitalised name, a number abbreviation before a number, and the abbreviations of the
     table, as in `Dr. Smith`, `No. 5` and `etc.` A key of `sentence_final` that ends the sentence, before a capital
-    letter or at the end of the text, keeps its full stop as the trail of the span.
+    letter or at the end of the text, keeps its full stop as the trail of the span. A title before a capital
+    letter comes before a name, so it keeps no full stop.
 
     A language file that reads other tables replaces `tables`, and one that refuses a key in some places replaces
     `refuses`."""
@@ -1092,7 +1117,8 @@ class Abbreviation:
                     following = next_visible(text, end)
                     if is_bounded(text, position, end) and follows(following) \
                             and not self.refuses(text, position, table, data):
-                        sentence_end = key in final and (following == "" or following.isupper())
+                        sentence_end = table != "titles" and key in final \
+                            and (following == "" or following.isupper())
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
                                    trail="." if sentence_end else "", recognizer=self.name)
                     position = text.find(key, end)
