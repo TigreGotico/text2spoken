@@ -37,8 +37,12 @@ comma (Taaladvies.net, "Komma of punt bij decimale getallen": "We zetten een kom
 is the full stop (Onze Taal, "Komma of punt in getal": "In het Nederlands komen punten voor in hele getallen van vier
 cijfers of meer. Je gebruikt ze om de cijfers per drie te groeperen"). Taaladvies.net, "10.000.000 / 10 000 000", gives
 the space of the ISO norm too, "De ISO-norm en de BIN-norm schrijven de spatie als scheidingsteken voor (10 000 000),
-maar in de praktijk is ook de schrijfwijze met punten gebruikelijk". The core reads one group mark for a script, so the
-`space_groups` recognizer keeps a number with spaces between its groups as written.
+maar in de praktijk is ook de schrijfwijze met punten gebruikelijk". So `1 000 000` reads "één miljoen" and `12 000`
+"twaalfduizend", alone, in an amount and in a measure, as in `€ 12 000` and `10 000 km`. A digit run that continues
+the groups after one space or one mark, as in the phone number `+31 20 123 4567`, and a first group that starts with 0,
+as in `020 123 456`, show no number of groups, so each part reads as it would alone. A date splits into groups of one,
+two or four digits, so it holds no group of three after a space. A number with spaces between its groups and a
+decimal comma, a percent sign or a dimension mark stays as written.
 
 A fraction is a cardinal and an ordinal, written apart: Taaladvies.net, "Aaneenschrijven van telwoorden", Breukgetallen:
 "Bij breuken is de teller een hoofdtelwoord en de noemer een rangtelwoord [...] Teller en noemer worden los van elkaar
@@ -70,9 +74,13 @@ de euro (€)". So in nl-NL and nl-BE `$` reads "dollar", where CLDR `nl` gives 
 Taaladvies.net, "Euro: – € 12 / € -12", "Voor negatieve bedragen is het aan te bevelen € -12 te schrijven", and "euro
 voluit te schrijven: -12 euro". A whole amount written `€ 5,–`, `€ 5,-` or `€ 5,00` reads "vijf euro": Taaladvies.net,
 "Euro: komma en streepje in de notatie van hele bedragen?", "Komt er achter een bedrag in hele euro's een komma met twee
-nullen (€ 5,00), een komma met een streep (€ 5,–) of niets (€ 5)? [...] De drie notaties zijn correct". Another amount
-with decimals reads as a decimal before the currency name. A scale word after the amount reads before the currency name:
-Onze Taal, "Getallen uitschrijven", "25.000.000 euro: 25 miljoen euro, € 25 miljoen".
+nullen (€ 5,00), een komma met een streep (€ 5,–) of niets (€ 5)? [...] De drie notaties zijn correct". An amount in
+euros with two decimals reads the euros and then the cents: Onze Taal, "Euro / euro / Euro's / euro's",
+"Als je een bedrag van € 15,50 ziet staan, spreek je dat uit als 'vijftien euro en vijftig cent' of 'vijftien euro
+vijftig'", the short form, which the file reads. Below one euro the amount reads in cents: "Je kunt dus gerust spreken
+van 'een blikje frisdrank van vijftig cent'", so `€ 0,50` reads "vijftig cent". The `subunits` table names the cent of
+the euro. Another amount with decimals reads as a decimal before the currency name. A scale word after the amount
+reads before the currency name: Onze Taal, "Getallen uitschrijven", "25.000.000 euro: 25 miljoen euro, € 25 miljoen".
 
 A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
 `cldr-annotations-derived-full`) of the variety.
@@ -100,15 +108,16 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.numbers import written_amount
-from text2spoken.core.recognizers import (SHARED, amount_words, numbers_in, signed, speak_abbreviation, speak_cardinal,
-                                          speak_decimal, speak_expression, speak_lexicon, speak_ordinal, speak_percent)
+from text2spoken.core.numbers import SIGNS, Number, written_amount
+from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, numbers_in, signed, speak_abbreviation,
+                                          speak_cardinal, speak_decimal, speak_expression, speak_lexicon, speak_ordinal,
+                                          speak_percent)
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char
-from text2spoken.core.units import unit_reading
+from text2spoken.core.units import unit_reading, units_at
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import OPTIONS, FrozenMap, Form, freeze
 
@@ -121,6 +130,13 @@ FRACTION_ONE = "een"
 WHOLE_AMOUNT_MARKS = (",–", ",-")
 """The comma and the dash after a whole amount in euros, as in `€ 5,–`."""
 
+GROUP_SPACES = " \u00a0\u202f"
+"""The spaces between the groups of a number: the space, the no-break space and the narrow no-break space."""
+
+DIGIT_BEFORE = re.compile("[0-9][ \u00a0\u202f/:.,–-]?$")
+DIGIT_AFTER = re.compile("[ \u00a0\u202f/:.,–-]?[0-9]")
+"""A digit run that continues a number of groups after one space or one mark, as in a phone number."""
+
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
     "sign_words": {"-": "min", "+": "plus"},
@@ -131,6 +147,7 @@ DATA = freeze({
     "percent": {"signs": ["%"], "position": "after", "word": "procent"},
     "currency_symbols": ["EUR"],
     "currencies": {"JPY": {"symbols": ["¥"]}},
+    "subunits": {"EUR": "cent"},
     "scales": {"miljoen": "miljoen", "miljard": "miljard"},
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml"],
     "dimension_marks": ["x", "×"],
@@ -198,6 +215,80 @@ class DutchSpeller:
 SPELLER = DutchSpeller()
 
 
+def spaced_numbers(text: str) -> tuple[Number, ...]:
+    """The whole numbers written with a space between groups of three digits, as in `12 000`. A sign right before the
+    digits belongs to the number."""
+    folded = fold_digits(text)
+    found = []
+    for match in SPACE_GROUPS.finditer(folded):
+        start, end = match.span()
+        script = digit_script(text[start:end])
+        if script is None or "," in match.group() or folded[start] == "0" \
+                or DIGIT_BEFORE.search(folded, 0, start) or DIGIT_AFTER.match(folded, end):
+            continue
+        sign = ""
+        if start and text[start - 1] in SIGNS and (start == 1 or not is_word_char(text[start - 2])):
+            sign, start = SIGNS[text[start - 1]], start - 1
+        elif start and is_word_char(text[start - 1]):
+            continue
+        found.append(Number(start, end, sign, re.sub("[^0-9]", "", match.group()), None, script))
+    return tuple(found)
+
+
+@dataclass(frozen=True)
+class SpacedMeasure:
+    """`10 000 km`: a number with a space between its groups and a unit after it, with no space or one space between
+    them. After a number and a dimension mark, as in `3 × 12 000 m`, the span takes the first number too, and the
+    measure stays as written as `3 × 4 m` does."""
+    name: str = "spaced_measure"
+    form: Form = Form.MEASURE
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for number in spaced_numbers(text):
+            if number.sign:
+                continue
+            start, relation, amount = number.start, "", number.amount()
+            before = text[:number.start].rstrip(GROUP_SPACES)
+            if before[-1:] in request.data["dimension_marks"]:
+                head = before[:-1].rstrip(GROUP_SPACES)
+                first = next((n for n in (*spaced_numbers(text), *numbers_in(text, request)) if n.end == len(head)),
+                             None)
+                if first is None:
+                    continue
+                start, relation, amount = first.start, "dimension", (first.amount(), amount)
+            for at in (number.end, number.end + 1):
+                if at > number.end and text[number.end] not in GROUP_SPACES:
+                    break
+                unit = next((u for u in units_at(text, at, request)
+                             if at + len(u) == len(text) or not (is_word_char(text[at + len(u)])
+                                                                 or text[at + len(u)] == "/")), None)
+                if unit is not None:
+                    yield Span(start, at + len(unit), Form.MEASURE,
+                               FrozenMap({"amount": amount, "relation": relation, "unit": unit, "prefix": "",
+                                          "suffix": ""}), recognizer=self.name)
+                    break
+
+
+@dataclass(frozen=True)
+class SpacedCardinal:
+    """`12 000`, `1 000 000`: a number with a space between its groups, with no letter, decimal comma or sign of the
+    `symbols` table next to it. The shared `space_groups` recognizer after it keeps the others as written."""
+    name: str = "spaced_cardinal"
+    form: Form = Form.CARDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        symbols = request.data["symbols"]
+        for number in spaced_numbers(text):
+            before = text[:number.start].rstrip(GROUP_SPACES)[-1:]
+            after = number.end + (text[number.end:number.end + 1] in GROUP_SPACES)
+            if before in symbols or text[after:after + 1] in symbols \
+                    or (text[number.end:number.end + 1] and is_word_char(text[number.end])):
+                continue
+            yield Span(number.start, number.end, Form.CARDINAL,
+                       FrozenMap({"digits": number.integer, "sign": number.sign, "lead": "", "prefix": "",
+                                  "suffix": "", "script": number.script}), recognizer=self.name)
+
+
 @dataclass(frozen=True)
 class KeptDate:
     """A numeric date such as `12-03-2024`, kept as written: no source of the file gives its words, so the span
@@ -237,19 +328,26 @@ class Ordinal:
 
 @dataclass(frozen=True)
 class Money(CoreMoney):
-    """The shared money recognizer, with a negative amount after the symbol, as in `€ -12`, and the comma and the
-    dash of a whole amount, as in `€ 5,–`."""
+    """The shared money recognizer, with a negative amount after the symbol, as in `€ -12`, the comma and the dash
+    of a whole amount, as in `€ 5,–`, and an amount with a space between its groups, as in `€ 12 000`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for span in (*super().find(text, tokens, request), *self._negative(text, request)):
+        for span in (*super().find(text, tokens, request), *self._negative(text, tokens, request)):
             end = span.end + 2
             if (not span.fields["amount"]["fraction"] and text[span.end:end] in WHOLE_AMOUNT_MARKS
                     and (end == len(text) or not is_word_char(text[end]))):
                 span = replace(span, end=end)
             yield span
 
-    def _negative(self, text: str, request: Request) -> Iterator[Span]:
-        for number in numbers_in(text, request):
+    def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
+        """The numbers of the text, where a number with a space between its groups replaces the numbers of its
+        groups."""
+        spaced = spaced_numbers(text)
+        return (*(number for number in numbers_in(text, request)
+                  if not any(group.start < number.end and number.start < group.end for group in spaced)), *spaced)
+
+    def _negative(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for number in self.numbers(text, tokens, request):
             if not number.sign:
                 continue
             for symbol, code in currency_symbols(request):
@@ -272,18 +370,29 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
 
 def speak_money(span: Span, context: SpanContext) -> str:
     """The amount, a scale word when the text writes one, and the currency name. Zero decimals read as a whole
-    amount."""
+    amount. Two decimals of a currency in `subunits` read after the currency name, or with the subunit word when the
+    whole part is zero."""
     request = context.request
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
     if not amount["fraction"].strip("0"):
         amount = FrozenMap({**amount, "fraction": ""})
     currency = currency_table(request)[fields["currency"]]
+    subunit = request.data["subunits"].get(fields["currency"])
+    fraction = amount["fraction"]
+    if subunit and not fields["scale"] and len(fraction) == 2:
+        amount = FrozenMap({**amount, "fraction": ""})
+        cents = amount_words(FrozenMap({**amount, "integer": fraction.lstrip("0")}), request)
+        if not amount["integer"].strip("0"):
+            return signed(f"{cents} {subunit}", fields["amount"]["sign"], request)
+        fraction_words = f" {cents}"
+    else:
+        fraction_words = ""
     words = amount_words(amount, request)
     if fields["scale"]:
         words = f"{words} {request.data['scales'][fields['scale']]} {currency_name(currency, 'other')}"
     else:
-        words = f"{words} {currency_name(currency, plural_category(request, written_amount(amount)))}"
+        words = f"{words} {currency_name(currency, plural_category(request, written_amount(amount)))}{fraction_words}"
     return signed(words, fields["amount"]["sign"], request)
 
 
@@ -302,7 +411,8 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["space_groups"], KeptDate(), Money(), SHARED["percent"],
+    recognizers=(SHARED["lexicon"], Money(), SpacedMeasure(), SpacedCardinal(),
+                 SHARED["space_groups"], KeptDate(), SHARED["percent"],
                  SHARED["measure"], SHARED["expression"], SHARED["fraction"], Ordinal(), SHARED["abbreviation"],
                  SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
