@@ -178,10 +178,13 @@ the digits read and the code reads "CX cinco", and a numeral up to 30, as in `Be
 because the digits wait on it.
 
 `roman_words` holds the numerals that are also an acronym or a word. After a noun of `roman_nouns`, a numeral of
-`roman_words` reads only when no word in lowercase follows it, because the word that follows a size or an acronym names
-the thing it qualifies: `capítulo XL,` reads "capítulo quarenta", and `categoria XL masculina`, `Classe CL usado` and
-`grupo MC venceu` stay as written. So `capítulo XL e XLI` stays as written, and a member of `roman_words` ends a list,
-as `MDC` in `capítulo IV, MDC e MMC`. Any other numeral after a noun of `roman_nouns` reads with no cap. Each entry
+`roman_words` reads only after a noun of `roman_letter_nouns`, and only when no word in any case follows it after a
+space, because the word that follows a size or an acronym names the thing it qualifies: `capítulo XL,` reads
+"capítulo quarenta", and `categoria XL masculina`, `Classe CL usado`, `grupo MC venceu` and `O Volume CD Duplo` stay as
+written. A class, a group, a category, a level and a phase are labelled with letters too, as above, so after such a
+noun a numeral of `roman_words` is a label as often as a number, and it stays as written, as in `A Classe CL.` and `O
+grupo MC.`. So `capítulo XL e XLI` stays as written, and a member of `roman_words` ends a list, as `MDC` in `capítulo
+IV, MDC e MMC`. Any other numeral after a noun of `roman_nouns` reads with no cap. Each entry
 names a sentence of the measurement, or a source: CC (Wiktionary, "CC", Portuguese: "init of cartão de cidadão"), CD
 (mmf-135478 "Qual CD você quer escutar?"), CDI (mmf-493941 "O CDI varia"), CDL (mmf-065245 "O CDL alega"), CI
 (mmf-358222 "A CI-Distribuição"), CL (mmf-091888 "O CL Financial"), CM (mmf-407703 "O CM aprovou"), CML (mmf-044814 "A
@@ -1050,18 +1053,18 @@ class Roman:
 
     After a noun of `century_words`, any well-formed numeral up to XXX reads. After a noun of `roman_nouns`, a numeral
     of two letters or more reads, and so do `I`, `V` and `X` after a noun of `roman_letter_nouns`, as in `o capítulo V`,
-    but a numeral of `roman_words` reads there only when no word in lowercase follows it, so `capítulo XL.` reads and
-    `Classe CL usado` stays as written. After a capitalised name, a value up to 30 reads when a regnal title comes right
-    before the name, as in `D. João V` and `papa Pio X`. A numeral of two letters or more also reads after any other
-    capitalised word, as in `João Paulo II` and `Luís XIV`, and right after a title and its full stop, as in `D. XIV`.
-    In these two cases the value is at most 30, so an acronym such as `MIX` stays as written. These rules need spaces
-    alone between the word before the numeral and the numeral. When a comma or another mark parts them, a numeral from
-    11 to 30 after a capitalised word reads as a cardinal, as `XX` in `No século XIX, XX pessoas`, and a smaller one
-    stays as written, unless a regnal title comes before the word. After a word of `function_words`, a numeral from 11
-    to 30 reads as a cardinal, as in `O XV`. Outside a clause in capitals, no numeral reads right after a word of
-    `letter_words` that is no function word, as `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a
-    word of `letter_words` or a word that tugalex knows, as `VI` in `EU VI`. A short numeral after another capitalised
-    word, as in `Malcolm X`, stays as written.
+    but a numeral of `roman_words` reads only after a noun of `roman_letter_nouns` and when no word follows it after a
+    space, so `capítulo XL.` reads and `Classe CL usado` and `A Classe CL.` stay as written. After a capitalised name, a
+    value up to 30 reads when a regnal title comes right before the name, as in `D. João V` and `papa Pio X`. A numeral
+    of two letters or more also reads after any other capitalised word, as in `João Paulo II` and `Luís XIV`, and right
+    after a title and its full stop, as in `D. XIV`. In these two cases the value is at most 30, so an acronym such as
+    `MIX` stays as written. These rules need spaces alone between the word before the numeral and the numeral. When a
+    comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as a cardinal, as `XX` in
+    `No século XIX, XX pessoas`, and a smaller one stays as written, unless a regnal title comes before the word. After
+    a word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in `O XV`. Outside a clause in capitals,
+    no numeral reads right after a word of `letter_words` that is no function word, as `LI` in `Eu LI`. In a clause in
+    capitals, no numeral reads that is a word of `letter_words` or a word that tugalex knows, as `VI` in `EU VI`. A
+    short numeral after another capitalised word, as in `Malcolm X`, stays as written.
 
     A list after `século` or a noun of `roman_nouns` reads with that noun: `N1, N2, … e Nk`, with a comma and a space
     between the members and a word of `list_links`, in any case, before the last one, as in `séculos XI, XII e XIII` and
@@ -1097,7 +1100,7 @@ class Roman:
             if key in centuries:
                 return value <= 30
             return (len(numeral) >= 2 or (numeral in "IVX" and key in letter_nouns)) \
-                and (numeral not in numeral_words or not word_follows(text, end))
+                and (numeral not in numeral_words or key in letter_nouns and not word_follows(text, end))
 
         for match in re.finditer("[IVXLCDM]+", text):
             start, end = match.span()

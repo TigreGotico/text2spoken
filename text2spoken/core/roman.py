@@ -21,6 +21,6 @@ def value(numeral: str) -> int | None:
 
 
 def word_follows(text: str, end: int) -> bool:
-    """Whether a word in lowercase follows the numeral that ends at `end`, after one space, as `size` follows `XL` in
-    `Grade XL size`."""
-    return text.startswith(" ", end) and text[end + 1:end + 2].islower()
+    """Whether a word in any case follows the numeral that ends at `end`, after one space, as `size` follows `XL` in
+    `Grade XL size` and `Tacoma` follows `MV` in `class MV Tacoma`."""
+    return text.startswith(" ", end) and text[end + 1:end + 2].isalpha()
