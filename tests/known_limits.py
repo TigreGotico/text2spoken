@@ -1,5 +1,5 @@
 """The known limits of idempotency that the README lists. In each, a word of a reading becomes the key or the context
-of another form on a second pass, so the second pass changes the first. Three come from the address claim of design
+of another form on a second pass, so the second pass changes the first. Five come from the address claim of design
 section 4.5, and one from the `LETTERS` form of section 4.6. The idempotency tests exclude exactly these cases and
 nothing broader."""
 from dataclasses import replace
@@ -60,6 +60,10 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
     `numeral by a claim`: each span of the second pass is a Roman numeral inside the reading of a claim, which keeps
     the numeral as written, as in `Paulo XIV٢http://x`, or a numeral whose two words of context hold the end of the
     reading of a claim, as in `www.a.comM25World War I`.
+    `symbol at claim start`: each span of the second pass is an amount whose currency symbol is the first character
+    of a claim, which its reading keeps as written, and whose number stands before the claim. The first pass keeps
+    the number as written, because the symbol touches the letter or the digit after it. As in `Pay 2,51 €m.www.x.in`
+    and `No.00 €1,000.www.x.in`.
     """
     once = normalize(text, lang, params)
     first = analyze(text, lang, params)
@@ -109,10 +113,19 @@ def known_limit(text: str, lang: str, params: NormalizationParams | None = None)
         return "abbreviation"
     if all(time_after_at(span) for span in second):
         return "time after @"
+    def symbol_at_claim_start(span: Span) -> bool:
+        if span.form is not Form.MONEY:
+            return False
+        symbol = span.fields["written_symbol"]
+        return any(text.startswith(symbol, claim.start) and span.start < start and once[start:span.end] == symbol
+                   for claim, start, _ in readings)
+
     if all(month_at_edge(span) for span in second):
         return "month at claim edge"
     if all(span.form is Form.ROMAN
            and any(start <= span.start and (span.end <= end or len(once[end:span.start].split()) < 2)
                    for _, start, end in readings) for span in second):
         return "numeral by a claim"
+    if all(symbol_at_claim_start(span) for span in second):
+        return "symbol at claim start"
     return None

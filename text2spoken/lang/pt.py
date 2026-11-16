@@ -246,6 +246,16 @@ The digits of a run read as a cardinal when the letters read as a word, as in `C
 three digits with no leading zero, as in `A25` ("á vinte e cinco") and `B52`. No usage source gives the reading of a
 road name such as `A25`, so this reading is a ruling of the maintainer. Digits with a leading zero, and four digits
 or more after letters that read letter by letter, read one by one.
+
+The titles: Priberam, "Sr.": "Abreviatura de senhor"; "Sr.ª": "Abreviatura de senhora"; "Dra.": "Abreviatura de
+doutora"; "D.": "Abreviatura de dom e de dona". Dicio, "Abreviaturas: lista de abreviações": "senhora - Sr.ª, Sr.a ou
+Sra.", "doutora - Dra. ou Dr.ª", "dona - D., d., D.ª ou Da.". The Manual de Comunicação of the Senado Federal writes
+the titles before a name in lowercase: "prefira abreviá-las: sr. e sra. (use com inicial minúscula)". Dicio,
+"Abreviação de senhora e senhor": "O ponto abreviativo deverá ser grafado no fim da abreviatura (como em Sr. e Sra.)
+ou antes das letras em expoente (como em Sr.ª)", so `Drª.` and `Dª` are no titles.
+
+pt-PT writes the space as the group mark of an amount: CLDR 49 pt-PT gives the group mark U+00A0 and the currency
+format `#,##0.00 ¤`, so `250 000 €` reads "duzentos e cinquenta mil euros". pt-BR takes the full stop (CLDR 49 pt).
 """
 from __future__ import annotations
 
@@ -261,17 +271,17 @@ from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
-from text2spoken.core.numbers import written_amount
+from text2spoken.core.numbers import SIGNS, Number, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
                                           speak_decimal, speak_expression, speak_fraction, speak_lexicon,
                                           speak_percent, speak_telephone)
-from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
-from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, one_digit_set
+from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char, one_digit_set
 from text2spoken.core.units import unit_reading
 from text2spoken.errors import DeclinedReading
 from text2spoken.lang import _pt_electronic
@@ -336,14 +346,15 @@ DATA = freeze({
     "color_words": ["cor", "cores"],
     "colors": {"000000": "preto", "0000ff": "azul", "008000": "verde", "ff0000": "vermelho", "ffff00": "amarelo",
                "ffffff": "branco"},
-    "titles": {"Sr.": "Senhor", "Dr.": "Doutor", "Dra.": "Doutora", "Prof.": "Professor", "Eng.": "Engenheiro"},
-    "abbreviations_any_case": ["sr.", "dr.", "dra.", "prof.", "eng."],
+    "titles": {"Sr.": "Senhor", "Sra.": "Senhora", "Sr.ª": "Senhora", "Dr.": "Doutor", "Dra.": "Doutora",
+               "Dr.ª": "Doutora", "D.ª": "Dona", "Prof.": "Professor", "Eng.": "Engenheiro"},
+    "abbreviations_any_case": ["sr.", "sra.", "dr.", "dra.", "prof.", "eng."],
     "honorific_before_name": {"D.": {"masculine": "Dom", "feminine": "Dona"}},
     "abbreviations": {"Av.": "Avenida", "av.": "avenida", "etc.": "et cetera"},
     "sentence_final": ["etc."],
     "number_abbreviations": {"n.º": "número", "N.º": "Número"},
     "ordinal_marks": {"º": "masculine", "ª": "feminine"},
-    "regnal_titles": ["D", "Dom", "Dona", "rei", "rainha", "papa", "imperador", "imperatriz", "príncipe",
+    "regnal_titles": ["D", "D.ª", "Dom", "Dona", "rei", "rainha", "papa", "imperador", "imperatriz", "príncipe",
                       "princesa", "infante", "infanta"],
     "century_words": ["século", "séculos"],
     "roman_ordinal_limit": 10,
@@ -397,6 +408,7 @@ DEFAULTS = {"date_order": "DMY", "clock": "24h", "minute_style": "number", "deci
 
 VARIETIES = (
     Variety("pt-PT", freeze({"defaults": {**DEFAULTS, "scale": "long"},
+                             "space_group_money": True,
                              "colors": {"808080": "cinzento"},
                              "letter_names": _pt_electronic.VARIETIES["pt-PT"]["letter_names"]})),
     Variety("pt-BR", freeze({
@@ -918,6 +930,45 @@ class Money(CoreMoney):
             yield replace(span, keep=True) if symbol in before_only and symbol not in written[:first_digit] else span
 
 
+_SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,2})?")
+
+
+@dataclass(frozen=True)
+class SpacedMoney(Money):
+    """`250 000 €`: a currency symbol next to digits in groups of three with a space between them, where the
+    variety writes the space as its group mark. CLDR 49 pt-PT gives the no-break space as the group mark
+    (`numbers.json`, `group`: U+00A0, currency format `#,##0.00 ¤`), and the SI Brochure, 9th edition, 5.4.4, divides
+    the digits of a number into groups of three with a space. The claim order puts this recognizer before the
+    telephone, which keeps a run of such groups as written. A run that the telephone reads, as in
+    `+351 912 345 678 €`, is no amount."""
+    name: str = "money_space_groups"
+
+    def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        """A sign before the digits reads with the amount, as before a symbol that comes first, and with the rule
+        of a written number: no word character touches the sign. So `-1 500 €` and `−1 500 €` read "menos mil e
+        quinhentos euros", and `+1 500 €` "mais mil e quinhentos euros"."""
+        for span in super()._amounts(text, tokens, request):
+            start = span.start
+            if start and text[start].isdigit() and text[start - 1] in SIGNS \
+                    and (start == 1 or not is_word_char(text[start - 2])):
+                amount = FrozenMap({**span.fields["amount"], "sign": SIGNS[text[start - 1]]})
+                span = replace(span, start=start - 1, fields=FrozenMap({**span.fields, "amount": amount}))
+            yield span
+
+    def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
+        if not request.data.get("space_group_money"):
+            return ()
+        phones = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
+        found = []
+        for match in _SPACE_GROUPS.finditer(fold_digits(text)):
+            start, end = match.span()
+            if is_bounded(text, start, end) and one_digit_set(text[start:end]) \
+                    and not any(phone.start < end and start < phone.end for phone in phones):
+                integer, _, fraction = re.sub("[ \u00a0\u202f]", "", match.group()).partition(",")
+                found.append(Number(start, end, "", integer, fraction or None, digit_script(text[start:end])))
+        return found
+
+
 @dataclass(frozen=True)
 class Ordinal:
     """`1.º`, `2.ª`, `3º`: a whole number and the ordinal indicator, with or without the full stop."""
@@ -960,6 +1011,13 @@ class DateNamed:
                        FrozenMap({"year": year_value, "month": month, "day": int(day),
                                   "written_order": "DMY", "month_written": "name",
                                   "prefix": "", "suffix": ""}), recognizer=self.name)
+
+
+def _regnal_title(text: str, word: Word, titles: frozenset[str]) -> bool:
+    """Whether `word` is a regnal title, or ends one with a full stop inside, such as `D.ª`, whose last word is `ª`."""
+    return word.text in titles or any(text.endswith(title, 0, word.end)
+                                      and is_bounded(text, word.end - len(title), word.end)
+                                      for title in titles if "." in title)
 
 
 def _roman_noun(before: Sequence[str], nouns: FrozenMap) -> str | None:
@@ -1126,7 +1184,7 @@ class Roman:
                 before = clause_window(text, words, start, end, -1, limit=2, breaks=breaks)
                 if not before:
                     continue
-                title = index >= 2 and words[index - 2].text in titles \
+                title = index >= 2 and _regnal_title(text, words[index - 2], titles) \
                     and text[words[index - 2].end:previous.start] in (" ", ". ")
                 noun = _roman_noun(before, nouns)
                 if not text[previous.end:start].isspace():
@@ -1164,7 +1222,17 @@ class Roman:
 @dataclass(frozen=True)
 class Abbreviation(CoreAbbreviation):
     """The shared abbreviations, with `D.` before a name and the keys of `abbreviations_any_case`, which also read
-    in lowercase, as in `dr. Silva`."""
+    in lowercase, as in `dr. Silva`. A title whose full stop ends the text also ends the sentence, so it keeps the
+    full stop as the trail of the span: `Falei com a sra.` reads "Falei com a senhora." (Dicio, "Quando usar ponto
+    final": "Quando o período termina com uma abreviatura, o ponto acumula duas funções: indicá-la e finalizar a
+    frase"). A line break is no end of the text, because the name can follow on the next line."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        titles = {*request.data["titles"], *request.data["abbreviations_any_case"]}
+        for span in super().find(text, tokens, request):
+            if span.fields["key"] in titles and not text[span.end:].strip():
+                span = replace(span, trail=".")
+            yield span
 
     def tables(self, data) -> tuple[tuple[str, Iterable[str], Callable[[str], bool]], ...]:
         return (("titles", data["titles"], str.isupper),
@@ -1181,7 +1249,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 TELEPHONE, Money(), SHARED["percent"], SHARED["measure"], SHARED["expression"],
+                 SpacedMoney(), TELEPHONE, Money(), SHARED["percent"], SHARED["measure"], SHARED["expression"],
                  SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), SHARED["decimal"],
                  SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
