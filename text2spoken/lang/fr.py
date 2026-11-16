@@ -55,7 +55,9 @@ The rules cite these sources, by rule family:
   faire d'élision", "yacht, yankee, yaourt". "Il ne faut pas faire d'élision devant les mots oui et ouistiti",
   which `no_elision` holds.
 - Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
-  des ordinaux complexes (vingt-deuxième, etc.)".
+  des ordinaux complexes (vingt-deuxième, etc.)". Dictionnaire de l'Académie française, 9th edition, "unième":
+  "Ne s'emploie qu'avec les nombres vingt, trente, quarante, cinquante, soixante, quatre-vingts, cent et mille,
+  souvent précédé de et", with the example "la mille et unième nuit". So 1001e is "mille et unième".
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
   symbol `h` of the hour.
 - Number marks and gaps: BIPM, The International System of Units (SI Brochure), 9th edition. Section 5.4.4 says
@@ -931,13 +933,15 @@ class FrenchSpeller:
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         """The ordinal of a cardinal: "premier", "deuxième", "vingt et unième", "quatre-vingt-unième", "centième",
-        "millionième", "deux cent millionième". A last word that ends in "e" loses it, "cinq" takes "u" and "neuf"
-        turns to "neuv". "Cent" and "vingt" take no "s" in an ordinal (`_invariable`)."""
+        "mille et unième", "millionième", "deux cent millionième". A last word that ends in "e" loses it, "cinq"
+        takes "u" and "neuf" turns to "neuv". "Cent" and "vingt" take no "s" in an ordinal (`_invariable`)."""
         words = _invariable(self.cardinal(digits, Features(), request))
         if words in ("un million", "un milliard"):
             words = words[3:]
         if words == "un":
             return "première" if features.gender is GrammaticalGender.FEMININE else "premier"
+        if words == "mille un":
+            return "mille et unième"
         head, _, last = words.rpartition(" ")
         prefix, _, last = last.rpartition("-")
         last = last or prefix
