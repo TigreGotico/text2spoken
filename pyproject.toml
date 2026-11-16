@@ -29,14 +29,14 @@ Homepage = "https://github.com/TigreGotico/text2spoken"
 ar = ["ovos-number-parser>=0.24.3a1"]
 es = ["ovos-number-parser>=0.24.45a1"]
 eu = ["ovos-number-parser>=0.24.26a1"]
-it = ["ovos-number-parser>=0.24.63a1"]
+it = ["ovos-number-parser>=0.24.64a1", "ovos-date-parser>=0.37.0a1"]
 ru = ["ovos-number-parser>=0.24.35a1"]
 test = [
     "pytest",
     "packaging",
-    "ovos-number-parser>=0.24.63a1",
+    "ovos-number-parser>=0.24.64a1",
     "ovos-color-parser>=0.12.4a1",
-    "ovos-date-parser>=0.36.2a1",
+    "ovos-date-parser>=0.37.0a1",
     "tugalex>=2.0.3a1",
 ]
 pt = [
@@ -53,4 +53,4 @@ where = ["."]
 include = ["text2spoken*"]
 
 [tool.setuptools.package-data]
-text2spoken = ["data/cldr/*.json", "data/cldr/LICENSE", "data/wiktionary/*.json"]
+text2spoken = ["data/cldr/*.json", "data/cldr/LICENSE", "data/wiktionary/*.json", "data/wiktionary/LICENSE"]

@@ -29,7 +29,7 @@ from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
-from text2spoken.core.units import unit_table, units_at
+from text2spoken.core.units import elided, unit_table, units_at
 from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
@@ -321,9 +321,10 @@ def _affixed_matches(pattern: re.Pattern, text: str, data) -> Iterator[tuple[re.
 
 
 def _unit_after(text: str, end: int, units: Iterable[str]) -> bool:
-    """Whether a unit of the language follows text[:end], attached or after one space."""
+    """Whether a unit of the language follows text[:end], attached or after one space. A unit symbol before an
+    apostrophe and a letter is an elided word."""
     return any(text.startswith(gap + unit, end) and is_bounded(text, end + len(gap), end + len(gap) + len(unit))
-               for gap in ("", " ", " ") for unit in units)
+               and not elided(text, end + len(gap) + len(unit)) for gap in ("", " ", " ") for unit in units)
 
 
 @dataclass(frozen=True)

@@ -13,6 +13,7 @@ from functools import lru_cache
 from importlib.resources import files
 
 from text2spoken.core.language import Request
+from text2spoken.core.tokens import is_letter
 from text2spoken.params import FrozenMap, freeze
 
 MICRO = "µμ"
@@ -84,9 +85,16 @@ def _by_length(table: FrozenMap) -> tuple[str, ...]:
     return tuple(sorted(table, key=len, reverse=True))
 
 
+def elided(text: str, end: int) -> bool:
+    """Whether an apostrophe and a letter follow text[:end]: the letters before it are an elided word, as `l'` in
+    `l'anno`, and no unit symbol."""
+    return text[end:end + 1] in ("'", "’") and end + 1 < len(text) and is_letter(text[end + 1])
+
+
 def units_at(text: str, start: int, request: Request) -> Iterator[str]:
     """The written units that start at text[start], the longest first. With CLDR data, a symbol with no `/` may take
-    `²` or `³` after it, and a symbol may take `/` and a second symbol, as in `kg/m²` and `km/h²`."""
+    `²` or `³` after it, and a symbol may take `/` and a second symbol, as in `kg/m²` and `km/h²`. A symbol before
+    an apostrophe and a letter is an elided word, so `2007 l'ano` holds no unit."""
     table = unit_table(request)
     symbols = _by_length(table)
     compound = "unit_symbols" in request.data
@@ -106,7 +114,7 @@ def units_at(text: str, start: int, request: Request) -> Iterator[str]:
                 yield from (base + "/" + denominator for denominator in bases(end + 1))
             yield base
 
-    return iter(sorted(candidates(), key=len, reverse=True))
+    return iter(sorted((unit for unit in candidates() if not elided(text, start + len(unit))), key=len, reverse=True))
 
 
 def _pattern(names: FrozenMap, category: str) -> str:

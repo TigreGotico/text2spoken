@@ -2,112 +2,168 @@
 
 Cardinals and ordinals come from ovos-number-parser (design section 5.4), the `it` extra. Its forms agree with the
 Enciclopedia dell'Italiano Treccani, "numerali", Pronuncia e grafia. A compound in uno keeps its full form, as
-"ventuno", "centouno" and "ventunomila", and the same section allows both forms before a noun: "Nei composti
-(ventuno, trentuno, ecc.) accompagnati da un nome, questo è invariabile se il numerale segue il nome, ma può essere
-apocopato se il numerale precede il nome". 108 reads "centootto": "con cento seguito da una decina o da un'unità,
-l'elisione è poco comune con uno, otto e undici [...] (29) centootto [raramente centotto]". 1003 reads "milletré": "I
-composti di tre vanno accentati". CLDR RBNF `it` writes "centotto" and "milletre" for these numbers.
+"ventuno", "centouno" and "ventunomila", and the same section allows both forms before a noun: "Nei composti (ventuno,
+trentuno, ecc.) accompagnati da un nome, questo è invariabile se il numerale segue il nome, ma può essere apocopato se
+il numerale precede il nome". 108 reads "centootto": "con cento seguito da una decina o da un'unità, l'elisione è poco
+comune con uno, otto e undici [...] (29) centootto [raramente centotto]". 1003 reads "milletré": "I composti di tre
+vanno accentati". CLDR RBNF `it` writes "centotto" and "milletre" for these numbers. The Accademia della Crusca,
+consulenza 1077, agrees: "108: centootto, meno bene centotto", and "21.000: ventunomila o ventunmila: entrambe le forme
+vanno bene".
 
 Of the cardinals, only uno changes with the noun (Treccani, "numerali", Cardinali: "In italiano sono invariabili, a
-eccezione di uno, che varia secondo il genere [...] e che al femminile assume la forma una"). Without a noun, 1
-reads "uno" (Vocabolario Treccani, "uno", 1: "il numero uno, a pagina uno"), or "una" when the caller gives
-`default_gender` feminine. Before a noun, uno takes the form of the indefinite article ("numerali": "Il numerale
-cardinale uno subisce apocope là dove la subirebbe l'articolo indeterminativo"). Before a masculine noun the article
-is un, unless the noun takes lo (Vocabolario Treccani, "uno": "l'uso della quale è regolato dalle stesse norme che
-regolano l'uso dell'art. determ. masch. sing. il, rispetto alla sua variante lo: un uomo, un osso, un cane, uno
-scolaro, uno zoccolo"). The Vocabolario Treccani, "articolo", gives where lo stands, and un and uno "si usano
-rispettivamente negli stessi casi di il e di lo": "b) davanti alle consonanti gl(i), gn, sc(i), z [...] c) davanti ai
-gruppi consonantici s + cons., ps-, pn-, x". `lo_onsets` lists these onsets, and an s before a consonant takes uno
-too, so `1 zaino` reads "uno zaino" and `1 studente` "uno studente". The gender of a noun comes from the noun list
-`data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian
-masculine nouns" and "Italian feminine nouns" of the English Wiktionary. The Italian Wiktionary has no category for
-the gender of a noun. The list leaves out a word of both categories. So `1 anno` reads "un anno" and `1 gatta` "una
-gatta". A scale word is a masculine noun (Vocabolario Treccani, "milione": "un milione di euro"). After a number, a
-noun that is also a preposition, a conjunction, an adverb, a pronoun, a determiner or an article may be a word that
-the number does not count, as "oggi" in `pagina 1 oggi`, and the list names these nouns in `function_words`. A unit
-name of CLDR, such as "ora", is a noun, and takes its CLDR gender, so `1 ora` reads "una ora". A month name after a
-number writes a date, as in `1 maggio`. Before these words and any other lowercase word, `1` stays as
-written, because the noun may come later, as in `tra 1 e 2 ore`.
+eccezione di uno, che varia secondo il genere [...] e che al femminile assume la forma una"). Without a noun, 1 reads
+"uno" (Vocabolario Treccani, "uno", 1: "il numero uno, a pagina uno"), or "una" when the caller gives `default_gender`
+feminine. Before a noun, uno takes the form of the indefinite article ("numerali": "Il numerale cardinale uno subisce
+apocope là dove la subirebbe l'articolo indeterminativo"). Before a masculine noun the article is un, unless the noun
+takes lo (Vocabolario Treccani, "uno": "l'uso della quale è regolato dalle stesse norme che regolano l'uso dell'art.
+determ. masch. sing. il, rispetto alla sua variante lo: un uomo, un osso, un cane, uno scolaro, uno zoccolo"). The
+Vocabolario Treccani, "articolo", gives where lo stands, and un and uno "si usano rispettivamente negli stessi casi di
+il e di lo": "b) davanti alle consonanti gl(i), gn, sc(i), z [...] c) davanti ai gruppi consonantici s + cons., ps-,
+pn-, x". `lo_onsets` lists these onsets, and an s before a consonant takes uno too, so `1 zaino` reads "uno zaino" and
+`1 studente` "uno studente". Before a feminine noun the article is una, "che davanti a vocale di regola si elide (una
+casa, una spazzola, un'isola, un'amica)", but not before a semiconsonant: "in tutti i casi una per il femm. (una iena,
+una uosa)" (the same entry). The Accademia della Crusca, consulenza 82, gives the same rule: "si avrà un'aiola,
+un'eresia, un'ora, un'isola, un'udienza". So `1 ora` reads "un'ora".
 
-A decimal reads the CLDR RBNF `it` rule `x.x: ←← virgola →→` of `spellout-numbering`: the whole part, "virgola",
-then each digit of the decimal part, so `3,14` reads "tre virgola uno quattro" and the zero of `2,50` stays. The
-minus sign reads "meno" (RBNF `-x: meno →→`; Vocabolario Treccani, "meno": "il termometro segna m. quattro (-4)"),
-and the plus sign "più" ("più": "stamattina il termometro segna appena più tre (+ 3)").
+The gender of a noun comes from the noun list `data/wiktionary/it_noun_genders.json`, which
+`scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of
+the English Wiktionary. The Italian Wiktionary has no category for the gender of a noun. The list leaves out a word of
+both categories. So `1 anno` reads "un anno", `1 gatta` "una gatta" and `1 uomo` "un uomo". A scale word is a masculine
+noun (Vocabolario Treccani, "milione": "s. m."; "un m. di sterline"). A unit name of CLDR that the list leaves out, such
+as "metro", takes its CLDR gender. The list comes first: CLDR gives "miglio" the feminine of its plural, and the
+Vocabolario Treccani, "miglio", gives "s. m. [...] (pl. le mìglia)", so `1 miglio` reads "un miglio". A month name after
+a number writes a date, as in `1 maggio`. A noun of the list that is also a function word is a noun after 1, as in `1
+via di fuga`: "una via di fuga" (Vocabolario Treccani, "via": "aprirsi una v. nella foresta"). The words of
+`partitive_words`, `score_words` and `kept_links` come first, so `1 di loro` reads "uno di loro". `function_words` of
+the list names the nouns that are also a function word.
+
+1 before another lowercase word reads by what that word is. Before a word of `partitive_words` it is the pronoun
+(Vocabolario Treccani, "uno": "in costruzioni partitive: uno di loro e una di voi"; "si alzò uno dei presenti"), so `1
+di loro` reads "uno di loro" and `1 delle città` "una delle città". Before or after a preposition of `score_words` ("a",
+"su", "contro") it is a score, a ratio or a pronoun, read as the bare number (Vocabolario Treccani, "vincere": "v. per
+quattro a due"; "contro": "essere dieci c. uno"): `1 a 0` reads "uno a zero", `2 a 1` "due a uno" and `1 contro 3` "uno
+contro tre". A preposition takes no article, so 1 before it is no article. Before another word it takes the masculine
+article form, as in `1 altro libro`: "un altro libro". Before "e" or "o" (`kept_links`) it stays as written, because its
+noun comes later, as in `tra 1 e 2 ore`. A number right after a label noun is a label, and reads the bare "uno" whatever
+follows (Vocabolario Treccani, "uno": "il numero uno, a pagina uno"; "numero": "il n. 5, il n. 11"). A label noun is a
+noun of `label_nouns`, a noun of the list after a determiner of `label_determiners`, elided forms included, as in `il
+binario 1` and `l'articolo 1`, or an abbreviation of `label_abbreviations`, as in `art. 1`. The clitic in `C'era 1 sola
+persona` is no determiner. A noun of the list with no determiner may be a participle or a verb, as "visto" in `Ho visto
+1 film`, so it is no label. A noun of the list with a capital inside a sentence starts a name, as `Formula` in `il
+mondiale di Formula 1`, and is a label noun.
+
+A scale word before a noun takes "di" (Treccani, "numerali", Cardinali: milione, miliardo "devono essere [...] seguiti –
+qualora precedano un altro nome – dalla preposizione di"), also when it comes from digits: `1.000.000 €` reads "un
+milione di euro" and `3.000.000 km` "tre milioni di chilometri". Before a plural noun, the file finds the singular by
+the regular endings (Vocabolario Treccani, "plurale": "I nomi e gli aggettivi maschili in -o e in -e hanno il plur. in
+-i [...]; i femminili hanno il plur. -e se terminano in -a [...], -i se terminano in -e"), so `2.000.000 persone` reads
+"due milioni di persone". `scale_words` holds the scale nouns of ovos-number-parser.
+
+A decimal reads the CLDR RBNF `it` rule `x.x: ←← virgola →→` of `spellout-numbering`: the whole part, "virgola", then
+each digit of the decimal part, so `3,14` reads "tre virgola uno quattro" and the zero of `2,50` stays. The minus sign
+reads "meno" (RBNF `-x: meno →→`; Vocabolario Treccani, "meno": "il termometro segna m. quattro (-4)"), and the plus
+sign "più" ("più": "stamattina il termometro segna appena più tre (+ 3)").
 
 An ordinal is written with "il piccolo segno esponenziale ‹º› per il genere maschile o ‹ª› per il genere femminile"
-("numerali", Pronuncia e grafia), as the CLDR RBNF `it` rules `digits-ordinal-masculine` and
-`digits-ordinal-feminine` write it. The Vocabolario Treccani, "ordinale", gives the rule of the ordinals after
-decimo: they "si formano dal tema del corrispondente cardinale ital. con l'aggiunta della terminazione -èsimo: così
-undicesimo, [...] ventitreesimo, [...] centunesimo, [...] millesimo, duemillesimo, [...] diecimillesimo". So 108
-reads "centoottesimo", from "centootto", and 180 "centottantesimo". The same entry gives the separate form for the
-ordinals "per i quali l'altro tipo sarebbe sentito come poco eufonico: centesimo decimo, millesimo primo, millesimo
-secondo, millesimo decimo, millesimo undecimo o undicesimo, ecc. (in questi casi la grafia staccata è preferita)".
-`SEPARATE_ORDINALS` holds these five numbers. ovos-number-parser follows the rule, with two differences, where the
-file follows the Treccani entry: it writes "centodecimo" for 110, and it writes "decimo" at the end of every other
-number above 100 that ends in 10, as "duecentodecimo" for 210, where the rule gives "duecentodiecesimo" from
-"duecentodieci". An ordinal above 999999 stays as written, because ovos-number-parser writes
-"tremilionecinquantamilasimo" for 3500000.
+("numerali", Pronuncia e grafia), as the CLDR RBNF `it` rules `digits-ordinal-masculine` and `digits-ordinal-feminine`
+write it. The Vocabolario Treccani, "ordinale", gives the rule of the ordinals after decimo: they "si formano dal tema
+del corrispondente cardinale ital. con l'aggiunta della terminazione -èsimo: così undicesimo, [...] ventitreesimo, [...]
+centunesimo, [...] millesimo, duemillesimo, [...] diecimillesimo". So 108 reads "centoottesimo", from "centootto", and
+180 "centottantesimo". The same entry gives the separate form for the ordinals "per i quali l'altro tipo sarebbe sentito
+come poco eufonico: centesimo decimo, millesimo primo, millesimo secondo, millesimo decimo, millesimo undecimo o
+undicesimo, ecc. (in questi casi la grafia staccata è preferita)". ovos-number-parser, the `it` extra, writes the
+ordinals, the separate forms included: "millesimo primo" for 1001, "millesimo undicesimo" for 1011, and every number
+above 100 that ends in 10 as the ordinal of the number without the 10 and "decimo": "centesimo decimo" for 110,
+"duecentesimo decimo" for 210, "trecentesima decima" in the feminine. Giorgio De Rienzo, Corriere della Sera,
+"Scioglilingua", 24 September 2004, gives for these numbers "O 'centodecesimo' (perché in questi casi il 'dieci' perde
+la 'i') o 'centesimo decimo', decisamente più elegante, anche se più antiquato". From a million up the parser writes one
+word with a singular scale word, as "tremilionecinquecentomillesimo" for 3500000, and no source gives that form, so an
+ordinal above 999999 stays as written until a sourced form exists.
 
-The degree sign writes an ordinal too (Vocabolario Treccani, "centesimo": "in scrittura numerica 100°"; "articolo":
-"l'a. 1° della Costituzione"; "gennaio": "cominciare l'anno dal 1° marzo"). `noun_ordinal_marks` names it. Before a
-month name of `months` or a noun that the number counts it is an ordinal that agrees with the noun, so `1° maggio`
-reads "primo maggio" and `21° secolo` "ventunesimo secolo". A month name is masculine ("gennaio": "s. m."). Before `C`
-or `F` the degree sign writes a temperature, and in other places an angle, so there it is not an ordinal.
+The degree sign writes an ordinal too (Vocabolario Treccani, "primo": "Numerale ordinale (indicato con 1° se si
+utilizzano cifre arabiche"; "centesimo": "in scrittura numerica 100°"). It also writes an angle and a coordinate, as in
+`46° nord` and `90° rispetto al suolo`, so `noun_ordinal_marks` makes an ordinal only before one space and a noun of
+`ordinal_nouns`, each of which the Vocabolario Treccani writes after an ordinal: "anniversario" ("cinquantenario":
+"Cinquantesimo anniversario"), "anno" ("frequentare il terzo a. del liceo"), "capitolo" ("l'ottavo c. dei «Promessi
+Sposi»"), "edizione" ("prima, seconda, sesta e."), "giorno" ("decimo": "il d. giorno del mese"), "grado" ("3° g."),
+"piano" ("primo p., secondo p. [...], terzo p."), "posto" ("è al terzo p. nella classifica generale"), "secolo" ("il 4°
+o IV sec. a. C.", "19° secolo") and "volume" ("secondo, terzo v."). The ordinal agrees with the noun: `3° edizione`
+reads "terza edizione". In other places the degree sign and its number stay as written. Before a month name, `1°` writes
+the first day of the month, and reads as a date.
 
-A fraction is "formati da un aggettivo numerale cardinale e da un ordinale (un terzo, due quinti, quattro decimi,
-ecc.)" ("numerali", Frazionari), and 1/2 is "un mezzo" (Vocabolario Treccani, "mezzo", 5: "un mezzo, una metà"). The
-ordinal is plural after a numerator other than one (`spellout-ordinal-masculine-plural`), and a denominator above 100
-stays as written. Before a noun, mezzo is an adjective that agrees with it ("numerali", Frazionari: "mi darebbe mezzo
-chilo di patate e mezza lattuga?"), so 1/2 before a noun of the noun list reads "mezzo" or "mezza", and before
-another lowercase word it stays as written. `half_links` names the words after which 1/2 is still the noun "un
-mezzo" ("mezzo", 1: "ancora un mezzo di vino"). A percentage is the
-number and "per cento" (Vocabolario Treccani, "per cento": "n per cento (simbolo: n%)").
+A fraction is "formati da un aggettivo numerale cardinale e da un ordinale (un terzo, due quinti, quattro decimi, ecc.)"
+("numerali", Frazionari), and 1/2 is "un mezzo" (Vocabolario Treccani, "mezzo", 5: "un mezzo, una metà"). The ordinal is
+plural after a numerator other than one (`spellout-ordinal-masculine-plural`), and a denominator above 100 stays as
+written. Before a noun, mezzo is an adjective that agrees with it ("numerali", Frazionari: "mi darebbe mezzo chilo di
+patate e mezza lattuga?"), so 1/2 before a noun of the noun list reads "mezzo" or "mezza", and before another lowercase
+word it stays as written. `half_links` names the words after which 1/2 is still the noun "un mezzo" ("mezzo", 1: "ancora
+un mezzo di vino"). A percentage is the number and "per cento" (Vocabolario Treccani, "per cento": "n per cento
+(simbolo: n%)").
 
-An expression reads its operators by the Vocabolario Treccani: "più" ("quattro più cinque è uguale a nove (in
-simboli: 4 + 5 = 9)"), "meno" ("tredici meno otto è uguale a cinque"), "per" ("a × b [...] si legge: a per b") and
-"è uguale a" for `=`. The dimension mark `×` of a measure reads "per" too.
+An expression reads its operators by the Vocabolario Treccani: "più" ("quattro più cinque è uguale a nove (in simboli: 4
++ 5 = 9)"), "meno" ("tredici meno otto è uguale a cinque"), "per" ("a × b [...] si legge: a per b") and "è uguale a" for
+`=`. The dimension mark `×` of a measure reads "per" too.
 
-Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of the variety):
-`5 km` reads "cinque chilometri" and `1 h` "una ora", because CLDR gives `duration-hour` the feminine gender. A unit
-with no CLDR gender takes the gender of its first word in the noun list. The
-article form una does not elide, as the Vocabolario Treccani, "uno", allows: "il femm. sing. una può subire elisione
-dinanzi a parola che comincia per vocale". A symbol that cannot be a plain word, such as `km/h` or `°C`, reads with no
-list. `unit_symbols` names the symbols made only of letters that read as units.
+Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of the variety): `5 km`
+reads "cinque chilometri" and `1 h` "una ora", because CLDR gives `duration-hour` the feminine gender. A unit with no
+CLDR gender takes the gender of its first word in the noun list, and the article form una elides as before a noun: `1 h`
+reads "un'ora". A symbol that cannot be a plain word, such as `km/h` or `°C`, reads with no list. `unit_symbols` names
+the symbols made only of letters that read as units.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of the variety): `15 €`
 reads "quindici euro", because CLDR `it` gives the euro one name for every plural category, and the Vocabolario
-Treccani, "euro", marks it "s. m. [...] invar.". `currency_symbols` names the ISO 4217 codes that read, because a symbol
-of letters reads only from that list. CLDR gives a currency no gender, so 1 takes the gender of the first word of the
-currency name in the noun list: "un euro", "una sterlina britannica". An amount next to `$` or `¥` stays as written,
-with its number, because CLDR `it` gives each of these signs to more than one currency; `kept_currency_signs` names
-them. Two decimals read as the minor unit after "e", so `10,50 €` reads "dieci euro e cinquanta centesimi", and
-other decimals read as a decimal number before the currency name. The minor unit of the euro and of the franc is the
-centesimo (Vocabolario Treccani, "centesimo", 2b: "Moneta che vale la centesima parte di un'euro, di una lira o di
-altra unità monetaria"), of the dollar the cent (the same entry: "cent negli Stati Uniti d'America"), and of the
-pound the penny ("penny": "pl. pence [...] usato in ital. al masch. [...] alla 100a parte della sterlina").
-`currencies` gives these names, and the gender of a name that the noun list does not hold. A scale word after an
-amount takes "di" before the currency ("numerali", Cardinali: milione, miliardo "devono essere [...] seguiti –
-qualora precedano un altro nome – dalla preposizione di"), so `€ 2 milioni` reads "due milioni di euro".
+Treccani, "euro", marks it "s. m. [...] invar.". The word "euro" after an amount reads as the sign does, so `8,50 euro`
+reads as `8,50 €`. `currency_symbols` names the ISO 4217 codes that read, because a symbol of letters reads only from
+that list. CLDR gives a currency no gender, so 1 takes the gender of the first word of the currency name in the noun
+list: "un euro", "una sterlina britannica". `$` and `USD` read as "dollaro", as the German and Spanish files read them:
+the word also names the dollar of other countries (Vocabolario Treccani, "dollaro": "Anche unità monetaria di altri
+paesi [...]: d. canadese, australiano"). An amount next to `¥` stays as written, with its number, because CLDR `it`
+gives the sign to the yen and the yuan; `kept_currency_signs` names it. Two decimals read as the minor unit after "e",
+so `10,50 €` reads "dieci euro e cinquanta centesimi", and other decimals read as a decimal number before the currency
+name. The minor unit of the euro and of the franc is the centesimo (Vocabolario Treccani, "centesimo", 2b: "Moneta che
+vale la centesima parte di un'euro, di una lira o di altra unità monetaria"), of the dollar the cent (the same entry:
+"cent negli Stati Uniti d'America"), and of the pound the penny ("penny": "pl. pence [...] usato in ital. al masch.
+[...] alla 100a parte della sterlina"). `currencies` gives these names, and the gender of a name that the noun list does
+not hold. A scale word takes "di" before the currency name, also after an amount in digits: `€ 2 milioni` and `2.000.000
+€` read "due milioni di euro".
 
 A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
 `cldr-annotations-derived-full`) of the variety.
 
 A title reads as its full word before a name, in the short form that the word takes there (Vocabolario Treccani,
-"signore", 2: "il signor Rossi [...] al sig. Mario Rossi"; "dottore", 2: "si abbrevia in dott. o dr.", and "il
-dottor Graziano"; "professore": "il professor Mario Rossi"). The feminine forms do not shorten: "sig.ra" ("signora":
-"Alla sig.ra Luisa Rossi"), "sig.na" ("signorina": "Alla sig.na Claudia Bianchi"), "dott.ssa" ("dott.": "abbreviando
+"signore", 2: "il signor Rossi [...] al sig. Mario Rossi"; "dottore", 2: "si abbrevia in dott. o dr.", and "il dottor
+Graziano"; "professore": "il professor Mario Rossi"). The feminine forms do not shorten: "sig.ra" ("signora": "Alla
+sig.ra Luisa Rossi"), "sig.na" ("signorina": "Alla sig.na Claudia Bianchi"), "dott.ssa" ("dott.": "abbreviando
 dottoressa in dott.ssa") and "prof.ssa" ("prof.": "per il femm. professoressa si usa o prof. o, volendo evitare
-equivoco, prof.ssa"). The word is lowercase, as these entries write it, and takes a capital only where a clause
-starts. "ecc." reads "eccetera" ("ecc.": "Abbreviazione di eccetera"), "art." before a number "articolo" ("art.":
-"Abbreviazione grafica di articolo"), and "pag." before a number "pagina" ("pagina": "vedi a pagina (abbrev. p. o
-pag.) 40").
+equivoco, prof.ssa"). Those entries also let the short form name a woman: "Le stesse abbreviazioni si possono usare
+anche con riferimento a donna" ("dott."), and "per il femm. professoressa si usa o prof." ("prof."). So `prof.`, `dott.`
+and `Dr.` read the feminine word, "professoressa" or "dottoressa", right after a feminine determiner of
+`feminine_determiners`, as in `la prof. Gallo`, and the masculine word in other places. The word is lowercase, as these
+entries write it, and takes a capital only where a clause starts. "ecc." reads "eccetera" ("ecc.": "Abbreviazione di
+eccetera"), "art." before a number "articolo" ("art.": "Abbreviazione grafica di articolo"), and "pag." before a number
+"pagina" ("pagina": "vedi a pagina (abbrev. p. o pag.) 40").
 
 it-IT and it-SM write the decimal comma and the group mark `.`, and it-CH the decimal point and the group mark `'` (CLDR
-49 number symbols of `it`, `it_SM` and `it_CH`). In it-CH a number with a decimal point stays as written: Italian text
-also writes a thousands group with the point, as in `1.000` (CLDR `it`), and a lone point before three digits fits both
-readings (CGPM 2003, Resolution 10: the decimal marker "shall be either the point on the line or the comma on the
-line"). The same point writes a clock time, as in `alle 8.00` of FLORES-200 devtest. The file reads no date, time or
-year: `ovos-date-parser` gives no `spoken_*` reading for Italian, so a numeric date and a clock time stay as written.
+49 number symbols of `it`, `it_SM` and `it_CH`). In it-CH a decimal point reads as a decimal, as in `2.5 km`, `3.14159`
+and `CHF 12.50`, except in the forms that Italian text also writes with the point. A point before three digits may be a
+thousands group, as in `1.000` (CLDR `it`), and a lone point before three digits fits both readings (CGPM 2003,
+Resolution 10: the decimal marker "shall be either the point on the line or the comma on the line"). An hour up to 24,
+the point and two digits up to 59 may be a clock time, as in `alle 8.00` of FLORES-200 devtest, when no amount, measure
+or percentage claims it. These forms stay as written, and so does a number with a letter right after its digits, as
+`802.11g` of FLORES-200 devtest: the letters make the name of a standard or a model, not a unit.
+
+The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4), the `it` extra,
+and so do the month names. A numeric date reads in the order day, month, year. In `25 dicembre 2024` the day and the
+month read as a date, and the year as a cardinal. The first day of a month is an ordinal: the Accademia della Crusca,
+consulenza 1077, "per il giorno iniziale di un mese si usa l'ordinale: il primo ottobre (o il 1° ottobre)", and
+consulenza 86, "il 1/2/2003 (cioè il primo febbraio duemilatré)". A year reads as one cardinal word, as
+"duemilaventidue" (the Accademia della Crusca, consulenza 20176, which reports the media form "venti ventidue anziché
+[...] duemilaventidue"). A clock time with `:` or `.` reads after a word of `time_words`, as in `alle 14:30`: "alle
+quattordici e trenta". A whole hour 0 or 12 reads "mezzanotte" or "mezzogiorno" (Vocabolario Treccani, "mezzanotte": "in
+partic. a mezzanotte", "verso m."), and before it "alle", "dalle" and "delle" become "a", "da" and "di": `alle 12:00`
+reads "a mezzogiorno". The hour 1 is "l'una": the Accademia della Crusca, consulenza 236, "mostrano pressoché
+generalizzato l'uso di l' / all'una", so `alle 1:30` reads "all'una e trenta". `time_articles` gives these forms. After
+"le", which cannot stand before mezzogiorno, 0 and 12 read the 24-hour form: `Sono le 12:00` reads "Sono le dodici".
 """
 from __future__ import annotations
 
@@ -119,16 +175,18 @@ from importlib.resources import files
 from itertools import takewhile
 
 from text2spoken.core.currencies import currency_name, currency_table
-from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
+from text2spoken.core.dates import is_valid
+from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
 from text2spoken.core.numbers import written_amount
-from text2spoken.core.recognizers import SHARED, numbers_in, signed, speak_decimal, speak_expression
+from text2spoken.core.recognizers import SHARED, TimeClock, numbers_in, signed, speak_decimal, speak_expression
 from text2spoken.core.recognizers import speak_cardinal as core_speak_cardinal
 from text2spoken.core.recognizers import speak_fraction as core_speak_fraction
 from text2spoken.core.recognizers import speak_lexicon, speak_percent
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import DIGIT_BOUND, OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
-from text2spoken.core.tokens import Token, is_bounded, is_word_char
+from text2spoken.core.times import day_hour
+from text2spoken.core.tokens import Token, is_bounded, is_letter, is_word_char
 from text2spoken.core.units import cldr_data, unit_reading
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import OPTIONS, FrozenMap, Form, GrammaticalGender, freeze
@@ -143,11 +201,12 @@ DATA = freeze({
     "leads": {"pag. ": "pagina"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cento"},
     "currency_symbols": ["EUR", "USD", "GBP", "CHF"],
-    "currencies": {"EUR": {"minor": {"one": "centesimo", "other": "centesimi"}},
+    "currencies": {"EUR": {"symbols": ["euro"], "minor": {"one": "centesimo", "other": "centesimi"}},
                    "CHF": {"minor": {"one": "centesimo", "other": "centesimi"}},
-                   "USD": {"minor": {"one": "cent", "other": "cent"}},
+                   "USD": {"symbols": ["$"], "one": "dollaro", "other": "dollari",
+                           "minor": {"one": "cent", "other": "cent"}},
                    "GBP": {"minor": {"one": "penny", "other": "pence", "gender": "masculine"}}},
-    "kept_currency_signs": ["$", "¥"],
+    "kept_currency_signs": ["¥"],
     "scales": {"milione": "milione", "milioni": "milioni", "miliardo": "miliardo", "miliardi": "miliardi"},
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "h", "min"],
     "dimension_marks": ["x", "×"],
@@ -155,14 +214,35 @@ DATA = freeze({
     "operators": {"+": "più", "−": "meno", "×": "per", "=": "è uguale a"},
     "ordinal_marks": {"º": "masculine", "ª": "feminine"},
     "noun_ordinal_marks": ["°"],
-    "months": ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre",
-               "novembre", "dicembre"],
+    "ordinal_nouns": ["anniversario", "anno", "capitolo", "edizione", "giorno", "grado", "piano", "posto", "secolo",
+                      "volume"],
     "lo_onsets": ["gli", "gn", "ps", "pn", "x", "z"],
     "half_links": ["di"],
+    "label_abbreviations": ["art.", "cap.", "n.", "pag."],
+    "label_nouns": ["numero", "pagina"],
+    "label_determiners": ["il", "lo", "la", "l'", "i", "gli", "le", "un", "uno", "una", "un'", "del", "dello", "della",
+                          "dell'", "dei", "degli", "delle", "al", "allo", "alla", "all'", "ai", "agli", "alle", "dal",
+                          "dallo", "dalla", "dall'", "dai", "dagli", "dalle", "nel", "nello", "nella", "nell'", "nei",
+                          "negli", "nelle", "sul", "sullo", "sulla", "sull'", "sui", "sugli", "sulle", "questo",
+                          "questa", "quest'", "quel", "quello", "quella", "quell'"],
+    "score_words": ["a", "su", "contro"],
+    "kept_links": ["e", "o"],
+    "partitive_words": {"di": "masculine", "del": "masculine", "dello": "masculine", "dei": "masculine",
+                        "degli": "masculine", "della": "feminine", "delle": "feminine", "tra": "masculine",
+                        "fra": "masculine"},
+    "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
+                    {"mark": ".", "seconds": False, "needs": "evidence"}],
+    "time_words": ["alle", "dalle", "delle", "sulle", "le", "ore", "verso", "entro"],
+    "time_articles": {"alle": {"0": "a", "1": "all'", "12": "a"}, "dalle": {"0": "da", "1": "dall'", "12": "da"},
+                      "delle": {"0": "di", "1": "dell'", "12": "di"}, "sulle": {"1": "sull'"}, "le": {"1": "l'"},
+                      "ore": {}},
     "titles": {"Sig.": "signor", "sig.": "signor", "Sig.ra": "signora", "sig.ra": "signora", "Sig.na": "signorina",
                "sig.na": "signorina", "Dott.": "dottor", "dott.": "dottor", "Dr.": "dottor", "dr.": "dottor",
                "Dott.ssa": "dottoressa", "dott.ssa": "dottoressa", "Prof.": "professor", "prof.": "professor",
                "Prof.ssa": "professoressa", "prof.ssa": "professoressa"},
+    "feminine_titles": {"Dott.": "dottoressa", "dott.": "dottoressa", "Dr.": "dottoressa", "dr.": "dottoressa",
+                        "Prof.": "professoressa", "prof.": "professoressa"},
+    "feminine_determiners": ["la", "una", "alla", "della", "dalla", "nella", "sulla", "colla", "quella", "questa"],
     "abbreviations": {"ecc.": "eccetera"},
     "sentence_final": ["ecc."],
     "number_abbreviations": {"art.": "articolo"},
@@ -170,27 +250,27 @@ DATA = freeze({
     "patterns": {"expression": "[-−+]?[0-9]+(?: ?[+−×=] ?[-−+]*[0-9]+)+"},
 })
 
+DEFAULTS = {"date_order": "DMY", "clock": "24h"}
+
 VARIETIES = (
-    Variety("it-IT"),
-    Variety("it-CH", freeze({"number_marks": {"Latn": [{"decimal": ".", "group": "'"}]}, "keep_decimals": True})),
-    Variety("it-SM"),
+    Variety("it-IT", freeze({"defaults": DEFAULTS})),
+    Variety("it-CH", freeze({"defaults": DEFAULTS, "number_marks": {"Latn": [{"decimal": ".", "group": "'"}]},
+                             "keep_decimals": True})),
+    Variety("it-SM", freeze({"defaults": DEFAULTS})),
 )
 
 LARGEST_PLURAL_ORDINAL = 100
 """The last plural ordinal that a fraction reads, by RBNF `it`. The core fraction recognizer reads no larger
 denominator."""
 LARGEST_ORDINAL = 999_999
-"""The last ordinal that reads. From a million up ovos-number-parser writes "tremilionecinquantamilasimo" for
-3500000."""
-SEPARATE_ORDINALS = frozenset({110, 1001, 1002, 1010, 1011})
-"""The ordinals that the Vocabolario Treccani, "ordinale", writes as two words: "centesimo decimo, millesimo primo,
-millesimo secondo, millesimo decimo, millesimo undecimo o undicesimo"."""
+"""The last ordinal that reads. From a million up ovos-number-parser writes "tremilionecinquecentomillesimo" for
+3500000, a form that no source gives."""
 VOWELS = "aeiouàèéìíòóù"
 
 
 class ItalianSpeller:
-    """ovos-number-parser for integers and ordinals, with the Treccani forms where the parser differs from them;
-    decimals by the RBNF `x.x` rule; fractions with the plural ordinals of RBNF."""
+    """ovos-number-parser for integers and ordinals up to `LARGEST_ORDINAL`; decimals by the RBNF `x.x` rule;
+    fractions with the plural ordinals of RBNF."""
 
     def __init__(self):
         self.parser = OvosNumberSpeller({M: "masculine", F: "feminine"})
@@ -204,14 +284,7 @@ class ItalianSpeller:
         value = bounded_integer(digits)
         if value is None or value > LARGEST_ORDINAL:
             raise DeclinedReading(f"no ordinal above {LARGEST_ORDINAL}")
-        features = Features(gender=features.gender)
-        if value in SEPARATE_ORDINALS:
-            head = 100 if value < 1000 else 1000
-            return f"{self.ordinal(str(head), features, request)} {self.ordinal(str(value - head), features, request)}"
-        if value > 100 and value % 100 == 10:
-            stem = self.cardinal(digits, Features(), request)[:-1]
-            return stem + ("esima" if features.gender is F else "esimo")
-        return self.parser.ordinal(digits, features, request)
+        return self.parser.ordinal(digits, Features(gender=features.gender), request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", Features(), request)
@@ -255,16 +328,58 @@ def function_nouns() -> frozenset[str]:
     return frozenset(_noun_list()["function_words"])
 
 
+@lru_cache(maxsize=1)
+def scale_words() -> frozenset[str]:
+    """The scale nouns that ovos-number-parser writes at the end of a number: "milione", "miliardi", "bilione". They
+    stop where the parser writes a power of ten, as "uno per dieci elevato alla quarantadue"."""
+    from ovos_number_parser import pronounce_number
+
+    words = set()
+    for power in range(6, DIGIT_BOUND, 3):
+        try:
+            readings = [pronounce_number(lead * 10 ** power, "it").split() for lead in (1, 2)]
+        except (OverflowError, NotImplementedError):
+            break
+        if any(len(reading) != 2 for reading in readings):
+            break
+        words.update(reading[1] for reading in readings)
+    return frozenset(words)
+
+
+@lru_cache(maxsize=None)
+def month_names(tag: str) -> tuple[str, ...]:
+    """The month names of ovos-date-parser, January first."""
+    from ovos_date_parser.spoken import spoken_date
+
+    return tuple(spoken_date(tag, month=month) for month in range(1, 13))
+
+
+def elides(word: str) -> bool:
+    """Whether una elides before the word: before a vowel, but not before the semiconsonant of i or u and a
+    vowel, as in "una iena"."""
+    return word[:1] in VOWELS and not (word[:1] in "iu" and word[1:2] in VOWELS)
+
+
 def one_before(noun: str, gender: str | None, request: Request) -> str:
-    """1 before a noun, as the indefinite article: "una" before a feminine noun, "uno" before a masculine noun that
-    takes lo, and "un" before another masculine noun."""
+    """1 before a noun, as the indefinite article: "una" before a feminine noun, "un'" before a feminine noun that
+    starts with a vowel, "uno" before a masculine noun that takes lo, and "un" before another masculine noun."""
     if gender == F.value:
-        return "una"
+        return "un'" if elides(noun) else "una"
     if gender != M.value:
         raise DeclinedReading(f"no gender for {noun!r}")
     takes_lo = noun.startswith(tuple(request.data["lo_onsets"])) or (
         noun[:1] == "s" and noun[1:2] != "" and noun[1] not in VOWELS)
     return "uno" if takes_lo else "un"
+
+
+def before_noun(words: str, noun: str) -> str:
+    """The number words and the noun after them: with no space after an elided "un'", and with "di" after a scale
+    word, as in "un milione di euro"."""
+    if words.endswith("'"):
+        return words + noun
+    if words.split()[-1] in scale_words():
+        return f"{words} di {noun}"
+    return f"{words} {noun}"
 
 
 def plain_amount(amount: FrozenMap, request: Request) -> str:
@@ -291,31 +406,90 @@ def unit_nouns(tag: str) -> dict[str, str]:
 
 
 def counted_noun(word: str, request: Request) -> str | None:
-    """The gender of a word after a number that the number counts: a scale word is masculine, a CLDR unit name has
-    its CLDR gender, and a noun has its gender in the noun list. A month name, as in `1 maggio`, and a noun that is
-    also a function word, as "oggi" in `pagina 1 oggi`, may be no noun that the number counts, and give None."""
+    """The gender of a word after a number that the number counts: a scale word is masculine, a noun has its gender
+    in the noun list, also a noun that is a function word too, as "via", and a CLDR unit name that the list leaves out
+    has its CLDR gender, as "metro". The list comes first, because CLDR gives "miglio" the gender of its plural
+    "miglia". A month name, as in `1 maggio`, writes a date and gives None."""
     if word in request.data["scales"]:
         return M.value
-    if word in unit_nouns(request.variety.tag):
-        return unit_nouns(request.variety.tag)[word]
-    if word in request.data["months"] or word in function_nouns():
+    if word in month_names(request.variety.tag):
         return None
-    return noun_genders().get(word)
+    return noun_genders().get(word) or unit_nouns(request.variety.tag).get(word)
+
+
+def plural_noun(word: str, request: Request) -> bool:
+    """Whether the word is the plural of a counted noun by a regular ending: -i for -o, -e or -a, and -e for -a, as
+    "chilometri" and "persone". A function word, or a word of three letters or fewer, is none."""
+    if len(word) < 4 or word in function_nouns():
+        return False
+    stems = {"i": [word[:-1] + end for end in "oea"], "e": [word[:-1] + "a"]}.get(word[-1], [])
+    return any(counted_noun(stem, request) is not None for stem in stems)
+
+
+def word_before(text: str, start: int) -> str:
+    """The word that one space separates from text[start:], with the full stop of an abbreviation, or ""."""
+    if not text[:start].endswith(" "):
+        return ""
+    begin = start - 1
+    while begin and (text[begin - 1].isalpha() or text[begin - 1] == "."):
+        begin -= 1
+    return text[begin:start - 1]
+
+
+def is_label(text: str, start: int, request: Request) -> bool:
+    """Whether the number at text[start:] is a label: right after an abbreviation of `label_abbreviations`, as in
+    `art. 1`, a noun of `label_nouns`, as in `pagina 1`, or a noun of the noun list that a determiner of
+    `label_determiners` comes before, as in `il binario 1` and `l'articolo 1`. A noun with no determiner may be a
+    verb or a participle, as "visto" in `Ho visto 1 film`, so it makes no label. A noun of the list with a capital
+    inside a sentence starts a name, as in `il mondiale di Formula 1`, and makes a label."""
+    data = request.data
+    word = word_before(text, start)
+    lower = word.lower()
+    if lower.endswith("."):
+        return lower in data["label_abbreviations"]
+    if lower in data["label_nouns"]:
+        return True
+    begin = start - 1 - len(word)
+    if word[:1].isupper() and text[:begin].endswith(" ") and is_word_char(text[begin - 2:begin - 1]):
+        return lower in noun_genders()
+    if text[begin - 1:begin] in ("'", "’"):
+        elided = "".join(takewhile(str.isalpha, reversed(text[:begin - 1])))[::-1]
+        determined = f"{elided.lower()}'" in data["label_determiners"]
+    else:
+        determined = word_before(text, begin).lower() in data["label_determiners"]
+    return bool(word) and lower in noun_genders() and determined
+
+
+def after_score(text: str, start: int, request: Request) -> bool:
+    """Whether a number and a word of `score_words` come before the number at text[start:], as in `2 a 1` and
+    `10 contro 1`."""
+    word = word_before(text, start)
+    rest = text[:start - 1 - len(word)]
+    return word in request.data["score_words"] and rest.endswith(" ") and rest[-2:-1].isdigit()
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
-    """1 that `OneBeforeWord` finds before a noun that it counts reads as the article of that noun: "un milione",
-    "uno zaino", "una gatta", "una ora". In other places 1 reads by `default_gender`, as the label in `(1) portata`.
-    Other numbers read through the core verbalizer."""
+    """A number that `BeforeWord` finds reads by the role that its recognizer name ends in. 1 in other places
+    reads by `default_gender`, and other numbers read through the core verbalizer."""
     fields, request = span.fields, context.request
-    if fields["lead"] or bounded_integer(fields["digits"]) != 1 or len(fields["digits"]) > 1:
+    role = span.recognizer.removeprefix(f"{BeforeWord.name}:") if span.recognizer.startswith(BeforeWord.name) else None
+    if fields["lead"] or (role is None and (bounded_integer(fields["digits"]) != 1 or len(fields["digits"]) > 1)):
         return core_speak_cardinal(span, context)
-    counted = span.recognizer == OneBeforeWord.name and context.after
-    gender = counted_noun(context.after[0], request) if counted else None
-    if gender is not None:
-        words = one_before(context.after[0], gender, request)
-    else:
+    if role is None:
         words = SPELLER.cardinal("1", Features(gender=_default_gender(request)), request)
+        return signed(words, fields["sign"], request)
+    word = "".join(takewhile(str.isalpha, context.after[0])) if context.after else ""
+    if role == "noun":
+        words = one_before(word, counted_noun(word, request), request)
+    elif role == "scale":
+        return f"{SPELLER.cardinal(fields['digits'], Features(), request)} di"
+    elif role == "pronoun":
+        words = SPELLER.cardinal("1", Features(gender=GrammaticalGender(request.data["partitive_words"][word])),
+                                 request)
+    elif role == "article":
+        words = one_before(word, M.value, request)
+    else:
+        words = SPELLER.cardinal("1", Features(), request)
     return signed(words, fields["sign"], request)
 
 
@@ -335,16 +509,21 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
 
 def speak_ordinal(span: Span, context: SpanContext) -> str:
     """The marker gives the gender of the ordinal. After a mark of `noun_ordinal_marks` the ordinal agrees with the
-    noun that follows, and a month name is masculine: "1° maggio" reads "primo maggio"."""
+    noun that follows: "3° piano" reads "terzo piano"."""
     request = context.request
     marker, word = span.fields["marker"], context.after[0] if context.after else ""
     gender = request.data["ordinal_marks"].get(marker) or counted_noun(word, request) or M.value
     return SPELLER.ordinal(span.fields["digits"], Features(gender=GrammaticalGender(gender)), request)
 
 
+def fill(pattern: str, words: str) -> str:
+    """A CLDR unit pattern with its number words, with no space after an elided "un'"."""
+    return pattern.replace("{0} ", words) if words.endswith("'") else pattern.replace("{0}", words)
+
+
 def speak_measure(span: Span, context: SpanContext) -> str:
     """The last amount agrees with the unit, by the CLDR gender of the unit or else by the noun list: "un
-    chilometro", "una ora"."""
+    chilometro", "un'ora". A scale word takes "di": "un milione di chilometri"."""
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
@@ -353,7 +532,9 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     gender = gender.value if isinstance(gender, GrammaticalGender) else gender or noun_genders().get(noun)
     read = [plain_amount(a, request) for a in amounts[:-1]] + [amount_before(amounts[-1], noun, gender, request)]
     words = f" {request.data['dimension_word']} ".join(read)
-    return pattern.replace("{0}", words)
+    if pattern.startswith("{0} ") and words.split()[-1] in scale_words():
+        words += " di"
+    return fill(pattern, words)
 
 
 def speak_money(span: Span, context: SpanContext) -> str:
@@ -387,7 +568,7 @@ def _counted(digits: str, name: str, request: Request, gender: str | None = None
     list."""
     amount = FrozenMap({"integer": digits, "fraction": "", "sign": ""})
     noun = name.split()[0]
-    return f"{amount_before(amount, noun, gender or noun_genders().get(noun), request)} {name}"
+    return before_noun(amount_before(amount, noun, gender or noun_genders().get(noun), request), name)
 
 
 def _currency_amount(integer: str, currency: FrozenMap, request: Request) -> str:
@@ -395,55 +576,134 @@ def _currency_amount(integer: str, currency: FrozenMap, request: Request) -> str
 
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
-    """The full word of the abbreviation, with a capital where a clause starts."""
+    """The full word of the abbreviation, with a capital where a clause starts. A title of `feminine_titles` right
+    after a word of `feminine_determiners` reads its feminine word: "la prof. Gallo" reads "la professoressa
+    Gallo"."""
     data = context.request.data
     key = span.fields["key"]
+    if key in data["feminine_titles"] and context.before and context.before[-1].lower() in data["feminine_determiners"]:
+        return data["feminine_titles"][key]
     word = next(data[table][key] for table in ("titles", "abbreviations", "number_abbreviations")
                 if data[table].get(key) is not None)
     return word[0].upper() + word[1:] if not context.before else word
 
 
+def speak_date(span: Span, context: SpanContext) -> str:
+    """The date words of ovos-date-parser: "primo maggio duemilaventiquattro"."""
+    from ovos_date_parser.spoken import spoken_date
+
+    fields = span.fields
+    try:
+        return spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
+    except ValueError as error:
+        raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
+
+
+def speak_time(span: Span, context: SpanContext) -> str:
+    """The time words of ovos-date-parser: "tredici e quarantacinque". A whole hour 0 or 12 reads "mezzanotte" or
+    "mezzogiorno", unless the word before it is a word of `time_articles` with no form for that hour, as "le". The
+    word of `time_articles` that `Clock` puts in the `prefix` field takes the form of its entry: "alle 12:00" reads "a
+    mezzogiorno" and "alle 1:30" "all'una e trenta"."""
+    from ovos_date_parser.spoken import spoken_time
+
+    fields, request = span.fields, context.request
+    hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
+    word = fields["prefix"].strip()
+    before = word or (context.before[-1] if context.before else "")
+    forms = request.data["time_articles"].get(before.lower())
+    named = minute == 0 and not fields["second"] and hour in (0, 12) and (forms is None or str(hour) in forms)
+    try:
+        if named:
+            reading = spoken_time(request.variety.tag, hour, clock="12h", period=True)
+        else:
+            reading = spoken_time(request.variety.tag, hour, minute)
+    except ValueError as error:
+        raise DeclinedReading(f"ovos-date-parser reads no time {hour}:{minute:02}: {error}") from error
+    if not word:
+        return reading
+    article = request.data["time_articles"][word.lower()][str(hour)]
+    article = article[0].upper() + article[1:] if word[0].isupper() else article
+    return article + reading if article.endswith("'") else f"{article} {reading}"
+
+
 @dataclass(frozen=True)
-class OneBeforeWord:
-    """`1` and a space before a lowercase word. Before a noun that 1 counts, the span reads as the article of the
-    noun. Before another word, as in `tra 1 e 2 ore`, it stays as written: uno takes the gender of the noun that it
-    counts, and the file does not know that noun."""
-    name: str = "one_before_word"
+class BeforeWord:
+    """A whole number and one space before a lowercase word that ends the word. For 1, the recognizer name of each span
+    ends in a role:
+    `label` after a noun or a label abbreviation (`binario 1`, `art. 1`), after a number and a word of `score_words`
+    (`2 a 1`), and before a word of `score_words` (`1 a 0`, `1 su 3`, `1 contro tutti`), a preposition that no
+    article comes before: "uno";
+    `noun` before a noun that it counts: the article of the noun, "un anno", "uno zaino", "una gatta", "un'ora";
+    `pronoun` before a word of `partitive_words`: "uno di loro", "una delle città";
+    `article` before another word: the masculine article form, "un altro", "uno strano".
+    Before a word of `kept_links`, as in `tra 1 e 2 ore`, 1 stays as written: its noun comes later. A number of
+    another value whose words end in a scale word takes the role `scale` before the plural of a noun that it counts:
+    "due milioni di persone"."""
+    name: str = "before_word"
     form: Form = Form.CARDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
         for number in numbers_in(text, request):
-            if (number.integer != "1" or number.sign or number.fraction is not None or number.end - number.start != 1
+            if (number.sign or number.fraction is not None or not text.startswith(" ", number.end)
                     or (number.start and is_word_char(text[number.start - 1]))):
                 continue
-            after = text[number.end + 1:] if text.startswith(" ", number.end) else ""
-            word = "".join(takewhile(str.isalpha, after))
-            if word and word.islower():
-                yield Span(number.start, number.end, Form.CARDINAL,
-                           FrozenMap({"digits": "1", "sign": "", "lead": "", "prefix": "", "suffix": "",
-                                      "script": number.script}), recognizer=self.name,
-                           keep=counted_noun(word, request) is None)
+            word = "".join(takewhile(str.isalpha, text[number.end + 1:]))
+            if not word or not word.islower():
+                continue
+            rest = text[number.end + 1 + len(word):]
+            if rest[:1] and is_word_char(rest[0]):
+                continue
+            end, keep = number.end, False
+            label = is_label(text, number.start, request) or after_score(text, number.start, request)
+            if number.integer != "1" or number.end - number.start != 1:
+                if label or not plural_noun(word, request) or word in data["scales"] \
+                        or SPELLER.cardinal(number.integer, Features(), request).split()[-1] not in scale_words():
+                    continue
+                role = "scale"
+            elif label or word in data["score_words"]:
+                role = "label"
+            elif word in data["kept_links"]:
+                role, keep = "label", True
+            elif word in data["partitive_words"]:
+                role = "pronoun"
+            elif (gender := counted_noun(word, request)) is not None:
+                role = "noun"
+                end += gender == F.value and elides(word)
+            else:
+                role = "article"
+            yield Span(number.start, end, Form.CARDINAL,
+                       FrozenMap({"digits": number.integer, "sign": "", "lead": "", "prefix": "", "suffix": "",
+                                  "script": number.script}), recognizer=f"{self.name}:{role}", keep=keep)
 
 
 @dataclass(frozen=True)
 class KeptDecimal:
-    """In a variety with `keep_decimals`, a number with a decimal mark stays as written, also in an amount, a
-    measure or a percentage: `1.000` and `8.00` are a thousands group and a clock time in Italian text."""
+    """In a variety with `keep_decimals`, a number with a decimal point that may be another form stays as written, also
+    in an amount, a measure or a percentage: three digits after the point, as in `1.000`, may be a thousands group,
+    and a letter right after the digits, as in `802.11g`, makes a name. With `clock`, a number that no amount,
+    measure or percentage claims stays as written when it may be a clock time, as `8.00` and `12.30`: an hour up to
+    24 and two digits up to 59."""
     name: str = "kept_decimal"
     form: Form = Form.DECIMAL
+    clock: bool = False
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         if request.data.get("keep_decimals"):
             for number in numbers_in(text, request):
-                if number.fraction is not None:
+                if number.fraction is None:
+                    continue
+                if (len(number.fraction) == 2 and int(number.fraction) <= 59 and len(number.integer) <= 2
+                        and int(number.integer or "0") <= 24) if self.clock else (
+                        len(number.fraction) == 3 or (number.end < len(text) and is_letter(text[number.end]))):
                     yield Span(number.start, number.end, Form.DECIMAL, number.amount(), recognizer=self.name,
                                keep=True)
 
 
 @dataclass(frozen=True)
 class KeptMoney:
-    """An amount next to a sign of `kept_currency_signs`, as `5 $` and `2.500 ¥`, stays as written, with its
-    number: CLDR `it` gives each of these signs to more than one currency."""
+    """An amount next to a sign of `kept_currency_signs`, as `2.500 ¥`, stays as written, with its number: CLDR
+    `it` gives the sign to more than one currency."""
     name: str = "kept_money"
     form: Form = Form.MONEY
 
@@ -456,10 +716,54 @@ class KeptMoney:
 
 
 @dataclass(frozen=True)
+class DateNamed:
+    """`25 dicembre`, `1 maggio`, `1° maggio`: a day, one space and a month name of ovos-date-parser. Only 1 takes
+    the degree sign. A year after the month reads as a cardinal, which is the form of `spoken_year`."""
+    name: str = "date_named"
+    form: Form = Form.DATE
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        months = month_names(request.variety.tag)
+        for number in numbers_in(text, request):
+            if (number.sign or number.fraction is not None or number.end - number.start > 2
+                    or (number.start and is_word_char(text[number.start - 1]))):
+                continue
+            end = number.end + (number.integer == "1" and text[number.end:number.end + 1] == "°")
+            word = "".join(takewhile(str.isalpha, text[end + 1:])) if text.startswith(" ", end) else ""
+            if word not in months:
+                continue
+            stop = end + 1 + len(word)
+            day, month = int(number.integer), months.index(word) + 1
+            if is_bounded(text, number.start, stop) and is_valid(None, month, day):
+                yield Span(number.start, stop, Form.DATE,
+                           FrozenMap({"year": None, "month": month, "day": day, "written_order": "DMY",
+                                      "month_written": "name", "prefix": "", "suffix": ""}), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class Clock(TimeClock):
+    """The clock times of the core, with `:` or `.` between the hour and the minutes and a word of `time_words`
+    before them. A word of `time_articles` with a form for the hour, right before a whole hour 0 or 12 or before the
+    hour 1, joins the span with its space in the field `prefix`: `alle 12:00`, `alle 1:30`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            fields = span.fields
+            hour = day_hour(fields["hour"], fields["period"])
+            word = word_before(text, span.start)
+            forms = request.data["time_articles"].get(word.lower(), {})
+            if str(hour) in forms and (hour == 1 or (fields["minute"] == 0 and not fields["second"])):
+                yield replace(span, start=span.start - len(word) - 1,
+                              fields=FrozenMap({**fields, "prefix": text[span.start - len(word) - 1:span.start]}))
+            else:
+                yield span
+
+
+@dataclass(frozen=True)
 class Ordinal:
     """`1º`, `2ª`: a whole number and a marker of the `ordinal_marks` table, with no full stop between them. A mark
-    of `noun_ordinal_marks` makes an ordinal only before a month name or a noun that the number counts, as in `1°
-    maggio` and `21° secolo`: before `C` or `F` it writes a temperature, and in other places an angle."""
+    of `noun_ordinal_marks` makes an ordinal only before one space and a noun of `ordinal_nouns`, as in `3° piano`
+    and `21° secolo`: in other places it is the degree sign of an angle or a coordinate, as in `46° nord`."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 
@@ -471,8 +775,7 @@ class Ordinal:
             marker = text[number.end:number.end + 1]
             if marker in data["noun_ordinal_marks"]:
                 word = "".join(takewhile(str.isalpha, text[number.end + 2:]))
-                noun = text.startswith(" ", number.end + 1) and (
-                    word in data["months"] or counted_noun(word, request) is not None)
+                noun = text.startswith(" ", number.end + 1) and word in data["ordinal_nouns"]
                 marker = marker if noun else ""
             if marker in (*data["ordinal_marks"], *data["noun_ordinal_marks"]) \
                     and is_bounded(text, number.start, number.end + 1):
@@ -487,22 +790,25 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], KeptDecimal(), SHARED["money"], KeptMoney(), SHARED["percent"], SHARED["measure"],
-                 SHARED["expression"], SHARED["fraction"], Ordinal(), SHARED["abbreviation"], SHARED["decimal"],
-                 OneBeforeWord(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+    recognizers=(SHARED["lexicon"], DateNamed(), SHARED["date_numeric"], Clock(), KeptDecimal(), SHARED["money"],
+                 KeptMoney(), SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"],
+                 Ordinal(), SHARED["abbreviation"], KeptDecimal(name="kept_clock", clock=True), SHARED["decimal"],
+                 BeforeWord(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
-        Form.LEXICON: speak_lexicon, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
-        Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
-        Form.ORDINAL: speak_ordinal, Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal,
-        Form.CARDINAL: speak_cardinal, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
+        Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
+        Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
+        Form.FRACTION: speak_fraction, Form.ORDINAL: speak_ordinal, Form.ABBREVIATION: speak_abbreviation,
+        Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
+    attach=drop_affixes,  # the one prefix, a word of `time_articles` before a time, is a word of the time reading
     genders=frozenset({M, F}),
     default_gender=M,
     animacies=frozenset(),
     noun_classes=frozenset(),
     numeral_systems=frozenset(),
     context_words=True,
-    options={"default_gender": frozenset({"masculine", "feminine"})},
-    not_applicable=frozenset(OPTIONS) - {"default_gender"},
+    options={"date_order": frozenset({"DMY", "MDY", "YMD"}), "clock": frozenset({"24h"}),
+             "default_gender": frozenset({"masculine", "feminine"})},
+    not_applicable=frozenset(OPTIONS) - {"date_order", "clock", "default_gender"},
 )

@@ -1,10 +1,10 @@
 # Italian
 
-The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for its number words, which come from `ovos-number-parser`.
+The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for its number words, which come from `ovos-number-parser`, and its dates and times, which come from `ovos-date-parser`.
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` before a feminine one. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
+The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -16,10 +16,18 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `Riceverete 1 anno di abbonamento.` | `it-IT` | Riceverete un anno di abbonamento. |
 | `Ho adottato 1 gatta.` | `it-IT` | Ho adottato una gatta. |
 | `Porta 1 zaino.` | `it-IT` | Porta uno zaino. |
+| `Ho 1 amica a Roma.` | `it-IT` | Ho un'amica a Roma. |
+| `Ho visto 1 uomo.` | `it-IT` | Ho visto un uomo. |
+| `Il binario 1 porta a Roma.` | `it-IT` | Il binario uno porta a Roma. |
+| `Leggi pagina 1 oggi.` | `it-IT` | Leggi pagina uno oggi. |
+| `La partita è finita 1 a 0.` | `it-IT` | La partita è finita uno a zero. |
+| `Ne ho visto 1 di loro.` | `it-IT` | Ne ho visto uno di loro. |
+| `Sono 2.000.000 persone.` | `it-IT` | Sono due milioni di persone. |
 | `Sono arrivati 108 ospiti.` | `it-IT` | Sono arrivati centootto ospiti. |
 | `Nel 2003 si è laureato.` | `it-IT` | Nel duemilatré si è laureato. |
 | `Il valore è 3,14.` | `it-IT` | Il valore è tre virgola uno quattro. |
 | `Ci sono 1'000 persone.` | `it-CH` | Ci sono mille persone. |
+| `La strada è lunga 2.5 km.` | `it-CH` | La strada è lunga due virgola cinque chilometri. |
 | `Negli anni '60 si ballava.` | `it-CH` | Negli anni 'sessanta si ballava. |
 | `L'interesse è del 9%.` | `it-IT` | L'interesse è del nove per cento. |
 | `I 3/4 della popolazione.` | `it-IT` | I tre quarti della popolazione. |
@@ -28,25 +36,35 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `È la 2ª volta.` | `it-IT` | È la seconda volta. |
 | `Il 180º giorno.` | `it-IT` | Il centottantesimo giorno. |
 | `Il 108º giorno.` | `it-IT` | Il centoottesimo giorno. |
+| `Il 210º giorno.` | `it-IT` | Il duecentesimo decimo giorno. |
 | `Il 1° maggio.` | `it-IT` | Il primo maggio. |
 | `Nel 21° secolo.` | `it-IT` | Nel ventunesimo secolo. |
+| `Abito al 3° piano.` | `it-IT` | Abito al terzo piano. |
+| `Il 1/2/2003 è festa.` | `it-IT` | Il primo febbraio duemilatré è festa. |
+| `Ci vediamo il 12/03/2024 alle 14:30.` | `it-IT` | Ci vediamo il dodici marzo duemilaventiquattro alle quattordici e trenta. |
+| `Ci vediamo alle 12:00.` | `it-IT` | Ci vediamo a mezzogiorno. |
+| `Ci vediamo alle 1:30.` | `it-IT` | Ci vediamo all'una e trenta. |
 | `Il biglietto costa 15 €.` | `it-IT` | Il biglietto costa quindici euro. |
 | `Costa 1 £.` | `it-IT` | Costa una sterlina britannica. |
 | `Costa 12,50 €.` | `it-IT` | Costa dodici euro e cinquanta centesimi. |
 | `Costano € 2 milioni.` | `it-IT` | Costano due milioni di euro. |
+| `Costa 1.000.000 €.` | `it-IT` | Costa un milione di euro. |
+| `Costa 8,50 euro.` | `it-IT` | Costa otto euro e cinquanta centesimi. |
+| `Costa 5 $.` | `it-IT` | Costa cinque dollari. |
 | `Costa 20 CHF.` | `it-CH` | Costa venti franchi svizzeri. |
-| `Il film dura 1 h.` | `it-IT` | Il film dura una ora. |
+| `Il film dura 1 h.` | `it-IT` | Il film dura un'ora. |
 | `Ho camminato 1 km.` | `it-IT` | Ho camminato un chilometro. |
 | `4 + 5 = 9` | `it-IT` | quattro più cinque è uguale a nove |
 | `Leggi l'art. 3 della Costituzione.` | `it-IT` | Leggi l'articolo tre della Costituzione. |
 
-A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts:
+A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. After a feminine determiner, such as `la`, `prof.`, `dott.` and `Dr.` read the feminine word:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Il dott. Bruni è in ferie.` | `it-IT` | Il dottor Bruni è in ferie. |
 | `Scrivo al sig. Mario Rossi.` | `it-IT` | Scrivo al signor Mario Rossi. |
 | `Sig. Rossi, prego.` | `it-SM` | Signor Rossi, prego. |
+| `La prof. Gallo insegna latino.` | `it-IT` | La professoressa Gallo insegna latino. |
 
 ## Varieties
 
@@ -56,14 +74,14 @@ A title reads as the word that stands before a name, in lowercase, and takes a c
 | `it-CH` | Full stop | `'` |
 | `it-SM` | Comma | Full stop |
 
-The marks of each variety come from CLDR. The varieties read the same words. In `it-CH`, a number with a decimal point stays as written, because Italian text also writes a thousands group and a clock time with the point.
+The marks of each variety come from CLDR. The varieties read the same words. In `it-CH`, a decimal point reads as a decimal. Two forms stay as written, because Italian text also writes them with the point: three digits after the point, which may be a thousands group, and an hour and two digits, which may be a clock time.
 
 ## Options
 
 | Option | Values | Default (`it-IT`) |
 | --- | --- | --- |
-| `date_order` | changes nothing | - |
-| `clock` | changes nothing | - |
+| `date_order` | `DMY`, `MDY`, `YMD` | `DMY` |
+| `clock` | `24h` | `24h` |
 | `minute_style` | changes nothing | - |
 | `decimal_mark` | changes nothing | - |
 | `scale` | changes nothing | - |
@@ -79,9 +97,9 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 ## Sources
 
-The rules cite the Vocabolario Treccani and the Enciclopedia dell'Italiano Treccani, entry "numerali". The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
+The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 119 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 169 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
@@ -89,20 +107,16 @@ Italian leaves these forms as written:
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
-| `Ci vediamo il 12/03/2024 alle 14:30.` | `it-IT` | stays as written | The file reads no date, time or year in figures, because ovos-date-parser has no Italian reading for them. |
-| `Leggi pagina 1 oggi.` | `it-IT` | stays as written | 1 before a lowercase word that is not in the noun list stays as written, because uno takes the gender of its noun. A noun that is also a function word, such as oggi, is not a noun that 1 counts. |
-| `Ho visto 1 uomo.` | `it-IT` | stays as written | The same rule: the English Wiktionary lists uomo as a pronoun too. |
-| `Arrivano tra 1 e 2 ore.` | `it-IT` | Arrivano tra 1 e due ore. | The same rule: the noun of the 1 comes later. |
-| `Ruota di 90° verso destra.` | `it-IT` | stays as written | `°` before a word that is not a noun that the number counts writes an angle, and `°` alone reads no unit. |
-| `Abito al 3° piano.` | `it-IT` | stays as written | The same rule: piano is also an adverb. Write `3º`. |
-| `Fa 30° oggi.` | `it-IT` | stays as written | The same rule. `°C` reads as degrees Celsius. |
-| `È il 2500000º cliente.` | `it-IT` | stays as written | An ordinal above 999999 stays as written, because ovos-number-parser writes a wrong form for it. |
-| `Il totale è 6.000 franchi.` | `it-CH` | stays as written | In `it-CH` the point is the decimal mark, and a number with a point stays as written. A text from Italy writes the thousands group with the point. |
-| `La riunione è alle 8.00.` | `it-CH` | stays as written | The same rule: the point also writes a clock time. |
+| `Arrivano tra 1 e 2 ore.` | `it-IT` | Arrivano tra 1 e due ore. | 1 before "e" or "o" stays as written: uno takes the gender of its noun, and the noun comes later. |
+| `Siamo a 46° nord.` | `it-IT` | stays as written | `°` before a word that is not a noun of `ordinal_nouns` writes an angle or a coordinate, and `°` alone reads no unit. |
+| `È il 2500000º cliente.` | `it-IT` | stays as written | An ordinal above 999999 stays as written, because no source gives the one-word form that ovos-number-parser writes for it, as "tremilionecinquecentomillesimo". |
+| `Il totale è 6.000 franchi.` | `it-CH` | stays as written | In `it-CH` three digits after the point may be a thousands group. |
+| `La riunione è 8.00.` | `it-CH` | stays as written | In `it-CH` an hour and two digits after the point may be a clock time. With a time word, as in `alle 8.00`, it reads as a time. |
 | `Il 3,5% dei voti.` | `it-CH` | stays as written | `it-CH` reads no decimal comma. |
-| `Le banconote da 5 $ e 100 $.` | `it-IT` | stays as written | `$` and `¥` belong to more than one currency in CLDR, so an amount next to them stays as written. |
+| `Costa 2.500 ¥.` | `it-IT` | stays as written | `¥` belongs to the yen and the yuan in CLDR, so an amount next to it stays as written. |
 | `Le corsie sono larghe 3,50 metri.` | `it-IT` | Le corsie sono larghe tre virgola cinque zero metri. | The digits after the decimal mark read one by one, as the CLDR spell-out rule reads them. |
 | `Antonio oggi compie 41 anni.` | `it-IT` | Antonio oggi compie quarantuno anni. | A compound in uno keeps its full form. Before a noun the short form "quarantun anni" is also correct. |
+| `Ci sono 1.000.000 abitanti.` | `it-IT` | Ci sono un milione abitanti. | "di" stands after a scale word only before a noun that the file finds in the noun list, by its singular. The list leaves out the nouns of both genders, such as abitante. |
 
 ---
 [← Basque](eu.md) · [Home](../index.md) · [Portuguese →](pt.md)
