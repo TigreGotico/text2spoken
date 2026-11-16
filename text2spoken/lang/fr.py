@@ -34,7 +34,8 @@ The rules cite these sources, by rule family:
   langue française, Banque de dépannage linguistique, "Pluriel des mots d'origine étrangère : rectifications":
   such words "suivent la règle générale du singulier et du pluriel des mots français. Ils prennent donc un s au
   pluriel, sauf s'ils se terminent par un s, un x ou un z". So a word with another ending takes no "de", such as
-  the verb in "2 000 000 manifestent", unless `invariable_plurals` holds it. A word with a hyphen counts as one.
+  the verb in "2 000 000 manifestent", unless `invariable_plurals` holds it. A word with a hyphen counts as one,
+  and it is plural when any of its parts is: "années-lumière", "timbres-poste".
 - "De" before a vowel or a mute h elides to "d'". The words of `aspirated_h` and the words derived from them begin
   with an aspirated h, which takes no elision: Office québécois de la langue française, Banque de dépannage
   linguistique, "La prononciation du h aspiré": "Voici une liste des principaux mots qui commencent par un h
@@ -212,39 +213,43 @@ FEMININE_NOUNS = tuple(w for noun in _FEMININE_SINGULAR for w in ((noun,) if nou
 
 NO_DE_WORDS = (
     "adementiers", "adens", "adoncques", "aels", "ailleurs", "alakons", "alias", "alles", "alors", "als", "après",
-    "aprés", "assez", "assés", "au-dedans", "au-dehors", "au-dessous", "au-dessus", "aucunefois", "aucunes",
-    "aucunesfois", "aucuns", "auprès", "autrefois", "aux", "auxdites", "auxdits", "auxquelles", "auxquels", "avecques",
-    "bis", "celles", "celleux", "certaines", "certains", "certes", "ces", "cesdites", "cesdits", "ceulles", "ceuss",
-    "ceusses", "ceux", "ceuxelles", "chacunes", "chacuns", "chacunx", "chaques", "cheux", "chez", "ci-après",
-    "ci-delez", "ci-dessous", "ci-dessus", "ci-plus-bas", "clas", "class", "combiennièmes", "combientièmes", "céans",
-    "dans", "decies", "dedans", "dehors", "depuis", "des", "desdites", "desdits", "desquelles", "desquels", "dessous",
-    "dessus", "devers", "directos", "discrétos", "ds", "duodecies", "duotricies", "dès", "désormais", "elles",
-    "elles-mêmes", "elleux", "embas", "emprès", "endéans", "entre-temps", "entretemps", "envers", "esdites", "esdits",
-    "eusses", "eux", "eux-autres", "eux-mêmes", "exprès", "extramuros", "fors", "gratis", "gratos", "guères", "hormis",
-    "hors", "icelles", "iceux", "ici-bas", "ici-dedans", "iels", "ilelles", "illes", "ils", "ils-elles", "intra-muros",
-    "intramuros", "jadis", "jamais", "jusques", "labès", "lars", "les", "lesdites", "lesdits", "lesquelles", "lesquels",
-    "leurs", "leursdites", "leursdits", "leurszigues", "leurzigues", "lez", "lombienquess", "long-temps", "long-tems",
-    "longtemps", "longtems", "lors", "là-bas", "là-dedans", "là-delez", "là-dessous", "là-dessus", "lès", "léans",
-    "maintefois", "maintes", "maints", "mais", "malgrés", "max", "mes", "mesdites", "mesdits", "mesmes", "mi-jambes",
-    "mi-mars", "miennes", "miens", "mieux", "minoribus", "moins", "mordicus", "mouais", "moultes", "moults", "naguères",
-    "nix", "nonies", "nos", "noszigues", "nous", "nous-mêmes", "novovicies", "nozigues", "nu-bras", "néanmoins",
-    "nôtres", "octies", "octotricies", "octovicies", "ols", "oncques", "onques", "orains", "ordoncques", "ores",
-    "par-dehors", "par-dessous", "par-dessus", "par-devers", "parfois", "parmis", "pedibus", "peinardos", "pis", "plus",
-    "plusieurs", "près", "puis", "pus", "qqns", "quantes", "quaterdecies", "quatertricies", "quelquefois", "quelques",
-    "quelques-ans", "quelques-unes", "quelques-uns", "quindecies", "quinquies", "quintricies", "quinvicies", "quèques",
-    "raiz", "rapidos", "rasibus", "razibus", "rez", "rémotis", "sans", "septies", "septtricies", "septvicies", "ses",
-    "sexies", "sextricies", "sexvicies", "siennes", "siens", "soubs", "sous", "souventefois", "ss", "sus", "tandis",
-    "terdecies", "tertricies", "tes", "tiennes", "tiens", "tjrs", "tjs", "toujours", "tous", "toustes", "toutefois",
-    "toutes", "toutxs", "touz", "toûjours", "tranquillos", "tricies", "très", "ts", "ttes", "uls", "undecies",
-    "untricies", "unx", "vers", "versus", "vicies", "volontiers", "vos", "voszigues", "vous", "vous-mêmes", "vozigues",
-    "vs", "vôtres", "yels", "à-la-fois", "æls", "çauz", "ès",
+    "après-après-demain", "après-demain", "aprés", "assez", "assés", "au-dedans", "au-dehors", "au-dessous",
+    "au-dessus", "aucunefois", "aucunes", "aucunesfois", "aucuns", "auprès", "autrefois", "aux", "auxdites", "auxdits",
+    "auxquelles", "auxquels", "avecques", "bis", "celles", "celles-ci", "celles-là", "celleux", "certaines", "certains",
+    "certes", "ces", "cesdites", "cesdits", "ceulles", "ceuss", "ceusses", "ceux", "ceux-ci", "ceux-là", "ceuxelles",
+    "chacunes", "chacuns", "chacunx", "chaques", "cheux", "chez", "ci-après", "ci-delez", "ci-dessous", "ci-dessus",
+    "ci-plus-bas", "ci-plus-haut", "clas", "class", "combiennièmes", "combientièmes", "céans", "dans", "decies",
+    "dedans", "dehors", "depuis", "des", "desdites", "desdits", "desquelles", "desquels", "dessous", "dessus", "devers",
+    "directos", "discrétos", "dix-huitièmement", "dix-neuvièmement", "dix-septièmement", "ds", "duodecies",
+    "duotricies", "dès", "dès-méshui", "désormais", "elles", "elles-mêmes", "elleux", "embas", "emprès", "endéans",
+    "entre-temps", "entretemps", "envers", "es-qualité", "esdites", "esdits", "eusses", "eux", "eux-autres",
+    "eux-mêmes", "ex-aequo", "ex-æquo", "exprès", "extramuros", "fors", "gratis", "gratos", "guères", "hormis", "hors",
+    "hors-service", "icelles", "iceux", "ici-bas", "ici-dedans", "iels", "ilelles", "illes", "ils", "ils-elles",
+    "intra-muros", "intramuros", "jadis", "jamais", "je-ne-sais-quoi", "jusques", "labès", "lars", "les", "lesdites",
+    "lesdits", "lesquelles", "lesquels", "leurs", "leursdites", "leursdits", "leurszigues", "leurzigues", "lez",
+    "lombienquess", "long-temps", "long-tems", "longtemps", "longtems", "lors", "là-bas", "là-dedans", "là-delez",
+    "là-dessous", "là-dessus", "lès", "léans", "maintefois", "maintes", "maints", "mais", "malgrés", "max", "mes",
+    "mesdites", "mesdits", "mesmes", "mi-jambes", "mi-mars", "miennes", "miens", "mieux", "minoribus", "moins",
+    "mordicus", "mouais", "moultes", "moults", "naguères", "nix", "nonies", "nos", "noszigues", "nous", "nous-même",
+    "nous-mêmes", "novovicies", "nozigues", "nu-bras", "néanmoins", "nôtres", "octies", "octotricies", "octovicies",
+    "ols", "oncques", "onques", "orains", "ordoncques", "ores", "par-dehors", "par-dessous", "par-dessus", "par-devers",
+    "parfois", "parmis", "pedibus", "peinardos", "pis", "plus", "plusieurs", "près", "puis", "pus", "qqns", "quantes",
+    "quaterdecies", "quatertricies", "quelquefois", "quelques", "quelques-ans", "quelques-unes", "quelques-uns",
+    "quindecies", "quinquies", "quintricies", "quinvicies", "quèques", "raiz", "rapidos", "ras-le-cresson", "rasibus",
+    "razibus", "rez", "rémotis", "sans", "sans-façon", "septies", "septtricies", "septvicies", "ses", "sexies",
+    "sextricies", "sexvicies", "siennes", "siens", "soubs", "sous", "souventefois", "ss", "sus", "tandis", "terdecies",
+    "tertricies", "tes", "tiennes", "tiens", "tjrs", "tjs", "toujours", "tous", "toustes", "toutefois", "toutes",
+    "toutxs", "touz", "toûjours", "tranquillos", "tricies", "très", "ts", "ttes", "uls", "undecies", "untricies", "unx",
+    "vers", "versus", "vicies", "volontiers", "vos", "voszigues", "vous", "vous-même", "vous-mêmes", "vozigues", "vs",
+    "vôtres", "yels", "z-en", "à-la-fois", "æls", "çauz", "ès",
 )
 """The French function words that end in "s", "x" or "z", which take no "de" after a round million: the determiners,
 pronouns, prepositions, conjunctions and adverbs of the French Wiktionnaire part-of-speech categories, such as
-"Prépositions en français", "Adverbes en français", "Pronoms personnels en français" and "Déterminants possessifs
-en français", with their hyphenated members, such as "là-bas", "au-dessus" and "eux-mêmes". The words that also read
-as a noun or a preposed adjective after a number are not in the table, so "un million de fois", "un million de pas",
-"un million d'autres choses" and "un million de vis-à-vis" keep their "de"."""
+"Prépositions en français", "Adverbes en français", "Pronoms personnels en français" and "Déterminants possessifs en
+français", with their hyphenated members that have such a part, such as "là-bas", "au-dessus", "eux-mêmes" and
+"après-demain". The words that also read as a noun or a preposed adjective after a number are not in the table, so
+"un million de fois", "un million de pas", "un million d'autres choses" and "un million de vis-à-vis" keep their
+"de"."""
 
 NO_DE_ADJECTIVES = (
     "derniers", "dernières", "premiers", "premières", "précédents", "précédentes", "inclus", "incluses", "passés",
@@ -268,25 +273,29 @@ in their plural forms. A singular form ends in no "s" and takes no "de" by the p
 counted noun after an amount in Tatoeba French or the FLORES+ French dev and devtest splits. The class is open, so
 a participle that the table lacks takes a wrong "de"."""
 
-INVERTED_PRONOUNS = ("ils", "elles", "vous", "nous")
-"""The subject pronouns that end in "s" and close a verb with an inverted subject: "disent-ils", "dites-vous". A
-hyphenated word that ends in one of them is that verb and takes no "de", unless `invariable_plurals` holds it. The
-other inverted forms, such as "dit-on" and "a-t-il", end in no "s", so the plural check already stops them."""
+INVERTED_PRONOUNS = ("je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles")
+"""The subject pronouns, which follow the verb when the subject is inverted: "vois-tu", "disent-ils", "a-t-on". A
+hyphenated word with one of them after its first part is that verb and takes no "de", unless `invariable_plurals`
+holds it."""
 
-INVARIABLE_PLURALS = ("sans-abri", "abat-jour", "graffiti", "people", "rendez-vous")
-"""Nouns whose plural is the singular, and which take "de" after a round million: the French Wiktionnaire gives
-"sans-abri" and "abat-jour" as invariable in the traditional spelling, "graffiti" as a plural of "graffito", "people"
-as its own plural, and "rendez-vous" as invariable. "Rendez-vous" has the form of a verb with an inverted subject."""
+INVARIABLE_PLURALS = ("abat-jour", "graffiti", "people", "rendez-vous", "garde-à-vous")
+"""Nouns whose plural is the singular, and which take "de" after a round million. The plural check stops "abat-jour",
+"graffiti" and "people", which have no part that ends in "s", "x" or "z". The pronoun check stops "rendez-vous" and
+"garde-à-vous", which have the form of a verb with an inverted subject. The French Wiktionnaire gives "abat-jour" as
+invariable in the traditional spelling, "graffiti" as a plural of "graffito", "people" as its own plural,
+"rendez-vous" as invariable, and "garde-à-vous" as "masculin, singulier et pluriel identiques"."""
 
 ASPIRATED_H = (
-    "hache", "hagard", "haie", "haillon", "haine", "haïr", "hall", "halo", "halte", "hamac", "hamburger", "hameau",
-    "hampe", "hamster", "hanche", "handicap", "hangar", "hanter", "happer", "harceler", "hardi", "harem", "hareng",
-    "harfang", "hargne", "haricot", "harnais", "harpe", "hasard", "hâte", "hausse", "haut", "havre", "hennir",
+    "hache", "hagard", "haie", "haillon", "haine", "haïr", "hall", "halo", "halte", "hamac", "hambourg", "hamburger",
+    "hameau", "hampe", "hamster", "hanche", "handicap", "hangar", "hanter", "happer", "harceler", "hardi", "harem",
+    "hareng", "harfang", "hargne", "haricot", "harnais", "harpe", "hasard", "hâte", "hausse", "haut", "havre", "hennir",
     "hérisser", "hernie", "héron", "héros", "hêtre", "heurter", "hibou", "hic", "hideur", "hiérarchie", "hippie",
-    "hisser", "hocher", "hockey", "hollande", "homard", "honte", "hoquet", "horde", "hors", "hotte", "houblon",
+    "hisser", "hocher", "hockey", "hollande", "homard", "hongr", "honte", "hoquet", "horde", "hors", "hotte", "houblon",
     "houle", "housse", "huard", "hublot", "huche", "huer", "huit", "humer", "hurler", "huron", "husky", "hutte",
 )
-"""The principal words with an aspirated h, as the Office québécois de la langue française lists them. A word that
+"""The principal words with an aspirated h, as the Office québécois de la langue française lists them, with the
+starts "hongr" and "hambourg" from its page "Noms propres : quand faire l'élision": "(par exemple, hongrois : de
+Hongrie)", "les habitants de Hambourg". A word that
 starts with one of them, less a final "e", "er" or "ir" when four letters remain, has an aspirated h, as the
 derived words of the list do: "handicapés", "hauteurs", "hockeyeurs", "harceleurs", "hérissons"."""
 
@@ -1050,7 +1059,7 @@ def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
     in it if the text gives one, and whether "de" elides before the noun. None when spaces and a word do not follow,
     or when the word has one letter, is in `no_de_words`, `no_de_adjectives` or `no_de_participles`, is a verb with
     an inverted subject, or does not end as a plural noun does and is not in `invariable_plurals`. A word with a
-    hyphen counts as one word: "sans-abri"."""
+    hyphen counts as one word, which is plural when any part is: "sans-abri", "années-lumière"."""
     position = end
     while position < len(text) and text[position] in SPACES:
         position += 1
@@ -1069,14 +1078,15 @@ def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
     ):
         stop += 1
     word = text[position:stop].lower()
-    inverted = "-" in word and word.rsplit("-", 1)[1] in data["inverted_pronouns"]
+    parts = word.split("-")
+    inverted = any(part in data["inverted_pronouns"] for part in parts[1:])
     if (
         len(word) < 2
         or word in data["no_de_words"]
         or word in data["no_de_adjectives"]
         or word in data["no_de_participles"]
         or inverted and word not in data["invariable_plurals"]
-        or not (word.endswith(("s", "x", "z")) or word in data["invariable_plurals"])
+        or not (any(part.endswith(("s", "x", "z")) for part in parts) or word in data["invariable_plurals"])
     ):
         return None
     return text[end:position], _elides(text[position:stop], data)

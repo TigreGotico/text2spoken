@@ -70,7 +70,7 @@ FR_ENTRIES = {
     "phone_unit_shapes": "0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}", "phone_reading": DELETE, "roman_headings": "chapitre",
     "roman_names": "Louis", "scales": "M", "day_periods": "pm", "number_gaps": "\u202f", "elision_marks": "'",
     "ordinal_nouns": "page", "scale_nouns": "million", "no_de_words": "dans", "aspirated_h": "haricot",
-    "no_de_adjectives": "supplémentaires", "invariable_plurals": "sans-abri", "mute_h": "hallucin", "eliding_y": "yeux",
+    "no_de_adjectives": "supplémentaires", "invariable_plurals": "abat-jour", "mute_h": "hallucin", "eliding_y": "yeux",
     "no_elision": "ouistiti", "no_de_participles": "versés", "inverted_pronouns": "ils", "eliding_h": "haïti",
 }
 PT_ENTRIES = {
