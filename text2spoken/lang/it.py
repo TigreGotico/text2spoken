@@ -48,7 +48,8 @@ della terminazione -èsimo: così undicesimo, [...] ventitreesimo, [...] centune
 So 180 reads "centottantesimo", 108 "centottesimo" and 1000 "millesimo". The same entry gives the separate form for
 the ordinals "per i quali l'altro tipo sarebbe sentito come poco eufonico: centesimo decimo, millesimo primo,
 millesimo secondo, millesimo decimo, millesimo undecimo o undicesimo, ecc. (in questi casi la grafia staccata è
-preferita)", so 110 reads "centesimo decimo" and 1001 "millesimo primo". An ordinal above 999999 stays as written.
+preferita)". `SEPARATE_ORDINALS` holds these five numbers, so 110 reads "centesimo decimo" and 1001 "millesimo
+primo"; any other ordinal follows the stem rule. An ordinal above 999999 stays as written.
 
 The degree sign writes an ordinal too (Vocabolario Treccani, "centesimo": "in scrittura numerica 100°"; "articolo":
 "l'a. 1° della Costituzione"; "gennaio": "cominciare l'anno dal 1° marzo"). `noun_ordinal_marks` names it. Before a
@@ -182,6 +183,9 @@ LARGEST_RBNF_ORDINAL = 100
 """The last ordinal that RBNF `it` writes. Above it RBNF writes "centoottantesimo" for 180, so the file builds the
 ordinal from the cardinal."""
 LARGEST_ORDINAL = 999_999
+SEPARATE_ORDINALS = frozenset({110, 1001, 1002, 1010, 1011})
+"""The ordinals that the Vocabolario Treccani, "ordinale", writes as two words: "centesimo decimo, millesimo primo,
+millesimo secondo, millesimo decimo, millesimo undecimo o undicesimo"."""
 VOWELS = "aeiouàèéìíòóù"
 
 
@@ -207,12 +211,9 @@ class ItalianSpeller:
             raise DeclinedReading(f"no ordinal above {LARGEST_ORDINAL}")
         if value <= LARGEST_RBNF_ORDINAL:
             return self.rbnf.ordinal(digits, features, request)
-        thousands, hundreds = value % 1000, value % 100
-        if value >= 1000 and 1 <= thousands <= 11:
-            return f"{self.ordinal(str(value - thousands), features, request)} " \
-                   f"{self.ordinal(str(thousands), features, request)}"
-        if hundreds == 10:
-            return f"{self.ordinal(str(value - 10), features, request)} {self.ordinal('10', features, request)}"
+        if value in SEPARATE_ORDINALS:
+            head = 100 if value < 1000 else 1000
+            return f"{self.ordinal(str(head), features, request)} {self.ordinal(str(value - head), features, request)}"
         words = self.cardinal(digits, Features(), request)
         if words.endswith("tré"):
             stem = words[:-1] + "e"
