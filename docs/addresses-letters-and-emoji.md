@@ -42,7 +42,7 @@ The digits of a run read as a number when they can name one. After letters that 
 | `Agent B007.` | `en-GB` | Agent bee zero zero seven. |
 | `A sigla ÇB.` | `pt-PT` | A sigla cê cedilhado bê. |
 
-A clause in capitals is a chain of two runs of capitals or more that only spaces part. A capital alone, as the article in `EU VI O FILME`, links the chain. In it, a two-letter word of the `letter_words` table reads as a word. A word that the word check of the language knows also reads as a word: Portuguese asks tugalex, behind the `pt` extra, and English has `letter_words` only. A two-letter acronym in no such list stays an acronym:
+A clause in capitals is a chain of two runs of capitals or more that only spaces part. Every run counts, however it reads, and so does a capital alone that the `letter_words` table holds, such as `I` and `A` in English or `A`, `E` and `O` in Portuguese. Any other capital alone links the chain. In a clause, a word of the `letter_words` table reads as a word, and so does a two-letter word that the word check of the language knows. Portuguese asks tugalex, behind the `pt` extra, and English has `letter_words` only. A two-letter acronym in no such list stays an acronym:
 
 | Written | Tag | Spoken, `LETTERS` on |
 | --- | --- | --- |
@@ -51,10 +51,18 @@ A clause in capitals is a chain of two runs of capitals or more that only spaces
 | `IF IT IS` | `en-GB` | stays as written |
 | `A RTP NO AR` | `pt-PT` | A érre tê pê NO AR |
 | `THE US AND UK` | `en-GB` | THE u ess AND u kay |
-| `IF XIV` | `en-US` | i ef the Fourteenth |
+| `I DO` | `en-US` | stays as written |
 | `ÇAÇA` | `pt-PT` | stays as written |
 
-A run that reads letter by letter ends the clause, and so does a run that another form reads, as `ROMAN` reads `XIV` above. Its reading is in lower case, so a second pass would see the clause end there too.
+A word of a clause stays in capitals while a part next to it stays in capitals. When another form reads the parts next to it, or they read letter by letter, it is written in lower case. Their reading is in lower case too, so a second pass sees no clause there, and the word must already read as a word:
+
+| Written | Tag | Spoken, `LETTERS` on |
+| --- | --- | --- |
+| `CAPÍTULO VI DE` | `pt-PT` | CAPÍTULO sexto de |
+| `A RTP NO` | `pt-PT` | A érre tê pê no |
+| `IF XIV` | `en-US` | if ex i vee |
+
+A Roman numeral right after a word of `letter_words` does not read, because a numeral follows a name or a noun. So `XIV` in `IF XIV` is a run, and it is spelled.
 
 English and Portuguese offer the form. A language with no letter names keeps each run as written. The rules of each language are on the [English](languages/en.md#runs-of-capital-letters) and [Portuguese](languages/pt.md#runs-of-capital-letters) pages.
 

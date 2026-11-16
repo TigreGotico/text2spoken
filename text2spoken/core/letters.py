@@ -9,13 +9,15 @@ vowel: as the coda of a syllable that another syllable follows, and after the la
 consonant before a vowel. A run that is a well-formed Roman numeral, which `ROMAN` declines in its context, takes no
 free consonant, so `XIV` reads as it reads without them, and `CIC`, which is no Roman numeral, reads ci-c.
 
-A run with no digit that reads as a word stays as written, so its span keeps the text. In a clause in capitals, a
-run of `letter_words`, the short words of the language, also reads as a word: `SAIA DA SALA` keeps `DA`, and `IF IT
-IS` keeps each word. So does a run that the word check of the language knows, as tugalex knows `AR` in Portuguese. A
-clause in capitals is a chain of two runs of capitals or more, with no digit, that only white space parts and that
-each stay as written. A capital alone links the chain. `ROMAN` claims before this form, so a numeral after a noun of
-a series, as in `CAPÍTULO VI`, reads as a number, and a run that another form reads ends the clause, as it does on a
-second pass.
+A run with no digit that reads as a word stays as written, so its span keeps the text. The word check of the
+language can make a run read as a word: a run of three letters or more that it knows reads as a word anywhere, as
+tugalex knows `AIDS` in Portuguese, unless `letter_runs` lists it. In a clause in capitals, a run of `letter_words`,
+the short words of the language, also reads as a word, and so does a run of two letters that the word check knows:
+`SAIA DA SALA` keeps `DA`, `IF IT IS` keeps each word, and `A RTP NO AR` keeps `AR`. A clause in capitals is a chain
+of capitals, with no digit, that only white space parts, and that holds two runs or more. Every run counts, however
+it reads, and so does a capital alone that `letter_words` holds, as `I` in `I DO`. When another form reads the parts
+next to such a word, or they read letter by letter, the word is written in lower case, so a second pass keeps it a
+word: `CAPÍTULO VI DE` reads "CAPÍTULO sexto de".
 
 A run that reads letter by letter gives the name of each letter from `letter_names`. The digits of a run read as a
 cardinal when the letters read as a word (`COVID19` reads "COVID nineteen"), or when they are one to three digits
@@ -35,6 +37,8 @@ from text2spoken.core.tokens import Token, is_letter, is_word_char
 from text2spoken.params import FrozenMap, Form
 
 _DIGITS = "0123456789"
+Clause = tuple[tuple[int, int, str], ...]
+"""The parts of a clause in capitals: the start, the end and the kind of each run and each capital alone."""
 
 
 def splits_into_syllables(word: str, vowels: frozenset[str], onsets: frozenset[str], codas: frozenset[str],
@@ -88,14 +92,14 @@ def _parts(run: str) -> tuple[str, str, str]:
 
 def reading(run: str, data: FrozenMap, known: bool = False) -> Literal["word", "letters"] | None:
     """The reading of a run of capital letters with optional digits before or after them, or None when the text
-    is no such run or when a letter of a run that reads letter by letter has no name. With `known`, the run is a word
-    of a clause in capitals, and it reads as a word."""
+    is no such run or when a letter of a run that reads letter by letter has no name. `letter_runs` decides first.
+    Else, with `known`, the run is a word of the language in its context, and it reads as a word."""
     head, letters, tail = _parts(run)
     if len(run) < 2 or not letters or not all(is_letter(char) and char.isupper() for char in letters):
         return None
-    if known:
-        return "word"
     read = data.get("letter_runs", FrozenMap()).get(letters)
+    if read is None and known:
+        return "word"
     if read is None:
         free = frozenset() if roman_value(letters) else frozenset(data.get("letter_free_consonants", ()))
         word = len(letters) > 2 and splits_into_syllables(
@@ -138,9 +142,9 @@ def respell(text: str, request: Request) -> str:
     data = request.data
     pieces = []
     position = 0
-    for (start, end), clause in _runs_in_context(text, request):
+    for (start, end), known, _ in _runs_in_context(text, request):
         written = text[start:end]
-        read = reading(written, data, bool(clause))
+        read = reading(written, data, known)
         if read == "letters" or (read == "word" and written != _parts(written)[1]):
             pieces += [text[position:start], spell(written, request)]
             position = end
@@ -161,41 +165,50 @@ def _word_runs(text: str) -> Iterator[tuple[int, int]]:
         yield start, len(text)
 
 
-def _runs_in_context(text: str, request: Request) -> list[tuple[tuple[int, int], tuple[tuple[int, int], ...]]]:
-    """Each maximal run of letters, digits and combining marks, with the clause in capitals that it is a known word
-    of, or an empty tuple. A clause in capitals is a chain of two runs or more of capital letters with no digit, that
-    only white space parts and that each stay as written: a run that reads as a word, or a run that `letter_words`
-    holds or that the word check of the language knows. A capital alone, as the article `A`, links the chain and does
-    not count as a run of it. A run that reads letter by letter ends the chain, because its reading in lower case ends
-    it on a second pass. A run of the chain is known when `letter_words` holds it or when the word check knows it.
-    The clause holds the start and the end of each run and each capital alone of the chain."""
+def _runs_in_context(text: str, request: Request) -> list[tuple[tuple[int, int], bool, Clause]]:
+    """Each maximal run of letters, digits and combining marks, whether the words of the language make it read as a
+    word, and the clause in capitals that its word reading needs, or an empty tuple.
+
+    A run of three letters or more that the word check of the language knows reads as a word anywhere. A run of
+    `letter_words`, or a run of two letters that the word check knows, reads as a word in a clause in capitals: a
+    chain of capitals that only white space parts, with two runs or more. Every run of capitals counts, however it
+    reads, and so does a capital alone that `letter_words` holds. Any other capital alone links the chain. Each part
+    of the clause is its start, its end and its kind: `stays` for a part that stays as written in capitals, `spelled`
+    for a run that reads letter by letter, and `link`."""
     data = request.data
     listed = frozenset(data.get("letter_words", ()))
     known_word = next((r.known_word for r in request.language.recognizers if isinstance(r, Letters)), None)
     runs = list(_word_runs(text))
     words = [text[start:end] for start, end in runs]
-    is_known = [word in listed or (known_word is not None and word.isalpha() and word.isupper()
-                                   and known_word(word.lower(), request)) for word in words]
-    clauses: list[tuple[tuple[int, int], ...]] = [()] * len(runs)
+    capitals = [all(is_letter(char) and char.isupper() for char in word) for word in words]
+    knows = [capitals[i] and len(word) > 1 and known_word is not None and known_word(word.lower(), request)
+             for i, word in enumerate(words)]
+    anywhere = [known and len(word) > 2 for known, word in zip(knows, words)]
+    needs = [capitals[i] and len(word) > 1 and not anywhere[i] and (word in listed or knows[i])
+             for i, word in enumerate(words)]
+    clauses: list[Clause] = [()] * len(runs)
     chain: list[int] = []
 
+    def kind(i: int) -> str:
+        if len(words[i]) == 1:
+            return "stays" if words[i] in listed else "link"
+        return "spelled" if reading(words[i], data, anywhere[i] or needs[i]) == "letters" else "stays"
+
     def close() -> None:
-        if sum(len(words[i]) > 1 for i in chain) > 1:
-            members = tuple(runs[i] for i in chain)
+        if sum(len(words[i]) > 1 or words[i] in listed for i in chain) > 1:
+            parts = tuple((*runs[i], kind(i)) for i in chain)
             for i in chain:
-                if is_known[i]:
-                    clauses[i] = members
+                if needs[i]:
+                    clauses[i] = parts
         chain.clear()
 
-    for index, word in enumerate(words):
-        member = (all(is_letter(char) and char.isupper() for char in word)
-                  and reading(word, data, is_known[index]) != "letters")
-        if chain and (not member or not text[runs[chain[-1]][1]:runs[index][0]].isspace()):
+    for index in range(len(words)):
+        if chain and (not capitals[index] or not text[runs[chain[-1]][1]:runs[index][0]].isspace()):
             close()
-        if member:
+        if capitals[index]:
             chain.append(index)
     close()
-    return list(zip(runs, clauses))
+    return [(run, anywhere[i] or bool(clauses[i]), clauses[i]) for i, run in enumerate(runs)]
 
 
 @dataclass(frozen=True)
@@ -207,22 +220,21 @@ class Letters:
     known_word: Callable[[str, Request], bool] | None = None
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        """A span for each run of design section 4.6. A run that reads as a word keeps its text. A known word of a
-        clause in capitals also gives the clause and the reading of the run alone, because the clause breaks when
-        another form claims a run of it (`classify`)."""
+        """A span for each run of design section 4.6. A run that reads as a word keeps its text. A word of a clause in
+        capitals also gives its clause, because `classify` writes it in lower case when no part next to it stays as
+        written in capitals."""
         data = request.data
-        for (start, end), clause in _runs_in_context(text, request):
+        for (start, end), known, clause in _runs_in_context(text, request):
             written = text[start:end]
-            read = reading(written, data, bool(clause))
-            if read is None:
-                continue
-            fields = {"letters": written, "reading": read, "clause": clause,
-                      "alone": reading(written, data) if clause else read}
-            yield Span(start, end, Form.LETTERS, FrozenMap(fields), recognizer=self.name,
-                       keep=read == "word" and written == _parts(written)[1])
+            read = reading(written, data, known)
+            if read is not None:
+                yield Span(start, end, Form.LETTERS, FrozenMap({"letters": written, "reading": read, "clause": clause}),
+                           recognizer=self.name, keep=read == "word" and written == _parts(written)[1])
 
 
 def speak_letters(span: Span, context: SpanContext) -> str:
+    if span.fields["reading"] == "lower":
+        return span.fields["letters"].lower()
     return spell(span.fields["letters"], context.request)
 
 

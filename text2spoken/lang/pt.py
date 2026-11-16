@@ -77,10 +77,12 @@ letter of Base I other than k, w and y, which "usam-se nos seguintes casos espec
 digraphs ch, lh and nh (Base I, Obs. 1), which open a syllable in "ca-cho, lha-no, ma-lha, ma-nha" (Base XX). An
 onset of two consonants is a group of Base XX, 1, where "a primeira consoante é uma labial, uma velar, uma dental ou
 uma labiodental e a segunda um l ou um r" (p, b; c, g; t, d; f, v). A coda is one consonant: "Syllables ending in a
-consonant generally end in one of the single consonants /S/, /l/, /R/, /N/" (Cristófaro Silva 2024, p. 98, quoted
-in Wikipedia, "Portuguese phonology", a secondary source). The letters are s, z and x for /S/ ("nas-cer",
-"atroz-mente", "bissex-to", Base XX, 2), l, r, and m and n "com valor de nasalidade" (Base XX, 2). So IRS, with the
-coda rs, reads letter by letter.
+consonant generally end in one of the single consonants /S/, /l/, /R/, /N/" (Cristófaro Silva 2024, p. 98, quoted in
+Wikipedia, "Portuguese phonology", a secondary source). The letters are s, z and x for /S/ ("nas-cer",
+"atroz-mente", "bissex-to", Base XX, 2), l, r, and m and n "com valor de nasalidade" (Base XX, 2). n and s also
+close a syllable together: Base XX, 3 divides "As sucessões de mais de duas consoantes ou de m ou n, com o valor de
+nasalidade, e duas ou mais consoantes" as in "in- cluir, ins- crição, subs- crever, trans- gredir", so INSTITUTO
+reads ins-ti-tu-to. So IRS, with the coda rs, reads letter by letter.
 
 A consonant of `letter_free_consonants` can also stand before a vowel that the reader adds. Mendes, Oliveira and
 Teixeira, "PLE: uma sigla para ler ou soletrar?", Cadernos de PLE, Universidade de Aveiro, DOI
@@ -122,11 +124,13 @@ ruling keeps it: "zero horas" in pt-PT and "zero hora" in pt-BR (Dicio, "Zero gr
 zero é encarado como singular: zero grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero
 graus; zero reais; zero horas.").
 
-`letter_runs` holds three runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
+`letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
 inside the run: Mendes, Oliveira and Teixeira, p. 10: "A estrutura VCCV admite também algumas excepções à leitura:
-OSCE, OCDE e APPO."
+OSCE, OCDE e APPO." ANS and ONS read letter by letter against the coda ns: a measurement over "meio milhão de
+frases" found the coda changes three runs, and two are initialisms, ANS (mmf-095745, "A ANS irá propor", the Agência
+Nacional de Saúde Suplementar) and ONS (mmf-288035, "no ONS (Operador Nacional do Sistema Elétrico)").
 
 A Roman numeral after its noun reads as an ordinal up to ten and as a cardinal from eleven. Ciberdúvidas 14167: "O
 hábito é considerar a numeração romana ordinal até X (décimo/a), e cardinal a partir daí. Assim, o papa Bento XVI
@@ -140,22 +144,26 @@ para papas, soberanos e séculos, é: usar ordinais até dez inclusive [...] car
 cláusula vinte e três)". Ciberdúvidas 9067: "(para papas, soberanos, séculos, partes duma obra) [...] (ex.: D.
 Afonso III [terceiro]; o papa João XXIII [vinte e três]; capítulo quarto, parte doze". So a numeral reads after a
 noun of `roman_nouns`: the parts of a work and of a law (capítulo, volume, tomo, artigo, cláusula, parte, livro,
-título, secção, seção, canto, ato, acto), and, by a ruling of the maintainer, the nouns that name a class, a rank or
-a member of a series (classe, fase, grupo, nível, categoria) and the name "Guerra Mundial". The reading takes the
-gender of the noun, which Priberam gives: "classe", "parte", "fase", "categoria", "cláusula", "secção", "seção" and
-"guerra" are "nome feminino", and "capítulo", "volume", "tomo", "artigo", "livro", "título", "canto", "ato", "acto",
-"grupo" and "nível" are "nome masculino". So `Classe II` reads "Classe segunda" and `o capítulo XV` "o capítulo
-quinze". A numeral of two letters or more also reads after any other capitalised word, with the gender of that word,
-as in `João Paulo II` and `Isabel II`, and right after a title and its full stop, with the gender of the title, as
-in `D. XIV`, which reads "Dom Catorze". In pt-BR the ordinal stops at nine, and `roman_ordinal_limit` holds the last
-value that reads as an ordinal in each variety. Ciberdúvidas 9067: "os numerais se pronunciarem em Portugal como
-ordinais até ao décimo, inclusive (no Brasil até ao nono); mas, a partir daí, se pronunciarem como cardinais". So
-`Pio X` reads "Pio Décimo" in pt-PT and "Pio Dez" in pt-BR.
+título, secção, seção, canto, ato, acto, cena), and, by a ruling of the maintainer, the nouns that name a class, a
+rank or a member of a series (classe, fase, grupo, nível, categoria) and the name "Guerra Mundial". The reading
+takes the gender of the noun, which Priberam gives: "classe", "parte", "fase", "categoria", "cláusula", "secção",
+"seção" and "guerra" and "cena" are "nome feminino", and "capítulo", "volume", "tomo", "artigo", "livro", "título",
+"canto", "ato", "acto", "grupo" and "nível" are "nome masculino". So `Classe II` reads "Classe segunda" and `o
+capítulo XV` "o capítulo quinze". A numeral of two letters or more also reads after any other capitalised word, with
+the gender of that word, as in `João Paulo II` and `Isabel II`, and right after a title and its full stop, with the
+gender of the title, as in `D. XIV`, which reads "Dom Catorze". In pt-BR the ordinal stops at nine, and
+`roman_ordinal_limit` holds the last value that reads as an ordinal in each variety. Ciberdúvidas 9067: "os numerais
+se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono); mas, a partir daí, se
+pronunciarem como cardinais". So `Pio X` reads "Pio Décimo" in pt-PT and "Pio Dez" in pt-BR.
 
 A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun
-of `roman_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. The other letters name a member of a
-series as often as a numeral: the measurement for `roman_words` below found `Grupo C` and `classe C`. So `classe A`,
-`anexo C` and `vitamina C` stay as written.
+of `roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
+letters: the parts of a work and of a law (capítulo, volume, tomo, livro, parte, ato, acto, cena, título, artigo),
+as Ciberdúvidas 11716 applies the rule "a todas as partes em que se divide uma obra". A group, a class, a category,
+a level and a phase are labelled with letters as well as numbers: the measurement for `roman_words` below found
+`Grupo C` and `classe C`, and "meio milhão de frases" holds `No Grupo I, houve duas goleadas` (mmf-210324), a group
+of a series from A. So `Grupo I`, `Fase I`, `classe A`, `anexo C` and `vitamina C` stay as written, and `Grupo II`
+reads "Grupo segundo".
 
 `roman_words` holds the numerals that are also an acronym or a word, so they do not read after a capitalised word or
 a title. The list comes from a measurement: the recognizer, with an empty `roman_words`, ran over the FLORES+
@@ -170,22 +178,32 @@ Wiktionary, "CML", Portuguese: "Câmara Municipal de Lisboa"), CV (mmf-110811 "O
 "Washington DC"), DL (mmf-128115 "O DL 66/2011"), MC (mmf-074274 "Racionais MC's"), MCI (mmf-102234 "O MCI quer"),
 MDC (mmf-093312 "Os MDC"), MI (mmf-376946 "Pode MI-me"; Priberam, "mi": "Terceira nota musical"), MM (mmf-053612 "O
 MM."), MV (mmf-294652 "Porquê MV ( máquina virtual)"), MX (mmf-028904 "Behringer MX 882") and XL (mmf-281415 "Os XL
-medem"). A numeral that is a word of the language does not read after a word in capitals: `letter_words` holds "vi",
-the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito perfeito do indicativo de ver"), and
-tugalex knows "li", so `EU VI` and `EU LI` stay as written, and `Paulo VI` still reads. A word of `function_words`,
-such as the article that starts `O CD`, reads no numeral.
+medem"). A numeral right after a word of `letter_words`, such as a pronoun, does not read, because a numeral follows
+a noun or a name: `Eu LI o livro` stays as written. Nor does a numeral that is a word of the language after a word
+in capitals: `letter_words` holds "vi", the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do
+pretérito perfeito do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do
+pretérito perfeito do indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and
+`Paulo VI` still reads. A word of `function_words`, such as the article that starts `O CD`, reads no numeral.
 
-In a clause in capitals, a two-letter run of `letter_words` reads as a word, so `SAIA DA SALA` keeps `DA`. Priberam
-gives each word its class: "da", "do" and "ao" are a "contracção" ("Contracção da preposição de e do artigo ou
-pronome a"), "no" and "na" a "contração" or a "pronome pessoal", "os" the "masculino plural de o", "as" the
-"feminino plural de o", "às" a "contracção", "um" an "artigo", "em" and "de" a "preposição", "se" a "conjunção" and
-a "pronome pessoal", "ou" a "conjunção", and "eu", "tu", "me", "te" and "lhe" a "pronome pessoal". "vi" is the verb
-form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito perfeito do indicativo de ver"), so `EU VI O
-FILME` keeps `VI`. A clause in capitals is two runs of capitals or more, so `A RTP NO AR` keeps `NO`. A run that
-tugalex knows as a word form of the variety also reads as a word there: the word list of `TugaLexicon.get_wordlist`,
-which tugalex takes from the Portal da Língua Portuguesa, holds "ar", so `AR` stays as written. Without the `pt`
-extra, only `letter_words` reads, and one log warning names the missing extra (design section 10). Outside a clause
-in capitals, a run of two letters reads letter by letter, so `Vi a TV` spells `TV`.
+In a clause in capitals, a run of `letter_words` reads as a word, so `SAIA DA SALA` keeps `DA`. The capitals alone
+"a", "e", "o", "à" and "é" are words of `letter_words` too (Priberam: "a", "o" an "artigo definido", "e" a
+"conjunção", "à" a "contracção", "é" the "terceira pessoa singular do presente do indicativo de ser"), so they count
+as runs of a clause, and `O AR` keeps `AR`. Any other capital alone links a clause and does not count, so `Vitamina
+C DE laranja` spells `DE`. Priberam gives each word its class: "da", "do" and "ao" are a "contracção" ("Contracção
+da preposição de e do artigo ou pronome a"), "no" and "na" a "contração" or a "pronome pessoal", "os" the "masculino
+plural de o", "as" the "feminino plural de o", "às" a "contracção", "um" an "artigo", "em" and "de" a "preposição",
+"se" a "conjunção" and a "pronome pessoal", "ou" a "conjunção", and "eu", "tu", "me", "te" and "lhe" a "pronome
+pessoal". "vi" is the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito perfeito do
+indicativo de ver"), so `EU VI O FILME` keeps `VI`. A clause in capitals is two runs of capitals or more, so `A RTP
+NO AR` keeps `NO`. A run of two letters that tugalex knows as a word form of the variety also reads as a word there:
+the word list of `TugaLexicon.get_wordlist`, which tugalex takes from the Portal da Língua Portuguesa, holds "ar",
+so `AR` stays as written. A run of three letters or more that tugalex knows reads as a word anywhere, unless
+`letter_runs` lists it, so `a AIDS` stays as written. Two letters need the clause: in "meio milhão de frases", 17 of
+the 18 two-letter runs that tugalex knows are initialisms (AL, IR, TI, DE, SE, EL, ME, AA, EM, FI, UI, EH, TE, UM,
+LI, AZ, and the word OU), 335 of 336 times. Of the 371 longer runs that it knows, the syllable rule already reads
+all but AIDS as words. Without the `pt` extra, only `letter_words` reads, and one log warning names the missing
+extra (design section 10). Outside a clause in capitals, a run of two letters reads letter by letter, so `Vi a TV`
+spells `TV`.
 
 `ç` has a name for a run that reads letter by letter: Priberam, "cê": "cê cedilhado • Nome da letra Ç ou ç". A run
 with `ç` that splits into syllables, such as `ÇAÇA`, stays as written, as any other word does.
@@ -297,8 +315,9 @@ DATA = freeze({
     "roman_nouns": {"classe": "feminine", "capítulo": "masculine", "volume": "masculine", "tomo": "masculine",
                     "artigo": "masculine", "cláusula": "feminine", "parte": "feminine", "livro": "masculine",
                     "título": "masculine", "secção": "feminine", "seção": "feminine", "canto": "masculine",
-                    "ato": "masculine", "acto": "masculine", "fase": "feminine", "grupo": "masculine",
-                    "nível": "masculine", "categoria": "feminine", "guerra mundial": "feminine"},
+                    "ato": "masculine", "acto": "masculine", "cena": "feminine", "fase": "feminine",
+                    "grupo": "masculine", "nível": "masculine", "categoria": "feminine", "guerra mundial": "feminine"},
+    "roman_letter_nouns": ["capítulo", "volume", "tomo", "livro", "parte", "ato", "acto", "cena", "título", "artigo"],
     "roman_words": ["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DL", "MC", "MCI", "MDC", "MI", "MM",
                     "MV", "MX", "XL"],
     "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine", "às": "feminine",
@@ -319,14 +338,14 @@ DATA = freeze({
                         ["ção", "feminine"], ["ções", "feminine"], ["a", "feminine"], ["as", "feminine"]],
     "symbols": {"%": "percent", "€": "money", "$": "money", "°": "measure", "×": "measure"},
     "letter_names": {**_pt_electronic.ELECTRONIC["letter_names"], "ç": "cê cedilhado"},
-    "letter_words": ["DA", "DO", "AO", "NO", "NA", "OS", "AS", "ÀS", "UM", "EM", "DE", "SE", "OU", "EU", "TU", "ME",
-                     "TE", "LHE", "VI"],
+    "letter_words": ["A", "E", "O", "À", "É", "DA", "DO", "AO", "NO", "NA", "OS", "AS", "ÀS", "UM", "EM", "DE", "SE",
+                     "OU", "EU", "TU", "ME", "TE", "LHE", "VI", "LI"],
     "letter_vowels": [*"aeiouáéíóúâêôàãõ"],
     "letter_onsets": [*"bcçdfghjlmnpqrstvxz", "ch", "lh", "nh",
                       *(first + second for first in "pbcgtdfv" for second in "lr")],
-    "letter_codas": [*"lrszxmn"],
+    "letter_codas": [*"lrszxmn", "ns"],
     "letter_free_consonants": [*"bcçdfgjklmnpqrstvwxz"],
-    "letter_runs": {"EUA": "letters", "APPO": "letters", "OCDE": "letters"},
+    "letter_runs": {"EUA": "letters", "APPO": "letters", "OCDE": "letters", "ANS": "letters", "ONS": "letters"},
     "patterns": {
         "date_named": "([0-9][0-9]?) de " + _MONTH + "(?: de ([0-9][0-9][0-9][0-9]))?",
         "expression": "[-−+]?[0-9]+(?: ?[+−×=] ?[-−+]*[0-9]+)+",
@@ -919,13 +938,14 @@ class Roman:
     `Luís XIV`, `século XIX`, `capítulo V`, `Classe II`, `D. XIV`.
 
     After a noun of `century_words`, any well-formed numeral up to XXX reads. After a noun of `roman_nouns`, a
-    numeral of two letters or more reads, and so do `I`, `V` and `X`, as in `o capítulo V`. After a capitalised
-    name, a value up to 30 reads when a regnal title comes right before the name, as in `D. João V` and `papa Pio
-    X`. A numeral of two letters or more also reads after any other capitalised word, as in `João Paulo II` and
-    `Luís XIV`, and right after a title and its full stop, as in `D. XIV`. A numeral of `roman_words`, an acronym,
-    does not read in these two cases. Nor does a numeral that is a word of the language after a word in capitals, a
-    word of `letter_words` or a word that tugalex knows, as `VI` in `EU VI` and `LI` in `EU LI`. A short numeral
-    after another capitalised word, as in `Malcolm X`, stays as written."""
+    numeral of two letters or more reads, and so do `I`, `V` and `X` after a noun of `roman_letter_nouns`, as in `o
+    capítulo V`. After a capitalised name, a value up to 30 reads when a regnal title comes right before the name, as
+    in `D. João V` and `papa Pio X`. A numeral of two letters or more also reads after any other capitalised word, as
+    in `João Paulo II` and `Luís XIV`, and right after a title and its full stop, as in `D. XIV`. A numeral of
+    `roman_words`, an acronym, does not read in these two cases, and no numeral reads right after a word of
+    `letter_words`, as `LI` in `Eu LI`. Nor does a numeral that is a word of the language after a word in capitals,
+    a word of `letter_words` or a word that tugalex knows, as `VI` in `EU VI`. A short numeral after another
+    capitalised word, as in `Malcolm X`, stays as written."""
     name: str = "roman"
     form: Form = Form.ROMAN
 
@@ -940,6 +960,7 @@ class Roman:
         nouns = data["roman_nouns"]
         numeral_words = frozenset(data["roman_words"])
         letter_words = frozenset(data["letter_words"])
+        letter_nouns = frozenset(data["roman_letter_nouns"])
         function_words = frozenset(data["function_words"])
         words = context_words(tokens)
         breaks = clause_breaks(text)
@@ -954,7 +975,7 @@ class Roman:
                 continue
             previous = words[index - 1]
             in_capitals = len(previous.text) > 1 and previous.text.isupper()
-            is_word = numeral in numeral_words or in_capitals and (
+            is_word = numeral in numeral_words or previous.text.upper() in letter_words or in_capitals and (
                 numeral in letter_words or _known_word(numeral.lower(), request))
             if previous.text in title_keys and text[previous.end:start] == ". ":
                 reads = len(numeral) >= 2 and not is_word
@@ -970,7 +991,7 @@ class Roman:
                 if before[-1].lower() in centuries:
                     reads = value <= 30
                 elif noun is not None:
-                    reads = len(numeral) >= 2 or numeral in "IVX"
+                    reads = len(numeral) >= 2 or (numeral in "IVX" and noun in letter_nouns)
                 elif (previous.text in not_names or not before[-1][0].isupper()
                       or before[-1].lower() in function_words):
                     reads = False

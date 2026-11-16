@@ -89,7 +89,9 @@ A numeral stays as written when the text does not show that it is a number:
 | `Malcolm X spoke.` | `en-GB` | stays as written | A numeral of one letter after a name needs a regnal title before the name. |
 | `The book I read.` | `en-GB` | stays as written | `I` is the pronoun. |
 | `Fly to Washington DC.` | `en-GB` | stays as written | `DC` is an acronym, in the `roman_words` table. |
-| `Tome vitamina C.` | `pt-PT` | stays as written | One letter reads only as `I`, `V` or `X` after a noun of a series. |
+| `Tome vitamina C.` | `pt-PT` | stays as written | One letter reads only as `I`, `V` or `X` after a noun that takes numbers and never letters. |
+| `No Grupo I, houve duas goleadas.` | `pt-PT` | stays as written | A group is labelled with letters too, so one letter after `Grupo` stays as written. |
+| `Eu LI o livro.` | `pt-PT` | stays as written | A numeral right after a pronoun does not read. |
 | `EU VI O FILME.` | `pt-PT` | stays as written | `VI` is a word after a word in capitals. |
 
 A title of a work reads its numeral as a name does, because telling a title from a name needs context that the library does not have:

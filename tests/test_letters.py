@@ -69,23 +69,25 @@ def test_a_language_with_no_letter_names_does_not_offer_the_form(code):
     (PT, "eua"), (PT, "pib"), (PT, "tap"), (PT, "ciav"), (PT, "palop"), (PT, "ovni"), (PT, "técnico"), (PT, "chip"),
     (EN, "nato"), (EN, "uefa"), (EN, "warning"), (EN, "first"), (EN, "help"), (EN, "irs"),
     (EN, "usa"), (EN, "cia"), (EN, "scuba"), (EN, "aids"), (EN, "sports"), (EN, "events"), (EN, "results"),
+    (PT, "instituto"), (PT, "transporte"),
 ])
 def test_a_run_that_splits_into_syllables(spec, word):
     """na-to, o-nu, i-va, si-da, u-e-fa, e-tar, a-ten-ção, e-u-a; pi-b, ta-p, ci-a-v, pa-lo-p and chi-p with a free
     consonant after the last syllable, and ov-ni and téc-ni-co with a free consonant that closes a syllable;
     war-ning, first with coda rst, help with coda lp, irs with coda rs, u-sa, ci-a; scu-ba with onset sc, and a-ids,
-    sports, e-vents and re-sults with a coda that takes the s of the -s/-z morpheme."""
+    sports, e-vents and re-sults with a coda that takes the s of the -s/-z morpheme; ins-ti-tu-to and trans-por-te
+    with the coda ns of AO1990 Base XX, 3."""
     assert splits_into_syllables(word, *_sets(spec))
 
 
 @pytest.mark.parametrize(("spec", "word"), [
     (PT, "rtp"), (PT, "ctt"), (PT, "cplp"), (PT, "bmw"), (PT, "irs"), (PT, "anp"), (PT, "hiv"), (PT, "nih"),
-    (PT, "instituto"), (EN, "bbc"), (EN, "fbi"), (EN, "ibm"), (EN, "bmw"), (EN, "zdf"),
+    (PT, "irst"), (EN, "bbc"), (EN, "fbi"), (EN, "ibm"), (EN, "bmw"), (EN, "zdf"),
 ])
 def test_a_run_that_does_not_split_into_syllables(spec, word):
     """No vowel (rtp, ctt, cplp, bmw, bbc, zdf), no free consonant after the last syllable of a run with no consonant
     before a vowel (irs, anp) or with an h outside ch, lh and nh (hiv, nih), no two consonants that close a syllable
-    in Portuguese (ns of instituto), no onset fb, and no coda b before a lone m (fbi, ibm)."""
+    in Portuguese other than ns (rst of irst), no onset fb, and no coda b before a lone m (fbi, ibm)."""
     assert not splits_into_syllables(word, *_sets(spec))
 
 
@@ -107,10 +109,10 @@ def test_the_reading_of_a_run(run, expected):
 def test_the_fields_and_a_word_reading_that_keeps_its_text():
     request = analyze("A NATO e os CTT.", "pt-PT", LETTERS_ON).request
     found = [(s.start, s.end, dict(s.fields), s.keep) for s in letters.LETTERS.find("A NATO e os CTT.", (), request)]
-    assert found == [(2, 6, {"letters": "NATO", "reading": "word", "clause": (), "alone": "word"}, True),
-                     (12, 15, {"letters": "CTT", "reading": "letters", "clause": (), "alone": "letters"}, False)]
+    assert found == [(2, 6, {"letters": "NATO", "reading": "word", "clause": ()}, True),
+                     (12, 15, {"letters": "CTT", "reading": "letters", "clause": ()}, False)]
     assert [(s.form, dict(s.fields)) for s in analyze("A NATO e os CTT.", "pt-PT", LETTERS_ON).spans] == [
-        (Form.LETTERS, {"letters": "CTT", "reading": "letters", "clause": (), "alone": "letters"})]
+        (Form.LETTERS, {"letters": "CTT", "reading": "letters", "clause": ()})]
 
 
 def test_a_lexicon_value_that_the_form_reads_raises_and_a_word_does_not():
@@ -139,7 +141,9 @@ def _failing_rows() -> set[str]:
 
 @pytest.mark.parametrize(("verdict", "expected"), [(False, WORD_ROWS), (True, LETTER_ROWS)])
 def test_the_syllable_rule_bites(monkeypatch, verdict, expected):
+    """Without tugalex, so that no word that it knows reads as a word by the word check."""
     assert _failing_rows() == set()
+    monkeypatch.setitem(sys.modules, "tugalex", None)
     monkeypatch.setattr(letters, "splits_into_syllables", lambda *args: verdict)
     assert _failing_rows() >= expected
 
@@ -241,7 +245,7 @@ def test_without_tugalex_only_letter_words_read_and_one_warning_names_the_extra(
             second = normalize("EU VI O AR", "pt-BR", LETTERS_ON)
     finally:
         pt._warn_no_tugalex.cache_clear()
-    assert first == "A érre tê pê éne ó á érre"
+    assert first == "A érre tê pê no á érre"
     assert second == "EU VI O á érre"
     assert [r.getMessage() for r in caplog.records if "tugalex" in r.getMessage()] == [
         "tugalex is not installed, so a word in capitals reads as a word only when letter_words holds it; "

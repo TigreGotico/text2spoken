@@ -56,7 +56,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 363 rows in `tests/data/pt.tsv`, 13 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 377 rows in `tests/data/pt.tsv`, 13 are marked silver.
 
 ## Roman numerals
 
@@ -66,20 +66,22 @@ A Roman numeral reads after a century word, after a noun of a part, a class or a
 | --- | --- | --- | --- |
 | `A parte III do livro.` | `pt-PT` | A parte terceira do livro. | The noun gives the gender. |
 | `Veja o artigo XXIII.` | `pt-PT` | Veja o artigo vinte e três. | A cardinal from eleven. |
-| `A cláusula V obriga.` | `pt-PT` | A cláusula quinta obriga. | One letter after a noun of a series. |
+| `A cena V começa.` | `pt-PT` | A cena quinta começa. | One letter after a part of a work. |
+| `O Grupo II joga hoje.` | `pt-PT` | O Grupo segundo joga hoje. | Two letters after a noun of a series. |
+| `No Grupo I, houve duas goleadas.` | `pt-PT` | stays as written | A group is labelled with letters too. |
 | `Veja o artigo X.` | `pt-PT` | Veja o artigo décimo. | pt-PT reads the tenth as an ordinal. |
 | `Veja o artigo X.` | `pt-BR` | Veja o artigo dez. | pt-BR reads it as a cardinal. |
 | `Isabel II reinou.` | `pt-PT` | Isabel Segunda reinou. | After a name, the numeral agrees with the name and takes a capital. |
 | `A Dra. IV saiu.` | `pt-PT` | A Doutora Quarta saiu. | After a title and its full stop, the title gives the gender. |
-| `A classe A viaja.` | `pt-PT` | stays as written | One letter other than `I`, `V` and `X` names a member of a series by a letter. |
+| `A classe A viaja.` | `pt-PT` | stays as written | A class is labelled with letters. |
 | `Fui a Washington DC.` | `pt-PT` | stays as written | `DC` is an acronym, in the `roman_words` table. |
-| `EU LI O LIVRO` | `pt-PT` | stays as written | `LI` is a word that tugalex knows, after a word in capitals. |
+| `EU LI O LIVRO` | `pt-PT` | stays as written | `LI` follows the pronoun `EU`, and `letter_words` holds it, the verb form of "ler". |
 
 ## Runs of capital letters
 
-A run that splits into Portuguese syllables stays as written, and any other run reads each letter by its name. In Portuguese, a consonant can also stand where a reader adds a vowel. A table in the language file holds the runs that the rule reads wrong: `EUA`, `APPO` and `OCDE` read letter by letter.
+A run that splits into Portuguese syllables stays as written, and any other run reads each letter by its name. In Portuguese, a consonant can also stand where a reader adds a vowel. A table in the language file holds the runs that the rule reads wrong: `EUA`, `APPO`, `OCDE`, `ANS` and `ONS` read letter by letter. A syllable can close with `ns`, as AO1990 Base XX divides "ins- crição" and "trans- gredir".
 
-In a clause in capitals, a word of the `letter_words` table or a word form that tugalex knows reads as a word. Without the `pt` extra, only `letter_words` reads, and one log warning names the missing extra.
+A run of three letters or more that tugalex knows reads as a word anywhere. In a clause in capitals, a word of the `letter_words` table, or a two-letter word form that tugalex knows, reads as a word. Without the `pt` extra, only `letter_words` reads, and one log warning names the missing extra.
 
 | Written | Spoken (`pt-PT`, `LETTERS` on) | Note |
 | --- | --- | --- |
@@ -92,8 +94,10 @@ In a clause in capitals, a word of the `letter_words` table or a word form that 
 | `geral@RTP.pt` | geral@érre tê pê.pt | Limit: Portuguese has no address form, so the form spells only the run in an address. |
 | `EU VI O FILME` | stays as written | A clause in capitals: `letter_words` holds `VI`, the verb form of "ver". |
 | `AR CONDICIONADO` | stays as written | A clause in capitals: tugalex knows "ar". |
-| `INSTITUTO DE ESTUDOS` | stays as written | A clause in capitals: tugalex knows "instituto". |
-| `Visitei o INSTITUTO.` | Visitei o i éne ésse tê i tê u tê ó. | Limit: a syllable inside a run closes with one consonant, so a word that needs two consonants at the end of a syllable (ins-ti-tu-to) reads letter by letter outside a clause in capitals. |
+| `INSTITUTO DE ESTUDOS` | stays as written | The run splits into ins-ti-tu-to. |
+| `Visitei o INSTITUTO.` | stays as written | The same rule, outside a clause. |
+| `O AR` | stays as written | `O` counts as a run of the clause. |
+| `A ANS propõe regras.` | A á éne ésse propõe regras. | The table spells it. |
 | `DEPARTAMENTO DE TI` | stays as written | Limit: tugalex knows the pronoun "ti", so the acronym `TI` reads as the pronoun in a clause in capitals. |
 | `EPI e ODE.` | stays as written | Limit: the rule reads some runs that Wiktionary spells, such as `EPI` ({{pt-IPA\|ê-pê-i}}) and `ODE` ({{pt-IPA\|ó-dê-é}}). |
 | `A WAN.` | A dâblio á éne. | Limit: the rule spells some runs that Wiktionary reads as words, because `w` starts no Portuguese syllable. |

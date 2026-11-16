@@ -36,7 +36,7 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.PERCENT: frozenset({"amount", "sign_position", "prefix", "suffix"}),
     Form.TELEPHONE: frozenset({"country_code", "groups", "prefix", "suffix"}),
     Form.IDENTIFIER: frozenset({"head", "digits"}),
-    Form.LETTERS: frozenset({"letters", "reading", "clause", "alone"}),
+    Form.LETTERS: frozenset({"letters", "reading", "clause"}),
     Form.ABBREVIATION: frozenset({"key"}),
     Form.IDIOM: frozenset({"key", "prefix", "suffix"}),
     Form.ROMAN: frozenset({"value", "role", "suffix"}),
@@ -170,15 +170,17 @@ def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None],
 
 
 def _in_clause(span: Span, other: bytearray) -> bool:
-    """Whether a run of the clause of a `LETTERS` span stays as written next to it: no span of another form reads
-    it, or a capital alone between them."""
+    """Whether the part of the clause next to a `LETTERS` span stays as written in capitals: no span of another form
+    reads it, it does not read letter by letter, and no span of another form reads a link between them."""
     clause = span.fields["clause"]
-    index = clause.index((span.start, span.end))
+    index = next(i for i, (start, end, _) in enumerate(clause) if (start, end) == (span.start, span.end))
     for step in (-1, 1):
         position = index + step
-        while 0 <= position < len(clause) and not any(other[slice(*clause[position])]):
-            start, end = clause[position]
-            if end - start > 1:
+        while 0 <= position < len(clause):
+            start, end, kind = clause[position]
+            if any(other[start:end]) or kind == "spelled":
+                break
+            if kind == "stays":
                 return True
             position += step
     return False
@@ -198,9 +200,10 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
 
-    A known word of a clause in capitals (`LETTERS`, section 4.6) reads as a word only while a run next to it in the
-    clause stays as written. When another form claims the runs next to it, as `ROMAN` claims `XIV` in `IF XIV`, it
-    reads as it reads alone, as it would on a second pass over the output.
+    A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while a part next to it in the clause
+    stays as written in capitals. When another form claims the parts next to it, or they read letter by letter, as
+    `ROMAN` claims `VI` in `CAPÍTULO VI DE`, it reads in lower case, so a second pass, which sees no clause there,
+    keeps it a word.
 
     An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
     `😀` in place of the sequence (design section 4.7). The recognizers read the view of `emoji_view`, in which the
@@ -244,8 +247,7 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
                 neighbours.setdefault(position, []).append(index)
             continue
         if span.form is Form.LETTERS and span.fields["clause"] and not _in_clause(span, other):
-            span = replace(span, fields=FrozenMap({**span.fields, "reading": span.fields["alone"]}),
-                           keep=span.fields["alone"] != "letters")
+            span = replace(span, fields=FrozenMap({**span.fields, "reading": "lower"}), keep=False)
         read[span.start:span.end] = b"\x01" * (span.end - span.start)
         if not span.keep:
             claimed.append(span)

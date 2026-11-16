@@ -100,7 +100,10 @@ NOT ENTER` keeps `DO`, and `IF IT IS` keeps each word. English has no word lexic
 "is", "be" and "go" are verbs, "no" and "my" determiners, "to", "in", "on", "at", "of", "up" and "by" prepositions,
 "it", "we", "me" and "he" pronouns, "so", "or", "as" and "if" conjunctions, and "an" an article. "us" is a pronoun
 too, and it stays out of the set, because `US` names the United States in a text in capitals as often as the
-pronoun. Outside a text in capitals, a run of two letters reads letter by letter, so `TV` and `PC` are spelled.
+pronoun. The capitals alone "I", a pronoun, and "A", an article, are words of `letter_words` too, so they count as
+runs of a clause, and `I DO` keeps `DO`. Outside a text in capitals, a run of two letters reads letter by letter, so
+`TV` and `PC` are spelled. A Roman numeral right after a word of `letter_words` does not read, because a numeral
+follows a name or a noun, so `IF XIV` keeps `XIV` as a run.
 
 The digits of a run read as a cardinal when the letters read as a word, as in `COVID19` ("COVID nineteen"), or when
 they are one to three digits with no leading zero, as in `B52` ("bee fifty-two") and `M25` ("em twenty-five"). No
@@ -259,8 +262,8 @@ DATA = freeze({
                     "war", "world war", "super bowl"],
     "roman_words": ["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DIV", "DL", "MC", "MCI", "MD",
                     "MDC", "MI", "MIX", "MM", "MV", "MX", "XL"],
-    "letter_words": ["DO", "NO", "TO", "IN", "ON", "AT", "OF", "IT", "IS", "BE", "WE", "ME", "MY", "SO", "UP", "OR",
-                     "AN", "AS", "BY", "GO", "HE", "IF"],
+    "letter_words": ["I", "A", "DO", "NO", "TO", "IN", "ON", "AT", "OF", "IT", "IS", "BE", "WE", "ME", "MY", "SO", "UP",
+                     "OR", "AN", "AS", "BY", "GO", "HE", "IF"],
     "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters", "IBS": "letters", "IDS": "letters"},
     "patterns": {
         "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
@@ -631,6 +634,7 @@ class Roman:
         nouns = frozenset(data["roman_nouns"])
         function_words = frozenset(data["function_words"])
         numeral_words = frozenset(data["roman_words"])
+        letter_words = frozenset(data["letter_words"])
         words = context_words(tokens)
         breaks = clause_breaks(text)
         for match in re.finditer("[IVXLCDM]+", text):
@@ -643,7 +647,7 @@ class Roman:
             if not before or before[-1].lower() in function_words or before[-1].lower() in titles:
                 continue
             last = before[-1]
-            is_word = numeral in numeral_words
+            is_word = numeral in numeral_words or last.upper() in letter_words
             regnal = len(before) == 2 and before[0] in titles and last[0].isupper()
             two_words = len(before) == 2 and " ".join(before).lower() in nouns
             if regnal:

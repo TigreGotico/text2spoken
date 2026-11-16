@@ -33,6 +33,10 @@ def lower_letter(value, where: str) -> None:
         f"{where}: {value!r} is not one lowercase letter"
 
 
+def capital_word(value, where: str) -> None:
+    assert type(value) is str and value.isalpha() and value.isupper(), f"{where}: {value!r} is not a word in capitals"
+
+
 def capitals(value, where: str) -> None:
     assert type(value) is str and len(value) >= 2 and all(c.isupper() for c in value), \
         f"{where}: {value!r} is not a run of two or more capital letters"
@@ -131,7 +135,7 @@ SHAPES: dict[str, Shape] = {
     "letter_free_consonants": list_of(lower),
     "letter_onsets": list_of(lower),
     "letter_runs": map_of(capitals, one_of("word", "letters")),
-    "letter_words": list_of(capitals),
+    "letter_words": list_of(capital_word),
     "letter_vowels": list_of(lower, minimum=1),
     "list_links": WORDS,
     "number_abbreviations": map_of(word, reading),

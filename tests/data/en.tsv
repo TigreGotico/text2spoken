@@ -532,4 +532,5 @@ en-534	en-US	roman	William Howard Taft IV spoke.	William Howard Taft the Fourth 
 en-535	en-US	roman	Thomas Smith II arrived.	Thomas Smith the Second arrived.	Wikipedia, Name suffix (fetched 2026-11-16): he can use the II suffix, which is pronounced "the second"	unchecked
 en-536	en-GB	roman	Type II diabetes.	Type Two diabetes.	ruling 4 of the letters-limits follow-up: type is a noun of a series and reads the cardinal	unchecked
 en-537	en-GB	roman	Malcolm X spoke today.	Malcolm X spoke today.	design section 4.2: a reading that is not clear stays as written; a numeral of one letter needs a regnal title	unchecked
-en-538	en-US	letters	IF XIV	i ef the Fourteenth	design section 11: a second pass leaves the output unchanged; ROMAN claims XIV, so IF stands alone in its clause and reads letter by letter, as it reads on a second pass	unchecked
+en-538	en-US	letters	IF XIV	if ex i vee	design section 4.2 and 4.6: a numeral right after a word of letter_words does not read, so XIV stays a run and reads letter by letter; IF then has no part next to it in capitals and is written in lower case, so a second pass keeps it a word	unchecked
+en-539	en-US	letters	I DO	I DO	ruling 3 of the letters-limits review: a capital alone that letter_words holds counts as a run of the clause, so I DO keeps DO	unchecked
