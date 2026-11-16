@@ -15,6 +15,7 @@ The library needs Python 3.11 or later. It uses no network and loads no model. E
 | `ar` | Arabic | `ovos-number-parser` |
 | `es` | Spanish | `ovos-number-parser` |
 | `eu` | Basque | `ovos-number-parser` |
+| `fr` | French | the floor of `unicode-rbnf`, which the core already holds |
 | `pt` | Portuguese | `ovos-number-parser`, `ovos-date-parser` and `tugalex` |
 | `ru` | Russian | `ovos-number-parser` |
 

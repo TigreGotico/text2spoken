@@ -91,4 +91,4 @@ Dutch leaves these forms as written or reads them in a limited way:
 | `Ik sprak Mr. Smith.` | `nl-NL` | stays as written | `Mr.` with a capital is also the English title, so only the lowercase `mr.` reads "meester". |
 
 ---
-[← Basque](eu.md) · [Home](../index.md) · [Portuguese →](pt.md)
+[← French](fr.md) · [Home](../index.md) · [Portuguese →](pt.md)
