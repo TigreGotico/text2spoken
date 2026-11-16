@@ -44,10 +44,14 @@ The rules cite these sources, by rule family:
   quand faire l'élision" says "il n'existe pas de règle systématique et que l'usage varie considérablement", and
   the page "HAÏTI, HAÏTIEN et HAÏTIENNE : élision et liaison" finds "une forte tendance à le considérer comme un h
   muet", with "originaire d'Haïti" and "de nombreux Haïtiens", so the words of `eliding_h` elide. A word all in
-  capitals, such as "HABITANTS", is no proper noun and follows the rules of its lowercase form. "Devant les mots
-  étrangers commençant par y, il ne faut pas faire d'élision", so a y takes none outside `eliding_y`, which holds
-  "yeux" ("Élision obligatoire": "Elle n'a d'yeux que pour lui") and "ypérite" (Wiktionnaire: "de l'ypérite");
-  and "Il ne faut pas faire d'élision devant les mots oui et ouistiti", which `no_elision` holds.
+  capitals, such as "HABITANTS", is no proper noun and follows the rules of its lowercase form. A y before a
+  consonant is a vowel, and a y before a vowel is the yod: Académie française, Dictionnaire, 9th edition, "Y":
+  "La liaison et l'élision se font avec les mots qui commencent par un y se prononçant i, comme dans l'ypérite.
+  Elles ne se font pas si y sert à noter le yod, comme le yack, la yole, sauf avec yeux et yeuse". So "de" elides
+  before a y and a consonant ("d'Yvelinois"), and before a y and a vowel only in a word of `eliding_y`. The OQLF
+  page "Élision interdite" names the same yod words: "Devant les mots étrangers commençant par y, il ne faut pas
+  faire d'élision", "yacht, yankee, yaourt". "Il ne faut pas faire d'élision devant les mots oui et ouistiti",
+  which `no_elision` holds.
 - Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
   des ordinaux complexes (vingt-deuxième, etc.)".
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
@@ -455,7 +459,7 @@ DATA = freeze(
         "aspirated_h": ASPIRATED_H,
         "mute_h": MUTE_H,
         "eliding_h": ["haïti"],
-        "eliding_y": ["yeux", "ypérite"],
+        "eliding_y": ["yeux", "yeuse"],
         "no_elision": ["oui", "ouistiti"],
         "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"}],
         "dimension_marks": ["x", "×"],
@@ -1024,8 +1028,8 @@ def _aspirated_start(word: str) -> str:
 def _elides(word: str, data: FrozenMap) -> bool:
     """Whether "de" elides before `word`. A word that starts as a word of `eliding_h` does elides. Any other h elides
     unless the word is capitalised and not all in capitals, or starts as a word of `aspirated_h` does, and not as a
-    word of `mute_h`. A y elides only in a word of `eliding_y`. The words of `no_elision` and their plurals take
-    none. Any other vowel elides."""
+    word of `mute_h`. A y elides before a consonant, and before a vowel only in a word of `eliding_y`. The words of
+    `no_elision` and their plurals take none. Any other vowel elides."""
     lower = word.lower()
     if lower.startswith(tuple(data["eliding_h"])):
         return True
@@ -1035,7 +1039,7 @@ def _elides(word: str, data: FrozenMap) -> bool:
         aspirated = lower.startswith(tuple(_aspirated_start(h) for h in data["aspirated_h"]))
         return not aspirated or lower.startswith(tuple(data["mute_h"]))
     if lower[0] == "y":
-        return lower.startswith(tuple(data["eliding_y"]))
+        return lower[1] not in _ELIDING or lower.startswith(tuple(data["eliding_y"]))
     if any(lower in (w, w + "s") for w in data["no_elision"]):
         return False
     return lower[0] in _ELIDING
