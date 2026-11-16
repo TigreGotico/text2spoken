@@ -4,7 +4,7 @@ The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for i
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`, unless a noun that it counts comes next, as in `la gara 1 anno fa`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
+The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. It counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `Nel 21° secolo.` | `it-IT` | Nel ventunesimo secolo. |
 | `Abito al 3° piano.` | `it-IT` | Abito al terzo piano. |
 | `Il 1/2/2003 è festa.` | `it-IT` | Il primo febbraio duemilatré è festa. |
-| `Ci vediamo il 5/6.` | `it-IT` | Ci vediamo il cinque giugno. |
+| `Ci vediamo il 13/11.` | `it-IT` | Ci vediamo il tredici novembre. |
 | `Ci vediamo il 12/03/2024 alle 14:30.` | `it-IT` | Ci vediamo il dodici marzo duemilaventiquattro alle quattordici e trenta. |
 | `Ci vediamo alle 12:00.` | `it-IT` | Ci vediamo a mezzogiorno. |
 | `Ci vediamo alle 1:30.` | `it-IT` | Ci vediamo all'una e trenta. |
@@ -60,7 +60,7 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `4 + 5 = 9` | `it-IT` | quattro più cinque è uguale a nove |
 | `Leggi l'art. 3 della Costituzione.` | `it-IT` | Leggi l'articolo tre della Costituzione. |
 
-A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. When the noun phrase has a feminine determiner, such as `la`, `sig.`, `prof.`, `dott.` and `Dr.` read the feminine word. Possessives and one adjective may come between the determiner and the title:
+A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. When the noun phrase has a feminine determiner, such as `la`, `sig.`, `prof.`, `dott.` and `Dr.` read the feminine word. Possessives and the adjectives of `title_adjectives`, such as `cara` and `vecchia`, may come between the determiner and the title. Any other word ends the noun phrase:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -70,6 +70,16 @@ A title reads as the word that stands before a name, in lowercase, and takes a c
 | `La prof. Gallo insegna latino.` | `it-IT` | La professoressa Gallo insegna latino. |
 | `Ho parlato con la nostra Dott. Ferri.` | `it-IT` | Ho parlato con la nostra dottoressa Ferri. |
 | `Ho scritto alla sig. Rossi.` | `it-IT` | Ho scritto alla signora Rossi. |
+| `La vecchia prof. Neri insegna ancora.` | `it-IT` | La vecchia professoressa Neri insegna ancora. |
+| `Questa mattina Prof. Rossi ha parlato.` | `it-IT` | Questa mattina professor Rossi ha parlato. |
+
+A day and a month, as `13/11`, read as a date only after a word of `date_words`, such as `il` and `dal`, and only when the day is above 12. A smaller day can also be the month of a month/day date, so the pair stays as written. `24/7` also stays as written:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Dal 31/3 il museo è chiuso.` | `it-IT` | Dal trentuno marzo il museo è chiuso. |
+| `Ci vediamo il 5/6.` | `it-IT` | Ci vediamo il 5/6. |
+| `Il 24/7 è un orario continuo.` | `it-IT` | Il 24/7 è un orario continuo. |
 
 ## Varieties
 
@@ -102,9 +112,9 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 ## Sources
 
-The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
+The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). It also lists the words of the categories of Italian prepositions, conjunctions, adverbs, pronouns, determiners and articles. The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 192 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 218 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
@@ -121,8 +131,7 @@ Italian leaves these forms as written, or reads them as shown:
 | `Costa 2.500 ¥.` | `it-IT` | stays as written | `¥` belongs to the yen and the yuan in CLDR, so an amount next to it stays as written. |
 | `Le corsie sono larghe 3,50 metri.` | `it-IT` | Le corsie sono larghe tre virgola cinque zero metri. | The digits after the decimal mark read one by one, as the CLDR spell-out rule reads them. |
 | `Antonio oggi compie 41 anni.` | `it-IT` | Antonio oggi compie quarantuno anni. | A compound in uno keeps its full form. Before a noun the short form "quarantun anni" is also correct. |
-| `Il binario 1 porta a Roma.` | `it-IT` | Il binario una porta a Roma. | After a label noun, 1 counts a noun of the noun list. The verb "porta" is also a noun, so 1 reads as its article. |
-| `La squadra 1 punto sopra di noi.` | `it-IT` | La squadra uno punto sopra di noi. | After a label noun, 1 counts no word that the noun list also marks as a function word. "punto" is also an adverb, so 1 reads as a label. |
+| `Ha 10.000.000 follower.` | `it-IT` | stays as written | A number that ends in a scale word reads before a noun of the noun list, its regular plural and a function word that is no noun. The loanword "follower" is in neither list, and a word that no list holds may be a verb. |
 
 ---
 [← Basque](eu.md) · [Home](../index.md) · [Portuguese →](pt.md)

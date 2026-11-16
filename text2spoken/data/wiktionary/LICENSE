@@ -9,9 +9,8 @@ day is the source revision.
 Attribution: Wiktionary contributors, "Italian masculine nouns" and "Italian feminine nouns", English Wiktionary.
 The contributors of each page are in its history at https://en.wiktionary.org/.
 
-Changes: the file keeps the lowercase words of two or more letters, leaves out the words of both gender
-categories, and lists the nouns that are also in a function-word category. scripts/extract_noun_genders.py makes
-the file.
+Changes: the file keeps the lowercase words of two or more letters, lists the words of both gender categories
+apart, and lists the words of the function-word categories. scripts/extract_noun_genders.py makes the file.
 
 Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
 Licence text: https://creativecommons.org/licenses/by-sa/4.0/legalcode

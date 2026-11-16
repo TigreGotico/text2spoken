@@ -2,12 +2,12 @@
 
     python scripts/extract_noun_genders.py
 
-The MediaWiki API lists the members of "Italian masculine nouns" and "Italian feminine nouns". A noun that is in
-both categories has no single gender, and the file leaves it out. `function_words` lists the nouns of the file that
-are also a preposition, a conjunction, an adverb, a pronoun, a determiner or an article: after a number such a word
-may be a word that the number does not count, as "oggi" in `pagina 1 oggi`. The file keeps lowercase words of two or
-more letters only. The Italian Wiktionary has no category for the gender of a noun, only "Sostantivi in
-italiano", so the English Wiktionary is the source. The Wiktionary text is under CC BY-SA 4.0.
+The MediaWiki API lists the members of "Italian masculine nouns" and "Italian feminine nouns". A noun that is in both
+categories has no single gender, and the file lists it in `both`, as "cantante" and "abitante". `function_words` lists
+the prepositions, conjunctions, adverbs, pronouns, determiners and articles: after a scale word such a word is no noun,
+also when the noun list holds it, as "ieri" in `2.000.000 ieri`. The file keeps lowercase words of two or more letters
+only. The Italian Wiktionary has no category for the gender of a noun, only "Sostantivi in italiano", so the English
+Wiktionary is the source. The Wiktionary text is under CC BY-SA 4.0.
 """
 import json
 import time
@@ -51,28 +51,29 @@ def members(category: str) -> list[str]:
 
 def main() -> None:
     lists = {name: set(members(category)) for name, category in GENDERS.items()}
-    function = set().union(*(members(category) for category in FUNCTION_WORDS))
+    function = {word for category in FUNCTION_WORDS for word in members(category)
+                if len(word) > 1 and word.isalpha() and word.islower()}
     both = lists["masculine"] & lists["feminine"]
-    kept = {name: sorted(w for w in words - both if len(w) > 1 and w.isalpha() and w.islower())
-            for name, words in lists.items()}
-    nouns = set(kept["masculine"]) | set(kept["feminine"])
+    kept = {name: sorted(w for w in words if len(w) > 1 and w.isalpha() and w.islower())
+            for name, words in {"masculine": lists["masculine"] - both, "feminine": lists["feminine"] - both,
+                                "both": both}.items()}
     OUT.write_text(json.dumps({
         "source": {
             "name": "English Wiktionary",
             "url": API,
             "categories": [*GENDERS.values()],
-            "excluded": "words in both gender categories",
+            "both": "words in both gender categories, listed apart",
             "function_words": FUNCTION_WORDS,
             "licence": "CC BY-SA 4.0",
             "retrieved": date.today().isoformat(),
             "members": {name: len(words) for name, words in lists.items()},
         },
         **kept,
-        "function_words": sorted(nouns & function),
+        "function_words": sorted(function),
     }, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
-    print(f"in masculine {len(lists['masculine'])} feminine {len(lists['feminine'])} both {len(both)} "
-          f"function {len(function)}; out masculine {len(kept['masculine'])} feminine {len(kept['feminine'])} "
-          f"function_words {len(nouns & function)}")
+    print(f"in masculine {len(lists['masculine'])} feminine {len(lists['feminine'])} both {len(both)}; "
+          f"out masculine {len(kept['masculine'])} feminine {len(kept['feminine'])} both {len(kept['both'])} "
+          f"function_words {len(function)}")
 
 
 if __name__ == "__main__":
