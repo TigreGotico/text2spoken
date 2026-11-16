@@ -35,8 +35,8 @@ EN_ENTRIES = {
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
     "electronic_symbols": "@", "letter_names": "w", "electronic_vowels": "i", "electronic_schemes": "https",
     "electronic_tlds": "uk", "letter_vowels": "a", "letter_onsets": "n", "letter_codas": "ng", "letter_runs": "IRS",
-    "regnal_titles": "King", "regnal_names": "Henry", "roman_nouns": "chapter", "roman_words": "MX",
-    "letter_words": "TO", "unjoined_symbols": "CD",
+    "regnal_titles": "King", "regnal_names": "Henry", "apposition_marks": "[", "roman_nouns": "chapter", "roman_words": "MX",
+    "roman_letter_nouns": "chapter", "letter_words": "TO", "unjoined_symbols": "CD",
 }
 DE_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_word": DELETE,
