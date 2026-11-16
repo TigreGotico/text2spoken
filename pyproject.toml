@@ -29,6 +29,7 @@ Homepage = "https://github.com/TigreGotico/text2spoken"
 ar = ["ovos-number-parser>=0.24.3a1"]
 es = ["ovos-number-parser>=0.24.45a1"]
 eu = ["ovos-number-parser>=0.24.26a1"]
+fr = ["unicode-rbnf>=2.4.1"]
 ru = ["ovos-number-parser>=0.24.35a1"]
 test = [
     "pytest",
