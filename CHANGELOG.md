@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a58](https://github.com/TigreGotico/text2spoken/tree/0.0.2a58) (2026-11-16)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a57...0.0.2a58)
+
+**Merged pull requests:**
+
+- fix: read titles parted by a single quote or guillemets [\#120](https://github.com/TigreGotico/text2spoken/pull/120) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a57](https://github.com/TigreGotico/text2spoken/tree/0.0.2a57) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a56...0.0.2a57)
@@ -379,7 +387,6 @@
 **Merged pull requests:**
 
 - perf: make Color.find linear [\#19](https://github.com/TigreGotico/text2spoken/pull/19) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix: OvosNumberSpeller declines what ovos-number-parser cannot read [\#18](https://github.com/TigreGotico/text2spoken/pull/18) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a8](https://github.com/TigreGotico/text2spoken/tree/0.0.2a8) (2026-11-09)
 
