@@ -90,13 +90,15 @@ def test_a_run_that_does_not_split_into_syllables(spec, word):
 @pytest.mark.parametrize(("run", "expected"), [
     ("ONU", "word"), ("ON", "letters"), ("A", None), ("A1", "letters"), ("4G", "letters"), ("12AB34", "letters"),
     ("TAP", "word"), ("EUA", "letters"), ("XIV", "letters"), ("LIV", "letters"), ("MIX", "word"), ("CIC", "word"),
-    ("UEFA2", None), ("ONGs", None), ("PhD", None), ("ÇX", None), ("ΒΓΔ", None), ("ATENÇÃO", None), ("A٣", None),
+    ("UEFA2", "word"), ("ONGs", None), ("PhD", None), ("ÇX", "letters"), ("ΒΓΔ", None), ("ATENÇÃO", None),
+    ("A٣", None), ("DA", "letters"),
 ])
 def test_the_reading_of_a_run(run, expected):
-    """Two letters read letter by letter, and one letter needs a digit. A run that reads as a word and holds a digit
-    is not taken. A letter with no name, a lowercase letter, a combining mark and a digit outside ASCII end the
-    run. A run that is a well-formed Roman numeral takes no free consonant, so XIV and LIV read letter by letter. MIX,
-    with the coda x, reads as a word, and CIC, which is no Roman numeral, reads ci-c with a free c."""
+    """Two letters read letter by letter, and one letter needs a digit. A run that reads as a word may hold digits,
+    which read as a cardinal. A letter with no name, a lowercase letter, a combining mark and a digit outside ASCII
+    end the run. A run that is a well-formed Roman numeral takes no free consonant, so XIV and LIV read letter by
+    letter. MIX, with the coda x, reads as a word, and CIC, which is no Roman numeral, reads ci-c with a free c. Ç has
+    a name, "cê cedilhado", so ÇX reads letter by letter. DA alone sits in no text in capitals."""
     assert reading(run, PT.data) == expected
 
 
@@ -202,3 +204,24 @@ def test_a_long_run_of_capitals_takes_linear_time(unit, lang):
     normalize(unit, lang, LETTERS_ON)
     small, large = min(seconds(500) for _ in range(3)), min(seconds(4000) for _ in range(3))
     assert large < 20 * small, (small, large)
+
+
+NUMERALS_AND_CODES = ["SAIA ", "DA ", "DO ", "NOT ", "NO ", "IF ", "SALA", "ENTER", "COVID", "COVID19", "A25", "B52",
+                      "B007", "M25", "GB", "MB", "TB", "10", "5", "Classe ", "capítulo ", "parte ", "World War ",
+                      "Guerra Mundial ", "Henry ", "Paulo ", "King ", "Pope ", "D. ", "Dra. ", "Sr. ", "I", "II", "V",
+                      "VI", "XIV", "LVII", "MIX", "CD", "DC", "Ç", "ÇAÇA", "ÇB", "EU ", "The ", "O "]
+JOINERS = list("0123456789٢ .,;:!?-'/%#@()") + ["\t", "\u00a0", "www.", ".com", "http://", "a@b.com.", "km/h", "1/2"]
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_numerals_text_in_capitals_and_codes_are_idempotent(seed):
+    """Section 11 for the Roman numerals, the text in capitals and the codes of letters and digits, with `LETTERS`
+    off and on: a second pass changes nothing, except in the known limits of the README. The joiners put digits,
+    marks, spaces and claims next to the runs."""
+    rng = random.Random(seed)
+    for _ in range(2000):
+        lang = rng.choice(["en", "en-US", "pt-PT", "pt-BR"])
+        params = rng.choice([None, LETTERS_ON])
+        text = "".join(rng.choice(JOINERS + CAPITALS + NUMERALS_AND_CODES) for _ in range(rng.randint(1, 30)))
+        once = normalize(text, lang, params)
+        assert normalize(once, lang, params) == once or known_limit(text, lang, params), (text, lang, params, once)

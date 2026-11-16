@@ -398,7 +398,7 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
         try:
             spoken = language.verbalizers[span.form](span, context)
             if letters and span.form not in (Form.LETTERS, Form.LEXICON):
-                spoken = respell(spoken, request.data)
+                spoken = respell(spoken, request)
             spoken = language.attach(spoken, span.fields.get("prefix", ""), span.fields.get("suffix", ""))
             out.append(span.lead + spoken + span.trail)
         except DECLINED as error:

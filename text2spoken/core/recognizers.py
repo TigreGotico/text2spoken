@@ -29,7 +29,7 @@ from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
-from text2spoken.core.units import unit_table, units_at
+from text2spoken.core.units import joined_table, unit_table, units_at
 from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
@@ -623,7 +623,10 @@ class Measure:
                     amounts.append(following)
                     end = following.end
             for gap in ("", " ", " "):
-                unit = next((u for u in units_at(text, end + len(gap), request) if text.startswith(gap, end)
+                candidates = units_at(text, end + len(gap), request)
+                if not gap:
+                    candidates = (*candidates, *(u for u in joined_table(request) if text.startswith(u, end)))
+                unit = next((u for u in candidates if text.startswith(gap, end)
                              and _suffix(text, end + len(gap) + len(u), data) is not None
                              and not _per_unit(text, end + len(gap) + len(u))), None)
                 if unit is not None:

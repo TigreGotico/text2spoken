@@ -25,7 +25,19 @@ The words of a date, a clock time and a year come from `ovos-date-parser`. A clo
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 283 rows in `tests/data/pt.tsv`, 13 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 335 rows in `tests/data/pt.tsv`, 13 are marked silver.
+
+## Roman numerals
+
+A Roman numeral reads after a century word, a noun of a part, a class or a series, or a capitalised word. It reads as an ordinal up to ten and as a cardinal from eleven, as Ciberdúvidas gives the rule. The noun before it gives the gender. So `Leia o capítulo XV.` reads "Leia o capítulo quinze.", and `A parte III do livro.` reads "A parte terceira do livro." After a name, the numeral starts with a capital: `João Paulo II visitou Fátima.` reads "João Paulo Segundo visitou Fátima.", and `Isabel II reinou.` reads "Isabel Segunda reinou." After a title and its full stop, the title gives the gender, so `A D. XIV.` reads "A Dom Catorze.", and `A Dra. IV saiu.` reads "A Doutora Quarta saiu."
+
+A numeral of one letter reads after a century word, a title and a name, or a noun of two words such as `guerra mundial`. A numeral that is also an acronym or a word, such as `DC`, `MC` or `MV`, does not read after a capitalised word, so `Fui a Washington DC.` stays as written. `VI` does not read after a word in capitals, so `EU VI O FILME.` stays as written. A measurement over the FLORES+ devtest and "meio milhão de frases" gives that list.
+
+Known limits of the form in Portuguese:
+
+- A numeral of one letter after a noun of one word stays as written, because the same letter names a group or a class: `o capítulo V` stays as written.
+- The title of a work reads its numeral as an ordinal: `Avatar II` reads "Avatar Segundo".
+- With the `LETTERS` form on, `EU VI O FILME.` spells `VI`, because `VI` is no two-letter function word.
 
 ## Runs of capital letters
 
@@ -33,7 +45,7 @@ A run that splits into Portuguese syllables stays as written, and any other run 
 
 Known limits of the form in Portuguese:
 
-- Portuguese reads some initialisms as words that a reader spells, because no source in the language file names them: `IBGE` stays as written. A well-formed Roman numeral is spelled, so `DIV`, `CIV` and `LIV` read letter by letter.
+- Portuguese reads some initialisms as words that a reader spells, because no source in the language file names them: `IBGE` stays as written. A well-formed Roman numeral that the `ROMAN` form does not read is spelled, so `O CIV` and `Veja o LIV.` read letter by letter.
 - Portuguese has no onset or coda with `k`, `w` or `y`, which AO1990 keeps for foreign names. So `WEB` reads "dâblio é bê" in pt-PT.
 - Portuguese has no address form, so the form spells only the run in an address. `geral@RTP.pt` reads "geral@érre tê pê.pt" in pt-PT.
 - A Portuguese syllable inside a run closes with one consonant. So a word in capitals that needs two consonants at the end of a syllable reads letter by letter: `INSTITUTO` (ins-ti-tu-to) reads "i éne ésse tê i tê u tê ó".

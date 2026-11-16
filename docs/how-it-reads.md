@@ -35,7 +35,7 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 | `LETTERS` | A run of capital letters: `NATO`, `BMW`, `MP3` | Off | en, pt |
 | `ABBREVIATION` | `Dr.`, `n.º`, `etc.` | On | de, en, es, eu, pt, ru |
 | `IDIOM` | `24/7`, `50/50`, from a table of the language | On | de, en |
-| `ROMAN` | `Luís XIV`, `XX. mendea`, `século XIX` | On | eu, pt |
+| `ROMAN` | `Luís XIV`, `XX. mendea`, `século XIX`, `Henry VIII` | On | en, eu, pt |
 | `COLOR` | `#FF0000` | On | de, en, pt |
 | `ELECTRONIC` | An e-mail or web address: `ann@example.com`, `www.example.org` | On | en |
 | `SYMBOL` | A character with a CLDR name, such as `©`, `§` or `→`, when no other form claims it | On | en, pt |
@@ -67,7 +67,13 @@ normalize("A NATO reuniu-se com a RTP.", "pt-PT", NormalizationParams().plus(For
 # 'A NATO reuniu-se com a érre tê pê.'
 ```
 
-A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name and each digit by its word.
+A run is two or more capital letters that touch no other letter. Digits can come before or after the letters, as in `MP3`, `4G` and `T2`. A run of two letters, or of one letter and digits, reads letter by letter. A longer run reads as a word when it splits into syllables of the language, and then it stays as written. Any other run reads each letter by its name.
+
+The digits of a run read as a number when they can name one. After letters that read as a word, they read as a cardinal: `COVID19` reads "COVID nineteen". After spelled letters, one to three digits with no leading zero read as a cardinal, as the name of a road does: `A25` reads "á vinte e cinco" in pt-PT, and `M25` reads "em twenty-five". Any other digits read one by one, so `B007` reads "bee zero zero seven".
+
+In a text in capitals, a two-letter word of the language reads as a word. `SAIA DA SALA` and `DO NOT ENTER` stay as written. A text in capitals is a chain of runs with only spaces between them, and one of its runs has three letters or more and reads as a word. A two-letter acronym of the language stays an acronym in it, so `THE US AND UK` reads "THE u ess AND u kay".
+
+Digits joined to a CLDR unit symbol of two capitals or more read as a measure, with the form on or off. `10GB` reads "ten gigabytes", and `Tenho 10GB livres.` reads "Tenho dez gigabytes livres." in pt-PT.
 
 English and Portuguese offer the form. A language with no letter names keeps each run as written. The rules of each language, and the limits that belong to one language, are on the [English](languages/en.md#runs-of-capital-letters) and [Portuguese](languages/pt.md#runs-of-capital-letters) pages.
 
@@ -75,11 +81,9 @@ The form does not take a run with a lowercase letter (`ONGs`, `PhD`), a run with
 
 These limits hold in both languages:
 
-- A Roman numeral that the `ROMAN` form does not read is a run. `Classe II` reads "Classe i i", and `World War II` reads "World War i i". Portuguese gives such a run no free consonant, so `A D. XIV.` reads "A Dom xis i vê."
-- A run that reads as a word and holds a digit stays as written, as `COVID19` does with the form off.
-- A run with a letter that has no name, such as `Ç`, stays as written when it does not split into syllables.
-- Text in capitals spells its two-letter words, because a run of two letters reads letter by letter. `SAIA DA SALA` reads "SAIA dê á SALA" in pt-PT, and `DO NOT ENTER` reads "dee o NOT ENTER". The rule stays, because two-letter acronyms such as `TV`, `PC`, `UE` and `IA` are frequent.
-- A run of digits joined to a run reads digit by digit. `10GB` reads "one zero gee bee", and `A25` reads "á dois cinco" in pt-PT.
+- A Roman numeral that the `ROMAN` form does not read is a run. Portuguese gives such a run no free consonant, so `O XIV chegou.` reads "O xis i vê chegou."
+- A text in capitals with no run of three letters or more that reads as a word spells its two-letter words. `IF IT IS` reads "i ef i tee i ess", and `A RTP NO AR` reads "A érre tê pê éne ó á érre" in pt-PT.
+- A unit symbol matches in its CLDR case only, so `5KM` is a run and not a measure. With the form on, `Corri 5KM.` reads "Corri cinco capa éme." in pt-PT.
 
 ## Emoji
 

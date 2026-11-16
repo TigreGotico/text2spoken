@@ -61,6 +61,52 @@ does not say, so r stays a coda letter. ch, sh, th and ng spell one consonant ea
 vowel sounds": y as in myth and sky, aw as in flaw, ew as in dew, and ow as in owl. The rule reads CIA, IRS, USA, IBS
 and IDS as words, and Wiktionary spells them letter by letter: CIA /ˌsiːˌaɪˈeɪ/, IRS /ˈaɪ.ɑɹ.ɛs/, USA /juː ɛs ˈeɪ/,
 IBS /aɪ.biːˈɛs/ and IDS /aɪ diː ɛs/. So `letter_runs` holds them.
+
+A Roman numeral after a regnal title and a name, or after a name of `regnal_names`, is a regnal number, and it reads
+"the" and the ordinal: `Henry VIII` reads "Henry the Eighth". Wikipedia, "Roman numerals", Modern use: "Names of
+monarchs and popes, e.g. Elizabeth II of the United Kingdom, Pope Leo XIV. These are referred to as regnal numbers
+and are usually read as ordinals; e.g. II is pronounced "the second"." The BBC News style guide, "royalty", writes the
+numeral: "We use Roman numerals with names (eg: Henry VIII, Charles III)". The regnal titles are those that Wikipedia,
+"Regnal number", names: "kings, queens regnant, popes, and rarely princes and princesses". `regnal_names` holds the
+given names that hold two Roman numerals or more in the Wikipedia lists of English, British, Scottish and French
+monarchs and of popes, in their English spelling.
+
+After any other capitalised word, and after a noun of `roman_nouns`, a numeral reads as a cardinal: `World War II`
+reads "World War Two", `Super Bowl LVII` "Super Bowl Fifty-Seven" and `chapter IV` "chapter four". The BBC News style
+guide, "World War": "write out World War One and World War Two". Wikipedia, "Roman numerals", Modern use, lists
+"Book volume and chapter numbers, as well as the several acts within a play" and says that "grade IX" is "sometimes
+seen for grade 9", and that "Super Bowl 50 was a one-time exception" to the numerals of the Super Bowl.
+So `roman_nouns` holds chapter, volume, book, act and grade, and, by a ruling of the maintainer, part, phase, class,
+level and stage, and the name "World War". The cardinal takes a capital on each word after a capitalised word, as the
+BBC writes "World War Two".
+
+A numeral of one letter reads only after a regnal title and a name, as in `King Henry V`, and after "World War". So
+`the book I read` keeps its pronoun, and `Malcolm X` stays as written. `roman_words` holds the numerals that are also
+an initialism or a word, from the same measurement as `pt.py` (FLORES+ devtest and "meio milhão de frases", judged in
+`knowledge/wiki/audits/text2spoken-langs/letters-limits/evidence/roman-runs.tsv`) and from Wiktionary, which gives
+each one an English sense: CC ("init of carbon copy"), CD ("initialism of compact disc"), CDI ("capacitor discharge
+ignition"), CDL ("commercial driver's licence"), CI ("cochlear implant"), CL ("light cruiser"), CM ("chief
+minister"), CML ("capital market line"), CV ("curriculum vitae"), DC ("District of Columbia"), DIV ("div": "A
+section"), DL ("download"), MC ("master of ceremonies"), MCI ("mild cognitive impairment"), MD ("Maryland"), MDC
+("Metropolitan Detention Center"), MI ("Michigan"), MIX ("mix": "To stir together"), MM ("Master of Music"), MV
+("motor vehicle"), MX ("mail exchanger") and XL ("extra large"). Such a numeral reads only after a regnal title and a
+name. A word of `function_words`, such as the `The` that starts a sentence, reads no numeral.
+
+In a text in capitals, a two-letter run of `letter_words` reads as a word, so `DO NOT ENTER` keeps `DO`. Wiktionary
+gives each word a part of speech of its English section: "do", "is", "be" and "go" are verbs, "no" and "my"
+determiners, "to", "in", "on", "at", "of", "up" and "by" prepositions, "it", "we", "me" and "he" pronouns, "so", "or",
+"as" and "if" conjunctions, and "an" an article. "us" is a pronoun too, and it stays out of the set, because `US`
+names the United States in a text in capitals as often as the pronoun. Outside a text in capitals, a run of two
+letters reads letter by letter, so `TV` and `PC` are spelled.
+
+The digits of a run read as a cardinal when the letters read as a word, as in `COVID19` ("COVID nineteen"), or when
+they are one to three digits with no leading zero, as in `B52` ("bee fifty-two") and `M25` ("em twenty-five"). No
+usage source gives the reading of a road name such as `M25`, so this reading is a ruling of the maintainer.
+
+Digits joined to a CLDR unit symbol of two capital letters or more read as a measure, as in `10GB` ("ten
+gigabytes"), because a run of capitals that touches digits is no word of running text. `unjoined_symbols` holds `CD`,
+the CLDR en symbol of the carat, because a `2CD` set holds two compact discs (Wiktionary, "CD": "initialism of
+compact disc").
 """
 from __future__ import annotations
 
@@ -126,6 +172,17 @@ COLORS = {
 }
 """Seeded by `scripts/seed_colors.py en` from the ovos-color-parser palette `en-US/dot-net-colors.json`."""
 
+REGNAL_NAMES = [
+    "Adeodatus", "Adrian", "Agapetus", "Alexander", "Anastasius", "Benedict", "Boniface", "Callixtus", "Celestine",
+    "Charles", "Clement", "Constantine", "Damasus", "David", "Donald", "Duncan", "Edmund", "Edward", "Elizabeth",
+    "Eugene", "Felix", "Francis", "Gelasius", "George", "Gregory", "Harold", "Henry", "Honorius", "Innocent", "James",
+    "Joan", "John", "Julius", "Kenneth", "Leo", "Louis", "Lucius", "Malcolm", "Marcellus", "Marinus", "Martin",
+    "Mary", "Napoleon", "Nicholas", "Paschal", "Paul", "Pelagius", "Pepin", "Philip", "Pius", "Richard", "Robert",
+    "Sergius", "Sixtus", "Stephen", "Sylvester", "Theodore", "Urban", "Victor", "William",
+]
+"""The given names that hold two Roman numerals or more in the Wikipedia lists of English, British, Scottish and
+French monarchs and of popes, in their English spelling."""
+
 _CODAS = [*"bcdfgklmnprstvxz", "ch", "sh", "th", "ng", "lp", "lb", "lt", "ld", "lk", "lch", "rp", "rb",
           "rt", "rd", "rk", "rg", "rch", "lf", "lv", "lth", "ls", "lsh", "rf", "rv", "rth", "rs", "rsh",
           "lm", "ln", "rm", "rn", "rl", "mp", "nt", "nd", "nch", "nk", "mph", "nth", "nz", "ft", "sp",
@@ -172,6 +229,7 @@ DATA = freeze({
     "scales": {"thousand": "thousand", "million": "million", "billion": "billion", "trillion": "trillion",
                "k": "thousand", "m": "million", "bn": "billion"},
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
+    "unjoined_symbols": ["CD"],
     "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "mph", "ml", "MHz", "GHz", "MB"],
     "phone_words": ["phone", "telephone", "tel", "call", "dial", "ring", "text", "mobile", "cell", "fax"],
     "short_codes": ["000", "101", "111", "112", "211", "311", "411", "511", "611", "711", "811", "911", "988", "999"],
@@ -204,6 +262,14 @@ DATA = freeze({
                       "tr", "dr", "cr", "gr", "tw", "dw", "fl", "sl", "fr", "thr", "shr", "sw", "thw", "sp", "st",
                       "sk", "sm", "sn", "sph", "spl", "sc", "scl", "spr", "str", "scr", "squ"],
     "letter_codas": [*_CODAS, *(coda + "s" for coda in _CODAS if not coda.endswith(("s", "z", "x", "sh", "ch")))],
+    "regnal_titles": ["King", "Queen", "Pope", "Prince", "Princess", "king", "queen", "pope", "prince", "princess"],
+    "regnal_names": REGNAL_NAMES,
+    "roman_nouns": ["chapter", "volume", "book", "act", "grade", "part", "phase", "class", "level", "stage",
+                    "world war"],
+    "roman_words": dict.fromkeys(["CC", "CD", "CDI", "CDL", "CI", "CL", "CM", "CML", "CV", "DC", "DIV", "DL", "MC",
+                                  "MCI", "MD", "MDC", "MI", "MIX", "MM", "MV", "MX", "XL"], "always"),
+    "letter_words": ["DO", "NO", "TO", "IN", "ON", "AT", "OF", "IT", "IS", "BE", "WE", "ME", "MY", "SO", "UP", "OR",
+                     "AN", "AS", "BY", "GO", "HE", "IF"],
     "letter_runs": {"CIA": "letters", "IRS": "letters", "USA": "letters", "IBS": "letters", "IDS": "letters"},
     "patterns": {
         "expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+",
@@ -365,6 +431,25 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     pattern, _ = unit_reading(request, span.fields["unit"], plural_category(request, written_amount(amounts[-1])))
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
     return pattern.replace("{0}", f" {link} ".join(amount_words(a, request) for a in amounts))
+
+
+def speak_roman(span: Span, context: SpanContext) -> str:
+    """A regnal number reads "the" and the ordinal, with a capital: `Henry VIII` reads "Henry the Eighth". Any other
+    numeral reads the cardinal, with a capital on each word after a capitalised word and with none after a noun of
+    `roman_nouns` in lowercase: `World War II` reads "World War Two" and `chapter IV` "chapter four"."""
+    request = context.request
+    digits = str(span.fields["value"])
+    if span.fields["role"] == "ordinal":
+        return "the " + _title_case(SPELLER.ordinal(digits, Features(), request))
+    words = SPELLER.cardinal(digits, Features(), request)
+    before = context.before[-1] if context.before else ""
+    return _title_case(words) if before[:1].isupper() else words
+
+
+def _title_case(words: str) -> str:
+    """Each word and each part of a hyphenated word with a capital, except "and": "One Hundred and Fifty-Seven"."""
+    return " ".join(word if word == "and" else "-".join(part[:1].upper() + part[1:] for part in word.split("-"))
+                    for word in words.split(" "))
 
 
 def speak_year(span: Span, context: SpanContext) -> str:
@@ -534,6 +619,59 @@ class Year:
 
 
 @dataclass(frozen=True)
+class Roman:
+    """A Roman numeral after a regnal title, a regnal name, a capitalised word or a noun of `roman_nouns`.
+
+    After a regnal title and a capitalised name, as in `King Harald V`, or after a name of `regnal_names`, as in
+    `Henry VIII`, the numeral is a regnal number and reads as an ordinal. After any other capitalised word, as in
+    `World War II` and `Super Bowl LVII`, or after a noun of `roman_nouns`, as in `chapter IV`, it reads as a cardinal.
+    A numeral of one letter reads only after a regnal title and a name, and after a noun of `roman_nouns` that holds
+    two words, as `World War I` does, so the pronoun in `the book I read` stays a pronoun. A numeral of `roman_words`
+    reads only after a regnal title and a name: `always` blocks it after any other word, and `capitals` blocks it
+    after a word in capitals. A word of `function_words`, as the `The` that starts a sentence, reads no numeral."""
+    name: str = "roman"
+    form: Form = Form.ROMAN
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        from text2spoken.core.roman import value as roman_value
+
+        data = request.data
+        titles = frozenset(data["regnal_titles"])
+        names = frozenset(data["regnal_names"])
+        nouns = frozenset(data["roman_nouns"])
+        function_words = frozenset(data["function_words"])
+        numeral_words = data["roman_words"]
+        words = context_words(tokens)
+        breaks = clause_breaks(text)
+        for match in re.finditer("[IVXLCDM]+", text):
+            start, end = match.span()
+            numeral = match.group()
+            value = roman_value(numeral)
+            if value is None or not is_bounded(text, start, end) or not text.endswith(" ", 0, start):
+                continue
+            before = clause_window(text, words, start, end, -1, limit=2, breaks=breaks)
+            if not before or before[-1].lower() in function_words or before[-1].lower() in titles:
+                continue
+            last = before[-1]
+            word = numeral_words.get(numeral)
+            is_word = word == "always" or (word == "capitals" and len(last) > 1 and last.isupper())
+            regnal = len(before) == 2 and before[0] in titles and last[0].isupper()
+            two_words = " ".join(before).lower() in nouns
+            if regnal:
+                role = "ordinal"
+            elif len(numeral) == 1 and not (two_words and numeral in "IVX") or is_word:
+                continue
+            elif last in names:
+                role = "ordinal"
+            elif last[0].isupper() or two_words or last in nouns:
+                role = "cardinal"
+            else:
+                continue
+            yield Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": role, "suffix": ""}),
+                       recognizer=self.name)
+
+
+@dataclass(frozen=True)
 class DateNamed:
     """`March 12, 2024`, `12th of March 2024`, `March 2024`: a date with a month name."""
     name: str = "date_named"
@@ -579,13 +717,13 @@ LANGUAGE = LanguageSpec(
                  SHARED["date_numeric"], SHARED["time_clock"],
                  EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
                  SHARED["money"], SHARED["percent"], SHARED["measure"], Year(), SHARED["expression"],
-                 SHARED["fraction"], SHARED["range"], Ordinal(), SHARED["abbreviation"], SHARED["letters"],
+                 SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"], SHARED["letters"],
                  SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
-        Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal,
+        Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
         Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic, Form.LETTERS: speak_letters,
         Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
