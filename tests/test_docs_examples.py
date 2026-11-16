@@ -47,7 +47,7 @@ MINIMUM = {
     "README.md": 3, "index.md": 0, "quickstart.md": 8, "usage.md": 16, "how-it-reads.md": 3, "numbers.md": 26,
     "dates-and-times.md": 24, "money-units-and-symbols.md": 45, "addresses-letters-and-emoji.md": 92, "api.md": 20,
     "errors.md": 8, "adding-a-language.md": 7, "development.md": 0, "ar.md": 36, "de.md": 51, "en.md": 50,
-    "es.md": 50, "eu.md": 28, "fr.md": 130, "pt.md": 46, "ru.md": 49,
+    "es.md": 50, "eu.md": 28, "fr.md": 131, "pt.md": 46, "ru.md": 49,
 }
 """The fewest examples that each page holds, so that a page that loses its examples fails."""
 LANGUAGE_MINIMUM = 10

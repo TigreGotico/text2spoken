@@ -150,7 +150,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second"), the Office québécois de la langue française for the aspirated h, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
-Of the 546 test rows in `tests/data/fr.tsv`, 148 quote a source that was fetched. 366 say that a rule comes from memory, and 6 more say that no source was fetched for a guard row. No native speaker has checked any row. `tests/test_french_sources.py` compares the cardinals, ordinals, month names, unit names and currency names with `num2words`, `ovos-number-parser` and CLDR through Babel.
+Of the 563 test rows in `tests/data/fr.tsv`, 165 quote a source that was fetched. 367 say that a rule comes from memory, and 6 more say that no source was fetched for a guard row. No native speaker has checked any row. The cited rows are the check for numbers. No other number engine checks them.
 
 ## Limits
 
@@ -177,6 +177,7 @@ French leaves these forms as written or reads them in a limited way:
 | `Il y a 2 000 000 harkis.` | `fr-FR` | Il y a deux millions d'harkis. | *De* elides before an aspirated h that the OQLF list does not reach. Of 415 Tatoeba words that the Wiktionnaire marks as aspirated, the list reaches 245. |
 | `Il y a 1/2 million habitants.` | `fr-FR` | Il y a un demi million habitants. | A fraction before *million* takes no *de*. |
 | `Il y a 2 000 000 chez-moi.` | `fr-FR` | Il y a deux millions chez-moi. | A noun whose last part is an object pronoun, such as *chez-moi*, *chez-toi*, *revenez-y* or *aimez-moi* (the forget-me-not), reads as an imperative and takes no *de* if `invariable_plurals` lacks it. |
+| `Il y a 2 000 000 chromosomes-Y.` | `fr-FR` | Il y a deux millions chromosomes-Y. | A letter label after a hyphen that is also the pronoun *y* reads as an imperative and takes no *de*. Other letter labels, such as *lymphocytes-T* and *chromosomes-X*, keep it. |
 | `Il y a 2 000 000 tête-à-tête.` | `fr-FR` | Il y a deux millions tête-à-tête. | A noun with an invariable plural and no part in *s*, *x* or *z* takes no *de* if `invariable_plurals` lacks it. |
 | `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after *page* takes the invariable form, also where it counts the next noun. |
 

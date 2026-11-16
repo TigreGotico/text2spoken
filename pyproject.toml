@@ -38,8 +38,6 @@ test = [
     "ovos-color-parser>=0.12.4a1",
     "ovos-date-parser>=0.36.2a1",
     "tugalex>=2.4.9a1",
-    "num2words>=0.5.14",
-    "babel>=2.18.0",
 ]
 pt = [
     "ovos-number-parser>=0.24.51a1",

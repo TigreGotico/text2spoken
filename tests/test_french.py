@@ -203,6 +203,13 @@ def test_a_date_that_does_not_exist_stays_as_written(written, caplog):
     assert "dix" not in normalize(f"Le {written}.", "fr")
 
 
+@pytest.mark.parametrize("two_digit_year", ["10/11/26", "10.11.26"])
+def test_a_date_with_a_two_digit_year_stays_as_written(two_digit_year, caplog):
+    """CLDR writes fr_BE and fr_CH short dates with two digits for the year; the year is ambiguous, so it stays."""
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        assert normalize(f"Le {two_digit_year} ici.", "fr-BE") == f"Le {two_digit_year} ici."
+
+
 @pytest.mark.parametrize("tag", ALL_TAGS)
 def test_the_defaults_of_each_region(tag):
     params = effective_params(tag)
