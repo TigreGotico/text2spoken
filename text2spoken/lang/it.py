@@ -53,7 +53,9 @@ mondiale di Formula 1`, and is a label noun. After a label noun other than an ab
 the number counts the next word when that word is a CLDR unit name or a noun of `label_counted_nouns`: `la gara 1 anno
 fa` reads "la gara un anno fa", `Marco 1 settimana fa` "Marco una settimana fa" and `il film 1 volta` "il film una
 volta". Before any other word it stays a label, because the word may be a verb that is also a noun: `il binario 1 porta
-a Roma` reads "il binario uno porta a Roma".
+a Roma` reads "il binario uno porta a Roma". A unit name that is also a function word, as "ora" ("now"), counts only
+before a word of `elapsed_words` (Vocabolario Treccani, "dopo": "un’ora, un giorno, un mese d."; "fa": "due ore fa"), so
+`il binario 1 ora è chiuso` reads "il binario uno ora è chiuso".
 
 A scale word before a noun takes "di" (Treccani, "numerali", Cardinali: milione, miliardo "devono essere [...] seguiti –
 qualora precedano un altro nome – dalla preposizione di"; Vocabolario Treccani, "milione": "un m. di volte", "un m. di
@@ -144,13 +146,16 @@ anche con riferimento a donna" ("dott."), and "per il femm. professoressa si usa
 and `Dr.` read the feminine word, "professoressa" or "dottoressa", when the determiner of their noun phrase is a word of
 `feminine_determiners`, as in `la prof. Gallo`, and the masculine word in other places. Between the determiner and the
 title may come words of `possessives` and `title_adjectives`, and any other word ends the noun phrase, as in `Questa
-mattina Prof. Rossi`: `la nostra Dott. Ferri` reads "la nostra dottoressa Ferri", and `La cara prof. Marini` "La cara
-professoressa Marini". The Vocabolario Treccani, "sig.", gives only "Abbreviazione di signore", and "signora" gives
-"sig.ra" for the feminine. After a feminine determiner `sig.` reads "signora", the title that agrees with the
-determiner, as in `La sig. Rossi`. The word is lowercase, as these entries write it, and takes a capital only where a
-clause starts. "ecc." reads "eccetera" ("ecc.": "Abbreviazione di eccetera"), "art." before a number "articolo" ("art.":
-"Abbreviazione grafica di articolo"), and "pag." before a number "pagina" ("pagina": "vedi a pagina (abbrev. p. o pag.)
-40").
+mattina Prof. Rossi`. With no determiner, a feminine adjective of `title_adjectives` before the title makes it feminine,
+as in the letter heading `Egregia Dott. Neri`: "Egregia dottoressa Neri" (Accademia della Crusca, consulenza 33625: "è
+corretto scrivere sia Egregio signor Bianchi sia Egregia dottoressa Rossi"; Vocabolario Treccani, "egregio": "Si adopera
+spec. negli indirizzi e nelle intestazioni delle lettere"): `la nostra Dott. Ferri` reads "la nostra dottoressa Ferri",
+and `La cara prof. Marini` "La cara professoressa Marini". The Vocabolario Treccani, "sig.", gives only "Abbreviazione
+di signore", and "signora" gives "sig.ra" for the feminine. After a feminine determiner `sig.` reads "signora", the
+title that agrees with the determiner, as in `La sig. Rossi`. The word is lowercase, as these entries write it, and
+takes a capital only where a clause starts. "ecc." reads "eccetera" ("ecc.": "Abbreviazione di eccetera"), "art." before
+a number "articolo" ("art.": "Abbreviazione grafica di articolo"), and "pag." before a number "pagina" ("pagina": "vedi
+a pagina (abbrev. p. o pag.) 40").
 
 it-IT and it-SM write the decimal comma and the group mark `.`, and it-CH the decimal point and the group mark `'` (CLDR
 49 number symbols of `it`, `it_SM` and `it_CH`). In it-CH a decimal point reads as a decimal, as in `2.5 km`, `3.14159`
@@ -242,6 +247,7 @@ DATA = freeze({
                           "questa", "quest'", "quel", "quello", "quella", "quell'"],
     "score_words": ["a", "su", "contro"],
     "label_counted_nouns": ["volta", "punto", "uomo", "cosa", "tipo", "mezzo"],
+    "elapsed_words": ["dopo", "fa"],
     "kept_links": ["e", "o"],
     "partitive_words": {"di": "masculine", "del": "masculine", "dello": "masculine", "dei": "masculine",
                         "degli": "masculine", "della": "feminine", "delle": "feminine", "tra": "masculine",
@@ -263,8 +269,12 @@ DATA = freeze({
                         "Dr.": "dottoressa", "dr.": "dottoressa", "Prof.": "professoressa", "prof.": "professoressa"},
     "feminine_determiners": ["la", "una", "alla", "della", "dalla", "nella", "sulla", "colla", "quella", "questa"],
     "possessives": ["mia", "tua", "sua", "nostra", "vostra", "loro"],
-    "title_adjectives": ["cara", "carissima", "stessa", "vecchia", "nuova", "giovane", "brava", "gentile", "stimata",
-                         "grande", "celebre", "illustre", "famosa", "nota"],
+    "title_adjectives": {"cara": "feminine", "caro": "masculine", "carissima": "feminine", "carissimo": "masculine",
+                         "stessa": "feminine", "stesso": "masculine", "vecchia": "feminine", "vecchio": "masculine",
+                         "nuova": "feminine", "nuovo": "masculine", "brava": "feminine", "bravo": "masculine",
+                         "stimata": "feminine", "stimato": "masculine", "famosa": "feminine", "famoso": "masculine",
+                         "nota": "feminine", "noto": "masculine", "egregia": "feminine", "egregio": "masculine",
+                         "giovane": "both", "gentile": "both", "grande": "both", "celebre": "both", "illustre": "both"},
     "abbreviations": {"ecc.": "eccetera"},
     "sentence_final": ["ecc."],
     "number_abbreviations": {"art.": "articolo"},
@@ -445,11 +455,17 @@ def counted_noun(word: str, request: Request) -> str | None:
     return noun_genders().get(word) or unit_nouns(request.variety.tag).get(word)
 
 
-def counts_after_label(word: str, request: Request) -> bool:
-    """Whether 1 after a label noun counts the word: a CLDR unit name, as "anno" and "ora", or a noun of
-    `label_counted_nouns`, as "volta". Any other word may be a verb that is also a noun, as "porta" in `il binario 1
-    porta a Roma`."""
-    return word in unit_nouns(request.variety.tag) or word in request.data["label_counted_nouns"]
+def counts_after_label(word: str, following: str, request: Request) -> bool:
+    """Whether 1 after a label noun counts the word: a noun of `label_counted_nouns`, as "volta", or a CLDR unit name,
+    as "anno". Any other word may be a verb that is also a noun, as "porta" in `il binario 1 porta a Roma`. A unit name
+    that is also a function word, as "ora" ("now") and "secondo" ("according to"), counts only before a word of
+    `elapsed_words`, the following word of a time span (Vocabolario Treccani, "dopo": "un’ora, un giorno, un mese
+    d."; "fa": "due ore fa"): `il cane 1 ora dopo` reads "il cane un'ora dopo", and `il binario 1 ora è chiuso` "il
+    binario uno ora è chiuso"."""
+    if word in request.data["label_counted_nouns"]:
+        return True
+    return word in unit_nouns(request.variety.tag) and (word not in function_words()
+                                                        or following in request.data["elapsed_words"])
 
 
 def scale_link(word: str) -> str | None:
@@ -614,16 +630,21 @@ def _currency_amount(integer: str, currency: FrozenMap, request: Request) -> str
 
 
 def feminine_phrase(before: Sequence[str], data: FrozenMap) -> bool:
-    """Whether the determiner of the noun phrase that ends at a title is a word of `feminine_determiners`. The walk
-    back from the title steps over the words of `possessives` and `title_adjectives`, as in `la nostra Dott.` and `La
-    cara prof.`, and any other word stops it, as "mattina" in `Questa mattina Prof. Rossi`."""
+    """Whether the noun phrase that ends at a title is feminine. The walk back from the title steps over the words of
+    `possessives` and `title_adjectives`, as in `la nostra Dott.` and `La cara prof.`, and any other word stops it, as
+    "mattina" in `Questa mattina Prof. Rossi`. A determiner of `feminine_determiners` makes the phrase feminine. With
+    no such determiner, the adjective next to the title gives the gender, as in the letter heading `Egregia Dott.
+    Neri` (Accademia della Crusca, consulenza 33625: "Egregia dottoressa Rossi")."""
+    adjective = ""
     for word in reversed(before):
         lower = word.lower()
         if lower in data["feminine_determiners"]:
             return True
-        if lower not in data["possessives"] and lower not in data["title_adjectives"]:
-            return False
-    return False
+        if lower in data["title_adjectives"]:
+            adjective = adjective or data["title_adjectives"][lower]
+        elif lower not in data["possessives"]:
+            break
+    return adjective == "feminine"
 
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
@@ -716,7 +737,9 @@ class BeforeWord:
                 role, keep = "scale", link is None
             elif (word in data["score_words"] or after_score(text, number.start, request)
                   or word_before(text, number.start).lower() in {*data["label_abbreviations"], *data["label_nouns"]}
-                  or (is_label(text, number.start, request) and not counts_after_label(word, request))):
+                  or (is_label(text, number.start, request)
+                      and not counts_after_label(word, "".join(takewhile(str.isalpha, rest[1:])) if rest[:1] == " "
+                                                 else "", request))):
                 role = "label"
             elif word in data["kept_links"]:
                 role, keep = "label", True

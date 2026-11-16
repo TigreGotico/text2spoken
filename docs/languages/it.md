@@ -4,7 +4,7 @@ The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for i
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. It counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
+The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. It counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. A unit name that is also an adverb or a preposition, as `ora` ("now"), counts only before `dopo` or `fa`: `il binario 1 ora è chiuso` reads `uno ora`, and `il cane 1 ora dopo` reads `un'ora dopo`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `4 + 5 = 9` | `it-IT` | quattro più cinque è uguale a nove |
 | `Leggi l'art. 3 della Costituzione.` | `it-IT` | Leggi l'articolo tre della Costituzione. |
 
-A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. When the noun phrase has a feminine determiner, such as `la`, `sig.`, `prof.`, `dott.` and `Dr.` read the feminine word. Possessives and the adjectives of `title_adjectives`, such as `cara` and `vecchia`, may come between the determiner and the title. Any other word ends the noun phrase:
+A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. When the noun phrase has a feminine determiner, such as `la`, `sig.`, `prof.`, `dott.` and `Dr.` read the feminine word. Possessives and the adjectives of `title_adjectives`, such as `cara` and `vecchia`, may come between the determiner and the title. Any other word ends the noun phrase. With no determiner, a feminine adjective before the title makes it feminine, as in a letter heading:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -72,6 +72,7 @@ A title reads as the word that stands before a name, in lowercase, and takes a c
 | `Ho scritto alla sig. Rossi.` | `it-IT` | Ho scritto alla signora Rossi. |
 | `La vecchia prof. Neri insegna ancora.` | `it-IT` | La vecchia professoressa Neri insegna ancora. |
 | `Questa mattina Prof. Rossi ha parlato.` | `it-IT` | Questa mattina professor Rossi ha parlato. |
+| `Egregia Dott. Neri, le scrivo.` | `it-IT` | Egregia dottoressa Neri, le scrivo. |
 
 A day and a month, as `13/11`, read as a date only after a word of `date_words`, such as `il` and `dal`, and only when the day is above 12. A smaller day can also be the month of a month/day date, so the pair stays as written. `24/7` also stays as written:
 
@@ -114,7 +115,7 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). It also lists the words of the categories of Italian prepositions, conjunctions, adverbs, pronouns, determiners and articles. The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 218 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 222 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
