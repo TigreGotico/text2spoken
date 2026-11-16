@@ -279,13 +279,17 @@ INVERTED_PRONOUNS = ("je", "tu", "il", "elle", "on", "nous", "vous", "ils", "ell
 hyphenated word with one of them after its first part is that verb and takes no "de", unless `invariable_plurals`
 holds it."""
 
-IMPERATIVE_PRONOUNS = ("moi", "toi", "le", "la", "les", "lui", "leur", "y", "en")
-"""The object pronouns that close a verb in the imperative: "croyez-moi", "allez-y", "avouons-le". Office québécois
-de la langue française, Banque de dépannage linguistique, "Trait d'union pour unir différents éléments du discours":
-"Le trait d'union unit également le pronom personnel complément, qu'il soit complément direct ou indirect", as in
-"Repose-toi" and "Dites-le-moi"; and "Ajout d'un S entre le verbe et les pronoms EN et Y": "Vas-y sans tarder",
-"Manges-en autant que tu en veux". A hyphenated word whose last part is one of them is that verb and takes no "de",
-unless `invariable_plurals` holds it. Only the last part counts, so "cessez-le-feu" and "va-t-en-guerre" stay nouns."""
+IMPERATIVE_PRONOUNS = ("moi", "toi", "m", "t", "le", "la", "les", "lui", "leur", "y", "en")
+"""The object pronouns that close a verb in the imperative: "croyez-moi", "allez-y", "avouons-le", "donnez-m'en". Office
+québécois de la langue française, Banque de dépannage linguistique, "Trait d'union pour unir différents éléments du
+discours": "Le trait d'union unit également le pronom personnel complément, qu'il soit complément direct ou
+indirect", as in "Repose-toi" and "Dites-le-moi"; "Ajout d'un S entre le verbe et les pronoms EN et Y": "Vas-y sans
+tarder", "Manges-en autant que tu en veux"; and "Verbes à l'impératif : ordre des pronoms et trait d'union": "Devant
+les pronoms en et y, on fait l'élision des pronoms me et te (qui se substituent à moi et toi)", as in "Donnez-m'en un
+kilo" and "Occupe-t'en". The word ends at the apostrophe, so "m" and "t" stand for the elided pronouns. A hyphenated
+word whose last part is one of them is that verb and takes no "de", unless `invariable_plurals` holds it. Only the
+last part counts, so "cessez-le-feu" stays a noun. A noun that ends in one of them, such as "chez-moi" or
+"revenez-y", takes no "de" either."""
 
 INVARIABLE_PLURALS = ("abat-jour", "graffiti", "people", "rendez-vous", "garde-à-vous")
 """Nouns whose plural is the singular, and which take "de" after a round million. The plural check stops "abat-jour",
