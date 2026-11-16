@@ -272,7 +272,7 @@ ATOMS = (list("abcxyzABCXYZéñ") + list("0123456789") + list("٠١٢٣٤٥٦٧�
 
 @pytest.mark.parametrize("seed", range(4))
 def test_normalize_is_idempotent_and_never_crashes_on_random_text(seed):
-    """Section 11: a second pass changes nothing, except in the three known limits of the address claim that the
+    """Section 11: a second pass changes nothing, except in the known limits of the address claim that the
     README lists. Random text built from the atoms of each form."""
     rng = random.Random(seed)
     for _ in range(500):
@@ -298,6 +298,19 @@ def test_a_number_grouped_with_a_space_reads_the_same_on_a_second_pass(seed):
         text = "".join(rng.choice(atoms) for _ in range(rng.randint(1, 30)))
         once = normalize(text, lang)
         assert normalize(once, lang) == once or known_limit(text, lang), (text, once)
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    ("Pay 2,51 €m.www.x.in", "symbol at claim start"),
+    ("See x.com£€ 03° and pay 2,51 €m.www.x.in", None),
+])
+def test_the_symbol_at_claim_start_limit_holds_only_its_own_amounts(text, expected):
+    """Both texts change on a second pass. In the second, the amount `€ 03` also reads on the second pass, and its
+    sign stands after the reading of the address `x.com`, not at the start of a claim. So the limit does not name
+    that text."""
+    once = normalize(text, "en-GB")
+    assert normalize(once, "en-GB") != once
+    assert known_limit(text, "en-GB") == expected
 
 
 def test_run_time_grows_linearly_with_the_input():

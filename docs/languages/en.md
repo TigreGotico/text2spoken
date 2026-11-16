@@ -15,6 +15,8 @@ The file reads every form except identifiers. The `LETTERS` and `EMOJI` forms ar
 | `Write to ann@example.com.` | `en-GB` | Write to ann at example dot com. |
 | `Call 911 now.` | `en-US` | Call nine one one now. |
 | `© 2024` | `en-GB` | copyright two thousand and twenty-four |
+| `The Prof. arrived.` | `en-US` | The Professor arrived. |
+| `It costs 23,88 €.` | `en-US` | It costs twenty-three euros and eighty-eight cents. |
 
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which English reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
@@ -44,7 +46,7 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 581 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 592 rows.
 
 ## Roman numerals
 
@@ -95,7 +97,7 @@ The limits that English shares with Portuguese are on the [Addresses, letters an
 | `Maroon 5 ft. Cardi B` | `en-GB` | Maroon five ft. Cardi B | `ft` does not read as feet, because `ft.` also names "featuring" in a music credit. |
 | `It is 6 ft tall.` | `en-GB` | It is six ft tall. | The same rule keeps `ft` as written after a number. |
 | `A 5 µm hole.` | `en-GB` | A five micrometres hole. | A unit before a noun reads in the plural. |
-| `It costs €12,50.` | `en-GB` | stays as written | A euro amount with a comma for the decimal mark stays as written. |
+| `It costs $23,88.` | `en-US` | stays as written | A decimal comma reads only next to `€`, the currency that CLDR writes with the comma in German, Spanish, French and Italian. |
 
 The limits that English shares with Portuguese are on the [Money, units and symbols](../money-units-and-symbols.md#limits) page.
 
@@ -117,7 +119,7 @@ Some English letter names do not read right in every English phonemizer, and no 
 
 ### Addresses on a second pass
 
-A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Four rules cause it:
+A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Five rules cause it:
 
 | Written | Spoken (`en-GB`) | Second pass (`en-GB`) | Why |
 | --- | --- | --- | --- |
@@ -126,6 +128,8 @@ A word of a spoken address can become the key or the context of another form on 
 | `Write x.com@ (9:30)` | Write ex dot com at (9:30) | Write ex dot com at (nine thirty) | The same holds inside brackets. |
 | `See example.com/May 05 for details.` | See example dot com slash May 05 for details. | See example dot com slash May fifth for details. | A month name as the first or the last label of an address forms a date with the digits next to it. |
 | `On 05 May@x.com we met.` | On 05 May at ex dot com we met. | On the fifth of May at ex dot com we met. | The same rule, with the month name as the first label. |
+| `Pay 2,51 €m.www.x.in` | Pay 2,51 € em dot double-u double-u double-u dot ex dot i en | Pay two euros and fifty-one cents em dot double-u double-u double-u dot ex dot i en | A currency sign that starts an address stays as written in its reading. The first pass keeps the number before it, because the sign touches the letter after it. The reading puts a space after the sign, and a second pass reads the number and the sign as money. |
+| `No.00 €1,000.www.x.in` | No.00 € one , zero zero zero dot double-u double-u double-u dot ex dot i en | No.zero euros one , zero zero zero dot double-u double-u double-u dot ex dot i en | The same rule, with a digit after the sign. |
 | `Chapter XIV٢http://x` | Chapter XIV two aitch tee tee pee colon slash slash ex | Chapter Fourteen two aitch tee tee pee colon slash slash ex | An address keeps a Roman numeral as written, and a second pass reads it. |
 
 ### Currency signs next to other text
