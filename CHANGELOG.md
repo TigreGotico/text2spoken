@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a53](https://github.com/TigreGotico/text2spoken/tree/0.0.2a53) (2026-11-16)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a52...0.0.2a53)
+
+**Merged pull requests:**
+
+- docs: rewrite the guides for readers [\#110](https://github.com/TigreGotico/text2spoken/pull/110) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a52](https://github.com/TigreGotico/text2spoken/tree/0.0.2a52) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a51...0.0.2a52)
@@ -377,17 +385,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a3...0.0.2a4)
 
-**Merged pull requests:**
-
-- test: harden the language-file contract tests [\#7](https://github.com/TigreGotico/text2spoken/pull/7) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a3](https://github.com/TigreGotico/text2spoken/tree/0.0.2a3) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a2...0.0.2a3)
-
-**Merged pull requests:**
-
-- refactor: move the English phone rules into EnglishTelephone [\#6](https://github.com/TigreGotico/text2spoken/pull/6) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a2](https://github.com/TigreGotico/text2spoken/tree/0.0.2a2) (2026-11-09)
 
