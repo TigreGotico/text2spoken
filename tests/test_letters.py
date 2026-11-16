@@ -2,8 +2,10 @@
 exception table, and the properties of section 11. Each expected value comes from the clause and the tables of the
 language file, worked out by hand."""
 import random
+import sys
 import time
 from dataclasses import replace
+from importlib import import_module
 
 import pytest
 
@@ -105,10 +107,10 @@ def test_the_reading_of_a_run(run, expected):
 def test_the_fields_and_a_word_reading_that_keeps_its_text():
     request = analyze("A NATO e os CTT.", "pt-PT", LETTERS_ON).request
     found = [(s.start, s.end, dict(s.fields), s.keep) for s in letters.LETTERS.find("A NATO e os CTT.", (), request)]
-    assert found == [(2, 6, {"letters": "NATO", "reading": "word"}, True),
-                     (12, 15, {"letters": "CTT", "reading": "letters"}, False)]
+    assert found == [(2, 6, {"letters": "NATO", "reading": "word", "clause": (), "alone": "word"}, True),
+                     (12, 15, {"letters": "CTT", "reading": "letters", "clause": (), "alone": "letters"}, False)]
     assert [(s.form, dict(s.fields)) for s in analyze("A NATO e os CTT.", "pt-PT", LETTERS_ON).spans] == [
-        (Form.LETTERS, {"letters": "CTT", "reading": "letters"})]
+        (Form.LETTERS, {"letters": "CTT", "reading": "letters", "clause": (), "alone": "letters"})]
 
 
 def test_a_lexicon_value_that_the_form_reads_raises_and_a_word_does_not():
@@ -225,3 +227,22 @@ def test_numerals_text_in_capitals_and_codes_are_idempotent(seed):
         text = "".join(rng.choice(JOINERS + CAPITALS + NUMERALS_AND_CODES) for _ in range(rng.randint(1, 30)))
         once = normalize(text, lang, params)
         assert normalize(once, lang, params) == once or known_limit(text, lang, params), (text, lang, params, once)
+
+
+def test_without_tugalex_only_letter_words_read_and_one_warning_names_the_extra(monkeypatch, caplog):
+    """Design section 4.6 and section 10: without the `pt` extra, a run of a clause in capitals reads as a word only
+    when `letter_words` holds it, and one log warning names the extra."""
+    pt = import_module("text2spoken.lang.pt")
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    pt._warn_no_tugalex.cache_clear()
+    try:
+        with caplog.at_level("WARNING", logger="text2spoken"):
+            first = normalize("A RTP NO AR", "pt-PT", LETTERS_ON)
+            second = normalize("EU VI O AR", "pt-BR", LETTERS_ON)
+    finally:
+        pt._warn_no_tugalex.cache_clear()
+    assert first == "A érre tê pê éne ó á érre"
+    assert second == "EU VI O á érre"
+    assert [r.getMessage() for r in caplog.records if "tugalex" in r.getMessage()] == [
+        "tugalex is not installed, so a word in capitals reads as a word only when letter_words holds it; "
+        "install text2spoken[pt]"]

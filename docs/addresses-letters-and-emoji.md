@@ -30,7 +30,31 @@ A run is two or more capital letters that touch no other letter, or one capital 
 
 - A run of two letters, or of one letter and digits, reads letter by letter.
 - A longer run that splits into syllables of the language reads as a word, so it stays as written.
-- Any other run reads each letter by its name and each digit by its word.
+- Any other run reads each letter by its name.
+
+The digits of a run read as a number when they can name one. After letters that read as a word, they read as a cardinal. After spelled letters, one to three digits with no leading zero read as a cardinal, as the name of a road does. Any other digits read one by one. No usage source gives the reading of a road name, so this part is a ruling of the maintainer.
+
+| Written | Tag | Spoken, `LETTERS` on |
+| --- | --- | --- |
+| `COVID19 spread.` | `en-GB` | COVID nineteen spread. |
+| `Siga pela A25.` | `pt-PT` | Siga pela á vinte e cinco. |
+| `Take the M25.` | `en-GB` | Take the em twenty-five. |
+| `Agent B007.` | `en-GB` | Agent bee zero zero seven. |
+| `A sigla ÇB.` | `pt-PT` | A sigla cê cedilhado bê. |
+
+A clause in capitals is a chain of two runs of capitals or more that only spaces part. A capital alone, as the article in `EU VI O FILME`, links the chain. In it, a two-letter word of the `letter_words` table reads as a word. A word that the word check of the language knows also reads as a word: Portuguese asks tugalex, behind the `pt` extra, and English has `letter_words` only. A two-letter acronym in no such list stays an acronym:
+
+| Written | Tag | Spoken, `LETTERS` on |
+| --- | --- | --- |
+| `SAIA DA SALA` | `pt-PT` | stays as written |
+| `DO NOT ENTER` | `en-GB` | stays as written |
+| `IF IT IS` | `en-GB` | stays as written |
+| `A RTP NO AR` | `pt-PT` | A érre tê pê NO AR |
+| `THE US AND UK` | `en-GB` | THE u ess AND u kay |
+| `IF XIV` | `en-US` | i ef the Fourteenth |
+| `ÇAÇA` | `pt-PT` | stays as written |
+
+A run that reads letter by letter ends the clause, and so does a run that another form reads, as `ROMAN` reads `XIV` above. Its reading is in lower case, so a second pass would see the clause end there too.
 
 English and Portuguese offer the form. A language with no letter names keeps each run as written. The rules of each language are on the [English](languages/en.md#runs-of-capital-letters) and [Portuguese](languages/pt.md#runs-of-capital-letters) pages.
 
@@ -45,15 +69,8 @@ These limits hold in both languages:
 
 | Written | Tag | Spoken, `LETTERS` on | Limit |
 | --- | --- | --- | --- |
-| `Classe II` | `pt-PT` | Classe i i | A Roman numeral that the `ROMAN` form does not read is a run. |
-| `World War II` | `en-GB` | World War i i | A Roman numeral that the `ROMAN` form does not read is a run. |
-| `A D. XIV.` | `pt-PT` | A Dom xis i vê. | A run that is a Roman numeral cannot use a consonant that a reader sounds with an unwritten vowel, so `XIV` does not read as a word and is spelled. |
-| `COVID19` | `en-GB` | stays as written | A run that reads as a word and holds a digit stays as written. |
-| `ÇAÇA` | `pt-PT` | stays as written | A run with a letter that has no name stays as written when it does not split into syllables. |
-| `SAIA DA SALA` | `pt-PT` | SAIA dê á SALA | Text in capitals spells its two-letter words. The rule stays, because two-letter acronyms such as `TV`, `PC`, `UE` and `IA` are frequent. |
-| `DO NOT ENTER` | `en-GB` | dee o NOT ENTER | Text in capitals spells its two-letter words. |
-| `10GB` | `en-GB` | one zero gee bee | A run of digits joined to a run reads digit by digit. |
-| `A25` | `pt-PT` | á dois cinco | A run of digits joined to a run reads digit by digit. |
+| `O XIV chegou.` | `pt-PT` | O xis i vê chegou. | A Roman numeral that the `ROMAN` form does not read is a run. A run that is a Roman numeral cannot use a consonant that a reader sounds with an unwritten vowel, so `XIV` is spelled. |
+| `Corri 5KM.` | `pt-PT` | Corri cinco capa éme. | A unit symbol matches in its CLDR case only, so `5KM` is a run and not a measure. |
 
 ## Abbreviations
 

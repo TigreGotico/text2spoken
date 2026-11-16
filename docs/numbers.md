@@ -64,13 +64,40 @@ The `decimal_mark` option sets the decimal mark of the written numbers, where th
 
 ## Roman numerals
 
-Portuguese and Basque read a Roman numeral when the text around it shows that it is a number, such as a king's name or a century:
+English, Portuguese and Basque read a Roman numeral when the text around it shows that it is a number, such as a name, a century, or a noun of a series:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Luís XIV reinou.` | `pt-PT` | Luís Catorze reinou. |
 | `No século XIX.` | `pt-PT` | No século dezanove. |
+| `Leia o capítulo V.` | `pt-PT` | Leia o capítulo quinto. |
+| `A D. XIV.` | `pt-PT` | A Dom Catorze. |
+| `O papa Pio X reinou.` | `pt-PT` | O papa Pio Décimo reinou. |
+| `O papa Pio X reinou.` | `pt-BR` | O papa Pio Dez reinou. |
+| `Henry VIII had six wives.` | `en-GB` | Henry the Eighth had six wives. |
+| `John Smith III spoke.` | `en-US` | John Smith the Third spoke. |
+| `World War II ended.` | `en-GB` | World War Two ended. |
+| `Super Bowl LVII was close.` | `en-US` | Super Bowl Fifty-Seven was close. |
 | `XX. mendean.` | `eu-ES` | hogeigarren mendean. |
+
+Portuguese reads an ordinal up to ten and a cardinal from eleven, and pt-BR stops the ordinal at nine, as Ciberdúvidas gives the rule. English reads "the" and an ordinal after a name, and a cardinal after a noun of a series. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
+
+A numeral stays as written when the text does not show that it is a number:
+
+| Written | Tag | Spoken | Why |
+| --- | --- | --- | --- |
+| `Malcolm X spoke.` | `en-GB` | stays as written | A numeral of one letter after a name needs a regnal title before the name. |
+| `The book I read.` | `en-GB` | stays as written | `I` is the pronoun. |
+| `Fly to Washington DC.` | `en-GB` | stays as written | `DC` is an acronym, in the `roman_words` table. |
+| `Tome vitamina C.` | `pt-PT` | stays as written | One letter reads only as `I`, `V` or `X` after a noun of a series. |
+| `EU VI O FILME.` | `pt-PT` | stays as written | `VI` is a word after a word in capitals. |
+
+A title of a work reads its numeral as a name does, because telling a title from a name needs context that the library does not have:
+
+| Written | Tag | Spoken | Limit |
+| --- | --- | --- | --- |
+| `Rocky II was a hit.` | `en-US` | Rocky the Second was a hit. | A title of a work reads as a name. |
+| `Vi o Avatar II.` | `pt-PT` | Vi o Avatar Segundo. | A title of a work reads as a name. |
 
 ## Telephone numbers
 

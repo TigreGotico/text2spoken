@@ -4,7 +4,7 @@ The file `text2spoken/lang/en.py` reads English. It needs no extra, because its 
 
 ## What it reads
 
-The file reads every form except Roman numerals and identifiers. The `LETTERS` and `EMOJI` forms are off by default, as in every language, so a letter code such as `GPS` or `X5` stays as written unless the `LETTERS` form is on.
+The file reads every form except identifiers. The `LETTERS` and `EMOJI` forms are off by default, as in every language, so a letter code such as `GPS` or `X5` stays as written unless the `LETTERS` form is on.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -44,7 +44,22 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 482 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 534 rows.
+
+## Roman numerals
+
+A Roman numeral after a capitalised name reads "the" and an ordinal, as a regnal number or a generational suffix. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals", and Wikipedia, "Name suffix", says the same of a generational suffix: "he can use the II suffix, which is pronounced "the second"". After a noun of a series, the numeral reads as a cardinal. The nouns of the `roman_nouns` table are chapter, volume, book, act, grade, part, phase, class, level, stage, type, war, and the names World War and Super Bowl.
+
+| Written | Spoken (`en-GB`) | Note |
+| --- | --- | --- |
+| `Henry VIII had six wives.` | Henry the Eighth had six wives. | A regnal number. |
+| `King Harald V of Norway.` | King Harald the Fifth of Norway. | One letter reads after a regnal title and a name. |
+| `Hank Williams III sang.` | Hank Williams the Third sang. | A generational suffix. |
+| `Read Chapter IV.` | Read Chapter Four. | A noun of a series. |
+| `Type II diabetes.` | Type Two diabetes. | A noun of a series. |
+| `World War I began.` | World War One began. | One letter reads after a noun of two words. |
+| `Malcolm X spoke.` | stays as written | One letter after a name needs a regnal title. Malcolm is also the name of four kings of Scotland, so a list of names cannot tell them apart. |
+| `Baltimore MD is far.` | stays as written | `MD` is an initialism, in the `roman_words` table. |
 
 ## Runs of capital letters
 
@@ -91,7 +106,7 @@ Some English letter names do not read right in every English phonemizer, and no 
 
 ### Addresses on a second pass
 
-A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Three rules cause it:
+A word of a spoken address can become the key or the context of another form on a second pass, so the second pass changes the first. Four rules cause it:
 
 | Written | Spoken (`en-GB`) | Second pass (`en-GB`) | Why |
 | --- | --- | --- | --- |
@@ -100,6 +115,7 @@ A word of a spoken address can become the key or the context of another form on 
 | `Write x.com@ (9:30)` | Write ex dot com at (9:30) | Write ex dot com at (nine thirty) | The same holds inside brackets. |
 | `See example.com/May 05 for details.` | See example dot com slash May 05 for details. | See example dot com slash May fifth for details. | A month name as the first or the last label of an address forms a date with the digits next to it. |
 | `On 05 May@x.com we met.` | On 05 May at ex dot com we met. | On the fifth of May at ex dot com we met. | The same rule, with the month name as the first label. |
+| `Chapter XIV٢http://x` | Chapter XIV two aitch tee tee pee colon slash slash ex | Chapter Fourteen two aitch tee tee pee colon slash slash ex | An address keeps a Roman numeral as written, and a second pass reads it. |
 
 ### Currency signs next to other text
 

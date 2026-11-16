@@ -110,9 +110,18 @@ SUFFIX_READINGS = {
     "pt-133": "Júpiter e Saturno são duas planetas.",
     "pt-134": "A região tem dois tribos indígenas.",
     "pt-135": "Os duas artistas e as duas artistas.",
+    "pt-336": "A érre tê pê éne ó á érre",
+    "pt-339": "A u é éne ó á érre",
+    "pt-340": "DE MIM OU DE tê i",
+    "pt-342": "é u Cinquenta e um O LIVRO",
+    "pt-343": "VAMOS i érre",
+    "pt-344": "á érre CONDICIONADO",
+    "pt-345": "i éne ésse tê i tê u tê ó DE ESTUDOS",
 }
-"""The Portuguese rows that need tugalex, read by the `gender_suffixes` of pt.py alone: a noun that no ending
-matches takes the masculine default, and `-as` reads feminine."""
+"""The Portuguese rows that need tugalex, read without it. The `gender_suffixes` of pt.py alone give the gender: a
+noun that no ending matches takes the masculine default, and `-as` reads feminine. In a clause in capitals, only
+`letter_words` gives a word, so `AR`, `IR`, `TI`, `LI` and `INSTITUTO` read as they read alone, and a run that reads
+letter by letter ends the clause, as `LI`, which `ROMAN` reads after `EU`, ends it in pt-342."""
 
 
 @pytest.mark.parametrize("row", rows("pt"), ids=lambda row: row["id"])
