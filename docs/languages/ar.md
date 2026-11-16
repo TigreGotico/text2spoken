@@ -2,7 +2,29 @@
 
 The file `text2spoken/lang/ar.py` reads Modern Standard Arabic in Arabic script, with no diacritics. A diacritizer runs after it. Install it with `text2spoken[ar]`, which adds `ovos-number-parser`.
 
-## Varieties and codes
+## What it reads
+
+The file reads cardinals, decimals, fractions, ranges, dates, times, money, measures, percentages and lexicon entries. A number agrees in gender and case with the noun after it. An ordinal follows the noun that it ranks, and one follows the noun that it counts.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `الطابق 3` | `ar` | الطابق الثالث |
+| `دفعت $1` | `ar` | دفعت دولار واحد |
+| `اشتريت 3 كتب` | `ar` | اشتريت ثلاثة كتب |
+| `في 3 سيارات` | `ar` | في ثلاث سيارات |
+| `النسبة 2.5%` | `ar` | النسبة اثنان فاصلة خمسة في المئة |
+| `الساعة 3:30` | `ar` | الساعة الثالثة والنصف |
+
+These stay as written: telephone numbers, operators such as `5+3`, a number with a `+` sign, and the word `ريال` before a number.
+
+| Written | Spoken (`ar`) |
+| --- | --- |
+| `اتصل 0501234567` | stays as written |
+| `الناتج 5+3` | stays as written |
+| `الفرق +5` | stays as written |
+| `الثمن ريال 5` | stays as written |
+
+## Varieties
 
 | Tag | Notes |
 | --- | --- |
@@ -11,15 +33,24 @@ The file `text2spoken/lang/ar.py` reads Modern Standard Arabic in Arabic script,
 
 The Arabic varieties of ISO 639-3 that write Arabic script read as `ar`, with no dialect words: `aao`, `abh`, `abv`, `acm`, `acq`, `acw`, `acx`, `adf`, `aeb`, `aec`, `afb`, `apd`, `arb`, `arq`, `ars`, `ary`, `arz`, `auz`, `avl`, `ayh`, `ayl`, `ayn`, `ayp`, `shu` and `ssh`. `apc` (Levantine) is not one of them.
 
-## What it reads
+## Options
 
-The file reads cardinals, decimals, fractions, ranges, dates, times, money, measures, percentages and lexicon entries. The default clock is `12h`, and the `register` param chooses formal or colloquial words.
+The `register` option chooses formal or colloquial words.
 
-A number agrees in gender and case with the noun after it, and an ordinal follows the noun that it ranks: `الطابق 3` reads "الطابق الثالث". One follows the noun that it counts, so `$1` reads "دولار واحد". Telephone numbers, operators such as `5+3`, a number with a `+` sign, and the word `ريال` before a number stay as written.
+| Option | Values | Default (`ar-001`) | Default (`ar-DZ`) |
+| --- | --- | --- | --- |
+| `date_order` | `DMY`, `MDY` | `DMY` | `DMY` |
+| `clock` | `12h` | `12h` | `12h` |
+| `decimal_mark` | `,`, `.` | `.` | `,` |
+| `register` | `colloquial`, `formal` | `formal` | `formal` |
+| `default_gender` | `feminine`, `masculine` | `masculine` | `masculine` |
+| `minute_style` | changes nothing | - | - |
+| `scale` | changes nothing | - | - |
+| `phone_regions` | changes nothing | - | - |
 
 ## Sources
 
-The rules cite Karin C. Ryding, *A Reference Grammar of Modern Standard Arabic* (Cambridge University Press, 2005), W. Wright, *A Grammar of the Arabic Language* (3rd edition, 1896), Wiktionary and the CLDR 49 data of each locale. The docstring of [`ar.py`](../../text2spoken/lang/ar.py) gives the page of each rule.
+The rules cite Karin C. Ryding, *A Reference Grammar of Modern Standard Arabic* (Cambridge University Press, 2005), W. Wright, *A Grammar of the Arabic Language* (3rd edition, 1896), Wiktionary, Arabic Wikipedia, the ISO 639-3 macrolanguage table of iso639-3.sil.org and the CLDR 49 data of each locale. The docstring of [`ar.py`](../../text2spoken/lang/ar.py) gives the page of each rule.
 
 In `tests/data/ar.tsv`, the 78 rows cite their source, and no native speaker has checked them.
 
@@ -27,21 +58,33 @@ In `tests/data/ar.tsv`, the 78 rows cite their source, and no native speaker has
 
 Some Arabic readings are wrong or stay as written:
 
-- A number that is the object of a verb takes the nominative. Only a preposition, a semi-preposition or a year noun before it gives the oblique case. `اشترى 200 كتاب` reads "مئتا كتاب", where the object takes "مئتي كتاب" (Ryding 2005, p. 347).
-- Only the semi-prepositions بعد, قبل, نحو, خلال, طوال and مع give the genitive. Another semi-preposition gives the nominative: `فوق 20 طابقا` reads "فوق عشرون طابقا".
-- A feminine plural that the `feminine_plurals` table does not list counts as masculine, because a plural in -aat also comes from masculine nouns. `وصلت 3 طائرات` reads "ثلاثة طائرات", where the feminine طائرة takes "ثلاث".
-- The word after a number counts as its noun, also when it is من. `اشتريت 3 من السيارات` reads "ثلاثة من السيارات".
-- A scale word reads as the noun of the number only after a currency symbol. `الثمن 3 مليون ريال` reads "ثلاثة مليون ريال", where Ryding (p. 353) gives the plural ملايين.
-- A negative amount of money reads as a number, and the noun stays singular: `الثمن -5 ريال` reads "سالب خمسة ريال".
-- The colloquial register reads every number, dual and ordinal in the oblique case. Ryding (p. 343, note 11) gives the oblique form in spoken Arabic for the tens only, so the rest is a choice with no source.
+| Written | Spoken (`ar`) | Limit |
+| --- | --- | --- |
+| `اشترى 200 كتاب` | اشترى مئتا كتاب | A number that is the object of a verb takes the nominative. Only a preposition, a semi-preposition or a year noun before it gives the oblique case. The object takes "مئتي كتاب" (Ryding 2005, p. 347). |
+| `فوق 20 طابقا` | فوق عشرون طابقا | Only the semi-prepositions بعد, قبل, نحو, خلال, طوال and مع give the genitive. Another semi-preposition gives the nominative. |
+| `وصلت 3 طائرات` | وصلت ثلاثة طائرات | A feminine plural that the `feminine_plurals` table does not list counts as masculine, because a plural in -aat also comes from masculine nouns. The feminine طائرة takes "ثلاث". |
+| `اشتريت 3 من السيارات` | اشتريت ثلاثة من السيارات | The word after a number counts as its noun, also when it is من. |
+| `الثمن 3 مليون ريال` | الثمن ثلاثة مليون ريال | A scale word reads as the noun of the number only after a currency symbol. Ryding (p. 353) gives the plural ملايين. |
+| `الثمن -5 ريال` | الثمن سالب خمسة ريال | A negative amount of money reads as a number, and the noun stays singular. |
+
+The colloquial register reads every number, dual and ordinal in the oblique case. Ryding (p. 343, note 11) gives the oblique form in spoken Arabic for the tens only, so the rest is a choice with no source:
+
+| Written | Spoken (`ar`) | Spoken (`ar`, `register="colloquial"`) |
+| --- | --- | --- |
+| `جاء 200 رجل` | جاء مئتا رجل | جاء مئتي رجل |
+| `جاء 20 رجلا` | جاء عشرون رجلا | جاء عشرين رجلا |
 
 Some Arabic readings wait for a native speaker:
 
-- One o'clock stays as written, because the sources give no form for it: a speaker can say الواحدة or الأولى. So `الساعة 1:30`, every time from 13:00 to 13:59, and `12:45`, which names the next hour, stay as written.
-- A time from 0:00 to 0:59 stays as written. The CLDR name of its day period is "في المساء", which no source here confirms for midnight.
-- A fraction part with a leading zero stays as written, because no source gives its reading. `النسبة 0.05` stays as written.
-- 800 reads ثمانمئة, where Ryding (2005, p. 348) writes thamaanii mi'at-in.
-- 45,001 reads خمسة وأربعون ألف وواحد, with no tamyiz ending on the thousand, as ovos-number-parser writes it.
+| Written | Spoken (`ar`) | Limit |
+| --- | --- | --- |
+| `الساعة 1:30` | stays as written | One o'clock stays as written, because the sources give no form for it: a speaker can say الواحدة or الأولى. |
+| `الساعة 13:15` | stays as written | Every time from 13:00 to 13:59 stays as written for the same reason. |
+| `الساعة 12:45` | stays as written | `12:45` names the next hour, so it stays as written too. |
+| `الساعة 0:30` | stays as written | A time from 0:00 to 0:59 stays as written. The CLDR name of its day period is "في المساء", which no source here confirms for midnight. |
+| `النسبة 0.05` | stays as written | A fraction part with a leading zero stays as written, because no source gives its reading. |
+| `دفعت 800 دولار` | دفعت ثمانمئة دولار | 800 reads ثمانمئة, where Ryding (2005, p. 348) writes thamaanii mi'at-in. Not fetched: no copy of that page was read. |
+| `دفعت 45001 دولار` | دفعت خمسة وأربعون ألف وواحد دولار | 45,001 reads with no tamyiz ending on the thousand, as ovos-number-parser writes it. |
 
 ---
 [← Errors and warnings](../errors.md) · [Home](../index.md) · [German →](de.md)
