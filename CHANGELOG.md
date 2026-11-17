@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a59](https://github.com/TigreGotico/text2spoken/tree/0.0.2a59) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a58...0.0.2a59)
+
+**Merged pull requests:**
+
+- feat: Dutch language file [\#119](https://github.com/TigreGotico/text2spoken/pull/119) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a58](https://github.com/TigreGotico/text2spoken/tree/0.0.2a58) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a57...0.0.2a58)
@@ -383,10 +391,6 @@
 ## [0.0.2a9](https://github.com/TigreGotico/text2spoken/tree/0.0.2a9) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a8...0.0.2a9)
-
-**Merged pull requests:**
-
-- perf: make Color.find linear [\#19](https://github.com/TigreGotico/text2spoken/pull/19) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a8](https://github.com/TigreGotico/text2spoken/tree/0.0.2a8) (2026-11-09)
 
