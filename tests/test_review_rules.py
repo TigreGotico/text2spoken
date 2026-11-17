@@ -273,7 +273,8 @@ def test_a_named_date_after_a_symbol_reads_the_same_on_a_second_pass():
 
 
 def test_a_negative_number_stays_as_written_in_a_language_with_no_sign_words(caplog):
-    assert normalize("It is -5 now.", "ca") == "It is -5 now."
+    # CLDR zu.xml: the rule set spellout-cardinal has no -x rule.
+    assert normalize("It is -5 now.", "zu") == "It is -5 now."
     assert "unread written form '-5'" in caplog.text and "sign_words" not in caplog.text
 
 

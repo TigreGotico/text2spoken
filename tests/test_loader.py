@@ -104,6 +104,71 @@ def test_a_language_with_no_file_reads_the_cardinals_next_to_a_kept_form():
     assert normalize("Tenho 3. Ele tem 2.", "pt-PT") == "Tenho três. Ele tem dois."
 
 
+# A language with no file reads a minus through the -x rule of its RBNF cardinal rule set (design section 6.1).
+# Expected words come from the CLDR RBNF files that unicode-rbnf ships.
+NO_FILE_MINUS = [
+    # uk.xml, spellout-cardinal-masculine: -x "мінус →→", 5 пʼять, 20 двадцять[ →→], 1 один.
+    ("uk-UA", "сьогодні -5 дуже", "сьогодні мінус пʼять дуже"),
+    ("uk", "Було \u221221.", "Було мінус двадцять один."),
+    # bg.xml, spellout-cardinal-masculine: -x "минус →→", 5 пет, 3 три.
+    ("bg", "Днес -5 градуса", "Днес минус пет градуса"),
+    ("bg-BG", "Температура (\u22123)", "Температура (минус три)"),
+]
+
+# A minus stays as written where it may be no minus. A hyphen after a letter, between two numbers or before a
+# percent sign is no sign at all, by the rule of `find_numbers` that en.py reads too. A minus at the start of a
+# line can mark a list item, and a minus after a number or a dash can mark a range or a code: the number before
+# it stays as written too, so that a second pass reads the same. A number grouped with a space, as in `-1 000`,
+# stays as written whole, with each kind of space that groups digits. A minus next to a currency symbol leaves the money
+# form, which a language with no file keeps as written. RBNF has no word for minus zero, and zu.xml has no -x
+# rule. Each number that reads takes its word from uk.xml: 5 пʼять.
+NO_FILE_KEPT_MINUS = [
+    ("uk-UA", "з 5-10 градусів", "з 5-10 градусів"),
+    ("uk-UA", "код A-5", "код A-пʼять"),
+    ("uk-UA", "знижка -5%", "знижка -5%"),
+    ("uk-UA", "температура -0 градусів", "температура -0 градусів"),
+    ("uk-UA", "від 5 -10 градусів", "від 5 -10 градусів"),
+    ("uk-UA", "розділи 5--10", "розділи пʼять--10"),
+    ("uk-UA", "тел. 333 -1234567", "тел. 333 -1234567"),
+    ("uk-UA", "-3 яблука", "-3 яблука"),
+    ("uk-UA", "Список:\n  -3 яблука", "Список:\n  -3 яблука"),
+    ("uk-UA", "температура -1 000 градусів", "температура -1 000 градусів"),
+    ("uk-UA", "борг -10\u00a0000 гривень", "борг -10\u00a0000 гривень"),
+    ("bg-BG", "Температура -1 000 градуса", "Температура -1 000 градуса"),
+    ("bg-BG", "Разлика -12\u202f000 кг", "Разлика -12\u202f000 кг"),
+    ("zu", "Izinga -5 namuhla.", "Izinga -5 namuhla."),
+]
+
+# A line break or a tab groups no digits: the minus at the end of a line reads, and so does the number of the next
+# line. A minus at the start of a line stays as written. Words from bg.xml (5 пет, 3 три, 10 десет, 12 дванайсет),
+# uk.xml (5 пʼять, 3 три, 10 десять) and pl.xml (5 pięć, 3 trzy), spellout-cardinal-masculine.
+NO_FILE_LINE_BREAKS = [
+    ("uk-UA", "Оцінка: -5\n10 студентів прийшли", "Оцінка: мінус пʼять\nдесять студентів прийшли"),
+    ("uk-UA", "сьогодні -5\n3 яблука", "сьогодні мінус пʼять\nтри яблука"),
+    ("uk-UA", "сьогодні -5\t10", "сьогодні мінус пʼять\tдесять"),
+    ("pl-PL", "dziś -5\n3 jabłka", "dziś minus pięć\ntrzy jabłka"),
+    ("bg-BG", "Оценка: -5\n10 души", "Оценка: минус пет\nдесет души"),
+    ("bg-BG", "днес -5\n\n3 ябълки", "днес минус пет\n\nтри ябълки"),
+    ("bg-BG", "-5\n\n12 души", "-5\n\nдванайсет души"),
+]
+
+NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
+    ("uk-UA", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
+    ("bg-BG", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
+    ("he-IL", ("יתרה: -50 ₪", "יתרה: ₪ -50")),
+    ("ja-JP", ("残高: -50 €", "残高: € -50")),
+    ("ca-ES", ("Saldo: -50 €", "Saldo: € -50")),
+    ("pl-PL", ("Saldo: -50 €", "Saldo: € -50")),
+) for text in texts]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"),
+                         NO_FILE_MINUS + NO_FILE_KEPT_MINUS + NO_FILE_LINE_BREAKS + NO_FILE_KEPT_MONEY)
+def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
 def test_a_language_with_no_file_and_no_rbnf_reads_only_the_lexicon():
     assert supports("tlh").forms == {"lexicon"}
     assert normalize("jIH 3", "tlh") == "jIH 3"
