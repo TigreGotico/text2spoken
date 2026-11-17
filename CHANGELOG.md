@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a68](https://github.com/TigreGotico/text2spoken/tree/0.0.2a68) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a67...0.0.2a68)
+
+**Merged pull requests:**
+
+- feat: say\_as argument names the form of a run of text [\#176](https://github.com/TigreGotico/text2spoken/pull/176) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a67](https://github.com/TigreGotico/text2spoken/tree/0.0.2a67) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a66...0.0.2a67)
