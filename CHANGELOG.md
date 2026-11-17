@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a69](https://github.com/TigreGotico/text2spoken/tree/0.0.2a69) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a68...0.0.2a69)
+
+**Merged pull requests:**
+
+- feat: revision\(lang\) changes when the output of a language can change [\#207](https://github.com/TigreGotico/text2spoken/pull/207) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a68](https://github.com/TigreGotico/text2spoken/tree/0.0.2a68) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a67...0.0.2a68)
