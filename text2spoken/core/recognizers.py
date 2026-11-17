@@ -29,7 +29,7 @@ from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
-from text2spoken.core.units import joined_table, unit_table, units_at
+from text2spoken.core.units import elided, joined_table, unit_table, units_at
 from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
@@ -248,6 +248,51 @@ class Cardinal:
                                   "suffix": suffix, "script": number.script}), recognizer=self.name)
 
 
+_DASHES = "-\u2010\u2011\u2012\u2013\u2014\u2212"
+"""The hyphen, the dashes and the minus sign."""
+
+_GROUP_SPACES = " \u00a0\u202f"
+"""The space, the no-break space and the narrow no-break space, which group the digits of a number."""
+
+
+@dataclass(frozen=True)
+class RbnfCardinal(Cardinal):
+    """The cardinal of a language with no file (section 6.1). A number with a minus stays as written where the
+    minus may mark something else, or where the number goes on past the span: a list item at the start of a line,
+    as in `-3 mele`; a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an
+    amount next to a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a
+    number grouped with one of `_GROUP_SPACES`, as in `-1 000`, where the span holds only the first group. A line
+    break or a tab groups no digits, so in `-5\n10` the `10` of the next line reads.
+
+    The number next to such a minus number stays as written too, so that a second pass finds the digit next to the
+    minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. A dash is no digit, so `5` in `5--10` reads."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        symbols = request.data.get("symbols", FrozenMap())
+        spans = list(super().find(text, tokens, request))
+        kept = set()
+        for index, span in enumerate(spans):
+            if not span.fields["sign"]:
+                continue
+            sign = span.start + len(span.fields["prefix"])
+            line_start = text.rfind("\n", 0, sign) + 1
+            before = text[line_start:sign].rstrip()
+            number_end = span.end - len(span.fields["suffix"])
+            after = text[number_end:].lstrip()
+            group = text[number_end:number_end + 2]
+            neighbours = []
+            if before and is_digit(before[-1]):
+                neighbours.append((index - 1, line_start + len(before) - 1))
+            if len(group) == 2 and group[0] in _GROUP_SPACES and is_digit(group[1]):
+                neighbours.append((index + 1, number_end + 1))
+            if neighbours or not before or before[-1] in _DASHES or before[-1] in symbols or after[:1] in symbols:
+                kept.add(index)
+            for other, digit in neighbours:
+                if 0 <= other < len(spans) and spans[other].start <= digit < spans[other].end:
+                    kept.add(other)
+        return (replace(span, keep=True) if index in kept else span for index, span in enumerate(spans))
+
+
 @dataclass(frozen=True)
 class Decimal:
     name: str = "decimal"
@@ -360,9 +405,10 @@ def number_gaps(data) -> tuple[str, ...]:
 
 
 def _unit_after(text: str, end: int, units: Iterable[str], gaps: Sequence[str] = GAPS) -> bool:
-    """Whether a unit of the language follows text[:end], attached or after one gap."""
+    """Whether a unit of the language follows text[:end], attached or after one gap. A unit symbol before an
+    apostrophe and a letter is an elided word."""
     return any(text.startswith(gap + unit, end) and is_bounded(text, end + len(gap), end + len(gap) + len(unit))
-               for gap in gaps for unit in units)
+               and not elided(text, end + len(gap) + len(unit)) for gap in gaps for unit in units)
 
 
 @dataclass(frozen=True)
@@ -953,6 +999,15 @@ def signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}" if sign else words
 
 
+def speak_rbnf_cardinal(span: Span, context: SpanContext) -> str:
+    """The cardinal of a language with no file (section 6.1). A number with a minus reads through the `-x` rule of
+    the RBNF cardinal rule set, which writes the sign word before or after the number, with or without a space."""
+    if span.fields["sign"] == "-":
+        request = context.request
+        return request.language.spellers[Form.CARDINAL].negative_cardinal(span.fields["digits"], Features(), request)
+    return speak_cardinal(span, context)
+
+
 def amount_words(amount: FrozenMap, request: Request, features: Features = Features()) -> str:
     """A `DECIMAL` record through the spellers of the language, with its sign: the decimal speller when the record
     has fraction digits, else the cardinal speller with `features`."""
@@ -1208,6 +1263,7 @@ class SpaceGroups:
 
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
+RBNF_CARDINAL = RbnfCardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
                               Percent(), Money(), Measure(), Telephone(), Expression(), Abbreviation(), SpaceGroups(),
                               COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}

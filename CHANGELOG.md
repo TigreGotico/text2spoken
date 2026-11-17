@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.2a64](https://github.com/TigreGotico/text2spoken/tree/0.0.2a64) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a63...0.0.2a64)
+
+**Merged pull requests:**
+
+- feat: Italian language file [\#114](https://github.com/TigreGotico/text2spoken/pull/114) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a63](https://github.com/TigreGotico/text2spoken/tree/0.0.2a63) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a62...0.0.2a63)
+
+**Merged pull requests:**
+
+- fix\(core\): read the minus in languages with no file [\#124](https://github.com/TigreGotico/text2spoken/pull/124) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a62](https://github.com/TigreGotico/text2spoken/tree/0.0.2a62) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a61...0.0.2a62)
@@ -375,17 +391,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a14...0.0.2a15)
 
-**Merged pull requests:**
-
-- fix: bound digit runs in recognizers before int\(\) [\#30](https://github.com/TigreGotico/text2spoken/pull/30) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a14](https://github.com/TigreGotico/text2spoken/tree/0.0.2a14) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a13...0.0.2a14)
-
-**Merged pull requests:**
-
-- fix: follow-ups to the digit bound and the clause guard [\#27](https://github.com/TigreGotico/text2spoken/pull/27) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a13](https://github.com/TigreGotico/text2spoken/tree/0.0.2a13) (2026-11-09)
 
