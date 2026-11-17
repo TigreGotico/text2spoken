@@ -16,7 +16,7 @@ This page shows how text2spoken reads dates, clock times and years, and the opti
 | `Am 12.03.2024.` | `de-DE` | Am zwölften März zweitausendvierundzwanzig. |
 | `Он родился 12 марта.` | `ru-RU` | Он родился двенадцатого марта. |
 
-An English day-first reading starts with "the". When the text writes "the" right before the date, the reading uses that word and adds no second one.
+An English day-first reading starts with "the". When the text writes "the" right before the date, with only spaces between them, the reading uses that word and adds no second one. A comma, a full stop or a quotation mark between them keeps both.
 
 A date with the year last is ambiguous when both other fields are 12 or below. The `date_order` option decides it, and its default comes from the variety. A field above 12 is always the day:
 

@@ -188,7 +188,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import cache
 from importlib.resources import files
 
@@ -199,7 +199,7 @@ from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number, written_amount
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, _edge, amount_words, join_ranges, numbers_in,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges, numbers_in,
                                           signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
                                           speak_range, speak_telephone)
@@ -209,7 +209,7 @@ from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, c
 from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import twelve_hour
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, one_digit_set
+from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, is_word_char, one_digit_set
 from text2spoken.core.units import unit_reading, unit_table
 from text2spoken.params import FrozenMap, Form, freeze
 
@@ -449,8 +449,9 @@ def _cardinal(digits: str, request: Request) -> str:
 def speak_date(span: Span, context: SpanContext) -> str:
     """A day-first reading says "the", the ordinal day, "of" and the month (Wikipedia, "Date and time notation in
     the United Kingdom": "When saying the date, it is usually pronounced using "the", then the ordinal number of the
-    day first, then the preposition "of", then the month"). When the text writes "the" right before the date, that
-    word is the article of the reading, so `the 3rd of May` reads "the third of May"."""
+    day first, then the preposition "of", then the month"). When the text writes "the" right before the date, with
+    whitespace alone between them, the date recognizers keep that word as the prefix of the span, and the reading
+    says no second one: `the 3rd of May` reads "the third of May"."""
     request = context.request
     fields = span.fields
     month = request.data["months"][fields["month"] - 1]
@@ -462,7 +463,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
         template = "{month} {day} {year}" if fields["written_order"] == "MDY" else "the {day} of {month} {year}"
     else:
         template = request.data["numeric_date_reading"]["full"]
-    if context.before and context.before[-1].lower() == "the":
+    if fields["prefix"].strip().lower() == "the":
         template = template.removeprefix("the ")
     if year is None:
         template = template.replace(" {year}", "")
@@ -801,6 +802,27 @@ class Roman:
                            recognizer=self.name)
 
 
+def with_article(span: Span, text: str) -> Span:
+    """The date span with the word "the" before it as its prefix, when whitespace alone parts the two. Punctuation
+    between them, as in `the. 3rd of May` or `"the" 3rd of May`, means that the word is no article of the date."""
+    gap = span.start
+    while gap and text[gap - 1].isspace():
+        gap -= 1
+    article = gap - 3
+    if span.fields["prefix"] or gap == span.start or article < 0 or text[article:gap].lower() != "the" \
+            or (article and is_word_char(text[article - 1])):
+        return span
+    return replace(span, start=article, fields=FrozenMap({**span.fields, "prefix": text[article:span.start]}))
+
+
+@dataclass(frozen=True)
+class EnglishDateNumeric(DateNumeric):
+    """The shared numeric date, with the article before it (`with_article`)."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return (with_article(span, text) for span in super().find(text, tokens, request))
+
+
 @dataclass(frozen=True)
 class DateNamed:
     """`March 12, 2024`, `12th of March 2024`, `March 2024`: a date with a month name."""
@@ -831,10 +853,12 @@ class DateNamed:
                 year_value = int(year) if year is not None else None
                 if day is not None and not is_valid(year_value, month, int(day)):
                     continue
-                yield Span(start, end, Form.DATE,
-                           FrozenMap({"year": year_value, "month": month, "day": int(day) if day else None,
-                                      "written_order": "DMY" if order == "DMY" else "MDY", "month_written": "name",
-                                      "prefix": "", "suffix": ""}), recognizer=self.name)
+                yield with_article(Span(start, end, Form.DATE,
+                                        FrozenMap({"year": year_value, "month": month,
+                                                   "day": int(day) if day else None,
+                                                   "written_order": "DMY" if order == "DMY" else "MDY",
+                                                   "month_written": "name", "prefix": "", "suffix": ""}),
+                                        recognizer=self.name), text)
 
 
 LANGUAGE = LanguageSpec(
@@ -844,7 +868,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
-                 SHARED["date_numeric"], SHARED["time_clock"],
+                 EnglishDateNumeric(), SHARED["time_clock"],
                  EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
                  SHARED["money"], SHARED["percent"], SHARED["measure"], Year(), SHARED["expression"],
                  SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"], SHARED["letters"],
