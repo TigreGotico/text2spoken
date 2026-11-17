@@ -1,11 +1,19 @@
-"""Modern Standard Arabic: `ar`, its CLDR regional varieties, and the Arabic varieties of ISO 639-3.
+"""Arabic: `ar`, its CLDR regional varieties, and the spoken Arabic lects of ISO 639-3.
 
-The output is Modern Standard Arabic in Arabic script with no diacritics; a diacritizer runs after normalisation.
-`SERVES` holds the active members of the ISO 639-3 macrolanguage `ara` (iso639-3.sil.org, macrolanguage table) that
-write Arabic script; the CLDR 49 likely subtags give Latin script to `acy` and `pga`. A regional tag reads the month
-names and the number marks of its CLDR 49 locale (`numbers.json`, `ca-gregorian.json`), and no regional words:
-`arz-EG` and `ar-EG` read as `ar`. Number words come from ovos-number-parser with the tag `ar`, so a dialect tag
-never selects its dialect words.
+The output is in Arabic script with no diacritics; a diacritizer runs after normalisation. `SERVES` holds the active
+members of the ISO 639-3 macrolanguage `ara` (iso639-3.sil.org, macrolanguage table) that write Arabic script; the
+CLDR 49 likely subtags give Latin script to `acy` and `pga`. A regional tag such as `ar-MA` reads the month names and
+the number marks of its CLDR 49 locale (`numbers.json`, `ca-gregorian.json`), and Modern Standard Arabic words.
+
+A spoken lect reads as itself. Its region is the region of its CLDR 49 likely subtags (`likelySubtags.json`), which
+Glottolog lists among the countries of the lect, so `ary` reads the Moroccan month names and decimal comma of `ar-MA`.
+Ryding writes that "colloquial forms of Arabic do not have case marking" (p. 166), so a lect reads in the colloquial
+register by default. Each code of `SERVES` but `arb` names a regional or ethnic variety in the ISO 639-3 code table,
+such as "Egyptian Arabic" or "Chadian Arabic"; `arb` is "Standard Arabic" and stays formal, as `ar` does. In the
+colloquial register, the number words of a lect come from ovos-number-parser with the code of the lect, so `arz`
+reads the Egyptian تلتاشر for 13. A lect with no dialect words in ovos-number-parser reads colloquial Standard Arabic,
+which the parser gives each member of the macrolanguage `ara`. `apc` (Levantine) is not in `SERVES`: a Levantine voice reads its own number words, and a reading
+here would replace them. It joins when ovos-number-parser writes Levantine number words.
 
 The rules and their sources:
 
@@ -47,7 +55,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
-from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
+from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
 from text2spoken.core.recognizers import SHARED, Money as CoreMoney, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
@@ -62,8 +70,39 @@ NOMINATIVE, OBLIQUE = "nominative", "oblique"
 SERVES = ("aao", "abh", "abv", "acm", "acq", "acw", "acx", "adf", "aeb", "aec", "afb", "apd", "arb", "arq",
           "ars", "ary", "arz", "auz", "avl", "ayh", "ayl", "ayn", "ayp", "shu", "ssh")
 """The active members of the ISO 639-3 macrolanguage `ara` that write Arabic script. `acy` and `pga` write Latin
-script (CLDR likely subtags), and `ajp` and `bbz` are retired codes. `apc` (Levantine) is left out: a Levantine
-voice reads its own number words, and a Standard Arabic reading here would replace them."""
+script (CLDR likely subtags), and `ajp` and `bbz` are retired codes. `apc` (Levantine) is left out until
+ovos-number-parser writes Levantine number words: a Levantine voice reads its own number words, and a reading of
+colloquial Standard Arabic here would replace them."""
+
+LECT_REGIONS = {
+    "aao": "DZ",  # "aao": "aao-Arab-DZ"; Glottolog alge1240: DZ, EH, LY, MA, NE
+    "abh": "TJ",  # "abh": "abh-Arab-TJ"; Glottolog taji1248: AF, TJ, UZ
+    "abv": "BH",  # "abv": "abv-Arab-BH"; Glottolog baha1259: BH, OM
+    "acm": "IQ",  # "acm": "acm-Arab-IQ"; Glottolog meso1252: IQ, IR, JO, SY, TR
+    "acq": "YE",  # "acq": "acq-Arab-YE"; Glottolog taiz1242: ER, SA, YE
+    "acw": "SA",  # "acw": "acw-Arab-SA"; Glottolog hija1235: SA, YE
+    "acx": "OM",  # "acx": "acx-Arab-OM"; Glottolog oman1239: AE, OM
+    "adf": "OM",  # "adf": "adf-Arab-OM"; Glottolog dhof1235: OM
+    "aeb": "TN",  # "aeb": "aeb-Arab-TN"; Glottolog tuni1259: DZ, LY, TN
+    "aec": "EG",  # "aec": "aec-Arab-EG"; Glottolog said1239: EG, SD
+    "afb": "KW",  # "afb": "afb-Arab-KW"; Glottolog gulf1241: AE, BH, IQ, IR, KW, OM, QA, SA, YE
+    "apd": "SD",  # "apd": "apd-Arab-SD"; Glottolog suda1236: CF, EG, ER, ET, LY, SD, TD
+    "arq": "DZ",  # "arq": "arq-Arab-DZ"; Glottolog alge1239: DZ, MA, TN
+    "ars": "SA",  # "ars": "ars-Arab-SA"; Glottolog najd1235: AE, IL, IQ, JO, KW, LB, SA, SY, TR, YE
+    "ary": "MA",  # "ary": "ary-Arab-MA"; Glottolog moro1292: DZ, EH, MA
+    "arz": "EG",  # "arz": "arz-Arab-EG"; Glottolog egyp1253: EG, IL, LY
+    "auz": "UZ",  # "auz": "auz-Arab-UZ"; Glottolog uzbe1248: UZ
+    "avl": "EG",  # "avl": "avl-Arab-EG"; Glottolog east2690: EG, IL, JO, PS, SA
+    "ayh": "YE",  # "ayh": "ayh-Arab-YE"; Glottolog hadr1236: SA, YE
+    "ayl": "LY",  # "ayl": "ayl-Arab-LY"; Glottolog liby1240: EG, LY, NE
+    "ayn": "YE",  # "ayn": "ayn-Arab-YE"; Glottolog sana1295: SA, YE
+    "ayp": "IQ",  # "ayp": "ayp-Arab-IQ"; Glottolog nort3142: IQ, JO, SY, TR
+    "shu": "TD",  # "shu": "shu-Arab-TD"; Glottolog chad1249: CM, NE, NG, TD
+    "ssh": "AE",  # "ssh": "ssh-Arab-AE"; Glottolog shih1239: AE, OM
+}
+"""The region of each spoken lect: the line of CLDR 49 `likelySubtags.json` for the code, and the countries of the
+Glottolog languoid of the code, which hold the region. A tag with no region, or with a region that the lect has no
+variety for, reads this region."""
 
 SYRIAC_MONTHS = ["كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول", "تشرين الأول",
                  "تشرين الثاني", "كانون الأول"]
@@ -162,24 +201,40 @@ VARIETIES = (
 )
 """The CLDR locales whose month names or Latin number marks differ from `ar`. Each other region reads as `ar-001`."""
 
+REGION_DATA = {variety.tag.split("-")[1]: variety.data for variety in VARIETIES}
+
+
+def _lect_variety(code: str, region: str) -> Variety:
+    """A spoken lect in its region: the month names and the number marks of the region, and the colloquial
+    register (Ryding 2005, p. 166)."""
+    data = REGION_DATA.get(region, FrozenMap())
+    defaults = {**data.get("defaults", FrozenMap()), "register": "colloquial"}
+    return Variety(f"{code}-{region}", freeze({**data, "defaults": defaults}))
+
+
+LECT_VARIETIES = tuple(_lect_variety(code, region) for code, region in LECT_REGIONS.items())
+
 
 class ArabicSpeller:
-    """ovos-number-parser, always with the tag `ar`, so that a dialect tag such as `arz` reads Modern Standard
-    Arabic. A decimal reads the integer, the decimal word and the fraction digits as one number (Wiktionary, فاصلة),
-    and a fraction reads its denominator by name, from 2 to 10 (Ryding 2005, pp. 360-361)."""
+    """ovos-number-parser, with the code of the lect in the colloquial register for a lect of `LECT_REGIONS`, and
+    with the tag `ar` for every other request: the formal register reads the literary words. A decimal reads the
+    integer, the decimal word and the fraction digits as one number (Wiktionary, فاصلة), and a fraction reads its
+    denominator by name, from 2 to 10 (Ryding 2005, pp. 360-361)."""
 
     def __init__(self):
         self.ovos = OvosNumberSpeller({MASCULINE: "masculine", FEMININE: "feminine"})
 
     @staticmethod
-    def _msa(request: Request) -> Request:
-        return replace(request, tag="ar")
+    def _writer(request: Request) -> Request:
+        code = primary_subtag(request.tag)
+        lect = code in LECT_REGIONS and request.params.register == "colloquial"
+        return replace(request, tag=code if lect else "ar")
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        return self.ovos.cardinal(digits, features, self._msa(request))
+        return self.ovos.cardinal(digits, features, self._writer(request))
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        return self.ovos.ordinal(digits, features, self._msa(request))
+        return self.ovos.ordinal(digits, features, self._writer(request))
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         return self.cardinal(digits, features, request)
@@ -459,12 +514,19 @@ def _day_period(hour: int, request: Request) -> str:
     raise DeclinedReading("no cited name for the day period from midnight to one")
 
 
+def _clock_ordinal(digits: str, request: Request) -> str:
+    """A feminine ordinal that agrees with saa'a or daqiiqa (Ryding 2005, p. 361), oblique in the colloquial
+    register, as every other ordinal is."""
+    case = OBLIQUE if request.params.register == "colloquial" else None
+    return SPELLER.ordinal(digits, Features(gender=FEMININE, case=case), request)
+
+
 def _hour(face: int, request: Request) -> str:
     """The hour is a feminine ordinal that agrees with saa'a (Ryding 2005, p. 361). For one o'clock the sources
     here give no form, so it declines."""
     if face == 1:
         raise DeclinedReading("no cited form for one o'clock")
-    return SPELLER.ordinal(str(face), Features(gender=FEMININE), request)
+    return _clock_ordinal(str(face), request)
 
 
 def speak_time(span: Span, context: SpanContext) -> str:
@@ -481,8 +543,7 @@ def speak_time(span: Span, context: SpanContext) -> str:
     next_hour = _hour(twelve_hour(hour + 1), request) if "{next_hour}" in template else ""
     words = template.format(hour=_hour(twelve_hour(hour), request) if "{hour}" in template else "",
                             next_hour=next_hour,
-                            minute=SPELLER.ordinal(str(minute), Features(gender=FEMININE), request)
-                            if "{minute}" in template else "")
+                            minute=_clock_ordinal(str(minute), request) if "{minute}" in template else "")
     if hour == 0 or fields["period"] is not None or hour >= 13:
         words += " " + _day_period(hour, request)
     return words
@@ -532,7 +593,7 @@ LANGUAGE = LanguageSpec(
     code="ar",
     serves=SERVES,
     cldr_aliases=(),
-    varieties=VARIETIES,
+    varieties=VARIETIES + LECT_VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], DateNamed(), SHARED["date_numeric"], SHARED["time_clock"], Money(),
                  SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"], SHARED["decimal"],

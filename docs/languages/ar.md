@@ -31,11 +31,39 @@ These stay as written: telephone numbers, operators such as `5+3`, a number with
 | `ar-001` | The default variety. A bare `ar` reads as `ar-001` |
 | `ar-DZ`, `ar-TN`, `ar-IQ`, `ar-JO`, `ar-PS`, `ar-SY`, `ar-LB`, `ar-LY`, `ar-MA`, `ar-MR` | Each regional tag reads the month names and number marks of its CLDR locale |
 
-The Arabic varieties of ISO 639-3 that write Arabic script read as `ar`, with no dialect words: `aao`, `abh`, `abv`, `acm`, `acq`, `acw`, `acx`, `adf`, `aeb`, `aec`, `afb`, `apd`, `arb`, `arq`, `ars`, `ary`, `arz`, `auz`, `avl`, `ayh`, `ayl`, `ayn`, `ayp`, `shu` and `ssh`. `apc` (Levantine) is not one of them.
+A regional tag such as `ar-EG` reads Modern Standard Arabic words.
+
+Each spoken Arabic lect of ISO 639-3 that writes Arabic script reads as itself:
+
+- It reads the month names and the number marks of its region. A tag with no region, or with a region that is not the region below, reads the region below.
+- It reads in the colloquial register, because colloquial Arabic has no case marking (Ryding 2005, p. 166).
+- In the colloquial register, its number words come from `ovos-number-parser` with the code of the lect. Where the parser has no dialect words for a lect, the words are colloquial Standard Arabic: the oblique case, with no case ending.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `الطقس 13 جميل 250 جدا` | `ar` | الطقس ثلاثة عشر جميل مئتان وخمسون جدا |
+| `الطقس 13 جميل 250 جدا` | `arz` | الطقس تلتاشر جميل ميتين وخمسين جدا |
+| `الطقس 13 جميل 250 جدا` | `ary` | الطقس ثلاثة عشر جميل مئتين وخمسين جدا |
+| `25/7/1930` | `ary` | الخامس والعشرين من يوليوز ألف وتسعمئة وثلاثين |
+| `الوزن 2,5` | `ary` | الوزن اثنين فاصلة خمسة |
+
+| Lect | Region | Number words |
+| --- | --- | --- |
+| `arz` Egyptian | `EG` | Egyptian |
+| `acw` Hijazi | `SA` | Hijazi |
+| `afb` Gulf | `KW` | Gulf |
+| `ars` Najdi | `SA` | Najdi |
+| `acm` Mesopotamian, `aeb` Tunisian, `ary` Moroccan, `ayl` Libyan | `IQ`, `TN`, `MA`, `LY` | Colloquial Standard Arabic, from `ovos-number-parser` with the code of the lect |
+| `aao`, `aec`, `apd`, `arq`, `auz`, `avl`, `abh`, `abv`, `acq`, `acx`, `adf`, `ayh`, `ayn`, `ayp`, `shu`, `ssh` | `DZ`, `EG`, `SD`, `DZ`, `UZ`, `EG`, `TJ`, `BH`, `YE`, `OM`, `OM`, `YE`, `YE`, `IQ`, `TD`, `AE` | Colloquial Standard Arabic, from `ovos-number-parser` with the code of the lect |
+| `arb` Standard Arabic | none | Modern Standard Arabic, in the formal register |
+
+The region of each lect is the region of its CLDR 49 likely subtags, which Glottolog lists among the countries of the lect. `register="formal"` gives a lect the words and the case of `ar`.
+
+`apc` (Levantine) is not one of these lects. A Levantine voice reads its own number words, and colloquial Standard Arabic here would replace them. `apc` joins when `ovos-number-parser` writes Levantine number words.
 
 ## Options
 
-The `register` option chooses formal or colloquial words.
+The `register` option chooses formal or colloquial words. A spoken lect such as `arz` defaults to `colloquial`.
 
 | Option | Values | Default (`ar-001`) | Default (`ar-DZ`) |
 | --- | --- | --- | --- |
@@ -50,9 +78,9 @@ The `register` option chooses formal or colloquial words.
 
 ## Sources
 
-The rules cite Karin C. Ryding, *A Reference Grammar of Modern Standard Arabic* (Cambridge University Press, 2005), W. Wright, *A Grammar of the Arabic Language* (3rd edition, 1896), Wiktionary, Arabic Wikipedia, the ISO 639-3 macrolanguage table of iso639-3.sil.org and the CLDR 49 data of each locale. The docstring of [`ar.py`](../../text2spoken/lang/ar.py) gives the page of each rule.
+The rules cite Karin C. Ryding, *A Reference Grammar of Modern Standard Arabic* (Cambridge University Press, 2005), W. Wright, *A Grammar of the Arabic Language* (3rd edition, 1896), Wiktionary, Arabic Wikipedia, the ISO 639-3 macrolanguage table of iso639-3.sil.org, the CLDR 49 data of each locale, the CLDR 49 likely subtags and the country lists of Glottolog. The number words of a lect come from `ovos-number-parser`, whose tables cite a grammar for each word. The docstring of [`ar.py`](../../text2spoken/lang/ar.py) gives the page of each rule.
 
-In `tests/data/ar.tsv`, the 78 rows cite their source, and no native speaker has checked them.
+In `tests/data/ar.tsv`, the 153 rows cite their source, and no native speaker has checked them. A row of a lect takes its number words from `ovos-number-parser` and says so.
 
 ## Limits
 

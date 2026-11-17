@@ -7,7 +7,8 @@ import pytest
 from packaging.requirements import Requirement
 from packaging.version import Version
 
-from text2spoken import Features, NormalizationParams, analyze, normalize, render
+from text2spoken import Features, NormalizationParams, analyze, effective_params, normalize, render
+from text2spoken.lang.ar import LECT_REGIONS, SERVES
 from text2spoken.params import FrozenMap, GrammaticalGender
 
 
@@ -37,6 +38,61 @@ def test_the_colloquial_register_reads_a_rank_ordinal_and_a_construct_oblique():
     assert normalize("سعرها 200,000 ريال", "ar", params) == "سعرها مئتي ألف ريال"
 
 
+@pytest.mark.parametrize("code", SERVES)
+def test_a_spoken_lect_reads_in_the_colloquial_register(code):
+    # Ryding 2005, p. 166: "colloquial forms of Arabic do not have case marking". arb is Standard Arabic (ISO 639-3).
+    assert effective_params(code).register == ("formal" if code == "arb" else "colloquial")
+
+
+@pytest.mark.parametrize("tag", ["ar", "ar-001", "ar-EG", "ar-MA", "ar-SA"])
+def test_standard_arabic_reads_in_the_formal_register(tag):
+    assert effective_params(tag).register == "formal"
+
+
+def test_each_lect_but_standard_arabic_has_a_region():
+    assert set(LECT_REGIONS) == set(SERVES) - {"arb"}
+
+
+@pytest.mark.parametrize("code", SERVES)
+def test_the_writer_reads_each_lect(code):
+    """ovos-number-parser reads each member of the macrolanguage `ara` from 0.25.1a1, so no digit stays as written."""
+    spoken = normalize("الطقس 13 جميل 250 جدا", code)
+    assert not any(char.isdigit() for char in spoken), spoken
+
+
+# The rows of issue #166. Number words: the output of ovos-number-parser 0.25.0a1 for the code of the lect in the
+# oblique case (acw, afb, ars and arz: the dialect tables of AR_LECT_FORMS); colloquial Arabic has no case marking
+# (Ryding 2005, p. 166).
+ISSUE_166 = [
+    ("acm", "mama 7 ana 42 sule 1234", "mama سبعة ana اثنين وأربعين sule ألف ومئتين وأربعة وثلاثين"),
+    ("acw", "mama 7 ana 42 sule 1234", "mama سبعة ana اتنين وأربعين sule ألف وميتين وأربعة وتلاتين"),
+    ("aeb", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اثنين وأربعين على ألف ومئتين وأربعة وثلاثين"),
+    ("afb", "mama 7 ana 42 sule 1234", "mama سبعة ana اثنين وأربعين sule ألف وميتين وأربعة وثلاثين"),
+    ("ars", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اثنين وأربعين على ألف وميتين وأربعة وثلاثين"),
+    ("ary", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اثنين وأربعين على ألف ومئتين وأربعة وثلاثين"),
+    ("arz", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اتنين وأربعين على ألف وميتين وأربعة وتلاتين"),
+    ("ayl", "mama 7 ana 42 sule 1234", "mama سبعة ana اثنين وأربعين sule ألف ومئتين وأربعة وثلاثين"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), ISSUE_166)
+def test_a_lect_reads_its_numbers_without_case_endings(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+def test_a_lect_in_the_formal_register_reads_the_literary_words():
+    # Ryding 2005, pp. 329 and 348: thalaathat-a 'ashar-a and mi'ataani, the nominative citation forms.
+    params = NormalizationParams(register="formal")
+    assert normalize("الطقس 13 جميل 250 جدا", "arz", params) == "الطقس ثلاثة عشر جميل مئتان وخمسون جدا"
+
+
+def test_a_lect_tag_with_its_region_reads_as_the_bare_lect():
+    for code, region in LECT_REGIONS.items():
+        assert normalize("الطقس 13 جميل 250 جدا 25/7/1930", f"{code}-{region}") == \
+            normalize("الطقس 13 جميل 250 جدا 25/7/1930", code)
+
+
 
 ATOMS = (list("0123456789٠١٢٣٤٥٦٧٨٩") + list("#-+$%٪°/:.,;!?()×–−٫٬") + [" ", " ", "\t"]
          + ["الساعة", "في", "من", "إلى", "على", "عن", "حتى", "منذ", "ب", "بـ", "لـ", "و", "عام", "سنة", "سيارة",
@@ -46,7 +102,7 @@ ATOMS = (list("0123456789٠١٢٣٤٥٦٧٨٩") + list("#-+$%٪°/:.,;!?()×–�
             "12/03/2024", "13/13/2024", "16:9", "3:16", "1.5", "0.05", "200,000", "45,000", "١٢٫٥", "20-30",
             "10 × 20", "#decade", "الكعكة", "أشخاص", "طلاب", "جميل", "سؤال"])
 TAGS = ["ar", "ar-001", "ar-EG", "ar-SA", "ar-MA", "ar-DZ", "ar-TN", "ar-IQ", "ar-LB", "ar-LY", "ar-MR", "arz",
-        "ars-SA", "ary"]
+        "ars-SA", "ary", "acw", "afb", "acm", "aeb", "ayl", "arq-DZ", "apd", "shu"]
 
 
 @pytest.mark.parametrize("seed", range(4))
