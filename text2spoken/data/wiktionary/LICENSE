@@ -14,6 +14,20 @@ Changes: the file keeps the lowercase forms of Greek letters, groups the forms o
 case, leaves out the vocative, and leaves out the words of articles, pronouns, determiners, prepositions, conjunctions,
 particles and contractions. scripts/extract_el_nouns.py makes the file.
 
+it_noun_genders.json
+
+Source: English Wiktionary, https://en.wiktionary.org/
+Read through the MediaWiki API (https://en.wiktionary.org/w/api.php) on 2026-11-16, from the category
+members of "Italian masculine nouns", "Italian feminine nouns", "Italian prepositions", "Italian conjunctions",
+"Italian adverbs", "Italian pronouns", "Italian determiners" and "Italian articles". The category state of that
+day is the source revision.
+
+Attribution: Wiktionary contributors, "Italian masculine nouns" and "Italian feminine nouns", English Wiktionary.
+The contributors of each page are in its history at https://en.wiktionary.org/.
+
+Changes: the file keeps the lowercase words of two or more letters, lists the words of both gender categories
+apart, and lists the words of the function-word categories. scripts/extract_noun_genders.py makes the file.
+
 Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
 Licence text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
-This file is shared under the same licence.
+Each file is shared under the same licence.

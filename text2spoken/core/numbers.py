@@ -105,14 +105,16 @@ def _clusters(text: str, marks: Marks, declared: frozenset[str]) -> Iterator[tup
     """Each cluster of the text: its start, its end, and the offset of each space in it that groups digits.
 
     A cluster is a run of digits joined by single marks, colons or slashes. A mark of `marks` or of `declared`
-    joins a cluster. A space of a run of group marks joins it only between groups of three (`_grouped`)."""
+    joins a cluster. A space of a run of group marks joins it only between groups of three (`_grouped`). The group
+    mark `'` joins only digits on both sides: before digits it is an apostrophe, as in `anni '60`, so `60` is a
+    number."""
     joiners = _CLUSTER_JOINERS | declared | {mark for _, decimal, group in marks
                                              for mark in (decimal or "") + (group or "")}
     spaces = _spaces(marks)
     leading = joiners - {mark for _, _, group in marks if group and len(group) > 1 for mark in group}
     i = 0
     while i < len(text):
-        leading_mark = (text[i] in leading and i + 1 < len(text) and is_digit(text[i + 1])
+        leading_mark = (text[i] in leading and text[i] != "'" and i + 1 < len(text) and is_digit(text[i + 1])
                         and (i == 0 or text[i - 1] in spaces
                              or not (is_word_char(text[i - 1]) or text[i - 1] in joiners)))
         if not (is_digit(text[i]) or leading_mark):
