@@ -31,7 +31,7 @@ def analyze(text: str, lang: str, params: NormalizationParams | None = None,
     tokens = cut_tokens(joined, emoji_view(text, request.memo))
     blocks = protect_blocks(text)
     spans = classify(text, tokens, blocks, request)
-    if request.say_as is not None and not request.say_as.read_in(spans):
+    if request.say_as is not None and not request.say_as.read_in(spans, request):
         reason = f"the say-as {request.say_as.value!r} finds no reading in {text!r} for {request.tag}"
         if request.params.strict:
             raise UnreadFormError((text,), reason)

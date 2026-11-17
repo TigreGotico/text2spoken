@@ -369,8 +369,17 @@ def resolve(lang: str, params: NormalizationParams, say_as: SayAs | None = None)
     if say_as is not None:
         from text2spoken.core.say_as import read
 
-        resolved, params = read(say_as, tag, language, merged_data(language.data, variety.data), params)
-    request = Request(tag, variety, language, _effective(tag, language, variety, params), say_as=resolved)
+        resolved, read_params = read(say_as, tag, language, merged_data(language.data, variety.data), params)
+        effective = _effective(tag, language, variety, read_params)
+        if resolved is not None and read_params is not params:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                resolved = replace(resolved, plain=_effective(tag, language, variety, params))
+        elif resolved is not None:
+            resolved = replace(resolved, plain=effective)
+    else:
+        effective = _effective(tag, language, variety, params)
+    request = Request(tag, variety, language, effective, say_as=resolved)
     _check_lexicon(request)
     return request
 

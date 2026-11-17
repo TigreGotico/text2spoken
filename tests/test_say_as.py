@@ -79,7 +79,7 @@ def test_the_consistency_check_covers_rows_of_every_language():
 
 @pytest.mark.parametrize("row,named", ONE_SPAN_ROWS, ids=[row["id"] for row, _ in ONE_SPAN_ROWS])
 def test_a_say_as_that_adds_nothing_changes_nothing(row, named):
-    """Note, section 1: "if the interpret-as and format attributes do not specify additional or different
+    """Note, section 3, "Implementation remarks": "if the interpret-as and format attributes do not specify additional or different
     information than what the processor would have inferred automatically, then there should be no change"."""
     params = row_params(row)
     with warnings.catch_warnings():
@@ -221,3 +221,70 @@ def test_the_rows_fail_when_the_say_as_table_or_the_evidence_step_is_removed(mon
         warnings.simplefilter("ignore", ParameterNotHonouredWarning)
         for row_id in ids:
             assert read(BY_ID[row_id]) != BY_ID[row_id]["expected"], row_id
+
+
+@pytest.mark.parametrize("lang", ["de-DE", "nl-NL"])
+def test_a_say_as_span_that_the_verbalizer_declines_gives_the_plain_reading(caplog, lang):
+    """The German and Dutch ordinal spellers decline from one million (design section 17.6)."""
+    named = SayAs(interpret_as="ordinal")
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        once = normalize("3981900", lang, say_as=named)
+    assert once == normalize("3981900", lang) != "3981900"
+    say_as_records = [r for r in caplog.records if "say-as" in r.getMessage()]
+    assert len(say_as_records) == 1 and "'ordinal'" in say_as_records[0].getMessage()
+    assert normalize(once, lang) == once
+    with pytest.raises(UnreadFormError, match="say-as"):
+        normalize("3981900", lang, NormalizationParams(strict=True), say_as=named)
+
+
+OTHER_TEXT = [
+    ("Flight 12 at 10:30", "en-US", "digits"),
+    ("0 23.59", "en-US", "digits"),
+    ("ABC 1/12/2026", "en-US", "characters"),
+    ("2,60 m", "pt-PT", "characters"),
+    ("1 1/2", "pt-PT", "characters"),
+    ("5+3 is 8.", "es-ES", "cardinal"),
+    ("Call 911 or 112+1.", "es-ES", "telephone"),
+]
+"""A say-as candidate that one character joins to a digit, next to other text that the plain reading reads."""
+
+
+@pytest.mark.parametrize("text,lang,value", OTHER_TEXT, ids=[f"{lang}-{value}-{text}" for text, lang, value in OTHER_TEXT])
+def test_a_waiting_say_as_candidate_leaves_the_other_text_to_read(caplog, text, lang, value):
+    """SSML 1.1 section 3.1.9: "this additional text MUST be rendered". No text stays as written, and a second
+    pass changes nothing."""
+    named = SayAs(interpret_as=value)
+    with caplog.at_level(logging.WARNING, logger="text2spoken"):
+        once = normalize(text, lang, say_as=named)
+    assert not [r for r in caplog.records if "unread" in r.getMessage()]
+    assert normalize(once, lang) == once
+
+
+PLAIN_UNITS = [
+    ("https://a.b/c?d=1/", "en-AU", SayAs(interpret_as="ordinal")),
+    ("e-mail@x.pt", "en-IE", SayAs(interpret_as="characters")),
+    ("Liga (11) 91234-5678 agora", "pt-PT", SayAs(interpret_as="cardinal")),
+    ("Il y a 2 000 000 habitants.", "de-CH", SayAs(interpret_as="cardinal")),
+    ("Ζουν εδώ 1.000.000 άνθρωποι.", "de-DE", SayAs(interpret_as="ordinal")),
+    ("3 1,234,567 . x", "es-US", SayAs(interpret_as="cardinal", detail=".")),
+    ("12,50 €a 3 pessoa,", "es-VE", SayAs(interpret_as="cardinal", detail=",")),
+    ("Call 112+1.", "en-US", SayAs(interpret_as="characters")),
+    ("Add 3/4 kg of flour.", "en-NZ", SayAs(interpret_as="characters")),
+]
+"""A say-as span that would cut a URL, an e-mail address, a phone number or a grouped number, a decimal mark of the
+say-as next to other numbers, and a word that keeps the span next to it as written."""
+
+
+@pytest.mark.parametrize("text,lang,named", PLAIN_UNITS, ids=[f"{lang}-{text}" for text, lang, _ in PLAIN_UNITS])
+def test_the_other_text_reads_as_the_plain_reading_reads_it(text, lang, named):
+    """Design section 17.7: a second pass with no say-as changes nothing."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ParameterNotHonouredWarning)
+        once = normalize(text, lang, say_as=named)
+    assert normalize(once, lang) == once
+
+
+def test_the_time_after_a_digits_say_as_reads_as_plain_text():
+    """A bare `10:30` has no time word, so the plain reading of `at 10:30` gives the reading of the time."""
+    assert normalize("Flight 12 at 10:30", "en-US", say_as=SayAs(interpret_as="digits")) \
+        == "Flight one two " + normalize("at 10:30", "en-US")

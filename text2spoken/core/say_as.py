@@ -6,9 +6,10 @@ then runs the recognizers of the language for the named forms first, then the re
 the markup as evidence, then the other recognizers on the characters that are left.
 
 The values come from the W3C Note "SSML 1.0 say-as attribute values" (26 May 2005): `date`, `time`, `telephone`,
-`characters`, `cardinal` and `ordinal`. `digits`, `fraction`, `unit` and `currency` come from Amazon Polly
-("Controlling how special types of words are spoken"), and so do the aliases that phoonnx takes: `number`,
-`spell-out`, `letters` and `verbatim`.
+`characters`, `cardinal` and `ordinal`. Amazon Polly ("Controlling how special types of words are spoken") defines
+`digits`, `fraction` and `unit`, and the aliases `number` and `spell-out`. Google Cloud Text-to-Speech ("Speech
+Synthesis Markup Language (SSML)") defines `currency` and the alias `verbatim`. phoonnx also takes `letters`, which no
+outside source defines.
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ from typing import TYPE_CHECKING
 from text2spoken.core.dates import is_valid, resolve as resolve_date
 from text2spoken.core.recognizers import (_DATE, PHONE_PLANS, _cluster_edge, _edge, _period_after, _phone_pattern,
                                           _sentence_period, digit_run_matches, numbers_in)
-from text2spoken.core.spans import Features, Recognizer, Span, SpanContext
+from text2spoken.core.spans import SAY_AS_SPANS, Features, Recognizer, Span, SpanContext
 from text2spoken.core.spellers import spell_digits
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_digit, is_word_char, one_digit_set
@@ -50,7 +51,7 @@ class SayAs:
 
 ALIASES: Mapping[str, str] = MappingProxyType({
     "number": "cardinal", "spell-out": "characters", "letters": "characters", "verbatim": "characters"})
-"""The vendor values that phoonnx takes, by the value of `VALUES` that they name."""
+"""The other names that phoonnx takes, by the value of `VALUES` that they name."""
 
 VALUES: Mapping[str, frozenset[Form]] = MappingProxyType({
     "cardinal": frozenset({Form.CARDINAL, Form.DECIMAL}),
@@ -290,6 +291,8 @@ class ResolvedSayAs:
     detail: str | None
     forms: frozenset[Form]
     forced: Recognizer | None
+    plain: NormalizationParams | None = None
+    """The params of the call with no say-as, for the plain reading when a say-as span declines."""
 
     def recognizers(self, language: LanguageSpec) -> tuple[Recognizer, ...]:
         """The recognizers that claim first, in claim order."""
@@ -306,10 +309,13 @@ class ResolvedSayAs:
             return low <= span.fields["hour"] <= high
         return True
 
-    def read_in(self, spans: Sequence[Span]) -> bool:
+    def claims(self, span: Span, request: Request) -> bool:
+        """Whether a recognizer of the say-as claimed the span in the call of the request."""
+        return (span.start, span.end) in request.memo.get(SAY_AS_SPANS, ())
+
+    def read_in(self, spans: Sequence[Span], request: Request) -> bool:
         """Whether one of the spans reads the say-as."""
-        return any(span.form in self.forms or (self.forced is not None and span.recognizer == self.forced.name)
-                   for span in spans)
+        return any(self.claims(span, request) for span in spans)
 
 
 def _not_honoured(message: str, strict: bool) -> None:
