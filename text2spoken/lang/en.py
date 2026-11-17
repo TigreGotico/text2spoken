@@ -447,6 +447,10 @@ def _cardinal(digits: str, request: Request) -> str:
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
+    """A day-first reading says "the", the ordinal day, "of" and the month (Wikipedia, "Date and time notation in
+    the United Kingdom": "When saying the date, it is usually pronounced using "the", then the ordinal number of the
+    day first, then the preposition "of", then the month"). When the text writes "the" right before the date, that
+    word is the article of the reading, so `the 3rd of May` reads "the third of May"."""
     request = context.request
     fields = span.fields
     month = request.data["months"][fields["month"] - 1]
@@ -458,6 +462,8 @@ def speak_date(span: Span, context: SpanContext) -> str:
         template = "{month} {day} {year}" if fields["written_order"] == "MDY" else "the {day} of {month} {year}"
     else:
         template = request.data["numeric_date_reading"]["full"]
+    if context.before and context.before[-1].lower() == "the":
+        template = template.removeprefix("the ")
     if year is None:
         template = template.replace(" {year}", "")
     return template.format(month=month, day=day, year=year)
