@@ -34,6 +34,7 @@ The second argument is a BCP 47 tag. It selects the language and the variety.
 | Know why a text reads as it does | [How it reads text](docs/how-it-reads.md) |
 | Add your language, step by step | [Adding a language](docs/adding-a-language.md) |
 | Look up a function, a param or an error | [API](docs/api.md), [Errors and warnings](docs/errors.md) |
+| Know when the output of a language can change | [API, revision](docs/api.md#revision) |
 | Run the tests | [Development](docs/development.md) |
 
 The [docs index](docs/index.md) lists every page.
