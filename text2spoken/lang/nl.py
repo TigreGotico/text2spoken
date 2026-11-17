@@ -46,8 +46,9 @@ in `020 123 456`, show no number of groups, so each group reads as it would alon
 or four digits, so it holds no group of three after a space. An amount reads the groups and a decimal comma after them
 whole: the same page writes "$ 34 898 456,78", and `€ 12 000,50` reads "twaalfduizend euro vijftig". No group of a
 number of groups reads alone as an amount. An amount or a measure whose whole part starts with 0 and holds more
-digits, as in `€ 05,00` and `012 000 kg`, stays as written. Outside an amount, a number with spaces between its groups
-and a decimal comma, a percent sign or a dimension mark stays as written.
+digits, as in `€ 05,00` and `012 000 kg`, stays as written, and so does a run whose first group starts with 0 and
+that has a decimal comma, as in `012 000,5`. Outside an amount, a number with spaces between its groups and a decimal
+comma, a percent sign or a dimension mark stays as written.
 
 A fraction is a cardinal and an ordinal, written apart: Taaladvies.net, "Aaneenschrijven van telwoorden", Breukgetallen:
 "Bij breuken is de teller een hoofdtelwoord en de noemer een rangtelwoord [...] Teller en noemer worden los van elkaar
@@ -105,17 +106,17 @@ the English title. The other abbreviations come from Wiktionary: "bijv." and "bv
 ("in plaats van"), "m.b.t." ("met betrekking tot"), "ca." ("circa"), "evt." ("eventueel") and, before a number, "blz."
 ("bladzijde"). "enz." at the end of a sentence keeps its full stop.
 
-A year right after `in het jaar` or `anno` (`year_words`), with one space between, as in `in het jaar 1998`, reads the
-CLDR RBNF `nl` rule `spellout-numbering-year`: "negentienachtennegentig" and "tweeduizend zesentwintig". Onze Taal, "Hoe
-spreek je 2026 uit?", gives this reading: "Jaartallen tot 2000, zoals 1940 en 1998, spreek je vaak verkort uit [...]
-'negentienhonderdachtennegentig' tot 'negentien-achtennegentig'", "Die verkorte vormen zijn bij jaartallen de
-standaarduitspraak geworden", and "Sinds 2000 gebruiken we weinig verkorte vormen meer [...] 'tweeduizend
-zesentwintig'". Taaladvies.net, "Jaartallen voluit", writes a year by the rules of other numbers, so a year takes the
-space after "duizend" too: "Jaartallen volgen dezelfde regels voor aaneenschrijven als gewone telwoorden". The same Onze
-Taal page reads the number in full in other contexts, "1940 euro klinkt bijvoorbeeld als 'negentienhonderdveertig
-euro'", so a number with no year word before it reads as a cardinal. After `jaar` alone, after another preposition or
-after a mark, a number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het jaar 1450 bezoekers` and
-`het jaar, 1450 mensen`, so `jaar` needs `in het` right before it.
+A year right after `in het jaar` or `anno` (`year_words`), with one space or one no-break space between, as in `in het
+jaar 1998`, reads the CLDR RBNF `nl` rule `spellout-numbering-year`: "negentienachtennegentig" and "tweeduizend
+zesentwintig". Onze Taal, "Hoe spreek je 2026 uit?", gives this reading: "Jaartallen tot 2000, zoals 1940 en 1998,
+spreek je vaak verkort uit [...] 'negentienhonderdachtennegentig' tot 'negentien-achtennegentig'", "Die verkorte vormen
+zijn bij jaartallen de standaarduitspraak geworden", and "Sinds 2000 gebruiken we weinig verkorte vormen meer [...]
+'tweeduizend zesentwintig'". Taaladvies.net, "Jaartallen voluit", writes a year by the rules of other numbers, so a year
+takes the space after "duizend" too: "Jaartallen volgen dezelfde regels voor aaneenschrijven als gewone telwoorden". The
+same Onze Taal page reads the number in full in other contexts, "1940 euro klinkt bijvoorbeeld als
+'negentienhonderdveertig euro'", so a number with no year word before it reads as a cardinal. After `jaar` alone, after
+another preposition or after a mark, a number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het
+jaar 1450 bezoekers` and `het jaar, 1450 mensen`, so `jaar` needs `in het` right before it.
 
 The words of a date and a clock time need `ovos_date_parser.spoken`, which reads no Dutch, so a numeric date stays as
 written. A clock time such as `14.30 uur` or `14:30` is no number, so it stays
@@ -350,7 +351,9 @@ class KeptGroups:
     """A number with a space between its groups that no other recognizer of the file reads, as in `12 000,5 liter`,
     kept as written so that no recognizer reads one group alone. A run of groups that a digit run continues, or whose
     first group starts with 0, as in the phone number `020 123 4567`, is no number of groups, so its groups read as
-    cardinals. A run that a letter joins, as in `Type A12 000 kg`, is part of a code and stays as written too."""
+    cardinals. A run whose first group starts with 0 and that has a decimal comma, as in `012 000,5 kg`, is no phone
+    number, so it stays as written. A run that a letter joins, as in `Type A12 000 kg`, is part of a code and stays as
+    written too."""
     name: str = "kept_groups"
     form: Form = Form.CARDINAL
 
@@ -359,7 +362,9 @@ class KeptGroups:
         for match in SPACE_GROUPS.finditer(folded):
             start, end = match.span()
             script = digit_script(text[start:end])
-            if script is None or not is_group_run(folded, start, end):
+            integer, comma, _ = match.group().partition(",")
+            leading_zero = bool(comma) and len(re.sub("[^0-9]", "", integer)) > 1
+            if script is None or not is_group_run(folded, start, end, leading_zero):
                 continue
             yield Span(start, end, Form.CARDINAL,
                        FrozenMap({"digits": re.sub("[^0-9]", "", match.group()), "sign": "", "lead": "", "prefix": "",
@@ -384,10 +389,11 @@ class KeptDate:
 
 @dataclass(frozen=True)
 class Year:
-    """A year from 1000 to 2099 right after an entry of the `year_words` table, in any case, with one space between
-    them, as in `in het jaar 1998` and `Anno 1650`. After `jaar` alone, after another preposition, or after a mark,
-    a number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het jaar 1450 bezoekers` and
-    `het jaar, 1450 mensen`, so it reads as a cardinal."""
+    """A year from 1000 to 2099 right after an entry of the `year_words` table, in any case, with one space, one
+    no-break space or one narrow no-break space between them, as in `in het jaar 1998` and `Anno 1650`. After `jaar`
+    alone, after another preposition, after a mark, after a line break or after two spaces, a number is often a count,
+    as in `vorig jaar 1450 verkeersdoden`, `gedurende het jaar 1450 bezoekers` and `het jaar, 1450 mensen`, so it
+    reads as a cardinal."""
     name: str = "year"
     form: Form = Form.YEAR
 
@@ -396,9 +402,10 @@ class Year:
             if number.sign or number.fraction is not None or number.end - number.start != 4 \
                     or not 1000 <= int(number.integer) <= 2099 or not is_bounded(text, number.start, number.end):
                 continue
-            if any(text[max(0, number.start - len(phrase) - 1):number.start].lower() == f"{phrase} "
-                   and is_bounded(text, number.start - len(phrase) - 1, number.start - 1)
-                   for phrase in request.data["year_words"]):
+            if text[number.start - 1:number.start] in GROUP_SPACES \
+                    and any(text[max(0, number.start - len(phrase) - 1):number.start - 1].lower() == phrase
+                            and is_bounded(text, number.start - len(phrase) - 1, number.start - 1)
+                            for phrase in request.data["year_words"]):
                 yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": number.integer, "suffix": ""}),
                            recognizer=self.name)
 
@@ -468,7 +475,8 @@ class Money(CoreMoney):
         """`2,50 euro`: an amount and a currency word of `currency_words` after it, with one space between them. When
         letters, an apostrophe or a hyphen continue the word, as in `2,50 euro's` and `2,50 euro-cent`, an amount
         with a decimal part stays as written with the word, because its cents would read after the suffix. A whole
-        amount reads, as in `5 euro's`."""
+        amount reads, as in `5 euro's`. The currency name reads in lower case, so before a suffix in capitals, as in
+        `5 EURO'S`, only the number reads and the word stays as written."""
         for number in self.numbers(text, tokens, request):
             for word, code in request.data["currency_words"].items():
                 end = number.end + 1 + len(word)
@@ -482,7 +490,7 @@ class Money(CoreMoney):
                                     "prefix": "", "suffix": ""})
                 if glued > end and number.fraction is not None:
                     yield Span(number.start, glued, Form.MONEY, fields, recognizer=self.name, keep=True)
-                elif is_bounded(text, number.start, end):
+                elif is_bounded(text, number.start, end) and text[end:glued] == text[end:glued].lower():
                     yield Span(number.start, end, Form.MONEY, fields, recognizer=self.name)
 
     def _negative(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
