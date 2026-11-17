@@ -18,6 +18,7 @@ from text2spoken.errors import (DeclinedReading, InvalidLanguageTagError, Invali
 from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams
 
 if TYPE_CHECKING:
+    from text2spoken.core.say_as import ResolvedSayAs, SayAs
     from text2spoken.core.spans import Recognizer, Span, Verbalizer
     from text2spoken.core.spellers import NumberSpeller
 
@@ -92,6 +93,8 @@ class Request:
     params: NormalizationParams
     memo: dict = field(default_factory=dict, repr=False)
     """Results computed for one call, such as the numbers of a text; a request lives for one call."""
+    say_as: ResolvedSayAs | None = None
+    """The say-as that the call reads (section 17), or None."""
 
     @property
     def data(self) -> FrozenMap:
@@ -350,9 +353,14 @@ def _check_lexicon_once(tag: str, variety: Variety, language: LanguageSpec, para
                     f"which the {claimed.recognizer} recognizer reads, so a second pass would change it")
 
 
-def resolve(lang: str, params: NormalizationParams) -> Request:
+def resolve(lang: str, params: NormalizationParams, say_as: SayAs | None = None) -> Request:
     tag, language, variety = select(lang)
-    request = Request(tag, variety, language, _effective(tag, language, variety, params))
+    resolved = None
+    if say_as is not None:
+        from text2spoken.core.say_as import read
+
+        resolved, params = read(say_as, tag, language, merged_data(language.data, variety.data), params)
+    request = Request(tag, variety, language, _effective(tag, language, variety, params), say_as=resolved)
     _check_lexicon(request)
     return request
 

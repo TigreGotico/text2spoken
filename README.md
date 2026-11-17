@@ -30,6 +30,7 @@ The second argument is a BCP 47 tag. It selects the language and the variety.
 | --- | --- |
 | Install it and make a first call | [Quickstart](docs/quickstart.md) |
 | Turn a form off or on, or add your own words | [Usage](docs/usage.md) |
+| Read a form that SSML `say-as` markup names | [API, say_as](docs/api.md#say_as) |
 | Know why a text reads as it does | [How it reads text](docs/how-it-reads.md) |
 | Add your language, step by step | [Adding a language](docs/adding-a-language.md) |
 | Look up a function, a param or an error | [API](docs/api.md), [Errors and warnings](docs/errors.md) |

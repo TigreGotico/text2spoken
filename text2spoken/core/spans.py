@@ -195,6 +195,10 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     letter, as `ROMAN` claims `VI` in `CAPÍTULO VI DE`, the word reads in lower case, so a second pass, which sees
     words in lower case and so no clause there, keeps it a word.
 
+    With a say-as (section 17), the recognizers of the language for the forms of the say-as claim first, whatever
+    `params.forms` holds, then the recognizer that takes the markup as evidence, then the other recognizers. A span
+    of the say-as that its format refuses (`ResolvedSayAs.fits`) is no candidate.
+
     An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
     `😀` in place of the sequence (design section 4.7). The recognizers read the view of `emoji_view`, in which the
     digit of `1️⃣` is no digit. `EMOJI` and `ELECTRONIC` read the name of a sequence from the text as written
@@ -206,10 +210,16 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
                  if emoji or any(char in EMOJI_MARKS for char in text[start:end])]
     view = emoji_view(text, request.memo)
     request.memo[("written", view)] = text
-    candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
+    say_as = request.say_as
+    recognizers = [recognizer for recognizer in request.language.recognizers if recognizer.form in request.params.forms
+                   and (say_as is None or recognizer.form not in say_as.forms)]
+    if say_as is not None:
+        recognizers = [*say_as.recognizers(request.language), *recognizers]
+    candidates = [span for recognizer in recognizers
                   for span in recognizer.find(view, tokens, request)
                   if not (_inside(span, blocks)
-                          or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
+                          or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))
+                  and (say_as is None or say_as.fits(span))]
     before = {end: start for start, end in sequences}
     after = dict(sequences)
     read = bytearray(len(text))
@@ -392,6 +402,7 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
     """The spoken text of an analysis. With `LETTERS` on, a run of capitals in the reading of another form reads
     as the `LETTERS` form reads it, so a second pass leaves the reading unchanged (design section 11)."""
     from text2spoken.core.letters import respell
+    from text2spoken.core.say_as import READINGS
 
     require_type(analysis, "analysis", Analysis)
     if hints is not None:
@@ -413,7 +424,8 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
                               hints.get(span.start))
         written = analysis.text[span.start:span.end]
         try:
-            spoken = language.verbalizers[span.form](span, context)
+            speak = READINGS.get(span.recognizer) or language.verbalizers[span.form]
+            spoken = speak(span, context)
             if letters and span.form not in (Form.LETTERS, Form.LEXICON):
                 spoken = respell(spoken, request)
             spoken = language.attach(spoken, span.fields.get("prefix", ""), span.fields.get("suffix", ""))

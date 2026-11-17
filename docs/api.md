@@ -4,8 +4,8 @@ This page gives each function, param and record of text2spoken. Every name on th
 
 | Function | Returns |
 | --- | --- |
-| `normalize(text, lang, params=None, tokenizer=None)` | The spoken text |
-| `analyze(text, lang, params=None, tokenizer=None)` | An `Analysis` with the tokens and the spans that the library found |
+| `normalize(text, lang, params=None, tokenizer=None, *, say_as=None)` | The spoken text |
+| `analyze(text, lang, params=None, tokenizer=None, *, say_as=None)` | An `Analysis` with the tokens and the spans that the library found |
 | `render(analysis, hints=None)` | The spoken text of an `Analysis` |
 | `supports(lang)` | A `Support` record: the forms, genders and option values of a tag |
 | `effective_params(lang, params=None)` | The params of a call, with the language defaults filled in |
@@ -21,6 +21,39 @@ This page gives each function, param and record of text2spoken. Every name on th
 ```
 
 `params=None` gives `NormalizationParams()`, the defaults of the language variety. `tokenizer=None` gives the default tokenizer.
+
+## say_as
+
+SSML markup can name the form of a run of text, as in `<say-as interpret-as="ordinal">3</say-as>`. Give the attributes of the element as a `SayAs`. The markup is the evidence for the form, so the run reads in that form with no other evidence:
+
+```python
+>>> from text2spoken import SayAs
+>>> normalize("123", "en-US")
+'one hundred twenty-three'
+>>> normalize("123", "en-US", say_as=SayAs(interpret_as="ordinal"))
+'one hundred twenty-third'
+>>> normalize("01/02/1960", "en-US", say_as=SayAs(interpret_as="date", format="dmy"))
+'February first nineteen sixty'
+>>> normalize("3981900", "en-US", say_as=SayAs(interpret_as="telephone"))
+'three nine eight one nine zero zero'
+>>> normalize("W3C", "en-US", say_as=SayAs(interpret_as="characters"))
+'double-u three see'
+```
+
+`SayAs` takes `interpret_as`, `format` and `detail`, as the markup writes them. The library strips the white space at their edges and ignores their case.
+
+| `interpret_as` | `format` | `detail` | The run reads |
+| --- | --- | --- | --- |
+| `cardinal`, `number` | The decimal mark | The group mark | As a number |
+| `ordinal` | | | As an ordinal. A run with no ordinal mark takes the `default_gender` |
+| `date` | `dmy`, `mdy` or `ymd`: the order of three fields. `y`: a year of four digits | | As a date or a year |
+| `time` | `hms24` or `hms12` | | As a clock time, with the `clock` option of the params |
+| `telephone` | A country code | | Digit by digit |
+| `digits` | | | Digit by digit |
+| `characters`, `spell-out`, `letters`, `verbatim` | `characters` | | Letter by letter, and digit by digit |
+| `fraction`, `unit`, `currency` | | | As a fraction, a measure or an amount of money |
+
+The rest of the text reads as plain text, so `21 people` with `cardinal` reads "twenty-one people". Any other value, such as `address`, gives the plain reading and a `ParameterNotHonouredWarning`. A format or a detail that the language cannot use is dropped with the same warning. When the text holds nothing of the form, as `abc` with `cardinal`, the call gives the plain reading and logs one `WARNING`. With `strict=True`, these cases raise `UnsupportedParameterError` and `UnreadFormError` (see [Errors and warnings](errors.md)). `analysis.request.say_as` shows the say-as that the call read, or `None`.
 
 ## analyze and render
 
