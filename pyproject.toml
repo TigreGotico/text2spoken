@@ -20,7 +20,7 @@ dependencies = [
     "linguatag[langcodes]>=0.1.5a1",
     "unicode-rbnf>=2.4.1",
     "quebra-frases>=0.3.7",
-    "ovos-number-parser>=0.25.0a1",
+    "ovos-number-parser>=0.25.1a1",
     "ovos-date-parser>=0.39.0a1",
 ]
 

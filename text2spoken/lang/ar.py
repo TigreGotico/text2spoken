@@ -11,8 +11,8 @@ Ryding writes that "colloquial forms of Arabic do not have case marking" (p. 166
 register by default. Each code of `SERVES` but `arb` names a regional or ethnic variety in the ISO 639-3 code table,
 such as "Egyptian Arabic" or "Chadian Arabic"; `arb` is "Standard Arabic" and stays formal, as `ar` does. In the
 colloquial register, the number words of a lect come from ovos-number-parser with the code of the lect, so `arz`
-reads the Egyptian تلتاشر for 13. A lect of `PARSER_REFUSES`, which ovos-number-parser does not read, reads with the
-tag `ar`. `apc` (Levantine) is not in `SERVES`: a Levantine voice reads its own number words, and a reading
+reads the Egyptian تلتاشر for 13. A lect with no dialect words in ovos-number-parser reads colloquial Standard Arabic,
+which the parser gives each member of the macrolanguage `ara`. `apc` (Levantine) is not in `SERVES`: a Levantine voice reads its own number words, and a reading
 here would replace them. It joins when ovos-number-parser writes Levantine number words.
 
 The rules and their sources:
@@ -103,14 +103,6 @@ LECT_REGIONS = {
 """The region of each spoken lect: the line of CLDR 49 `likelySubtags.json` for the code, and the countries of the
 Glottolog languoid of the code, which hold the region. A tag with no region, or with a region that the lect has no
 variety for, reads this region."""
-
-# Empty this set when the ovos-number-parser alpha that reads every ISO 639-3 member of the macrolanguage `ara` as
-# colloquial Standard Arabic (SIL macrolanguage mapping) is the floor of the `ar` extra.
-PARSER_REFUSES = frozenset({"aao", "abh", "abv", "acq", "acx", "adf", "aec", "apd", "arq", "auz", "avl", "ayh", "ayn",
-                            "ayp", "shu", "ssh"})
-"""The lects of `SERVES` for which ovos-number-parser 0.25.0a1 raises NotImplementedError, so they read with the tag
-`ar`. It reads every other lect: with dialect words for `acw`, `afb`, `ars` and `arz` (`AR_LECT_FORMS`), and with
-colloquial Standard Arabic for `acm`, `aeb`, `ary` and `ayl`."""
 
 SYRIAC_MONTHS = ["كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول", "تشرين الأول",
                  "تشرين الثاني", "كانون الأول"]
@@ -224,8 +216,8 @@ LECT_VARIETIES = tuple(_lect_variety(code, region) for code, region in LECT_REGI
 
 
 class ArabicSpeller:
-    """ovos-number-parser, with the code of the lect in the colloquial register for a lect not in `PARSER_REFUSES`,
-    and with the tag `ar` for every other request: the formal register reads the literary words. A decimal reads the
+    """ovos-number-parser, with the code of the lect in the colloquial register for a lect of `LECT_REGIONS`, and
+    with the tag `ar` for every other request: the formal register reads the literary words. A decimal reads the
     integer, the decimal word and the fraction digits as one number (Wiktionary, فاصلة), and a fraction reads its
     denominator by name, from 2 to 10 (Ryding 2005, pp. 360-361)."""
 
@@ -235,7 +227,7 @@ class ArabicSpeller:
     @staticmethod
     def _writer(request: Request) -> Request:
         code = primary_subtag(request.tag)
-        lect = code in LECT_REGIONS and code not in PARSER_REFUSES and request.params.register == "colloquial"
+        lect = code in LECT_REGIONS and request.params.register == "colloquial"
         return replace(request, tag=code if lect else "ar")
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:

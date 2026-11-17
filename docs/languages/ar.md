@@ -54,7 +54,7 @@ Each spoken Arabic lect of ISO 639-3 that writes Arabic script reads as itself:
 | `afb` Gulf | `KW` | Gulf |
 | `ars` Najdi | `SA` | Najdi |
 | `acm` Mesopotamian, `aeb` Tunisian, `ary` Moroccan, `ayl` Libyan | `IQ`, `TN`, `MA`, `LY` | Colloquial Standard Arabic, from `ovos-number-parser` with the code of the lect |
-| `aao`, `aec`, `apd`, `arq`, `auz`, `avl`, `abh`, `abv`, `acq`, `acx`, `adf`, `ayh`, `ayn`, `ayp`, `shu`, `ssh` | `DZ`, `EG`, `SD`, `DZ`, `UZ`, `EG`, `TJ`, `BH`, `YE`, `OM`, `OM`, `YE`, `YE`, `IQ`, `TD`, `AE` | Colloquial Standard Arabic: `ovos-number-parser` does not read these codes, so the file asks it for `ar` |
+| `aao`, `aec`, `apd`, `arq`, `auz`, `avl`, `abh`, `abv`, `acq`, `acx`, `adf`, `ayh`, `ayn`, `ayp`, `shu`, `ssh` | `DZ`, `EG`, `SD`, `DZ`, `UZ`, `EG`, `TJ`, `BH`, `YE`, `OM`, `OM`, `YE`, `YE`, `IQ`, `TD`, `AE` | Colloquial Standard Arabic, from `ovos-number-parser` with the code of the lect |
 | `arb` Standard Arabic | none | Modern Standard Arabic, in the formal register |
 
 The region of each lect is the region of its CLDR 49 likely subtags, which Glottolog lists among the countries of the lect. `register="formal"` gives a lect the words and the case of `ar`.

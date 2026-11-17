@@ -8,7 +8,7 @@ from packaging.requirements import Requirement
 from packaging.version import Version
 
 from text2spoken import Features, NormalizationParams, analyze, effective_params, normalize, render
-from text2spoken.lang.ar import LECT_REGIONS, PARSER_REFUSES, SERVES
+from text2spoken.lang.ar import LECT_REGIONS, SERVES
 from text2spoken.params import FrozenMap, GrammaticalGender
 
 
@@ -54,15 +54,10 @@ def test_each_lect_but_standard_arabic_has_a_region():
 
 
 @pytest.mark.parametrize("code", SERVES)
-def test_ovos_number_parser_refuses_each_lect_of_parser_refuses_and_no_other(code):
-    """A lect that ovos-number-parser starts to read fails here, so that it leaves PARSER_REFUSES."""
-    from ovos_number_parser import pronounce_number
-
-    if code in PARSER_REFUSES:
-        with pytest.raises(NotImplementedError):
-            pronounce_number(13, code)
-    else:
-        assert pronounce_number(13, code)
+def test_the_writer_reads_each_lect(code):
+    """ovos-number-parser reads each member of the macrolanguage `ara` from 0.25.1a1, so no digit stays as written."""
+    spoken = normalize("الطقس 13 جميل 250 جدا", code)
+    assert not any(char.isdigit() for char in spoken), spoken
 
 
 # The rows of issue #166. Number words: the output of ovos-number-parser 0.25.0a1 for the code of the lect in the
