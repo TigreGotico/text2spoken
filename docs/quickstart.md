@@ -14,7 +14,7 @@ The library needs Python 3.11 or later. It uses no network and loads no model. E
 uv pip install --prerelease=allow "text2spoken[pt]"
 ```
 
-The extras `ar`, `es`, `eu`, `fr`, `nl` and `ru` add nothing, and an install that names one still works.
+The extras `ar`, `es`, `eu`, `fr`, `it`, `nl` and `ru` add nothing, and an install that names one still works.
 
 ## The first call
 
