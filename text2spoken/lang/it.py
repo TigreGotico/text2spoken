@@ -134,7 +134,7 @@ that list. CLDR gives a currency no gender, so 1 takes the gender of the first w
 list: "un euro", "una sterlina britannica". `$` and `USD` read as "dollaro", as the German and English files read them:
 the word also names the dollar of other countries (Vocabolario Treccani, "dollaro": "Anche unità monetaria di altri
 paesi [...]: d. canadese, australiano"). An amount next to `¥` stays as written, with its number, because CLDR `it`
-gives the sign to the yen and the yuan; `kept_currency_signs` names it. Two decimals read as the minor unit after "e",
+gives the sign to the yen and the yuan; the core `kept_money` keeps it. Two decimals read as the minor unit after "e",
 so `10,50 €` reads "dieci euro e cinquanta centesimi", and other decimals read as a decimal number before the currency
 name. The minor unit of the euro and of the franc is the centesimo (Vocabolario Treccani, "centesimo", 2b: "Moneta che
 vale la centesima parte di un'euro, di una lira o di altra unità monetaria"), of the dollar the cent (the same entry:
@@ -251,7 +251,6 @@ DATA = freeze({
                    "USD": {"symbols": ["$"], "one": "dollaro", "other": "dollari",
                            "minor": {"one": "cent", "other": "cent"}},
                    "GBP": {"minor": {"one": "penny", "other": "pence", "gender": "masculine"}}},
-    "kept_currency_signs": ["¥"],
     "scales": {"milione": "milione", "milioni": "milioni", "miliardo": "miliardo", "miliardi": "miliardi"},
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "h", "min"],
     "dimension_marks": ["x", "×"],
@@ -911,21 +910,6 @@ class KeptSign:
 
 
 @dataclass(frozen=True)
-class KeptMoney:
-    """An amount next to a sign of `kept_currency_signs`, as `2.500 ¥`, stays as written, with its number: CLDR
-    `it` gives the sign to more than one currency."""
-    name: str = "kept_money"
-    form: Form = Form.MONEY
-
-    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        signs = FrozenMap({"kept": FrozenMap({"symbols": request.data["kept_currency_signs"]})})
-        data = FrozenMap({**{k: v for k, v in request.language.data.items() if k != "currency_symbols"},
-                          "currencies": signs})
-        kept = Request(request.tag, request.variety, replace(request.language, data=data), request.params)
-        return (replace(span, keep=True) for span in SHARED["money"].find(text, tokens, kept))
-
-
-@dataclass(frozen=True)
 class DateNamed:
     """`25 dicembre`, `1 maggio`, `1° maggio`: a day, one space and a month name of ovos-date-parser. Only 1 takes
     the degree sign. A year after the month reads as a cardinal, which is the form of `spoken_year`. Day 1 after an
@@ -1038,7 +1022,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], KeptSign(), DateNamed(), DateDayMonth(), SHARED["date_numeric"], Clock(),
-                 KeptDecimal(), SHARED["money"], KeptMoney(), SHARED["percent"], SHARED["measure"],
+                 KeptDecimal(), SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
                  SHARED["expression"], SHARED["fraction"], Ordinal(), Abbreviation(),
                  KeptDecimal(name="kept_clock", clock=True), KeptCommaTime(), SHARED["decimal"], BeforeWord(),
                  SHARED["cardinal"], SHARED["emoji"], KeptApostrophe(), SHARED["symbol"]),

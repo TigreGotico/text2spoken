@@ -27,6 +27,13 @@ trillones (escala larga); es decir, diez elevado a veinticuatro"), «quintillón
 decir, diez elevado a treinta") and «sextillón» ("de un millón de quintillones; o sea, diez elevado a treinta y seis").
 A variety with the decimal point reads a decimal comma next to `€`, as in `23,88 €`, because CLDR 49 es
 writes the euro with that comma (`#,##0.00 ¤`).
+
+An ordinal in digits takes a full stop before its raised letters: "En cambio, no debe omitirse nunca el punto
+abreviativo que ha de preceder a las letras voladas dentro de la abreviatura" (RAE-ASALE, Ortografía de la lengua
+española, 2010, chapter V, 3.2.2 «Formación»; the same section gives "1.º por primero, 2.ª por segunda"). The form
+without the full stop, `1º` and `1ª`, is common in running text, and a reader says the same word for both forms, so
+`1º` reads "primero" as `1.º` does. A `º` after a number also stands for a degree in some texts, as in `25º`, and
+reads as the ordinal too; `25ºC` and `25 ºC` read as a temperature, because the unit `ºC` claims first.
 """
 from __future__ import annotations
 
@@ -141,7 +148,7 @@ DATA = freeze({
     "sentence_final": ["etc."],
     "number_abbreviations": {"n.º": "número", "N.º": "número", "núm.": "número", "nro.": "número"},
     "symbols": {"%": "percent", "$": "money", "€": "money", "£": "money", "°": "measure", "×": "measure"},
-    "ordinal_marks": {"ª": "feminine", ".º": "masculine", ".ª": "feminine", ".er": "apocope",
+    "ordinal_marks": {"ª": "feminine", "º": "masculine", ".º": "masculine", ".ª": "feminine", ".er": "apocope",
                       ".ᵉʳ": "apocope", "er": "apocope", ".os": "masculine plural", ".as": "feminine plural"},
     "function_words": ["a", "al", "ante", "bajo", "con", "contra", "de", "del", "desde", "durante", "en", "entre",
                        "hacia", "hasta", "para", "por", "según", "sin", "sobre", "tras", "y", "e", "o", "u", "ni",
@@ -626,8 +633,8 @@ class SpanishTelephone(Telephone):
 @dataclass(frozen=True)
 class Ordinal:
     """`1.º`, `2.ª`, `1.er`, `3.os`: a whole number and a marker of the `ordinal_marks` table (DPD «abreviatura»,
-    5.b: `n.º`, letters written high). `1ª` and `3er` with no full stop are common, and their marker tells the
-    ordinal apart. A bare `º`, as in `25º`, is also written for a degree, so it stays as written."""
+    5.b: `n.º`, letters written high). `1º`, `1ª` and `3er` with no full stop read as the ordinal too (see the module
+    docstring)."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 
@@ -705,8 +712,9 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(reach=3), SHARED["money"],
-                 SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"], SHARED["range"],
-                 Ordinal(), CountedAbbreviation(), Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
+                 SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"],
+                 SHARED["range"], Ordinal(), CountedAbbreviation(), Abbreviation(), SHARED["decimal"],
+                 SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,

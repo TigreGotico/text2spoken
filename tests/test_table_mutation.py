@@ -147,7 +147,7 @@ ENTRIES = {
     },
     "it": {
         "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "decimal_word": DELETE, "leads": "pag. ",
-        "percent": "word", "currency_symbols": "CHF", "currencies": "EUR", "kept_currency_signs": "¥",
+        "percent": "word", "currency_symbols": "CHF", "currencies": "EUR",
         "scales": "milioni", "unit_symbols": "kg", "dimension_marks": "×", "dimension_word": DELETE, "operators": "+",
         "ordinal_marks": "ª", "noun_ordinal_marks": "°", "ordinal_nouns": "piano", "lo_onsets": "z",
         "half_links": "di", "label_abbreviations": "art.", "label_nouns": "pagina", "label_determiners": "il",

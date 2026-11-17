@@ -1897,6 +1897,7 @@ LANGUAGE = LanguageSpec(
         FrenchTime(),
         FrenchTelephone(spaces=SPACES, plans=PLANS),
         FrenchMoney(),
+        SHARED["kept_money"],
         FrenchPercent(),
         SHARED["measure"],
         Year(),

@@ -733,7 +733,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 Time(), TELEPHONE, Money(), SHARED["percent"], SHARED["measure"],
+                 Time(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
                  Year(), SHARED["expression"], Fraction(), SHARED["range"], Ordinal(), TitleAbbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon,

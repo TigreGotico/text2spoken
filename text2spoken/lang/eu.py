@@ -750,9 +750,9 @@ LANGUAGE = LanguageSpec(
     varieties=(Variety("eu-ES"),),
     data=DATA,
     recognizers=(SHARED["lexicon"], RomanMonthDate(), SHARED["space_groups"], LetterCode(), LawNumber(),
-                 SHARED["date_numeric"], BasqueTime(), BasqueMoney(), BasquePercent(), BasqueMeasure(),
-                 SHARED["expression"], SHARED["fraction"], BasqueOrdinal(), Roman(), BasqueAbbreviation(),
-                 SHARED["decimal"], SHARED["cardinal"]),
+                 SHARED["date_numeric"], BasqueTime(), BasqueMoney(), SHARED["kept_money"], BasquePercent(),
+                 BasqueMeasure(), SHARED["expression"], SHARED["fraction"], BasqueOrdinal(), Roman(),
+                 BasqueAbbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,

@@ -876,9 +876,9 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
                  EnglishDateNumeric(), SHARED["time_clock"],
                  EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
-                 SHARED["money"], SHARED["percent"], SHARED["measure"], Year(), SHARED["expression"],
-                 SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"], SHARED["letters"],
-                 SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+                 SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"], Year(),
+                 SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"],
+                 SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,

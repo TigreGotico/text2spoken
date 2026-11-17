@@ -15,11 +15,11 @@ from functools import lru_cache
 from types import MappingProxyType
 
 from text2spoken.core.color import COLOR
-from text2spoken.core.currencies import currency_symbols
+from text2spoken.core.currencies import cldr_part, currency_signs, currency_symbols, words_only
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
-from text2spoken.core.language import Request, lexicon_entries
+from text2spoken.core.language import Request, Variety, lexicon_entries
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
@@ -1129,6 +1129,54 @@ class Written:
         return (replace(span, keep=True) for span in self.shape.find(text, tokens, request))
 
 
+_KEPT_MONEY_KEYS = ("number_marks", "number_gaps", "proclitics", "case_suffixes")
+
+
+@dataclass(frozen=True)
+class KeptMoney:
+    """An amount next to a currency sign that the money recognizers of the language do not read stays as
+    written, with its number, as `¥5` does in a language whose currency table has no yen. The language has no name
+    for the currency, so the amount is a decline of section 10, and a reading of the number alone would glue the sign
+    to a word (`¥fünf`). The signs are those of `written_shapes`, less a sign whose reading the language decides
+    (`_read_by_the_language`), as `₿1` reads "bitcoin one" in English. A signed number right after such a sign stays
+    with it, as `¥-5` does. A language file puts this recognizer after its money recognizers, so that a sign they
+    read claims first."""
+    name: str = "kept_money"
+    form: Form = Form.MONEY
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        table = FrozenMap({**{key: data[key] for key in _KEPT_MONEY_KEYS if key in data},
+                           "currencies": written_shapes()["currencies"]})
+        kept = Request(request.tag, Variety(request.variety.tag), replace(request.language, data=table),
+                       request.params)
+        for span in SHARED["money"].find(text, tokens, kept):
+            if not _read_by_the_language(span.fields["written_symbol"], request):
+                yield replace(span, keep=True)
+        signs = written_shapes()["symbols"]
+        for number in numbers_in(text, kept):
+            sign = text[number.start - 1:number.start]
+            if number.sign and signs.get(sign) == "money" and not _read_by_the_language(sign, request):
+                yield Span(number.start - 1, number.end, Form.MONEY,
+                           FrozenMap({"amount": number.amount(), "currency": "Sc", "written_symbol": sign, "scale": "",
+                                      "prefix": "", "suffix": ""}), recognizer=self.name, keep=True)
+
+
+def _read_by_the_language(sign: str, request: Request) -> bool:
+    """Whether the language decides the reading of a currency sign itself. Its currency table lists the sign, so its
+    money recognizers read the amount or keep the sign as section 4.7 says (`5 ¤` reads "five ¤"). Or the `SYMBOL`
+    form of the language reads the sign by its CLDR name or its `symbol_names` entry, and no other table of the
+    language holds the sign (`symbol_name`)."""
+    if sign in currency_signs(request):
+        return True
+    if Form.SYMBOL not in request.params.forms or SYMBOL not in request.language.recognizers:
+        return False
+    data = request.data
+    names = {**cldr_part(request.variety.tag, "symbols").get("symbols", FrozenMap()), **data.get("symbol_names", {})}
+    name = names.get(sign)
+    return name is not None and words_only(name) and sign not in data["symbols"]
+
+
 UNIT_SYMBOLS = ("km", "cm", "mm", "µm", "nm", "kg", "mg", "µg", "ml", "mL", "cl", "cL", "dl", "dL", "km/h", "m/s",
                 "m²", "m³", "km²", "cm²", "cm³", "mm²", "kWh", "Wh", "kW", "MW", "GW", "mAh", "Hz", "kHz", "MHz",
                 "GHz", "kJ", "kPa", "hPa", "°C", "°")
@@ -1265,6 +1313,6 @@ LEXICON = Lexicon()
 CARDINAL = Cardinal()
 RBNF_CARDINAL = RbnfCardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), Measure(), Telephone(), Expression(), Abbreviation(), SpaceGroups(),
-                              COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
+                              Percent(), Money(), KeptMoney(), Measure(), Telephone(), Expression(), Abbreviation(),
+                              SpaceGroups(), COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
 """The shared recognizers by name."""
