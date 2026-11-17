@@ -45,8 +45,9 @@ groups after one space or one mark, as in the phone number `+31 20 123 4567`, an
 in `020 123 456`, show no number of groups, so each group reads as it would alone. A date splits into groups of one, two
 or four digits, so it holds no group of three after a space. An amount reads the groups and a decimal comma after them
 whole: the same page writes "$ 34 898 456,78", and `€ 12 000,50` reads "twaalfduizend euro vijftig". No group of a
-number of groups reads alone as an amount. Outside an amount, a number with spaces between its groups and a decimal
-comma, a percent sign or a dimension mark stays as written.
+number of groups reads alone as an amount. An amount or a measure whose whole part starts with 0 and holds more
+digits, as in `€ 05,00` and `012 000 kg`, stays as written. Outside an amount, a number with spaces between its groups
+and a decimal comma, a percent sign or a dimension mark stays as written.
 
 A fraction is a cardinal and an ordinal, written apart: Taaladvies.net, "Aaneenschrijven van telwoorden", Breukgetallen:
 "Bij breuken is de teller een hoofdtelwoord en de noemer een rangtelwoord [...] Teller en noemer worden los van elkaar
@@ -104,16 +105,17 @@ the English title. The other abbreviations come from Wiktionary: "bijv." and "bv
 ("in plaats van"), "m.b.t." ("met betrekking tot"), "ca." ("circa"), "evt." ("eventueel") and, before a number, "blz."
 ("bladzijde"). "enz." at the end of a sentence keeps its full stop.
 
-A year after `het jaar` or `anno` (`year_words`), as in `in het jaar 1998`, reads the CLDR RBNF `nl` rule
-`spellout-numbering-year`: "negentienachtennegentig" and "tweeduizend zesentwintig". Onze Taal, "Hoe spreek je 2026
-uit?", gives this reading: "Jaartallen tot 2000, zoals 1940 en 1998, spreek je vaak verkort uit [...]
+A year right after `in het jaar` or `anno` (`year_words`), with one space between, as in `in het jaar 1998`, reads the
+CLDR RBNF `nl` rule `spellout-numbering-year`: "negentienachtennegentig" and "tweeduizend zesentwintig". Onze Taal, "Hoe
+spreek je 2026 uit?", gives this reading: "Jaartallen tot 2000, zoals 1940 en 1998, spreek je vaak verkort uit [...]
 'negentienhonderdachtennegentig' tot 'negentien-achtennegentig'", "Die verkorte vormen zijn bij jaartallen de
 standaarduitspraak geworden", and "Sinds 2000 gebruiken we weinig verkorte vormen meer [...] 'tweeduizend
 zesentwintig'". Taaladvies.net, "Jaartallen voluit", writes a year by the rules of other numbers, so a year takes the
 space after "duizend" too: "Jaartallen volgen dezelfde regels voor aaneenschrijven als gewone telwoorden". The same Onze
 Taal page reads the number in full in other contexts, "1940 euro klinkt bijvoorbeeld als 'negentienhonderdveertig
-euro'", so a number with no year word before it reads as a cardinal. After `jaar` alone a number is often a count, as in
-`vorig jaar 1450 verkeersdoden`, so `jaar` needs `het` before it.
+euro'", so a number with no year word before it reads as a cardinal. After `jaar` alone, after another preposition or
+after a mark, a number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het jaar 1450 bezoekers` and
+`het jaar, 1450 mensen`, so `jaar` needs `in het` right before it.
 
 The words of a date and a clock time need `ovos_date_parser.spoken`, which reads no Dutch, so a numeric date stays as
 written. A clock time such as `14.30 uur` or `14:30` is no number, so it stays
@@ -128,12 +130,12 @@ from dataclasses import dataclass, replace
 from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import SIGNS, Number, written_amount
-from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, _cluster_edge, amount_words, numbers_in, signed,
+from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, numbers_in, signed,
                                           speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_lexicon, speak_ordinal, speak_percent)
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
-from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char
@@ -150,6 +152,10 @@ FRACTION_ONE = "een"
 WHOLE_AMOUNT_MARKS = (",--", ",–", ",-")
 """The comma and the dash after a whole amount in euros, as in `€ 5,–`, where two hyphens or one also type the
 dash."""
+
+WORD_JOINERS = "'\u2019-\u2010"
+"""The apostrophe, the right single quotation mark, the hyphen-minus and the hyphen, which join a suffix or a second
+word to a word, as in `euro's` and `euro-cent`."""
 
 GROUP_SPACES = " \u00a0\u202f"
 """The spaces between the groups of a number: the space, the no-break space and the narrow no-break space."""
@@ -169,8 +175,8 @@ DATA = freeze({
     "currency_symbols": ["EUR"],
     "currencies": {"JPY": {"symbols": ["¥"]}},
     "subunits": {"EUR": "cent"},
-    "currency_words": {"euro": "EUR", "Euro": "EUR"},
-    "year_words": ["het jaar", "anno"],
+    "currency_words": {"euro": "EUR", "Euro": "EUR", "EURO": "EUR"},
+    "year_words": ["in het jaar", "anno"],
     "scales": {"miljoen": "miljoen", "miljard": "miljard"},
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml"],
     "dimension_marks": ["x", "×"],
@@ -250,15 +256,18 @@ class DutchSpeller:
 SPELLER = DutchSpeller()
 
 
-def is_group_run(folded: str, start: int, end: int) -> bool:
+def is_group_run(folded: str, start: int, end: int, leading_zero: bool = False) -> bool:
     """Whether the run of digit groups from `start` to `end` is one number: no digit run continues it, and its first
-    group does not start with 0, as the phone number `020 123 4567` does. The groups of another run read alone."""
-    return folded[start] != "0" and not DIGIT_BEFORE.search(folded, 0, start) and not DIGIT_AFTER.match(folded, end)
+    group does not start with 0, as the phone number `020 123 4567` does, unless `leading_zero` is true. The groups of
+    another run read alone."""
+    return (leading_zero or folded[start] != "0") and not DIGIT_BEFORE.search(folded, 0, start) \
+        and not DIGIT_AFTER.match(folded, end)
 
 
-def spaced_numbers(text: str) -> tuple[Number, ...]:
+def spaced_numbers(text: str, leading_zero: bool = False) -> tuple[Number, ...]:
     """The numbers written with a space between groups of three digits, as in `12 000`, and with a decimal comma
-    after the groups, as in `12 000,50`. A sign right before the digits belongs to the number."""
+    after the groups, as in `12 000,50`. A sign right before the digits belongs to the number. With `leading_zero`,
+    a run whose first group starts with 0, as in `012 000`, is a number too."""
     folded = fold_digits(text)
     found = []
     for match in SPACE_GROUPS.finditer(folded):
@@ -266,7 +275,8 @@ def spaced_numbers(text: str) -> tuple[Number, ...]:
         script = digit_script(text[start:end])
         integer, _, fraction = match.group().partition(",")
         if script is None or not any(space in integer for space in GROUP_SPACES) \
-                or any(space in fraction for space in GROUP_SPACES) or not is_group_run(folded, start, end):
+                or any(space in fraction for space in GROUP_SPACES) \
+                or not is_group_run(folded, start, end, leading_zero):
             continue
         sign = ""
         if start and text[start - 1] in SIGNS and (start == 1 or not is_word_char(text[start - 2])):
@@ -281,12 +291,13 @@ def spaced_numbers(text: str) -> tuple[Number, ...]:
 class SpacedMeasure:
     """`10 000 km`: a whole number with a space between its groups and a unit after it, with no space or one space
     between them. After a number and a dimension mark, as in `3 × 12 000 m`, the span takes the first number too, and
-    the measure stays as written as `3 × 4 m` does."""
+    the measure stays as written as `3 × 4 m` does. A measure whose first group starts with 0, as in `012 000 kg`,
+    stays as written, so that no group reads alone."""
     name: str = "spaced_measure"
     form: Form = Form.MEASURE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for number in spaced_numbers(text):
+        for number in spaced_numbers(text, leading_zero=True):
             if number.fraction is not None:
                 continue
             start, relation, amount = number.start, "", number.amount()
@@ -307,7 +318,7 @@ class SpacedMeasure:
                 if unit is not None:
                     yield Span(start, at + len(unit), Form.MEASURE,
                                FrozenMap({"amount": amount, "relation": relation, "unit": unit, "prefix": "",
-                                          "suffix": ""}), recognizer=self.name)
+                                          "suffix": ""}), recognizer=self.name, keep=number.integer.startswith("0"))
                     break
 
 
@@ -348,7 +359,7 @@ class KeptGroups:
         for match in SPACE_GROUPS.finditer(folded):
             start, end = match.span()
             script = digit_script(text[start:end])
-            if script is None or not _cluster_edge(text, start, end) or not is_group_run(folded, start, end):
+            if script is None or not is_group_run(folded, start, end):
                 continue
             yield Span(start, end, Form.CARDINAL,
                        FrozenMap({"digits": re.sub("[^0-9]", "", match.group()), "sign": "", "lead": "", "prefix": "",
@@ -373,23 +384,21 @@ class KeptDate:
 
 @dataclass(frozen=True)
 class Year:
-    """A year from 1000 to 2099 after the words of an entry of the `year_words` table, in any case, as in
-    `in het jaar 1998` and `Anno 1650`. After `jaar` alone a number is often a count, as in `vorig jaar 1450
-    verkeersdoden`, so it reads as a cardinal."""
+    """A year from 1000 to 2099 right after an entry of the `year_words` table, in any case, with one space between
+    them, as in `in het jaar 1998` and `Anno 1650`. After `jaar` alone, after another preposition, or after a mark,
+    a number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het jaar 1450 bezoekers` and
+    `het jaar, 1450 mensen`, so it reads as a cardinal."""
     name: str = "year"
     form: Form = Form.YEAR
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        phrases = [tuple(phrase.split()) for phrase in request.data["year_words"]]
-        words = context_words(tokens)
-        breaks = clause_breaks(text)
         for number in numbers_in(text, request):
             if number.sign or number.fraction is not None or number.end - number.start != 4 \
                     or not 1000 <= int(number.integer) <= 2099 or not is_bounded(text, number.start, number.end):
                 continue
-            before = tuple(word.lower() for word in clause_window(text, words, number.start, number.end, -1,
-                                                                  limit=2, breaks=breaks))
-            if any(before[-len(phrase):] == phrase for phrase in phrases):
+            if any(text[max(0, number.start - len(phrase) - 1):number.start].lower() == f"{phrase} "
+                   and is_bounded(text, number.start - len(phrase) - 1, number.start - 1)
+                   for phrase in request.data["year_words"]):
                 yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": number.integer, "suffix": ""}),
                            recognizer=self.name)
 
@@ -429,7 +438,9 @@ class Abbreviation(CoreAbbreviation):
 @dataclass(frozen=True)
 class Money(CoreMoney):
     """The shared money recognizer, with a negative amount after the symbol, as in `€ -12`, the comma and the dash
-    of a whole amount, as in `€ 5,–`, and an amount with a space between its groups, as in `€ 12 000`."""
+    of a whole amount, as in `€ 5,–`, and an amount with a space between its groups, as in `€ 12 000`. An amount
+    whose whole part starts with 0 and holds more digits, as in `€ 05,00` and `€ 012 000,50`, stays as written, so
+    that no group reads alone."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in (*super().find(text, tokens, request), *self._negative(text, tokens, request),
@@ -438,28 +449,41 @@ class Money(CoreMoney):
             end = span.end + len(mark)
             if mark and not span.fields["amount"]["fraction"] and (end == len(text) or not is_word_char(text[end])):
                 span = replace(span, end=end)
+            integer = span.fields["amount"]["integer"]
+            if len(integer) > 1 and integer.startswith("0"):
+                span = replace(span, keep=True)
             yield span
 
     def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
         """The numbers of the text, where a number with a space between its groups replaces the numbers of its
-        groups. No number inside another run that is one number, as in `€ 12 000,5 liter`, reads an amount, and no
-        whole part that starts with 0 and holds more digits, as in `€ 012`, reads an amount."""
+        groups, also when its first group starts with 0, as in `€ 012 000`."""
         folded = fold_digits(text)
-        runs = [match.span() for match in SPACE_GROUPS.finditer(folded) if is_group_run(folded, *match.span())]
+        runs = [match.span() for match in SPACE_GROUPS.finditer(folded)
+                if is_group_run(folded, *match.span(), leading_zero=True)]
         return (*(number for number in numbers_in(text, request)
-                  if not any(start < number.end and number.start < end for start, end in runs)
-                  and not (len(number.integer) > 1 and number.integer.startswith("0"))),
-                *spaced_numbers(text))
+                  if not any(start < number.end and number.start < end for start, end in runs)),
+                *spaced_numbers(text, leading_zero=True))
 
     def _words(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        """`2,50 euro`: an amount and a currency word of `currency_words` after it, with one space between them."""
+        """`2,50 euro`: an amount and a currency word of `currency_words` after it, with one space between them. When
+        letters, an apostrophe or a hyphen continue the word, as in `2,50 euro's` and `2,50 euro-cent`, an amount
+        with a decimal part stays as written with the word, because its cents would read after the suffix. A whole
+        amount reads, as in `5 euro's`."""
         for number in self.numbers(text, tokens, request):
             for word, code in request.data["currency_words"].items():
                 end = number.end + 1 + len(word)
-                if text[number.end:end] in (f" {word}", f"\u00a0{word}") and is_bounded(text, number.start, end):
-                    yield Span(number.start, end, Form.MONEY,
-                               FrozenMap({"amount": number.amount(), "currency": code, "written_symbol": word,
-                                          "scale": "", "prefix": "", "suffix": ""}), recognizer=self.name)
+                if text[number.end:end] not in (f" {word}", f"\u00a0{word}") \
+                        or not is_bounded(text, number.start, number.end):
+                    continue
+                glued = end
+                while glued < len(text) and (is_word_char(text[glued]) or text[glued] in WORD_JOINERS):
+                    glued += 1
+                fields = FrozenMap({"amount": number.amount(), "currency": code, "written_symbol": word, "scale": "",
+                                    "prefix": "", "suffix": ""})
+                if glued > end and number.fraction is not None:
+                    yield Span(number.start, glued, Form.MONEY, fields, recognizer=self.name, keep=True)
+                elif is_bounded(text, number.start, end):
+                    yield Span(number.start, end, Form.MONEY, fields, recognizer=self.name)
 
     def _negative(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for number in self.numbers(text, tokens, request):
