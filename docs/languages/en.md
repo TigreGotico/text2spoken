@@ -162,4 +162,4 @@ With the `LETTERS` form on, an amount before a symbol and digits can stay as wri
 The edge cases that English shares with Portuguese are on the [Money, units and symbols](../money-units-and-symbols.md#limits) and [Addresses, letters and emoji](../addresses-letters-and-emoji.md#edge-cases) pages.
 
 ---
-[← German](de.md) · [Home](../index.md) · [Spanish →](es.md)
+[← Greek](el.md) · [Home](../index.md) · [Spanish →](es.md)

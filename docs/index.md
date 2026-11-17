@@ -24,6 +24,7 @@ Each language page gives what the language reads, its varieties and the codes th
 | --- | --- |
 | Arabic | [ar](languages/ar.md) |
 | German | [de](languages/de.md) |
+| Greek | [el](languages/el.md) |
 | English | [en](languages/en.md) |
 | Spanish | [es](languages/es.md) |
 | Basque | [eu](languages/eu.md) |
