@@ -110,9 +110,9 @@ NO_FILE_MINUS = [
     # uk.xml, spellout-cardinal-masculine: -x "мінус →→", 5 пʼять, 20 двадцять[ →→], 1 один.
     ("uk-UA", "сьогодні -5 дуже", "сьогодні мінус пʼять дуже"),
     ("uk", "Було \u221221.", "Було мінус двадцять один."),
-    # el.xml, spellout-cardinal-masculine: -x "μείον →→", 5 πέντε, 3 τρεις.
-    ("el", "Σήμερα -5 βαθμοί", "Σήμερα μείον πέντε βαθμοί"),
-    ("el-GR", "Θερμοκρασία (\u22123)", "Θερμοκρασία (μείον τρεις)"),
+    # bg.xml, spellout-cardinal-masculine: -x "минус →→", 5 пет, 3 три.
+    ("bg", "Днес -5 градуса", "Днес минус пет градуса"),
+    ("bg-BG", "Температура (\u22123)", "Температура (минус три)"),
 ]
 
 # A minus stays as written where it may be no minus. A hyphen after a letter, between two numbers or before a
@@ -134,14 +134,27 @@ NO_FILE_KEPT_MINUS = [
     ("uk-UA", "Список:\n  -3 яблука", "Список:\n  -3 яблука"),
     ("uk-UA", "температура -1 000 градусів", "температура -1 000 градусів"),
     ("uk-UA", "борг -10\u00a0000 гривень", "борг -10\u00a0000 гривень"),
-    ("el-GR", "Θερμοκρασία -1 000 βαθμοί", "Θερμοκρασία -1 000 βαθμοί"),
-    ("el-GR", "Διαφορά -12\u202f000 κιλά", "Διαφορά -12\u202f000 κιλά"),
+    ("bg-BG", "Температура -1 000 градуса", "Температура -1 000 градуса"),
+    ("bg-BG", "Разлика -12\u202f000 кг", "Разлика -12\u202f000 кг"),
     ("zu", "Izinga -5 namuhla.", "Izinga -5 namuhla."),
+]
+
+# A line break or a tab groups no digits: the minus at the end of a line reads, and so does the number of the next
+# line. A minus at the start of a line stays as written. Words from bg.xml (5 пет, 3 три, 10 десет, 12 дванайсет),
+# uk.xml (5 пʼять, 3 три, 10 десять) and pl.xml (5 pięć, 3 trzy), spellout-cardinal-masculine.
+NO_FILE_LINE_BREAKS = [
+    ("uk-UA", "Оцінка: -5\n10 студентів прийшли", "Оцінка: мінус пʼять\nдесять студентів прийшли"),
+    ("uk-UA", "сьогодні -5\n3 яблука", "сьогодні мінус пʼять\nтри яблука"),
+    ("uk-UA", "сьогодні -5\t10", "сьогодні мінус пʼять\tдесять"),
+    ("pl-PL", "dziś -5\n3 jabłka", "dziś minus pięć\ntrzy jabłka"),
+    ("bg-BG", "Оценка: -5\n10 души", "Оценка: минус пет\nдесет души"),
+    ("bg-BG", "днес -5\n\n3 ябълки", "днес минус пет\n\nтри ябълки"),
+    ("bg-BG", "-5\n\n12 души", "-5\n\nдванайсет души"),
 ]
 
 NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
     ("uk-UA", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
-    ("el-GR", ("Υπόλοιπο: -50 €", "Υπόλοιπο: € -50", "Υπόλοιπο: -1 000 €")),
+    ("bg-BG", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
     ("he-IL", ("יתרה: -50 ₪", "יתרה: ₪ -50")),
     ("ja-JP", ("残高: -50 €", "残高: € -50")),
     ("ca-ES", ("Saldo: -50 €", "Saldo: € -50")),
@@ -149,7 +162,8 @@ NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
 ) for text in texts]
 
 
-@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_MINUS + NO_FILE_KEPT_MINUS + NO_FILE_KEPT_MONEY)
+@pytest.mark.parametrize(("tag", "text", "expected"),
+                         NO_FILE_MINUS + NO_FILE_KEPT_MINUS + NO_FILE_LINE_BREAKS + NO_FILE_KEPT_MONEY)
 def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
