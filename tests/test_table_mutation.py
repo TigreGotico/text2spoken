@@ -145,7 +145,7 @@ ENTRIES = {
         "ordinal_marks": "ste", "percent": "word", "currency_symbols": "EUR", "currencies": "JPY", "subunits": "EUR",
         "scales": "miljoen", "unit_symbols": "km", "dimension_marks": "×", "operators": "=", "patterns": "expression",
         "titles": "ing.", "abbreviations": "dr.", "sentence_final": "enz.", "number_abbreviations": "blz.",
-        "currency_words": "euro", "year_words": "jaar",
+        "currency_words": "euro", "year_words": "het jaar",
     },
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",

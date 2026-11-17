@@ -104,15 +104,16 @@ the English title. The other abbreviations come from Wiktionary: "bijv." and "bv
 ("in plaats van"), "m.b.t." ("met betrekking tot"), "ca." ("circa"), "evt." ("eventueel") and, before a number, "blz."
 ("bladzijde"). "enz." at the end of a sentence keeps its full stop.
 
-A year after a word of `year_words`, as in `in het jaar 1998`, reads the CLDR RBNF `nl` rule `spellout-numbering-year`:
-"negentienachtennegentig" and "tweeduizend zesentwintig". Onze Taal, "Hoe spreek je 2026 uit?", gives this reading:
-"Jaartallen tot 2000, zoals 1940 en 1998, spreek je vaak verkort uit [...] 'negentienhonderdachtennegentig' tot
-'negentien-achtennegentig'", "Die verkorte vormen zijn bij jaartallen de standaarduitspraak geworden", and "Sinds 2000
-gebruiken we weinig verkorte vormen meer [...] 'tweeduizend zesentwintig'". Taaladvies.net, "Jaartallen voluit", writes
-a year by the rules of other numbers, so a year takes the space after "duizend" too: "Jaartallen volgen dezelfde regels
-voor aaneenschrijven als gewone telwoorden". The same Onze Taal page reads the number in full in other contexts, "1940
-euro klinkt bijvoorbeeld als 'negentienhonderdveertig euro'", so a number with no year word before it reads as a
-cardinal.
+A year after `het jaar` or `anno` (`year_words`), as in `in het jaar 1998`, reads the CLDR RBNF `nl` rule
+`spellout-numbering-year`: "negentienachtennegentig" and "tweeduizend zesentwintig". Onze Taal, "Hoe spreek je 2026
+uit?", gives this reading: "Jaartallen tot 2000, zoals 1940 en 1998, spreek je vaak verkort uit [...]
+'negentienhonderdachtennegentig' tot 'negentien-achtennegentig'", "Die verkorte vormen zijn bij jaartallen de
+standaarduitspraak geworden", and "Sinds 2000 gebruiken we weinig verkorte vormen meer [...] 'tweeduizend
+zesentwintig'". Taaladvies.net, "Jaartallen voluit", writes a year by the rules of other numbers, so a year takes the
+space after "duizend" too: "Jaartallen volgen dezelfde regels voor aaneenschrijven als gewone telwoorden". The same Onze
+Taal page reads the number in full in other contexts, "1940 euro klinkt bijvoorbeeld als 'negentienhonderdveertig
+euro'", so a number with no year word before it reads as a cardinal. After `jaar` alone a number is often a count, as in
+`vorig jaar 1450 verkeersdoden`, so `jaar` needs `het` before it.
 
 The words of a date and a clock time need `ovos_date_parser.spoken`, which reads no Dutch, so a numeric date stays as
 written. A clock time such as `14.30 uur` or `14:30` is no number, so it stays
@@ -127,9 +128,9 @@ from dataclasses import dataclass, replace
 from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import SIGNS, Number, written_amount
-from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, numbers_in, signed, speak_abbreviation,
-                                          speak_cardinal, speak_decimal, speak_expression, speak_lexicon, speak_ordinal,
-                                          speak_percent)
+from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, _cluster_edge, amount_words, numbers_in, signed,
+                                          speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
+                                          speak_lexicon, speak_ordinal, speak_percent)
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
@@ -157,9 +158,6 @@ DIGIT_BEFORE = re.compile("[0-9][ \u00a0\u202f/:.,–-]?$")
 DIGIT_AFTER = re.compile("[ \u00a0\u202f/:.,–-]?[0-9]")
 """A digit run that continues a number of groups after one space or one mark, as in a phone number."""
 
-JOINING_MARKS = "/:.,–-"
-"""The marks that join a number abbreviation to the word or number before it, as in `0-blz.`."""
-
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
     "sign_words": {"-": "min", "+": "plus"},
@@ -171,8 +169,8 @@ DATA = freeze({
     "currency_symbols": ["EUR"],
     "currencies": {"JPY": {"symbols": ["¥"]}},
     "subunits": {"EUR": "cent"},
-    "currency_words": {"euro": "EUR"},
-    "year_words": ["jaar", "Jaar", "anno", "Anno"],
+    "currency_words": {"euro": "EUR", "Euro": "EUR"},
+    "year_words": ["het jaar", "anno"],
     "scales": {"miljoen": "miljoen", "miljard": "miljard"},
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml"],
     "dimension_marks": ["x", "×"],
@@ -341,15 +339,20 @@ class KeptGroups:
     """A number with a space between its groups that no other recognizer of the file reads, as in `12 000,5 liter`,
     kept as written so that no recognizer reads one group alone. A run of groups that a digit run continues, or whose
     first group starts with 0, as in the phone number `020 123 4567`, is no number of groups, so its groups read as
-    cardinals."""
+    cardinals. A run that a letter joins, as in `Type A12 000 kg`, is part of a code and stays as written too."""
     name: str = "kept_groups"
     form: Form = Form.CARDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         folded = fold_digits(text)
-        for span in SHARED["space_groups"].find(text, tokens, request):
-            if is_group_run(folded, span.start, span.end):
-                yield replace(span, recognizer=self.name)
+        for match in SPACE_GROUPS.finditer(folded):
+            start, end = match.span()
+            script = digit_script(text[start:end])
+            if script is None or not _cluster_edge(text, start, end) or not is_group_run(folded, start, end):
+                continue
+            yield Span(start, end, Form.CARDINAL,
+                       FrozenMap({"digits": re.sub("[^0-9]", "", match.group()), "sign": "", "lead": "", "prefix": "",
+                                  "suffix": "", "script": script}), recognizer=self.name, keep=True)
 
 
 @dataclass(frozen=True)
@@ -370,20 +373,23 @@ class KeptDate:
 
 @dataclass(frozen=True)
 class Year:
-    """A year from 1000 to 2099 after a word of the `year_words` table, as in `in het jaar 1998`."""
+    """A year from 1000 to 2099 after the words of an entry of the `year_words` table, in any case, as in
+    `in het jaar 1998` and `Anno 1650`. After `jaar` alone a number is often a count, as in `vorig jaar 1450
+    verkeersdoden`, so it reads as a cardinal."""
     name: str = "year"
     form: Form = Form.YEAR
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        year_words = frozenset(request.data["year_words"])
+        phrases = [tuple(phrase.split()) for phrase in request.data["year_words"]]
         words = context_words(tokens)
         breaks = clause_breaks(text)
         for number in numbers_in(text, request):
             if number.sign or number.fraction is not None or number.end - number.start != 4 \
                     or not 1000 <= int(number.integer) <= 2099 or not is_bounded(text, number.start, number.end):
                 continue
-            before = clause_window(text, words, number.start, number.end, -1, limit=1, breaks=breaks)
-            if before and before[0] in year_words:
+            before = tuple(word.lower() for word in clause_window(text, words, number.start, number.end, -1,
+                                                                  limit=2, breaks=breaks))
+            if any(before[-len(phrase):] == phrase for phrase in phrases):
                 yield Span(number.start, number.end, Form.YEAR, FrozenMap({"digits": number.integer, "suffix": ""}),
                            recognizer=self.name)
 
@@ -411,12 +417,12 @@ class Ordinal:
 
 @dataclass(frozen=True)
 class Abbreviation(CoreAbbreviation):
-    """The shared abbreviations, where a number abbreviation that a mark joins to a word or a number before it, as in
-    `0-blz.`, stays as written. A key joined to a digit would wait on the digit while the number waits on the key,
+    """The shared abbreviations, where a key that one mark joins to a word or a number before it, as in `0-blz.` and
+    `4_Dr.`, stays as written. A key joined to a digit would wait on the digit while the number waits on the key,
     and a second pass, which reads the number as a word, would read both."""
 
     def refuses(self, text: str, position: int, table: str, data) -> bool:
-        return table == "number_abbreviations" and position >= 2 and text[position - 1] in JOINING_MARKS \
+        return position >= 2 and not text[position - 1].isspace() and not is_word_char(text[position - 1]) \
             and is_word_char(text[position - 2])
 
 
@@ -436,21 +442,18 @@ class Money(CoreMoney):
 
     def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
         """The numbers of the text, where a number with a space between its groups replaces the numbers of its
-        groups. No number inside another run that is one number, as in `€ 12 000,5 liter`, reads an amount."""
+        groups. No number inside another run that is one number, as in `€ 12 000,5 liter`, reads an amount, and no
+        whole part that starts with 0 and holds more digits, as in `€ 012`, reads an amount."""
         folded = fold_digits(text)
         runs = [match.span() for match in SPACE_GROUPS.finditer(folded) if is_group_run(folded, *match.span())]
         return (*(number for number in numbers_in(text, request)
-                  if not any(start < number.end and number.start < end for start, end in runs)),
+                  if not any(start < number.end and number.start < end for start, end in runs)
+                  and not (len(number.integer) > 1 and number.integer.startswith("0"))),
                 *spaced_numbers(text))
 
     def _words(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        """`2,50 euro`: an amount and a currency word of `currency_words` after it, with one space between them. A
-        group of a run of groups that is no number, as in `10 000-20 000 euro`, is no amount."""
-        runs = [match.span() for match in SPACE_GROUPS.finditer(fold_digits(text))]
+        """`2,50 euro`: an amount and a currency word of `currency_words` after it, with one space between them."""
         for number in self.numbers(text, tokens, request):
-            if any(start < number.end and number.start < end and not number.start <= start < end <= number.end
-                   for start, end in runs):
-                continue
             for word, code in request.data["currency_words"].items():
                 end = number.end + 1 + len(word)
                 if text[number.end:end] in (f" {word}", f"\u00a0{word}") and is_bounded(text, number.start, end):
