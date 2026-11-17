@@ -248,6 +248,39 @@ class Cardinal:
                                   "suffix": suffix, "script": number.script}), recognizer=self.name)
 
 
+_DASHES = "-\u2010\u2011\u2012\u2013\u2014\u2212"
+"""The hyphen, the dashes and the minus sign."""
+
+
+@dataclass(frozen=True)
+class RbnfCardinal(Cardinal):
+    """The cardinal of a language with no file (section 6.1). A number with a minus stays as written where the
+    minus may mark something else: a list item at the start of a line, as in `-3 mele`; a range or a code after a
+    number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; or an amount next to a symbol of `symbols`, which
+    the language keeps as written, as in `-50 €` and `€ -50`. The number before such a minus stays as written too,
+    so that a second pass finds a digit before the minus again (section 11)."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        symbols = request.data.get("symbols", FrozenMap())
+        spans = list(super().find(text, tokens, request))
+        kept = set()
+        for index, span in enumerate(spans):
+            if not span.fields["sign"]:
+                continue
+            sign = span.start + len(span.fields["prefix"])
+            line_start = text.rfind("\n", 0, sign) + 1
+            before = text[line_start:sign].rstrip()
+            after = text[span.end - len(span.fields["suffix"]):].lstrip()[:1]
+            if not before or before[-1] in _DASHES or before[-1] in symbols or after in symbols:
+                kept.add(index)
+            elif is_digit(before[-1]):
+                kept.add(index)
+                digit = line_start + len(before) - 1
+                if index and spans[index - 1].start <= digit < spans[index - 1].end:
+                    kept.add(index - 1)
+        return (replace(span, keep=True) if index in kept else span for index, span in enumerate(spans))
+
+
 @dataclass(frozen=True)
 class Decimal:
     name: str = "decimal"
@@ -1217,6 +1250,7 @@ class SpaceGroups:
 
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
+RBNF_CARDINAL = RbnfCardinal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
                               Percent(), Money(), Measure(), Telephone(), Expression(), Abbreviation(), SpaceGroups(),
                               COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}

@@ -104,37 +104,48 @@ def test_a_language_with_no_file_reads_the_cardinals_next_to_a_kept_form():
     assert normalize("Tenho 3. Ele tem 2.", "pt-PT") == "Tenho três. Ele tem dois."
 
 
-# A language with no file and no plain spellout-cardinal reads spellout-numbering, and a minus through the -x rule of
-# that rule set (design section 6.1). Expected words come from the CLDR RBNF files that unicode-rbnf ships.
-NO_FILE_ROWS = [
-    # el.xml: spellout-numbering is =%spellout-cardinal-neuter=; spellout-cardinal-neuter: 3 τρία.
-    ("el", "Έχω 3 βιβλία", "Έχω τρία βιβλία"),
-    # el.xml, spellout-cardinal-neuter: 1000 χίλια[ →→], 200 διακόσια[ →→], 30 τριάντα[ →→], 4 τέσσερα.
-    ("el-GR", "Έχω 1234 βιβλία", "Έχω χίλια διακόσια τριάντα τέσσερα βιβλία"),
-    # it.xml, spellout-numbering: -x "meno →→", 5 cinque.
-    ("it", "oggi -5 gradi", "oggi meno cinque gradi"),
-    ("it-IT", "oggi \u22125 gradi", "oggi meno cinque gradi"),
-    # uk.xml: spellout-numbering is =%spellout-cardinal-masculine=; that rule set: -x "мінус →→", 5 пʼять.
+# A language with no file reads a minus through the -x rule of its RBNF cardinal rule set (design section 6.1).
+# Expected words come from the CLDR RBNF files that unicode-rbnf ships.
+NO_FILE_MINUS = [
+    # uk.xml, spellout-cardinal-masculine: -x "мінус →→", 5 пʼять, 20 двадцять[ →→], 1 один.
     ("uk-UA", "сьогодні -5 дуже", "сьогодні мінус пʼять дуже"),
-    # uk.xml, spellout-cardinal-masculine: 20 двадцять[ →→], 1 один.
     ("uk", "Було \u221221.", "Було мінус двадцять один."),
+    # el.xml, spellout-cardinal-masculine: -x "μείον →→", 5 πέντε, 3 τρεις.
+    ("el", "Σήμερα -5 βαθμοί", "Σήμερα μείον πέντε βαθμοί"),
+    ("el-GR", "Θερμοκρασία (\u22123)", "Θερμοκρασία (μείον τρεις)"),
 ]
 
-# A hyphen between two numbers, after a letter or before a percent sign is no minus: the rule of `find_numbers`
-# that en.py reads too. RBNF has no word for minus zero, and zu.xml has no -x rule.
-NO_FILE_GUARDS = [
-    ("it-IT", "da 5-10 gradi", "da 5-10 gradi"),
-    ("it-IT", "tipo A-5", "tipo A-cinque"),
+# A minus stays as written where it may be no minus. A hyphen after a letter, between two numbers or before a
+# percent sign is no sign at all, by the rule of `find_numbers` that en.py reads too. A minus at the start of a
+# line can mark a list item, and a minus after a number or a dash can mark a range or a code: the number before
+# it stays as written too, so that a second pass reads the same. A minus next to a currency symbol leaves the money
+# form, which a language with no file keeps as written. RBNF has no word for minus zero, and zu.xml has no -x
+# rule. Each number that reads takes its word from uk.xml: 5 пʼять.
+NO_FILE_KEPT_MINUS = [
+    ("uk-UA", "з 5-10 градусів", "з 5-10 градусів"),
     ("uk-UA", "код A-5", "код A-пʼять"),
-    ("it-IT", "sconto -5%", "sconto -5%"),
     ("uk-UA", "знижка -5%", "знижка -5%"),
-    ("it-IT", "-0 gradi", "-0 gradi"),
-    ("zu", "-5", "-5"),
+    ("uk-UA", "температура -0 градусів", "температура -0 градусів"),
+    ("uk-UA", "від 5 -10 градусів", "від 5 -10 градусів"),
+    ("uk-UA", "розділи 5--10", "розділи пʼять--10"),
+    ("uk-UA", "тел. 333 -1234567", "тел. 333 -1234567"),
+    ("uk-UA", "-3 яблука", "-3 яблука"),
+    ("uk-UA", "Список:\n  -3 яблука", "Список:\n  -3 яблука"),
+    ("zu", "Izinga -5 namuhla.", "Izinga -5 namuhla."),
 ]
 
+NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
+    ("uk-UA", ("Баланс: -50 €", "Баланс: € -50")),
+    ("el-GR", ("Υπόλοιπο: -50 €", "Υπόλοιπο: € -50")),
+    ("he-IL", ("יתרה: -50 ₪", "יתרה: ₪ -50")),
+    ("ja-JP", ("残高: -50 €", "残高: € -50")),
+    ("ca-ES", ("Saldo: -50 €", "Saldo: € -50")),
+    ("pl-PL", ("Saldo: -50 €", "Saldo: € -50")),
+) for text in texts]
 
-@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_ROWS + NO_FILE_GUARDS)
-def test_a_language_with_no_file_reads_the_counting_form_and_the_minus_of_rbnf(tag, text, expected):
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_MINUS + NO_FILE_KEPT_MINUS + NO_FILE_KEPT_MONEY)
+def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
 

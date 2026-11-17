@@ -245,17 +245,9 @@ def plural_category(request: Request, written: str) -> str:
 def core_language(code: str) -> LanguageSpec:
     """The language of a code with no file: cardinals through RBNF where RBNF has the locale (section 6.1).
 
-    The cardinal rule set is `spellout-cardinal`, else `spellout-numbering`. A file with no gender data cannot
-    choose among `spellout-cardinal-masculine`, `-feminine` and `-neuter`: UTS #35, Part 3, "Rule-Based Number
-    Formatting", says "CLDR does not supply any data for when to use one vs another (e.g. when to use
-    spellout-cardinal-masculine vs spellout-cardinal-feminine)". It defines the numbering rule set as "the default
-    used when there is no context for the number. Usually this is used for counting without reference to a noun",
-    and for the cardinal it says "Some languages may not have dedicated words for 0 or negative numbers for
-    cardinals. In those cases, the words from the numbering type can be reused."
-
     A minus before a number reads when the cardinal rule set has a `-x` rule, in the rule set or in the rule set
     that its 0 rule names. `sign_words` holds the text of that rule, and `speak_rbnf_cardinal` reads the number
-    through it."""
+    through it. `RBNF_CARDINAL` keeps as written a minus that may be no minus."""
     from unicode_rbnf.engine import RbnfSpecialRule, TextRulePart
 
     from text2spoken.core import recognizers
@@ -273,7 +265,7 @@ def core_language(code: str) -> LanguageSpec:
     if locale is None:
         return bare
     names = rbnf_engine(locale).rulesets
-    cardinal = next(n for n in ("spellout-cardinal", "spellout-numbering") if n in names)
+    cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering") if n in names)
     ordinal = next((n for n in ("spellout-ordinal", "spellout-ordinal-masculine") if n in names), cardinal)
     speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): ordinal})
     minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
@@ -284,7 +276,7 @@ def core_language(code: str) -> LanguageSpec:
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
               recognizers.SHARED["date_numeric"], recognizers.OrdinalStop(bare_stop=not own_ordinal))
     return replace(bare, data=FrozenMap({**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}),
-                   recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), recognizers.CARDINAL),
+                   recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), recognizers.RBNF_CARDINAL),
                    verbalizers={Form.LEXICON: recognizers.speak_lexicon,
                                 Form.CARDINAL: recognizers.speak_rbnf_cardinal},
                    spellers={Form.CARDINAL: speller})
