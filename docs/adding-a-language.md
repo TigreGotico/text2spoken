@@ -20,7 +20,7 @@ Set up a checkout with the test extra, as [Development](development.md#set-up-an
 
 ## Step 1: see what your language reads now
 
-A language with no file reads cardinal numbers from the CLDR spell-out rules, and nothing else. It knows no group mark, so `1.250` stays as written, and so does the date:
+A language with no file reads cardinal numbers, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It knows no group mark, so `1.250` stays as written, and so does the date:
 
 ```python
 >>> from text2spoken import normalize, supports

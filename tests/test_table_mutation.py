@@ -132,7 +132,7 @@ ENTRIES = {
     "pt": PT_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
     "el": {
-        "number_marks": "Latn", "sign_words": "-", "spelling": "χίλιάδες", "case_words": "genitive", "articles": "στις",
+        "number_marks": "Latn", "sign_words": "-", "case_words": "genitive", "articles": "στις",
         "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
     },
