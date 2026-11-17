@@ -8,8 +8,9 @@ the markup as evidence, then the other recognizers on the characters that are le
 The values come from the W3C Note "SSML 1.0 say-as attribute values" (26 May 2005): `date`, `time`, `telephone`,
 `characters`, `cardinal` and `ordinal`. Amazon Polly ("Controlling how special types of words are spoken") defines
 `digits`, `fraction` and `unit`, and the aliases `number` and `spell-out`. Google Cloud Text-to-Speech ("Speech
-Synthesis Markup Language (SSML)") defines `currency` and the alias `verbatim`. phoonnx also takes `letters`, which no
-outside source defines.
+Synthesis Markup Language (SSML)") defines `currency` and the alias `verbatim`. IBM Watson Text to Speech ("SSML
+elements") defines the alias `letters`: "The `letters` value spells out the characters in the word within the
+element."
 """
 from __future__ import annotations
 
