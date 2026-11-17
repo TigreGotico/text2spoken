@@ -1,6 +1,7 @@
 """Spellers, CLDR locales and plural categories (design sections 5.3 and 5.4)."""
 import json
 import logging
+import re
 import subprocess
 import sys
 from dataclasses import replace
@@ -10,8 +11,8 @@ import pytest
 
 from text2spoken import DeclinedReading, Features, GrammaticalGender, NormalizationParams, UnreadFormError, normalize
 from text2spoken.core.language import Request, Variety, plural_category
-from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, rbnf_engine,
-                                       words)
+from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, corrected,
+                                       rbnf_corrections, rbnf_engine, words)
 
 F, M = GrammaticalGender.FEMININE, GrammaticalGender.MASCULINE
 OVOS_GENDER = {M: "masculine", F: "feminine", GrammaticalGender.NEUTER: "neutral"}
@@ -523,3 +524,26 @@ def test_the_plural_category_agrees_with_unicode_rbnf_where_it_reads_no_exponent
         with localcontext(prec=40):
             expected = get_plural_category(locale, Decimal(written))
         assert plural_category(request, written) == expected, written
+
+
+def test_each_rbnf_correction_names_a_word_that_the_rbnf_data_writes():
+    """A release of unicode-rbnf that fixes a word of `data/rbnf_corrections.json` fails here, so the row goes."""
+    numbers = (0, 13, 90, 100, 1000, 3000, 10_000, 100_000, 10**6, -5)
+    for language, table in rbnf_corrections().items():
+        engine = rbnf_engine(language)
+        written = set()
+        for name in engine.rulesets:
+            for number in numbers:
+                try:
+                    text = engine.format_number(number, ruleset_names=[name]).text_by_ruleset[name]
+                except Exception:  # a private or a numbering rule set may refuse a number; others still read it
+                    continue
+                written.update(re.split("[ \u00a0\u200b]+", text))
+        assert set(table) <= written, (language, sorted(set(table) - written))
+
+
+def test_a_correction_replaces_whole_words_only():
+    assert corrected("ໜຶ່ງ\u200bร้อย ร้อยx", "lo") == "ໜຶ່ງ\u200bຮ້ອຍ ร้อยx"
+    assert corrected("τρεις χίλιάδες", "el_GR") == "τρεις χιλιάδες"
+    assert corrected("ร้อย", "th") == "ร้อย"
+

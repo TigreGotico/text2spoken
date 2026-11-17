@@ -1,6 +1,6 @@
 # Arabic
 
-The file `text2spoken/lang/ar.py` reads Modern Standard Arabic in Arabic script, with no diacritics. A diacritizer runs after it. Install it with `text2spoken[ar]`, which adds `ovos-number-parser`.
+The file `text2spoken/lang/ar.py` reads Modern Standard Arabic in Arabic script, with no diacritics. A diacritizer runs after it. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
 

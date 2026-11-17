@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.0.2a66](https://github.com/TigreGotico/text2spoken/tree/0.0.2a66) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a65...0.0.2a66)
+
+**Merged pull requests:**
+
+- fix: a language with no file reads number words through ovos-number-parser [\#190](https://github.com/TigreGotico/text2spoken/pull/190) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a65](https://github.com/TigreGotico/text2spoken/tree/0.0.2a65) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a64...0.0.2a65)
+
+**Merged pull requests:**
+
+- fix: one dependency set for every language [\#175](https://github.com/TigreGotico/text2spoken/pull/175) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a64](https://github.com/TigreGotico/text2spoken/tree/0.0.2a64) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a63...0.0.2a64)
+
+**Merged pull requests:**
+
+- feat: Italian language file [\#114](https://github.com/TigreGotico/text2spoken/pull/114) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a63](https://github.com/TigreGotico/text2spoken/tree/0.0.2a63) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a62...0.0.2a63)
@@ -366,26 +390,13 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a16...0.0.2a17)
 
-**Merged pull requests:**
-
-- fix: linear time with many inline blocks [\#34](https://github.com/TigreGotico/text2spoken/pull/34) ([JarbasAl](https://github.com/JarbasAl))
-- fix: linear time on long digit runs [\#33](https://github.com/TigreGotico/text2spoken/pull/33) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a16](https://github.com/TigreGotico/text2spoken/tree/0.0.2a16) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a15...0.0.2a16)
 
-**Merged pull requests:**
-
-- fix: read decimals exactly, without float [\#32](https://github.com/TigreGotico/text2spoken/pull/32) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a15](https://github.com/TigreGotico/text2spoken/tree/0.0.2a15) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a14...0.0.2a15)
-
-**Merged pull requests:**
-
-- fix: bound digit runs in recognizers before int\(\) [\#30](https://github.com/TigreGotico/text2spoken/pull/30) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a14](https://github.com/TigreGotico/text2spoken/tree/0.0.2a14) (2026-11-09)
 

@@ -13,7 +13,7 @@ uv pip install --prerelease=allow -e ".[test]"
 pytest tests
 ```
 
-The `test` extra installs the dependencies of every language extra, so the suite runs every language file. `source .venv/bin/activate` puts `pytest` on your path. In a new shell, run it again before you run the tests.
+The `test` extra installs `tugalex` and the test tools, so the suite runs every language file. `source .venv/bin/activate` puts `pytest` on your path. In a new shell, run it again before you run the tests.
 
 ## The row files
 

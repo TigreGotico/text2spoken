@@ -243,16 +243,20 @@ def plural_category(request: Request, written: str) -> str:
 
 @cache
 def core_language(code: str) -> LanguageSpec:
-    """The language of a code with no file: cardinals through RBNF where RBNF has the locale (section 6.1).
+    """The language of a code with no file: cardinals through ovos-number-parser where it has a writer of its own
+    for the language, else through RBNF where RBNF has the locale (section 6.1). `RBNF_HELD` names the languages with
+    a writer that read through RBNF for now.
 
-    A minus before a number reads when the cardinal rule set has a `-x` rule, in the rule set or in the rule set
-    that its 0 rule names. `sign_words` holds the text of that rule, and `speak_rbnf_cardinal` reads the number
-    through it. `RBNF_CARDINAL` keeps as written a minus that may be no minus."""
+    A minus before a number reads when the speller reads it. The parser reads it when its reading of -1 has a word
+    that its reading of 1 does not have. RBNF reads it when the cardinal rule set has a `-x` rule, in the rule set or
+    in the rule set that its 0 rule names. `sign_words` holds that word, and `speak_rbnf_cardinal` reads the number
+    through the speller. `RBNF_CARDINAL` keeps as written a minus that may be no minus."""
+    from unicode_rbnf import RbnfEngine
     from unicode_rbnf.engine import RbnfSpecialRule, TextRulePart
 
-    from text2spoken.core import recognizers
+    from text2spoken.core import parsers, recognizers
     from text2spoken.core.spans import Features
-    from text2spoken.core.spellers import RbnfSpeller, rbnf_engine
+    from text2spoken.core.spellers import RBNF_HELD, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
     import linguatag
 
     tag = linguatag.with_default_region(code)
@@ -262,17 +266,29 @@ def core_language(code: str) -> LanguageSpec:
                         noun_classes=frozenset(), numeral_systems=frozenset(), context_words=True, options={},
                         not_applicable=frozenset(OPTIONS))
     locale = cldr_locale(tag, rbnf_locales(), bare)
-    if locale is None:
+    if code in parsers.number_writer_languages() and code not in RBNF_HELD:
+        speller = OvosNumberSpeller({})
+        one = words(parsers.pronounce_number(1, tag)).split()
+        try:
+            negative = words(parsers.pronounce_number(-1, tag)).split()
+        except (ValueError, NotImplementedError):
+            negative = []
+        minus = " ".join(word for word in negative if word not in one)
+        sign_words = {"-": minus} if minus else {}
+    elif locale is None:
         return bare
-    names = rbnf_engine(locale).rulesets
-    cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering") if n in names)
-    ordinal = next((n for n in ("spellout-ordinal", "spellout-ordinal-masculine") if n in names), cardinal)
-    speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): ordinal})
-    minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
-    sign_words = {} if minus is None else {
-        "-": "".join(part.text for part in minus.parts if isinstance(part, TextRulePart)).strip()}
-    own_ordinal = any("digits-ordinal" in rbnf_engine(name).rulesets
-                      for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
+    else:
+        names = rbnf_engine(locale).rulesets
+        cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering")
+                        if n in names)
+        ordinal = next((n for n in ("spellout-ordinal", "spellout-ordinal-masculine") if n in names), cardinal)
+        speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): ordinal})
+        minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
+        sign_words = {} if minus is None else {
+            "-": "".join(part.text for part in minus.parts if isinstance(part, TextRulePart)).strip()}
+    own_ordinal = locale is not None and any(
+        "digits-ordinal" in RbnfEngine.for_language(name).rulesets
+        for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
               recognizers.SHARED["date_numeric"], recognizers.OrdinalStop(bare_stop=not own_ordinal))
     return replace(bare, data=FrozenMap({**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}),

@@ -203,8 +203,8 @@ names that match a Wikidata given name, and the Wikidata given names marked Port
 so it names a name that is also a common noun of another gender: "Lula", the name by which Luiz Inácio Lula da Silva
 is known (Wikipedia, "Luiz Inácio Lula da Silva": "known mononymously as Lula"), so `Lula III` reads "Terceiro". The
 word list of tugalex holds no plural, so `noun_gender` names the plurals of the feminine nouns of `roman_nouns`,
-which Priberam gives as "nome feminino": `nas Seções IV e VI` reads "Seções Quarta". Without the extra, which brings
-the number library, a Roman numeral stays as written, and one log warning names the extra.
+which Priberam gives as "nome feminino": `nas Seções IV e VI` reads "Seções Quarta". Without the extra, the gender
+after a name comes from the regnal title and the `noun_gender` table alone, else the masculine.
 
 A numeral right after a word of `letter_words`, such as a pronoun, does not read, because a numeral follows a noun
 or a name: `Eu LI o livro` stays as written. In a clause in capitals, the word before the numeral does not decide
@@ -268,6 +268,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
 
+from text2spoken.core import parsers
 from text2spoken.core.color import speak_color
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
@@ -503,8 +504,8 @@ def _tugalex_words(region: str) -> frozenset[str]:
 @cache
 def _warn_no_extra() -> None:
     logging.getLogger("text2spoken").warning(
-        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it, and "
-        "a Roman numeral stays as written; install text2spoken[pt]")
+        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it; "
+        "install text2spoken[pt]")
 
 
 def _known_word(word: str, request: Request) -> bool:
@@ -622,11 +623,9 @@ def speak_range(span: Span, context: SpanContext) -> str:
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
-    from ovos_date_parser.spoken import spoken_date
-
     fields = span.fields
     try:
-        return spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
+        return parsers.spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
 
@@ -659,19 +658,17 @@ def speak_time(span: Span, context: SpanContext) -> str:
     14648; Ciberdúvidas 3267: "às onze horas e trinta minutos"), and its seconds (Ciberdúvidas 14586: "vinte horas,
     trinta minutos e vinte e quatro segundos"). The parser gives words with no comma, so `17 h 34 min 25 s` reads
     `dezassete horas trinta e quatro minutos e vinte e cinco segundos`. A written zero second is not read."""
-    from ovos_date_parser.spoken import spoken_time
-
     fields = span.fields
     request = context.request
     tag = request.variety.tag
     hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
     try:
         if _day_point(fields) is not None:
-            reading = spoken_time(tag, hour, clock="12h", period=True)
+            reading = parsers.spoken_time(tag, hour, clock="12h", period=True)
             return _contracted_word(fields["prefix"], hour, request) + reading
         if fields["suffix"]:
-            return spoken_time(tag, hour, minute, fields["second"] or None, style="units")
-        return spoken_time(tag, hour, minute)
+            return parsers.spoken_time(tag, hour, minute, fields["second"] or None, style="units")
+        return parsers.spoken_time(tag, hour, minute)
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no time {hour}:{minute:02}: {error}") from error
 
@@ -773,14 +770,10 @@ def speak_roman(span: Span, context: SpanContext) -> str:
         gender, capital = _title_gender(title, request), True
     else:
         gender, capital = _name_gender(before, request), True
-    try:
-        if span.fields["role"] == "ordinal":
-            words = SPELLER.ordinal(value, Features(gender=gender), request)
-        else:
-            words = _cardinal(value, request)
-    except ImportError as error:
-        _warn_no_extra()
-        raise DeclinedReading(f"no number library reads {value}") from error
+    if span.fields["role"] == "ordinal":
+        words = SPELLER.ordinal(value, Features(gender=gender), request)
+    else:
+        words = _cardinal(value, request)
     return words[0].upper() + words[1:] if capital else words
 
 

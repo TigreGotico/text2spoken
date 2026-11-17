@@ -1,6 +1,6 @@
 # Russian
 
-The file `text2spoken/lang/ru.py` reads Russian. Install it with `text2spoken[ru]`, which adds `ovos-number-parser`.
+The file `text2spoken/lang/ru.py` reads Russian. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
 

@@ -3,7 +3,7 @@
 The sources are the advice pages of the Nederlandse Taalunie (taaladvies.net), the advice pages of Genootschap Onze Taal
 (onzetaal.nl/taalloket), the Dutch Wiktionary and CLDR 49.
 
-Cardinals come from ovos-number-parser (design section 5.4), the `nl` extra. Its words follow Taaladvies.net,
+Cardinals come from ovos-number-parser (design section 5.4). Its words follow Taaladvies.net,
 "Aaneenschrijven van telwoorden (algemeen)", Hoofdtelwoorden: "21 eenentwintig", "43 drieënveertig", "800 achthonderd",
 "135 honderdvijfendertig", "101 honderdeen of honderdeneen". The number 1 alone reads "één": Onze Taal, "een van de /
 één van de", "Eén is juist als het telwoord één bedoeld is en er ook nadruk op één ligt", with "Ik moet rijden, dus ik

@@ -20,31 +20,30 @@ dependencies = [
     "linguatag[langcodes]>=0.1.5a1",
     "unicode-rbnf>=2.4.1",
     "quebra-frases>=0.3.7",
+    "ovos-number-parser>=0.25.0a1",
+    "ovos-date-parser>=0.39.0a1",
 ]
 
 [project.urls]
 Homepage = "https://github.com/TigreGotico/text2spoken"
 
 [project.optional-dependencies]
-ar = ["ovos-number-parser>=0.24.3a1"]
-es = ["ovos-number-parser>=0.24.45a1"]
-eu = ["ovos-number-parser>=0.24.26a1"]
-fr = ["unicode-rbnf>=2.4.1"]
-nl = ["ovos-number-parser>=0.19.3a1"]
-ru = ["ovos-number-parser>=0.24.35a1"]
+# Every language reads with the base install. These extras hold no package and stay one stable cycle, so that
+# an install that names one, such as `text2spoken[es]`, still resolves.
+ar = []
+es = []
+eu = []
+fr = []
+it = []
+nl = []
+ru = []
 test = [
     "pytest",
     "packaging",
-    "ovos-number-parser>=0.24.51a1",
     "ovos-color-parser>=0.12.4a1",
-    "ovos-date-parser>=0.36.2a1",
     "tugalex>=2.4.9a1",
 ]
-pt = [
-    "ovos-number-parser>=0.24.51a1",
-    "ovos-date-parser>=0.36.2a1",
-    "tugalex>=2.4.9a1",
-]
+pt = ["tugalex>=2.4.9a1"]
 
 [tool.setuptools.dynamic]
 version = {attr = "text2spoken.version.__version__"}
@@ -55,5 +54,5 @@ include = ["text2spoken*"]
 
 [tool.setuptools.package-data]
 text2spoken = [
-    "data/cldr/*.json", "data/cldr/LICENSE", "data/en/*.json", "data/wiktionary/*.json", "data/wiktionary/LICENSE",
+    "data/*.json", "data/cldr/*.json", "data/cldr/LICENSE", "data/en/*.json", "data/wiktionary/*.json", "data/wiktionary/LICENSE",
 ]

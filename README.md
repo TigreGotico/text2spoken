@@ -8,7 +8,7 @@ text2spoken rewrites written text into the words that a person says when they re
 uv pip install --prerelease=allow text2spoken
 ```
 
-It needs Python 3.11 or later, and uses no network and no model. Each language except English, German and Greek takes an extra, such as `text2spoken[pt]`.
+It needs Python 3.11 or later, and uses no network and no model. Every language reads with the base install. Portuguese takes the `pt` extra for the gender of nouns and names, from `tugalex`.
 
 ## Example
 
@@ -50,6 +50,7 @@ A tag with no language file reads cardinal numbers from the CLDR spell-out rules
 | [Spanish](docs/languages/es.md) | `es-ES`, `es-419` and eleven American varieties | `es` |
 | [Basque](docs/languages/eu.md) | `eu-ES` | `eu` |
 | [French](docs/languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`. Every other `fr-*` tag reads as `fr-FR` | `fr` |
+| [Italian](docs/languages/it.md) | `it-IT`, `it-CH`, `it-SM` | `it` |
 | [Dutch](docs/languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` | `nl` |
 | [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` | `pt` |
 | [Russian](docs/languages/ru.md) | `ru-RU` | `ru` |

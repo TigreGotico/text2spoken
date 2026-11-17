@@ -1,6 +1,6 @@
 # Portuguese
 
-The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken[pt]`, which adds `ovos-number-parser`, `ovos-date-parser` and `tugalex`.
+The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken[pt]`, which adds `tugalex` for the gender of nouns and given names.
 
 ## What it reads
 
@@ -60,7 +60,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 482 rows in `tests/data/pt.tsv`, 15 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 483 rows in `tests/data/pt.tsv`, 15 are marked silver.
 
 ## Roman numerals
 

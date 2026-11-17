@@ -1,6 +1,6 @@
 # Dutch
 
-The file `text2spoken/lang/nl.py` reads Dutch. Install `text2spoken[nl]` for its number words, which come from `ovos-number-parser`.
+The file `text2spoken/lang/nl.py` reads Dutch. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
 
@@ -104,4 +104,4 @@ The file reads no ranges, dates, times, telephone numbers, identifiers, words in
 | `Ik sprak Mr. Smith.` | `nl-NL` | stays as written | `Mr.` with a capital is also the English title, so only the lowercase `mr.` reads "meester". |
 
 ---
-[← French](fr.md) · [Home](../index.md) · [Portuguese →](pt.md)
+[← Italian](it.md) · [Home](../index.md) · [Portuguese →](pt.md)

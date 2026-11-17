@@ -412,7 +412,7 @@ def test_clause_12_bites(en, source):
                                     "import ovos_color_parser\n", "def f():\n    from ovos_date_parser import x\n"])
 def test_clause_12_bites_on_an_undeclared_dependency(source):
     with pytest.raises(AssertionError, match="does not hold"):
-        contract.clause_12("qac", STUB, source=source)
+        contract.clause_12("qac", STUB, source=source, requirements=["linguatag", "unicode-rbnf", "quebra-frases"])
 
 
 @pytest.mark.parametrize("source", ["from text2spoken.lang.en import Abbreviation\n", "import text2spoken.lang.es\n",
@@ -473,10 +473,22 @@ def test_clause_12_checks_the_dependency_of_each_core_speller():
     """The stub names OvosNumberSpeller, so the import of ovos_number_parser lives in the core, not in the file."""
     spec = replace(STUB, spellers={Form.CARDINAL: OvosNumberSpeller({})})
     with pytest.raises(AssertionError, match="ovos-number-parser"):
-        contract.clause_12("qac", spec, source=OVOS_SOURCE)
+        contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=[])
     with pytest.raises(AssertionError, match="ovos-number-parser"):
         contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "pt"'])
     contract.clause_12("qac", spec, source=OVOS_SOURCE, requirements=['ovos-number-parser; extra == "qac"'])
+
+
+@pytest.mark.parametrize("name", [name for name in FILES if name != "pt"])
+def test_a_language_file_reads_with_the_base_install(name):
+    """Issue #153: every language but pt reads with no extra. The base install holds each distribution that the file
+    imports and each one that its core spellers import. pt alone takes its extra, for tugalex."""
+    spec = import_module(f"text2spoken.lang.{name}").LANGUAGE
+    top, nested = contract._imports((files("text2spoken.lang") / f"{name}.py").read_text(encoding="utf-8"))
+    wanted = {contract.DISTRIBUTIONS[m] for m in top | nested if m in contract.DISTRIBUTIONS}
+    wanted |= {contract.SPELLER_DISTRIBUTIONS[type(s)] for s in contract._spellers(spec)
+               if type(s) in contract.SPELLER_DISTRIBUTIONS}
+    assert wanted <= contract.declared(requires("text2spoken"), "")
 
 
 class _ByVariety:

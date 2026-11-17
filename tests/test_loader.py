@@ -77,11 +77,11 @@ def test_a_language_with_no_file_reads_cardinals_through_rbnf():
 # README: "A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms
 # as written." Each text holds one form other than a cardinal, so it stays whole.
 WRITTEN_FORMS = [
-    ("it-IT", "Ha pagato £5."), ("it-IT", "Ha pagato 5 €."), ("it-IT", "Ha pagato 5\u00a0€."), ("it-IT", "50%"),
-    ("it-IT", "È il 25 % in meno."), ("lb-LU", "Et kascht $5."), ("lb-LU", "Et kascht 50%."),
+    ("ca-ES", "Ha pagat £5."), ("ca-ES", "Ha pagat 5 €."), ("ca-ES", "Ha pagat 5\u00a0€."), ("ca-ES", "50%"),
+    ("ca-ES", "És un 25 % més barat."), ("lb-LU", "Et kascht $5."), ("lb-LU", "Et kascht 50%."),
     ("lb-LU", "Et weit 5 kg."), ("lb-LU", "Et huet 25°."), ("lb-LU", "Mir fueren 50 km/h."), ("lb-LU", "den 3. Mee"),
     ("lb-LU", "Hie gouf 2. Sieger."), ("mt-MT", "Il-prezz: $5."), ("mt-MT", "Jiswa R$5."), ("gl-ES", "o 1.º de maio"),
-    ("gl-ES", "a 2.ª vez"), ("it-IT", "Costa 5 € al giorno."), ("it-IT", "Il 12/03/2024 alle 7:30."),
+    ("gl-ES", "a 2.ª vez"), ("ca-ES", "Costa 5 € al dia."), ("ca-ES", "El 12/03/2024 a les 7:30."),
     ("tr-TR", "%50 indirim"),
 ]
 
@@ -96,21 +96,21 @@ def test_a_language_with_no_file_keeps_the_forms_it_cannot_read_as_written(tag, 
 
 
 def test_a_language_with_no_file_reads_the_cardinals_next_to_a_kept_form():
-    # Wiktionary, tre: Italian "three".
-    assert normalize("Ha pagato £5 e 5 € per 3 mele.", "it-IT") == "Ha pagato £5 e 5 € per tre mele."
+    # Wiktionary, tres: Catalan "three".
+    assert normalize("Ha pagat £5 i 5 € per 3 pomes.", "ca-ES") == "Ha pagat £5 i 5 € per tres pomes."
     # Wiktionary, dräi (fetched): Luxembourgish "three".
     assert normalize("Den 3. Mee kaaft ech 3.", "lb-LU") == "Den 3. Mee kaaft ech dräi."
     # CLDR `digits-ordinal` writes 3.º in Portuguese, so a full stop and a space end a sentence.
     assert normalize("Tenho 3. Ele tem 2.", "pt-PT") == "Tenho três. Ele tem dois."
 
 
-# A language with no file reads a minus through the -x rule of its RBNF cardinal rule set (design section 6.1).
-# Expected words come from the CLDR RBNF files that unicode-rbnf ships.
+# A language with no file reads a minus through the owner of its number words (design section 6.1). Expected
+# words: ovos-number-parser writes uk and bg, with the words of the English Wiktionary, Module:number list/data/uk
+# (5 п'ять, 21 двадцять один) and /bg (3 три, 5 пет, 10 десет, 12 дванадесет); "мінус" and "минус" are the minus
+# words of the uk.xml and bg.xml rules of CLDR too.
 NO_FILE_MINUS = [
-    # uk.xml, spellout-cardinal-masculine: -x "мінус →→", 5 пʼять, 20 двадцять[ →→], 1 один.
-    ("uk-UA", "сьогодні -5 дуже", "сьогодні мінус пʼять дуже"),
+    ("uk-UA", "сьогодні -5 дуже", "сьогодні мінус п'ять дуже"),
     ("uk", "Було \u221221.", "Було мінус двадцять один."),
-    # bg.xml, spellout-cardinal-masculine: -x "минус →→", 5 пет, 3 три.
     ("bg", "Днес -5 градуса", "Днес минус пет градуса"),
     ("bg-BG", "Температура (\u22123)", "Температура (минус три)"),
 ]
@@ -121,14 +121,14 @@ NO_FILE_MINUS = [
 # it stays as written too, so that a second pass reads the same. A number grouped with a space, as in `-1 000`,
 # stays as written whole, with each kind of space that groups digits. A minus next to a currency symbol leaves the money
 # form, which a language with no file keeps as written. RBNF has no word for minus zero, and zu.xml has no -x
-# rule. Each number that reads takes its word from uk.xml: 5 пʼять.
+# rule. Each number that reads takes its word from ovos-number-parser: 5 п'ять, as the English Wiktionary writes.
 NO_FILE_KEPT_MINUS = [
     ("uk-UA", "з 5-10 градусів", "з 5-10 градусів"),
-    ("uk-UA", "код A-5", "код A-пʼять"),
+    ("uk-UA", "код A-5", "код A-п'ять"),
     ("uk-UA", "знижка -5%", "знижка -5%"),
     ("uk-UA", "температура -0 градусів", "температура -0 градусів"),
     ("uk-UA", "від 5 -10 градусів", "від 5 -10 градусів"),
-    ("uk-UA", "розділи 5--10", "розділи пʼять--10"),
+    ("uk-UA", "розділи 5--10", "розділи п'ять--10"),
     ("uk-UA", "тел. 333 -1234567", "тел. 333 -1234567"),
     ("uk-UA", "-3 яблука", "-3 яблука"),
     ("uk-UA", "Список:\n  -3 яблука", "Список:\n  -3 яблука"),
@@ -140,16 +140,16 @@ NO_FILE_KEPT_MINUS = [
 ]
 
 # A line break or a tab groups no digits: the minus at the end of a line reads, and so does the number of the next
-# line. A minus at the start of a line stays as written. Words from bg.xml (5 пет, 3 три, 10 десет, 12 дванайсет),
-# uk.xml (5 пʼять, 3 три, 10 десять) and pl.xml (5 pięć, 3 trzy), spellout-cardinal-masculine.
+# line. A minus at the start of a line stays as written. Words of the English Wiktionary, Module:number list/data/bg
+# (5 пет, 3 три, 10 десет, 12 дванадесет), /uk (5 п'ять, 3 три, 10 десять) and /pl (5 pięć, 3 trzy).
 NO_FILE_LINE_BREAKS = [
-    ("uk-UA", "Оцінка: -5\n10 студентів прийшли", "Оцінка: мінус пʼять\nдесять студентів прийшли"),
-    ("uk-UA", "сьогодні -5\n3 яблука", "сьогодні мінус пʼять\nтри яблука"),
-    ("uk-UA", "сьогодні -5\t10", "сьогодні мінус пʼять\tдесять"),
+    ("uk-UA", "Оцінка: -5\n10 студентів прийшли", "Оцінка: мінус п'ять\nдесять студентів прийшли"),
+    ("uk-UA", "сьогодні -5\n3 яблука", "сьогодні мінус п'ять\nтри яблука"),
+    ("uk-UA", "сьогодні -5\t10", "сьогодні мінус п'ять\tдесять"),
     ("pl-PL", "dziś -5\n3 jabłka", "dziś minus pięć\ntrzy jabłka"),
     ("bg-BG", "Оценка: -5\n10 души", "Оценка: минус пет\nдесет души"),
     ("bg-BG", "днес -5\n\n3 ябълки", "днес минус пет\n\nтри ябълки"),
-    ("bg-BG", "-5\n\n12 души", "-5\n\nдванайсет души"),
+    ("bg-BG", "-5\n\n12 души", "-5\n\nдванадесет души"),
 ]
 
 NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
@@ -167,6 +167,53 @@ NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
 def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
+
+
+# A language with no file whose number words ovos-number-parser writes with a module of its own reads them through
+# the parser, and RBNF reads every other language (design section 6.1). Expected words: English Wiktionary,
+# Module:number list/data/nb (3 tre), /az (7 yeddi, 60 altmış, 100 yüz) and /gl (0 cero); Galician "tres" from the
+# Wiktionary entry tres; Catalan "dos-cents" from the Wiktionary entry dos-cents, where RBNF writes "dos-cent".
+# Slovene reads through the parser, though the parser writes 2000 as "dve tisoč" where /sl writes "dva tisoč": RBNF
+# writes each number from 21 to 99 unit last, "štirideset dva", where /sl writes 7 sedem and 42 dvainštirideset.
+NO_FILE_PARSER = [
+    ("nb-NO", "Jeg har 3 katter", "Jeg har tre katter"),
+    ("gl-ES", "O Dr. Pérez ten 3 pacientes.", "O Dr. Pérez ten tres pacientes."),
+    ("gl-ES", "Hai 0 erros", "Hai cero erros"),
+    ("az-AZ", "bu gün 7 gün 60 il 100", "bu gün yeddi gün altmış il yüz"),
+    ("ca-ES", "avui 201 fa", "avui dos-cents un fa"),
+    ("sl-SI", "danes 7 je 42 zelo", "danes sedem je dvainštirideset zelo"),
+]
+
+# Lao reads through RBNF, and the core table rbnf_corrections.json gives the Lao words where the CLDR rules of lo
+# write Thai ones. Expected words: English Wiktionary, Module:number list/data/lo: 7 ເຈັດ, 4 ສີ່, 10 ສິບ, 2 ສອງ, 1
+# ໜຶ່ງ, 3 ສາມ, 5 ຫ້າ, 100 ຮ້ອຍ, 1000 ພັນ; SEAlang Lao dictionary, ລົບ: "preposition minus". RBNF writes a zero-width space
+# between the parts of a number.
+NO_FILE_LAO = [
+    ("lo", "ມື້ນີ້ 7 ອາກາດ 42 ດີຫຼາຍ 1234",
+     "ມື້ນີ້ ເຈັດ ອາກາດ ສີ່\u200bສິບ\u200bສອງ ດີຫຼາຍ ໜຶ່ງ\u200bພັນ\u200bສອງ\u200bຮ້ອຍ\u200bສາມ\u200bສິບ\u200bສີ່"),
+    ("lo-LA", "ມື້ນີ້ 7 ອາກາດ 42 ດີຫຼາຍ 1234",
+     "ມື້ນີ້ ເຈັດ ອາກາດ ສີ່\u200bສິບ\u200bສອງ ດີຫຼາຍ ໜຶ່ງ\u200bພັນ\u200bສອງ\u200bຮ້ອຍ\u200bສາມ\u200bສິບ\u200bສີ່"),
+    ("lo-LA", "ມື້ນີ້ -5 ອາກາດ", "ມື້ນີ້ ລົບ\u200bຫ້າ ອາກາດ"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_PARSER + NO_FILE_LAO)
+def test_a_language_with_no_file_reads_each_number_word_from_its_one_owner(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+@pytest.mark.parametrize("tag", ["lo", "lo-LA"])
+def test_a_lao_number_holds_no_thai_letter(tag):
+    """The Thai block is U+0E00 to U+0E7F, and Lao is U+0E80 to U+0EFF (The Unicode Standard, Thai and Lao blocks)."""
+    spoken = normalize("0 7 42 100 1234 21000 150000 1000000 -5", tag)
+    assert not [char for char in spoken if "\u0e00" <= char <= "\u0e7f"], spoken
+
+
+def test_a_language_that_rbnf_holds_reads_through_rbnf():
+    """RBNF_HELD holds da and sk. Danish shows it: the parser drops the "og" of "tusind og en", which the title of
+    the Danish Wikipedia page "Tusind og en Nat" writes. RBNF da, spellout-cardinal: 1001 "tusind og et"."""
+    assert normalize("år 1001", "da-DK") == "år tusind og et"
 
 
 def test_a_language_with_no_file_and_no_rbnf_reads_only_the_lexicon():
