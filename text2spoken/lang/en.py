@@ -188,7 +188,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterator, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from functools import cache
 from importlib.resources import files
 
@@ -199,10 +199,10 @@ from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number, written_amount
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges, numbers_in,
-                                          signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
-                                          speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
-                                          speak_range, speak_telephone)
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges,
+                                          numbers_in, signed, speak_abbreviation, speak_cardinal, speak_decimal,
+                                          speak_expression, speak_fraction, speak_idiom, speak_lexicon, speak_ordinal,
+                                          speak_percent, speak_range, speak_telephone)
 from bisect import bisect_right
 
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
@@ -450,8 +450,8 @@ def speak_date(span: Span, context: SpanContext) -> str:
     """A day-first reading says "the", the ordinal day, "of" and the month (Wikipedia, "Date and time notation in
     the United Kingdom": "When saying the date, it is usually pronounced using "the", then the ordinal number of the
     day first, then the preposition "of", then the month"). When the text writes "the" right before the date, with
-    whitespace alone between them, the date recognizers keep that word as the prefix of the span, and the reading
-    says no second one: `the 3rd of May` reads "the third of May"."""
+    whitespace alone between them, the reading says no second one: `the 3rd of May` reads "the third of May". The
+    date recognizers mark such a date in `Request.memo` (`mark_article`)."""
     request = context.request
     fields = span.fields
     month = request.data["months"][fields["month"] - 1]
@@ -463,7 +463,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
         template = "{month} {day} {year}" if fields["written_order"] == "MDY" else "the {day} of {month} {year}"
     else:
         template = request.data["numeric_date_reading"]["full"]
-    if fields["prefix"].strip().lower() == "the":
+    if span.start in request.memo.get(_ARTICLE, ()):
         template = template.removeprefix("the ")
     if year is None:
         template = template.replace(" {year}", "")
@@ -802,25 +802,31 @@ class Roman:
                            recognizer=self.name)
 
 
-def with_article(span: Span, text: str) -> Span:
-    """The date span with the word "the" before it as its prefix, when whitespace alone parts the two. Punctuation
-    between them, as in `the. 3rd of May` or `"the" 3rd of May`, means that the word is no article of the date."""
+_ARTICLE = "en_date_article"
+"""The key of `Request.memo` that holds the starts of the date spans that the word "the" stands right before."""
+
+
+def mark_article(span: Span, text: str, request: Request) -> Span:
+    """The date span, marked in `Request.memo` under `_ARTICLE` when the word "the" stands before it with whitespace
+    alone between the two. Punctuation between them, as in `the. 3rd of May` or `"the" 3rd of May`, means that the
+    word is no article of the date. The span keeps its bounds, so a lexicon entry for "the" and a hint at the offset
+    of the date find the date as they do with no article."""
     gap = span.start
     while gap and text[gap - 1].isspace():
         gap -= 1
     article = gap - 3
-    if span.fields["prefix"] or gap == span.start or article < 0 or text[article:gap].lower() != "the" \
-            or (article and is_word_char(text[article - 1])):
-        return span
-    return replace(span, start=article, fields=FrozenMap({**span.fields, "prefix": text[article:span.start]}))
+    if gap < span.start and article >= 0 and text[article:gap].lower() == "the" \
+            and not (article and is_word_char(text[article - 1])):
+        request.memo.setdefault(_ARTICLE, set()).add(span.start)
+    return span
 
 
 @dataclass(frozen=True)
 class EnglishDateNumeric(DateNumeric):
-    """The shared numeric date, with the article before it (`with_article`)."""
+    """The shared numeric date, with the article before it marked (`mark_article`)."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return (with_article(span, text) for span in super().find(text, tokens, request))
+        return (mark_article(span, text, request) for span in super().find(text, tokens, request))
 
 
 @dataclass(frozen=True)
@@ -853,12 +859,12 @@ class DateNamed:
                 year_value = int(year) if year is not None else None
                 if day is not None and not is_valid(year_value, month, int(day)):
                     continue
-                yield with_article(Span(start, end, Form.DATE,
+                yield mark_article(Span(start, end, Form.DATE,
                                         FrozenMap({"year": year_value, "month": month,
                                                    "day": int(day) if day else None,
                                                    "written_order": "DMY" if order == "DMY" else "MDY",
                                                    "month_written": "name", "prefix": "", "suffix": ""}),
-                                        recognizer=self.name), text)
+                                        recognizer=self.name), text, request)
 
 
 LANGUAGE = LanguageSpec(
