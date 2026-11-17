@@ -4,7 +4,7 @@ The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for i
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. It counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. A unit name that is also an adverb or a preposition, as `ora` ("now"), counts only before `dopo` or `fa`: `il binario 1 ora è chiuso` reads `uno ora`, and `il cane 1 ora dopo` reads `un'ora dopo`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
+The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. It counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. A unit name that is also an adverb or a preposition, as `ora` ("now") or `secondo` ("according to"), counts too: `il percorso 1 ora circa` reads `un'ora circa`. Only a verb of `adverb_verbs`, such as `è` or `fa parte`, makes it the adverb: `il binario 1 ora è chiuso` reads `uno ora`. `secondo` before an article or a capital is the preposition, as in `il livello 1 secondo la scala`. Before a word with a capital, such as a name or a unit symbol that the file does not list, 1 reads `un`, as in `con 1 Airbus`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `4 + 5 = 9` | `it-IT` | quattro più cinque è uguale a nove |
 | `Leggi l'art. 3 della Costituzione.` | `it-IT` | Leggi l'articolo tre della Costituzione. |
 
-A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. When the noun phrase has a feminine determiner, such as `la`, `sig.`, `prof.`, `dott.` and `Dr.` read the feminine word. Possessives and the adjectives of `title_adjectives`, such as `cara` and `vecchia`, may come between the determiner and the title. Any other word ends the noun phrase. With no determiner, a feminine adjective before the title makes it feminine, as in a letter heading:
+A title reads as the word that stands before a name, in lowercase, and takes a capital only where a clause starts. When the noun phrase has a feminine determiner, such as `la`, `sig.`, `prof.`, `dott.` and `Dr.` read the feminine word. Possessives and the adjectives of `title_adjectives`, such as `cara` and `vecchia`, may come between the determiner and the title. Any other word ends the noun phrase. In a letter heading, where only adjectives come before the title on its line, the adjective gives the gender, as `Egregia` and `Gentilissima` do. Two adjectives of different genders, or a gendered adjective after another word, as the verb `nota` in `Come nota Prof. Rossi`, leave the title as written:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -73,6 +73,8 @@ A title reads as the word that stands before a name, in lowercase, and takes a c
 | `La vecchia prof. Neri insegna ancora.` | `it-IT` | La vecchia professoressa Neri insegna ancora. |
 | `Questa mattina Prof. Rossi ha parlato.` | `it-IT` | Questa mattina professor Rossi ha parlato. |
 | `Egregia Dott. Neri, le scrivo.` | `it-IT` | Egregia dottoressa Neri, le scrivo. |
+| `Gentilissima Dott. Neri, le scrivo.` | `it-IT` | Gentilissima dottoressa Neri, le scrivo. |
+| `Come nota Prof. Rossi, il dato è basso.` | `it-IT` | Come nota Prof. Rossi, il dato è basso. |
 
 A day and a month, as `13/11`, read as a date only after a word of `date_words`, such as `il` and `dal`, and only when the day is above 12. A smaller day can also be the month of a month/day date, so the pair stays as written. `24/7` also stays as written:
 
@@ -115,7 +117,7 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). It also lists the words of the categories of Italian prepositions, conjunctions, adverbs, pronouns, determiners and articles. The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 225 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 255 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
@@ -134,6 +136,12 @@ Italian leaves these forms as written, or reads them as shown:
 | `Antonio oggi compie 41 anni.` | `it-IT` | Antonio oggi compie quarantuno anni. | A compound in uno keeps its full form. Before a noun the short form "quarantun anni" is also correct. |
 | `Ha 10.000.000 follower.` | `it-IT` | stays as written | A number that ends in a scale word reads before a noun of the noun list, its regular plural and a function word that is no noun. The loanword "follower" is in neither list, and a word that no list holds may be a verb. |
 | `Le pagine 5-10.` | `it-IT` | stays as written | A hyphen between two numbers writes a range, and the file holds no range word. The hyphen is no minus sign, so the text never reads "cinque meno dieci". |
+| `Il negozio apre alle ore 15,00.` | `it-IT` | stays as written | After a time word, an hour, a comma and two digits up to 59 may be a clock time, and the file reads a clock time only with `:` or `.`. |
+| `Ci sono onde alte 3/4 metri.` | `it-IT` | stays as written | A fraction is a noun, so the noun it counts follows "di", as in `I 3/4 della popolazione`. Before another word, as `metri`, `milioni` or `per cento`, two numbers with a slash write a range, a pair or a score, and the file holds no range word. 1/2 before a noun reads "mezzo". |
+| `Dall'1 maggio si parte.` | `it-IT` | stays as written | The first day of a month reads "primo", and an elided article such as `dall'` stands only before a vowel. A speaker says "dal primo maggio". |
+| `l´Italia è bella.` | `it-IT` | stays as written | An acute or a grave accent next to a letter stands for an apostrophe or a quotation mark, so it reads no symbol name. |
+| `Il dato scende (- 2,8%) oggi.` | `it-IT` | stays as written | A space parts the sign from the number after a bracket, so the sign may be a minus or a dash. A whole number alone, as `(+ 2)`, reads "(+ due)". |
+| `Una temperatura di -1 gradi.` | `it-IT` | Una temperatura di meno uno gradi. | 1 after a minus sign reads the bare number before a plural noun. A speaker says "meno un grado". |
 
 ---
 [← French](fr.md) · [Home](../index.md) · [Portuguese →](pt.md)
