@@ -1,6 +1,6 @@
 # Spanish
 
-The file `text2spoken/lang/es.py` reads Spanish. Install `text2spoken[es]` for its number words, which come from `ovos-number-parser`.
+The file `text2spoken/lang/es.py` reads Spanish. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
 

@@ -1,6 +1,6 @@
 # Italian
 
-The file `text2spoken/lang/it.py` reads Italian. Install `text2spoken[it]` for its number words, which come from `ovos-number-parser`, and its dates and times, which come from `ovos-date-parser`.
+The file `text2spoken/lang/it.py` reads Italian. Its number words come from `ovos-number-parser`, and its dates and times from `ovos-date-parser`. The base install holds both.
 
 ## What it reads
 

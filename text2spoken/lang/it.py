@@ -1,6 +1,6 @@
 """Italian: it-IT, the default variety, it-CH and it-SM.
 
-Cardinals and ordinals come from ovos-number-parser (design section 5.4), the `it` extra. Its forms agree with the
+Cardinals and ordinals come from ovos-number-parser (design section 5.4). Its forms agree with the
 Enciclopedia dell'Italiano Treccani, "numerali", Pronuncia e grafia. A compound in uno keeps its full form, as
 "ventuno", "centouno" and "ventunomila", and the same section allows both forms before a noun: "Nei composti (ventuno,
 trentuno, ecc.) accompagnati da un nome, questo è invariabile se il numerale segue il nome, ma può essere apocopato se
@@ -86,7 +86,7 @@ del corrispondente cardinale ital. con l'aggiunta della terminazione -èsimo: co
 centunesimo, [...] millesimo, duemillesimo, [...] diecimillesimo". So 108 reads "centoottesimo", from "centootto", and
 180 "centottantesimo". The same entry gives the separate form for the ordinals "per i quali l'altro tipo sarebbe sentito
 come poco eufonico: centesimo decimo, millesimo primo, millesimo secondo, millesimo decimo, millesimo undecimo o
-undicesimo, ecc. (in questi casi la grafia staccata è preferita)". ovos-number-parser, the `it` extra, writes the
+undicesimo, ecc. (in questi casi la grafia staccata è preferita)". ovos-number-parser writes the
 ordinals, the separate forms included: "millesimo primo" for 1001, "millesimo undicesimo" for 1011, and every number
 above 100 that ends in 10 as the ordinal of the number without the 10 and "decimo": "centesimo decimo" for 110,
 "duecentesimo decimo" for 210, "trecentesima decima" in the feminine. From a million up the parser writes one word with
@@ -189,7 +189,7 @@ the sign from the number, so it may be a minus or a dash. A whole number alone a
 cardinal, as in a language with no file. An acute or a grave accent next to a letter, as in `l´Italia`, stands for an
 apostrophe or a quotation mark and stays as written.
 
-The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4), the `it` extra,
+The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4),
 and so do the month names. A numeric date reads in the order day, month, year. In `25 dicembre 2024` the day and the
 month read as a date, and the year as a cardinal. The first day of a month is an ordinal: the Accademia della Crusca,
 consulenza 1077, "per il giorno iniziale di un mese si usa l'ordinale: il primo ottobre (o il 1° ottobre)", and

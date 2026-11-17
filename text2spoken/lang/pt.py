@@ -203,8 +203,8 @@ names that match a Wikidata given name, and the Wikidata given names marked Port
 so it names a name that is also a common noun of another gender: "Lula", the name by which Luiz Inácio Lula da Silva
 is known (Wikipedia, "Luiz Inácio Lula da Silva": "known mononymously as Lula"), so `Lula III` reads "Terceiro". The
 word list of tugalex holds no plural, so `noun_gender` names the plurals of the feminine nouns of `roman_nouns`,
-which Priberam gives as "nome feminino": `nas Seções IV e VI` reads "Seções Quarta". Without the extra, which brings
-the number library, a Roman numeral stays as written, and one log warning names the extra.
+which Priberam gives as "nome feminino": `nas Seções IV e VI` reads "Seções Quarta". Without the extra, the gender
+after a name comes from the regnal title and the `noun_gender` table alone, else the masculine.
 
 A numeral right after a word of `letter_words`, such as a pronoun, does not read, because a numeral follows a noun
 or a name: `Eu LI o livro` stays as written. In a clause in capitals, the word before the numeral does not decide
@@ -503,8 +503,8 @@ def _tugalex_words(region: str) -> frozenset[str]:
 @cache
 def _warn_no_extra() -> None:
     logging.getLogger("text2spoken").warning(
-        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it, and "
-        "a Roman numeral stays as written; install text2spoken[pt]")
+        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it; "
+        "install text2spoken[pt]")
 
 
 def _known_word(word: str, request: Request) -> bool:
@@ -773,14 +773,10 @@ def speak_roman(span: Span, context: SpanContext) -> str:
         gender, capital = _title_gender(title, request), True
     else:
         gender, capital = _name_gender(before, request), True
-    try:
-        if span.fields["role"] == "ordinal":
-            words = SPELLER.ordinal(value, Features(gender=gender), request)
-        else:
-            words = _cardinal(value, request)
-    except ImportError as error:
-        _warn_no_extra()
-        raise DeclinedReading(f"no number library reads {value}") from error
+    if span.fields["role"] == "ordinal":
+        words = SPELLER.ordinal(value, Features(gender=gender), request)
+    else:
+        words = _cardinal(value, request)
     return words[0].upper() + words[1:] if capital else words
 
 

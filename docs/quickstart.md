@@ -8,20 +8,13 @@ This page installs text2spoken, makes the first call, and shows how to see what 
 uv pip install --prerelease=allow text2spoken
 ```
 
-The library needs Python 3.11 or later. It uses no network and loads no model. English and German need no extra. Install the extra of each other language that you read:
-
-| Extra | Language | What it adds |
-| --- | --- | --- |
-| `ar` | Arabic | `ovos-number-parser` |
-| `es` | Spanish | `ovos-number-parser` |
-| `eu` | Basque | `ovos-number-parser` |
-| `fr` | French | the floor of `unicode-rbnf`, which the core already holds |
-| `pt` | Portuguese | `ovos-number-parser`, `ovos-date-parser` and `tugalex` |
-| `ru` | Russian | `ovos-number-parser` |
+The library needs Python 3.11 or later. It uses no network and loads no model. Every language reads with the base install. Portuguese also reads the gender of nouns and given names from `tugalex`, which the `pt` extra adds:
 
 ```bash
-uv pip install --prerelease=allow "text2spoken[pt,es]"
+uv pip install --prerelease=allow "text2spoken[pt]"
 ```
+
+The extras `ar`, `es`, `eu`, `fr`, `it`, `nl` and `ru` add nothing, and an install that names one still works.
 
 ## The first call
 
