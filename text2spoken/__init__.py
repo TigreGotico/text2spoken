@@ -13,7 +13,7 @@ from text2spoken.core.spans import Analysis, Features, Span, render
 from text2spoken.core.tokens import Token, Tokenizer, default_tokenizer
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError,
                                 InvalidLanguageTagError, InvalidLexiconError, InvalidParameterError,
-                                ParameterNotHonouredWarning, Text2SpokenError, Text2SpokenWarning, TokenizerError,
+                                ParameterNotHonouredWarning, RevisionError, Text2SpokenError, Text2SpokenWarning, TokenizerError,
                                 UndefinedGrammaticalGender, UnreadFormError, UnsupportedParameterError)
 from text2spoken.params import Animacy, Form, FrozenMap, GrammaticalGender, NormalizationParams
 
@@ -24,6 +24,6 @@ __all__ = [
     "Text2SpokenError", "ArgumentTypeError", "InvalidParameterError", "InvalidLanguageTagError", "TokenizerError",
     "InvalidHintError", "UnsupportedParameterError",
     "InvalidLexiconError", "UndefinedGrammaticalGender", "UnreadFormError", "DeclinedReading", "Text2SpokenWarning",
-    "ParameterNotHonouredWarning", "HintWarning",
+    "ParameterNotHonouredWarning", "HintWarning", "RevisionError",
 ]
 

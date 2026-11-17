@@ -9,14 +9,17 @@ import re
 import shutil
 import subprocess
 import sys
+import unicodedata
+import zipfile
 from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
 
 import text2spoken
-from text2spoken import ArgumentTypeError, InvalidLanguageTagError, revision
-from text2spoken.core.revision import probe, tree_digest
+from text2spoken import ArgumentTypeError, InvalidLanguageTagError, RevisionError, revision
+from text2spoken.core.language import select
+from text2spoken.core.revision import _revision, _top_level_digest, code_tokens, probe, tree_digest
 
 PACKAGE = Path(text2spoken.__file__).parent
 
@@ -37,13 +40,17 @@ def edit(path: Path, old: str, new: str) -> None:
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
-def revision_in_process(lang: str, path: Path | None = None, seed: str = "0") -> str:
+def run_revision(lang: str, path: Path | None = None, seed: str = "0") -> subprocess.CompletedProcess:
     paths = [str(path)] if path else []
     env = {**os.environ, "PYTHONHASHSEED": seed,
            "PYTHONPATH": os.pathsep.join([*paths, *(entry or os.getcwd() for entry in sys.path)])}
     script = "import sys, text2spoken; print(text2spoken.revision(sys.argv[1]))"
-    done = subprocess.run([sys.executable, "-P", "-c", script, lang], capture_output=True, text=True, env=env,
-                          check=True)
+    return subprocess.run([sys.executable, "-P", "-c", script, lang], capture_output=True, text=True, env=env)
+
+
+def revision_in_process(lang: str, path: Path | None = None, seed: str = "0") -> str:
+    done = run_revision(lang, path, seed)
+    assert done.returncode == 0, done.stderr
     return done.stdout.strip()
 
 
@@ -169,3 +176,38 @@ def test_an_edit_of_a_data_file_of_a_loaded_distribution_changes_the_revision(tm
     rbnf = copy_package(installed("unicode_rbnf"), tmp_path)
     edit(rbnf / "rbnf" / "pt.xml", '<rbnfrule value="20">vinte[', '<rbnfrule value="20">vintx[')
     assert revision_in_process("pt-PT", tmp_path) != revision("pt-PT")
+
+
+def test_a_different_unicode_version_changes_the_revision(monkeypatch):
+    """The tokenizer reads digits through `unicodedata`: Nag Mundari digits read as a number with Unicode 15 and
+    stay as written with Unicode 14."""
+    tag, language, variety = select("pt-PT")
+    before = _revision.__wrapped__(tag, language.code, variety.tag)
+    assert before == revision("pt-PT")
+    monkeypatch.setattr(unicodedata, "unidata_version", "99.0.0")
+    assert _revision.__wrapped__(tag, language.code, variety.tag) != before
+
+
+def test_a_package_imported_from_a_zip_file_raises(tmp_path):
+    root = installed("ovos_number_parser")
+    archive = tmp_path / "numbers.zip"
+    with zipfile.ZipFile(archive, "w") as packed:
+        for path in root.rglob("*"):
+            if path.is_file() and "__pycache__" not in path.parts:
+                packed.write(path, path.relative_to(root.parent).as_posix())
+    done = run_revision("pt-PT", archive)
+    assert done.returncode != 0 and done.stdout == ""
+    assert "RevisionError" in done.stderr and str(archive / "ovos_number_parser") in done.stderr
+
+
+def test_a_name_that_the_import_system_does_not_find_raises():
+    with pytest.raises(RevisionError, match="t2s_no_such_module"):
+        _top_level_digest("t2s_no_such_module")
+
+
+def test_the_text_of_a_string_at_the_end_of_a_statement_is_in_the_tokens():
+    assert code_tokens(b'x = "a"\n') != code_tokens(b'x = "b"\n')
+
+
+def test_the_text_of_an_f_string_is_in_the_tokens():
+    assert code_tokens(b'y = 1\nz = f"a{y}"\n') != code_tokens(b'y = 1\nz = f"b{y}"\n')

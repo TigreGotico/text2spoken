@@ -4,8 +4,9 @@ section 12.1).
 The revision is a hash over the code and the data on the output path of the language. A probe in a fresh process
 calls `normalize` and each parser writer for the language, and records the modules that the calls import. Each
 distribution that holds one of those modules goes into the hash whole: the code tokens of each of its Python
-modules and the bytes of each of its data files. A docstring, a comment and a `version.py` are not in the hash, so
-a release that changes only those keeps the revision.
+modules and the bytes of each of its data files. The Unicode version of the interpreter is in the hash too, since
+the tokenizer reads digits through `unicodedata`. A docstring, a comment and a `version.py` are not in the hash,
+so a release that changes only those keeps the revision.
 """
 from __future__ import annotations
 
@@ -17,12 +18,13 @@ import subprocess
 import sys
 import sysconfig
 import tokenize
+import unicodedata
 from collections.abc import Iterator
 from functools import cache
 from pathlib import Path
 
 from text2spoken.core.language import select
-from text2spoken.errors import require_type
+from text2spoken.errors import RevisionError, require_type
 
 FORMAT = "t2s1"
 """The prefix of a revision. It changes when the inputs or the encoding of the hash change."""
@@ -80,7 +82,7 @@ def revision(lang: str) -> str:
 
 @cache
 def _revision(tag: str, code: str, variety: str) -> str:
-    digest = hashlib.sha256(json.dumps([FORMAT, tag, code, variety]).encode())
+    digest = hashlib.sha256(json.dumps([FORMAT, unicodedata.unidata_version, tag, code, variety]).encode())
     for name in sorted(_top_levels(tag)):
         digest.update(f"\0{name}\0{_top_level_digest(name)}".encode())
     return f"{FORMAT}:{digest.hexdigest()}"
@@ -110,17 +112,22 @@ def _top_levels(tag: str) -> set[str]:
 
 @cache
 def _top_level_digest(name: str) -> str:
-    """The hash of the files of one top-level module, where the import system finds it."""
+    """The hash of the files of one top-level module, where the import system finds it. A module that loads from
+    anything but a directory or a file, such as a zip file, raises `RevisionError`."""
     from importlib.util import find_spec
 
     spec = find_spec(name)
     if spec is None:
-        return ""
+        raise RevisionError(f"{name!r} is on the output path, but the import system does not find it")
     if spec.submodule_search_locations:
-        return tree_digest(name, *map(Path, spec.submodule_search_locations))
-    if spec.origin and Path(spec.origin).is_file():
-        return hashlib.sha256(_entry(name, Path(spec.origin).name, Path(spec.origin)).encode()).hexdigest()
-    return ""
+        roots = [Path(location) for location in spec.submodule_search_locations]
+        for root in roots:
+            if not root.is_dir():
+                raise RevisionError(f"{name!r} loads from {str(root)!r}, which is not a directory")
+        return tree_digest(name, *roots)
+    if spec.origin is None or not Path(spec.origin).is_file():
+        raise RevisionError(f"{name!r} loads from {spec.origin!r}, which is not a file")
+    return hashlib.sha256(_entry(name, Path(spec.origin).name, Path(spec.origin)).encode()).hexdigest()
 
 
 def tree_digest(name: str, *roots: Path) -> str:

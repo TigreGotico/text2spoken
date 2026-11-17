@@ -156,9 +156,13 @@ False
 
 The value is `t2s1:` and a SHA-256 in hex. The hash holds the tag, the language file and the variety. It also holds each distribution that has a module that `normalize` or a number or date writer imports for the language. For each of these distributions, it holds the code tokens of each Python module and the bytes of each data file.
 
+The hash also holds the Unicode version of the interpreter, `unicodedata.unidata_version`, because the library finds digits through `unicodedata`. Each Python minor version has a different Unicode version, so each has a different revision.
+
 A docstring, a comment, a blank line and a `version.py` are not in the hash. A release that changes only these keeps the revision. A refactor that keeps the output can change the revision. A compiled module, such as the C part of `regex`, goes into the hash by its name and the version of its distribution, because its bytes are different on each platform.
 
 The first call for a language takes some seconds. It runs a probe in a new Python process and reads the files of each distribution. Later calls give the stored value. `import text2spoken` computes no revision.
+
+When a module of the output path loads from a zip file, or from another place that is not a directory or a file, `revision` raises `RevisionError`. It names the module and the place. It gives no revision over less than the code.
 
 ## Params
 

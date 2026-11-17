@@ -18,6 +18,7 @@ text2spoken has two modes. The default mode keeps a form that it cannot read as 
 | A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
 | A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
 | A tokenizer result that is not a sequence of tokens that match the text | `TokenizerError` | `TokenizerError` |
+| `revision` finds a module of the output path in a zip file or in another place that is not a directory or a file | `RevisionError` | `RevisionError` |
 
 ## A form that the library cannot read
 
