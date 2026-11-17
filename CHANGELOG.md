@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a60](https://github.com/TigreGotico/text2spoken/tree/0.0.2a60) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a59...0.0.2a60)
+
+**Merged pull requests:**
+
+- fix\(nl\): keep leading-zero spaced numbers with a decimal comma [\#126](https://github.com/TigreGotico/text2spoken/pull/126) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a59](https://github.com/TigreGotico/text2spoken/tree/0.0.2a59) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a58...0.0.2a59)
@@ -382,7 +390,6 @@
 **Merged pull requests:**
 
 - fix: decline long digit runs at a fixed bound, not at Python's int limit [\#23](https://github.com/TigreGotico/text2spoken/pull/23) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- refactor: make the public API keyword-only and exact [\#22](https://github.com/TigreGotico/text2spoken/pull/22) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a10](https://github.com/TigreGotico/text2spoken/tree/0.0.2a10) (2026-11-09)
 
