@@ -38,6 +38,8 @@ SSML markup can name the form of a run of text, as in `<say-as interpret-as="ord
 'three nine eight one nine zero zero'
 >>> normalize("W3C", "en-US", say_as=SayAs(interpret_as="characters"))
 'double-u three see'
+>>> normalize("21 people", "en-US", say_as=SayAs(interpret_as="cardinal"))
+'twenty-one people'
 ```
 
 `SayAs` takes `interpret_as`, `format` and `detail`, as the markup writes them. The library strips the white space at their edges and ignores their case.
@@ -53,7 +55,7 @@ SSML markup can name the form of a run of text, as in `<say-as interpret-as="ord
 | `characters`, `spell-out`, `letters`, `verbatim` | `characters` | | Letter by letter, and digit by digit |
 | `fraction`, `unit`, `currency` | | | As a fraction, a measure or an amount of money |
 
-The rest of the text reads as plain text, so `21 people` with `cardinal` reads "twenty-one people". Any other value, such as `address`, gives the plain reading and a `ParameterNotHonouredWarning`. A format or a detail that the language cannot use is dropped with the same warning. When the text holds nothing of the form, as `abc` with `cardinal`, the call gives the plain reading and logs one `WARNING`. With `strict=True`, these cases raise `UnsupportedParameterError` and `UnreadFormError` (see [Errors and warnings](errors.md)). `analysis.request.say_as` shows the say-as that the call read, or `None`.
+The rest of the text reads as plain text, as `people` does in the last example. Any other value, such as `address`, gives the plain reading and a `ParameterNotHonouredWarning`. A format or a detail that the language cannot use is dropped with the same warning. When the text holds nothing of the form, as `abc` with `cardinal`, the call gives the plain reading and logs one `WARNING`. With `strict=True`, these cases raise `UnsupportedParameterError` and `UnreadFormError` (see [Errors and warnings](errors.md)). `analysis.request.say_as` shows the say-as that the call read, or `None`.
 
 ## analyze and render
 
