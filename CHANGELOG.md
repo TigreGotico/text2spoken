@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.0.2a62](https://github.com/TigreGotico/text2spoken/tree/0.0.2a62) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a61...0.0.2a62)
+
+**Merged pull requests:**
+
+- feat: Greek language file [\#127](https://github.com/TigreGotico/text2spoken/pull/127) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a61](https://github.com/TigreGotico/text2spoken/tree/0.0.2a61) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a60...0.0.2a61)
+
+**Merged pull requests:**
+
+- fix\(en\): no doubled article before a date [\#123](https://github.com/TigreGotico/text2spoken/pull/123) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a60](https://github.com/TigreGotico/text2spoken/tree/0.0.2a60) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a59...0.0.2a60)
+
+**Merged pull requests:**
+
+- fix\(nl\): keep leading-zero spaced numbers with a decimal comma [\#126](https://github.com/TigreGotico/text2spoken/pull/126) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a59](https://github.com/TigreGotico/text2spoken/tree/0.0.2a59) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a58...0.0.2a59)
@@ -367,10 +391,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a12...0.0.2a13)
 
-**Merged pull requests:**
-
-- perf: cache the lexicon check [\#26](https://github.com/TigreGotico/text2spoken/pull/26) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a12](https://github.com/TigreGotico/text2spoken/tree/0.0.2a12) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a11...0.0.2a12)
@@ -378,11 +398,6 @@
 ## [0.0.2a11](https://github.com/TigreGotico/text2spoken/tree/0.0.2a11) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a10...0.0.2a11)
-
-**Merged pull requests:**
-
-- fix: decline long digit runs at a fixed bound, not at Python's int limit [\#23](https://github.com/TigreGotico/text2spoken/pull/23) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- refactor: make the public API keyword-only and exact [\#22](https://github.com/TigreGotico/text2spoken/pull/22) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a10](https://github.com/TigreGotico/text2spoken/tree/0.0.2a10) (2026-11-09)
 

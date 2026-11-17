@@ -8,7 +8,7 @@ text2spoken rewrites written text into the words that a person says when they re
 uv pip install --prerelease=allow text2spoken
 ```
 
-It needs Python 3.11 or later, and uses no network and no model. Each language except English and German takes an extra, such as `text2spoken[pt]`.
+It needs Python 3.11 or later, and uses no network and no model. Each language except English, German and Greek takes an extra, such as `text2spoken[pt]`.
 
 ## Example
 
@@ -45,6 +45,7 @@ A tag with no language file reads cardinal numbers from the CLDR spell-out rules
 | --- | --- | --- |
 | [Arabic](docs/languages/ar.md) | `ar-001`, ten regional tags, and 25 ISO 639-3 varieties such as `arz` | `ar` |
 | [German](docs/languages/de.md) | `de-DE`, `de-AT`, `de-CH` | none |
+| [Greek](docs/languages/el.md) | `el-GR` | none |
 | [English](docs/languages/en.md) | `en-GB`, `en-US` | none |
 | [Spanish](docs/languages/es.md) | `es-ES`, `es-419` and eleven American varieties | `es` |
 | [Basque](docs/languages/eu.md) | `eu-ES` | `eu` |

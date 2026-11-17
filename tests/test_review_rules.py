@@ -228,6 +228,22 @@ def test_a_lexicon_entry_that_keeps_its_key_is_allowed_and_protects_the_text():
     assert normalize("the #fff colour", "en", protected) == "the #fff colour"
 
 
+# en.py marks a date that "the" stands right before, and the span keeps the bounds it has with no article.
+
+
+def test_a_lexicon_entry_for_the_article_before_an_english_date_leaves_the_date_read():
+    params = NormalizationParams(lexicon=FrozenMap({"en-GB": FrozenMap({"the": "thee"})}))
+    assert normalize("Due the 12/03/2024.", "en-GB", params) == "Due thee twelfth of March twenty twenty-four."
+    assert normalize("On the 14 March 2024.", "en-GB", params) == "On thee fourteenth of March twenty twenty-four."
+
+
+def test_a_hint_at_an_english_date_after_the_article_finds_the_date():
+    text = "Book it for the 3rd of May."
+    strict = analyze(text, "en-GB", NormalizationParams(strict=True))
+    assert render(strict, {text.index("3rd"): Features()}) == "Book it for the third of May."
+    assert [text[span.start:span.end] for span in strict.spans] == ["3rd of May"]
+
+
 def test_a_lexicon_value_that_a_recognizer_reads_with_its_tokens_raises():
     with pytest.raises(InvalidLexiconError):
         normalize("ETA", "en", NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"ETA": "at 14:30"})})))
@@ -449,7 +465,7 @@ def test_a_digit_next_to_a_span_is_no_joiner():
 
 
 def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():
-    assert normalize("Ha １2 stanze.", "it") == "Ha １2 stanze."
+    assert normalize("Té １2 habitacions.", "ca") == "Té １2 habitacions."
 
 
 @pytest.mark.parametrize("space", [" ", "\t", "\n"])

@@ -1,3 +1,19 @@
+el_nouns.json
+
+Source: English Wiktionary, https://en.wiktionary.org/
+Read through the MediaWiki API (https://en.wiktionary.org/w/api.php) on 2026-11-17, from the category members of
+"Greek masculine nouns", "Greek feminine nouns", "Greek neuter nouns" and "Greek adjectives". The inflected forms come
+from the Wiktextract dump of the English Wiktionary at kaikki.org
+(https://kaikki.org/dictionary/Greek/kaikki.org-dictionary-Greek.jsonl), read on the same day. The category state and
+the dump of that day are the source revision.
+
+Attribution: Wiktionary contributors, the Greek noun and adjective entries of the English Wiktionary. The contributors
+of each page are in its history at https://en.wiktionary.org/. Wiktextract, by Tatu Ylonen, extracts the forms.
+
+Changes: the file keeps the lowercase forms of Greek letters, groups the forms of nouns and adjectives by gender and
+case, leaves out the vocative, and leaves out the words of articles, pronouns, determiners, prepositions, conjunctions,
+particles and contractions. scripts/extract_el_nouns.py makes the file.
+
 it_noun_genders.json
 
 Source: English Wiktionary, https://en.wiktionary.org/
@@ -14,4 +30,4 @@ apart, and lists the words of the function-word categories. scripts/extract_noun
 
 Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
 Licence text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
-This file is shared under the same licence.
+Each file is shared under the same licence.
