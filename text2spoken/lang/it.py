@@ -217,6 +217,7 @@ from functools import lru_cache
 from importlib.resources import files
 from itertools import takewhile
 
+from text2spoken.core import parsers
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
@@ -399,12 +400,10 @@ def both_gender_nouns() -> frozenset[str]:
 def scale_words() -> frozenset[str]:
     """The scale nouns that ovos-number-parser writes at the end of a number: "milione", "miliardi", "bilione". They
     stop where the parser writes a power of ten, as "uno per dieci elevato alla quarantadue"."""
-    from ovos_number_parser import pronounce_number
-
     words = set()
     for power in range(6, DIGIT_BOUND, 3):
         try:
-            readings = [pronounce_number(lead * 10 ** power, "it").split() for lead in (1, 2)]
+            readings = [parsers.pronounce_number(lead * 10 ** power, "it").split() for lead in (1, 2)]
         except (OverflowError, NotImplementedError):
             break
         if any(len(reading) != 2 for reading in readings):
@@ -416,9 +415,7 @@ def scale_words() -> frozenset[str]:
 @lru_cache(maxsize=None)
 def month_names(tag: str) -> tuple[str, ...]:
     """The month names of ovos-date-parser, January first."""
-    from ovos_date_parser.spoken import spoken_date
-
-    return tuple(spoken_date(tag, month=month) for month in range(1, 13))
+    return tuple(parsers.spoken_date(tag, month=month) for month in range(1, 13))
 
 
 def elides(word: str) -> bool:
@@ -742,11 +739,10 @@ def speak_abbreviation(span: Span, context: SpanContext) -> str:
 
 def speak_date(span: Span, context: SpanContext) -> str:
     """The date words of ovos-date-parser: "primo maggio duemilaventiquattro"."""
-    from ovos_date_parser.spoken import spoken_date
-
     fields = span.fields
     try:
-        return spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
+        return parsers.spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"],
+                                   year=fields["year"])
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
 
@@ -756,8 +752,6 @@ def speak_time(span: Span, context: SpanContext) -> str:
     "mezzogiorno", unless the word before it is a word of `time_articles` with no form for that hour, as "le". The
     word of `time_articles` that `Clock` puts in the `prefix` field takes the form of its entry: "alle 12:00" reads "a
     mezzogiorno" and "alle 1:30" "all'una e trenta"."""
-    from ovos_date_parser.spoken import spoken_time
-
     fields, request = span.fields, context.request
     hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
     word = fields["prefix"].strip()
@@ -766,9 +760,9 @@ def speak_time(span: Span, context: SpanContext) -> str:
     named = minute == 0 and not fields["second"] and hour in (0, 12) and (forms is None or str(hour) in forms)
     try:
         if named:
-            reading = spoken_time(request.variety.tag, hour, clock="12h", period=True)
+            reading = parsers.spoken_time(request.variety.tag, hour, clock="12h", period=True)
         else:
-            reading = spoken_time(request.variety.tag, hour, minute)
+            reading = parsers.spoken_time(request.variety.tag, hour, minute)
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no time {hour}:{minute:02}: {error}") from error
     if not word:

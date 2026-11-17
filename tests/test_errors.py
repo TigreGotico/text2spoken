@@ -370,13 +370,13 @@ def test_rbnf_declines_a_number_with_no_rule_and_a_run_past_the_digit_bound(run,
 
 
 def test_a_value_error_of_the_rbnf_library_still_raises(monkeypatch):
-    from text2spoken.core.spellers import RbnfSpeller
+    from text2spoken.core import spellers
 
     class Broken:
         def format_number(self, number, ruleset_names):
             raise ValueError("a defect in the library")
 
-    monkeypatch.setattr(RbnfSpeller, "engine", staticmethod(lambda request: Broken()))
+    monkeypatch.setattr(spellers, "rbnf_engine", lambda locale: Broken())
     with pytest.raises(ValueError, match="a defect in the library"):
         normalize("It is 5 now.", "en")
 

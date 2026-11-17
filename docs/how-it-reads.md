@@ -63,20 +63,20 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 
 ## A language with no file
 
-A tag whose language has no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written. A language that CLDR has no spell-out rules for reads only the lexicon.
+A tag whose language has no file reads cardinal numbers, and keeps all other forms as written. Each number word has one owner. A language that `ovos-number-parser` writes with a module of its own reads the words of that module. Every other language reads the CLDR spell-out rules, and the table `text2spoken/data/rbnf_corrections.json` corrects the CLDR words that are wrong, with a source for each. A few languages with a module stay on the CLDR rules while the module reads a class of numbers worse. `RBNF_HELD` in `text2spoken/core/spellers.py` names them and the class. A language with neither reads only the lexicon.
 
-A minus before a number reads when the CLDR rules have a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus. A minus at the start of a line, after a number or after a dash can mark a list item, a range or a code, so the minus and its number stay as written. A minus next to a currency symbol stays as written with the amount. A negative number grouped with spaces, as in `-1 000`, stays as written whole:
+A minus before a number reads when its owner has a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus. A minus at the start of a line, after a number or after a dash can mark a list item, a range or a code, so the minus and its number stay as written. A minus next to a currency symbol stays as written with the amount. A negative number grouped with spaces, as in `-1 000`, stays as written whole:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
-| `сьогодні -5 градусів` | `uk` | сьогодні мінус пʼять градусів |
-| `код A-5` | `uk` | код A-пʼять |
+| `сьогодні -5 градусів` | `uk` | сьогодні мінус п'ять градусів |
+| `код A-5` | `uk` | код A-п'ять |
 | `знижка -5%` | `uk` | stays as written |
 | `від 5 -10 градусів` | `uk` | stays as written |
 | `Баланс: -50 €` | `uk` | stays as written |
 | `температура -1 000 градусів` | `uk` | stays as written |
 
-A language with no file has no noun genders. A number before a noun takes the first CLDR cardinal rule set of `spellout-cardinal`, `spellout-cardinal-masculine` and `spellout-numbering`, whatever the gender of the noun. Agreement with the noun needs a language file that gives the genders.
+A language with no file has no noun genders. A number before a noun takes the default form of `ovos-number-parser`, or the first CLDR cardinal rule set of `spellout-cardinal`, `spellout-cardinal-masculine` and `spellout-numbering`, whatever the gender of the noun. Agreement with the noun needs a language file that gives the genders.
 
 ## Turn forms on and off
 

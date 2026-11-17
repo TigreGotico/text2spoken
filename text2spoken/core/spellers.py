@@ -5,12 +5,16 @@ its file. A speller returns words separated by single spaces, with no space at e
 """
 from __future__ import annotations
 
+import json
+import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from decimal import Decimal
-from functools import lru_cache
+from functools import cache, lru_cache
+from importlib.resources import files
 from typing import TYPE_CHECKING, Protocol
 
+from text2spoken.core import parsers
 from text2spoken.core.language import cldr_locale, rbnf_locales
 from text2spoken.core.spans import Features
 from text2spoken.errors import DeclinedReading
@@ -80,13 +84,11 @@ class OvosNumberSpeller:
         self.gender_arg = dict(gender_arg)
 
     def _kwargs(self, features: Features, request: Request) -> dict:
-        from ovos_number_parser.util import GrammaticalGender as OvosGender, Scale
-
         kwargs = {}
         if features.gender is not None:
-            kwargs["gender"] = OvosGender(self.gender_arg[features.gender])
+            kwargs["gender"] = parsers.GrammaticalGender(self.gender_arg[features.gender])
         if request.params.scale is not None:
-            kwargs["scale"] = Scale(request.params.scale)
+            kwargs["scale"] = parsers.Scale(request.params.scale)
         if features.case is not None:
             kwargs["case"] = features.case
         return kwargs
@@ -105,25 +107,32 @@ class OvosNumberSpeller:
         return spoken
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        from ovos_number_parser import pronounce_number
-
         number, kwargs = _integer(digits), self._kwargs(features, request)
         return self._read("cardinal", f"{len(digits)} digits", request,
-                          lambda: pronounce_number(number, request.tag, **kwargs))
+                          lambda: parsers.pronounce_number(number, request.tag, **kwargs))
+
+    def negative_cardinal(self, digits: str, features: Features, request: Request) -> str:
+        """The cardinal of minus the number. Zero declines, and so does a reading that has no word more than the
+        reading of the number, because then the sign is not read."""
+        number = _integer(digits)
+        if number == 0:
+            raise DeclinedReading("minus zero has no sign word")
+        kwargs = self._kwargs(features, request)
+        spoken = self._read("cardinal", f"-{len(digits)} digits", request,
+                            lambda: parsers.pronounce_number(-number, request.tag, **kwargs))
+        if len(spoken.split()) <= len(self.cardinal(digits, features, request).split()):
+            raise DeclinedReading(f"ovos-number-parser reads no minus in {request.tag}")
+        return spoken
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        from ovos_number_parser import pronounce_ordinal
-
         number, kwargs = _integer(digits), self._kwargs(features, request)
         return self._read("ordinal", f"{len(digits)} digits", request,
-                          lambda: pronounce_ordinal(number, request.tag, **kwargs))
+                          lambda: parsers.pronounce_ordinal(number, request.tag, **kwargs))
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         return self.cardinal(digits, features, request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        from ovos_number_parser import pronounce_number
-
         significant = len(_significant(integer))
         if significant > DIGIT_BOUND:
             raise DeclinedReading(f"{significant} integer digits pass the bound of {DIGIT_BOUND} digits that a "
@@ -137,16 +146,24 @@ class OvosNumberSpeller:
                                   f"{len(integer)}.{len(fraction)} digits exactly")
         kwargs = self._kwargs(features, request)
         return self._read("decimal", f"{len(integer)}.{len(fraction)} digits", request,
-                          lambda: pronounce_number(value, request.tag, places=len(fraction), **kwargs))
+                          lambda: parsers.pronounce_number(value, request.tag, places=len(fraction), **kwargs))
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
-        from ovos_number_parser import pronounce_fraction
-        from ovos_number_parser.util import Scale
-
-        scale = Scale(request.params.scale) if request.params.scale is not None else None
+        scale = parsers.Scale(request.params.scale) if request.params.scale is not None else None
         written = f"{_integer(numerator)}/{_integer(denominator)}"
         return self._read("fraction", f"{len(numerator)}/{len(denominator)} digits", request,
-                          lambda: pronounce_fraction(written, request.tag, scale=scale))
+                          lambda: parsers.pronounce_fraction(written, request.tag, scale=scale))
+
+
+RBNF_HELD = frozenset({
+    "da",  # "og" before the last part after tusind: 1001 reads "tusind en"; da.wikipedia writes "Tusind og en Nat"
+    "sk",  # thousands 2000 to 2999: "dva tisíce", where Wiktionary writes "dvetisíc" and RBNF keeps "dve"
+})
+"""Languages with a writer of their own in ovos-number-parser that a language with no file still reads through
+RBNF, because the writer reads a class of numbers worse than RBNF. The comment of each names the class. A language
+leaves the set when text2spoken takes the floor of the parser release that fixes the class. Where RBNF reads a class
+wrong too, the side with the narrower class wins: sl reads through the writer, which misreads 2000 to 2999, because
+RBNF misreads every number from 21 to 99."""
 
 
 def _rbnf_key(features: Features) -> Features:
@@ -165,8 +182,33 @@ def rbnf_engine(locale: str) -> RbnfEngine:
     return engine
 
 
+_WORD_BREAK = re.compile("([ \u00a0\u200b]+)")
+"""A space, a no-break space, or a zero-width space, which the Lao rules of CLDR write between the parts of a
+number."""
+
+
+@cache
+def rbnf_corrections() -> dict[str, dict[str, str]]:
+    """The cited corrections of `data/rbnf_corrections.json`, by language: each wrong word of the CLDR RBNF data and
+    its right word (design section 5.4). The core keeps every such correction in this one table, never in a language
+    file. The dict is shared, so a caller does not change it."""
+    table = json.loads((files("text2spoken") / "data" / "rbnf_corrections.json").read_text(encoding="utf-8"))
+    by_language: dict[str, dict[str, str]] = {}
+    for row in table["corrections"]:
+        by_language.setdefault(row["language"], {})[row["wrong"]] = row["right"]
+    return by_language
+
+
+def corrected(text: str, locale: str) -> str:
+    """RBNF output of a CLDR locale, with each word that `rbnf_corrections` holds for its language replaced."""
+    table = rbnf_corrections().get(locale.split("_")[0])
+    if not table:
+        return text
+    return "".join(table.get(part, part) for part in _WORD_BREAK.split(text))
+
+
 class RbnfSpeller:
-    """unicode_rbnf, with explicit rule set names; integers only."""
+    """unicode_rbnf, with explicit rule set names; integers only. The output passes through `corrected`."""
 
     def __init__(self, cardinal: Mapping[Features, str], ordinal: Mapping[Features, str],
                  year: str = "spellout-numbering-year"):
@@ -187,21 +229,22 @@ class RbnfSpeller:
         return table.get(key, table[Features()])
 
     @staticmethod
-    def engine(request: Request) -> RbnfEngine:
+    def locale(request: Request) -> str:
         locale = cldr_locale(request.tag, rbnf_locales(), request.language)
         if locale is None:
             raise LookupError(f"no RBNF locale for {request.tag!r}")
-        return rbnf_engine(locale)
+        return locale
 
     def _format(self, digits: str, name: str, request: Request, sign: int = 1) -> str:
         from unicode_rbnf.engine import NoRuleForNumberError
 
         number = sign * _integer(digits)
+        locale = self.locale(request)
         try:
-            result = self.engine(request).format_number(number, ruleset_names=[name])
+            result = rbnf_engine(locale).format_number(number, ruleset_names=[name])
         except (NoRuleForNumberError, OverflowError) as error:
             raise DeclinedReading(f"no rule of {name} reads a number of {len(digits)} digits") from error
-        return words(result.text_by_ruleset[name])
+        return words(corrected(result.text_by_ruleset[name], locale))
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._format(digits, self.rule_set(self.cardinal_sets, features), request)

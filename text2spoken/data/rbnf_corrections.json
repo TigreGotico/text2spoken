@@ -1,0 +1,71 @@
+{
+  "source": "Words that the CLDR RBNF data of unicode-rbnf spells wrong, with the right word and its source. RbnfSpeller replaces each wrong word in the output of every locale of the language.",
+  "corrections": [
+    {
+      "language": "el",
+      "wrong": "χίλιάδες",
+      "right": "χιλιάδες",
+      "source": "CLDR main branch, common/rbnf/el.xml, writes χιλιάδες; English Wiktionary, χιλιάδα, plural χιλιάδες"
+    },
+    {
+      "language": "el",
+      "wrong": "εννενήντα",
+      "right": "ενενήντα",
+      "source": "CLDR main branch, common/rbnf/el.xml, writes ενενήντα; English Wiktionary, ενενήντα"
+    },
+    {
+      "language": "el",
+      "wrong": "δεκατρεις",
+      "right": "δεκατρείς",
+      "source": "English Wiktionary, δεκατρείς, /ðe.kaˈtɾis/"
+    },
+    {
+      "language": "lo",
+      "wrong": "ศูนย์",
+      "right": "ສູນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 0 is ສູນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ร้อย",
+      "right": "ຮ້ອຍ",
+      "source": "English Wiktionary, Module:number list/data/lo: 100 is ຮ້ອຍ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "พัน",
+      "right": "ພັນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 1000 is ພັນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "หมื่น",
+      "right": "ໝື່ນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 10000 is ໝື່ນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "แสน",
+      "right": "ແສນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 100000 is ແສນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ล้าน",
+      "right": "ລ້ານ",
+      "source": "English Wiktionary, Module:number list/data/lo: 1000000 is ລ້ານ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ลบ",
+      "right": "ລົບ",
+      "source": "SEAlang Lao dictionary (sealang.net/lao), entry ລົບ: \"preposition minus\". CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ที่",
+      "right": "ທີ່",
+      "source": "English Wiktionary, Module:number list/data/lo: each ordinal is ທີ່ and the cardinal; SEAlang Lao dictionary (sealang.net/lao), entry ທີ່: \"together with a number forms a combination that corresponds to an ordinal number\". CLDR writes the Thai word"
+    }
+  ]
+}

@@ -268,6 +268,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
 
+from text2spoken.core import parsers
 from text2spoken.core.color import speak_color
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
@@ -622,11 +623,9 @@ def speak_range(span: Span, context: SpanContext) -> str:
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
-    from ovos_date_parser.spoken import spoken_date
-
     fields = span.fields
     try:
-        return spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
+        return parsers.spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
 
@@ -659,19 +658,17 @@ def speak_time(span: Span, context: SpanContext) -> str:
     14648; Ciberdúvidas 3267: "às onze horas e trinta minutos"), and its seconds (Ciberdúvidas 14586: "vinte horas,
     trinta minutos e vinte e quatro segundos"). The parser gives words with no comma, so `17 h 34 min 25 s` reads
     `dezassete horas trinta e quatro minutos e vinte e cinco segundos`. A written zero second is not read."""
-    from ovos_date_parser.spoken import spoken_time
-
     fields = span.fields
     request = context.request
     tag = request.variety.tag
     hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
     try:
         if _day_point(fields) is not None:
-            reading = spoken_time(tag, hour, clock="12h", period=True)
+            reading = parsers.spoken_time(tag, hour, clock="12h", period=True)
             return _contracted_word(fields["prefix"], hour, request) + reading
         if fields["suffix"]:
-            return spoken_time(tag, hour, minute, fields["second"] or None, style="units")
-        return spoken_time(tag, hour, minute)
+            return parsers.spoken_time(tag, hour, minute, fields["second"] or None, style="units")
+        return parsers.spoken_time(tag, hour, minute)
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no time {hour}:{minute:02}: {error}") from error
 

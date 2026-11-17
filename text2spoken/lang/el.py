@@ -46,10 +46,9 @@ A day before a month name counts the feminine ημέρα, the day of the month, 
 "Πρωτομαγιά": "η πρώτη ημέρα του Μαΐου". `month_names` holds the genitive month names of CLDR 49, `el`, format
 wide and abbreviated. So `4 Ιουνίου` reads "τέσσερις Ιουνίου" and `1 Μαΐου` "πρώτη Μαΐου".
 
-`spelling` corrects three words of the RBNF data of unicode-rbnf. It writes "χίλιάδες" with two accents and
-"εννενήντα" with two ν, where CLDR on its main branch writes "χιλιάδες" and "ενενήντα", as the English Wiktionary
-entries "χιλιάδα" (plural "χιλιάδες") and "ενενήντα" do. It writes 13 as "δεκατρεις" with no accent, where the
-English Wiktionary writes "δεκατρείς", /ðe.kaˈtɾis/.
+The RBNF data of unicode-rbnf writes "χίλιάδες" with two accents, "εννενήντα" with two ν and 13 as "δεκατρεις" with
+no accent. The core table `data/rbnf_corrections.json` gives the right words and their sources, and `RbnfSpeller`
+reads it (design section 5.4).
 
 A minus reads "μείον", the word of the RBNF rule `-x: μείον →→`. As in the other files, the hyphen of `5-10` and
 `A-5` is no minus. Money, measures and an ordinal with a full stop stay as written, as for a language with no file
@@ -112,7 +111,6 @@ DATA = freeze({
                        "9": ["ένατο", "ένατα"], "10": ["δέκατο", "δέκατα"], "11": ["ενδέκατο", "ενδέκατα"],
                        "12": ["δωδέκατο", "δωδέκατα"], "20": ["εικοστό", "εικοστά"], "100": ["εκατοστό", "εκατοστά"]},
     "leads": {},
-    "spelling": {"χίλιάδες": "χιλιάδες", "εννενήντα": "ενενήντα", "δεκατρεις": "δεκατρείς"},
     "case_words": {
         ACCUSATIVE: {"ένας": "έναν", "χίλιοι": "χίλιους", **{f"{h}οι": f"{h}ους" for h in _HUNDREDS}},
         GENITIVE: {"ένας": "ενός", "ένα": "ενός", "μία": "μιας", "τρεις": "τριών", "τρία": "τριών",
@@ -150,8 +148,8 @@ ADJECTIVE_WALK = 2
 
 
 class GreekSpeller:
-    """The RBNF `el` cardinal of a gender, with the corrected spelling of `spelling` and the case words of
-    `case_words`. The accusative words are masculine words only; the genitive words serve each gender."""
+    """The RBNF `el` cardinal of a gender, with the case words of `case_words`. The accusative words are masculine
+    words only; the genitive words serve each gender."""
 
     def __init__(self):
         self.rbnf = RbnfSpeller(
@@ -162,11 +160,10 @@ class GreekSpeller:
 
     @staticmethod
     def _respell(words: str, features: Features, request: Request) -> str:
-        data = request.data
-        spelled = [data["spelling"].get(word, word) for word in words.split()]
         if features.case == GENITIVE or (features.case == ACCUSATIVE and features.gender == M):
-            spelled = [data["case_words"][features.case].get(word, word) for word in spelled]
-        return " ".join(spelled)
+            table = request.data["case_words"][features.case]
+            return " ".join(table.get(word, word) for word in words.split())
+        return words
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._respell(self.rbnf.cardinal(digits, Features(gender=features.gender), request), features, request)
