@@ -52,8 +52,24 @@ entries "χιλιάδα" (plural "χιλιάδες") and "ενενήντα" do. 
 English Wiktionary writes "δεκατρείς", /ðe.kaˈtɾis/.
 
 A minus reads "μείον", the word of the RBNF rule `-x: μείον →→`. As in the other files, the hyphen of `5-10` and
-`A-5` is no minus. Money, percentages, measures, numeric dates and an ordinal with a full stop stay as written, as
-for a language with no file (design section 6.1), and so does an amount with a minus, as `-50 €` and `€ -50`. The
+`A-5` is no minus. Money, measures and an ordinal with a full stop stay as written, as for a language with no file
+(design section 6.1), and so does an amount with a minus, as `-50 €` and `€ -50`.
+
+A percentage reads its number and "τοις εκατό", the unit pattern of `concentr-percent` in the CLDR units of `el`, which
+gives the unit the neuter gender: `20%` reads "είκοσι τοις εκατό" and `-5%` "μείον πέντε τοις εκατό". A decimal, a
+per mille sign and two percentages that a dash joins stay as written.
+
+A fraction reads when its denominator has a one-word name in the English Wiktionary appendix "Greek numerals",
+Fraction column: 2 to 12, 20 and 100. The half is the adjective μισός, which agrees with its noun (English Wiktionary,
+"μισός": "μισή ώρα", half an hour; "μισό": "μισό κιλό κρασί"). Any other name is a neuter noun, as "τρίτο", plural
+"τρίτα", and "τέταρτο", plural "τέταρτα" (English Wiktionary), so its numerator reads in the neuter: `1/3` reads "ένα
+τρίτο" and `3/4` "τρία τέταρτα". The plural of each name is the neuter plural of its ordinal adjective in -ος. Any
+other fraction stays as written.
+
+A numeric date reads day, month and year, as the CLDR long date format of `el`, `d MMMM y`, writes it, with the month
+name of `months`, CLDR 49 format wide, in the genitive. The day is the feminine ημέρα, as above, and the year reads
+in the neuter, as a number with no noun. The date adds no weekday. The core resolves the order: a field above 12 is
+the day, and when both fields are 12 or below the day comes first, as in the CLDR short date format `d/M/yy`. The
 decimal mark is the comma and the group mark the full stop (CLDR 49 number symbols of `el`), so `1.234` reads as one
 number. A decimal stays as written.
 """
@@ -66,8 +82,8 @@ from functools import lru_cache
 from importlib.resources import files
 
 from text2spoken.core.language import LanguageSpec, Request, Variety
-from text2spoken.core.recognizers import (GAPS, SHARED, OrdinalStop, numbers_in, signed, speak_lexicon,
-                                          written_shapes)
+from text2spoken.core.recognizers import (GAPS, SHARED, OrdinalStop, _free_before, numbers_in, signed,
+                                          speak_lexicon, written_shapes)
 from text2spoken.core.spans import FIELDS, Features, Recognizer, Span, SpanContext
 from text2spoken.core.spellers import RbnfSpeller
 from text2spoken.core.tokens import Token
@@ -83,6 +99,18 @@ DATA = freeze({
     **written_shapes(),
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
     "sign_words": {"-": "μείον"},
+    "percent": {**written_shapes()["percent"], "word": "τοις εκατό"},
+    "months": ["Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου", "Ιουλίου", "Αυγούστου",
+               "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου"],
+    "half": {
+        MASCULINE: {NOMINATIVE: "μισός", ACCUSATIVE: "μισό", GENITIVE: "μισού"},
+        FEMININE: {NOMINATIVE: "μισή", ACCUSATIVE: "μισή", GENITIVE: "μισής"},
+        NEUTER: {NOMINATIVE: "μισό", ACCUSATIVE: "μισό", GENITIVE: "μισού"},
+    },
+    "fraction_names": {"3": ["τρίτο", "τρίτα"], "4": ["τέταρτο", "τέταρτα"], "5": ["πέμπτο", "πέμπτα"],
+                       "6": ["έκτο", "έκτα"], "7": ["έβδομο", "έβδομα"], "8": ["όγδοο", "όγδοα"],
+                       "9": ["ένατο", "ένατα"], "10": ["δέκατο", "δέκατα"], "11": ["ενδέκατο", "ενδέκατα"],
+                       "12": ["δωδέκατο", "δωδέκατα"], "20": ["εικοστό", "εικοστά"], "100": ["εκατοστό", "εκατοστά"]},
     "leads": {},
     "spelling": {"χίλιάδες": "χιλιάδες", "εννενήντα": "ενενήντα", "δεκατρεις": "δεκατρείς"},
     "case_words": {
@@ -154,7 +182,15 @@ class GreekSpeller:
         raise NotImplementedError("the Greek file reads no decimal")
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
-        raise NotImplementedError("the Greek file reads no fraction")
+        """A half in the gender and case of `features`, as μισή; any other fraction as the neuter numerator and the
+        name of `fraction_names`, as "ένα τρίτο" and "δύο τρίτα"."""
+        numerator, denominator = str(int(numerator)), str(int(denominator))
+        if denominator == "2":
+            gender = (features.gender or N).value
+            return request.data["half"][gender][features.case or NOMINATIVE]
+        singular, plural = request.data["fraction_names"][denominator]
+        count = self.cardinal(numerator, Features(gender=N, case=NOMINATIVE), request)
+        return f"{count} {singular if numerator == '1' else plural}"
 
 
 SPELLER = GreekSpeller()
@@ -263,6 +299,77 @@ def kept(span: Span, name: str) -> Span:
     return replace(span, form=Form.CARDINAL, fields=KEPT_FIELDS, recognizer=name, keep=True)
 
 
+def speak_date(span: Span, context: SpanContext) -> str:
+    """Day, month name and year: the day in the feminine of ημέρα, day 1 as its ordinal, the month in the genitive
+    of `months`, and the year in the neuter."""
+    request = context.request
+    fields = span.fields
+    day = str(fields["day"])
+    if day == "1":
+        day_words = SPELLER.ordinal(day, Features(gender=F), request)
+    else:
+        day_words = SPELLER.cardinal(day, Features(gender=F, case=NOMINATIVE), request)
+    year = SPELLER.cardinal(str(fields["year"]), Features(gender=N, case=NOMINATIVE), request)
+    return f"{day_words} {request.data['months'][fields['month'] - 1]} {year}"
+
+
+def speak_percent(span: Span, context: SpanContext) -> str:
+    """The amount in the neuter, the gender of τοις εκατό, then the word of the `percent` table."""
+    request = context.request
+    amount = span.fields["amount"]
+    words = SPELLER.cardinal(amount["integer"], Features(gender=N, case=NOMINATIVE), request)
+    return f"{signed(words, amount['sign'], request)} {request.data['percent']['word']}"
+
+
+def speak_fraction(span: Span, context: SpanContext) -> str:
+    """A fraction in the gender and case of the noun phrase around it, which only a half shows."""
+    fields = span.fields
+    features, _ = number_features(context)
+    return signed(SPELLER.fraction(fields["numerator"], fields["denominator"], features, context.request),
+                  fields["sign"], context.request)
+
+
+DASHES = ("-", "–", "−")
+
+
+@dataclass(frozen=True)
+class ReadPercent:
+    """A whole number before a percent sign, with no sign or a minus. A decimal, a per mille sign, a sign before
+    the number and two percentages that a dash joins, as `10%-20%`, stay as written: the file has no range word. So
+    does a percentage that a word character or a symbol touches from the left, as the fraction recognizer of the core
+    decides, because its words would join that character."""
+    name: str = "read_percent"
+    form: Form = Form.PERCENT
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in SHARED["percent"].find(text, tokens, request):
+            amount = span.fields["amount"]
+            read = (isinstance(amount, FrozenMap) and not amount["fraction"] and amount["integer"]
+                    and (not amount["sign"] or amount["sign"] in request.data["sign_words"])
+                    and span.fields["sign_position"] == "after" and "%" in text[span.start:span.end]
+                    and _free_before(text, span.start, request.data["symbols"])
+                    and text[span.end:span.end + 1] not in DASHES
+                    and not (span.start > 1 and text[span.start - 1] in DASHES and text[span.start - 2] in "%٪‰"))
+            yield span if read else replace(span, keep=True)
+
+
+@dataclass(frozen=True)
+class ListedFraction:
+    """A proper fraction whose denominator has a name: 2 and the keys of `fraction_names`. Any other fraction stays
+    as written."""
+    name: str = "listed_fraction"
+    form: Form = Form.FRACTION
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        names = request.data["fraction_names"]
+        for span in SHARED["fraction"].find(text, tokens, request):
+            fields = span.fields
+            denominator = str(int(fields["denominator"]))
+            read = (not span.keep and (denominator == "2" or denominator in names)
+                    and (not fields["sign"] or fields["sign"] in request.data["sign_words"]))
+            yield span if read else replace(span, keep=True)
+
+
 @dataclass(frozen=True)
 class Kept:
     """The spans of a shape recognizer, kept as written, as for a language with no file. A span takes the form and
@@ -309,9 +416,11 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=(Variety("el-GR"),),
     data=DATA,
-    recognizers=(SHARED["lexicon"], *map(Kept, SHAPES), SignedMoney(), SHARED["cardinal"]),
-    verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal},
-    spellers={Form.CARDINAL: SPELLER},
+    recognizers=(SHARED["lexicon"], SHARED["date_numeric"], ReadPercent(), ListedFraction(), *map(Kept, SHAPES),
+                 SignedMoney(), SHARED["cardinal"]),
+    verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DATE: speak_date,
+                 Form.PERCENT: speak_percent, Form.FRACTION: speak_fraction},
+    spellers={Form.CARDINAL: SPELLER, Form.FRACTION: SPELLER},
     genders=frozenset({M, F, N}),
     default_gender=N,
     animacies=frozenset(),

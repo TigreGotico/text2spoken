@@ -34,7 +34,7 @@ The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 
 - `en` reads every form except `ROMAN` and `IDENTIFIER`, which stay as written. `de` also leaves `ELECTRONIC`, `SYMBOL`, `LETTERS` and `EMOJI` as written. `supports("en")` lists the forms. A language with no file reads cardinal numbers and lexicon entries only, and only the lexicon when CLDR has no spell-out rules for it.
 - `fr` reads every form except `ELECTRONIC`, `SYMBOL`, `EMOJI`, `LETTERS` and `IDENTIFIER`, for every `fr-*` tag, with *septante* and *nonante* for `fr-BE` and `fr-CH`. Give a gender hint, or `default_gender`, when a number agrees with a noun that the file does not know.
-- `el` reads cardinals in the gender and the case of their noun, and a minus. Money, percentages, measures, dates, decimals and ordinals stay as written. A number with no known noun takes the neuter.
+- `el` reads cardinals in the gender and the case of their noun, a minus, percentages, common fractions and numeric dates. Money, measures, decimals and ordinals stay as written. A number with no known noun takes the neuter.
 - The `EMOJI` and `LETTERS` forms read emoji and runs of capital letters in `en` and `pt`. They are off by default. Turn one on with `NormalizationParams().plus(Form.EMOJI)`.
 - A form that the library cannot read stays as written, with a WARNING log. `strict=True` raises `UnreadFormError`.
 - The English, German and French test rows name their source, and no native speaker has checked them.
