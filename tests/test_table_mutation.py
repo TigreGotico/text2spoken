@@ -18,8 +18,8 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
-                 "no_phone_shapes"}}
+NO_ROW = {"el": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+                                  "no_phone_shapes"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables), or a row reads it only with a param other than the default (the 12-hour clock and the
 phrase style of French, which tests/test_french.py checks)."""
@@ -131,6 +131,10 @@ ENTRIES = {
     "fr": FR_ENTRIES,
     "pt": PT_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
+    "el": {
+        "number_marks": "Latn", "sign_words": "-", "spelling": "χίλιάδες", "case_words": "genitive", "articles": "στις",
+        "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
+    },
     "eu": {
         "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero",
         "leads": "-", "case_suffixes": "ko", "time_suffixes": "etan", "time_words": "arratsaldeko",

@@ -53,4 +53,6 @@ where = ["."]
 include = ["text2spoken*"]
 
 [tool.setuptools.package-data]
-text2spoken = ["data/cldr/*.json", "data/cldr/LICENSE", "data/en/*.json"]
+text2spoken = [
+    "data/cldr/*.json", "data/cldr/LICENSE", "data/en/*.json", "data/wiktionary/*.json", "data/wiktionary/LICENSE",
+]
