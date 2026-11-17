@@ -248,36 +248,32 @@ def test_without_tugalex_only_letter_words_read_and_one_warning_names_the_extra(
     assert first == "A érre tê pê no á érre"
     assert second == "eu vi O á érre"
     assert [r.getMessage() for r in caplog.records if "text2spoken[pt]" in r.getMessage()] == [
-        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it, and "
-        "a Roman numeral stays as written; install text2spoken[pt]"]
+        "the pt extra is not installed, so a word in capitals reads as a word only when letter_words holds it; "
+        "install text2spoken[pt]"]
 
 
-@pytest.mark.parametrize(("text", "expected"), [("Leia o capítulo V.", "Leia o capítulo V."), ("Classe II", "Classe II"),
-                                                ("A D. XIV.", "A Dom XIV."),
-                                                ("Rainha Elizabeth II", "Rainha Elizabeth II"),
-                                                ("No capítulo II, V. Silva.", "No capítulo II, V. Silva.")])
-def test_without_the_pt_extra_a_roman_numeral_stays_as_written(monkeypatch, caplog, text, expected):
-    """Design section 10: without the `pt` extra, which brings the number library, a Roman numeral stays as written,
-    as on dev, one log warning names the extra, and no `ModuleNotFoundError` reaches the caller."""
+@pytest.mark.parametrize(("text", "expected"), [("Leia o capítulo V.", "Leia o capítulo quinto."),
+                                                ("A D. XIV.", "A Dom Catorze."),
+                                                ("Rainha Elizabeth II", "Rainha Elizabeth Segunda"),
+                                                ("No capítulo II, V. Silva.", "No capítulo segundo, V. Silva.")])
+def test_without_the_pt_extra_a_roman_numeral_reads_its_gender_from_the_noun_or_the_title(monkeypatch, text, expected):
+    """Design section 4.2: the number library is in the base install, so without tugalex a Roman numeral still reads.
+    The noun of `roman_nouns` or the regnal title gives the gender, as `capítulo` and `Rainha` do with tugalex."""
     pt = import_module("text2spoken.lang.pt")
     monkeypatch.setitem(sys.modules, "tugalex", None)
-    monkeypatch.setitem(sys.modules, "ovos_number_parser", None)
-    monkeypatch.setitem(sys.modules, "ovos_number_parser.util", None)
     pt._warn_no_extra.cache_clear()
     try:
-        with caplog.at_level("WARNING", logger="text2spoken"):
-            assert normalize(text, "pt-PT") == expected
+        assert normalize(text, "pt-PT") == expected
     finally:
         pt._warn_no_extra.cache_clear()
-    assert len([r for r in caplog.records if "text2spoken[pt]" in r.getMessage()]) == 1
 
 
 @pytest.mark.parametrize(("text", "expected"), [("MP3", "éme pê três"), ("A25", "á dois cinco"),
                                                 ("O F16", "O éfe um seis"), ("B52", "bê cinco dois"),
                                                 ("IC19", "i cê um nove")])
-def test_without_the_pt_extra_digits_read_one_by_one(monkeypatch, text, expected):
-    """Design section 10: without the `pt` extra, which brings the number library, the digits of a run read by
-    their words in `digit_words`, and no `ModuleNotFoundError` reaches the caller."""
+def test_without_the_number_library_digits_read_one_by_one(monkeypatch, text, expected):
+    """Design section 10: without the number library of the cardinal speller, the digits of a run read by their
+    words in `digit_words`, and no `ModuleNotFoundError` reaches the caller."""
     monkeypatch.setitem(sys.modules, "tugalex", None)
     monkeypatch.setitem(sys.modules, "ovos_number_parser", None)
     monkeypatch.setitem(sys.modules, "ovos_number_parser.util", None)

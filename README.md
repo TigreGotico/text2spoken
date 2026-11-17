@@ -8,7 +8,7 @@ text2spoken rewrites written text into the words that a person says when they re
 uv pip install --prerelease=allow text2spoken
 ```
 
-It needs Python 3.11 or later, and uses no network and no model. Each language except English, German and Greek takes an extra, such as `text2spoken[pt]`.
+It needs Python 3.11 or later, and uses no network and no model. Every language reads with the base install. Portuguese takes the `pt` extra for the gender of nouns and names, from `tugalex`.
 
 ## Example
 

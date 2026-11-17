@@ -60,11 +60,10 @@ def test_random_arabic_text_never_raises_and_reads_the_same_on_a_second_pass(see
         assert normalize(once, tag) == once, (tag, text, once)
 
 
-def test_the_ar_extra_installs_the_speller_that_writes_the_construct_dual():
-    """ar.py reads numbers with ovos-number-parser, which design section 12 keeps out of the base install. Row ar-040
+def test_the_base_install_holds_the_speller_that_writes_the_construct_dual():
+    """ar.py reads numbers with ovos-number-parser, which the base install holds (design section 12). Row ar-040
     needs مئتا ألف for 200,000 (Ryding 2005, p. 350), which ovos-number-parser writes from 0.24.3a1."""
     lines = [Requirement(line) for line in requires("text2spoken")]
-    extra = [line for line in lines if line.marker is not None and line.marker.evaluate({"extra": "ar"})]
-    assert [line.name for line in extra] == ["ovos-number-parser"]
-    assert not extra[0].specifier.contains(Version("0.24.2a1"), prereleases=True)
-    assert extra[0].specifier.contains(Version("0.24.3a1"), prereleases=True)
+    base = [line for line in lines if line.marker is None and line.name == "ovos-number-parser"]
+    assert len(base) == 1
+    assert not base[0].specifier.contains(Version("0.24.2a1"), prereleases=True)

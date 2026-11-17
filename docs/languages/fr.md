@@ -1,6 +1,6 @@
 # French
 
-The file `text2spoken/lang/fr.py` reads French. Its number words come from the CLDR spell-out rules, which the core dependency `unicode-rbnf` holds. Install `text2spoken[fr]` for the floor of `unicode-rbnf` that the file needs.
+The file `text2spoken/lang/fr.py` reads French. Its number words come from the CLDR spell-out rules, which the core dependency `unicode-rbnf` holds.
 
 ## What it reads
 

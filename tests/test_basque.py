@@ -39,12 +39,10 @@ def test_the_usual_reading_of_midnight_names_the_night():
     assert normalize("00:00etan", "eu") == "gaueko hamabietan"
 
 
-def test_the_eu_extra_installs_the_basque_speller():
-    """`eu.py` reads cardinals with ovos-number-parser, which design section 12 keeps out of the base install, so
-    the `eu` extra installs it."""
+def test_the_base_install_holds_the_basque_speller():
+    """`eu.py` reads cardinals with ovos-number-parser, which the base install holds (design section 12)."""
     lines = [Requirement(line) for line in requires("text2spoken")]
-    extra = {line.name for line in lines if line.marker is not None and line.marker.evaluate({"extra": "eu"})}
-    assert "ovos-number-parser" in extra
+    assert "ovos-number-parser" in {line.name for line in lines if line.marker is None}
 
 
 IDEMPOTENT = [

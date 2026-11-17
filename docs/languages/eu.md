@@ -1,6 +1,6 @@
 # Basque
 
-The file `text2spoken/lang/eu.py` reads Basque: the standard language (batua) of the Euskaltzaindia norms. Install it with `text2spoken[eu]`, which adds `ovos-number-parser`.
+The file `text2spoken/lang/eu.py` reads Basque: the standard language (batua) of the Euskaltzaindia norms. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
 

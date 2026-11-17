@@ -1,6 +1,6 @@
 # Portuguese
 
-The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken[pt]`, which adds `ovos-number-parser`, `ovos-date-parser` and `tugalex`.
+The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken[pt]`, which adds `tugalex` for the gender of nouns and given names.
 
 ## What it reads
 

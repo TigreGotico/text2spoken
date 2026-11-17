@@ -1,6 +1,6 @@
 # Dutch
 
-The file `text2spoken/lang/nl.py` reads Dutch. Install `text2spoken[nl]` for its number words, which come from `ovos-number-parser`.
+The file `text2spoken/lang/nl.py` reads Dutch. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
 
