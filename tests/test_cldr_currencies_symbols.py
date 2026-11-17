@@ -15,7 +15,7 @@ from text2spoken.core import symbols
 from text2spoken.lang import pt
 from text2spoken.params import freeze
 
-TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM")
+TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE", "nl-SR")
 ROOT = Path(__file__).resolve().parent.parent
 
 

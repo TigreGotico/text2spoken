@@ -154,6 +154,13 @@ ENTRIES = {
         "feminine_determiners": "la", "possessives": "loro", "abbreviations": "ecc.", "sentence_final": "ecc.",
         "number_abbreviations": "art.", "patterns": "expression",
     },
+    "nl": {
+        "number_marks": "Latn", "sign_words": "-", "digit_words": "nul", "decimal_word": DELETE, "leads": "nr. ",
+        "ordinal_marks": "ste", "percent": "word", "currency_symbols": "EUR", "currencies": "JPY", "subunits": "EUR",
+        "scales": "miljoen", "unit_symbols": "km", "dimension_marks": "×", "operators": "=", "patterns": "expression",
+        "titles": "ing.", "abbreviations": "dr.", "sentence_final": "enz.", "number_abbreviations": "blz.",
+        "currency_words": "euro", "year_words": "in het jaar",
+    },
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",
         "range_word": DELETE, "range_marks": "-", "dimension_marks": "×", "dimension_word": DELETE, "time_words": "в",

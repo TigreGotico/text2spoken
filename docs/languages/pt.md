@@ -156,4 +156,4 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 The edge cases that Portuguese shares with English are on the [Money, units and symbols](../money-units-and-symbols.md#limits) and [Addresses, letters and emoji](../addresses-letters-and-emoji.md#edge-cases) pages.
 
 ---
-[← Italian](it.md) · [Home](../index.md) · [Russian →](ru.md)
+[← Dutch](nl.md) · [Home](../index.md) · [Russian →](ru.md)
