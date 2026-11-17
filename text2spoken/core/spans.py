@@ -176,6 +176,10 @@ def _in_clause(span: Span, other: bytearray) -> bool:
                for start, end, kind in span.fields["clause"] if (start, end) != (span.start, span.end))
 
 
+SAY_AS_SPANS = "say_as_spans"
+"""The `Request.memo` key of the offsets of the spans that the recognizers of the say-as claim."""
+
+
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
     """The spans that the recognizers claim, in claim order, by the rules of sections 2.1 and 4.2.
 
@@ -195,21 +199,55 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     letter, as `ROMAN` claims `VI` in `CAPÍTULO VI DE`, the word reads in lower case, so a second pass, which sees
     words in lower case and so no clause there, keeps it a word.
 
+    With a say-as (section 17), the recognizers of the language for the forms of the say-as claim first, whatever
+    `params.forms` holds, then the recognizer that takes the markup as evidence, then every recognizer of
+    `params.forms` with the params of the call with no say-as, as the plain reading reads. A span
+    of the say-as that its format refuses (`ResolvedSayAs.fits`) is no candidate, and nor is a span of the say-as that
+    cuts a span of the analysis with no say-as, claimed, kept as written or waiting: a URL, an e-mail address or a
+    phone number reads whole, as it reads with no say-as. Nor is a say-as span over the word next to a span that the
+    plain reading keeps as written, because that word is the evidence that keeps it. A say-as span that waits holds its
+    characters only against the other say-as spans: before the other recognizers claim, its characters are free, so
+    the other text reads as it reads with no say-as. So with `digits`, `Flight 12 at 10:30` reads the time.
+
     An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
     `😀` in place of the sequence (design section 4.7). The recognizers read the view of `emoji_view`, in which the
     digit of `1️⃣` is no digit. `EMOJI` and `ELECTRONIC` read the name of a sequence from the text as written
     (`written_text`). A sequence joins as one character when it holds U+FE0E, U+FE0F or U+20E3, and with `EMOJI` on,
     any sequence does.
     """
+    return _claim(text, tokens, blocks, request)[0]
+
+
+def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]],
+           request: Request) -> tuple[tuple[Span, ...], tuple[Span, ...], tuple[Span, ...]]:
+    """The claimed spans, every span that holds characters (claimed, kept as written, or waiting), and the spans
+    that hold characters as written."""
     emoji = Form.EMOJI in request.params.forms
     sequences = [(start, end) for start, end in sequences_in(text, request.memo)
                  if emoji or any(char in EMOJI_MARKS for char in text[start:end])]
     view = emoji_view(text, request.memo)
     request.memo[("written", view)] = text
-    candidates = [span for recognizer in request.language.recognizers if recognizer.form in request.params.forms
-                  for span in recognizer.find(view, tokens, request)
-                  if not (_inside(span, blocks)
-                          or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
+    say_as = request.say_as
+    recognizers = [recognizer for recognizer in request.language.recognizers if recognizer.form in request.params.forms]
+
+    def found(group: Sequence[Recognizer], asked: Request) -> list[Span]:
+        return [span for recognizer in group for span in recognizer.find(view, tokens, asked)
+                if not (_inside(span, blocks)
+                        or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
+
+    first, others = [], request
+    if say_as is not None:
+        others = replace(request, params=say_as.plain, memo={("written", view): text}, say_as=None)
+        first = [span for span in found(say_as.recognizers(request.language), request) if say_as.fits(span)]
+    if first:
+        _, units, held = _claim(text, tokens, blocks, others)
+        unit_at: list[Span | None] = [None] * len(text)
+        for unit in units:
+            unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
+        evidence = _evidence_words(text, tokens, held)
+        first = [span for span in first if not (_cuts(span, unit_at) or any(evidence[span.start:span.end]))]
+    say_as_count = len(first)
+    candidates = [*first, *found(recognizers, others)]
     before = {end: start for start, end in sequences}
     after = dict(sequences)
     read = bytearray(len(text))
@@ -217,9 +255,15 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     holder: list[Span | None] = [None] * len(text)
     neighbours: dict[int, list[int]] = {}
     claimed: list[Span] = []
+    kept: list[Span] = []
+    said: set[tuple[int, int]] = set()
     queue = list(range(len(candidates)))
+    released = False
     while queue:
         index = heapq.heappop(queue)
+        if index >= say_as_count and not released:
+            holder = [None] * len(text)
+            released = True
         span = candidates[index]
         if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
             continue
@@ -230,7 +274,7 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
                 last -= 1
             sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
         if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
-            if span.form not in (Form.SYMBOL, Form.EMOJI):
+            if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
                 for position in range(span.start, span.end):
                     holder[position] = span
             for position in (position for side in sides for position in side):
@@ -239,14 +283,43 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
         if span.form is Form.LETTERS and span.fields["clause"] and not _in_clause(span, other):
             span = replace(span, fields=FrozenMap({**span.fields, "reading": "lower"}), keep=False)
         read[span.start:span.end] = b"\x01" * (span.end - span.start)
-        if not span.keep:
+        if span.keep:
+            kept.append(span)
+        else:
             claimed.append(span)
+            if index < say_as_count:
+                said.add((span.start, span.end))
             if span.form is not Form.LETTERS:
                 other[span.start:span.end] = b"\x01" * (span.end - span.start)
         for position in range(span.start, span.end):
             for waiting in neighbours.pop(position, ()):
                 heapq.heappush(queue, waiting)
-    return tuple(sorted(claimed, key=lambda s: s.start))
+    if say_as is not None:
+        request.memo[SAY_AS_SPANS] = frozenset(said)
+    waiting = {id(span): span for span in holder if span is not None and not any(read[span.start:span.end])}
+    held = (*kept, *waiting.values())
+    return tuple(sorted(claimed, key=lambda s: s.start)), (*claimed, *held), held
+
+
+def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span]) -> bytearray:
+    """The words next to each span that stays as written: a recognizer reads them as the evidence that keeps the
+    span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4` in `3/4 kg`."""
+    marked = bytearray(len(text))
+    words = [token for token in tokens if context_word(token.text) is not None]
+    starts = [token.start for token in words]
+    for span in held:
+        before, after = bisect_left(starts, span.start) - 1, bisect_left(starts, span.end)
+        for word in (words[before] if before >= 0 else None, words[after] if after < len(words) else None):
+            if word is not None and (word.end <= span.start or word.start >= span.end):
+                marked[word.start:word.end] = b"\x01" * (word.end - word.start)
+    return marked
+
+
+def _cuts(span: Span, unit_at: Sequence[Span | None]) -> bool:
+    """Whether the span cuts a span of the plain analysis, which holds its characters as one unit. The units do not
+    overlap, so a unit that the span cuts holds the first or the last character of the span."""
+    first, last = unit_at[span.start], unit_at[span.end - 1]
+    return (first is not None and first.start < span.start) or (last is not None and last.end > span.end)
 
 
 @dataclass(frozen=True)
@@ -390,8 +463,11 @@ does not offer the method of the form. Any other error of a verbalizer is a defe
 
 def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> str:
     """The spoken text of an analysis. With `LETTERS` on, a run of capitals in the reading of another form reads
-    as the `LETTERS` form reads it, so a second pass leaves the reading unchanged (design section 11)."""
+    as the `LETTERS` form reads it, so a second pass leaves the reading unchanged (design section 11). When the
+    verbalizer declines a say-as span, the text reads as if no say-as were given, with one log warning, or
+    `UnreadFormError` in strict mode (design section 17.4)."""
     from text2spoken.core.letters import respell
+    from text2spoken.core.say_as import READINGS
 
     require_type(analysis, "analysis", Analysis)
     if hints is not None:
@@ -402,23 +478,36 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
     hints = check_hints(hints or {}, analysis)
     words = context_words(analysis.tokens) if language.context_words else ()
     breaks = clause_breaks(analysis.text)
+    say_as = request.say_as
+    plain = request if say_as is None else replace(request, params=say_as.plain, say_as=None)
     out: list[str] = []
     passthrough: list[tuple[int, int]] = []
     position = 0
     for span in analysis.spans:
         out.append(analysis.text[position:span.start])
         passthrough.append((position, span.start))
-        context = SpanContext(request, clause_window(analysis.text, words, span.start, span.end, -1, breaks=breaks),
+        said = say_as is not None and say_as.claims(span, request)
+        context = SpanContext(request if said else plain,
+                              clause_window(analysis.text, words, span.start, span.end, -1, breaks=breaks),
                               clause_window(analysis.text, words, span.start, span.end, 1, breaks=breaks),
                               hints.get(span.start))
         written = analysis.text[span.start:span.end]
         try:
-            spoken = language.verbalizers[span.form](span, context)
+            speak = READINGS.get(span.recognizer) or language.verbalizers[span.form]
+            spoken = speak(span, context)
             if letters and span.form not in (Form.LETTERS, Form.LEXICON):
                 spoken = respell(spoken, request)
             spoken = language.attach(spoken, span.fields.get("prefix", ""), span.fields.get("suffix", ""))
             out.append(span.lead + spoken + span.trail)
         except DECLINED as error:
+            if said:
+                reason = f"the say-as {say_as.value!r} does not read {written!r} for {request.tag}: {error}"
+                if request.params.strict:
+                    raise UnreadFormError((written,), reason) from error
+                LOG.warning("%s; the text reads as if no say-as were given", reason)
+                unsaid = _without_say_as(analysis)
+                starts = {other.start for other in unsaid.spans}
+                return render(unsaid, {start: hint for start, hint in hints.items() if start in starts})
             if request.params.strict:
                 raise UnreadFormError((written,), f"{span.form}: {error}") from error
             LOG.warning("unread %s span %r at %d: %s", span.form, written, span.start, error)
@@ -434,6 +523,12 @@ def render(analysis: Analysis, hints: Mapping[int, Features] | None = None) -> s
     passthrough.append((position, len(analysis.text)))
     _check_unread(analysis, passthrough)
     return "".join(out)
+
+
+def _without_say_as(analysis: Analysis) -> Analysis:
+    """The analysis of the same text with no say-as (design section 17.4)."""
+    request = replace(analysis.request, params=analysis.request.say_as.plain, memo={}, say_as=None)
+    return replace(analysis, spans=classify(analysis.text, analysis.tokens, analysis.blocks, request), request=request)
 
 
 def _check_unread(analysis: Analysis, passthrough: list[tuple[int, int]]) -> None:

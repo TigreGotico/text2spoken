@@ -1,0 +1,16 @@
+id	tag	text	interpret_as	format	detail	expected	source	checked_by
+SA01	en-US	123	ordinal			one hundred twenty-third	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.6: "One hundred twenty third"; en-US writes no and (Wikipedia, English numerals)	unchecked
+SA02	en-US	1,234,567	cardinal		,	one million two hundred thirty-four thousand five hundred sixty-seven	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.5: detail is the group mark; Wikipedia, English numerals: US writes no and	unchecked
+SA03	en-US	123.456	cardinal		.	one hundred twenty-three thousand four hundred fifty-six	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.5: detail "." groups the integral part	unchecked
+SA04	en-US	-0.5	cardinal			minus zero point five	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.5: "An optional leading '-' or '+' is permitted to indicate negative (positive) numbers"	unchecked
+SA05	en-US	09/21/2001	date	mdy		September twenty-first two thousand one	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.1, format mdy; the en-US year reading of Wikipedia, English numerals	unchecked
+SA06	en-US	01/02/1960	date	dmy		February first nineteen sixty	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.1: "February first, 1960"	unchecked
+SA09	en-US	2024	date	y		twenty twenty-four	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.1, format y; CLDR RBNF en spellout-numbering-year	unchecked
+SA10	en-US	00:01	time	hms24		twelve oh one AM	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.2: "one minute past midnight"; Wikipedia, 12-hour clock: 12 AM is hour 0; en-US clock 12h	unchecked
+SA13	en-US	3981900	telephone			three nine eight one nine zero zero	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.3; read digit by digit (text2spoken design section 4.3)	unchecked
+SA14	en-US	W3C	characters			double-u three see	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.4: "double-you, three, c"; Wikipedia, English alphabet: c is /ˈsiː/ and w is double-u, as letter_names of en.py writes them	unchecked
+SA15	en-US	007	digits			zero zero seven	Amazon Polly, Controlling how special types of words are spoken: "Spells out each digit individually"	unchecked
+SA17	pt-PT	3	ordinal			terceiro	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.6: "the best representation of the ordinal that it can"; Priberam, terceiro: the masculine ordinal of três	unchecked
+SA18	pt-PT	12/03/2024	date	dmy		doze de março de dois mil e vinte e quatro	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.1, format dmy; text2spoken design section 15	unchecked
+SA19	en-US	21 people	cardinal			twenty-one people	SSML 1.1 section 3.1.9: "this additional text MUST be rendered"	unchecked
+SA20	en-US	abc	cardinal			abc	SSML 1.1 section 3.1.9: render the content "as if the interpret-as attribute were not present"	unchecked

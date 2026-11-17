@@ -11,6 +11,9 @@ text2spoken has two modes. The default mode keeps a form that it cannot read as 
 | A tag that is not a BCP 47 tag | `InvalidLanguageTagError` | `InvalidLanguageTagError` |
 | A form that the library cannot read | Stays as written, WARNING logged | `UnreadFormError` |
 | A param value that the language cannot produce | Language default, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
+| A `say_as` value, format or detail that the language cannot read | The reading without it, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
+| A `say_as` whose form is not in the text | The reading with no `say_as`, WARNING logged | `UnreadFormError` |
+| A `say_as` span that the language cannot speak, such as a German ordinal of one million | The reading with no `say_as`, WARNING logged | `UnreadFormError` |
 | A gender that a language with genders does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |
 | A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
 | A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
