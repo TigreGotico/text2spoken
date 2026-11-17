@@ -1,5 +1,6 @@
 """Language tags and the loader (design section 6). The loader needs `langcodes`, which the package requires
 through `linguatag[langcodes]`."""
+from decimal import Decimal
 from importlib.metadata import requires
 
 import pytest
@@ -7,7 +8,7 @@ from packaging.requirements import Requirement
 
 from text2spoken import (Form, InvalidLanguageTagError, NormalizationParams, UnreadFormError, normalize,
                          supports)
-from text2spoken.core.language import cldr_locale, plural_locales, rbnf_locales, select
+from text2spoken.core.language import cldr_locale, language_file, plural_locales, rbnf_locales, select
 
 # (input tag, standardized tag with region, file code, variety): design section 6 and loader_probe.out.txt.
 LOADER_ROWS = [
@@ -71,7 +72,7 @@ def test_cldr_locale_tries_the_tag_then_the_code_then_the_aliases(gendered):
 def test_a_language_with_no_file_reads_cardinals_through_rbnf():
     # Wiktionary, eenanzwanzeg (fetched): Luxembourgish "twenty-one".
     assert normalize("Ech hunn 21 Äppel.", "lb") == "Ech hunn eenanzwanzeg Äppel."
-    assert supports("lb").code == "lb" and set(supports("lb").forms) == {"lexicon", "cardinal"}
+    assert supports("lb").code == "lb" and set(supports("lb").forms) == {"lexicon", "cardinal", "decimal"}
 
 
 # README: "A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms
@@ -116,12 +117,12 @@ NO_FILE_MINUS = [
 ]
 
 # A minus stays as written where it may be no minus. A hyphen after a letter, between two numbers or before a
-# percent sign is no sign at all, by the rule of `find_numbers` that en.py reads too. A minus at the start of a
-# line can mark a list item, and a minus after a number or a dash can mark a range or a code: the number before
-# it stays as written too, so that a second pass reads the same. A number grouped with a space, as in `-1 000`,
-# stays as written whole, with each kind of space that groups digits. A minus next to a currency symbol leaves the money
-# form, which a language with no file keeps as written. RBNF has no word for minus zero, and zu.xml has no -x
-# rule. Each number that reads takes its word from ovos-number-parser: 5 п'ять, as the English Wiktionary writes.
+# percent sign is no sign at all, by the rule of `find_numbers` that en.py reads too. A minus after a number or a
+# dash can mark a range or a code: the number before it stays as written too, so that a second pass reads the
+# same. A number grouped with a space that is no group mark of the locale, as in `-1 000`, stays as written whole.
+# A minus next to a currency symbol leaves the money form, which a language with no file keeps as written. RBNF has
+# no word for minus zero, and zu.xml has no -x rule. Each number that reads takes its word from ovos-number-parser:
+# 5 п'ять, as the English Wiktionary writes.
 NO_FILE_KEPT_MINUS = [
     ("uk-UA", "з 5-10 градусів", "з 5-10 градусів"),
     ("uk-UA", "код A-5", "код A-п'ять"),
@@ -130,18 +131,17 @@ NO_FILE_KEPT_MINUS = [
     ("uk-UA", "від 5 -10 градусів", "від 5 -10 градусів"),
     ("uk-UA", "розділи 5--10", "розділи п'ять--10"),
     ("uk-UA", "тел. 333 -1234567", "тел. 333 -1234567"),
-    ("uk-UA", "-3 яблука", "-3 яблука"),
-    ("uk-UA", "Список:\n  -3 яблука", "Список:\n  -3 яблука"),
     ("uk-UA", "температура -1 000 градусів", "температура -1 000 градусів"),
-    ("uk-UA", "борг -10\u00a0000 гривень", "борг -10\u00a0000 гривень"),
     ("bg-BG", "Температура -1 000 градуса", "Температура -1 000 градуса"),
     ("bg-BG", "Разлика -12\u202f000 кг", "Разлика -12\u202f000 кг"),
     ("zu", "Izinga -5 namuhla.", "Izinga -5 namuhla."),
 ]
 
 # A line break or a tab groups no digits: the minus at the end of a line reads, and so does the number of the next
-# line. A minus at the start of a line stays as written. Words of the English Wiktionary, Module:number list/data/bg
-# (5 пет, 3 три, 10 десет, 12 дванадесет), /uk (5 п'ять, 3 три, 10 десять) and /pl (5 pięć, 3 trzy).
+# line. A minus at the start of a line reads, as in a language file. The no-break space is the group mark of uk in
+# CLDR 49 (numbers.json, symbols-numberSystem-latn), so `-10\u00a0000` is one number. Words of the English
+# Wiktionary, Module:number list/data/bg (5 пет, 3 три, 10 десет, 12 дванадесет), /uk (5 п'ять, 3 три, 10 десять,
+# 10000 десять тисяч) and /pl (5 pięć, 3 trzy).
 NO_FILE_LINE_BREAKS = [
     ("uk-UA", "Оцінка: -5\n10 студентів прийшли", "Оцінка: мінус п'ять\nдесять студентів прийшли"),
     ("uk-UA", "сьогодні -5\n3 яблука", "сьогодні мінус п'ять\nтри яблука"),
@@ -149,7 +149,10 @@ NO_FILE_LINE_BREAKS = [
     ("pl-PL", "dziś -5\n3 jabłka", "dziś minus pięć\ntrzy jabłka"),
     ("bg-BG", "Оценка: -5\n10 души", "Оценка: минус пет\nдесет души"),
     ("bg-BG", "днес -5\n\n3 ябълки", "днес минус пет\n\nтри ябълки"),
-    ("bg-BG", "-5\n\n12 души", "-5\n\nдванадесет души"),
+    ("bg-BG", "-5\n\n12 души", "минус пет\n\nдванадесет души"),
+    ("uk-UA", "-3 яблука", "мінус три яблука"),
+    ("uk-UA", "Список:\n  -3 яблука", "Список:\n  мінус три яблука"),
+    ("uk-UA", "борг -10\u00a0000 гривень", "борг мінус десять тисяч гривень"),
 ]
 
 NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
@@ -167,6 +170,207 @@ NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
 def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
+
+
+def _rbnf_words(locale: str, rule_set: str, number: str) -> str:
+    """unicode_rbnf called directly, with the rule set that holds the rule, as words separated by single spaces."""
+    from unicode_rbnf import RbnfEngine
+
+    text = RbnfEngine.for_language(locale).format_number(Decimal(number), ruleset_names=[rule_set]).text
+    return " ".join(text.replace(",", " ").split())
+
+
+# Languages with no file that read through RBNF: (tag, RBNF locale, the rule set of the -x and x.x rules, the decimal
+# mark of the locale). The rule set is `spellout-cardinal`, or the rule set that its 0 rule names, as in km and da.
+# The decimal mark is `decimal` of symbols-numberSystem-latn in CLDR 49 numbers.json. da has a parser module, and
+# RBNF_HELD keeps it on RBNF, decimals too.
+NO_FILE_RBNF_DECIMALS = [
+    ("hi-IN", "hi", "spellout-cardinal", "."),
+    ("th-TH", "th", "spellout-cardinal", "."),
+    ("sw-TZ", "sw", "spellout-cardinal", "."),
+    ("vi-VN", "vi", "spellout-cardinal", ","),
+    ("ja-JP", "ja", "spellout-cardinal", "."),
+    ("km-KH", "km", "spellout-numbering", "."),
+    ("hy-AM", "hy", "spellout-cardinal", ","),
+    ("ka-GE", "ka", "spellout-cardinal", ","),
+    ("ta-IN", "ta", "spellout-cardinal", "."),
+    ("my-MM", "my", "spellout-cardinal", "."),
+    ("mt-MT", "mt", "spellout-cardinal-masculine", "."),
+    ("lt-LT", "lt", "spellout-cardinal-masculine", ","),
+    ("am-ET", "am", "spellout-cardinal", "."),
+    ("af-ZA", "af", "spellout-cardinal", ","),
+    ("da-DK", "da", "spellout-cardinal-neuter", ","),
+]
+
+
+@pytest.mark.parametrize(("tag", "locale", "rule_set", "mark"), NO_FILE_RBNF_DECIMALS)
+def test_a_language_with_no_file_reads_a_minus_and_a_decimal_through_rbnf(tag, locale, rule_set, mark):
+    """A minus at the start of the text and a decimal in the mark of the locale read through the `-x` and `x.x`
+    rules of RBNF (design section 6.1)."""
+    for written, number in (("-5", "-5"), (f"3{mark}5", "3.5"), (f"-3{mark}5", "-3.5"),
+                            (f"x -12{mark}05 y", "-12.05")):
+        expected = _rbnf_words(locale, rule_set, number)
+        if written.startswith("x "):
+            expected = f"x {expected} y"
+        assert normalize(written, tag) == expected
+        assert normalize(expected, tag) == expected
+
+
+# Hand readings of the CLDR XML rules of unicode-rbnf 2.5.0. hi.xml spellout-cardinal: `-x: ऋण →→;`,
+# `x.x: ←← दशमलव →→;`, 3 तीन, 5 पाँच. sw.xml: `-x: kasoro →→;`, `x.x: ←← nukta →→;`, 3 tatu, 5 tano. th.xml:
+# `-x: ลบ→→;` and `x.x: ←←จุด→→→;` with a zero-width space around each word, 3 สาม, 5 ห้า.
+NO_FILE_RBNF_BY_HAND = [
+    ("hi", "-5", "ऋण पाँच"),
+    ("hi", "3.5", "तीन दशमलव पाँच"),
+    ("hi", "-3.5", "ऋण तीन दशमलव पाँच"),
+    ("hi", "३.५", "तीन दशमलव पाँच"),
+    ("sw", "-5", "kasoro tano"),
+    ("sw", "3.5", "tatu nukta tano"),
+    ("sw", "-3.5", "kasoro tatu nukta tano"),
+    ("th", "-5", "ลบ\u200bห้า"),
+    ("th", "3.5", "สาม\u200bจุด\u200bห้า"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_RBNF_BY_HAND)
+def test_a_language_with_no_file_reads_the_rbnf_rules_as_the_xml_writes_them(tag, text, expected):
+    assert normalize(text, tag) == expected
+
+
+# Languages with no file that ovos-number-parser writes, with the decimal mark of CLDR 49: (tag, mark).
+NO_FILE_PARSER_DECIMALS = [("nb-NO", ","), ("fa-IR", "."), ("tr-TR", ","), ("pl-PL", ","), ("he-IL", "."),
+                           ("ca-ES", ","), ("sv-SE", ","), ("fy-NL", ",")]
+
+
+@pytest.mark.parametrize(("tag", "mark"), NO_FILE_PARSER_DECIMALS)
+def test_a_language_with_no_file_reads_a_minus_and_a_decimal_through_the_parser(tag, mark):
+    """The parser owns the number words of these languages (design section 6.1), so the expected words are its own
+    reading of the number, called directly."""
+    from ovos_number_parser import pronounce_number
+
+    assert normalize("-5", tag) == " ".join(pronounce_number(-5, tag).split())
+    assert normalize(f"3{mark}5", tag) == " ".join(pronounce_number(3.5, tag, places=1).split())
+    assert normalize(f"-3{mark}5", tag) == " ".join(pronounce_number(-3.5, tag, places=1).split())
+
+
+def test_a_held_language_reads_decimals_through_rbnf():
+    from text2spoken.core.language import select
+    from text2spoken.core.spellers import RBNF_HELD, RbnfSpeller
+
+    assert RBNF_HELD == {"da", "sk"}
+    for code in RBNF_HELD:
+        spellers = select(code)[1].spellers
+        assert isinstance(spellers[Form.CARDINAL], RbnfSpeller) and isinstance(spellers[Form.DECIMAL], RbnfSpeller)
+
+
+# A say-as `cardinal` reads a decimal in the CLDR mark of the locale, as a text with no say-as does. The mark of sw
+# is the full stop, so `3,5` stays as written in sw-TZ.
+SAY_AS_DECIMALS = [("ca-ES", "3,5"), ("da-DK", "3,5"), ("sv-SE", "3,5"), ("nb-NO", "3,5"), ("af-ZA", "3,5"),
+                   ("sw-TZ", "3.5"), ("fy-NL", "3,5")]
+
+
+@pytest.mark.parametrize(("tag", "text"), SAY_AS_DECIMALS)
+def test_a_say_as_cardinal_reads_a_decimal_of_a_language_with_no_file(tag, text):
+    from text2spoken.core.say_as import SayAs
+
+    expected = normalize(text, tag)
+    assert expected != text
+    assert normalize(text, tag, say_as=SayAs(interpret_as="cardinal")) == expected
+
+
+# The marks of each locale come from CLDR 49 numbers.json. hi writes 3,500 (group `,`), nb 3,5 (decimal `,`, group
+# no-break space), tr 1.234,5 (decimal `,`, group `.`), and sw-CD 3,5 where sw writes 3.5. A number with one full
+# stop or comma and three digits after it, which the CLDR root locale (1,234.5) reads in the other role, stays as
+# written: `1.234` in tr and `3,500` in nb. A full stop where the locale has no such mark splits the number, so
+# `3.5` stays as written in nb.
+NO_FILE_MARKS = [
+    ("hi-IN", "3,500", _rbnf_words("hi", "spellout-cardinal", "3500")),
+    ("hi-IN", "1,234.5", _rbnf_words("hi", "spellout-cardinal", "1234.5")),
+    ("sw-TZ", "3,500", _rbnf_words("sw", "spellout-cardinal", "3500")),
+    ("sw-CD", "3,5", _rbnf_words("sw", "spellout-cardinal", "3.5")),
+    ("sw-CD", "3,500", "3,500"),
+    ("vi-VN", "1.234.567", _rbnf_words("vi", "spellout-cardinal", "1234567")),
+    ("vi-VN", "1.234", "1.234"),
+    ("nb-NO", "3,500", "3,500"),
+    ("nb-NO", "3.5", "3.5"),
+    ("tr-TR", "1.234", "1.234"),
+    ("hi-IN", "3.0", "3.0"),
+    ("nb-NO", "3,0", "3,0"),
+    ("hi-IN", "03.5", "03.5"),
+    ("hi-IN", "+3.5", "+3.5"),
+    ("hi-IN", "3.5.1", "3.5.1"),
+    ("hi-IN", "5 -3.5", "5 -3.5"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_MARKS)
+def test_a_language_with_no_file_reads_the_marks_of_its_locale(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+NO_MINUS_RULE = ("ko", "zu")
+"""The RBNF locales whose cardinal rule set has no `-x` rule, in itself or in the rule set that its 0 rule names."""
+NO_DECIMAL_RULE = ("zu",)
+"""The RBNF locales whose cardinal rule set has no `x.x` rule, in itself or in the rule set that its 0 rule names."""
+NO_CLDR_MARKS = ("an", "mwl")
+"""The languages with no file that ovos-number-parser writes and CLDR 49 numbers.json has no locale for."""
+NO_PARSER_MINUS = ("kab",)
+"""The languages with no file whose ovos-number-parser module writes no minus word for -1."""
+NO_PARSER_DECIMAL = ("kab",)
+"""The languages with no file whose ovos-number-parser module raises for 1.5."""
+
+
+def test_the_languages_without_the_rules_are_listed():
+    from ovos_number_parser import pronounce_number
+    from unicode_rbnf import RbnfEngine
+    from unicode_rbnf.engine import RbnfSpecialRule, ReplaceRulePart
+
+    from text2spoken.core.language import cldr_number_marks
+    from text2spoken.core.parsers import number_writer_languages
+    from text2spoken.core.spellers import RBNF_HELD
+
+    def holds(names, name, rule):
+        while name is not None:
+            if rule in names[name].special_rules:
+                return True
+            zero = names[name].numeric_rules.get(0)
+            name = zero.parts[0].ruleset_name if zero and isinstance(zero.parts[0], ReplaceRulePart) else None
+        return False
+
+    def raises(number, code):
+        try:
+            pronounce_number(number, code, places=1)
+        except (ValueError, NotImplementedError):
+            return True
+        return False
+
+    missing = {RbnfSpecialRule.NEGATIVE_NUMBER: set(), RbnfSpecialRule.IMPROPER_FRACTION: set()}
+    for locale in rbnf_locales():
+        names = RbnfEngine.for_language(locale).rulesets
+        cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering")
+                        if n in names)
+        for rule, locales in missing.items():
+            if not holds(names, cardinal, rule):
+                locales.add(locale)
+    parser = sorted(code for code in number_writer_languages() if code not in RBNF_HELD and not language_file(code))
+    assert sorted(missing[RbnfSpecialRule.NEGATIVE_NUMBER]) == list(NO_MINUS_RULE)
+    assert sorted(missing[RbnfSpecialRule.IMPROPER_FRACTION]) == list(NO_DECIMAL_RULE)
+    assert [code for code in parser if code not in cldr_number_marks()] == list(NO_CLDR_MARKS)
+    assert [code for code in parser if raises(-1, code)] == list(NO_PARSER_MINUS)
+    assert [code for code in parser if raises(1.5, code)] == list(NO_PARSER_DECIMAL)
+
+
+@pytest.mark.parametrize("code", NO_MINUS_RULE + NO_PARSER_MINUS)
+def test_a_language_with_no_minus_word_keeps_the_minus(code):
+    for text in ("-5", "x -5 y", "-3.5", "-3,5"):
+        assert normalize(text, code) == text
+
+
+@pytest.mark.parametrize("code", NO_DECIMAL_RULE + NO_CLDR_MARKS + NO_PARSER_DECIMAL)
+def test_a_language_with_no_decimal_rule_or_marks_keeps_the_decimal(code):
+    for text in ("3.5", "3,5", "-3.5", "-3,5"):
+        assert normalize(text, code) == text
 
 
 # A language with no file whose number words ovos-number-parser writes with a module of its own reads them through
