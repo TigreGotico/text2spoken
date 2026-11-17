@@ -65,7 +65,7 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 
 A tag whose language has no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written. A language that CLDR has no spell-out rules for reads only the lexicon.
 
-A minus before a number reads when the CLDR rules have a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus. A minus at the start of a line, after a number or after a dash can mark a list item, a range or a code, so the text stays as written. A minus next to a currency symbol stays as written with the amount:
+A minus before a number reads when the CLDR rules have a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus. A minus at the start of a line, after a number or after a dash can mark a list item, a range or a code, so the minus and its number stay as written. A minus next to a currency symbol stays as written with the amount. A negative number grouped with spaces, as in `-1 000`, stays as written whole:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -74,6 +74,7 @@ A minus before a number reads when the CLDR rules have a word for it. A hyphen b
 | `знижка -5%` | `uk` | stays as written |
 | `від 5 -10 градусів` | `uk` | stays as written |
 | `Баланс: -50 €` | `uk` | stays as written |
+| `температура -1 000 градусів` | `uk` | stays as written |
 
 A language with no file has no noun genders. A number before a noun takes the first CLDR cardinal rule set of `spellout-cardinal`, `spellout-cardinal-masculine` and `spellout-numbering`, whatever the gender of the noun. Agreement with the noun needs a language file that gives the genders.
 

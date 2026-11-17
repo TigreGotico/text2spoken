@@ -118,7 +118,8 @@ NO_FILE_MINUS = [
 # A minus stays as written where it may be no minus. A hyphen after a letter, between two numbers or before a
 # percent sign is no sign at all, by the rule of `find_numbers` that en.py reads too. A minus at the start of a
 # line can mark a list item, and a minus after a number or a dash can mark a range or a code: the number before
-# it stays as written too, so that a second pass reads the same. A minus next to a currency symbol leaves the money
+# it stays as written too, so that a second pass reads the same. A number grouped with a space, as in `-1 000`,
+# stays as written whole, with each kind of space that groups digits. A minus next to a currency symbol leaves the money
 # form, which a language with no file keeps as written. RBNF has no word for minus zero, and zu.xml has no -x
 # rule. Each number that reads takes its word from uk.xml: 5 пʼять.
 NO_FILE_KEPT_MINUS = [
@@ -131,12 +132,16 @@ NO_FILE_KEPT_MINUS = [
     ("uk-UA", "тел. 333 -1234567", "тел. 333 -1234567"),
     ("uk-UA", "-3 яблука", "-3 яблука"),
     ("uk-UA", "Список:\n  -3 яблука", "Список:\n  -3 яблука"),
+    ("uk-UA", "температура -1 000 градусів", "температура -1 000 градусів"),
+    ("uk-UA", "борг -10\u00a0000 гривень", "борг -10\u00a0000 гривень"),
+    ("el-GR", "Θερμοκρασία -1 000 βαθμοί", "Θερμοκρασία -1 000 βαθμοί"),
+    ("el-GR", "Διαφορά -12\u202f000 κιλά", "Διαφορά -12\u202f000 κιλά"),
     ("zu", "Izinga -5 namuhla.", "Izinga -5 namuhla."),
 ]
 
 NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
-    ("uk-UA", ("Баланс: -50 €", "Баланс: € -50")),
-    ("el-GR", ("Υπόλοιπο: -50 €", "Υπόλοιπο: € -50")),
+    ("uk-UA", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
+    ("el-GR", ("Υπόλοιπο: -50 €", "Υπόλοιπο: € -50", "Υπόλοιπο: -1 000 €")),
     ("he-IL", ("יתרה: -50 ₪", "יתרה: ₪ -50")),
     ("ja-JP", ("残高: -50 €", "残高: € -50")),
     ("ca-ES", ("Saldo: -50 €", "Saldo: € -50")),

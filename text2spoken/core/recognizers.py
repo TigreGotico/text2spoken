@@ -255,10 +255,12 @@ _DASHES = "-\u2010\u2011\u2012\u2013\u2014\u2212"
 @dataclass(frozen=True)
 class RbnfCardinal(Cardinal):
     """The cardinal of a language with no file (section 6.1). A number with a minus stays as written where the
-    minus may mark something else: a list item at the start of a line, as in `-3 mele`; a range or a code after a
-    number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; or an amount next to a symbol of `symbols`, which
-    the language keeps as written, as in `-50 €` and `€ -50`. The number before such a minus stays as written too,
-    so that a second pass finds a digit before the minus again (section 11)."""
+    minus may mark something else, or where the number goes on past the span: a list item at the start of a line,
+    as in `-3 mele`; a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an
+    amount next to a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a
+    number grouped with a space, as in `-1 000`, where the span holds only the first group. A number that a space
+    alone parts from such a minus number stays as written too, so that a second pass finds the digit next to the
+    minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. A dash is no digit, so `5` in `5--10` reads."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         symbols = request.data.get("symbols", FrozenMap())
@@ -270,14 +272,18 @@ class RbnfCardinal(Cardinal):
             sign = span.start + len(span.fields["prefix"])
             line_start = text.rfind("\n", 0, sign) + 1
             before = text[line_start:sign].rstrip()
-            after = text[span.end - len(span.fields["suffix"]):].lstrip()[:1]
-            if not before or before[-1] in _DASHES or before[-1] in symbols or after in symbols:
+            number_end = span.end - len(span.fields["suffix"])
+            after = text[number_end:].lstrip()
+            neighbours = []
+            if before and is_digit(before[-1]):
+                neighbours.append((index - 1, line_start + len(before) - 1))
+            if text[number_end:number_end + 1].isspace() and after and is_digit(after[0]):
+                neighbours.append((index + 1, len(text) - len(after)))
+            if neighbours or not before or before[-1] in _DASHES or before[-1] in symbols or after[:1] in symbols:
                 kept.add(index)
-            elif is_digit(before[-1]):
-                kept.add(index)
-                digit = line_start + len(before) - 1
-                if index and spans[index - 1].start <= digit < spans[index - 1].end:
-                    kept.add(index - 1)
+            for other, digit in neighbours:
+                if 0 <= other < len(spans) and spans[other].start <= digit < spans[other].end:
+                    kept.add(other)
         return (replace(span, keep=True) if index in kept else span for index, span in enumerate(spans))
 
 
