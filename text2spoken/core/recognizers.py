@@ -953,6 +953,15 @@ def signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}" if sign else words
 
 
+def speak_rbnf_cardinal(span: Span, context: SpanContext) -> str:
+    """The cardinal of a language with no file (section 6.1). A number with a minus reads through the `-x` rule of
+    the RBNF cardinal rule set, which writes the sign word before or after the number, with or without a space."""
+    if span.fields["sign"] == "-":
+        request = context.request
+        return request.language.spellers[Form.CARDINAL].negative_cardinal(span.fields["digits"], Features(), request)
+    return speak_cardinal(span, context)
+
+
 def amount_words(amount: FrozenMap, request: Request, features: Features = Features()) -> str:
     """A `DECIMAL` record through the spellers of the language, with its sign: the decimal speller when the record
     has fraction digits, else the cardinal speller with `features`."""

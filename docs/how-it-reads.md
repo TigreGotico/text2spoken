@@ -65,6 +65,15 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 
 A tag whose language has no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms as written. A language that CLDR has no spell-out rules for reads only the lexicon.
 
+The library cannot see the gender of the noun after a number. So where CLDR gives a cardinal for each gender, the number takes the CLDR counting form, which CLDR uses when a number has no context. A minus before a number reads when the CLDR rules have a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Έχω 3 βιβλία.` | `el` | Έχω τρία βιβλία. |
+| `сьогодні -5 градусів` | `uk` | сьогодні мінус пʼять градусів |
+| `код A-5` | `uk` | код A-пʼять |
+| `знижка -5%` | `uk` | stays as written |
+
 ## Turn forms on and off
 
 `only` reads the forms that you name and no other:

@@ -193,10 +193,10 @@ class RbnfSpeller:
             raise LookupError(f"no RBNF locale for {request.tag!r}")
         return rbnf_engine(locale)
 
-    def _format(self, digits: str, name: str, request: Request) -> str:
+    def _format(self, digits: str, name: str, request: Request, sign: int = 1) -> str:
         from unicode_rbnf.engine import NoRuleForNumberError
 
-        number = _integer(digits)
+        number = sign * _integer(digits)
         try:
             result = self.engine(request).format_number(number, ruleset_names=[name])
         except (NoRuleForNumberError, OverflowError) as error:
@@ -205,6 +205,14 @@ class RbnfSpeller:
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._format(digits, self.rule_set(self.cardinal_sets, features), request)
+
+    def negative_cardinal(self, digits: str, features: Features, request: Request) -> str:
+        """The cardinal of minus the number, through the `-x` rule of the cardinal rule set, which places the sign
+        word and its space. A rule set with no `-x` rule declines. Zero declines too, because RBNF reads `-0` as
+        zero, with no sign word."""
+        if _integer(digits) == 0:
+            raise DeclinedReading("the -x rule of RBNF reads no minus zero")
+        return self._format(digits, self.rule_set(self.cardinal_sets, features), request, sign=-1)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         return self._format(digits, self.rule_set(self.ordinal_sets, features), request)

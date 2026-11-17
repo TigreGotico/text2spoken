@@ -104,6 +104,41 @@ def test_a_language_with_no_file_reads_the_cardinals_next_to_a_kept_form():
     assert normalize("Tenho 3. Ele tem 2.", "pt-PT") == "Tenho três. Ele tem dois."
 
 
+# A language with no file and no plain spellout-cardinal reads spellout-numbering, and a minus through the -x rule of
+# that rule set (design section 6.1). Expected words come from the CLDR RBNF files that unicode-rbnf ships.
+NO_FILE_ROWS = [
+    # el.xml: spellout-numbering is =%spellout-cardinal-neuter=; spellout-cardinal-neuter: 3 τρία.
+    ("el", "Έχω 3 βιβλία", "Έχω τρία βιβλία"),
+    # el.xml, spellout-cardinal-neuter: 1000 χίλια[ →→], 200 διακόσια[ →→], 30 τριάντα[ →→], 4 τέσσερα.
+    ("el-GR", "Έχω 1234 βιβλία", "Έχω χίλια διακόσια τριάντα τέσσερα βιβλία"),
+    # it.xml, spellout-numbering: -x "meno →→", 5 cinque.
+    ("it", "oggi -5 gradi", "oggi meno cinque gradi"),
+    ("it-IT", "oggi \u22125 gradi", "oggi meno cinque gradi"),
+    # uk.xml: spellout-numbering is =%spellout-cardinal-masculine=; that rule set: -x "мінус →→", 5 пʼять.
+    ("uk-UA", "сьогодні -5 дуже", "сьогодні мінус пʼять дуже"),
+    # uk.xml, spellout-cardinal-masculine: 20 двадцять[ →→], 1 один.
+    ("uk", "Було \u221221.", "Було мінус двадцять один."),
+]
+
+# A hyphen between two numbers, after a letter or before a percent sign is no minus: the rule of `find_numbers`
+# that en.py reads too. RBNF has no word for minus zero, and zu.xml has no -x rule.
+NO_FILE_GUARDS = [
+    ("it-IT", "da 5-10 gradi", "da 5-10 gradi"),
+    ("it-IT", "tipo A-5", "tipo A-cinque"),
+    ("uk-UA", "код A-5", "код A-пʼять"),
+    ("it-IT", "sconto -5%", "sconto -5%"),
+    ("uk-UA", "знижка -5%", "знижка -5%"),
+    ("it-IT", "-0 gradi", "-0 gradi"),
+    ("zu", "-5", "-5"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_ROWS + NO_FILE_GUARDS)
+def test_a_language_with_no_file_reads_the_counting_form_and_the_minus_of_rbnf(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
 def test_a_language_with_no_file_and_no_rbnf_reads_only_the_lexicon():
     assert supports("tlh").forms == {"lexicon"}
     assert normalize("jIH 3", "tlh") == "jIH 3"
