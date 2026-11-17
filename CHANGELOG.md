@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a63](https://github.com/TigreGotico/text2spoken/tree/0.0.2a63) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a62...0.0.2a63)
+
+**Merged pull requests:**
+
+- fix\(core\): read the minus in languages with no file [\#124](https://github.com/TigreGotico/text2spoken/pull/124) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a62](https://github.com/TigreGotico/text2spoken/tree/0.0.2a62) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a61...0.0.2a62)
@@ -382,10 +390,6 @@
 ## [0.0.2a14](https://github.com/TigreGotico/text2spoken/tree/0.0.2a14) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a13...0.0.2a14)
-
-**Merged pull requests:**
-
-- fix: follow-ups to the digit bound and the clause guard [\#27](https://github.com/TigreGotico/text2spoken/pull/27) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a13](https://github.com/TigreGotico/text2spoken/tree/0.0.2a13) (2026-11-09)
 
