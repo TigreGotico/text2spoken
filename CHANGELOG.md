@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a61](https://github.com/TigreGotico/text2spoken/tree/0.0.2a61) (2026-11-17)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a60...0.0.2a61)
+
+**Merged pull requests:**
+
+- fix\(en\): no doubled article before a date [\#123](https://github.com/TigreGotico/text2spoken/pull/123) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a60](https://github.com/TigreGotico/text2spoken/tree/0.0.2a60) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a59...0.0.2a60)
@@ -386,10 +394,6 @@
 ## [0.0.2a11](https://github.com/TigreGotico/text2spoken/tree/0.0.2a11) (2026-11-09)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a10...0.0.2a11)
-
-**Merged pull requests:**
-
-- fix: decline long digit runs at a fixed bound, not at Python's int limit [\#23](https://github.com/TigreGotico/text2spoken/pull/23) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a10](https://github.com/TigreGotico/text2spoken/tree/0.0.2a10) (2026-11-09)
 
