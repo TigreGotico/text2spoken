@@ -28,6 +28,7 @@ Each language page gives what the language reads, its varieties and the codes th
 | Spanish | [es](languages/es.md) |
 | Basque | [eu](languages/eu.md) |
 | French | [fr](languages/fr.md) |
+| Dutch | [nl](languages/nl.md) |
 | Portuguese | [pt](languages/pt.md) |
 | Russian | [ru](languages/ru.md) |
 
