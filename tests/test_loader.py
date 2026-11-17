@@ -173,12 +173,15 @@ def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
 # the parser, and RBNF reads every other language (design section 6.1). Expected words: English Wiktionary,
 # Module:number list/data/nb (3 tre), /az (7 yeddi, 60 altmış, 100 yüz) and /gl (0 cero); Galician "tres" from the
 # Wiktionary entry tres; Catalan "dos-cents" from the Wiktionary entry dos-cents, where RBNF writes "dos-cent".
+# Slovene reads through the parser, though the parser writes 2000 as "dve tisoč" where /sl writes "dva tisoč": RBNF
+# writes each number from 21 to 99 unit last, "štirideset dva", where /sl writes 7 sedem and 42 dvainštirideset.
 NO_FILE_PARSER = [
     ("nb-NO", "Jeg har 3 katter", "Jeg har tre katter"),
     ("gl-ES", "O Dr. Pérez ten 3 pacientes.", "O Dr. Pérez ten tres pacientes."),
     ("gl-ES", "Hai 0 erros", "Hai cero erros"),
     ("az-AZ", "bu gün 7 gün 60 il 100", "bu gün yeddi gün altmış il yüz"),
     ("ca-ES", "avui 201 fa", "avui dos-cents un fa"),
+    ("sl-SI", "danes 7 je 42 zelo", "danes sedem je dvainštirideset zelo"),
 ]
 
 # Lao reads through RBNF, and the core table rbnf_corrections.json gives the Lao words where the CLDR rules of lo
@@ -208,8 +211,8 @@ def test_a_lao_number_holds_no_thai_letter(tag):
 
 
 def test_a_language_that_rbnf_holds_reads_through_rbnf():
-    """Danish is in RBNF_HELD: the parser drops the "og" of "tusind og en", which the title of the Danish Wikipedia
-    page "Tusind og en Nat" writes. RBNF da, spellout-cardinal: 1001 "tusind og et"."""
+    """RBNF_HELD holds da and sk. Danish shows it: the parser drops the "og" of "tusind og en", which the title of
+    the Danish Wikipedia page "Tusind og en Nat" writes. RBNF da, spellout-cardinal: 1001 "tusind og et"."""
     assert normalize("år 1001", "da-DK") == "år tusind og et"
 
 

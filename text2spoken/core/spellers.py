@@ -158,11 +158,12 @@ class OvosNumberSpeller:
 RBNF_HELD = frozenset({
     "da",  # "og" before the last part after tusind: 1001 reads "tusind en"; da.wikipedia writes "Tusind og en Nat"
     "sk",  # thousands 2000 to 2999: "dva tisíce", where Wiktionary writes "dvetisíc" and RBNF keeps "dve"
-    "sl",  # thousands 2000 to 2999: "dve tisoč", where Wiktionary, Module:number list/data/sl, writes "dva tisoč"
 })
 """Languages with a writer of their own in ovos-number-parser that a language with no file still reads through
 RBNF, because the writer reads a class of numbers worse than RBNF. The comment of each names the class. A language
-leaves the set when text2spoken takes the floor of the parser release that fixes the class."""
+leaves the set when text2spoken takes the floor of the parser release that fixes the class. Where RBNF reads a class
+wrong too, the side with the narrower class wins: sl reads through the writer, which misreads 2000 to 2999, because
+RBNF misreads every number from 21 to 99."""
 
 
 def _rbnf_key(features: Features) -> Features:
