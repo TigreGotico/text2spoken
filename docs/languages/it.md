@@ -115,7 +115,7 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). It also lists the words of the categories of Italian prepositions, conjunctions, adverbs, pronouns, determiners and articles. The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 222 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 225 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
@@ -133,6 +133,7 @@ Italian leaves these forms as written, or reads them as shown:
 | `Le corsie sono larghe 3,50 metri.` | `it-IT` | Le corsie sono larghe tre virgola cinque zero metri. | The digits after the decimal mark read one by one, as the CLDR spell-out rule reads them. |
 | `Antonio oggi compie 41 anni.` | `it-IT` | Antonio oggi compie quarantuno anni. | A compound in uno keeps its full form. Before a noun the short form "quarantun anni" is also correct. |
 | `Ha 10.000.000 follower.` | `it-IT` | stays as written | A number that ends in a scale word reads before a noun of the noun list, its regular plural and a function word that is no noun. The loanword "follower" is in neither list, and a word that no list holds may be a verb. |
+| `Le pagine 5-10.` | `it-IT` | stays as written | A hyphen between two numbers writes a range, and the file holds no range word. The hyphen is no minus sign, so the text never reads "cinque meno dieci". |
 
 ---
 [← French](fr.md) · [Home](../index.md) · [Portuguese →](pt.md)
