@@ -275,9 +275,10 @@ this, and the numeral itself does: it is a word of the clause only when `letter_
 `letter_words` holds "vi", the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito perfeito
 do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito do
 indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
-A numeral between a word of `function_words` and a common noun with one gender orders that noun, so it reads as an
-ordinal that agrees with the noun, with no limit on the value: `Nesta XV edição` reads "Nesta décima quinta edição"
-and `A II Guerra Mundial` "A Segunda Guerra Mundial", with a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
+A numeral between a singular demonstrative contracted with `em` or `de` (`nesta`, `deste`, `naquele`) and a common
+noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, with no limit on the
+value: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
+a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
 jurídica": "Se o numeral antecede o substantivo, é usual continuar a usar-se o ordinal, mesmo depois de dez".
 Ciberdúvidas 28509, "Plurais com números romanos": "«II directriz», «III directriz», etc. (os símbolos são lidos:
 «segunda», «terceira», etc.)". Migalhas, Gramatigalhas, "Numeral", after José de Nicola and Ernani Terra: "O numeral

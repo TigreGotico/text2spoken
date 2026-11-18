@@ -131,8 +131,9 @@ capitals read as a word, so `AR`, `IR`, `TI` and `AIDS` read as they read with n
 `letter_words` next to them, as `NO` in pt-336, is written in lower case. A Roman numeral after a capitalised word
 takes its gender from a list, never from an ending, and the `noun_gender` table names few nouns and names, so
 `Região III`, `Elizabeth II` and `Reda II` read the masculine. A Roman numeral after a singular contraction such as
-`nesta` reads as an ordinal only when tugalex gives the noun after it the gender of the contraction, so pt-532 to
-pt-535 keep the reading that they have with no noun."""
+`nesta` reads as an ordinal only when the `noun_gender` table or tugalex gives the noun after it the gender of the
+contraction. The table names none of the nouns of pt-532 to pt-535, so they keep the reading that they have with no
+noun."""
 
 
 @pytest.mark.parametrize("row", rows("pt"), ids=lambda row: row["id"])
