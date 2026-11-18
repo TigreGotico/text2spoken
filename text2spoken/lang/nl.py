@@ -337,7 +337,9 @@ class SpacedMeasure:
 class SpacedCardinal:
     """`12 000`, `1 000 000`: a whole number with a space between its groups, with no letter after it and no sign of
     the `symbols` table next to it. A currency sign before it is the exception: an amount reads that sign, as in
-    `1€ 12 000`, so the groups after it read as a cardinal. `KeptGroups` after it keeps the others as written."""
+    `1€ 12 000`, so the groups after it read as a cardinal. So is a percent sign after a number before it: the
+    percentage reads that sign, as in `50% 1 000`, and a second pass, which sees its words, reads the groups too.
+    `KeptGroups` after it keeps the others as written."""
     name: str = "spaced_cardinal"
     form: Form = Form.CARDINAL
 
@@ -346,9 +348,12 @@ class SpacedCardinal:
         for number in spaced_numbers(text):
             if number.fraction is not None:
                 continue
-            before = text[:number.start].rstrip(GROUP_SPACES)[-1:]
+            head = text[:number.start].rstrip(GROUP_SPACES)
+            before = head[-1:]
+            read_sign = unicodedata.category(before) == "Sc" \
+                or (symbols.get(before) == "percent" and head[:-1].rstrip(GROUP_SPACES)[-1:].isdecimal())
             after = number.end + (text[number.end:number.end + 1] in GROUP_SPACES)
-            if (before in symbols and unicodedata.category(before) != "Sc") or text[after:after + 1] in symbols \
+            if (before in symbols and not read_sign) or text[after:after + 1] in symbols \
                     or (text[number.end:number.end + 1] and is_word_char(text[number.end])):
                 continue
             yield Span(number.start, number.end, Form.CARDINAL,

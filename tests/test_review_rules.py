@@ -758,3 +758,10 @@ def test_a_signed_fraction_after_a_mark_reads_once_the_number_before_the_mark_re
 def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(text, caplog):
     assert normalize(text, "en-GB") == text
     assert "unread written form" in caplog.text
+
+
+@pytest.mark.parametrize("text", ["50% 1 000, 1️⃣", "Een groei van 5 % 1 000 keer."])
+def test_groups_after_a_percentage_read_the_same_on_a_second_pass(text):
+    """Section 11. The percentage reads its sign, so the groups after it read on the first pass."""
+    once = normalize(text, "nl-BE")
+    assert normalize(once, "nl-BE") == once
