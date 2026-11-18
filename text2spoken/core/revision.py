@@ -102,14 +102,17 @@ def probe(tag: str) -> frozenset[str]:
     fresh process with the import path of this one.
 
     The result is the one line that starts with a marker unique to the call, so output that a `sitecustomize` or an
-    exit handler prints does not replace it. A probe that exits with an error, runs longer than `PROBE_TIMEOUT`, or
-    prints no readable result raises `RevisionError`."""
+    exit handler prints does not replace it. The child runs with `PYTHONIOENCODING=utf-8`, and its output is decoded as
+    UTF-8 with `errors="replace"`, so bytes that a `sitecustomize` writes in another encoding cannot break the parse of
+    the result line. A probe that exits with an error, runs longer than `PROBE_TIMEOUT`, or prints no readable result
+    raises `RevisionError`."""
     path = os.pathsep.join(entry or os.getcwd() for entry in sys.path)
     marker = f"text2spoken-revision-probe-{uuid.uuid4().hex}:"
     what = f"the revision probe for {tag!r}"
     try:
-        done = subprocess.run([sys.executable, "-P", "-c", _PROBE, marker, tag], capture_output=True, text=True,
-                              timeout=PROBE_TIMEOUT, check=True, env={**os.environ, "PYTHONPATH": path})
+        done = subprocess.run([sys.executable, "-P", "-c", _PROBE, marker, tag], capture_output=True,
+                              encoding="utf-8", errors="replace", timeout=PROBE_TIMEOUT, check=True,
+                              env={**os.environ, "PYTHONPATH": path, "PYTHONIOENCODING": "utf-8"})
     except subprocess.TimeoutExpired as exc:
         raise RevisionError(f"{what} ran longer than {PROBE_TIMEOUT} s") from exc
     except subprocess.CalledProcessError as exc:

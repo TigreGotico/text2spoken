@@ -245,6 +245,18 @@ def test_text_before_the_result_without_a_line_end_keeps_the_revision(fresh_prob
     assert probe("pt-PT") == before
 
 
+def test_a_probe_that_writes_bytes_the_caller_cannot_decode_keeps_the_revision(fresh_probe, monkeypatch, tmp_path):
+    before = probe("pt-PT")
+    (tmp_path / "sitecustomize.py").write_text('import sys\nsys.stdout.write("café")\n', encoding="utf-8")
+    control = subprocess.run([sys.executable, "-P", "-c", "pass"], capture_output=True,
+                             env={**os.environ, "PYTHONIOENCODING": "latin-1", "PYTHONPATH": str(tmp_path)})
+    assert control.stdout == "café".encode("latin-1")
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.setenv("PYTHONIOENCODING", "latin-1")
+    probe.cache_clear()
+    assert probe("pt-PT") == before
+
+
 def test_a_probe_that_runs_too_long_raises(fresh_probe, monkeypatch):
     monkeypatch.setattr(revision_module, "_PROBE", "import time\ntime.sleep(10)")
     monkeypatch.setattr(revision_module, "PROBE_TIMEOUT", 0.5, raising=False)
