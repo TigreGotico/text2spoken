@@ -84,7 +84,7 @@ Each of the 80 rows in `tests/data/ca.tsv` cites a source. 25 guard rows pin tex
 
 ## Limits
 
-The file reads no dates, times, years, ranges, telephone numbers, identifiers, words in capitals letter by letter, idioms, Roman numerals, colours, expressions or web and email addresses. `supports("ca")` lists the forms it reads. Catalan also leaves these forms as written or reads them in a limited way:
+The file reads no dates, times, ranges, telephone numbers, identifiers, words in capitals letter by letter, idioms, Roman numerals, colours, expressions or web and email addresses. A year in figures reads as a cardinal. `supports("ca")` lists the forms it reads. Catalan also leaves these forms as written or reads them in a limited way:
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |

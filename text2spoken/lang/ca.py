@@ -52,11 +52,12 @@ Units come from CLDR 49 (`cldr-units-full`, the `long` patterns of the variety),
 "Abreviacions", Símbols, reads "15 m2" as "quinze metres quadrats", "1 cm" as "un centímetre" and "95 m" as
 "noranta-cinc metres". CLDR gives `duration-hour` the feminine, so `2 h` reads "dues hores". A unit with no CLDR
 gender, such as `mass-ton`, reads only an amount whose words are the same in both genders. `unit_symbols` names the
-symbols made only of letters that read as units. A measure with a dimension mark, as `3 × 4 m`, stays as written.
+symbols made only of letters that read as units. A measure with a dimension mark and no spaces, as `3x4 m`, stays as written.
 CLDR 49 `ca` gives `m` no unit, because the symbol is both the month and the metre, and it names the millimetre
 "mil·límetres" and the millilitre "mil·lilitres", which the core does not read. So `m`, `mm` and `ml` are not in
-`unit_symbols`, and `KeptMeasure` keeps a number before them as written, as `35 mm`: the number alone would read in
-the masculine before a unit that may be feminine.
+`unit_symbols`. `KeptMeasure` keeps a number before `mm` and `ml` as written, as `35 mm`: the number alone would read
+in the masculine before a unit that may be feminine. No shared unit shape holds `m`, so a number before it reads as a
+cardinal and the symbol stays: `Fa 3 m.` reads "Fa tres m.", and `Té 3 × 4 m.` reads "Té tres × quatre m.".
 
 Currency names come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of the variety): `15 €` reads "quinze
 euros". CLDR gives a currency no gender, so `currency_genders` gives the gender of the euro (DNV "euro", "m. [...]
