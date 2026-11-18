@@ -9,9 +9,10 @@ from decimal import Decimal, localcontext
 
 import pytest
 
-from text2spoken import DeclinedReading, Features, GrammaticalGender, NormalizationParams, UnreadFormError, normalize
-from text2spoken.core.language import Request, Variety, plural_category
-from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, corrected,
+from text2spoken import (DeclinedReading, Features, GrammaticalGender, NormalizationParams, SayAs, UnreadFormError,
+                         normalize)
+from text2spoken.core.language import Request, Variety, plural_category, rbnf_locales
+from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, corrected, rbnf_bound,
                                        rbnf_corrections, rbnf_engine, words)
 
 F, M = GrammaticalGender.FEMININE, GrammaticalGender.MASCULINE
@@ -336,6 +337,29 @@ def test_rbnf_speller_reads_integers_only(gendered):
         speller.fraction("1", "2", Features(), request(gendered, "en"))
     with pytest.raises(ValueError):
         RbnfSpeller(cardinal={Features(gender=F): "x"}, ordinal={Features(): "y"})
+
+
+def test_only_the_serbian_ordinal_rule_sets_end_in_a_rule_that_counts_its_divisor():
+    """sr spellout-ordinal ends at 400, divisor 100; a unicode-rbnf release with a rule for 1000 fails here."""
+    bounds = {(locale, name): rbnf_bound(locale, name) for locale in sorted(rbnf_locales())
+              for name, rule_set in rbnf_engine(locale).rulesets.items() if not rule_set.is_private}
+    assert {key: bound for key, bound in bounds.items() if bound is not None} == {
+        ("sr", "spellout-ordinal"): 1000, ("sr_Latn", "spellout-ordinal"): 1000}
+
+
+@pytest.mark.parametrize("tag", ["sr", "sr-Latn"])
+@pytest.mark.parametrize("text", ["1000", "2000", "2024", "-1000", "1000000"])
+def test_a_serbian_ordinal_past_the_last_rule_gives_the_plain_reading(tag, text):
+    """Serbian writes двехиљадити, not двадесетстоти (Правописни приручник српског језика, ITHS, 2019); a declined
+    say-as gives the plain reading (design section 17.6)."""
+    assert normalize(text, tag, say_as=SayAs(interpret_as="ordinal")) == normalize(text, tag)
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), [
+    ("sr", "400", "четиристоти"), ("sr", "900", "деветстоти"), ("sr-Latn", "500", "petstoti")])
+def test_a_serbian_ordinal_below_the_bound_reads(tag, text, expected):
+    """Правописни приручник српског језика (ITHS, 2019): "двестоти, тристоти… деветстоти"."""
+    assert normalize(text, tag, say_as=SayAs(interpret_as="ordinal")) == expected
 
 
 def test_an_rbnf_engine_with_no_rule_sets_is_refused(monkeypatch):
