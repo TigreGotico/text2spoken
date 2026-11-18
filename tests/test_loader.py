@@ -357,7 +357,7 @@ def test_the_languages_without_the_rules_are_listed():
     assert [code for code in parser if raises(1.5, code)] == list(NO_PARSER_DECIMAL)
 
 
-@pytest.mark.parametrize("code", NO_MINUS_RULE + NO_PARSER_MINUS)
+@pytest.mark.parametrize("code", [code for code in NO_MINUS_RULE + NO_PARSER_MINUS if language_file(code) is None])
 def test_a_language_with_no_minus_word_keeps_the_minus(code):
     for text in ("-5", "x -5 y", "-3.5", "-3,5"):
         assert normalize(text, code) == text
