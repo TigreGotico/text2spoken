@@ -34,7 +34,10 @@ The rules and their sources:
   counted from 11 to 99 with no noun is an accusative tamyiz (pp. 350 and 353), and a scale word makes the million
   the counted noun of an amount (p. 353).
 - Ordinals follow the noun that they rank and agree with it (pp. 354-359). A date reads the day as a masculine
-  ordinal, then من and the month (pp. 357-358).
+  ordinal, then من and the month (pp. 357-358). A numeric date with the era mark هـ or ه after it is a date of the
+  Hijri calendar: the month is the Hijri month, and the mark reads هجري (English Wiktionary, هـ: "abbreviation of
+  هِجْرِيّ (hijriyy): in the year of the Hegira (AH)"). The mark م after a numeric date reads ميلادي (English
+  Wiktionary, م: "abbreviation of مِيلَادِيّ (mīlādiyy), AD, CE").
 - Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
   thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour comes from
   the CLDR 49 day period rules of `ar` (`dayPeriods.json`).
@@ -172,11 +175,17 @@ DATA = freeze({
     "months": ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر",
                "ديسمبر"],
     "date_reading": {"full": "{day} من {month} {year}", "no_year": "{day} من {month}"},
+    "hijri_months": ["محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
+                     "رمضان", "شوال", "ذي القعدة", "ذي الحجة"],
+    "era_marks": {"هـ": "هجري", "ه": "هجري", "م": "ميلادي"},
+    "hijri_marks": ["هـ", "ه"],
     "symbols": {"%": "percent", "٪": "percent", "$": "money", "+": "expression", "=": "expression"},
 })
 """Sources, by table. `number_marks`, `months`, `day_periods` and `spoken_periods`: CLDR 49 (numbers.json,
 ca-gregorian.json, dayPeriods). `percent`: Ryding 2005, p. 347. `prepositions`: Ryding 2005, pp. 366-367.
-`semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
+`hijri_months`: Arabic Wikipedia, تقويم هجري, the table of months, which gives ربيع الآخر and جمادى الآخرة; the
+two months that start with ذو take the genitive ذي after من, as Arabic Wikipedia, ذو الحجة, writes it:
+"العشر الأوائل من ذي الحجة". `semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
 3.21.1 qabl-a (p. 395), 3.25 Tiwaal-a (p. 397) and 3.31 xilaal-a (p. 398). `year_nouns`: Ryding 2005, pp. 351-353.
 `feminine_plurals`: the counted plurals of Ryding 2005, pp. 335-336, دقائق of CLDR (units.json, duration-minute), and
 سنوات, the plural of the feminine sana (pp. 352-353). `rank_nouns`: nouns that an ordinal follows (Ryding 2005,
@@ -506,12 +515,14 @@ def speak_date(span: Span, context: SpanContext) -> str:
     as after the year noun that may stand before it (pp. 351-353)."""
     request = context.request
     fields = span.fields
-    month = request.data["months"][fields["month"] - 1]
+    era = fields["era"]
+    month = request.data["hijri_months" if era in request.data["hijri_marks"] else "months"][fields["month"] - 1]
     day = SPELLER.ordinal(str(fields["day"]), Features(gender=MASCULINE, case=_case(span, context)), request)
     if fields["year"] is None:
         return request.data["date_reading"]["no_year"].format(day=day, month=month)
     year = SPELLER.year(str(fields["year"]), Features(gender=MASCULINE, case=OBLIQUE), request)
-    return request.data["date_reading"]["full"].format(day=day, month=month, year=year)
+    spoken = request.data["date_reading"]["full"].format(day=day, month=month, year=year)
+    return f"{spoken} {request.data['era_marks'][era]}" if era else spoken
 
 
 def _day_period(hour: int, request: Request) -> str:
@@ -572,6 +583,34 @@ class Money(CoreMoney):
 
 
 @dataclass(frozen=True)
+class EraDate:
+    """`15/9/1447هـ`, `1447-12-10 هـ` and `5/3/2026م`: a numeric date, day first with slashes or year first with
+    hyphens, and an era mark of `era_marks` right after it or after one space. A Hijri month has 29 or 30 days."""
+    name: str = "date_era"
+    form: Form = Form.DATE
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        marks = "|".join(sorted(request.data["era_marks"], key=len, reverse=True))
+        pattern = re.compile(f"(?:([0-9]{{1,2}})/([0-9]{{1,2}})/([0-9]{{3,4}})|([0-9]{{3,4}})-([0-9]{{1,2}})-([0-9]{{1,2}}))"
+                             f" ?({marks})")
+        for match in pattern.finditer(fold_digits(text)):
+            start, end = match.span()
+            if not is_bounded(text, start, end) or not one_digit_set(text[start:end]):
+                continue
+            if match.group(1):
+                day, month, year, order = int(match.group(1)), int(match.group(2)), int(match.group(3)), "DMY"
+            else:
+                year, month, day, order = int(match.group(4)), int(match.group(5)), int(match.group(6)), "YMD"
+            hijri = match.group(7) in request.data["hijri_marks"]
+            if not (1 <= month <= 12 and 1 <= day <= 30) if hijri else not is_valid(year, month, day):
+                continue
+            yield Span(start, end, Form.DATE,
+                       FrozenMap({"year": year, "month": month, "day": day, "written_order": order,
+                                  "month_written": "digits", "era": match.group(7), "prefix": "", "suffix": ""}),
+                       recognizer=self.name)
+
+
+@dataclass(frozen=True)
 class DateNamed:
     """`12 مارس 2024` and `12 مارس`: the CLDR long date `d MMMM y`, with the month names of the variety."""
     name: str = "date_named"
@@ -593,7 +632,7 @@ class DateNamed:
                 continue
             yield Span(start, end, Form.DATE,
                        FrozenMap({"year": year, "month": month, "day": day, "written_order": "DMY",
-                                  "month_written": "name", "prefix": "", "suffix": ""}), recognizer=self.name)
+                                  "month_written": "name", "era": "", "prefix": "", "suffix": ""}), recognizer=self.name)
 
 
 LANGUAGE = LanguageSpec(
@@ -602,7 +641,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES + LECT_VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], DateNamed(), SHARED["date_numeric"], SHARED["time_clock"], Money(),
+    recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], SHARED["time_clock"], Money(),
                  SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"],
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={

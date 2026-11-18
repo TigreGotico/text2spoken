@@ -598,7 +598,7 @@ class DateNumeric:
             start, end, prefix, suffix = bounds
             yield Span(start, end, Form.DATE,
                        FrozenMap({"year": year, "month": month, "day": day, "written_order": order,
-                                  "month_written": "digits", "prefix": prefix, "suffix": suffix}),
+                                  "month_written": "digits", "era": "", "prefix": prefix, "suffix": suffix}),
                        recognizer=self.name)
 
 
@@ -1477,12 +1477,14 @@ section 3.2.1.1, page 12)."""
 class SpaceGroups:
     """`36 524`, `30 000`: digits in groups of three with a space between them. The span stays as written in every
     language that lists this recognizer, whatever its group mark, so that no other recognizer reads each group as
-    a number of its own."""
+    a number of its own. A language that reads space groups through its `number_marks` gives a narrower `pattern`:
+    the runs that stay ambiguous there."""
     name: str = "space_groups"
     form: Form = Form.CARDINAL
+    pattern: re.Pattern = SPACE_GROUPS
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in SPACE_GROUPS.finditer(fold_digits(text)):
+        for match in self.pattern.finditer(fold_digits(text)):
             start, end = match.span()
             script = digit_script(text[start:end])
             if script is None or (start and is_word_char(text[start - 1])) or not _cluster_edge(text, start, end):

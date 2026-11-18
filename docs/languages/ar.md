@@ -15,6 +15,7 @@ The file reads cardinals, decimals, fractions, ranges, dates, times, money, meas
 | `النسبة 2.5%` | `ar` | النسبة اثنان فاصلة خمسة في المئة |
 | `%10 خصم` | `ar` | عشرة في المئة خصم |
 | `الساعة 3:30` | `ar` | الساعة الثالثة والنصف |
+| `موعدك 15/9/1447هـ` | `ar` | موعدك الخامس عشر من رمضان ألف وأربعمئة وسبعة وأربعين هجري |
 
 These stay as written: telephone numbers, operators such as `5+3`, a number with a `+` sign, and the word `ريال` before a number.
 
@@ -86,7 +87,7 @@ The `register` option chooses formal or colloquial words. A spoken lect such as 
 
 The rules cite Karin C. Ryding, *A Reference Grammar of Modern Standard Arabic* (Cambridge University Press, 2005), W. Wright, *A Grammar of the Arabic Language* (3rd edition, 1896), Wiktionary, Arabic Wikipedia, the ISO 639-3 macrolanguage table of iso639-3.sil.org, the CLDR 49 data of each locale, the CLDR 49 likely subtags and the country lists of Glottolog. The number words of a lect come from `ovos-number-parser`, whose tables cite a grammar for each word. The docstring of [`ar.py`](../../text2spoken/lang/ar.py) gives the page of each rule.
 
-In `tests/data/ar.tsv`, the 162 rows cite their source, and no native speaker has checked them. A row of a lect takes its number words from `ovos-number-parser` and says so.
+In `tests/data/ar.tsv`, the 167 rows cite their source, and no native speaker has checked them. A row of a lect takes its number words from `ovos-number-parser` and says so.
 
 ## Limits
 
