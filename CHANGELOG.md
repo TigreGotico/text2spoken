@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a70](https://github.com/TigreGotico/text2spoken/tree/0.0.2a70) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a69...0.0.2a70)
+
+**Merged pull requests:**
+
+- fix\(core\): read decimals and a line-start minus in languages with no file [\#218](https://github.com/TigreGotico/text2spoken/pull/218) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a69](https://github.com/TigreGotico/text2spoken/tree/0.0.2a69) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a68...0.0.2a69)
@@ -388,7 +396,6 @@
 **Merged pull requests:**
 
 - test: contract clause for digit-run patterns [\#43](https://github.com/TigreGotico/text2spoken/pull/43) ([JarbasAl](https://github.com/JarbasAl))
-- fix: minus sign as operator in expressions [\#42](https://github.com/TigreGotico/text2spoken/pull/42) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a20](https://github.com/TigreGotico/text2spoken/tree/0.0.2a20) (2026-11-10)
 
