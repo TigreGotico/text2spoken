@@ -20,7 +20,9 @@ de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR
   Aktualisierte Fassung des amtlichen Regelwerks, Mannheim 2018, by paragraph (rechtschreibrat.com).
 - CLDR: Unicode Common Locale Data Repository, RBNF `de` and `de_CH`, and `common/main` `de`, `de_AT` and `de_CH`
   (months, date formats, number marks).
-- Duden online, by entry: "eineinhalb", "Grad", "plus", "Prozent", "Uhr", "zweieinhalb" (duden.de).
+- Duden online, by entry: "eineinhalb", "Grad", "Mio.", "plus", "Prozent", "Uhr", "zweieinhalb" (duden.de).
+- Duden, Die Grammatik: Duden Band 4, 10., völlig neu verfasste Auflage, Berlin 2022, by Randnummer (Rn.).
+- Duden, Erste Hilfe: A. Steinhauer, Duden. Erste Hilfe. Die 100 häufigsten Fehler, Berlin 2018, by entry.
 - de.wiktionary, by entry and sense: "halb" [1], "Kaffee", "Komitee", "kosten" [1], "Tee", "vor" [1].
 - de.wikipedia, "Präposition", sections Rektion and Zeitlich.
 - en.wikipedia, "Grammatical gender in German", the tables of masculine, feminine and neuter endings.
@@ -28,6 +30,17 @@ de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR
 A mixed number of a half is one word of the whole part and "einhalb": Duden, "zweieinhalb": Zahlwort, Bruchzahl,
 "2 1/2", "wir kennen uns seit zweieinhalb Jahren"; Duden, "eineinhalb": "eineinhalb Tage". No source in the list
 gives the reading of a mixed number of another fraction, so it stays as written.
+
+A list of ordinals with one determiner, as in `Am 1., 2. und 3. Mai.`, is a row of attributes of one noun, and each
+member takes the declension of the first: "Stehen bei einem Substantiv zwei oder mehrere Adjektive, dann werden diese
+in gleicher Weise (parallel) gebeugt: ein breiter, tiefer Graben" (Duden, Erste Hilfe, entry "Adjektiv", "nach
+langem[,] schwerem Leiden (Beugung und Kommasetzung)"). An attribute between the article and the noun takes the
+ending of that slot, also in a row joined by a conjunction: "(3) das alte, längst renovierungsbedürftige, aber immer
+noch bewohnte Haus" (Duden, Die Grammatik, Rn. 982); "mit kurz-em schwarz-en Haar analog zu mit d-em schwarz-en
+Haar" (Rn. 983). So the list reads "Am ersten, zweiten und dritten Mai."
+
+A scale abbreviation between a number and a currency sign, as in `1,5 Mio. €`, reads as its word: Duden, "Mio.":
+"Kurz für Million[en]".
 
 `Abbreviation` and `Expression` are shared recognizers, and read only the data tables of the language. An
 expression reads each operator by its word in `operators`, and "=" as "gleich": Duden, "plus": "fünf plus drei
@@ -43,8 +56,9 @@ from text2spoken.core.color import speak_color
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import written_amount
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Abbreviation, Telephone, amount_words, join_ranges,
-                                          numbers_in, signed, speak_abbreviation, speak_decimal, speak_expression,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Abbreviation, Money as CoreMoney, Telephone,
+                                          amount_words, join_ranges, numbers_in, signed, speak_abbreviation,
+                                          speak_decimal, speak_expression,
                                           speak_fraction as core_speak_fraction, speak_idiom, speak_lexicon,
                                           speak_range, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
@@ -420,7 +434,20 @@ def _ordinal_features(context: SpanContext, gender: GrammaticalGender | None) ->
     return Features(gender=gender or M, case=case, definite=determiner["definite"])
 
 
+ORDINAL_LIST = "de_ordinal_list"
+"""The `Request.memo` key that maps each later member of a list of ordinals to the words before the first one."""
+_LIST = re.compile("(?:, ?[0-9]+[.])*,? (?:" + "|".join(DATA["list_links"]) + ") [0-9]+[.]")
+_DIGITS = re.compile("[0-9]+")
+
+
+def _list_context(span: Span, context: SpanContext) -> SpanContext:
+    """The context of a list member, with the words before the first member."""
+    before = context.request.memo.get(ORDINAL_LIST, {}).get(span.start)
+    return context if before is None or context.hint is not None else replace(context, before=before)
+
+
 def speak_ordinal(span: Span, context: SpanContext) -> str:
+    context = _list_context(span, context)
     noun = _noun_after(context.after)
     gender = noun_gender(noun, context.request.data) if noun else None
     return SPELLER.ordinal(span.fields["digits"], _ordinal_features(context, gender), context.request)
@@ -430,6 +457,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
     """The day is an ordinal that agrees with the masculine "Tag": "der siebzehnte Oktober" (Regelwerk § 36
     (1.6)), "am dritten Mai", and "zwölfter März" with no article. A determiner of another gender belongs to
     another noun, so it does not decide."""
+    context = _list_context(span, context)
     request = context.request
     fields = span.fields
     month = request.data["months"][fields["month"] - 1]
@@ -548,14 +576,14 @@ phone number, as in `Das Telefon hat die Nummer 030 1234567.` Two years that a d
 
 
 @dataclass(frozen=True)
-class Money:
+class Money(CoreMoney):
     """The shared money recognizer. A scale abbreviation at the end of a sentence, as in `CHF 2 Mio.`, carries the
-    one full stop that also ends the sentence (Regelwerk § 103), so the span keeps it as its trail."""
-    name: str = "money"
-    form: Form = Form.MONEY
+    one full stop that also ends the sentence (Regelwerk § 103), so the span keeps it as its trail. A scale
+    abbreviation may also stand before a sign after the number, as in `1,5 Mio. €`."""
+    scale_before_symbol: bool = True
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for span in SHARED["money"].find(text, tokens, request):
+        for span in super().find(text, tokens, request):
             following = next_visible(text, span.end)
             if text[span.end - 1] == "." and not span.trail and (following == "" or following.isupper()):
                 span = replace(span, trail=".")
@@ -650,14 +678,19 @@ class Ordinal:
     ends it (§ 105), so the span keeps it as its trail.
 
     With no determiner, a full stop and more text after the number do not tell an ordinal, as in `1. FC Köln`,
-    from the end of a sentence, as in `Er ist 3. Sie ist 4.`, so the number stays as written."""
+    from the end of a sentence, as in `Er ist 3. Sie ist 4.`, so the number stays as written.
+
+    A list after a determiner, `N1., N2., … und|oder Nk.`, gives every member the determiner of the first, which
+    `ORDINAL_LIST` holds. With no closing link the numbers after a comma are no list, as in `Am 1., 2. Mai`."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         determiners = request.data["determiners"]
+        folded = fold_digits(text)
         words = context_words(tokens)
         breaks = clause_breaks(text)
+        members = request.memo.setdefault(ORDINAL_LIST, {})
         for number in numbers_in(text, request):
             stop = number.end
             if (number.sign or number.fraction is not None or not text.startswith(".", stop)
@@ -668,7 +701,12 @@ class Ordinal:
                                 "script": number.script})
             before = clause_window(text, words, number.start, number.end, -1, limit=1, breaks=breaks)
             following = next_visible(text, stop + 1)
-            if before and before[0].lower() in determiners:
+            if number.start in members or (before and before[0].lower() in determiners):
+                if number.start not in members and (match := _LIST.match(folded, stop + 1)) \
+                        and not folded[match.end():match.end() + 1].isdigit():
+                    head = clause_window(text, words, number.start, stop + 1, -1, breaks=breaks)
+                    members.update(dict.fromkeys((stop + 1 + member.start()
+                                                  for member in _DIGITS.finditer(match.group())), head))
                 yield Span(number.start, stop + 1, Form.ORDINAL, fields, trail="" if following else ".",
                            recognizer=self.name)
             elif following:

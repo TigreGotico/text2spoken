@@ -19,9 +19,13 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `um 14.30 Uhr` | `de-CH` | um vierzehn Uhr dreissig |
 | `um 1.15 Franken` | `de-CH` | um eins Komma eins fünf Franken |
 | `Das Buch kostet 23,88 €.` | `de-CH` | Das Buch kostet dreiundzwanzig Euro achtundachtzig. |
+| `Das kostet 1,5 Mio. €.` | `de-DE` | Das kostet eins Komma fünf Millionen Euro. |
+| `Am 1., 2. und 3. Mai.` | `de-DE` | Am ersten, zweiten und dritten Mai. |
 | `von 9:00 bis 17:00 Uhr` | `de-DE` | von neun Uhr bis siebzehn Uhr |
 
 A German number takes the gender and the case of its noun, and the word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time. A form of the verb `kosten` gives the accusative to a price. Any other noun after the verb is its subject. A noun with no known gender takes the masculine, and only the dative of a preposition.
+
+In a list of ordinals after one determiner, every ordinal takes the ending of the first. The list has a comma between the ordinals and `und` or `oder` before the last one.
 
 In `de-CH` the full stop is also the decimal mark, so a time with a full stop needs `Uhr`. `von`, `bis`, `ab` and `seit` also come before a ratio, so a time after them needs `Uhr`, or a range that `Uhr` closes.
 
@@ -50,9 +54,9 @@ In `de-CH` the full stop is also the decimal mark, so a time with a full stop ne
 
 ## Sources
 
-The rules cite the amtliche Regelwerk of the Rat für deutsche Rechtschreibung, the CLDR data of `de`, `de_AT` and `de_CH`, Duden online, de.wiktionary, de.wikipedia and en.wikipedia. The docstring of [`de.py`](../../text2spoken/lang/de.py) gives each entry.
+The rules cite the amtliche Regelwerk of the Rat für deutsche Rechtschreibung, the CLDR data of `de`, `de_AT` and `de_CH`, Duden online, the Duden books Die Grammatik and Erste Hilfe, de.wiktionary, de.wikipedia and en.wikipedia. The docstring of [`de.py`](../../text2spoken/lang/de.py) gives each entry.
 
-Most test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia. Some cite CLDR or the design of text2spoken. No native speaker has checked them. Of the 125 rows, 34 mark at least one part of their reading as silver: that part comes from memory, and no source was read for it.
+Most test rows in `tests/data/de.tsv` cite the Regelwerk, Duden, Wiktionary or Wikipedia. Some cite CLDR or the design of text2spoken. No native speaker has checked them. Of the 133 rows, 35 mark at least one part of their reading as silver: that part comes from memory, and no source was read for it.
 
 ## Limits
 
@@ -81,8 +85,7 @@ Some German readings are wrong or stay as written:
 | `Ab 16:10` | `de-DE` | stays as written | A time after `ab`, `von`, `bis` or `seit` with no `Uhr` stays as written. |
 | `9:00-17:00 Uhr` | `de-DE` | stays as written | The core reads the dash as a joiner, so the range stays as written. |
 | `1/2 Pizza` | `de-DE` | stays as written | One half before a noun stays as written, because `halb` declines before a noun. |
-| `2 Mio. Einwohner` | `de-DE` | zwei Mio. Einwohner | A scale abbreviation after a number stays as written. |
-| `2 Mio. €` | `de-DE` | zwei Mio. € | A scale abbreviation after a number stays as written. |
+| `2 Mio. Einwohner` | `de-DE` | zwei Mio. Einwohner | A scale abbreviation reads only next to a currency sign. |
 | `Er wurde 1999 geboren.` | `de-DE` | Er wurde eintausendneunhundertneunundneunzig geboren. | In German, a year with no year word reads as a cardinal. |
 | `Er wurde 2. Sieger.` | `de-DE` | stays as written | An ordinal with no determiner before it stays as written, and so does an ordinal from one million up. |
 | `das 12/03/2024 Wetter` | `de-DE` | das zwölfter März zweitausendvierundzwanzig Wetter | A determiner that does not agree with a date is ignored. |
