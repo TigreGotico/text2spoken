@@ -14,6 +14,8 @@ text2spoken has two modes. The default mode keeps a form that it cannot read as 
 | A `say_as` value, format or detail that the language cannot read | The reading without it, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
 | A `say_as` whose form is not in the text | The reading with no `say_as`, WARNING logged | `UnreadFormError` |
 | A `say_as` span that the language cannot speak, such as a German ordinal of one million | The reading with no `say_as`, WARNING logged | `UnreadFormError` |
+| A `say_as` `characters` in a language with no letter names | Each letter as written, alone, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
+| A `say_as` `telephone` with a `+` that the language has no word for | The country code without the `+`, WARNING logged | `UnreadFormError` |
 | A gender that a language with genders does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |
 | A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
 | A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
@@ -67,7 +69,7 @@ A language with genders raises `UndefinedGrammaticalGender` for a gender that it
 'pt-PT' does not define 'neuter'; it defines ['feminine', 'masculine']
 ```
 
-A language with no genders ignores a gender in a hint or in `default_gender`. English, Basque and every language with no file have no genders.
+A language with no genders ignores a gender in a hint or in `default_gender`. English, Basque and most languages with no file have no genders. A language with no file has the genders of its CLDR ordinal rule sets when CLDR has one for more than one gender, as Hindi and Danish do.
 
 ## When a reading stays as written
 

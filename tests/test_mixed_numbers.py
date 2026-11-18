@@ -88,7 +88,7 @@ def test_a_second_pass_changes_nothing(lang, text):
 
 
 GENDERLESS = sorted({variety.tag for spec in language._registry().values() if not spec.genders
-                     for variety in spec.varieties} | {"sv-SE", "pl-PL", "fi-FI", "tr-TR", "ja-JP", "da-DK"})
+                     for variety in spec.varieties} | {"sv-SE", "pl-PL", "fi-FI", "tr-TR", "ja-JP"})
 """Every variety of a language file that declares no grammatical gender, and languages with no file."""
 
 

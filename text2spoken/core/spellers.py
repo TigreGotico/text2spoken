@@ -23,7 +23,7 @@ from text2spoken.params import GrammaticalGender
 if TYPE_CHECKING:
     from unicode_rbnf import RbnfEngine
 
-    from text2spoken.core.language import Request
+    from text2spoken.core.language import LanguageSpec, Request
 
 
 def words(text: str) -> str:
@@ -125,9 +125,22 @@ class OvosNumberSpeller:
         return spoken
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
+        """The ordinal of the number. Two more refusals of the writer decline: a `ValueError`, which several writers
+        raise for the ordinal of zero, as "Greek ordinals start at 1", and a reading that holds a digit, which some
+        writers return past a number of digits."""
         number, kwargs = _integer(digits), self._kwargs(features, request)
-        return self._read("ordinal", f"{len(digits)} digits", request,
-                          lambda: parsers.pronounce_ordinal(number, request.tag, **kwargs))
+        try:
+            spoken = self._read("ordinal", f"{len(digits)} digits", request,
+                                lambda: parsers.pronounce_ordinal(number, request.tag, **kwargs))
+        except DeclinedReading:
+            raise
+        except ValueError as error:
+            raise DeclinedReading(f"ovos-number-parser reads no ordinal of {len(digits)} digits in {request.tag}: "
+                                  f"{error}") from error
+        if any(char.isdigit() for char in spoken):
+            raise DeclinedReading(f"ovos-number-parser gives digits for the ordinal of {len(digits)} digits in "
+                                  f"{request.tag}")
+        return spoken
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         return self.cardinal(digits, features, request)
@@ -310,6 +323,29 @@ class RbnfSpeller:
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         raise NotImplementedError("RbnfSpeller reads integers and decimals only")
+
+
+@lru_cache(maxsize=128)
+def cardinal_digit_words(tag: str, language: LanguageSpec) -> tuple[str, ...] | None:
+    """The cardinal of each digit from 0 to 9 by the writer of ovos-number-parser for the language, else by the
+    CLDR RBNF rule set `spellout-numbering`. UTS #35, Part 3, "Rule-Based Number Formatting", names that rule set
+    "the default used when there is no context for the number. Usually this is used for counting without reference
+    to a noun". None when neither reads all ten, or a reading holds a digit."""
+    if language.code in parsers.number_writer_languages():
+        try:
+            spoken = tuple(words(str(parsers.pronounce_number(digit, tag))) for digit in range(10))
+        except (NotImplementedError, ValueError):
+            return None
+    else:
+        locale = cldr_locale(tag, rbnf_locales(), language)
+        engine = None if locale is None else rbnf_engine(locale)
+        if engine is None or "spellout-numbering" not in engine.rulesets:
+            return None
+        spoken = tuple(words(corrected(engine.format_number(digit, ruleset_names=["spellout-numbering"])
+                                       .text_by_ruleset["spellout-numbering"], locale)) for digit in range(10))
+    if not all(spoken) or any(char.isdigit() for word in spoken for char in word):
+        return None
+    return spoken
 
 
 def spell_digits(digits: str, request: Request) -> str:

@@ -271,16 +271,34 @@ def test_ovos_speller_declines_an_empty_reading(gendered, monkeypatch, reading):
         OvosNumberSpeller(OVOS_GENDER).ordinal("0", Features(), request(gendered, "sl"))
 
 
-@pytest.mark.parametrize("error", [ValueError("Greek ordinals start at 1"), KeyError(2000000)])
-def test_ovos_speller_raises_any_other_error_of_the_library(gendered, monkeypatch, error):
+def test_ovos_speller_raises_any_other_error_of_the_library(gendered, monkeypatch):
     import ovos_number_parser
 
     def fail(number, lang, **kwargs):
-        raise error
+        raise KeyError(2000000)
 
     monkeypatch.setattr(ovos_number_parser, "pronounce_ordinal", fail)
-    with pytest.raises(type(error)):
+    with pytest.raises(KeyError):
         OvosNumberSpeller(OVOS_GENDER).ordinal("0", Features(), request(gendered, "el"))
+
+
+def test_ovos_speller_declines_an_ordinal_that_the_library_refuses_with_a_value_error(gendered, monkeypatch):
+    import ovos_number_parser
+
+    def fail(number, lang, **kwargs):
+        raise ValueError("Greek ordinals start at 1")
+
+    monkeypatch.setattr(ovos_number_parser, "pronounce_ordinal", fail)
+    with pytest.raises(DeclinedReading, match="Greek ordinals start at 1"):
+        OvosNumberSpeller(OVOS_GENDER).ordinal("0", Features(), request(gendered, "el"))
+
+
+def test_ovos_speller_declines_an_ordinal_that_the_library_writes_in_digits(gendered, monkeypatch):
+    import ovos_number_parser
+
+    monkeypatch.setattr(ovos_number_parser, "pronounce_ordinal", lambda number, lang, **kwargs: "8901234567890")
+    with pytest.raises(DeclinedReading, match="digits for the ordinal"):
+        OvosNumberSpeller(OVOS_GENDER).ordinal("8901234567890", Features(), request(gendered, "el"))
 
 
 def test_rbnf_speller_falls_back_case_then_animacy_then_numeral_system_then_bare(gendered):

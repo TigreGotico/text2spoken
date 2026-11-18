@@ -71,6 +71,10 @@ in the neuter, as a number with no noun. The date adds no weekday. The core reso
 the day, and when both fields are 12 or below the day comes first, as in the CLDR short date format `d/M/yy`. The
 decimal mark is the comma and the group mark the full stop (CLDR 49 number symbols of `el`), so `1.234` reads as one
 number. A decimal stays as written.
+
+The file claims no ordinal in plain text. A say-as ordinal (text2spoken design, section 17.5) reads through the
+ordinal rule sets of `el`, `spellout-ordinal-masculine`, `-feminine` and `-neuter`, in the default gender, the neuter:
+`3` reads "τρίτο".
 """
 from __future__ import annotations
 
@@ -417,7 +421,7 @@ LANGUAGE = LanguageSpec(
                  SignedMoney(), SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DATE: speak_date,
                  Form.PERCENT: speak_percent, Form.FRACTION: speak_fraction},
-    spellers={Form.CARDINAL: SPELLER, Form.FRACTION: SPELLER},
+    spellers={Form.CARDINAL: SPELLER, Form.FRACTION: SPELLER, Form.ORDINAL: SPELLER},
     genders=frozenset({M, F, N}),
     default_gender=N,
     animacies=frozenset(),
