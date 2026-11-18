@@ -608,13 +608,14 @@ class EnglishTelephone(Telephone):
     `Call 0800 123 456 8 am to 8 pm.` and `Ring 0800 123 456 24 hours a day.` read the number and the hour."""
 
     def hour_after(self, text: str, end: int, request: Request) -> bool:
-        if super().hour_after(text, end, request):
-            return True
+        if not text.startswith(" ", end):
+            return False
         stop = end + 1
         while stop < len(text) and is_letter(text[stop]):
             stop += 1
         word = text[end + 1:stop]
-        return text.startswith(" ", end) and word.islower() and word not in request.data.get("function_words", ())
+        return word.islower() and word not in request.data.get("function_words", ()) \
+            or super().hour_after(text, end, request)
 
 
 @dataclass(frozen=True)

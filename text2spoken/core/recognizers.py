@@ -969,9 +969,9 @@ class Telephone:
 
     def hour_after(self, text: str, end: int, request: Request) -> bool:
         """Whether a space and a day period follow text[:end], as `8 am` follows a phone number."""
-        periods = [period for written in request.data.get("day_periods", {}).values() for period in written]
         return text.startswith(" ", end) and any(
-            text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period)) for period in periods)
+            text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period))
+            for periods in request.data.get("day_periods", {}).values() for period in periods)
 
     def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                request: Request) -> range:
