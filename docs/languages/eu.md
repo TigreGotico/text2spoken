@@ -49,7 +49,7 @@ The file has no variety for a dialect, so a tag such as `eu-x-zuberera` reads th
 
 The rules come from the norms of Euskaltzaindia, the Basque academy: Araua 7 (cardinals), Araua 196 (abbreviations), Araua 197 (symbols) and Araua 203, "Zenbakizko adierazpenak". The rule for a code noun and a number pair also cites EIMA, *Ortotipografia*, the style guide of the Basque Government. The docstring of [`eu.py`](../../text2spoken/lang/eu.py) gives the section of each rule.
 
-Of the 147 rows in `tests/data/eu.tsv`, 136 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 18 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Of the 149 rows in `tests/data/eu.tsv`, 138 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 18 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093, eu-112, eu-134, eu-137, eu-138 and eu-140 to eu-147. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko`, `U2`, `¥5`, the telephone shapes `943 123 456`, `+34 944 158 155`, `+34 944 15 81 55`, `0034 943 123 456`, `34 943 123 456` and `(943) 123 456`, and the grouped fractions `0,264 7`, `4 712,395 8`, `74 835,140 71` and `3.141 592 6`.
 
@@ -59,7 +59,7 @@ These forms stay as written in Basque:
 
 | Written | Spoken (`eu-ES`) | Limit |
 | --- | --- | --- |
-| `+34 944 158 155` | stays as written | The file has no telephone reading, so a run of three groups of three digits stays as written. |
+| `+34 944 158 155` | stays as written | The file has no telephone reading, so digit groups after a country code stay as written. |
 | `4 712,395 8` | stays as written | A fraction in groups after the decimal comma would read its first group alone. |
 | `10%-20%` | stays as written | A range of percentages, amounts or measures stays as written. Basque marks a range with the endings `-tik` and `-ra`, and the file has no rule for them. |
 | `5 €-10 €` | stays as written | The same rule. |
