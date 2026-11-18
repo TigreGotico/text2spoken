@@ -46,9 +46,9 @@ The file has no variety for a dialect, so a tag such as `eu-x-zuberera` reads th
 
 The rules come from the norms of Euskaltzaindia, the Basque academy: Araua 7 (cardinals), Araua 196 (abbreviations), Araua 197 (symbols) and Araua 203, "Zenbakizko adierazpenak". The rule for a code noun and a number pair also cites EIMA, *Ortotipografia*, the style guide of the Basque Government. The docstring of [`eu.py`](../../text2spoken/lang/eu.py) gives the section of each rule.
 
-Of the 134 rows in `tests/data/eu.tsv`, 123 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 8 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Of the 139 rows in `tests/data/eu.tsv`, 127 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 10 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
-The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093, eu-112 and eu-134. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko`, `U2` and `¥5`.
+The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093, eu-112, eu-134, eu-137 and eu-138. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko`, `U2`, `¥5`, the telephone shape `943 123 456` and the grouped fraction `0,264 7`.
 
 ## Limits
 
@@ -56,7 +56,7 @@ These forms stay as written in Basque:
 
 | Written | Spoken (`eu-ES`) | Limit |
 | --- | --- | --- |
-| `30 000 pertsona` | stays as written | The group mark of the file is the full stop, so a number with spaces between its groups stays as written. |
+| `30 000 pertsona` | hogeita hamar mila pertsona | Araua 203, section 3.2.1.1, groups digits with a space, so the space is a group mark of the file as the full stop is. Three groups of three digits, the shape of a Spanish telephone number, and a fraction in groups after the decimal comma stay as written. |
 | `10%-20%` | stays as written | A range of percentages, amounts or measures stays as written. Basque marks a range with the endings `-tik` and `-ra`, and the file has no rule for them. |
 | `5 €-10 €` | stays as written | The same rule. |
 | `€5eko` | stays as written | An amount with the currency symbol first and a case ending stays as written. |
