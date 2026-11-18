@@ -188,6 +188,18 @@ ruling keeps it: "zero horas" in pt-PT and "zero hora" in pt-BR (Dicio, "Zero gr
 zero é encarado como singular: zero grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero
 graus; zero reais; zero horas.").
 
+A clock with a colon reads after a word of `time_words`. `são`, the verb that tells the time, is one: Priberam, "ser",
+sense 14: "Indica o momento, o dia, a estação, o ano, a época (ex.: já é noite; são 18h00)". In the "meio milhão de
+frases" sentence set, each of the 148 clocks after `são` is a time, as mmf-286695 "São 17:30. Está na hora de ir buscar
+o Pedro à escola." `são` is plural and agrees with the hours, so 12:00 after it reads the 24-hour form, as after `as`:
+`São 12:00` reads "São doze horas". A clock 0:00 or 24:00 after `são` stays as written, because pt-BR reads the hour
+zero in the singular, "zero hora" (Dicio, above), which does not agree with `são`. A clock after `são` with `h` or
+`horas` after it stays as written, because the reading of a whole hour ends in "horas": `Já são 11:00 horas!`. So does a
+clock with a mark between it and `são`, as in mmf-178704 "Os lotes proibidos são: 17:00, de geleia de uva", where the
+clocks are lot numbers. A clock `24:00` is midnight, the end of the day: Priberam, "meia-noite": "Fim da vigésima quarta
+hora do dia civil que acaba às 24h00 (ou 00h00, o mesmo momento em que começa a primeira hora do dia seguinte)". So it
+reads as `0:00` does, with the ruling above: `Fecha às 24:00` reads "Fecha à meia-noite".
+
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
@@ -347,7 +359,7 @@ from __future__ import annotations
 
 import logging
 import re
-from bisect import bisect_right
+from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
@@ -388,7 +400,8 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
-    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde"],
+    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são"],
+    "plural_time_verbs": ["são"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
     "time_contractions": {"às": {"0": "à", "12": "ao"}, "à": {"0": "à", "12": "ao"}, "as": {"0": "a", "12": "o"},
@@ -821,9 +834,9 @@ def speak_date(span: Span, context: SpanContext) -> str:
 
 def _day_point(fields: FrozenMap) -> int | None:
     """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds. A `prefix`
-    of None marks a time whose word of `time_contractions` stays as written, so its hour reads the 24-hour form that
-    the plural article agrees with. A written `a.m.` or `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.":
-    "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
+    of None marks a time whose word before it stays as written and agrees with plural hours, a word of
+    `time_contractions` or a verb of `plural_time_verbs`, so its hour reads the 24-hour form. A written `a.m.` or
+    `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.": "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
     hour = day_hour(fields["hour"], fields["period"])
     whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"] and fields["prefix"] is not None
     return hour if whole and hour in (0, 12) else None
@@ -1003,7 +1016,16 @@ class Clock(TimeClock):
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
-        for span in self._symbols(text, request):
+        words = context_words(tokens)
+        day_ends = []
+        for match in re.finditer("24:00", text):
+            start, end = match.span()
+            joined = text[end:end + 1] in (":", ".", ",") and text[end + 1:end + 2].isdigit()
+            before = clause_window(text, words, start, end, -1, limit=1)
+            if is_bounded(text, start, end) and not joined and before \
+                    and before[0].lower() in request.data["time_words"]:
+                day_ends.append(replace(self._time(start, "24", "00", ""), end=end))
+        for span in (*self._symbols(text, request), *day_ends):
             if not any(span.start < other.end and other.start < span.end for other in own):
                 own.append(span)
         for span in super().find(text, tokens, request):
@@ -1017,6 +1039,16 @@ class Clock(TimeClock):
         words = context_words(tokens)
         out: list[Span] = []
         for span in spans:
+            index = bisect_right(words, span.start, key=lambda word: word.end)
+            word = words[index - 1] if index else None
+            verb = word is not None and word.text.lower() in request.data["plural_time_verbs"] \
+                and not (span.fields["suffix"] or span.fields["period"])
+            plural = verb and text[word.end:span.start].isspace()
+            after = bisect_left(words, span.end, key=lambda word: word.start)
+            hour_word = after < len(words) and text[span.end:words[after].start].isspace() \
+                and words[after].text.lower() in ("h", "hora", "horas")
+            if verb and (not plural or hour_word):
+                continue
             hour = _day_point(span.fields)
             if hour is None:
                 out.append(span)
@@ -1028,8 +1060,10 @@ class Clock(TimeClock):
                            for first in out]
                 out.append(span)
                 continue
-            index = bisect_right(words, span.start, key=lambda word: word.end)
-            word = words[index - 1] if index else None
+            if plural:
+                if hour != 0:
+                    out.append(replace(span, fields=FrozenMap({**span.fields, "prefix": None})))
+                continue
             if word is None or word.text.lower() not in contractions:
                 out.append(span)
                 continue
@@ -1052,6 +1086,9 @@ class Clock(TimeClock):
         return replace(span, fields=FrozenMap({**span.fields, "suffix": "h"}))
 
     def _time(self, start: int, hour: str, minute: str | None, symbol: str, second: str | None = None) -> Span | None:
+        """The time span at `start`. A clock `24:00` is the end of the day, which is midnight: hour 0."""
+        if (hour, minute, symbol, second) == ("24", "00", "", None):
+            hour = "0"
         fields = clock_fields(hour, minute or "00", second)
         if fields is None:
             return None

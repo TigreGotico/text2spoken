@@ -45,6 +45,14 @@ The words of a date, a clock time and a year come from `ovos-date-parser`. A clo
 | --- | --- |
 | `Chega às 0:00.` | Chega às zero horas. |
 
+A clock with a colon reads after a time word, such as `às`, `das` or the verb `são` (Priberam, "ser": "são 18h00"). A clock with no time word before it stays as written, because `16:10` may also be a ratio. `24:00` is the end of the day, and it reads as midnight.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `São 16:30.` | `pt-PT` | São dezasseis e trinta. |
+| `Já são 12:00!` | `pt-PT` | Já são doze horas! |
+| `Fecha às 24:00.` | `pt-PT` | Fecha à meia-noite. |
+
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the emoji.
 
 ## Varieties
@@ -73,7 +81,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 547 rows in `tests/data/pt.tsv`, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 557 rows in `tests/data/pt.tsv`, 14 are marked silver.
 
 ## Roman numerals
 
