@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a75](https://github.com/TigreGotico/text2spoken/tree/0.0.2a75) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a74...0.0.2a75)
+
+**Merged pull requests:**
+
+- fix\(revision\): decode the probe output as UTF-8 with replacement [\#247](https://github.com/TigreGotico/text2spoken/pull/247) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a74](https://github.com/TigreGotico/text2spoken/tree/0.0.2a74) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a73...0.0.2a74)
@@ -377,10 +385,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a26...0.0.2a27)
 
-**Merged pull requests:**
-
-- test: check the parsed start of each pattern that reaches digit\_run\_matches [\#52](https://github.com/TigreGotico/text2spoken/pull/52) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a26](https://github.com/TigreGotico/text2spoken/tree/0.0.2a26) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a25...0.0.2a26)
@@ -392,10 +396,6 @@
 ## [0.0.2a25](https://github.com/TigreGotico/text2spoken/tree/0.0.2a25) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a24...0.0.2a25)
-
-**Merged pull requests:**
-
-- fix: keep an expression as written when a later operand has a sign or a symbol touches it [\#51](https://github.com/TigreGotico/text2spoken/pull/51) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a24](https://github.com/TigreGotico/text2spoken/tree/0.0.2a24) (2026-11-10)
 
