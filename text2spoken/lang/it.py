@@ -113,8 +113,14 @@ word it stays as written. Every other fraction has "il valore di nomi" ("numeral
 follows "di", as in `I 3/4 della popolazione`. Before a word that is not "di" or one of its forms, as in `2/3
 milioni`, `l'anno scolastico 23/24 in via` or `onde alte 3/4 metri`, the slash writes a range, a pair or a score, and
 the fraction stays as written. `half_links` names the words after which 1/2 is still the noun "un mezzo" ("mezzo", 1:
-"ancora un mezzo di vino"). A percentage is the number and "per cento" (Vocabolario Treccani, "per cento": "n per cento
-(simbolo: n%)").
+"ancora un mezzo di vino"). A mixed number of a half reads the whole part, "e" and the noun "mezzo", "metà di un
+intero" (Wikizionario, "mezzo", sostantivo 1: "È alto un metro e mezzo", "Sono le otto e mezzo"); Accademia della
+Crusca, "Mezzo / mezza", allows both "le tre e mezzo, cioè le tre più il mezzo" and "le tre e mezza, sottintendendo
+ora", so the half is "mezzo" in every gender. The noun that the number counts stands between the whole part and the
+half, as "un metro e mezzo" writes it, so `2 1/2 metri` stays as written. No source gives the reading of a mixed number
+of another fraction, so it stays as written.
+
+A percentage is the number and "per cento" (Vocabolario Treccani, "per cento": "n per cento (simbolo: n%)").
 
 An expression reads its operators by the Vocabolario Treccani: "più" ("quattro più cinque è uguale a nove (in simboli: 4
 + 5 = 9)"), "meno" ("tredici meno otto è uguale a cinque"), "per" ("a × b [...] si legge: a per b") and "è uguale a" for
@@ -226,7 +232,7 @@ from text2spoken.core.recognizers import SHARED, TimeClock, numbers_in, signed, 
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import speak_cardinal as core_speak_cardinal
 from text2spoken.core.recognizers import speak_fraction as core_speak_fraction
-from text2spoken.core.recognizers import speak_lexicon, speak_percent
+from text2spoken.core.recognizers import speak_lexicon, speak_mixed_half, speak_percent
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import DIGIT_BOUND, OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
@@ -262,6 +268,8 @@ DATA = freeze({
                       "volume"],
     "lo_onsets": ["gli", "gn", "ps", "pn", "x", "z"],
     "half_links": ["di"],
+    "mixed_word": "e",
+    "mixed_half": {"other": "mezzo"},
     "label_abbreviations": ["art.", "cap.", "n.", "pag."],
     "label_nouns": ["numero", "pagina"],
     "label_determiners": ["il", "lo", "la", "l'", "i", "gli", "le", "un", "uno", "una", "un'", "del", "dello", "della",
@@ -587,13 +595,16 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
     """1/2 before a noun is the adjective mezzo, which agrees with the noun: "mezzo chilo di patate e mezza
     lattuga". Before "di" it is the noun "un mezzo". Before another lowercase word 1/2 stays as written. Another
     fraction is a noun, so before a word it reads only when the word is "di" or one of its forms. After a word of
-    `label_nouns` or `label_abbreviations`, as in `numero 11/22`, the pair is a code and stays as written."""
+    `label_nouns` or `label_abbreviations`, as in `numero 11/22`, the pair is a code and stays as written. A mixed
+    number reads through `speak_mixed_half`."""
     fields, after = span.fields, context.after
     half = bounded_integer(fields["numerator"]) == 1 and bounded_integer(fields["denominator"]) == 2
     labels = {word.rstrip(".") for word in (*context.request.data["label_abbreviations"],
                                             *context.request.data["label_nouns"])}
     if context.before and context.before[-1].lower().rstrip(".") in labels:
         raise DeclinedReading(f"a fraction after the label {context.before[-1]!r} is a code")
+    if fields["whole"]:
+        return speak_mixed_half(span, context)
     if not half and after and after[0][:1].isalpha():
         link = re.split(r"(?<=['’])", after[0])[0]
         if link not in context.request.data["of_words"] and link.rstrip("'’") not in ("d", "dell"):

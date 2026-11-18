@@ -22,6 +22,12 @@ The rules cite these sources, by rule family:
   ordinal ("deux cent millionième"), in a year, and in a number that labels a page or a year, as the passage
   writes them: "page" and "l'an", which the table `ordinal_nouns` holds, with only spaces before the number.
   Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix".
+- A mixed number of a half: Dictionnaire de l'Académie française, 9th edition, "demi", II.1: "La moitié d'une
+  unité", "Douze et demi ou 12,5". So `12 1/2` reads "douze et demi". Before a noun, "demi" follows the noun and
+  agrees with it, I.1: "Coordonné par et à un nom précédé d'un numéral, s'accorde en genre", "Il va bientôt être
+  trois heures et demie". So with no noun the whole part and the half take the gender of `default_gender`, and
+  `2 1/2 heures` stays as written. No source gives the reading of a mixed number of another fraction, so it stays
+  as written.
 - A noun after a round million or milliard: the same entry, "vingt et cent varient devant millier, million,
   milliard, qui sont des noms et non des adjectifs numéraux : [...] deux cents millions d'années ; trois cents
   milliers d'habitants." Larousse, "million", Difficultés: "Le nom complément de million ou de milliard se
@@ -112,6 +118,7 @@ from text2spoken.core.recognizers import (
     speak_expression,
     speak_idiom,
     speak_lexicon,
+    speak_mixed_half,
 )
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import RbnfSpeller, spell_digits
@@ -774,6 +781,8 @@ DATA = freeze(
             "second_feminine_plural": ["ndes", "des"],
         },
         "feminine_nouns": FEMININE_NOUNS,
+        "mixed_word": "et",
+        "mixed_half": {"feminine": "demie", "other": "demi"},
         "patterns": {
             "date_day_month": _DAY + _SPACE + _MONTH + "(?:" + _SPACE + _YEAR + ")?",
             "date_month_year": _MONTH + _SPACE + _YEAR,
@@ -1150,7 +1159,10 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
 
 
 def speak_fraction(span: Span, context: SpanContext) -> str:
-    """A fraction; a half before a feminine noun says "une demi", as in "une demi heure"."""
+    """A fraction; a half before a feminine noun says "une demi", as in "une demi heure". A mixed number reads
+    through `speak_mixed_half`."""
+    if span.fields["whole"]:
+        return speak_mixed_half(span, context)
     fields, features = span.fields, Features(gender=_gender(context))
     words = SPELLER.fraction(fields["numerator"], fields["denominator"], features, context.request)
     return signed(words, fields["sign"], context.request)

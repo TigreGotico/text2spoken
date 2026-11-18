@@ -46,9 +46,9 @@ The file has no variety for a dialect, so a tag such as `eu-x-zuberera` reads th
 
 The rules come from the norms of Euskaltzaindia, the Basque academy: Araua 7 (cardinals), Araua 196 (abbreviations), Araua 197 (symbols) and Araua 203, "Zenbakizko adierazpenak". The rule for a code noun and a number pair also cites EIMA, *Ortotipografia*, the style guide of the Basque Government. The docstring of [`eu.py`](../../text2spoken/lang/eu.py) gives the section of each rule.
 
-Of the 133 rows in `tests/data/eu.tsv`, 123 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 8 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Of the 134 rows in `tests/data/eu.tsv`, 123 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 8 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
-The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093, eu-112 and eu-133. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko`, `U2` and `¥5`.
+The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093, eu-112 and eu-134. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko`, `U2` and `¥5`.
 
 ## Limits
 

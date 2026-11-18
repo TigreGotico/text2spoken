@@ -319,7 +319,8 @@ def core_language(code: str) -> LanguageSpec:
         "digits-ordinal" in RbnfEngine.for_language(name).rulesets
         for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
-              recognizers.SHARED["date_numeric"], recognizers.OrdinalStop(bare_stop=not own_ordinal))
+              recognizers.SHARED["date_numeric"], recognizers.SHARED["fraction"],
+              recognizers.OrdinalStop(bare_stop=not own_ordinal))
     table = cldr_number_marks()
     data = {**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}
     if code in table:

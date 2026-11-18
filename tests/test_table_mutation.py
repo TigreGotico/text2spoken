@@ -41,11 +41,12 @@ EN_ENTRIES = {
     "electronic_symbols": "@", "letter_names": "w", "electronic_vowels": "i", "electronic_schemes": "https",
     "electronic_tlds": "uk", "letter_vowels": "a", "letter_onsets": "n", "letter_codas": "ng", "letter_runs": "IRS",
     "regnal_titles": "King", "regnal_names": "Henry", "apposition_marks": "[", "roman_nouns": "chapter", "roman_words": "MX",
-    "roman_letter_nouns": "chapter", "letter_words": "TO", "unjoined_symbols": "CD",
+    "roman_letter_nouns": "chapter", "letter_words": "TO", "unjoined_symbols": "CD", "mixed_word": DELETE,
 }
 DE_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_word": DELETE,
-    "digit_words": "null", "leads": "#", "half": DELETE, "idioms": "24/7", "range_word": DELETE, "range_marks": "-",
+    "digit_words": "null", "leads": "#", "half": DELETE, "mixed_suffix": DELETE, "idioms": "24/7",
+    "range_word": DELETE, "range_marks": "-",
     "time_suffixes": " Uhr",
     "hour_word": DELETE, "time_words": "um", "dimension_marks": "x", "dimension_word": DELETE, "operators": "+",
     "months": "März", "month_numbers": "März", "year_words": "Jahr", "currencies": "EUR", "scales": "Mio.",
@@ -75,6 +76,7 @@ FR_ENTRIES = {
     "no_de_adjectives": "supplémentaires", "invariable_plurals": "abat-jour", "mute_h": "hallucin", "eliding_y": "yeux",
     "no_elision": "ouistiti", "no_de_participles": "versés", "inverted_pronouns": "ils", "eliding_h": "haïti",
     "imperative_pronouns": "moi", "elided_pronouns": "m",
+    "mixed_word": DELETE, "mixed_half": "other",
 }
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
@@ -98,6 +100,7 @@ PT_ENTRIES = {
     "letter_free_consonants": "b", "roman_nouns": "capítulo", "roman_words": "MC", "letter_words": "DA",
     "roman_letter_nouns": "capítulo", "unjoined_symbols": "ML",
     "roman_ordinal_limit": DELETE,
+    "mixed_word": DELETE, "mixed_half": "other",
 }
 AR_ENTRIES = {
     "number_marks": "Arab", "defaults": "decimal_mark", "proclitics": "بـ", "prepositions": "في",
@@ -122,6 +125,7 @@ ES_ENTRIES = {
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
     "abbreviation_plurals": "vol.", "degree_marks": "º", "ordinal_leads": "el", "ordinal_follows": "de",
+    "mixed_word": DELETE, "mixed_half": "other",
 }
 ENTRIES = {
     "ar": AR_ENTRIES,
@@ -150,7 +154,8 @@ ENTRIES = {
         "percent": "word", "currency_symbols": "CHF", "currencies": "EUR",
         "scales": "milioni", "unit_symbols": "kg", "dimension_marks": "×", "dimension_word": DELETE, "operators": "+",
         "ordinal_marks": "ª", "noun_ordinal_marks": "°", "ordinal_nouns": "piano", "lo_onsets": "z",
-        "half_links": "di", "label_abbreviations": "art.", "label_nouns": "pagina", "label_determiners": "il",
+        "half_links": "di", "mixed_word": DELETE, "mixed_half": "other", "label_abbreviations": "art.",
+        "label_nouns": "pagina", "label_determiners": "il",
         "score_words": "a", "label_counted_nouns": "punto", "title_adjectives": "egregia",
         "adverb_verbs": "fa parte", "preposition_units": "secondo", "masculine_determiners": "lo",
         "kept_day_months": "24/7", "kept_links": "e", "partitive_words": "di", "time_words": "alle",
@@ -164,7 +169,7 @@ ENTRIES = {
         "ordinal_marks": "ste", "percent": "word", "currency_symbols": "EUR", "currencies": "JPY", "subunits": "EUR",
         "scales": "miljoen", "unit_symbols": "km", "dimension_marks": "×", "operators": "=", "patterns": "expression",
         "titles": "ing.", "abbreviations": "dr.", "sentence_final": "enz.", "number_abbreviations": "blz.",
-        "currency_words": "euro", "year_words": "in het jaar",
+        "currency_words": "euro", "year_words": "in het jaar", "mixed_word": DELETE, "mixed_half": "other",
     },
     "ru": {
         "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "digit_words": "ноль", "leads": "№ ",

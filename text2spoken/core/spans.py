@@ -25,7 +25,7 @@ FIELDS: Mapping[Form, frozenset[str]] = {
     Form.CARDINAL: frozenset({"digits", "sign", "lead", "prefix", "suffix", "script"}),
     Form.ORDINAL: frozenset({"digits", "marker", "prefix", "suffix", "script"}),
     Form.DECIMAL: frozenset({"integer", "fraction", "sign", "prefix", "suffix", "script"}),
-    Form.FRACTION: frozenset({"numerator", "denominator", "sign", "prefix", "suffix"}),
+    Form.FRACTION: frozenset({"whole", "numerator", "denominator", "sign", "prefix", "suffix"}),
     Form.RANGE: frozenset({"low", "high", "prefix", "suffix"}),
     Form.EXPRESSION: frozenset({"operands", "operators"}),
     Form.DATE: frozenset({"year", "month", "day", "written_order", "month_written", "prefix", "suffix"}),
