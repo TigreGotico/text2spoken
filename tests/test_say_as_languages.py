@@ -54,9 +54,14 @@ def rbnf(tag: str, number: int, rule_set: str) -> str:
 
 
 def digit_word(tag: str, digit: str) -> str:
-    """The cardinal of one digit: the writer of the language, else RBNF `spellout-numbering`."""
+    """The cardinal of one digit: the writer of the language, else RBNF `spellout-numbering`, with zero from the
+    first plain cardinal rule set of the locale (`spellout-numbering` of `zh` writes the digit sign 〇 for zero)."""
     if code(tag) in WRITERS or code(tag) in AR_LECTS:
         return pronounce_number(int(digit), tag)
+    if digit == "0":
+        names = RbnfEngine.for_language(code(tag)).rulesets
+        return rbnf(tag, 0, next(name for name in ("spellout-cardinal", "spellout-cardinal-masculine",
+                                                   "spellout-numbering") if name in names))
     return rbnf(tag, int(digit), "spellout-numbering")
 
 
@@ -102,6 +107,17 @@ def test_digits_read_each_digit_by_its_cardinal(tag, text):
     expected = " ".join(spelled(tag, run) for run in text.split())
     assert spoken == expected
     assert reads_again_the_same(spoken, tag)
+
+
+@pytest.mark.parametrize("tag", READ + ["zh-TW", "yue"])
+def test_a_digit_reading_writes_zero_as_the_plain_reading_does(tag):
+    """Zero in a digit reading is the word that the plain reading of the language writes for 0. Wiktionary, "〇":
+    "Used to express a zero digit in a number"; a phonemizer that reads 零 can leave the sign unread. The French file
+    reads a telephone group of an even length in pairs (`fr.py`)."""
+    zero = normalize("0", tag)
+    assert say("007", tag, "digits").split()[:2] == [zero, zero]
+    if tag != "fr-FR":
+        assert say("555-0100", tag, "telephone").split()[-2:] == [zero, zero]
 
 
 @pytest.mark.parametrize("tag", [tag for tag in READ if tag != "fr-FR"])
