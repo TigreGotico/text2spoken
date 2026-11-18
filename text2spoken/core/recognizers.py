@@ -287,6 +287,9 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
                     *Decimal.find(RBNF_DECIMAL, text, tokens, request)), key=lambda span: span.start)
     kept = set()
     for index, span in enumerate(spans):
+        rest = text[span.end:].lstrip(" \t\u00a0\u202f")
+        if 1 < len(rest) < len(text) - span.end and rest[0] in "-\u2212" and is_digit(rest[1]):
+            kept.add(index)
         if not span.fields["sign"]:
             continue
         sign = span.start + len(span.fields["prefix"])
@@ -322,7 +325,9 @@ class RbnfCardinal(Cardinal):
     in `-5\n10` the `10` of the next line reads.
 
     The number next to such a minus number stays as written too, so that a second pass finds the digit next to the
-    minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. A dash is no digit, so `5` in `5--10` reads."""
+    minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. So does a number before a space, a minus and a
+    digit that no number covers, as `5` in `5 -3.5` where the full stop groups. A dash is no digit, so `5` in
+    `5--10` reads."""
 
     def numbers(self, text: str, request: Request) -> Sequence[Number]:
         return tuple(number for number in numbers_in(text, request) if not _root_reading_differs(text, number))
