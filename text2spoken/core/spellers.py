@@ -125,9 +125,9 @@ class OvosNumberSpeller:
         return spoken
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """The ordinal of the number. Two more refusals of the writer decline: a `ValueError`, which several writers
-        raise for the ordinal of zero, as "Greek ordinals start at 1", and a reading that holds a digit, which some
-        writers return past a number of digits."""
+        """The ordinal of the number. Three more refusals of the writer decline: a `ValueError`, which several writers
+        raise for the ordinal of zero, as "Greek ordinals start at 1", a reading that holds a digit, which some
+        writers return past a number of digits, and the cardinal of the number, as Turkish "iki yüz" for 200."""
         number, kwargs = _integer(digits), self._kwargs(features, request)
         try:
             spoken = self._read("ordinal", f"{len(digits)} digits", request,
@@ -139,6 +139,9 @@ class OvosNumberSpeller:
                                   f"{error}") from error
         if any(char.isdigit() for char in spoken):
             raise DeclinedReading(f"ovos-number-parser gives digits for the ordinal of {len(digits)} digits in "
+                                  f"{request.tag}")
+        if spoken == self.cardinal(digits, features, request):
+            raise DeclinedReading(f"ovos-number-parser gives the cardinal for the ordinal of {len(digits)} digits in "
                                   f"{request.tag}")
         return spoken
 

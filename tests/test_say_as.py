@@ -5,11 +5,14 @@ import logging
 import warnings
 
 import pytest
+from ovos_number_parser import pronounce_number
 
 from tests.conftest import DATA, row_params, rows
+from tests.test_say_as_languages import TAGS, WRITERS
 from text2spoken import (ArgumentTypeError, Form, NormalizationParams, ParameterNotHonouredWarning, SayAs,
                          UnreadFormError, UnsupportedParameterError, analyze, normalize)
 from text2spoken.core import say_as as module
+from text2spoken.core.spellers import RBNF_HELD
 
 with open(DATA / "say_as" / "rows.tsv", encoding="utf-8") as f:
     ROWS = list(csv.DictReader(f, delimiter="\t"))
@@ -222,6 +225,27 @@ def test_the_rows_fail_when_the_say_as_table_or_the_evidence_step_is_removed(mon
         warnings.simplefilter("ignore", ParameterNotHonouredWarning)
         for row_id in ids:
             assert read(BY_ID[row_id]) != BY_ID[row_id]["expected"], row_id
+
+
+ROUND_NUMBERS = [100, 200, 300, 1000, 2000, 10000, 1000000, 1000000000]
+"""Round numbers, for which some writers of ovos-number-parser return the cardinal as the ordinal."""
+
+
+WRITER_TAGS = [tag for tag in TAGS if tag.split("-")[0] in WRITERS - RBNF_HELD]
+"""The tags whose numbers the writer reads. RBNF `da` reads 2000 "to tusinde" as an ordinal, a Danish cardinal too."""
+
+
+@pytest.mark.parametrize("tag", WRITER_TAGS)
+def test_a_say_as_ordinal_never_reads_the_cardinal_of_the_parser(tag):
+    """W3C Note, section 3.6: "should be spoken as an ordinal number". Turkish adds -inci, as "yüzüncü",
+    "hundredth" (Wiktionary), and the writer returns the cardinal "iki yüz" for 200, so the span declines."""
+    strict = NormalizationParams(strict=True)
+    for number in ROUND_NUMBERS:
+        try:
+            spoken = normalize(str(number), tag, strict, say_as=SayAs(interpret_as="ordinal"))
+        except (UnreadFormError, UnsupportedParameterError):
+            continue
+        assert spoken != " ".join(pronounce_number(number, tag).replace(",", " ").split()), (tag, number)
 
 
 @pytest.mark.parametrize("lang", ["de-DE", "nl-NL"])
