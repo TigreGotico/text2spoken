@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a82...0.0.2a83)
+
+**Merged pull requests:**
+
+- fix\(ar\): a numeric date with an era mark reads its calendar and the era word [\#300](https://github.com/TigreGotico/text2spoken/pull/300) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a82](https://github.com/TigreGotico/text2spoken/tree/0.0.2a82) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a81...0.0.2a82)
