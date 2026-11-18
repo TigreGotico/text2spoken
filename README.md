@@ -46,6 +46,7 @@ A tag with no language file reads cardinal numbers, decimals and a minus from th
 | Language | Varieties | Extra |
 | --- | --- | --- |
 | [Arabic](docs/languages/ar.md) | `ar-001`, ten regional tags, and 25 ISO 639-3 varieties such as `arz` | `ar` |
+| [Catalan](docs/languages/ca.md) | `ca-ES`, `ca-AD`, `ca-ES-valencia` | `ca` |
 | [German](docs/languages/de.md) | `de-DE`, `de-AT`, `de-CH` | none |
 | [Greek](docs/languages/el.md) | `el-GR` | none |
 | [English](docs/languages/en.md) | `en-GB`, `en-US` | none |

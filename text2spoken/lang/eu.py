@@ -315,7 +315,7 @@ KEPT_SPACE_GROUPS = SpaceGroups(pattern=re.compile(
     f"(?<![0-9]{_GAP})(?<![0-9+])"
     f"(?:(?:\\+|00)[0-9]{{1,3}}(?:{_GAP}[0-9]{{2,3}})+(?![0-9])"
     f"|(?:[0-9]{{2}}{_GAP})?(?:[0-9]{{3}}|\\([0-9]{{3}}\\))(?:{_GAP}[0-9]{{3}}){{2}}(?!{_GAP}?[0-9]|,[0-9])"
-    f"|(?:[0-9]{{1,3}}(?:{_GAP}[0-9]{{3}})+|[0-9]+),[0-9]{{1,3}}(?:{_GAP}[0-9]{{1,3}})+"
+    f"|(?:[0-9]{{1,3}}(?:{_GAP}[0-9]{{3}})+|[0-9]+),[0-9]{{3}}(?:{_GAP}[0-9]{{3}})*{_GAP}[0-9]{{1,3}}(?![0-9])"
     f"|[0-9]+\\.[0-9]{{3}}(?:{_GAP}[0-9]{{3}})*{_GAP}[0-9]{{1,2}}(?![0-9]))"))
 """The space-grouped runs that stay as written: digit groups after a country code, three groups of three digits, the
 shape of a Spanish telephone number, with a two-digit group or brackets before it, a fraction in groups after the
@@ -502,7 +502,7 @@ class RomanMonthDate:
             if after is not None:
                 yield Span(start, after[0], Form.DATE,
                            FrozenMap({"year": year, "month": month, "day": day, "written_order": "YMD",
-                                      "month_written": "digits", "prefix": "", "suffix": after[1]}),
+                                      "month_written": "digits", "era": "", "prefix": "", "suffix": after[1]}),
                            recognizer=self.name)
 
 

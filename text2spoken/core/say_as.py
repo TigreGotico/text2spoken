@@ -140,7 +140,7 @@ class NumericDate:
             year, month, day, order = resolved
             yield Span(start, end, Form.DATE,
                        FrozenMap({"year": year, "month": month, "day": day, "written_order": order,
-                                  "month_written": "digits", "prefix": "", "suffix": ""}), recognizer=self.name)
+                                  "month_written": "digits", "era": "", "prefix": "", "suffix": ""}), recognizer=self.name)
 
 
 @dataclass(frozen=True)

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a82...0.0.2a83)
+
+**Merged pull requests:**
+
+- fix\(ar\): a numeric date with an era mark reads its calendar and the era word [\#300](https://github.com/TigreGotico/text2spoken/pull/300) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a82](https://github.com/TigreGotico/text2spoken/tree/0.0.2a82) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a81...0.0.2a82)
+
+**Merged pull requests:**
+
+- fix\(eu\): a fraction group of one or two digits after the comma ends the number [\#299](https://github.com/TigreGotico/text2spoken/pull/299) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): a demonstrative or its contraction gives a number no gender [\#289](https://github.com/TigreGotico/text2spoken/pull/289) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a81](https://github.com/TigreGotico/text2spoken/tree/0.0.2a81) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a80...0.0.2a81)
@@ -7,7 +24,6 @@
 **Merged pull requests:**
 
 - fix\(eu\): read a number grouped by spaces, as Araua 203 recommends [\#292](https://github.com/TigreGotico/text2spoken/pull/292) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(pt\): a demonstrative or its contraction gives a number no gender [\#289](https://github.com/TigreGotico/text2spoken/pull/289) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a80](https://github.com/TigreGotico/text2spoken/tree/0.0.2a80) (2026-11-18)
 
@@ -377,10 +393,6 @@
 ## [0.0.2a33](https://github.com/TigreGotico/text2spoken/tree/0.0.2a33) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a32...0.0.2a33)
-
-**Merged pull requests:**
-
-- feat: read e-mail and web addresses \(ELECTRONIC form\) [\#67](https://github.com/TigreGotico/text2spoken/pull/67) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a32](https://github.com/TigreGotico/text2spoken/tree/0.0.2a32) (2026-11-13)
 

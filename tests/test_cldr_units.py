@@ -8,9 +8,10 @@ from importlib.resources import files
 import pytest
 
 from text2spoken.core.units import no_word
-from text2spoken.lang import en, it, nl, pt
+from text2spoken.lang import ca, en, it, nl, pt
 
-TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE", "nl-SR")
+TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "ca-ES", "ca-AD", "ca-ES-valencia", "it-IT", "it-CH", "it-SM", "nl-NL",
+        "nl-BE", "nl-SR")
 
 
 def data(tag: str) -> dict:
@@ -45,6 +46,9 @@ def test_the_parent_chain_resolves_at_extraction():
     assert data("pt-BR")["source"]["locales"] == ["pt", "und"]
     assert data("nl-NL")["source"]["locales"] == ["nl", "und"]
     assert data("nl-BE")["source"]["locales"] == ["nl-BE", "nl", "und"]
+    assert data("ca-ES")["source"]["locales"] == ["ca", "und"]
+    assert data("ca-AD")["source"]["locales"] == ["ca-AD", "ca", "und"]
+    assert data("ca-ES-valencia")["source"]["locales"] == ["ca-ES-valencia", "ca", "und"]
 
 
 def test_the_licence_ships_with_the_data():
@@ -65,7 +69,7 @@ def test_both_micro_signs_name_the_micrometre(tag):
     assert {"µm", "μm"} <= set(data(tag)["units"]["length-micrometer"]["symbols"])
 
 
-@pytest.mark.parametrize("module", [en, it, nl, pt])
+@pytest.mark.parametrize("module", [ca, en, it, nl, pt])
 def test_each_listed_symbol_is_made_of_letters_and_is_a_cldr_symbol(module):
     listed = module.DATA["unit_symbols"]
     symbols = {s for v in module.VARIETIES for u in data(v.tag)["units"].values() for s in u["symbols"]}
@@ -85,7 +89,7 @@ def test_the_data_loads_on_first_use_of_each_variety():
     assert result.stdout.split() == ["0", "1"]
 
 
-@pytest.mark.parametrize("module", [en, it, nl, pt])
+@pytest.mark.parametrize("module", [ca, en, it, nl, pt])
 def test_only_a_listed_symbol_reads_through_a_case_match(module):
     from text2spoken.core.language import Request, select
     from text2spoken.core.units import unit_table

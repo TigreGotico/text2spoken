@@ -31,6 +31,7 @@ Homepage = "https://github.com/TigreGotico/text2spoken"
 # Every language reads with the base install. These extras hold no package and stay one stable cycle, so that
 # an install that names one, such as `text2spoken[es]`, still resolves.
 ar = []
+ca = []
 es = []
 eu = []
 fr = []
