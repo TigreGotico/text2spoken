@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a73](https://github.com/TigreGotico/text2spoken/tree/0.0.2a73) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a72...0.0.2a73)
+
+**Merged pull requests:**
+
+- fix\(revision\): start the probe result on its own line [\#245](https://github.com/TigreGotico/text2spoken/pull/245) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a72](https://github.com/TigreGotico/text2spoken/tree/0.0.2a72) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a71...0.0.2a72)
@@ -385,17 +393,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a23...0.0.2a24)
 
-**Merged pull requests:**
-
-- fix: export command takes a BCP 47 tag and reports errors in one line [\#47](https://github.com/TigreGotico/text2spoken/pull/47) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a23](https://github.com/TigreGotico/text2spoken/tree/0.0.2a23) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a22...0.0.2a23)
-
-**Merged pull requests:**
-
-- fix: raise ArgumentTypeError for a value of the wrong type [\#48](https://github.com/TigreGotico/text2spoken/pull/48) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a22](https://github.com/TigreGotico/text2spoken/tree/0.0.2a22) (2026-11-10)
 
