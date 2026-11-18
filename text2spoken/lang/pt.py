@@ -29,7 +29,12 @@ or a verb of `label_verbs` follows it: `sala 2, porta 4` reads "sala dois, porta
 disposições` "o artigo dois das disposições". A counted noun after it, as `semanas` in `em casa 2 semanas`, gives the
 number its gender: "duas semanas". `label_verbs` holds the third-person verbs that a numbered figure or table
 stands before, which the ending `a` reads as a feminine noun: Priberam, "mostrar": "verbo transitivo". Priberam,
-"mas": "conjunção adversativa", and "cada": "quantificador universal", join the words of `function_words`. Cunha and
+"mas": "conjunção adversativa", and "cada": "quantificador universal", join the words of `function_words`. So do
+the demonstratives and their contractions with `em` and `de`, which are no noun that a number counts: Priberam,
+"nesta": "Contracção da preposição em e do pronome ou determinante esta."; "desta": "Contracção da preposição de e
+do pronome demonstrativo esta."; "naquela": "Contracção da preposição em com o determinante ou pronome demonstrativo
+aquela." `ganhou 1 nesta terça-feira` reads "ganhou um nesta terça-feira". A plural contraction with `de` right
+after the number is a partitive, as `das` is, so `2 destas maçãs` reads "duas destas maçãs". Cunha and
 Cintra, Nova Gramática do Português Contemporâneo, p. 374, quoted in
 Ciberdúvidas 33468: "Na enumeração de páginas e de folhas de um livro, assim como na de casas, apartamentos, quartos
 de hotel, cabines de navio, poltronas de casas de diversões e equivalentes, empregam-se os CARDINAIS. Nestes casos
@@ -420,7 +425,10 @@ DATA = freeze({
     "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
     "function_words": ["o", "a", "os", "as", "um", "uma", "de", "do", "da", "dos", "das", "em", "no", "na", "nos",
                        "nas", "para", "pelo", "pela", "por", "e", "ou", "com", "ao", "que", "agora", "já", "hoje",
-                       "mas", "cada"],
+                       "mas", "cada", "este", "esta", "estes", "estas", "esse", "essa", "esses", "essas", "aquele",
+                       "aquela", "aqueles", "aquelas", "neste", "nesta", "nestes", "nestas", "nesse", "nessa", "nesses",
+                       "nessas", "naquele", "naquela", "naqueles", "naquelas", "deste", "desta", "desse", "dessa",
+                       "daquele", "daquela"],
     "color_words": ["cor", "cores"],
     "colors": {"000000": "preto", "0000ff": "azul", "008000": "verde", "ff0000": "vermelho", "ffff00": "amarelo",
                "ffffff": "branco"},
@@ -446,7 +454,9 @@ DATA = freeze({
     "roman_letter_nouns": ["capítulo", "volume", "tomo", "livro", "parte", "ato", "acto", "cena", "título", "artigo",
                            "secção", "seção", "canto", "cláusula"],
     "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine", "às": "feminine",
-                    "à": "feminine", "os": "masculine", "dos": "masculine", "nos": "masculine", "pelos": "masculine"},
+                    "à": "feminine", "os": "masculine", "dos": "masculine", "nos": "masculine", "pelos": "masculine",
+                    "destas": "feminine", "dessas": "feminine", "daquelas": "feminine", "destes": "masculine",
+                    "desses": "masculine", "daqueles": "masculine"},
     "noun_gender": {
         "dia": "masculine", "dias": "masculine", "mapa": "masculine", "mapas": "masculine",
         "problema": "masculine", "problemas": "masculine", "sistema": "masculine", "sistemas": "masculine",
@@ -569,7 +579,7 @@ def _counted(forms: FrozenMap, request: Request, written: str) -> str:
 
 
 _LEXICON_GENDERS = {"m": "masculine", "f": "feminine"}
-_PARTITIVES = ("das", "dos")
+_PARTITIVES = ("das", "dos", "destas", "destes", "dessas", "desses", "daquelas", "daqueles")
 
 
 def _lexicon_gender(word: str) -> str | None:
@@ -636,7 +646,8 @@ def agreement(context: SpanContext) -> GrammaticalGender:
 
     A written `mil` after the number is not the noun: `mil` has two genders (Priberam, "mil": "quantificador
     numeral cardinal de dois géneros"), so `2 mil pessoas` takes the gender of `pessoas`, as `2000 pessoas` does. A
-    partitive `das` or `dos` right after the number gives the gender, as in `1 das casas`.
+    partitive `das`, `dos` or a plural contraction of `de` and a demonstrative right after the number gives the
+    gender, as in `1 das casas` and `2 destas maçãs`.
 
     A number after a noun of `label_nouns` or `roman_letter_nouns` names an item and reads in the masculine when no
     noun that the number counts follows it — the number ends the text, or a punctuation mark, a function word or a
