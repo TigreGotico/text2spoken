@@ -284,7 +284,7 @@ def core_language(code: str) -> LanguageSpec:
     A numeric date stays as written, and a say-as `date` reads through the `DATE` verbalizer (section 17.5): the
     `spoken_date` of ovos-date-parser when it reads the language, else the CLDR `long` date pattern of the locale
     (`speak_cldr_date`), when `long_date` gives its parts and the language has an ordinal speller for an ordinal
-    day."""
+    day or year."""
     from unicode_rbnf import RbnfEngine
     from unicode_rbnf.engine import RbnfSpecialRule, TextRulePart
 
@@ -345,7 +345,8 @@ def core_language(code: str) -> LanguageSpec:
     except NotImplementedError:
         date_locale = cldr_locale(tag, date_locales(), bare)
         pattern = None if date_locale is None else long_date(date_locale)
-        if pattern is not None and (ordinal_speller is not None or ("ordinal_day", "") not in pattern[0]):
+        if pattern is not None and (ordinal_speller is not None or
+                                    not any(name.startswith("ordinal_") for name, _ in pattern[0])):
             verbalizers[Form.DATE] = recognizers.speak_cldr_date
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
               recognizers.SHARED["date_numeric"], recognizers.SHARED["fraction"],
