@@ -14,7 +14,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
     `primero` in America (DPD «primero», 3)."""
 ```
 
-A wrong reading is worse than none. If the file cannot read a form for sure, the form stays as written.
+A wrong reading is worse than none. If the file cannot read a form for sure, the form stays as written. A form can be unsure in two ways: it has two readings that the context does not choose between, or no source gives its reading. A form with one reading that a speaker reads with ease, and a source for that reading, must read. To leave such a form as written is a bug, and it gets an issue.
 
 Set up a checkout with the test extra, as [Development](development.md#set-up-and-run-the-tests) shows. The commands on this page run from the root of the checkout.
 

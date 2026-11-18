@@ -17,7 +17,7 @@ This page gives the rules that hold for every form, and the list of forms. One p
 
 ## It does not guess
 
-A form that the library cannot read for sure stays as written, and the library logs a WARNING on the `text2spoken` logger. A wrong reading is worse than none. Here `1:23:45` is a duration, not a clock time, so it stays:
+A form that the library cannot read for sure stays as written, and the library logs a WARNING on the `text2spoken` logger. A wrong reading is worse than none. A form is unsure when it has two readings that the context does not choose between, or when no source gives its reading. A form with one reading that a speaker reads with ease is not unsure: when it stays as written, that is a bug. Here `1:23:45` is a duration, not a clock time, so it stays:
 
 ```python
 >>> from text2spoken import Form, NormalizationParams, normalize
