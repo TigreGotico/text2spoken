@@ -40,7 +40,12 @@ The rules and their sources:
   Wiktionary, م: "abbreviation of مِيلَادِيّ (mīlādiyy), AD, CE").
 - Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
   thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour comes from
-  the CLDR 49 day period rules of `ar` (`dayPeriods.json`).
+  the CLDR 49 day period rules of `ar` (`dayPeriods.json`). "The word "hour" (saaca) may or may not be mentioned,
+  but the ordinal numeral is in the feminine form, agreeing with that noun": "fii l-saacat-i l-thaaminat-i", "at
+  eight o'clock" (p. 361). So a whole hour after الساعة reads as the hour of a time.
+- The CLDR 49 format names of the day periods of `ar` are ص and م (`ca-gregorian.json`, dayPeriods, format), and
+  the short time pattern is "h:mm a". So ص and م after a time are its day period. م is also the CLDR 49 short
+  symbol of the metre (`units.json`, length-meter), so an hour with no minutes takes ص or م only after الساعة.
 - Percent: the number and في المئة (p. 347). CLDR 49 writes the sign after the number in logical order (`#,##0%`),
   and a right-to-left line shows that sign to the left of the number, so a percentage typed as it looks, `%10`,
   reads the same. The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of the minus sign is سالب
@@ -65,8 +70,8 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
-from text2spoken.core.recognizers import SHARED, Money as CoreMoney, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext
+from text2spoken.core.recognizers import SHARED, Money as CoreMoney, TimeClock, speak_lexicon
+from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import day_hour, twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, one_digit_set
@@ -166,7 +171,8 @@ DATA = freeze({
     "dimension_marks": ["×"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"}],
     "time_words": ["الساعة"],
-    "day_periods": {"am": ["صباحًا", "صباحا"], "pm": ["مساءً", "مساء"]},
+    "day_periods": {"am": ["صباحًا", "صباحا", "ص"], "pm": ["مساءً", "مساء", "م"]},
+    "short_periods": ["ص", "م"],
     "spoken_periods": {"morning1": "في الصباح", "morning2": "صباحا", "afternoon1": "ظهرا",
                        "afternoon2": "بعد الظهر", "evening1": "مساء", "night2": "ليلا"},
     "minute_phrases": {"0": "{hour}", "15": "{hour} والربع", "20": "{hour} والثلث", "30": "{hour} والنصف",
@@ -194,7 +200,7 @@ revision 1252604873) and the word ريال read ريال. `fraction_names`: Rydi
 Ryding 2005, pp. 361-362. `decimal_word`: Wiktionary, فاصلة, sense "decimal point". `sign_words`: Arabic Wikipedia,
 عدد سالب, section التسمية. The count forms of `currencies` and `units`: Wiktionary دولار and ريال, CLDR units.json
 (length-kilometer), and the count rules of Ryding 2005, pp. 330-345. `symbols_after_only`: ريال is a counted noun,
-which follows the number (Ryding 2005, p. 335)."""
+which follows the number (Ryding 2005, p. 335). `short_periods`: the CLDR 49 format names of `day_periods`."""
 
 VARIETIES = (
     Variety("ar-001"),
@@ -399,11 +405,14 @@ def speak_rank(span: Span, context: SpanContext, proclitic: str, noun: str) -> s
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """One and two follow the noun that they count (Ryding 2005, pp. 330 and 333), so a digit 1 or 2 before a noun
-    stays as written."""
+    stays as written. A whole hour after الساعة reads as the hour of a time (p. 361)."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         raise DeclinedReading("a number with a leading zero has no cited reading")
+    if (context.before and context.before[-1] in request.data["time_words"] and not (fields["sign"] or fields["lead"])
+            and int(digits) <= 23):
+        return clock(int(digits), 0, None, request)
     rank = rank_noun(context)
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
@@ -548,23 +557,44 @@ def _hour(face: int, request: Request) -> str:
 
 
 def speak_time(span: Span, context: SpanContext) -> str:
+    fields = span.fields
+    if fields["second"] is not None:
+        raise DeclinedReading("no cited reading for seconds")
+    return clock(fields["hour"], fields["minute"], fields["period"], context.request)
+
+
+def clock(written_hour: int, minute: int, period: str | None, request: Request) -> str:
     """Quarters, thirds and halves of the hour, with إلا before the next hour for 40 and 45 minutes, and other
     minutes as a feminine ordinal after والدقيقة (Ryding 2005, pp. 361-362). A written day period, or an hour
     from 13 to 23, reads the CLDR day period of the hour."""
-    request = context.request
-    fields = span.fields
-    hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
-    if fields["second"] is not None:
-        raise DeclinedReading("no cited reading for seconds")
+    hour = day_hour(written_hour, period)
     phrases = request.data["minute_phrases"]
     template = phrases.get(str(minute), phrases["other"])
     next_hour = _hour(twelve_hour(hour + 1), request) if "{next_hour}" in template else ""
     words = template.format(hour=_hour(twelve_hour(hour), request) if "{hour}" in template else "",
                             next_hour=next_hour,
                             minute=_clock_ordinal(str(minute), request) if "{minute}" in template else "")
-    if hour == 0 or fields["period"] is not None or hour >= 13:
+    if hour == 0 or period is not None or hour >= 13:
         words += " " + _day_period(hour, request)
     return words
+
+
+@dataclass(frozen=True)
+class Clock(TimeClock):
+    """The core time, where an hour with no minutes before ص or م needs الساعة: `المسافة 7 م` is the metre."""
+
+    def _times(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        words, breaks = context_words(tokens), clause_breaks(text)
+        short, marks = tuple(data["short_periods"]), [entry["mark"] for entry in data["clock_marks"]]
+        for span in super()._times(text, tokens, request):
+            written = text[span.start:span.end]
+            if any(mark in written for mark in marks) or not written.endswith(short):
+                yield span
+                continue
+            before = clause_window(text, words, span.start, span.end, -1, 1, breaks)
+            if before and before[0] in data["time_words"]:
+                yield span
 
 
 @dataclass(frozen=True)
@@ -641,7 +671,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES + LECT_VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], SHARED["time_clock"], Money(),
+    recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], Clock(), Money(),
                  SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"],
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
