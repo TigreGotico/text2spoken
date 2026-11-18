@@ -291,7 +291,7 @@ def core_language(code: str) -> LanguageSpec:
     from text2spoken.core import parsers, recognizers
     from text2spoken.core.dates import date_locales, long_date
     from text2spoken.core.spans import Features
-    from text2spoken.core.spellers import RBNF_HELD, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
+    from text2spoken.core.spellers import CARDINAL_RULE_SETS, RBNF_HELD, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
     import linguatag
 
     tag = linguatag.with_default_region(code)
@@ -325,8 +325,7 @@ def core_language(code: str) -> LanguageSpec:
         return bare
     else:
         names = rbnf_engine(locale).rulesets
-        cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering")
-                        if n in names)
+        cardinal = next(name for name in CARDINAL_RULE_SETS if name in names)
         ordinals = rbnf_ordinals(locale)
         decimal = _special_rule_set(names, cardinal, RbnfSpecialRule.IMPROPER_FRACTION)
         speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal},
