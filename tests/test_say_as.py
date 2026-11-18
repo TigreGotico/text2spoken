@@ -93,12 +93,13 @@ DECLINES = [
     ("13/12/2024", "en-US", SayAs(interpret_as="date", format="mdy")),
     ("01/02/02", "en-US", SayAs(interpret_as="date", format="dmy")),
     ("13:00", "en-US", SayAs(interpret_as="time", format="hms12")),
-    ("3+1/2", "en-US", SayAs(interpret_as="fraction")),
+    ("3+3/2", "en-US", SayAs(interpret_as="fraction")),
     ("3,5", "pt-PT", SayAs(interpret_as="ordinal")),
     ("é", "en-US", SayAs(interpret_as="characters")),
 ]
 """Texts that hold no candidate of the form, or only candidates with invalid fields. `13/12/2024` is a valid date
-only in day-month order, so it is no `mdy` date, and the two-digit year of `01/02/02` has no reading."""
+only in day-month order, so it is no `mdy` date, the two-digit year of `01/02/02` has no reading, and `3+3/2` holds
+an improper fraction."""
 
 
 @pytest.mark.parametrize("text,lang,named", DECLINES, ids=[text for text, _, _ in DECLINES])
