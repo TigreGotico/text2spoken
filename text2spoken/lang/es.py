@@ -45,6 +45,22 @@ reads as the ordinal only in a context that a degree does not take: a singular m
 (`artículo 6º`). In every other context it stays as written, as `Quedó 1º en la carrera.` and `Hace 25º hoy.` do.
 `25ºC` and `25 ºC` read as a temperature, because the unit `ºC` claims first. `\\d+ª` writes no degree, so it
 reads as the ordinal in every context.
+
+A masculine singular ordinal takes the apocope before its noun: "Los ordinales primero y tercero se apocopan en las
+formas primer y tercer cuando preceden a un sustantivo masculino, aunque entre ambos se interponga otra palabra; esta
+apócope también se produce cuando forman parte de ordinales complejos" (DPD «ordinales», 4), and `primero` "Toma
+siempre la forma apocopada primer cuando, antepuesto, modifica a un sustantivo masculino singular" (DPD «primero»,
+1.a). A capital letter does not change the noun: «ordinales», 8 writes "21.er Congreso de Cirugía Pediátrica", so `El
+21.º Congreso` reads "vigesimoprimer". A singular noun can end in `s`, as `mes`, `lunes` and `país` do, so `El 3.º
+mes` reads "tercer". An ordinal can also follow its noun: "pueden ir antepuestos o pospuestos al sustantivo [...]
+Acabo de terminar el capítulo segundo" (DPD «ordinales», 1). There it takes no apocope, so `Artículo 1.º Objeto.`
+reads "primero". The word after a comma is not the noun that the ordinal precedes, so `El 3.º, premiado.` reads
+"tercero".
+
+The raised letter gives the gender: the feminine is written "sustituyendo la º volada por una ª de la misma clase"
+(DPD «ordinales», 1, note to the table). A determiner agrees with the same noun, as in "la 23.ª edición" (DPD
+«ordinales», 8). So `la 12.º generación` writes a feminine determiner and a masculine mark. No source chooses one of
+them, and the ordinal stays as written (design section 10).
 """
 from __future__ import annotations
 
@@ -165,6 +181,8 @@ DATA = freeze({
                       ".ᵉʳ": "apocope", "er": "apocope", ".os": "masculine plural", ".as": "feminine plural"},
     "degree_marks": ["º"],
     "ordinal_leads": ["el", "al", "del", "su", "este", "cada", "artículo", "art.", "inciso"],
+    "ordinal_determiners": ["el", "al", "del", "su", "este", "cada"],
+    "feminine_determiners": ["la"],
     "ordinal_follows": ["de"],
     "function_words": ["a", "al", "ante", "bajo", "con", "contra", "de", "del", "desde", "durante", "en", "entre",
                        "hacia", "hasta", "para", "por", "según", "sin", "sobre", "tras", "y", "e", "o", "u", "ni",
@@ -194,6 +212,9 @@ DATA = freeze({
     "tonic_a": ["agua", "águila", "ala", "alma", "arma", "área", "aula", "hacha", "hambre", "hada"],
     "patterns": {"expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+"},
 })
+
+_LEAD_WORDS = frozenset(word.rstrip(".") for word in DATA["ordinal_leads"])
+"""The words of `ordinal_leads` as context words give them, with no final full stop."""
 
 AMERICA = {"first_of_month": "ordinal", "percent": {"whole": "ciento por ciento"}, "leads": {"#": "número"}}
 """What every American variety changes: `primero` for the first day of the month (DPD «primero», 3), `ciento por
@@ -443,20 +464,30 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
 
 
 def speak_ordinal(span: Span, context: SpanContext) -> str:
-    """The marker gives the gender and the number: `1.º`, `1.ª`, `1.os`. `1.er` and a masculine singular ordinal
-    before its noun take the apocope `primer` and `tercer`, also at the end of a longer ordinal, as in
-    "vigesimoprimer" and "decimotercer" (DPD «ordinales», 4: "el vigesimoprimer aniversario"). The apocope needs a
-    masculine noun after the ordinal, and `etc.` closes a list (DPD «etcétera», 1), so `3.º, etc.` reads "tercero"."""
-    request = context.request
-    kind = request.data["ordinal_marks"][span.fields["marker"]]
+    """The marker gives the gender and the number: `1.º`, `1.ª`, `1.os`. `1.er`, and a masculine singular ordinal
+    before its noun, take the apocope (see the module docstring); `etc.` closes a list (DPD «etcétera», 1) and is no
+    noun. After a word of `ordinal_determiners` a capitalised noun and a noun in `s` count. With no determiner the
+    ordinal can head a list, so only a lowercase word with no final `s` counts. A word in capitals counts only after
+    a determiner in capitals, and a word of one letter, such as the door letter of `el 3.º B`, never counts."""
+    request, data = context.request, context.request.data
+    kind = data["ordinal_marks"][span.fields["marker"]]
     gender = F if kind.startswith("feminine") else M
     words = SPELLER.ordinal(span.fields["digits"], Features(gender=gender), request)
     if kind.endswith("plural"):
         return " ".join(word + "s" for word in words.split())
     first = context.after[0] if context.after else ""
-    before_noun = (first[:1].islower() and first.isalpha() and first not in request.data["function_words"]
-                   and f"{first}." not in request.data["sentence_final"]
-                   and not first.endswith("s") and noun_gender(first, request.data) is not F)
+    lead = context.before[-1] if context.before else ""
+    determined = lead.lower() in data["ordinal_determiners"]
+    postposed = not determined and lead.lower() in _LEAD_WORDS
+    if determined:
+        shaped = first.islower() or first.istitle() or (first.isupper() and lead.isupper())
+    else:
+        shaped = first.islower() and not first.endswith("s")
+    noun = first.lower()
+    parted = span.start in request.memo.get("es_ordinal_parted", ())
+    before_noun = (shaped and not postposed and not parted and first.isalpha() and len(first) > 1
+                   and noun not in data["function_words"] and f"{noun}." not in data["sentence_final"]
+                   and noun_gender(noun, data) is not F)
     if kind == "apocope" or (gender is M and before_noun):
         *head, last = words.split()
         words = " ".join([*head, last[:-1] if last.endswith(("primero", "tercero")) else last])
@@ -654,7 +685,8 @@ class Ordinal:
     5.b: `n.º`, letters written high). `1ª` and `3er` with no full stop read as the ordinal too. A marker of
     `degree_marks` also writes a degree, so `1º` reads as the ordinal only in a context that a degree does not take:
     a singular masculine determiner before it (`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a
-    legal division word before it (`artículo 6º`) (see the module docstring)."""
+    legal division word before it (`artículo 6º`) (see the module docstring). A masculine marker after a word of
+    `feminine_determiners`, as in `la 12.º generación`, stays as written."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 
@@ -669,9 +701,16 @@ class Ordinal:
             if marker in request.data["degree_marks"] and (bounded_integer(number.integer) == 0
                     or not _ordinal_context(text, number.start, number.end + len(marker), request)):
                 continue
-            yield Span(number.start, number.end + len(marker), Form.ORDINAL,
+            end = number.end + len(marker)
+            head = text[:number.start]
+            last = (head.rsplit(None, 1) or [""])[-1].lower()
+            contradicted = (request.data["ordinal_marks"][marker] == "masculine" and head[-1:].isspace()
+                            and last in request.data["feminine_determiners"])
+            if not (text[end:end + 1].isspace() and next_visible(text, end).isalpha()):
+                request.memo.setdefault("es_ordinal_parted", set()).add(number.start)
+            yield Span(number.start, end, Form.ORDINAL,
                        FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
-                                  "script": number.script}), recognizer=self.name)
+                                  "script": number.script}), recognizer=self.name, keep=contradicted)
 
 
 def _ordinal_context(text: str, start: int, end: int, request: Request) -> bool:
