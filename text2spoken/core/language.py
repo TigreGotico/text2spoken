@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from text2spoken.errors import (DeclinedReading, InvalidLanguageTagError, InvalidLexiconError,
                                 ParameterNotHonouredWarning, UndefinedGrammaticalGender, UnsupportedParameterError,
                                 require_type)
-from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams
+from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams, freeze
 
 if TYPE_CHECKING:
     from text2spoken.core.say_as import ResolvedSayAs, SayAs
@@ -168,6 +168,22 @@ def rbnf_locales() -> frozenset[str]:
 
 
 @cache
+def cldr_number_marks() -> FrozenMap:
+    """The CLDR decimal and group marks of each locale, by the script of the digits, from
+    `data/cldr/number-marks.json`. A language holds its marks under its subtag, and another locale holds them under
+    its CLDR id only where they differ from the marks of its language (`scripts/extract_number_marks.py`)."""
+    import json
+
+    table = json.loads((files("text2spoken") / "data" / "cldr" / "number-marks.json").read_text(encoding="utf-8"))
+    return freeze(table["marks"])
+
+
+def _number_marks(marks: Mapping[str, Mapping[str, str]]) -> FrozenMap:
+    """CLDR marks as the `number_marks` data of a language file: one entry for each script."""
+    return FrozenMap({script: (entry,) for script, entry in marks.items()})
+
+
+@cache
 def plural_locales() -> frozenset[str]:
     """The locales with CLDR plural rules. `_load` is the one place in unicode_rbnf that holds the list."""
     from unicode_rbnf.plural_rules import PluralType, _load
@@ -253,7 +269,11 @@ def core_language(code: str) -> LanguageSpec:
     A minus before a number reads when the speller reads it. The parser reads it when its reading of -1 has a word
     that its reading of 1 does not have. RBNF reads it when the cardinal rule set has a `-x` rule, in the rule set or
     in the rule set that its 0 rule names. `sign_words` holds that word, and `speak_rbnf_cardinal` reads the number
-    through the speller. `RBNF_CARDINAL` keeps as written a minus that may be no minus."""
+    through the speller. `RBNF_CARDINAL` keeps as written a minus that may be no minus.
+
+    A decimal reads in the marks of CLDR for the locale (`cldr_number_marks`), when the speller reads it. The parser
+    reads it when it reads 1.5. RBNF reads it when the cardinal rule set has an `x.x` rule, in the rule set or in
+    the rule set that its 0 rule names. Each other CLDR locale of the language whose marks differ is a variety."""
     from unicode_rbnf import RbnfEngine
     from unicode_rbnf.engine import RbnfSpecialRule, TextRulePart
 
@@ -278,6 +298,10 @@ def core_language(code: str) -> LanguageSpec:
             negative = []
         minus = " ".join(word for word in negative if word not in one)
         sign_words = {"-": minus} if minus else {}
+        try:
+            decimals = bool(words(parsers.pronounce_number(1.5, tag, places=1)))
+        except (ValueError, NotImplementedError):
+            decimals = False
     elif locale is None:
         return bare
     else:
@@ -285,21 +309,47 @@ def core_language(code: str) -> LanguageSpec:
         cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering")
                         if n in names)
         ordinal = next((n for n in ("spellout-ordinal", "spellout-ordinal-masculine") if n in names), cardinal)
-        speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): ordinal})
+        decimal = _special_rule_set(names, cardinal, RbnfSpecialRule.IMPROPER_FRACTION)
+        speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): ordinal}, decimal=decimal)
         minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
         sign_words = {} if minus is None else {
             "-": "".join(part.text for part in minus.parts if isinstance(part, TextRulePart)).strip()}
+        decimals = decimal is not None
     own_ordinal = locale is not None and any(
         "digits-ordinal" in RbnfEngine.for_language(name).rulesets
         for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
               recognizers.SHARED["date_numeric"], recognizers.SHARED["fraction"],
               recognizers.OrdinalStop(bare_stop=not own_ordinal))
-    return replace(bare, data=FrozenMap({**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}),
-                   recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), recognizers.RBNF_CARDINAL),
-                   verbalizers={Form.LEXICON: recognizers.speak_lexicon,
-                                Form.CARDINAL: recognizers.speak_rbnf_cardinal},
-                   spellers={Form.CARDINAL: speller})
+    table = cldr_number_marks()
+    data = {**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}
+    if code in table:
+        data["number_marks"] = _number_marks(table[code])
+    varieties = (Variety(tag), *(Variety(name.replace("_", "-"), FrozenMap({"number_marks": _number_marks(marks)}))
+                                 for name, marks in table.items() if name.startswith(code + "_")))
+    numbers = (recognizers.RBNF_CARDINAL, recognizers.RBNF_DECIMAL) if decimals else (recognizers.RBNF_CARDINAL,)
+    verbalizers = {Form.LEXICON: recognizers.speak_lexicon, Form.CARDINAL: recognizers.speak_rbnf_cardinal}
+    spellers = {Form.CARDINAL: speller}
+    if decimals:
+        verbalizers[Form.DECIMAL] = recognizers.speak_rbnf_decimal
+        spellers[Form.DECIMAL] = speller
+    return replace(bare, varieties=varieties, data=FrozenMap(data),
+                   recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), *numbers),
+                   verbalizers=verbalizers, spellers=spellers)
+
+
+def _special_rule_set(names: Mapping, name: str, rule) -> str | None:
+    """The rule set that holds the special rule `rule` for the rule set `name`: the rule set itself, or the rule
+    set that its 0 rule names, as `RbnfRuleSet.find_special_rule` looks it up."""
+    from unicode_rbnf.engine import ReplaceRulePart
+
+    while name is not None:
+        if rule in names[name].special_rules:
+            return name
+        zero = names[name].numeric_rules.get(0)
+        name = zero.parts[0].ruleset_name if zero and zero.parts and isinstance(zero.parts[0], ReplaceRulePart) \
+            else None
+    return None
 
 
 def select(tag: str) -> tuple[str, LanguageSpec, Variety]:
