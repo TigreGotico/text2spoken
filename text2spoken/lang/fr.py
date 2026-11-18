@@ -1885,7 +1885,7 @@ class DateNamed:
                             "month": month,
                             "day": int(day) if day else None,
                             "written_order": "DMY",
-                            "month_written": "name",
+                            "month_written": "name", "era": "",
                             "prefix": "",
                             "suffix": "",
                         }

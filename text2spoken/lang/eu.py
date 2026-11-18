@@ -502,7 +502,7 @@ class RomanMonthDate:
             if after is not None:
                 yield Span(start, after[0], Form.DATE,
                            FrozenMap({"year": year, "month": month, "day": day, "written_order": "YMD",
-                                      "month_written": "digits", "prefix": "", "suffix": after[1]}),
+                                      "month_written": "digits", "era": "", "prefix": "", "suffix": after[1]}),
                            recognizer=self.name)
 
 

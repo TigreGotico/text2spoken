@@ -945,7 +945,7 @@ class DateNamed:
                 elided = day == 1 and text[number.start - 1:number.start] in ("'", "’")
                 yield Span(number.start, stop, Form.DATE,
                            FrozenMap({"year": None, "month": month, "day": day, "written_order": "DMY",
-                                      "month_written": "name", "prefix": "", "suffix": ""}), recognizer=self.name,
+                                      "month_written": "name", "era": "", "prefix": "", "suffix": ""}), recognizer=self.name,
                            keep=elided)
 
 
@@ -978,7 +978,7 @@ class DateDayMonth:
                     and is_valid(None, month, day)):
                 yield Span(start, end, Form.DATE,
                            FrozenMap({"year": None, "month": month, "day": day, "written_order": "DMY",
-                                      "month_written": "digits", "prefix": "", "suffix": ""}), recognizer=self.name,
+                                      "month_written": "digits", "era": "", "prefix": "", "suffix": ""}), recognizer=self.name,
                            keep=kept)
 
 

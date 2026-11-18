@@ -733,7 +733,7 @@ class DateNamed:
                     continue
                 yield Span(start, end, Form.DATE,
                            FrozenMap({"year": year_value, "month": month, "day": int(day) if day else None,
-                                      "written_order": "DMY", "month_written": "name", "prefix": "",
+                                      "written_order": "DMY", "month_written": "name", "era": "", "prefix": "",
                                       "suffix": ""}), recognizer=self.name)
 
 

@@ -834,7 +834,7 @@ class DateNamed:
                     and is_valid(year, month, last) and not (start and text[start - 1] in ".,/-"):
                 yield Span(start, end, Form.DATE,
                            FrozenMap({"year": None, "month": None, "day": first, "written_order": "DMY",
-                                      "month_written": "name", "prefix": "", "suffix": ""}), recognizer=self.name)
+                                      "month_written": "name", "era": "", "prefix": "", "suffix": ""}), recognizer=self.name)
         pattern = f"([0-9][0-9]?)[  ]({'|'.join(months)})(?:[  ]([0-9]{{4}})([  ]г[.])?)?"
         for match in re.finditer(pattern, folded):
             start, end = match.span()
@@ -846,7 +846,7 @@ class DateNamed:
             suffix = match.group(4) or ""
             yield _framed(text, Span(start, end, Form.DATE,
                                      FrozenMap({"year": year, "month": month, "day": day, "written_order": "DMY",
-                                                "month_written": "name", "prefix": "", "suffix": suffix}),
+                                                "month_written": "name", "era": "", "prefix": "", "suffix": suffix}),
                                      trail="." if suffix and _sentence_period(text, end) else "", recognizer=self.name),
                           words, request)
 
