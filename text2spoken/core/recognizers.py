@@ -14,12 +14,14 @@ from dataclasses import dataclass, replace
 from functools import lru_cache
 from types import MappingProxyType
 
+from text2spoken.core import parsers
 from text2spoken.core.color import COLOR
 from text2spoken.core.currencies import cldr_part, currency_signs, currency_symbols, words_only
+from text2spoken.core.dates import date_locales, long_date
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
-from text2spoken.core.language import Request, Variety, lexicon_entries
+from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
@@ -1114,6 +1116,40 @@ def speak_rbnf_decimal(span: Span, context: SpanContext) -> str:
         return request.language.spellers[Form.DECIMAL].negative_decimal(fields["integer"], fields["fraction"],
                                                                         Features(), request)
     return speak_decimal(span, context)
+
+
+def speak_spoken_date(span: Span, context: SpanContext) -> str:
+    """The date words of `ovos_date_parser.spoken_date`, as "negen november tweeduizend zesentwintig"."""
+    fields = span.fields
+    try:
+        return parsers.spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"],
+                                   year=fields["year"])
+    except ValueError as error:
+        raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
+
+
+def speak_cldr_date(span: Span, context: SpanContext) -> str:
+    """A date of a language with no file, by the parts of its CLDR `long` date pattern (`long_date`): the literal
+    text as CLDR writes it, the month name of CLDR with each number in it read as a cardinal, as `11월` in
+    Korean, an ordinal day through the ordinal speller, and the day, a month number and the year through the cardinal
+    speller (section 17.5). The year reads as a cardinal: unicode_rbnf drops the zeros of the RBNF `zh` and `ja`
+    rule set `spellout-numbering-year`, which reads 2026 "二二六"."""
+    fields, request = span.fields, context.request
+    spellers = request.language.spellers
+    parts, months = long_date(cldr_locale(request.tag, date_locales(), request.language))
+
+    def cardinal(number: object) -> str:
+        return spellers[Form.CARDINAL].cardinal(str(number), Features(), request)
+
+    readings = {
+        "day": lambda: cardinal(fields["day"]),
+        "ordinal_day": lambda: spellers[Form.ORDINAL].ordinal(str(fields["day"]), Features(), request),
+        "month": lambda: cardinal(fields["month"]),
+        "month_name": lambda: re.sub("[0-9]+", lambda number: cardinal(number.group()),
+                                     months[fields["month"] - 1]),
+        "year": lambda: cardinal(fields["year"]),
+    }
+    return "".join(literal if name == "text" else readings[name]() for name, literal in parts)
 
 
 def amount_words(amount: FrozenMap, request: Request, features: Features = Features()) -> str:

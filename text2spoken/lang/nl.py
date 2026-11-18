@@ -125,9 +125,10 @@ same Onze Taal page reads the number in full in other contexts, "1940 euro klink
 another preposition or after a mark, a number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het
 jaar 1450 bezoekers` and `het jaar, 1450 mensen`, so `jaar` needs `in het` right before it.
 
-The words of a date and a clock time need `ovos_date_parser.spoken`, which reads no Dutch, so a numeric date stays as
-written. A clock time such as `14.30 uur` or `14:30` is no number, so it stays
-as written."""
+A numeric date stays as written, because the plain reading has no evidence of its field order. With an SSML say-as
+`date`, the markup gives that evidence, and the date reads through `ovos_date_parser.spoken_date`: `09-11-2026` reads
+"negen november tweeduizend zesentwintig". A clock time such as `14.30 uur` or `14:30` is no number, so it stays as
+written."""
 from __future__ import annotations
 
 import re
@@ -140,7 +141,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, plural_cat
 from text2spoken.core.numbers import SIGNS, Number, written_amount
 from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, numbers_in, signed,
                                           speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
-                                          speak_lexicon, speak_ordinal, speak_percent)
+                                          speak_lexicon, speak_ordinal, speak_percent, speak_spoken_date)
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
 from text2spoken.core.spans import Features, Span, SpanContext
@@ -584,7 +585,7 @@ LANGUAGE = LanguageSpec(
         Form.LEXICON: speak_lexicon, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
         Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
         Form.ORDINAL: speak_ordinal, Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal,
-        Form.CARDINAL: speak_cardinal, Form.YEAR: speak_year, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
+        Form.CARDINAL: speak_cardinal, Form.YEAR: speak_year, Form.DATE: speak_spoken_date, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},

@@ -106,6 +106,15 @@ SSML `say-as` markup reads more forms in a language with no file, because the ma
 'तीसरा'
 ```
 
+A `date` reads by the CLDR `long` date pattern of the language, with the month name of CLDR and the numbers of the same owner. In Danish, Finnish and Czech the pattern writes the day as `d.`, an ordinal, so the day reads as an ordinal. A pattern with a field or an abbreviation that has no words, as the Ukrainian `р.` after the year, gives the plain reading:
+
+```python
+>>> normalize("2026-11-09", "pl", say_as=SayAs(interpret_as="date"))
+'dziewięć listopada dwa tysiące dwadzieścia sześć'
+>>> normalize("09/11/2026", "da", say_as=SayAs(interpret_as="date", format="dmy"))
+'niende november to tusind og seksogtyve'
+```
+
 ## Turn forms on and off
 
 `only` reads the forms that you name and no other:

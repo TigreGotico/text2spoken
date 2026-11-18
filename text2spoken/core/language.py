@@ -279,11 +279,17 @@ def core_language(code: str) -> LanguageSpec:
 
     A decimal reads in the marks of CLDR for the locale (`cldr_number_marks`), when the speller reads it. The parser
     reads it when it reads 1.5. RBNF reads it when the cardinal rule set has an `x.x` rule, in the rule set or in
-    the rule set that its 0 rule names. Each other CLDR locale of the language whose marks differ is a variety."""
+    the rule set that its 0 rule names. Each other CLDR locale of the language whose marks differ is a variety.
+
+    A numeric date stays as written, and a say-as `date` reads through the `DATE` verbalizer (section 17.5): the
+    `spoken_date` of ovos-date-parser when it reads the language, else the CLDR `long` date pattern of the locale
+    (`speak_cldr_date`), when `long_date` gives its parts and the language has an ordinal speller for an ordinal
+    day."""
     from unicode_rbnf import RbnfEngine
     from unicode_rbnf.engine import RbnfSpecialRule, TextRulePart
 
     from text2spoken.core import parsers, recognizers
+    from text2spoken.core.dates import date_locales, long_date
     from text2spoken.core.spans import Features
     from text2spoken.core.spellers import RBNF_HELD, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
     import linguatag
@@ -333,6 +339,15 @@ def core_language(code: str) -> LanguageSpec:
     own_ordinal = locale is not None and any(
         "digits-ordinal" in RbnfEngine.for_language(name).rulesets
         for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
+    verbalizers = {Form.LEXICON: recognizers.speak_lexicon, Form.CARDINAL: recognizers.speak_rbnf_cardinal}
+    try:
+        parsers.spoken_date(tag, day=1, month=1, year=2000)
+        verbalizers[Form.DATE] = recognizers.speak_spoken_date
+    except NotImplementedError:
+        date_locale = cldr_locale(tag, date_locales(), bare)
+        pattern = None if date_locale is None else long_date(date_locale)
+        if pattern is not None and (ordinal_speller is not None or ("ordinal_day", "") not in pattern[0]):
+            verbalizers[Form.DATE] = recognizers.speak_cldr_date
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
               recognizers.SHARED["date_numeric"], recognizers.SHARED["fraction"],
               recognizers.OrdinalStop(bare_stop=not own_ordinal))
@@ -343,7 +358,6 @@ def core_language(code: str) -> LanguageSpec:
     varieties = (Variety(tag), *(Variety(name.replace("_", "-"), FrozenMap({"number_marks": _number_marks(marks)}))
                                  for name, marks in table.items() if name.startswith(code + "_")))
     numbers = (recognizers.RBNF_CARDINAL, recognizers.RBNF_DECIMAL) if decimals else (recognizers.RBNF_CARDINAL,)
-    verbalizers = {Form.LEXICON: recognizers.speak_lexicon, Form.CARDINAL: recognizers.speak_rbnf_cardinal}
     spellers = {Form.CARDINAL: speller}
     if decimals:
         verbalizers[Form.DECIMAL] = recognizers.speak_rbnf_decimal

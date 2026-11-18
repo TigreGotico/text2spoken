@@ -8,7 +8,8 @@ The script reads the `cldr-units-full`, `cldr-numbers-full`, `cldr-annotations-f
 the CLDR parent chain of each tag (`pt-PT` to `pt` to `und`, `en-GB` to `en-001` to `en` to `und`), so the runtime
 reads one file and does no inheritance. Each data file records the release, the commit, the locale chain and the
 sha256 of each input file. It writes four files for each tag: `<tag>.json` with the units, `<tag>.currencies.json`,
-`<tag>.symbols.json` and `<tag>.emoji.json`, and one file for every tag, `emoji-sequences.json`.
+`<tag>.symbols.json` and `<tag>.emoji.json`, and one file for every tag, `emoji-sequences.json`. It also reads
+`cldr-dates-full` and writes `<locale>.dates.json` for each locale of `DATE_LOCALES`.
 
 A unit holds its `long` patterns by plural category, its grammatical gender when CLDR gives one, its per-unit
 pattern, and its written symbols: the `short` patterns of the locale with `{0}` removed. A symbol that two units
@@ -34,6 +35,11 @@ The `EMOJI` form segments a text with the emoji sequences of the same Unicode ve
 names whose reading the `EMOJI` form refuses, because the reading holds a character other than a letter, a combining
 mark, a space, `-` or `'` (design section 4.7).
 
+A dates file holds the wide month names of the Gregorian calendar in the format context, the one that a date
+pattern uses, and the `long` date pattern. A date with no file reads through them (design section 17.5). The
+`DATE_LOCALES` are the languages with no language file whose numbers read through ovos-number-parser or CLDR RBNF.
+A locale that the release does not hold gets no file.
+
 The data is under the Unicode License v3, which the script copies to `text2spoken/data/cldr/LICENSE`.
 """
 from __future__ import annotations
@@ -54,6 +60,12 @@ EMOJI = f"https://www.unicode.org/Public/{UNICODE}/emoji/"
 EMOJI_FILES = ("emoji-sequences.txt", "emoji-zwj-sequences.txt")
 SELECTOR = "\ufe0f"
 TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE", "nl-SR")
+DATE_LOCALES = (
+    "af", "ak", "am", "an", "ast", "az", "be", "bg", "bs", "ca", "ccp", "chr", "cs", "cy", "da", "ee", "eo", "et",
+    "fa", "ff", "fi", "fil", "fo", "fy", "ga", "gl", "he", "hi", "hr", "hu", "hy", "id", "is", "ja", "ka", "kab",
+    "kk", "kl", "km", "ko", "ky", "lb", "lo", "lrc", "lt", "lv", "mk", "ms", "mt", "mwl", "my", "nb", "ne", "nn",
+    "no", "oc", "pl", "qu", "ro", "se", "sk", "sl", "sq", "sr", "su", "sv", "sw", "ta", "th", "tr", "uk", "vec",
+    "vi", "yue", "zh", "zu")
 OUT = Path(__file__).resolve().parent.parent / "text2spoken" / "data" / "cldr"
 MICRO = ("µ", "μ")
 COMPOUNDS = ("per", "power2", "power3")
@@ -100,6 +112,10 @@ def annotations_paths(locale: str) -> tuple[str, str]:
             f"cldr-json/cldr-annotations-derived-full/annotationsDerived/{locale}/annotations.json")
 
 
+def dates_path(locale: str) -> str:
+    return f"cldr-json/cldr-dates-full/main/{locale}/ca-gregorian.json"
+
+
 def _part(source: Source, path: str, *keys: str) -> dict | None:
     """The part of a JSON file of the release under the keys, or None when the release does not hold the file."""
     blob = source.read(path)
@@ -128,6 +144,10 @@ def _annotations(source: Source, locale: str) -> dict | None:
     if plain is None and derived is None:
         return None
     return {**(derived or {}).get("annotations", {}), **(plain or {}).get("annotations", {})}
+
+
+def _gregorian(source: Source, locale: str) -> dict | None:
+    return _part(source, dates_path(locale), "main", locale, "dates", "calendars", "gregorian")
 
 
 def chain(tag: str, parents: dict[str, str], source: Source, read=_units) -> list[tuple[str, dict]]:
@@ -241,6 +261,21 @@ def extract_currencies(tag: str, parents: dict[str, str], source: Source, shared
         "collisions": collisions,
     }
     return data, collisions
+
+
+def extract_dates(locale: str, parents: dict[str, str], source: Source, shared: dict[str, str]) -> dict | None:
+    """The wide format month names and the long date pattern of the locale, each from the first locale of its
+    parent chain that holds it; None when the release holds no file for the locale itself."""
+    source.hashes = dict(shared)
+    locales = chain(locale, parents, source, _gregorian)
+    if not locales or locales[0][0] != locale:
+        return None
+    wide = next(data["months"]["format"]["wide"] for _, data in locales
+                if "wide" in data.get("months", {}).get("format", {}))
+    long = next(data["dateFormats"]["long"] for _, data in locales if "long" in data.get("dateFormats", {}))
+    return {"source": {"release": RELEASE, "commit": COMMIT, "locales": [name for name, _ in locales],
+                       "files": dict(sorted(source.hashes.items()))},
+            "months": [wide[str(month)] for month in range(1, 13)], "long": long}
 
 
 def unicode_properties(ucd: Source) -> tuple[dict[str, str], frozenset[str]]:
@@ -380,6 +415,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{tag}: {len(data['names'])} emoji names, {len(names)} refused")
         for name in names:
             print(f"  refused {name!r}")
+    written = 0
+    for locale in DATE_LOCALES:
+        data = extract_dates(locale, parents, source, shared)
+        if data is None:
+            print(f"{locale}: no dates file in the release")
+            continue
+        write(args.out / f"{locale}.dates.json", data)
+        written += 1
+        print(f"{locale}: long date {data['long']!r}")
+    print(f"dates: {len(DATE_LOCALES)} locales in, {written} files out")
     return 0
 
 
