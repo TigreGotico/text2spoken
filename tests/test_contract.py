@@ -11,7 +11,7 @@ import pytest
 from tests import contract
 from tests.conftest import rows
 from tests.contract import CLAUSES, language_files
-from tests.data_keys import OPTIONAL, READERS, SHAPES
+from tests.data_keys import OPTIONAL, READERS, SHAPES, SYMBOL_KEYS, THROUGH_SYMBOL
 from tests.fixtures import qac
 from text2spoken.core import language as loader
 from text2spoken.core import recognizers
@@ -260,7 +260,8 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
                     request = Request(tag, variety, language, NormalizationParams(), memo={"recognizer": name})
                     list(recognizer.find(row["text"], tokens, request))
     for name, keys in read.items():
-        assert keys <= READERS[name], f"{name} reads {sorted(keys - READERS[name])}, which it does not declare"
+        declared = READERS[name] | (SYMBOL_KEYS if name in THROUGH_SYMBOL else frozenset())
+        assert keys <= declared, f"{name} reads {sorted(keys - declared)}, which it does not declare"
     assert set().union(*read.values()) == set().union(*(READERS[name] for name in used))
 
 

@@ -63,6 +63,31 @@ def test_the_gap_is_a_space_or_a_no_break_space(gap):
     assert normalize(f"Add 2{gap}1/2 cups.", "en-US") == "Add two and a half cups."
 
 
+# A mixed number next to a currency symbol stays as written whole. An amount reads no mixed number, and a reading of
+# the parts would be two numbers ("two dollars one-half") or leave the sign unread ("deux et demi €"). The symbol
+# may stand before or after the number, attached or after one space.
+MIXED_AMOUNTS = [
+    ("en-US", "It costs $2 1/2."), ("en-GB", "It costs €2 1/2."), ("pt-PT", "Custa $2 1/2."),
+    ("es-ES", "Cuesta $2 1/2."), ("fr-FR", "Il coûte 2 1/2 €."), ("de-DE", "Es kostet 2 1/2 €."),
+    ("en-US", "It costs $ 2 1/2."), ("de-DE", "Es kostet 2 1/2€."), ("it-IT", "Costa 2 1/2 €."),
+    ("nl-NL", "Het kost € 2 1/2."), ("pt-BR", "Custa R$ 2 1/2."),
+]
+
+
+@pytest.mark.parametrize(("lang", "text"), MIXED_AMOUNTS)
+def test_a_mixed_number_next_to_a_currency_symbol_stays_as_written(lang, text):
+    assert normalize(text, lang) == text
+
+
+@pytest.mark.parametrize(("lang", "text", "expected"), [
+    ("en-US", "It costs $2.", "It costs two dollars."),
+    ("en-US", "It costs $2 and 1/2 hour.", "It costs two dollars and one-half hour."),
+    ("en-US", "Add 2 1/2 cups.", "Add two and a half cups."),
+])
+def test_an_amount_with_no_mixed_number_still_reads(lang, text, expected):
+    assert normalize(text, lang) == expected
+
+
 DECLINING = ["el-GR", "ar", "ru-RU", "eu-ES", "sv-SE", "pl-PL", "fi-FI", "tr-TR", "ja-JP", "da-DK"]
 """Language files that give no reading of a mixed number, and languages with no file, which read through RBNF or
 ovos-number-parser."""

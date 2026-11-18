@@ -27,7 +27,7 @@ from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
-from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
+from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces, reads_symbol
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
@@ -70,6 +70,14 @@ def _free_before(text: str, start: int, symbols) -> bool:
 def _free_after(text: str, end: int, symbols) -> bool:
     """Whether no word character and no form symbol touches text[:end] from the right."""
     return end == len(text) or not (is_word_char(text[end]) or text[end] in symbols)
+
+
+def _currency_sign_touches(text: str, start: int, end: int, request: Request) -> bool:
+    """Whether a currency sign (category `Sc`) that the `SYMBOL` form of the language does not read touches the
+    number, as in `a¥5` and `¥-5`: such a number reads only as an amount (design section 10)."""
+    return any(0 <= index < len(text) and unicodedata.category(text[index]) == "Sc"
+               and not (SYMBOL in request.language.recognizers and reads_symbol(text, index, request))
+               for index in (start - 1, end))
 
 
 def _affixes(text: str, start: int, end: int, data, symbols=None) -> tuple[int, int, str, str] | None:
@@ -235,7 +243,8 @@ class Cardinal:
         leads = request.data.get("leads", FrozenMap())
         sign_words = request.data.get("sign_words", FrozenMap())
         for number in self.numbers(text, request):
-            if number.fraction is not None or (number.sign and number.sign not in sign_words):
+            if number.fraction is not None or (number.sign and number.sign not in sign_words) \
+                    or _currency_sign_touches(text, number.start, number.end, request):
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
             proclitic = bounds is not None and bounds[2]
@@ -341,7 +350,7 @@ class Decimal:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for number in self.numbers(text, request):
-            if number.fraction is None:
+            if number.fraction is None or _currency_sign_touches(text, number.start, number.end, request):
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
             if bounds is None:
@@ -504,9 +513,9 @@ class Fraction:
 
         A proper fraction after a whole part (`whole_part`) is a mixed number, as `2 1/2`, and its span holds the
         whole part in the field `whole`. A leading zero in a field, a sign before the whole part, a symbol next to
-        the span, a unit after it or digits from two digit sets keep the mixed number as written. The span of the
-        fraction alone follows, and it reads only where another span claims the whole part first, as a currency
-        amount claims `$2` in `$2 1/2`."""
+        the span, a unit after it, a currency symbol next to it, as in `2 1/2 €`, or digits from two digit sets keep
+        the mixed number as written. The span of the fraction alone follows, and it reads only where another span
+        claims the whole part first."""
         symbols = request.data.get("symbols", FrozenMap())
         units = unit_table(request)
         for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(_FRACTION, text,
@@ -525,6 +534,8 @@ class Fraction:
                 signed_whole = begin and text[begin - 1] in SIGNS and not (begin > 1 and is_digit(text[begin - 2]))
                 keep = ("0" in (fold_digits(text[begin]), numerator[0], denominator[0]) or signed_whole or unit
                         or not (_free_before(text, begin, symbols) and _free_after(text, end, symbols))
+                        or any(text.endswith(symbol + gap, 0, begin) or text.startswith(gap + symbol, end)
+                               for symbol, _ in currency_symbols(request) for gap in number_gaps(request.data))
                         or not one_digit_set(text[begin:start - 1] + text[matched_start:matched_end]))
                 yield Span(begin - 1 if signed_whole else begin, end, Form.FRACTION,
                            FrozenMap({"whole": fold_digits(text[begin:start - 1]), "numerator": numerator,
@@ -736,13 +747,20 @@ class Money:
         that no earlier span holds. So a symbol that one amount reads is not the symbol of the next number: in
         `5 R$ 10£` the second amount is `10£`. A symbol that a phone number holds is still free for the amount after
         it: `Call 999 £ 5 now.` reads "five pounds". A number with a decimal comma in a variety with the decimal
-        point reads only next to `€` (`_comma_decimals`)."""
+        point reads only next to `€` (`_comma_decimals`). The whole part of a mixed number, as `$2` in `$2 1/2`, is no
+        amount."""
         every_symbol = currency_symbols(request)
         euro = tuple((symbol, code) for symbol, code in every_symbol if code == "EUR")
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         numbers = [(number, every_symbol) for number in self.numbers(text, tokens, request)]
         numbers += [(number, euro) for number in _comma_decimals(text, request)]
         for number, symbols in numbers:
+            fraction = _FRACTION.match(text, number.end + 1)
+            if fraction and fraction.group()[0] not in SIGNS:
+                top, bottom = map(bounded_integer, fraction.group().split("/"))
+                if (bottom is not None and 2 <= bottom <= 100 and top is not None and 0 < top < bottom
+                        and whole_part(text, fraction.start(), fraction.end()) == number.start):
+                    continue
             if number.sign:
                 continue
             for symbol, code in symbols:
