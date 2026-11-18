@@ -59,7 +59,12 @@ UCD = f"https://www.unicode.org/Public/{UNICODE}/ucd/"
 EMOJI = f"https://www.unicode.org/Public/{UNICODE}/emoji/"
 EMOJI_FILES = ("emoji-sequences.txt", "emoji-zwj-sequences.txt")
 SELECTOR = "\ufe0f"
-TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE", "nl-SR")
+TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE", "nl-SR", "zh-CN",
+        "zh-TW")
+LIKELY_SCRIPT = {"zh-TW": "zh-Hant-TW"}
+"""The tags whose CLDR locale holds a script that the tag leaves out, by CLDR 49 likelySubtags.json: `"zh-TW":
+"zh-Hant-TW"`. The parent chain of such a tag starts at the locale with the script, so zh-TW reads zh-Hant and not
+zh."""
 DATE_LOCALES = (
     "af", "ak", "am", "an", "ast", "az", "be", "bg", "bs", "ca", "ccp", "chr", "cs", "cy", "da", "ee", "eo", "et",
     "fa", "ff", "fi", "fil", "fo", "fy", "ga", "gl", "he", "hi", "hr", "hu", "hy", "id", "is", "ja", "ka", "kab",
@@ -151,9 +156,9 @@ def _gregorian(source: Source, locale: str) -> dict | None:
 
 
 def chain(tag: str, parents: dict[str, str], source: Source, read=_units) -> list[tuple[str, dict]]:
-    """The locales of the CLDR parent chain of the tag that the release holds, from the tag to `und`, each with
-    the data that `read` gives: by default its `units` data."""
-    found, locale = [], tag
+    """The locales of the CLDR parent chain of the tag that the release holds, from the tag, or its locale in
+    `LIKELY_SCRIPT`, to `und`, each with the data that `read` gives: by default its `units` data."""
+    found, locale = [], LIKELY_SCRIPT.get(tag, tag)
     while True:
         data = read(source, locale)
         if data is not None:

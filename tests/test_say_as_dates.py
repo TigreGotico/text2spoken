@@ -47,7 +47,6 @@ DATES = {
     "fi-FI": ("{d.} {MMMM} {y}", "marraskuuta", "helmikuuta", writer("fi-FI")),
     "cs-CZ": ("{d.} {MMMM} {y}", "listopadu", "února", writer("cs-CZ")),
     "ro-RO": ("{d} {MMMM} {y}", "noiembrie", "februarie", writer("ro-RO")),
-    "zh-CN": ("{y}年{M}月{d}日", "十一月", "二月", rule_set("zh-CN", "spellout-cardinal")),
     "ja-JP": ("{y}年{M}月{d}日", "11月", "2月", rule_set("ja-JP", "spellout-cardinal")),
     "ko-KR": ("{y}년 {MMMM} {d}일", "11월", "2월", rule_set("ko-KR", "spellout-numbering")),
     "hi-IN": ("{d} {MMMM} {y}", "नवंबर", "फ़रवरी", rule_set("hi-IN", "spellout-cardinal")),
@@ -76,7 +75,8 @@ NO_DATE = frozenset({"uk-UA", "hu-HU", "is-IS", "yo-NG", "ha-NG", "tw", "bn-IN"}
 after the year, `y. MMMM d.`; no source gives their words. `is` writes `d.`, an ordinal day, and has no ordinal. The
 other tags read no numbers."""
 
-FILES = frozenset({"en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "ru-RU", "eu-ES", "el-GR", "ar", "apc"})
+FILES = frozenset({"en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "ru-RU", "eu-ES", "el-GR", "ar", "apc",
+                   "zh-CN"})
 """Tags whose language file reads a date of its own; `apc` reads through the `ar` file."""
 
 assert set(TAGS) == set(DATES) | NO_DATE | FILES | {"nl-NL"}
