@@ -23,7 +23,8 @@ from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
 from text2spoken.core.letters import LETTERS
-from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
+from text2spoken.core.numbers import (SIGNS, SPACE_GROUPS, Number, declared_marks, find_numbers, group_spaces,
+                                      number_marks)
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
@@ -1452,13 +1453,6 @@ class Abbreviation:
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
                                    trail="." if sentence_end else "", recognizer=self.name)
                     position = text.find(key, end)
-
-
-SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{1,3})*)?"
-                          "|[0-9]+,[0-9]{3}(?:[ \u00a0\u202f][0-9]{1,3})+")
-"""Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the
-whole part or in the fraction after a decimal comma: `36 524`, `123 456 789,987 546`, `0,264 7` (Araua 203,
-section 3.2.1.1, page 12)."""
 
 
 @dataclass(frozen=True)

@@ -11,6 +11,7 @@ from dataclasses import KW_ONLY, dataclass, replace
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
+from text2spoken.core.numbers import SPACE_GROUPS
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_digit, is_letter, is_mark,
                                      is_punctuation)
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
@@ -156,17 +157,15 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
 
 
 _GROUP_GAPS = " \u00a0\u202f"
+_GROUPED_NUMBER = re.compile(f"(?<![0-9])(?:{SPACE_GROUPS.pattern})(?![0-9])")
 
 
 def _group_spaces(text: str) -> bytearray:
-    """The spaces between the groups of a number written in groups of three digits, as in `12 000` and `0,264 7`
-    (`SPACE_GROUPS`). A run that one space joins to another digit run, as in `123 456 78` and `0800 123 456`, is no
-    such number."""
-    from text2spoken.core.recognizers import SPACE_GROUPS
-
+    """The spaces between the groups of a number written in groups of three digits, as in `12 000` and `0,264 7`.
+    A run that one space joins to another digit run, as in `123 456 78` and `0800 123 456`, is no such number."""
     folded = fold_digits(text)
     marked = bytearray(len(text))
-    for match in re.finditer(f"(?<![0-9])(?:{SPACE_GROUPS.pattern})(?![0-9])", folded):
+    for match in _GROUPED_NUMBER.finditer(folded):
         start, end = match.span()
         if (start > 1 and folded[start - 1] in _GROUP_GAPS and "0" <= folded[start - 2] <= "9") \
                 or (end + 1 < len(folded) and folded[end] in _GROUP_GAPS and "0" <= folded[end + 1] <= "9"):
