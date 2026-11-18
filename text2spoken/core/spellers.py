@@ -325,12 +325,18 @@ class RbnfSpeller:
         raise NotImplementedError("RbnfSpeller reads integers and decimals only")
 
 
+#: The CLDR RBNF rule set that reads a plain cardinal: the first of these that the locale has.
+CARDINAL_RULE_SETS = ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering")
+
+
 @lru_cache(maxsize=128)
 def cardinal_digit_words(tag: str, language: LanguageSpec) -> tuple[str, ...] | None:
     """The cardinal of each digit from 0 to 9 by the writer of ovos-number-parser for the language, else by the
     CLDR RBNF rule set `spellout-numbering`. UTS #35, Part 3, "Rule-Based Number Formatting", names that rule set
     "the default used when there is no context for the number. Usually this is used for counting without reference
-    to a noun". None when neither reads all ten, or a reading holds a digit."""
+    to a noun". Zero reads as the plain cardinal of the locale reads 0: the `zh` rule set `spellout-numbering` writes
+    the digit sign 〇, and its cardinal writes the word 零. None when neither reads all ten, or a reading holds a
+    digit."""
     if language.code in parsers.number_writer_languages():
         try:
             spoken = tuple(words(str(parsers.pronounce_number(digit, tag))) for digit in range(10))
@@ -341,8 +347,10 @@ def cardinal_digit_words(tag: str, language: LanguageSpec) -> tuple[str, ...] | 
         engine = None if locale is None else rbnf_engine(locale)
         if engine is None or "spellout-numbering" not in engine.rulesets:
             return None
-        spoken = tuple(words(corrected(engine.format_number(digit, ruleset_names=["spellout-numbering"])
-                                       .text_by_ruleset["spellout-numbering"], locale)) for digit in range(10))
+        cardinal = next(name for name in CARDINAL_RULE_SETS if name in engine.rulesets)
+        spoken = tuple(words(corrected(engine.format_number(digit, ruleset_names=[rule_set])
+                                       .text_by_ruleset[rule_set], locale))
+                       for digit, rule_set in enumerate([cardinal, *["spellout-numbering"] * 9]))
     if not all(spoken) or any(char.isdigit() for word in spoken for char in word):
         return None
     return spoken
