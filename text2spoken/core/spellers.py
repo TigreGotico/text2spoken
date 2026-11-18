@@ -133,6 +133,22 @@ class OvosNumberSpeller:
         return self.cardinal(digits, features, request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
+        value, kwargs = self._float(integer, fraction), self._kwargs(features, request)
+        return self._read("decimal", f"{len(integer)}.{len(fraction)} digits", request,
+                          lambda: parsers.pronounce_number(value, request.tag, places=len(fraction), **kwargs))
+
+    def negative_decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
+        """The decimal of minus the number. A reading that has no word more than the reading of the number
+        declines, because then the sign is not read."""
+        value, kwargs = self._float(integer, fraction), self._kwargs(features, request)
+        spoken = self._read("decimal", f"-{len(integer)}.{len(fraction)} digits", request,
+                            lambda: parsers.pronounce_number(-value, request.tag, places=len(fraction), **kwargs))
+        if len(spoken.split()) <= len(self.decimal(integer, fraction, features, request).split()):
+            raise DeclinedReading(f"ovos-number-parser reads no minus in {request.tag}")
+        return spoken
+
+    @staticmethod
+    def _float(integer: str, fraction: str) -> float:
         significant = len(_significant(integer))
         if significant > DIGIT_BOUND:
             raise DeclinedReading(f"{significant} integer digits pass the bound of {DIGIT_BOUND} digits that a "
@@ -144,9 +160,7 @@ class OvosNumberSpeller:
         if Decimal(str(value)) != Decimal(written) or int(value) != _integer(integer or "0"):
             raise DeclinedReading("ovos-number-parser reads a float, and no float holds the decimal of "
                                   f"{len(integer)}.{len(fraction)} digits exactly")
-        kwargs = self._kwargs(features, request)
-        return self._read("decimal", f"{len(integer)}.{len(fraction)} digits", request,
-                          lambda: parsers.pronounce_number(value, request.tag, places=len(fraction), **kwargs))
+        return value
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         scale = parsers.Scale(request.params.scale) if request.params.scale is not None else None
@@ -208,16 +222,20 @@ def corrected(text: str, locale: str) -> str:
 
 
 class RbnfSpeller:
-    """unicode_rbnf, with explicit rule set names; integers only. The output passes through `corrected`."""
+    """unicode_rbnf, with explicit rule set names. The output passes through `corrected`.
+
+    It reads integers, and decimals when `decimal` names the rule set that holds the `x.x` rule. With no such rule
+    set, a decimal raises NotImplementedError."""
 
     def __init__(self, cardinal: Mapping[Features, str], ordinal: Mapping[Features, str],
-                 year: str = "spellout-numbering-year"):
+                 year: str = "spellout-numbering-year", decimal: str | None = None):
         for name, table in (("cardinal", cardinal), ("ordinal", ordinal)):
             if Features() not in table:
                 raise ValueError(f"the {name} map of an RbnfSpeller needs an entry for Features()")
         self.cardinal_sets = dict(cardinal)
         self.ordinal_sets = dict(ordinal)
         self.year_set = year
+        self.decimal_set = decimal
 
     @staticmethod
     def rule_set(table: Mapping[Features, str], features: Features) -> str:
@@ -236,14 +254,16 @@ class RbnfSpeller:
         return locale
 
     def _format(self, digits: str, name: str, request: Request, sign: int = 1) -> str:
+        return self._spell(sign * _integer(digits), f"{len(digits)} digits", name, request)
+
+    def _spell(self, number: int | Decimal, size: str, name: str, request: Request) -> str:
         from unicode_rbnf.engine import NoRuleForNumberError
 
-        number = sign * _integer(digits)
         locale = self.locale(request)
         try:
             result = rbnf_engine(locale).format_number(number, ruleset_names=[name])
         except (NoRuleForNumberError, OverflowError) as error:
-            raise DeclinedReading(f"no rule of {name} reads a number of {len(digits)} digits") from error
+            raise DeclinedReading(f"no rule of {name} reads a number of {size}") from error
         return words(corrected(result.text_by_ruleset[name], locale))
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
@@ -264,10 +284,32 @@ class RbnfSpeller:
         return self._format(digits, self.year_set, request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        raise NotImplementedError("RbnfSpeller reads integers only")
+        """The decimal through the `x.x` rule of `decimal_set`, which writes the word of the decimal mark and the
+        digits after it."""
+        return self._decimal(integer, fraction, request, sign=1)
+
+    def negative_decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
+        """The decimal of minus the number, through the `-x` rule that `decimal_set` finds and its `x.x` rule."""
+        return self._decimal(integer, fraction, request, sign=-1)
+
+    def _decimal(self, integer: str, fraction: str, request: Request, sign: int) -> str:
+        """unicode_rbnf picks the `x.x` rule when the float of the number is more than DEFAULT_TOLERANCE from an
+        integer, and else reads the integer alone. So a fraction of zeros, as in `3.0`, a fraction too small for
+        the tolerance, and an integer part too long for a float to keep the fraction decline."""
+        from unicode_rbnf.engine import DEFAULT_TOLERANCE
+
+        if self.decimal_set is None:
+            raise NotImplementedError("RbnfSpeller reads integers only")
+        if len(fraction) > DIGIT_BOUND:
+            raise DeclinedReading(f"{len(fraction)} fraction digits pass the bound of {DIGIT_BOUND} digits that a "
+                                  "speller reads")
+        value = Decimal(f"{_integer(integer or '0')}.{fraction}")
+        if abs(float(value) - round(float(value))) <= DEFAULT_TOLERANCE:
+            raise DeclinedReading(f"RBNF reads the decimal {len(integer)}.{len(fraction)} digits as an integer")
+        return self._spell(sign * value, f"{len(integer)}.{len(fraction)} digits", self.decimal_set, request)
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
-        raise NotImplementedError("RbnfSpeller reads integers only")
+        raise NotImplementedError("RbnfSpeller reads integers and decimals only")
 
 
 def spell_digits(digits: str, request: Request) -> str:

@@ -20,14 +20,14 @@ Set up a checkout with the test extra, as [Development](development.md#set-up-an
 
 ## Step 1: see what your language reads now
 
-A language with no file reads cardinal numbers, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It knows no group mark, so `1.250` stays as written, and so does the date:
+A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`. A full stop with three digits after it can also be a decimal mark, as the CLDR root locale writes it, so `1.250` stays as written. So does the date:
 
 ```python
 >>> from text2spoken import normalize, supports
 >>> normalize("Saya punya 3 kucing dan 1.250 buku pada 12/03/2024.", "id")
 'Saya punya tiga kucing dan 1.250 buku pada 12/03/2024.'
 >>> sorted(form.name for form in supports("id").forms)
-['CARDINAL', 'LEXICON']
+['CARDINAL', 'DECIMAL', 'LEXICON']
 ```
 
 The library also logs a WARNING for each written form that stays as written. In a Python session, these lines appear on stderr:

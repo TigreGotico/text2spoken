@@ -225,10 +225,13 @@ class Cardinal:
     name: str = "cardinal"
     form: Form = Form.CARDINAL
 
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        return numbers_in(text, request)
+
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         leads = request.data.get("leads", FrozenMap())
         sign_words = request.data.get("sign_words", FrozenMap())
-        for number in numbers_in(text, request):
+        for number in self.numbers(text, request):
             if number.fraction is not None or (number.sign and number.sign not in sign_words):
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
@@ -255,42 +258,74 @@ _GROUP_SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space, which group the digits of a number."""
 
 
+_ROOT_ROLES = MappingProxyType({".": "decimal", ",": "group"})
+"""The role of the full stop and the comma in the CLDR root locale, which writes `1,234.5`."""
+
+
+def _root_reading_differs(text: str, number: Number) -> bool:
+    """Whether the CLDR root locale reads the number in other words than the locale: the number has one full stop
+    or comma, exactly three digits follow it, and the locale gives it the other role, as `1.234` in `tr` and `3,500`
+    in `nb`. Such a number could be written in either convention."""
+    written = text[number.start + len(number.sign):number.end]
+    marks = [char for char in written if not is_digit(char)]
+    if len(marks) != 1 or marks[0] not in _ROOT_ROLES or len(written.partition(marks[0])[2]) != 3:
+        return False
+    return _ROOT_ROLES[marks[0]] != ("decimal" if number.fraction is not None else "group")
+
+
+def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[Span, ...]:
+    """The cardinal and decimal spans of a language with no file (section 6.1), in text order, with each span whose
+    minus may mark something else kept as written; `RbnfCardinal` names the cases."""
+    key = ("rbnf numbers", text)
+    if key in request.memo:
+        return request.memo[key]
+    symbols = request.data.get("symbols", FrozenMap())
+    spans = sorted((*Cardinal.find(RBNF_CARDINAL, text, tokens, request),
+                    *Decimal.find(RBNF_DECIMAL, text, tokens, request)), key=lambda span: span.start)
+    kept = set()
+    for index, span in enumerate(spans):
+        if not span.fields["sign"]:
+            continue
+        sign = span.start + len(span.fields["prefix"])
+        line_start = text.rfind("\n", 0, sign) + 1
+        before = text[line_start:sign].rstrip()
+        number_end = span.end - len(span.fields["suffix"])
+        after = text[number_end:].lstrip()
+        group = text[number_end:number_end + 2]
+        neighbours = []
+        if before and is_digit(before[-1]):
+            neighbours.append((index - 1, line_start + len(before) - 1))
+        if len(group) == 2 and group[0] in _GROUP_SPACES and is_digit(group[1]):
+            neighbours.append((index + 1, number_end + 1))
+        if neighbours or (before and (before[-1] in _DASHES or before[-1] in symbols)) or after[:1] in symbols:
+            kept.add(index)
+        for other, digit in neighbours:
+            if 0 <= other < len(spans) and spans[other].start <= digit < spans[other].end:
+                kept.add(other)
+    request.memo[key] = tuple(replace(span, keep=True) if index in kept else span for index, span in enumerate(spans))
+    return request.memo[key]
+
+
 @dataclass(frozen=True)
 class RbnfCardinal(Cardinal):
-    """The cardinal of a language with no file (section 6.1). A number with a minus stays as written where the
-    minus may mark something else, or where the number goes on past the span: a list item at the start of a line,
-    as in `-3 mele`; a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an
-    amount next to a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a
-    number grouped with one of `_GROUP_SPACES`, as in `-1 000`, where the span holds only the first group. A line
-    break or a tab groups no digits, so in `-5\n10` the `10` of the next line reads.
+    """The cardinal of a language with no file (section 6.1), in the CLDR marks of the locale.
+
+    A number that the CLDR root locale reads in other words stays as written (`_root_reading_differs`). A number
+    with a minus stays as written where the minus may mark something else, or where the number goes on past the
+    span: a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an amount next to
+    a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a number grouped with
+    one of `_GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
+    group. A minus at the start of a line reads, as in a language file. A line break or a tab groups no digits, so
+    in `-5\n10` the `10` of the next line reads.
 
     The number next to such a minus number stays as written too, so that a second pass finds the digit next to the
     minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. A dash is no digit, so `5` in `5--10` reads."""
 
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        return tuple(number for number in numbers_in(text, request) if not _root_reading_differs(text, number))
+
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        symbols = request.data.get("symbols", FrozenMap())
-        spans = list(super().find(text, tokens, request))
-        kept = set()
-        for index, span in enumerate(spans):
-            if not span.fields["sign"]:
-                continue
-            sign = span.start + len(span.fields["prefix"])
-            line_start = text.rfind("\n", 0, sign) + 1
-            before = text[line_start:sign].rstrip()
-            number_end = span.end - len(span.fields["suffix"])
-            after = text[number_end:].lstrip()
-            group = text[number_end:number_end + 2]
-            neighbours = []
-            if before and is_digit(before[-1]):
-                neighbours.append((index - 1, line_start + len(before) - 1))
-            if len(group) == 2 and group[0] in _GROUP_SPACES and is_digit(group[1]):
-                neighbours.append((index + 1, number_end + 1))
-            if neighbours or not before or before[-1] in _DASHES or before[-1] in symbols or after[:1] in symbols:
-                kept.add(index)
-            for other, digit in neighbours:
-                if 0 <= other < len(spans) and spans[other].start <= digit < spans[other].end:
-                    kept.add(other)
-        return (replace(span, keep=True) if index in kept else span for index, span in enumerate(spans))
+        return (span for span in _rbnf_spans(text, tokens, request) if span.form is self.form)
 
 
 @dataclass(frozen=True)
@@ -298,8 +333,11 @@ class Decimal:
     name: str = "decimal"
     form: Form = Form.DECIMAL
 
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        return numbers_in(text, request)
+
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for number in numbers_in(text, request):
+        for number in self.numbers(text, request):
             if number.fraction is None:
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
@@ -307,6 +345,24 @@ class Decimal:
                 continue
             start, end, prefix, suffix = bounds
             yield Span(start, end, Form.DECIMAL, number.amount(prefix, suffix), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class RbnfDecimal(Decimal):
+    """The decimal of a language with no file (section 6.1), in the CLDR marks of the locale, as `RbnfCardinal`
+    reads a cardinal. A sign with no word in `sign_words` and an integer part with a leading zero, as in `03.5`, keep
+    the number as written, as they keep a cardinal. So does a fraction of zeros, as in `3.0`: RBNF and
+    ovos-number-parser read it as the integer, without the zeros that the text writes."""
+
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        sign_words = request.data.get("sign_words", FrozenMap())
+        return tuple(number for number in RBNF_CARDINAL.numbers(text, request)
+                     if not (number.sign and number.sign not in sign_words)
+                     and not (len(number.integer) > 1 and number.integer[0] == "0")
+                     and (number.fraction is None or number.fraction.strip("0")))
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return (span for span in _rbnf_spans(text, tokens, request) if span.form is self.form)
 
 
 _FRACTION = re.compile("[-+−]?[0-9]+/[0-9]+")
@@ -1008,6 +1064,17 @@ def speak_rbnf_cardinal(span: Span, context: SpanContext) -> str:
     return speak_cardinal(span, context)
 
 
+def speak_rbnf_decimal(span: Span, context: SpanContext) -> str:
+    """The decimal of a language with no file (section 6.1). A number with a minus reads through the speller, which
+    places the sign word as its rules write it."""
+    fields = span.fields
+    if fields["sign"] == "-":
+        request = context.request
+        return request.language.spellers[Form.DECIMAL].negative_decimal(fields["integer"], fields["fraction"],
+                                                                        Features(), request)
+    return speak_decimal(span, context)
+
+
 def amount_words(amount: FrozenMap, request: Request, features: Features = Features()) -> str:
     """A `DECIMAL` record through the spellers of the language, with its sign: the decimal speller when the record
     has fraction digits, else the cardinal speller with `features`."""
@@ -1312,6 +1379,7 @@ class SpaceGroups:
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 RBNF_CARDINAL = RbnfCardinal()
+RBNF_DECIMAL = RbnfDecimal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
                               Percent(), Money(), KeptMoney(), Measure(), Telephone(), Expression(), Abbreviation(),
                               SpaceGroups(), COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
