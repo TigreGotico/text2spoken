@@ -7,6 +7,9 @@ distribution that holds one of those modules goes into the hash whole: the code 
 modules and the bytes of each of its data files. The Unicode version of the interpreter is in the hash too, since
 the tokenizer reads digits through `unicodedata`. A docstring, a comment and a `version.py` are not in the hash,
 so a release that changes only those keeps the revision.
+
+A probe that exits with an error, runs longer than `PROBE_TIMEOUT`, or prints no readable result raises
+`RevisionError`.
 """
 from __future__ import annotations
 
@@ -19,6 +22,7 @@ import sys
 import sysconfig
 import tokenize
 import unicodedata
+import uuid
 from collections.abc import Iterator
 from functools import cache
 from pathlib import Path
@@ -29,11 +33,14 @@ from text2spoken.errors import RevisionError, require_type
 FORMAT = "t2s1"
 """The prefix of a revision. It changes when the inputs or the encoding of the hash change."""
 
+PROBE_TIMEOUT = 60
+"""The seconds a probe may run before it counts as failed. A `pt-PT` probe takes up to 7 s on a loaded machine."""
+
 _PROBE = """
 import sys
 before = set(sys.modules)
 import json, sysconfig, warnings
-tag = sys.argv[1]
+marker, tag = sys.argv[1:3]
 import text2spoken
 from text2spoken.core import parsers
 calls = (
@@ -54,11 +61,12 @@ installed = tuple(paths[key] for key in ("purelib", "platlib"))
 def outside_stdlib(module):
     where = getattr(module, "__file__", None)
     return where is None or not where.startswith(stdlib) or where.startswith(installed)
-print(json.dumps(sorted(name for name, module in list(sys.modules.items())
-                        if name not in before and name.split(".")[0] not in sys.stdlib_module_names
-                        and outside_stdlib(module))))
+print("\\n" + marker + json.dumps(sorted(name for name, module in list(sys.modules.items())
+                                         if name not in before and name.split(".")[0] not in sys.stdlib_module_names
+                                         and outside_stdlib(module))), flush=True)
 """
-"""Prints the modules outside the standard library that a `normalize` and each parser writer import for a tag."""
+"""Prints, after a marker, the modules outside the standard library that a `normalize` and each parser writer import
+for a tag."""
 
 _NATIVE = frozenset({".so", ".pyd", ".dll", ".dylib"})
 _VERSION_FILES = frozenset({"version.py", "_version.py"})
@@ -91,13 +99,31 @@ def _revision(tag: str, code: str, variety: str) -> str:
 @cache
 def probe(tag: str) -> frozenset[str]:
     """The modules outside the standard library that `normalize` and each parser writer import for a tag, in a
-    fresh process with the import path of this one."""
+    fresh process with the import path of this one.
+
+    The result is the one line that starts with a marker unique to the call, so output that a `sitecustomize` or an
+    exit handler prints does not replace it. The child runs with `PYTHONIOENCODING=utf-8`, and its output is decoded as
+    UTF-8 with `errors="replace"`, so bytes that a `sitecustomize` writes in another encoding cannot break the parse of
+    the result line. A probe that exits with an error, runs longer than `PROBE_TIMEOUT`, or prints no readable result
+    raises `RevisionError`."""
     path = os.pathsep.join(entry or os.getcwd() for entry in sys.path)
-    done = subprocess.run([sys.executable, "-P", "-c", _PROBE, tag], capture_output=True, text=True,
-                          env={**os.environ, "PYTHONPATH": path})
-    if done.returncode:
-        raise RuntimeError(f"the revision probe for {tag!r} failed:\n{done.stderr}")
-    return frozenset(json.loads(done.stdout.splitlines()[-1]))
+    marker = f"text2spoken-revision-probe-{uuid.uuid4().hex}:"
+    what = f"the revision probe for {tag!r}"
+    try:
+        done = subprocess.run([sys.executable, "-P", "-c", _PROBE, marker, tag], capture_output=True,
+                              encoding="utf-8", errors="replace", timeout=PROBE_TIMEOUT, check=True,
+                              env={**os.environ, "PYTHONPATH": path, "PYTHONIOENCODING": "utf-8"})
+    except subprocess.TimeoutExpired as exc:
+        raise RevisionError(f"{what} ran longer than {PROBE_TIMEOUT} s") from exc
+    except subprocess.CalledProcessError as exc:
+        raise RevisionError(f"{what} exited with {exc.returncode}:\n{exc.stderr}") from exc
+    results = [line.removeprefix(marker) for line in done.stdout.splitlines() if line.startswith(marker)]
+    if len(results) != 1:
+        raise RevisionError(f"{what} printed {len(results)} results, not 1")
+    try:
+        return frozenset(json.loads(results[0]))
+    except json.JSONDecodeError as exc:
+        raise RevisionError(f"{what} printed a result that is not JSON: {results[0]!r}") from exc
 
 
 def _top_levels(tag: str) -> set[str]:

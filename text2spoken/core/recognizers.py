@@ -30,6 +30,7 @@ from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
 from text2spoken.core.units import elided, joined_table, unit_table, units_at
+from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
@@ -467,6 +468,29 @@ def _unit_after(text: str, end: int, units: Iterable[str], gaps: Sequence[str] =
                and not elided(text, end + len(gap) + len(unit)) for gap in gaps for unit in units)
 
 
+MIXED_GAPS = (" ", "\u00a0")
+"""The gaps between the whole part and the fraction of a mixed number: a space and a no-break space."""
+
+
+def whole_part(text: str, start: int, end: int, gaps: Sequence[str] = MIXED_GAPS) -> int | None:
+    """The start of the whole part of a mixed number whose fraction is text[start:end], as `2` in `2 1/2`, or None.
+
+    The whole part is a run of digits, then one gap of `gaps`. It is no whole part when a word character or a
+    cluster mark between two digits touches it, as in `A2 1/2`, `1,2 1/2`, `1:2 1/2` and `3-2 1/2`, or when another
+    group of digits and a gap stand before it or after the fraction, as in `5 1 1/2` and `1 1/2 3`."""
+    gap = start - 1
+    if gap < 1 or text[gap] not in gaps or not is_digit(text[gap - 1]):
+        return None
+    begin = gap - 1
+    while begin and is_digit(text[begin - 1]):
+        begin -= 1
+    longer = (begin >= 2 and text[begin - 1] in gaps and is_digit(text[begin - 2])) \
+        or (end + 1 < len(text) and text[end] in gaps and is_digit(text[end + 1]))
+    if longer or (begin and is_word_char(text[begin - 1])) or not _cluster_edge(text, begin, gap):
+        return None
+    return begin
+
+
 @dataclass(frozen=True)
 class Fraction:
     name: str = "fraction"
@@ -474,7 +498,13 @@ class Fraction:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A symbol of the language next to the fraction or a unit after it leaves a reading that is not clear,
-        as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets."""
+        as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets.
+
+        A proper fraction after a whole part (`whole_part`) is a mixed number, as `2 1/2`, and its span holds the
+        whole part in the field `whole`. A leading zero in a field, a sign before the whole part, a symbol next to
+        the span, a unit after it or digits from two digit sets keep the mixed number as written. The span of the
+        fraction alone follows, and it reads only where another span claims the whole part first, as a currency
+        amount claims `$2` in `$2 1/2`."""
         symbols = request.data.get("symbols", FrozenMap())
         units = unit_table(request)
         for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(_FRACTION, text,
@@ -483,13 +513,24 @@ class Fraction:
             numerator, denominator = written.lstrip("-+−").split("/")
             if sign and matched_start > 0 and is_word_char(text[matched_start - 1]):
                 continue
-            unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols))
-                       or _unit_after(text, end, units, number_gaps(request.data))
+            unit = _unit_after(text, end, units, number_gaps(request.data))
+            unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols)) or unit
                        or not one_digit_set(text[matched_start:matched_end]))
             top, bottom = bounded_integer(numerator), bounded_integer(denominator)
+            proper = bottom is not None and 2 <= bottom <= 100 and top is not None and 0 < top < bottom
+            begin = None if sign or prefix or not proper else whole_part(text, start, end)
+            if begin is not None:
+                signed_whole = begin and text[begin - 1] in SIGNS and not (begin > 1 and is_digit(text[begin - 2]))
+                keep = ("0" in (fold_digits(text[begin]), numerator[0], denominator[0]) or signed_whole or unit
+                        or not (_free_before(text, begin, symbols) and _free_after(text, end, symbols))
+                        or not one_digit_set(text[begin:start - 1] + text[matched_start:matched_end]))
+                yield Span(begin - 1 if signed_whole else begin, end, Form.FRACTION,
+                           FrozenMap({"whole": fold_digits(text[begin:start - 1]), "numerator": numerator,
+                                      "denominator": denominator, "sign": "", "prefix": "", "suffix": suffix}),
+                           recognizer=self.name, keep=keep)
             if unclear or (bottom is not None and 2 <= bottom <= 100 and top is not None and top < bottom):
                 yield Span(start, end, Form.FRACTION,
-                           FrozenMap({"numerator": numerator, "denominator": denominator, "sign": sign,
+                           FrozenMap({"whole": "", "numerator": numerator, "denominator": denominator, "sign": sign,
                                       "prefix": prefix, "suffix": suffix}), recognizer=self.name, keep=unclear)
 
 
@@ -1090,8 +1131,36 @@ def speak_decimal(span: Span, context: SpanContext) -> str:
     return amount_words(span.fields, context.request)
 
 
-def speak_fraction(span: Span, context: SpanContext) -> str:
+def speak_mixed_half(span: Span, context: SpanContext) -> str:
+    """A mixed number of a half, in a language whose data gives `mixed_word` and `mixed_half`: the whole part, the
+    word and the half, both in the gender of `default_gender` (design section 5.6), as pt "dois e meio" and es "dos
+    y medio". `mixed_half` gives the half by gender, and under "other" for any other gender or none. A language
+    with no grammatical gender takes no gender (design section 2.3), so nl reads "twee en een half" for any
+    `default_gender`. The noun that
+    the number counts sets the gender of the half, and in pt, es, fr and it it stands between the whole part and the
+    half, as in pt "uma página e meia", so a mixed number before a word declines, as does any other fraction and
+    any language with no `mixed_half`."""
     fields, request = span.fields, context.request
+    language = request.language
+    halves = request.data.get("mixed_half")
+    if halves is None or fields["denominator"] != "2":
+        raise DeclinedReading("the language gives no reading of this mixed number")
+    if context.after and context.after[0][:1].isalpha():
+        raise DeclinedReading(f"a counted noun stands between the parts of a mixed number, and {context.after[0]!r} "
+                              "follows it")
+    gender = request.params.default_gender.get(language.code) or language.default_gender
+    if gender not in language.genders:
+        gender = None
+    whole = language.spellers[Form.CARDINAL].cardinal(fields["whole"], Features(gender=gender), request)
+    half = halves.get(gender.value if gender is not None else "other", halves["other"])
+    return f"{whole} {request.data['mixed_word']} {half}"
+
+
+def speak_fraction(span: Span, context: SpanContext) -> str:
+    """A fraction through the fraction speller of the language, and a mixed number through `speak_mixed_half`."""
+    fields, request = span.fields, context.request
+    if fields["whole"]:
+        return speak_mixed_half(span, context)
     words = request.language.spellers[Form.FRACTION].fraction(fields["numerator"], fields["denominator"], Features(),
                                                               request)
     return signed(words, fields["sign"], request)

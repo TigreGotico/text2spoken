@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.0.2a75](https://github.com/TigreGotico/text2spoken/tree/0.0.2a75) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a74...0.0.2a75)
+
+**Merged pull requests:**
+
+- fix\(revision\): decode the probe output as UTF-8 with replacement [\#247](https://github.com/TigreGotico/text2spoken/pull/247) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a74](https://github.com/TigreGotico/text2spoken/tree/0.0.2a74) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a73...0.0.2a74)
+
+**Merged pull requests:**
+
+- fix: read a mixed number as one number, or keep it as written [\#221](https://github.com/TigreGotico/text2spoken/pull/221) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a73](https://github.com/TigreGotico/text2spoken/tree/0.0.2a73) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a72...0.0.2a73)
+
+**Merged pull requests:**
+
+- fix\(revision\): start the probe result on its own line [\#245](https://github.com/TigreGotico/text2spoken/pull/245) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a72](https://github.com/TigreGotico/text2spoken/tree/0.0.2a72) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a71...0.0.2a72)
+
+**Merged pull requests:**
+
+- fix\(revision\): mark the probe result and bound the probe run [\#230](https://github.com/TigreGotico/text2spoken/pull/230) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a71](https://github.com/TigreGotico/text2spoken/tree/0.0.2a71) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a70...0.0.2a71)
+
+**Merged pull requests:**
+
+- fix: read the Arabic lects through the dialect writers of ovos-number-parser [\#235](https://github.com/TigreGotico/text2spoken/pull/235) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a70](https://github.com/TigreGotico/text2spoken/tree/0.0.2a70) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a69...0.0.2a70)
+
+**Merged pull requests:**
+
+- fix\(core\): read decimals and a line-start minus in languages with no file [\#218](https://github.com/TigreGotico/text2spoken/pull/218) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a69](https://github.com/TigreGotico/text2spoken/tree/0.0.2a69) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a68...0.0.2a69)
@@ -337,10 +385,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a26...0.0.2a27)
 
-**Merged pull requests:**
-
-- test: check the parsed start of each pattern that reaches digit\_run\_matches [\#52](https://github.com/TigreGotico/text2spoken/pull/52) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a26](https://github.com/TigreGotico/text2spoken/tree/0.0.2a26) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a25...0.0.2a26)
@@ -353,42 +397,21 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a24...0.0.2a25)
 
-**Merged pull requests:**
-
-- fix: keep an expression as written when a later operand has a sign or a symbol touches it [\#51](https://github.com/TigreGotico/text2spoken/pull/51) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a24](https://github.com/TigreGotico/text2spoken/tree/0.0.2a24) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a23...0.0.2a24)
-
-**Merged pull requests:**
-
-- fix: export command takes a BCP 47 tag and reports errors in one line [\#47](https://github.com/TigreGotico/text2spoken/pull/47) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a23](https://github.com/TigreGotico/text2spoken/tree/0.0.2a23) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a22...0.0.2a23)
 
-**Merged pull requests:**
-
-- fix: raise ArgumentTypeError for a value of the wrong type [\#48](https://github.com/TigreGotico/text2spoken/pull/48) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a22](https://github.com/TigreGotico/text2spoken/tree/0.0.2a22) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a21...0.0.2a22)
 
-**Merged pull requests:**
-
-- test: strict-mode unread check with a block at offset 0 [\#44](https://github.com/TigreGotico/text2spoken/pull/44) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a21](https://github.com/TigreGotico/text2spoken/tree/0.0.2a21) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a20...0.0.2a21)
-
-**Merged pull requests:**
-
-- test: contract clause for digit-run patterns [\#43](https://github.com/TigreGotico/text2spoken/pull/43) ([JarbasAl](https://github.com/JarbasAl))
-- fix: minus sign as operator in expressions [\#42](https://github.com/TigreGotico/text2spoken/pull/42) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a20](https://github.com/TigreGotico/text2spoken/tree/0.0.2a20) (2026-11-10)
 

@@ -26,7 +26,7 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 
 A number agrees with the noun that it counts. The gender of a common noun comes from the noun lexicon of `tugalex`, and a number before a unit takes the gender of the unit.
 
-A number right after a noun that names one item of a series, such as `sala`, `página`, `artigo` or `Fig.`, reads in the masculine, because the word "número" is left out (Cunha and Cintra, quoted in Ciberdúvidas 33468). After `a páginas`, the number agrees with the plural noun (Bechara, quoted in Ciberdúvidas 33527). A number before `da tarde` counts hours. A number before `vezes` or `vírgula` and a second number reads in the masculine. Two numbers that `a`, `e` or `ou` join stay as written when the noun after the second number gives the first number another gender, because no source gives that gender. An amount of money with one decimal reads the decimal as tens of cents. After `vitamina`, `grupo`, `classe` or `anexo`, `D.` is a letter, not a title.
+A number right after a noun that names one item of a series, such as `sala`, `página`, `artigo` or `Fig.`, reads in the masculine when no noun that it counts follows, because the word "número" is left out (Cunha and Cintra, quoted in Ciberdúvidas 33468). After `a páginas`, the number agrees with the plural noun (Bechara, quoted in Ciberdúvidas 33527). A number before `da tarde` counts hours. A number before `vezes` or `vírgula` and a second number reads in the masculine, unless a noun follows the second number and then `vezes` is the noun it counts. Two numbers that `a`, `e` or `ou` join stay as written when the noun after the second number gives the first number another gender, because no source gives that gender. An amount of money with one decimal reads the decimal as tens of cents. After `vitamina`, `grupo` or `classe`, `D.` is a letter, not a title.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -73,7 +73,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 503 rows in `tests/data/pt.tsv`, 15 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 521 rows in `tests/data/pt.tsv`, 15 are marked silver.
 
 ## Roman numerals
 

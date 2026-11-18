@@ -1,9 +1,11 @@
 """Arabic readings that need params or hints, which a row of tests/data cannot give. Each expected value comes from
 the cited source, never from a run of the code."""
 import random
+import re
 from importlib.metadata import requires
 
 import pytest
+from ovos_number_parser import pronounce_number
 from packaging.requirements import Requirement
 from packaging.version import Version
 
@@ -60,25 +62,47 @@ def test_the_writer_reads_each_lect(code):
     assert not any(char.isdigit() for char in spoken), spoken
 
 
-# The rows of issue #166. Number words: the output of ovos-number-parser 0.25.0a1 for the code of the lect in the
-# oblique case (acw, afb, ars and arz: the dialect tables of AR_LECT_FORMS); colloquial Arabic has no case marking
-# (Ryding 2005, p. 166).
+# The rows of issue #166. A lect reads each number as ovos-number-parser writes it for the code of the lect in the
+# oblique case, called here directly, and so with no case ending: colloquial Arabic has no case marking (Ryding 2005,
+# p. 166), and the nominative endings -aan and -uun of اثنان, مئتان and ثلاثون never appear.
 ISSUE_166 = [
-    ("acm", "mama 7 ana 42 sule 1234", "mama سبعة ana اثنين وأربعين sule ألف ومئتين وأربعة وثلاثين"),
-    ("acw", "mama 7 ana 42 sule 1234", "mama سبعة ana اتنين وأربعين sule ألف وميتين وأربعة وتلاتين"),
-    ("aeb", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اثنين وأربعين على ألف ومئتين وأربعة وثلاثين"),
-    ("afb", "mama 7 ana 42 sule 1234", "mama سبعة ana اثنين وأربعين sule ألف وميتين وأربعة وثلاثين"),
-    ("ars", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اثنين وأربعين على ألف وميتين وأربعة وثلاثين"),
-    ("ary", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اثنين وأربعين على ألف ومئتين وأربعة وثلاثين"),
-    ("arz", "الكتاب 7 الجديد 42 على 1234", "الكتاب سبعة الجديد اتنين وأربعين على ألف وميتين وأربعة وتلاتين"),
-    ("ayl", "mama 7 ana 42 sule 1234", "mama سبعة ana اثنين وأربعين sule ألف ومئتين وأربعة وثلاثين"),
+    ("acm", "mama 7 ana 42 sule 1234"),
+    ("acw", "mama 7 ana 42 sule 1234"),
+    ("aeb", "الكتاب 7 الجديد 42 على 1234"),
+    ("afb", "mama 7 ana 42 sule 1234"),
+    ("apc", "الكتاب 7 الجديد 42 على 1234"),
+    ("arq", "الكتاب 7 الجديد 42 على 1234"),
+    ("ars", "الكتاب 7 الجديد 42 على 1234"),
+    ("ary", "الكتاب 7 الجديد 42 على 1234"),
+    ("arz", "الكتاب 7 الجديد 42 على 1234"),
+    ("ayl", "mama 7 ana 42 sule 1234"),
 ]
+NOMINATIVE_ENDING = re.compile(r"(?:ان|ون)(?=\s|$)")
 
 
-@pytest.mark.parametrize(("tag", "text", "expected"), ISSUE_166)
-def test_a_lect_reads_its_numbers_without_case_endings(tag, text, expected):
-    assert normalize(text, tag) == expected
+@pytest.mark.parametrize(("tag", "text"), ISSUE_166)
+def test_a_lect_reads_its_numbers_without_case_endings(tag, text):
+    expected = re.sub(r"[0-9]+", lambda number: pronounce_number(int(number[0]), lang=tag, case="oblique"), text)
+    spoken = normalize(text, tag)
+    assert spoken == expected
+    assert NOMINATIVE_ENDING.search(spoken) is None, spoken
     assert normalize(expected, tag) == expected
+
+
+# English Wikipedia, "Levantine Arabic grammar", Numerals, revision 1368977674: the cells of the table that the apc
+# table of ovos-number-parser cites, written with no vowel marks.
+LEVANTINE_CELLS = [("30", "تلاتين"), ("102", "مية وتنين"), ("200", "ميتين"), ("300", "تلتمية")]
+
+
+@pytest.mark.parametrize(("digits", "words"), LEVANTINE_CELLS)
+def test_levantine_reads_its_own_number_words(digits, words):
+    assert normalize(f"الطقس {digits} جدا", "apc") == f"الطقس {words} جدا"
+
+
+def test_the_retired_south_levantine_code_reads_as_levantine():
+    # ISO 639-3 change request 2022-006 merged ajp into apc (iso639-3.sil.org, code ajp).
+    text = "الطقس 13 جميل 250 جدا 25/7/1930"
+    assert normalize(text, "ajp") == normalize(text, "apc")
 
 
 def test_a_lect_in_the_formal_register_reads_the_literary_words():

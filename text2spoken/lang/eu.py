@@ -458,7 +458,7 @@ class LawNumber:
                     or not _noun_after(text, end, request.data["code_nouns"], request.data)):
                 continue
             yield Span(start, end, Form.FRACTION,
-                       FrozenMap({"numerator": match.group(1), "denominator": match.group(2), "sign": "",
+                       FrozenMap({"whole": "", "numerator": match.group(1), "denominator": match.group(2), "sign": "",
                                   "prefix": "", "suffix": ""}), recognizer=self.name, keep=True)
 
 

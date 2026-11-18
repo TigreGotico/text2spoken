@@ -55,7 +55,14 @@ A fraction is a cardinal and an ordinal, written apart: Taaladvies.net, "Aaneens
 geschreven", "Twee derde van de tekst", and "Het rangtelwoord in de noemer krijgt meestal geen meervouds -n". The
 numerator 1 reads "een", as Onze Taal, "telwoord", writes "Breuken bestaan uit een hoofdtelwoord en een rangtelwoord:
 een derde, drie vierde". 1/2 stays as written: its word "half" takes the form "halve" before some nouns (Wiktionary,
-"half", "een halve fles water"), and the file does not know the noun.
+"half", "een halve fles water"), and the file does not know the noun. A mixed number of a half with no word after it
+reads the whole part and "en een half": Onze Taal, "Hoe schrijf je 2½ in letters: tweeënhalf, twee en half,
+tweeëneenhalf of twee en een half?" (https://onzetaal.nl/taalloket/twee): "Zowel tweeënhalf als twee en een half is
+juist", and "bij hogere getallen een voorkeur voor de versie met en een half". Before a noun
+the half inflects as 1/2 does ("tweeënhalve / twee en een halve"), so a mixed number before a word stays as written,
+as does a mixed number of another fraction, for which no source gives a reading. `1 1/2` stays as written: Dutch says
+"anderhalf" (Taaladvies, "het afgelopen anderhalf jaar / de afgelopen anderhalf jaar": "het afgelopen anderhalf uur"),
+which the file does not give.
 
 A percentage reads the number and "procent" (Taaladvies.net, "Een percentage van 25 procent"; Wiktionary, "procent",
 "een honderdste deel, weergegeven met symbool %").
@@ -170,6 +177,8 @@ DATA = freeze({
     "sign_words": {"-": "min", "+": "plus"},
     "digit_words": ["nul", "één", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen"],
     "decimal_word": "komma",
+    "mixed_word": "en",
+    "mixed_half": {"other": "een half"},
     "leads": {"nr. ": "nummer", "Nr. ": "Nummer"},
     "ordinal_marks": ["ste", "de", "e"],
     "percent": {"signs": ["%"], "position": "after", "word": "procent"},
@@ -509,7 +518,12 @@ class Money(CoreMoney):
 
 def speak_fraction(span: Span, context: SpanContext) -> str:
     """The fraction, except 1/2: its word "half" takes the form "halve" before some nouns, and the file does not know
-    the noun."""
+    the noun. A mixed number reads through the core reading, which reads only a half with no word after it. One
+    and a half is the one word "anderhalf", which the file does not give, so `1 1/2` stays as written."""
+    if span.fields["whole"] == "1":
+        raise DeclinedReading("one and a half is anderhalf, which the file does not give")
+    if span.fields["whole"]:
+        return core_speak_fraction(span, context)
     if bounded_integer(span.fields["denominator"]) == 2:
         raise DeclinedReading("the Dutch word for a half agrees with the noun after it")
     return core_speak_fraction(span, context)

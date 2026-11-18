@@ -194,7 +194,7 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
                    Form.LETTERS: contract.speak_letters, Form.COLOR: contract.speak_color}
     spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers), verbalizers=verbalizers)
     read = set().union(*(READERS[r.name] for r in readers), READERS["speak_electronic"], READERS["speak_letters"],
-                       READERS["speak_color"])
+                       READERS["speak_color"], READERS["speak_fraction"])
     assert OPTIONAL <= read and not OPTIONAL & set(spec.data)
     contract.clause_6("qac", spec)
 

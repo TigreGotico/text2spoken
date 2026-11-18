@@ -9,6 +9,12 @@ entry «fraccionarios» gives "un veintiunavo". It writes its own decimals, beca
 drops the written zero of `2,50`, and because the DLE entry «coma» (1.b) reads the decimal part as a number:
 "trescientos veinticinco coma ochenta y cinco".
 
+A mixed number of a half reads the whole part, `y` and `medio`, as `2 1/2` reads "dos y medio" (Wiktionary, "y
+medio": "(after a number) and a half"). The half agrees with the noun that it counts, and the noun stands between
+the whole part and the half: Wikipedia, "Fracción", Fracción mixta, «Una cucharadita y media de...». So with no
+noun the whole part and the half take the gender of `default_gender`, and `2 1/2 horas` stays as written. No
+source gives the reading of a mixed number of another fraction, so it stays as written.
+
 An abbreviation reads as its full word (DPD «abreviatura», 3: "deben leerse reponiendo la forma plena de la palabra
 abreviada"). A noun abbreviation that an integer other than one counts reads as the plural of that word, so `21 vol.`
 reads "veintiún volúmenes". No source states this rule. The file infers it from three passages: the full word of DPD
@@ -39,7 +45,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affix
 from text2spoken.core.numbers import written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, numbers_in, signed, speak_decimal,
-                                          speak_expression, speak_lexicon, speak_telephone)
+                                          speak_expression, speak_lexicon, speak_mixed_half, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_window
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.times import day_hour, twelve_hour
@@ -68,6 +74,8 @@ DATA = freeze({
     "decimal_words": {",": "coma", ".": "punto"},
     "digit_words": ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"],
     "leads": {"-": ""},
+    "mixed_word": "y",
+    "mixed_half": {"feminine": "media", "other": "medio"},
     "fraction_names": {"2": "medio", "3": "tercio", "4": "cuarto", "5": "quinto", "6": "sexto", "7": "séptimo",
                        "8": "octavo", "9": "noveno", "10": "décimo", "100": "centésimo"},
     "range_word": "a",
@@ -444,6 +452,8 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
     """`1/2` before a noun is `medio` or `media`, which agrees with it (DPD «fraccionarios», 2: "media
     tortilla"); in other places `un medio` (DPD «fraccionarios», 3.a)."""
     fields, request = span.fields, context.request
+    if fields["whole"]:
+        return speak_mixed_half(span, context)
     agree = agreement(span, context)
     if fields["numerator"] == "1" and fields["denominator"] == "2" and agree.noun is not None:
         words = "media" if agree.gender is F else "medio"
