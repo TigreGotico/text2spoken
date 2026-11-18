@@ -75,6 +75,7 @@ class Form(StrEnum):
     EXPRESSION = "expression"
     DATE = "date"
     TIME = "time"
+    DURATION = "duration"
     YEAR = "year"
     MONEY = "money"
     MEASURE = "measure"

@@ -11,18 +11,18 @@ This page gives the rules that hold for every form, and the list of forms. One p
 | Page | Forms |
 | --- | --- |
 | [Numbers](numbers.md) | Cardinals, ordinals, decimals, fractions, ranges, expressions, Roman numerals, telephone numbers, identifiers, idioms |
-| [Dates and times](dates-and-times.md) | Dates, clock times, years |
+| [Dates and times](dates-and-times.md) | Dates, clock times, durations, years |
 | [Money, units and symbols](money-units-and-symbols.md) | Money, measures, percentages, symbols, colours |
 | [Addresses, letters and emoji](addresses-letters-and-emoji.md) | E-mail and web addresses, runs of capital letters, abbreviations, emoji |
 
 ## It does not guess
 
-A form that the library cannot read for sure stays as written, and the library logs a WARNING on the `text2spoken` logger. A wrong reading is worse than none. Here `1:23:45` is a duration, not a clock time, so it stays:
+A form that the library cannot read for sure stays as written, and the library logs a WARNING on the `text2spoken` logger. A wrong reading is worse than none. Here `1:23:45` can be a clock time or a duration, and no word tells which, so it stays:
 
 ```python
 >>> from text2spoken import Form, NormalizationParams, normalize
->>> normalize("The run took 1:23:45.", "en-GB")
-'The run took 1:23:45.'
+>>> normalize("The screen showed 1:23:45.", "en-GB")
+'The screen showed 1:23:45.'
 ```
 
 Set `NormalizationParams(strict=True)` to get an error instead of the warning. [Errors and warnings](errors.md) gives each case.
@@ -46,6 +46,7 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 | `EXPRESSION` | `5+3`, `2 × 2` | On | de, en, es, eu, pt |
 | `DATE` | `12/03/2024`, `2024-03-12`, `15 de maio de 2025` | On | All |
 | `TIME` | `às 14:30`, `14h30`, `9am`, `10 p.m.` | On | All |
+| `DURATION` | `took 1:23:45`, after a word that names a duration | On | en |
 | `YEAR` | A year that a word or a suffix marks: `in 1999`, `im Jahr 1999` | On | de, en, ru |
 | `MONEY` | `$5`, `2,50 €` | On | All |
 | `MEASURE` | `10kg`, `25°C`, `5 km/h` | On | All |

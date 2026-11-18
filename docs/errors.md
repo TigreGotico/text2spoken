@@ -29,10 +29,10 @@ In the default mode the form stays as written. In strict mode, `UnreadFormError.
 
 ```python
 >>> from text2spoken import NormalizationParams, UnreadFormError, normalize
->>> normalize("The run took 1:23:45.", "en-GB")
-'The run took 1:23:45.'
+>>> normalize("The screen showed 1:23:45.", "en-GB")
+'The screen showed 1:23:45.'
 >>> try:
-...     normalize("The run took 1:23:45.", "en-GB", NormalizationParams(strict=True))
+...     normalize("The screen showed 1:23:45.", "en-GB", NormalizationParams(strict=True))
 ... except UnreadFormError as error:
 ...     print(error.unread)
 ('1:23:45.',)

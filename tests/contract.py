@@ -29,9 +29,9 @@ from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, check_tag, cldr_locale, plural_locales, rbnf_locales
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.spans import FIELDS, Span
-from text2spoken.core.recognizers import (SHARED, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
-                                          speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
-                                          speak_range, speak_telephone)
+from text2spoken.core.recognizers import (SHARED, speak_abbreviation, speak_cardinal, speak_decimal, speak_duration,
+                                          speak_expression, speak_fraction, speak_idiom, speak_lexicon, speak_ordinal,
+                                          speak_percent, speak_range, speak_telephone)
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import OPTIONS, Form, FrozenMap
@@ -160,7 +160,8 @@ def check_data_keys(data: FrozenMap, where: str) -> None:
 
 SHARED_VERBALIZERS = {verbalizer.__name__: verbalizer for verbalizer in (
     speak_cardinal, speak_lexicon, speak_electronic, speak_letters, speak_decimal, speak_fraction, speak_ordinal,
-    speak_range, speak_percent, speak_expression, speak_telephone, speak_abbreviation, speak_idiom, speak_color)}
+    speak_range, speak_duration, speak_percent, speak_expression, speak_telephone, speak_abbreviation, speak_idiom,
+    speak_color)}
 """The verbalizers of the core that a file can name, by their name in `READERS`."""
 
 

@@ -17,6 +17,7 @@ The file reads every form except identifiers. The `LETTERS` and `EMOJI` forms ar
 | `© 2024` | `en-GB` | copyright two thousand and twenty-four |
 | `The Prof. arrived.` | `en-US` | The Professor arrived. |
 | `It costs 23,88 €.` | `en-US` | It costs twenty-three euros and eighty-eight cents. |
+| `The run took 1:23:45.` | `en-GB` | The run took one hour, twenty-three minutes, forty-five seconds. |
 
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which English reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
@@ -44,9 +45,9 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 ## Sources
 
-Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
+Number words come from CLDR RBNF. Unit words, duration words, currency names and symbol names come from CLDR 49. The words that mark a duration, such as `took` and `lasted`, come from Wiktionary. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 645 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 655 rows.
 
 ## Roman numerals
 

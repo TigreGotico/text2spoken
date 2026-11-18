@@ -89,6 +89,26 @@ def test_clock_fields(parts, expected):
     assert times.clock_fields(*parts) == expected
 
 
+@pytest.mark.parametrize("text,expected", [
+    ("She won in a time of 2:01:09.5.", [("2", "1", "9", "5")]),
+    ("It took 01:00:00.", [("1", "0", "0", "")]),
+    ("It took 0:00:00.0.", []),
+    ("It took 1:60:00.", []),
+    ("It took 1:23.", []),
+    ("It took 1:23:45 pm.", []),
+    ("It took 1:23:45 o'clock.", []),
+    ("It took 1:23:45 o’clock.", []),
+    ("It took 1:23:45h.", []),
+    ("Meet in 1:23:45.", []),
+])
+def test_duration_fields(text, expected):
+    """`h:mm:ss` with minutes and seconds 00-59 after a duration word, no clock word after it, and a value above zero
+    (design section 4.2)."""
+    spans = [s for s in analyze(text, "en-GB").spans if s.form is Form.DURATION]
+    assert [(s.fields["hours"], s.fields["minutes"], s.fields["seconds"], s.fields["fraction"]) for s in spans] \
+        == expected
+
+
 def test_twelve_hour_face():
     assert [times.twelve_hour(h) for h in (0, 1, 12, 13, 23)] == [12, 1, 12, 1, 11]
 

@@ -21,7 +21,7 @@ from text2spoken.core.dates import date_locales, long_date
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
-from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
+from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries, plural_category
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
@@ -31,7 +31,7 @@ from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
-from text2spoken.core.units import elided, joined_table, unit_table, units_at
+from text2spoken.core.units import cldr_data, elided, joined_table, unit_table, units_at
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form
 
@@ -681,6 +681,87 @@ class TimeClock:
                 yield Span(start, end + len(suffix), Form.TIME,
                            FrozenMap({"hour": hour, "minute": minute, "second": second, "period": period,
                                       "prefix": "", "suffix": suffix}), trail=trail, recognizer=self.name)
+
+
+_DURATION = re.compile("([0-9]{1,3}):([0-5][0-9]):([0-5][0-9])")
+_DURATION_UNITS = (("hours", "duration-hour"), ("minutes", "duration-minute"), ("seconds", "duration-second"))
+
+
+@dataclass(frozen=True)
+class Duration:
+    """`took 1:23:45`, `in a time of 2:01:09.5`: `h:mm:ss` and an optional fraction of a second, right after a phrase
+    of `duration_words` (design section 4.2).
+
+    A day period or a word of `clock_words` after the run keeps it a clock time, and a duration of zero has no unit
+    to read. `h:mm` and `m:ss` have the same shape, so two fields are no duration."""
+    name: str = "duration"
+    form: Form = Form.DURATION
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        folded = fold_digits(text)
+        matches = list(_DURATION.finditer(folded))
+        if not matches:
+            return
+        data = request.data
+        phrases = {tuple(phrase.split()) for phrase in data.get("duration_words", ())}
+        reach = max(map(len, phrases))
+        words = context_words(tokens)
+        breaks = clause_breaks(text)
+        clock_marks = {**data.get("day_periods", FrozenMap()), "clock_words": data.get("clock_words", ())}
+        marks = {script: decimal[:1] for script, decimal, _ in number_marks(data, request.params.decimal_mark)}
+        for match in matches:
+            start, end = match.span()
+            mark = marks.get(digit_script(text[start:end]) or "")
+            if mark is None:
+                continue
+            fraction = _DIGIT_RUN.match(folded, end + 1) if folded.startswith(mark, end) else None
+            if fraction is not None:
+                end = fraction.end()
+            if ((start and is_word_char(text[start - 1])) or not _cluster_edge(text, start, end)
+                    or not one_digit_set(text[start:end]) or (end < len(text) and is_word_char(text[end]))):
+                continue
+            hours, minutes, seconds = (str(int(field)) for field in match.groups())
+            digits = "" if fraction is None else fraction.group()
+            if hours == minutes == seconds == "0" and not digits.strip("0"):
+                continue
+            if _period_after(text, end, clock_marks) is not None:
+                continue
+            before = tuple(word.lower() for word in clause_window(text, words, start, end, -1, limit=reach,
+                                                                   breaks=breaks))
+            if not any(before[-len(phrase):] == phrase for phrase in phrases):
+                continue
+            yield Span(start, end, Form.DURATION,
+                       FrozenMap({"hours": hours, "minutes": minutes, "seconds": seconds, "fraction": digits}),
+                       recognizer=self.name)
+
+
+def speak_duration(span: Span, context: SpanContext) -> str:
+    """Each unit that is not zero, in the CLDR `long` pattern of its unit and the plural category of its number,
+    joined by the CLDR list pattern `duration_list`: ECMA-402 `Intl.DurationFormat` with style `long` (sections
+    13.5.6, 13.5.14 and 13.5.15). The patterns come from the CLDR unit file of the variety."""
+    request = context.request
+    spellers = request.language.spellers
+    units = cldr_data(request.variety.tag)["units"]
+    parts = []
+    for field, unit in _DURATION_UNITS:
+        integer = span.fields[field]
+        fraction = span.fields["fraction"] if field == "seconds" else ""
+        if integer == "0" and not fraction.strip("0"):
+            continue
+        if fraction:
+            words = spellers[Form.DECIMAL].decimal(integer, fraction, Features(), request)
+        else:
+            words = spellers[Form.CARDINAL].cardinal(integer, Features(), request)
+        names = units[unit]["names"]
+        category = plural_category(request, integer + ("." + fraction if fraction else ""))
+        parts.append(names.get(category, names["other"]).replace("{0}", words))
+    patterns = request.data["duration_list"]
+    if len(parts) == 1:
+        return parts[0]
+    if len(parts) == 2:
+        return patterns["2"].replace("{1}", parts[1]).replace("{0}", parts[0])
+    joined = patterns["end"].replace("{1}", parts[2]).replace("{0}", parts[1])
+    return patterns["start"].replace("{1}", joined).replace("{0}", parts[0])
 
 
 def _starts_word(text: str, start: int) -> bool:
@@ -1500,6 +1581,6 @@ CARDINAL = Cardinal()
 RBNF_CARDINAL = RbnfCardinal()
 RBNF_DECIMAL = RbnfDecimal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
-                              Percent(), Money(), KeptMoney(), Measure(), Telephone(), Expression(), Abbreviation(),
-                              SpaceGroups(), COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
+                              Duration(), Percent(), Money(), KeptMoney(), Measure(), Telephone(), Expression(),
+                              Abbreviation(), SpaceGroups(), COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}
 """The shared recognizers by name."""

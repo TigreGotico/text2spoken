@@ -112,6 +112,7 @@ WORDS = list_of(word)
 SHAPES: dict[str, Shape] = {
     "abbreviations": map_of(word, reading),
     "case_suffixes": WORDS,
+    "clock_words": list_of(lower),
     "clock_marks": list_of(record(mark=word, seconds=boolean, needs=one_of("evidence", "day_period", "none"),
                                   optional={"closes_hour": boolean})),
     "color_words": WORDS,
@@ -122,6 +123,8 @@ SHAPES: dict[str, Shape] = {
     "defaults": map_of(one_of(*OPTIONS), text),
     "digit_words": list_of(word, length=10),
     "dimension_marks": WORDS,
+    "duration_list": record(start=text, end=text, **{"2": text}),
+    "duration_words": list_of(lower),
     "elision_marks": list_of(character),
     "electronic_labels": map_of(word, one_of("word", "letters")),
     "electronic_schemes": map_of(word, one_of("read", "drop")),
@@ -190,6 +193,7 @@ READERS: dict[str, frozenset[str]] = {
     "range": frozenset({"number_marks", "range_marks", "symbols", "proclitics", "case_suffixes"}),
     "date_numeric": frozenset({"symbols", "proclitics", "case_suffixes"}),
     "time_clock": frozenset({"range_word", "range_marks", "clock_marks", "time_words", "day_periods", "time_suffixes"}),
+    "duration": frozenset({"duration_words", "clock_words", "day_periods", "number_marks"}),
     "percent": frozenset({"number_marks", "number_gaps", "percent", "range_word", "range_marks", "proclitics",
                         "case_suffixes"}),
     "money": frozenset({"number_marks", "number_gaps", "currencies", "currency_symbols", "scales", "range_word",
@@ -220,6 +224,7 @@ READERS: dict[str, frozenset[str]] = {
     "speak_fraction": frozenset({"sign_words", "mixed_half", "mixed_word"}),
     "speak_ordinal": frozenset(),
     "speak_range": frozenset({"range_word"}),
+    "speak_duration": frozenset({"duration_list"}),
     "speak_percent": frozenset({"percent", "sign_words"}),
     "speak_expression": frozenset({"operators", "sign_words"}),
     "speak_telephone": frozenset({"digit_words", "sign_words"}),
@@ -242,7 +247,7 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
     "letter_runs", "letter_free_consonants", "letter_words", "letter_label_nouns", "unjoined_symbols",
-    "symbol_names", "function_words",
+    "symbol_names", "function_words", "clock_words",
     "colors", "number_gaps", "elision_marks", "mixed_half", "mixed_word",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.

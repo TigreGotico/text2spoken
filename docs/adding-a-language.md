@@ -381,6 +381,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `range` | `RANGE` | `number_marks`, `symbols` | `case_suffixes`, `proclitics`, `range_marks` |
 | `date_numeric` | `DATE` | `symbols` | `case_suffixes`, `proclitics` |
 | `time_clock` | `TIME` | `clock_marks`, `time_words` | `day_periods`, `range_marks`, `range_word`, `time_suffixes` |
+| `duration` | `DURATION` | `duration_words`, `number_marks` | `clock_words`, `day_periods` |
 | `percent` | `PERCENT` | `number_marks`, `percent` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
 | `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
 | `kept_money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `symbols` | `case_suffixes`, `number_gaps`, `proclitics`, `symbol_names` |
@@ -409,6 +410,7 @@ The shared verbalizers read these keys:
 | `speak_fraction` | `sign_words` | `mixed_half`, `mixed_word` |
 | `speak_ordinal` | none | none |
 | `speak_range` | none | `range_word` |
+| `speak_duration` | `duration_list` | none |
 | `speak_percent` | `percent`, `sign_words` | none |
 | `speak_expression` | `operators`, `sign_words` | none |
 | `speak_telephone` | `digit_words`, `sign_words` | none |
@@ -417,6 +419,8 @@ The shared verbalizers read these keys:
 | `speak_color` | `digit_words` | `colors` |
 
 `speak_fraction` reads a mixed number of a half, such as `2 1/2`, when the file gives `mixed_word` and `mixed_half`. `mixed_word` is the word between the two parts. `mixed_half` gives the half by gender, with the key `other` for any other gender or none. Portuguese gives `"mixed_word": "e"` and `"mixed_half": {"feminine": "meia", "other": "meio"}`. A file without these keys keeps every mixed number as written.
+
+`speak_duration` reads each unit word from the CLDR unit file of the variety, so a file that uses it gives `unit_symbols`. `duration_list` is the CLDR list pattern of units of the language, with the keys `2`, `start` and `end`. English gives `"{0}, {1}"` for each key.
 
 `READERS` and `OPTIONAL` in `tests/data_keys.py` list the same keys, and `SHAPES` gives the shape of each key.
 

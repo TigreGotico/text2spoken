@@ -188,6 +188,20 @@ gigabytes"), because a run of capitals that touches digits is no word of running
 `CD`, the CLDR en symbol of the carat, because a `2CD` set holds two compact discs (Wiktionary, "CD": "initialism of
 compact disc"). It holds `ML`, the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so
 `ML` in capitals may be either unit, and `2ML` stays as written.
+
+A duration written `h:mm:ss` reads after a phrase of `duration_words` right before it, and stays as written with no
+such phrase, because a clock time and a lap time have the same shape. Each phrase names a duration: Wiktionary,
+"take", verb: "To fill or require: to last or expend (an amount of time)", as in "The trip will take about ten
+minutes."; "last", verb: "To endure, continue over time", as in "They say this blizzard might last (for) days.";
+"in", preposition: "Within (a certain elapsed time); by the end of", as in "Will you be able to finish this in a
+week?"; and "time", noun: "A measurement of a quantity of time; a numerical or general indication of a length of
+progression", as in "Only your best time is compared with the other competitors.", so `a time of` also covers `in a
+time of` and `with a time of`. `in` alone is no evidence, because it also comes before a clock time. A word of
+`clock_words` after the run keeps it a clock time: Wiktionary, "o'clock": "In conjunction with a numeral, indicates
+the time within a twelve-hour period". The unit words come from the CLDR 49 `long` patterns of `duration-hour`,
+`duration-minute` and `duration-second` (`cldr-units-full`, en-GB and en). `duration_list` is the CLDR 49 list pattern
+of units (`cldr-misc-full/main/en/listPatterns.json`, `listPattern-type-unit`, the same in en-001 and en-GB), which
+joins every pair with a comma: `took 1:23:45` reads "took one hour, twenty-three minutes, forty-five seconds".
 """
 from __future__ import annotations
 
@@ -208,7 +222,7 @@ from text2spoken.core.numbers import Number, written_amount
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges,
                                           numbers_in, signed, speak_abbreviation, speak_cardinal, speak_decimal,
                                           speak_expression, speak_fraction as core_speak_fraction, speak_idiom,
-                                          speak_lexicon, speak_ordinal,
+                                          speak_duration, speak_lexicon, speak_ordinal,
                                           speak_percent, speak_range, speak_telephone)
 from bisect import bisect_right
 
@@ -291,6 +305,9 @@ DATA = freeze({
     "dimension_word": "by",
     "operators": {"+": "plus", "−": "minus", "×": "times", "÷": "divided by", "=": "equals"},
     "time_words": ["at", "from", "until", "till", "since", "before", "after", "around"],
+    "duration_words": ["took", "takes", "lasted", "lasts", "finished in", "a time of"],
+    "clock_words": ["o'clock", "o’clock"],
+    "duration_list": {"2": "{0}, {1}", "start": "{0}, {1}", "end": "{0}, {1}"},
     "year_words": ["in", "since", "until", "till", "during", "circa", "year"],
     "year_links": ["and", "or", "to"],
     "function_words": ["a", "an", "the", "and", "or", "but", "so", "then", "to", "in", "on", "at", "by",
@@ -896,14 +913,14 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
-                 EnglishDateNumeric(), SHARED["time_clock"],
+                 EnglishDateNumeric(), SHARED["duration"], SHARED["time_clock"],
                  EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
                  SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"], Year(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"],
                  SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
-        Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
+        Form.TIME: speak_time, Form.DURATION: speak_duration, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,

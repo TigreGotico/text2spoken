@@ -1,6 +1,6 @@
 # Dates and times
 
-This page shows how text2spoken reads dates, clock times and years, and the options that change the reading.
+This page shows how text2spoken reads dates, clock times, durations and years, and the options that change the reading.
 
 ## Dates
 
@@ -48,7 +48,7 @@ A time needs evidence that it is a time: a time word before it, such as `at` or 
 | --- | --- |
 | `The ratio is 16:9 here.` | stays as written |
 | `Read John 3:16 again.` | stays as written |
-| `The run took 1:23:45.` | stays as written |
+| `The screen showed 1:23:45.` | stays as written |
 
 The `clock` option chooses the 12-hour or the 24-hour reading, and `minute_style` chooses between a number and a phrase for the minutes:
 
@@ -58,6 +58,24 @@ The `clock` option chooses the 12-hour or the 24-hour reading, and `minute_style
 | `Meet at 2:30.` | Meet at two thirty. | Meet at two thirty. | Meet at half past two. |
 
 A language reads only the values that it can produce. A value that it cannot produce gives a warning, and the default applies. [Errors and warnings](errors.md#a-param-value-that-the-language-cannot-produce) shows the case.
+
+## Durations
+
+English reads a duration written `h:mm:ss`, with an optional fraction of a second, when a word that names a duration comes right before it, such as `took`, `lasted`, `finished in` or `a time of`. The unit words come from CLDR, and a unit of zero is not read:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `The run took 1:23:45.` | `en-GB` | The run took one hour, twenty-three minutes, forty-five seconds. |
+| `The meeting lasted 2:00:05.` | `en-US` | The meeting lasted two hours, five seconds. |
+| `She won in a time of 2:01:09.5.` | `en-GB` | She won in a time of two hours, one minute, nine point five seconds. |
+
+A clock time and a lap time have the same written shape, so a run with no such word stays as written. A run of two fields also stays, because `1:23` can be one hour and twenty-three minutes or one minute and twenty-three seconds:
+
+| Written | Spoken (`en-GB`) |
+| --- | --- |
+| `The screen showed 1:23:45.` | stays as written |
+| `The run took 1:23.` | stays as written |
+| `It took 0:00:00.` | stays as written |
 
 ## Years
 
