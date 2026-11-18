@@ -12,6 +12,20 @@ sources:
 
 Number words take the letter ё, as Грамматика-80 § 1374 writes "трёх", "четырёх", "трём", so that a reader says
 them right (Правила-2006 § 5).
+
+The verb "стоить" takes the price in the accusative: "стоить (рубль, тысячу рублей)" (Грамматика-80 § 1783); "При
+глаголах весить 'иметь вес', тянуть, потянуть (с тем же знач.), стоить 'иметь цену' вин. п. информативно
+восполняет глагол" (§ 1785); "по мере цены - при глаголе стоить у слов - названий денежных единиц или того, что
+считаемо, исчисляемо ценностно: стоить рубль (большие деньги, меру хлеба, сорок шкурок, одну соболиную шкурку)"
+(§ 2693). A count that is the subject takes its verb in the plural or the singular, "тысяча" in the feminine: "При
+словах тысяча, миллион, миллиард сказуемое обычно согласуется по правилам согласования с подлежащими-
+существительными (в роде и числе), например: Тысяча книг поступила в школьную библиотеку" (Розенталь § 184, п. 7).
+So after the masculine past of `price_verbs`, "стоил", a number before a currency name or with a currency sign reads
+in the accusative: `Стоил 1000 рублей` reads "Стоил тысячу рублей". A count that ends in "один" takes the gender of
+its noun: "Двадцать один делегат прибыл на совещание" (п. 6), so with a masculine noun it may be the subject of
+"стоил", as in "Сколько стоил 1001 доллар?". Such a count takes the accusative only where its noun shows that case,
+as "одну копейку". After "стоила", "стоило" and "стоили" any number may be the subject, as in "Сколько стоила 1000
+рублей?", so its case stays the nominative.
 """
 from __future__ import annotations
 
@@ -60,6 +74,7 @@ DATA = freeze({
     "time_words": ["в", "во", "к", "ко", "до", "с", "со", "после", "по", "от"],
     "zero_minutes": "ноль-ноль",
     "copulas": ["был", "была", "было", "будет", "есть"],
+    "price_verbs": ["стоил"],
     "onset_verbs": ["наступил", "наступила", "наступило", "наступит"],
     "date_adverbs": ["вот", "и", "а", "но", "да", "ведь", "же", "ну", "ещё", "не", "ли", "наконец", "уже", "тогда",
                      "скоро", "сегодня", "завтра", "вчера", "послезавтра", "позавчера"],
@@ -148,6 +163,11 @@ genitive plural, in -ых or -их (Грамматика-80 § 1216: "выход
 1790, § 2710: "в течение двух недель"; Розенталь § 164, п. 3: "в течение двадцати двух суток")."""
 
 VARIETIES = (Variety("ru-RU"),)
+
+_CURRENCY_UNITS = [currency[unit] for currency in DATA["currencies"].values() for unit in ("major", "minor")]
+_CURRENCY_NOUNS = frozenset(form for unit in _CURRENCY_UNITS for form in (*unit["singular"], *unit["plural"]))
+_CURRENCY_ACCUSATIVES = frozenset(unit["singular"][3] for unit in _CURRENCY_UNITS
+                                  if unit["singular"][3] != unit["singular"][0])
 
 _ONE_WORDS = ("один", "одна", "одно", "одну", "одного", "одной", "одному", "одним", "одном")
 _SCALE_WORD = re.compile("(?:тысяч|миллион|миллиард|триллион|квадриллион)")
@@ -325,14 +345,17 @@ def counted(noun: FrozenMap, written: str, case: str, request: Request) -> str:
     return form + noun["tail"]
 
 
-def governed_case(context: SpanContext, word_after: str = "", category: str = "many", digits: str = "") -> str:
+def governed_case(context: SpanContext, word_after: str = "", category: str = "many", digits: str = "",
+                  price: str = "") -> str:
     """The case of a hint, else the case that the preposition before a number governs. A preposition of one case
     gives it (Грамматика-80 § 1657, § 1658), also a preposition of two words such as `в течение`. A preposition
     of two or three cases takes the one that the ending of
     the noun after the number shows: a plural ending, or after the category one a singular ending of the
     prepositional or the instrumental. With no such ending, the first case of `case_choices` applies. Distributive
     `по` takes the dative of "один", "тысяча", "миллион" and "миллиард": "по одному рублю, по тысяче книг, по
-    миллиону жителей" (Розенталь § 164, п. 7 а)), and the accusative of the other numbers (п. 7 б))."""
+    миллиону жителей" (Розенталь § 164, п. 7 а)), and the accusative of the other numbers (п. 7 б)). A word of
+    `price_verbs` gives the accusative to a price: `price`, the written amount of money, or a number before a
+    currency name."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
@@ -343,9 +366,12 @@ def governed_case(context: SpanContext, word_after: str = "", category: str = "m
     if preposition in data["governed_cases"]:
         return data["governed_cases"][preposition]
     choices = data["case_choices"].get(preposition)
-    if choices is None:
-        return "nominative"
     word = word_after.lower()
+    if choices is None:
+        priced = preposition in data["price_verbs"] and (price or word in _CURRENCY_NOUNS)
+        if priced and (plural_category(context.request, price or digits) != "one" or word in _CURRENCY_ACCUSATIVES):
+            return "accusative"
+        return "nominative"
     shown = next((case for ending, case in data["plural_endings"].items() if word.endswith(ending)), None)
     if preposition == "по" and (category == "one" or digits.lstrip("0") in _DISTRIBUTIVE_DATIVE):
         shown = "dative"
@@ -453,15 +479,16 @@ def _amount(amount: FrozenMap, gender: GrammaticalGender, case: str, request: Re
     return _signed(words, amount["sign"], request)
 
 
-def _counted_amount(span: Span, amount: FrozenMap, noun: FrozenMap, context: SpanContext) -> str:
+def _counted_amount(span: Span, amount: FrozenMap, noun: FrozenMap, context: SpanContext, price: bool = False) -> str:
     """An amount and its noun. The first number of a range, which takes the range word as its trail, reads alone:
     "десять — двадцать процентов"."""
     request = context.request
-    case = governed_case(context, digits=written_amount(amount))
+    written = written_amount(amount)
+    case = governed_case(context, digits=written, price=written if price else "")
     words = _amount(amount, GrammaticalGender(noun["gender"]), case, request)
     if span.trail.strip() == request.data["range_word"]:
         return words
-    return f"{words} {counted(noun, written_amount(amount), case, request)}"
+    return f"{words} {counted(noun, written, case, request)}"
 
 
 def _adjectival(word: str) -> bool:
@@ -556,7 +583,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
     currency = request.data["currencies"][fields["currency"]]
     major, minor = currency["major"], currency["minor"]
     amount = FrozenMap({**fields["amount"], "sign": ""})
-    case = governed_case(context)
+    case = governed_case(context, price=written_amount(amount))
     if fields["scale"]:
         scale = request.data["scale_nouns"][request.data["scales"][fields["scale"]]]
         words = (f"{_amount(amount, GrammaticalGender(scale['gender']), case, request)} "
@@ -567,7 +594,7 @@ def speak_money(span: Span, context: SpanContext) -> str:
             else [(integer, major), (cents, minor)]
         words = " ".join(_number_and_noun(digits, noun, case, request) for digits, noun in parts)
     else:
-        words = _counted_amount(span, amount, major, context)
+        words = _counted_amount(span, amount, major, context, price=True)
     return _signed(words, fields["amount"]["sign"], request)
 
 

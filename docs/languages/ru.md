@@ -43,6 +43,14 @@ After 2, 3 and 4, a noun that has only plural forms takes "двое", "трое"
 | `В семье 3 детей` | В семье трое детей |
 | `Я видел 2 детей` | stays as written |
 | `Я видел в парке 2 детей` | stays as written |
+
+After "стоил", a price takes the accusative: a number before a currency name, or an amount with a currency sign (Грамматика-80, § 1783, § 1785). A subject that is a count never takes a verb in the masculine, so "стоил" tells the price from the subject (Розенталь 1985, § 184). A count that ends in 1 before a masculine noun can be the subject, so it takes the accusative only where its noun shows that case.
+
+| Written | Spoken (`ru-RU`) |
+| --- | --- |
+| `Стоил 1000 рублей` | Стоил тысячу рублей |
+| `Билет стоил 21 копейку.` | Билет стоил двадцать одну копейку. |
+| `Билет стоил 1000 ₽.` | Билет стоил тысячу рублей. |
 | `Для 2 детей` | Для двух детей |
 
 ### Dates
@@ -104,7 +112,7 @@ A subject before the verb, or a word after the date, makes the date a time again
 
 The rules cite Грамматика-80 (Русская грамматика, АН СССР, 1980), Д. Э. Розенталь, Справочник по правописанию и литературной правке (1985), and the Правила русской орфографии и пунктуации (2006), by paragraph. The unit names and the digit groups cite ru.wikipedia.org. The docstring of [`ru.py`](../../text2spoken/lang/ru.py) lists them.
 
-Most test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules. Some cite Кузнецов's Большой толковый словарь, CLDR 49 or the design of text2spoken. No native speaker has checked them. Of the 179 rows, 3 are marked silver, because no source gives their reading.
+Most test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules. Some cite Кузнецов's Большой толковый словарь, CLDR 49 or the design of text2spoken. No native speaker has checked them. Of the 184 rows, 3 are marked silver, because no source gives their reading.
 
 ## Limits
 
@@ -114,6 +122,7 @@ Some Russian readings are wrong:
 | --- | --- | --- |
 | `Нас было 2` | Нас было два | This reads "два", not "двое". |
 | `3 детей я видел` | трое детей я видел | An object before the verb reads "трое", not "троих". |
+| `Книга стоила 1000 рублей.` | Книга стоила тысяча рублей. | After "стоила", "стоило" and "стоили" the count can be the subject, so it reads the nominative. |
 | `2 очень маленьких детей` | два очень маленьких детей | An adverb before the adjective hides the noun, so the number reads "два". |
 | `Сегодня 1 мая — День весны` | Сегодня первого мая — День весны | A date before a dash reads in the genitive, also after "сегодня". |
 | `Было 1 мая, шёл дождь` | Было первого мая, шёл дождь | A date before a comma, a colon or a bracket reads in the genitive, also where it is the subject. |
@@ -126,7 +135,7 @@ Some Russian readings are wrong:
 | `В семье у нас 3 детей` | stays as written | A phrase with "у", "в" or "во" that does not open the clause stays as written. |
 | `У нас в семье 3 детей` | stays as written | So does a phrase that the three words before the number do not show whole. |
 
-The prepositional in `-е` or `-ии`, and some nouns in `-ь`, read masculine without a gender hint. A count after a verb reads the nominative, and an animate accusative reads the cardinal.
+The prepositional in `-е` or `-ии`, and some nouns in `-ь`, read masculine without a gender hint. A count after a verb other than "стоил" reads the nominative, and an animate accusative reads the cardinal.
 
 ## Edge cases
 
