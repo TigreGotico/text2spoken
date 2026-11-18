@@ -9,6 +9,13 @@ corretas", and "Já no português falado em Portugal, a palavra quatorze está e
 da palavra catorze."
 
 A fraction reads `um meio`, `três quartos`, `três onze avos` (Priberam, "avo": "doze vinte e cinco avos = 12/25").
+A mixed number of a half reads the whole part, `e` and `meio`, as `2 1/2` reads `dois e meio`. The half agrees with
+the noun that the expression leaves out (Ciberdúvidas 38523, "A expressão meio-dia e meia (II)": "Esta concordância
+é determinada pelo elemento que está omitido", as in «pé-de-cabra e meio», «pé-de-cabra e meio pé-de-cabra»), so
+with no noun the whole part and the half take the gender of `default_gender`. A counted noun stands between the
+whole part and the half (Ciberdúvidas 38528, "Concordância com «página e meia»": "Falta uma página e meia para
+acabar de escrever o livro."), so `2 1/2 maçãs` stays as written. No source gives the reading of a mixed number of
+another fraction, so it stays as written.
 
 A number agrees with the noun that it counts. The hint of a frontend decides first, then the noun after the
 number, then a determiner before it, then `default_gender`. `um`, `dois` and the hundreds from `duzentos` have a
@@ -334,6 +341,8 @@ DATA = freeze({
     "fraction_names": {"2": "meio", "3": "terço", "4": "quarto", "5": "quinto", "6": "sexto", "7": "sétimo",
                        "8": "oitavo", "9": "nono", "10": "décimo", "100": "centésimo"},
     "fraction_word": "avos",
+    "mixed_word": "e",
+    "mixed_half": {"feminine": "meia", "other": "meio"},
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml", "h", "min", "s"],
     "unjoined_symbols": ["ML"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",

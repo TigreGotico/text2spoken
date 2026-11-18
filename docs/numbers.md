@@ -48,6 +48,20 @@ The `decimal_mark` option sets the decimal mark of the written numbers, where th
 | `Eat 1/2 of it.` | `en-GB` | Eat one-half of it. |
 | `Coma 3/4 do bolo.` | `pt-PT` | Coma três quartos do bolo. |
 
+### Mixed numbers
+
+A mixed number is a whole part, one space or no-break space, and a proper fraction, as in `2 1/2`. It reads as one number in a language whose file gives the reading. Every other language keeps it as written and logs a warning.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Add 2 1/2 cups.` | `en-GB` | Add two and a half cups. |
+| `It is 7 5/8 long.` | `en-US` | It is seven and five-eighths long. |
+| `Wir kennen uns seit 2 1/2 Jahren.` | `de-DE` | Wir kennen uns seit zweieinhalb Jahren. |
+| `O resultado é 2 1/2.` | `pt-PT` | O resultado é dois e meio. |
+| `Tenho 2 1/2 maçãs` | `pt-PT` | stays as written |
+
+English reads every proper fraction. German reads a half as one word. Portuguese, Spanish, French, Italian and Dutch read a half with no word after it: "dois e meio", "dos y medio", "deux et demi", "due e mezzo", "twee en een half". In these languages the noun that the number counts stands between the two parts, as in "uma página e meia", or changes the form of the half, so a mixed number before a word stays as written. A mixed number also stays as written after a sign, next to a symbol, before a unit, and with a leading zero in a field. Text that only looks like a mixed number gives no mixed number, and each number in it reads as it reads alone: a date such as `2 1/2/2024`, a score or a ratio before the fraction, as in `3-2 1/2`, and a longer run of digit groups, as in `5 1 1/2`.
+
 ## Ranges
 
 | Written | Tag | Spoken |

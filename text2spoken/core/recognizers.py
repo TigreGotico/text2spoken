@@ -30,6 +30,7 @@ from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
 from text2spoken.core.units import elided, joined_table, unit_table, units_at
+from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form
 
 PHONE_PLANS = FrozenMap({
@@ -225,10 +226,13 @@ class Cardinal:
     name: str = "cardinal"
     form: Form = Form.CARDINAL
 
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        return numbers_in(text, request)
+
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         leads = request.data.get("leads", FrozenMap())
         sign_words = request.data.get("sign_words", FrozenMap())
-        for number in numbers_in(text, request):
+        for number in self.numbers(text, request):
             if number.fraction is not None or (number.sign and number.sign not in sign_words):
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
@@ -255,42 +259,74 @@ _GROUP_SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space, which group the digits of a number."""
 
 
+_ROOT_ROLES = MappingProxyType({".": "decimal", ",": "group"})
+"""The role of the full stop and the comma in the CLDR root locale, which writes `1,234.5`."""
+
+
+def _root_reading_differs(text: str, number: Number) -> bool:
+    """Whether the CLDR root locale reads the number in other words than the locale: the number has one full stop
+    or comma, exactly three digits follow it, and the locale gives it the other role, as `1.234` in `tr` and `3,500`
+    in `nb`. Such a number could be written in either convention."""
+    written = text[number.start + len(number.sign):number.end]
+    marks = [char for char in written if not is_digit(char)]
+    if len(marks) != 1 or marks[0] not in _ROOT_ROLES or len(written.partition(marks[0])[2]) != 3:
+        return False
+    return _ROOT_ROLES[marks[0]] != ("decimal" if number.fraction is not None else "group")
+
+
+def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[Span, ...]:
+    """The cardinal and decimal spans of a language with no file (section 6.1), in text order, with each span whose
+    minus may mark something else kept as written; `RbnfCardinal` names the cases."""
+    key = ("rbnf numbers", text)
+    if key in request.memo:
+        return request.memo[key]
+    symbols = request.data.get("symbols", FrozenMap())
+    spans = sorted((*Cardinal.find(RBNF_CARDINAL, text, tokens, request),
+                    *Decimal.find(RBNF_DECIMAL, text, tokens, request)), key=lambda span: span.start)
+    kept = set()
+    for index, span in enumerate(spans):
+        if not span.fields["sign"]:
+            continue
+        sign = span.start + len(span.fields["prefix"])
+        line_start = text.rfind("\n", 0, sign) + 1
+        before = text[line_start:sign].rstrip()
+        number_end = span.end - len(span.fields["suffix"])
+        after = text[number_end:].lstrip()
+        group = text[number_end:number_end + 2]
+        neighbours = []
+        if before and is_digit(before[-1]):
+            neighbours.append((index - 1, line_start + len(before) - 1))
+        if len(group) == 2 and group[0] in _GROUP_SPACES and is_digit(group[1]):
+            neighbours.append((index + 1, number_end + 1))
+        if neighbours or (before and (before[-1] in _DASHES or before[-1] in symbols)) or after[:1] in symbols:
+            kept.add(index)
+        for other, digit in neighbours:
+            if 0 <= other < len(spans) and spans[other].start <= digit < spans[other].end:
+                kept.add(other)
+    request.memo[key] = tuple(replace(span, keep=True) if index in kept else span for index, span in enumerate(spans))
+    return request.memo[key]
+
+
 @dataclass(frozen=True)
 class RbnfCardinal(Cardinal):
-    """The cardinal of a language with no file (section 6.1). A number with a minus stays as written where the
-    minus may mark something else, or where the number goes on past the span: a list item at the start of a line,
-    as in `-3 mele`; a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an
-    amount next to a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a
-    number grouped with one of `_GROUP_SPACES`, as in `-1 000`, where the span holds only the first group. A line
-    break or a tab groups no digits, so in `-5\n10` the `10` of the next line reads.
+    """The cardinal of a language with no file (section 6.1), in the CLDR marks of the locale.
+
+    A number that the CLDR root locale reads in other words stays as written (`_root_reading_differs`). A number
+    with a minus stays as written where the minus may mark something else, or where the number goes on past the
+    span: a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an amount next to
+    a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a number grouped with
+    one of `_GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
+    group. A minus at the start of a line reads, as in a language file. A line break or a tab groups no digits, so
+    in `-5\n10` the `10` of the next line reads.
 
     The number next to such a minus number stays as written too, so that a second pass finds the digit next to the
     minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. A dash is no digit, so `5` in `5--10` reads."""
 
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        return tuple(number for number in numbers_in(text, request) if not _root_reading_differs(text, number))
+
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        symbols = request.data.get("symbols", FrozenMap())
-        spans = list(super().find(text, tokens, request))
-        kept = set()
-        for index, span in enumerate(spans):
-            if not span.fields["sign"]:
-                continue
-            sign = span.start + len(span.fields["prefix"])
-            line_start = text.rfind("\n", 0, sign) + 1
-            before = text[line_start:sign].rstrip()
-            number_end = span.end - len(span.fields["suffix"])
-            after = text[number_end:].lstrip()
-            group = text[number_end:number_end + 2]
-            neighbours = []
-            if before and is_digit(before[-1]):
-                neighbours.append((index - 1, line_start + len(before) - 1))
-            if len(group) == 2 and group[0] in _GROUP_SPACES and is_digit(group[1]):
-                neighbours.append((index + 1, number_end + 1))
-            if neighbours or not before or before[-1] in _DASHES or before[-1] in symbols or after[:1] in symbols:
-                kept.add(index)
-            for other, digit in neighbours:
-                if 0 <= other < len(spans) and spans[other].start <= digit < spans[other].end:
-                    kept.add(other)
-        return (replace(span, keep=True) if index in kept else span for index, span in enumerate(spans))
+        return (span for span in _rbnf_spans(text, tokens, request) if span.form is self.form)
 
 
 @dataclass(frozen=True)
@@ -298,8 +334,11 @@ class Decimal:
     name: str = "decimal"
     form: Form = Form.DECIMAL
 
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        return numbers_in(text, request)
+
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for number in numbers_in(text, request):
+        for number in self.numbers(text, request):
             if number.fraction is None:
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
@@ -307,6 +346,24 @@ class Decimal:
                 continue
             start, end, prefix, suffix = bounds
             yield Span(start, end, Form.DECIMAL, number.amount(prefix, suffix), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class RbnfDecimal(Decimal):
+    """The decimal of a language with no file (section 6.1), in the CLDR marks of the locale, as `RbnfCardinal`
+    reads a cardinal. A sign with no word in `sign_words` and an integer part with a leading zero, as in `03.5`, keep
+    the number as written, as they keep a cardinal. So does a fraction of zeros, as in `3.0`: RBNF and
+    ovos-number-parser read it as the integer, without the zeros that the text writes."""
+
+    def numbers(self, text: str, request: Request) -> Sequence[Number]:
+        sign_words = request.data.get("sign_words", FrozenMap())
+        return tuple(number for number in RBNF_CARDINAL.numbers(text, request)
+                     if not (number.sign and number.sign not in sign_words)
+                     and not (len(number.integer) > 1 and number.integer[0] == "0")
+                     and (number.fraction is None or number.fraction.strip("0")))
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        return (span for span in _rbnf_spans(text, tokens, request) if span.form is self.form)
 
 
 _FRACTION = re.compile("[-+−]?[0-9]+/[0-9]+")
@@ -411,6 +468,29 @@ def _unit_after(text: str, end: int, units: Iterable[str], gaps: Sequence[str] =
                and not elided(text, end + len(gap) + len(unit)) for gap in gaps for unit in units)
 
 
+MIXED_GAPS = (" ", "\u00a0")
+"""The gaps between the whole part and the fraction of a mixed number: a space and a no-break space."""
+
+
+def whole_part(text: str, start: int, end: int, gaps: Sequence[str] = MIXED_GAPS) -> int | None:
+    """The start of the whole part of a mixed number whose fraction is text[start:end], as `2` in `2 1/2`, or None.
+
+    The whole part is a run of digits, then one gap of `gaps`. It is no whole part when a word character or a
+    cluster mark between two digits touches it, as in `A2 1/2`, `1,2 1/2`, `1:2 1/2` and `3-2 1/2`, or when another
+    group of digits and a gap stand before it or after the fraction, as in `5 1 1/2` and `1 1/2 3`."""
+    gap = start - 1
+    if gap < 1 or text[gap] not in gaps or not is_digit(text[gap - 1]):
+        return None
+    begin = gap - 1
+    while begin and is_digit(text[begin - 1]):
+        begin -= 1
+    longer = (begin >= 2 and text[begin - 1] in gaps and is_digit(text[begin - 2])) \
+        or (end + 1 < len(text) and text[end] in gaps and is_digit(text[end + 1]))
+    if longer or (begin and is_word_char(text[begin - 1])) or not _cluster_edge(text, begin, gap):
+        return None
+    return begin
+
+
 @dataclass(frozen=True)
 class Fraction:
     name: str = "fraction"
@@ -418,7 +498,13 @@ class Fraction:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A symbol of the language next to the fraction or a unit after it leaves a reading that is not clear,
-        as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets."""
+        as in `$5/6` and `3/4 kg`, so the fraction stays as written, as do digits from two digit sets.
+
+        A proper fraction after a whole part (`whole_part`) is a mixed number, as `2 1/2`, and its span holds the
+        whole part in the field `whole`. A leading zero in a field, a sign before the whole part, a symbol next to
+        the span, a unit after it or digits from two digit sets keep the mixed number as written. The span of the
+        fraction alone follows, and it reads only where another span claims the whole part first, as a currency
+        amount claims `$2` in `$2 1/2`."""
         symbols = request.data.get("symbols", FrozenMap())
         units = unit_table(request)
         for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(_FRACTION, text,
@@ -427,13 +513,24 @@ class Fraction:
             numerator, denominator = written.lstrip("-+−").split("/")
             if sign and matched_start > 0 and is_word_char(text[matched_start - 1]):
                 continue
-            unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols))
-                       or _unit_after(text, end, units, number_gaps(request.data))
+            unit = _unit_after(text, end, units, number_gaps(request.data))
+            unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols)) or unit
                        or not one_digit_set(text[matched_start:matched_end]))
             top, bottom = bounded_integer(numerator), bounded_integer(denominator)
+            proper = bottom is not None and 2 <= bottom <= 100 and top is not None and 0 < top < bottom
+            begin = None if sign or prefix or not proper else whole_part(text, start, end)
+            if begin is not None:
+                signed_whole = begin and text[begin - 1] in SIGNS and not (begin > 1 and is_digit(text[begin - 2]))
+                keep = ("0" in (fold_digits(text[begin]), numerator[0], denominator[0]) or signed_whole or unit
+                        or not (_free_before(text, begin, symbols) and _free_after(text, end, symbols))
+                        or not one_digit_set(text[begin:start - 1] + text[matched_start:matched_end]))
+                yield Span(begin - 1 if signed_whole else begin, end, Form.FRACTION,
+                           FrozenMap({"whole": fold_digits(text[begin:start - 1]), "numerator": numerator,
+                                      "denominator": denominator, "sign": "", "prefix": "", "suffix": suffix}),
+                           recognizer=self.name, keep=keep)
             if unclear or (bottom is not None and 2 <= bottom <= 100 and top is not None and top < bottom):
                 yield Span(start, end, Form.FRACTION,
-                           FrozenMap({"numerator": numerator, "denominator": denominator, "sign": sign,
+                           FrozenMap({"whole": "", "numerator": numerator, "denominator": denominator, "sign": sign,
                                       "prefix": prefix, "suffix": suffix}), recognizer=self.name, keep=unclear)
 
 
@@ -1008,6 +1105,17 @@ def speak_rbnf_cardinal(span: Span, context: SpanContext) -> str:
     return speak_cardinal(span, context)
 
 
+def speak_rbnf_decimal(span: Span, context: SpanContext) -> str:
+    """The decimal of a language with no file (section 6.1). A number with a minus reads through the speller, which
+    places the sign word as its rules write it."""
+    fields = span.fields
+    if fields["sign"] == "-":
+        request = context.request
+        return request.language.spellers[Form.DECIMAL].negative_decimal(fields["integer"], fields["fraction"],
+                                                                        Features(), request)
+    return speak_decimal(span, context)
+
+
 def amount_words(amount: FrozenMap, request: Request, features: Features = Features()) -> str:
     """A `DECIMAL` record through the spellers of the language, with its sign: the decimal speller when the record
     has fraction digits, else the cardinal speller with `features`."""
@@ -1023,8 +1131,36 @@ def speak_decimal(span: Span, context: SpanContext) -> str:
     return amount_words(span.fields, context.request)
 
 
-def speak_fraction(span: Span, context: SpanContext) -> str:
+def speak_mixed_half(span: Span, context: SpanContext) -> str:
+    """A mixed number of a half, in a language whose data gives `mixed_word` and `mixed_half`: the whole part, the
+    word and the half, both in the gender of `default_gender` (design section 5.6), as pt "dois e meio" and es "dos
+    y medio". `mixed_half` gives the half by gender, and under "other" for any other gender or none. A language
+    with no grammatical gender takes no gender (design section 2.3), so nl reads "twee en een half" for any
+    `default_gender`. The noun that
+    the number counts sets the gender of the half, and in pt, es, fr and it it stands between the whole part and the
+    half, as in pt "uma página e meia", so a mixed number before a word declines, as does any other fraction and
+    any language with no `mixed_half`."""
     fields, request = span.fields, context.request
+    language = request.language
+    halves = request.data.get("mixed_half")
+    if halves is None or fields["denominator"] != "2":
+        raise DeclinedReading("the language gives no reading of this mixed number")
+    if context.after and context.after[0][:1].isalpha():
+        raise DeclinedReading(f"a counted noun stands between the parts of a mixed number, and {context.after[0]!r} "
+                              "follows it")
+    gender = request.params.default_gender.get(language.code) or language.default_gender
+    if gender not in language.genders:
+        gender = None
+    whole = language.spellers[Form.CARDINAL].cardinal(fields["whole"], Features(gender=gender), request)
+    half = halves.get(gender.value if gender is not None else "other", halves["other"])
+    return f"{whole} {request.data['mixed_word']} {half}"
+
+
+def speak_fraction(span: Span, context: SpanContext) -> str:
+    """A fraction through the fraction speller of the language, and a mixed number through `speak_mixed_half`."""
+    fields, request = span.fields, context.request
+    if fields["whole"]:
+        return speak_mixed_half(span, context)
     words = request.language.spellers[Form.FRACTION].fraction(fields["numerator"], fields["denominator"], Features(),
                                                               request)
     return signed(words, fields["sign"], request)
@@ -1264,6 +1400,7 @@ class SpaceGroups:
 LEXICON = Lexicon()
 CARDINAL = Cardinal()
 RBNF_CARDINAL = RbnfCardinal()
+RBNF_DECIMAL = RbnfDecimal()
 SHARED = {r.name: r for r in (LEXICON, CARDINAL, Decimal(), Fraction(), Idiom(), Range(), DateNumeric(), TimeClock(),
                               Percent(), Money(), Measure(), Telephone(), Expression(), Abbreviation(), SpaceGroups(),
                               COLOR, ELECTRONIC, LETTERS, SYMBOL, EMOJI)}

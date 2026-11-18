@@ -51,7 +51,8 @@ class DeclinedReading(Text2SpokenError):
 
 class RevisionError(Text2SpokenError):
     """`revision` cannot read the files of a module on the output path, such as a package imported from a zip
-    file, so it gives no revision rather than a hash over less than the code."""
+    file, so it gives no revision rather than a hash over less than the code. The probe that finds those modules
+    also raises it when it exits with an error, runs too long or prints no readable result."""
 
 
 class UnreadFormError(Text2SpokenError):

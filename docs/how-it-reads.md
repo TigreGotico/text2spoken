@@ -63,12 +63,28 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 
 ## A language with no file
 
-A tag whose language has no file reads cardinal numbers, and keeps all other forms as written. Each number word has one owner. A language that `ovos-number-parser` writes with a module of its own reads the words of that module. Every other language reads the CLDR spell-out rules, and the table `text2spoken/data/rbnf_corrections.json` corrects the CLDR words that are wrong, with a source for each. A few languages with a module stay on the CLDR rules while the module reads a class of numbers worse. `RBNF_HELD` in `text2spoken/core/spellers.py` names them and the class. A language with neither reads only the lexicon.
+A tag whose language has no file reads cardinal numbers and decimals, and keeps all other forms as written. Each number word has one owner. A language that `ovos-number-parser` writes with a module of its own reads the words of that module. Every other language reads the CLDR spell-out rules, and the table `text2spoken/data/rbnf_corrections.json` corrects the CLDR words that are wrong, with a source for each. A few languages with a module stay on the CLDR rules while the module reads a class of numbers worse. `RBNF_HELD` in `text2spoken/core/spellers.py` names them and the class. A language with neither reads only the lexicon.
 
-A minus before a number reads when its owner has a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus. A minus at the start of a line, after a number or after a dash can mark a list item, a range or a code, so the minus and its number stay as written. A minus next to a currency symbol stays as written with the amount. A negative number grouped with spaces, as in `-1 000`, stays as written whole:
+A decimal reads in the decimal mark and the group mark that CLDR gives the locale, for the digits of each script. The owner of the number words reads it: `ovos-number-parser`, or the `x.x` rule of the CLDR spell-out rules. Some numbers stay as written:
+
+- A number with one full stop or comma and three digits after it, when the locale gives the mark the other role than the CLDR root locale does. The root locale writes `1,234.5`. Such a number can be written in either convention.
+- A fraction of zeros, as in `3.0`. Both owners read it as the integer, without the zeros.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
+| `3.5` | `hi` | तीन दशमलव पाँच |
+| `3,500` | `hi` | तीन हज़ार पाँच सौ |
+| `3,5` | `nb` | tre komma fem |
+| `3,500` | `nb` | stays as written |
+| `1.234` | `tr` | stays as written |
+| `3.0` | `hi` | stays as written |
+
+A minus before a number reads when its owner has a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus. A minus after a number or after a dash can mark a range or a code, so the minus and its number stay as written. A minus next to a currency symbol stays as written with the amount. A negative number grouped with spaces that are no group mark of the locale, as in `-1 000`, stays as written whole:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `-5` | `uk` | мінус п'ять |
+| `-3.5` | `hi` | ऋण तीन दशमलव पाँच |
 | `сьогодні -5 градусів` | `uk` | сьогодні мінус п'ять градусів |
 | `код A-5` | `uk` | код A-п'ять |
 | `знижка -5%` | `uk` | stays as written |
