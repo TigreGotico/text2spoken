@@ -23,6 +23,7 @@ Each language page gives what the language reads, its varieties and the codes th
 | Language | Page |
 | --- | --- |
 | Arabic | [ar](languages/ar.md) |
+| Catalan | [ca](languages/ca.md) |
 | German | [de](languages/de.md) |
 | Greek | [el](languages/el.md) |
 | English | [en](languages/en.md) |
