@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a81](https://github.com/TigreGotico/text2spoken/tree/0.0.2a81) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a80...0.0.2a81)
+
+**Merged pull requests:**
+
+- fix\(eu\): read a number grouped by spaces, as Araua 203 recommends [\#292](https://github.com/TigreGotico/text2spoken/pull/292) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): a demonstrative or its contraction gives a number no gender [\#289](https://github.com/TigreGotico/text2spoken/pull/289) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a80](https://github.com/TigreGotico/text2spoken/tree/0.0.2a80) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a79...0.0.2a80)
@@ -281,10 +290,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a44...0.0.2a45)
 
-**Merged pull requests:**
-
-- feat\(es\): Spanish language file [\#63](https://github.com/TigreGotico/text2spoken/pull/63) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a44](https://github.com/TigreGotico/text2spoken/tree/0.0.2a44) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a43...0.0.2a44)
@@ -296,10 +301,6 @@
 ## [0.0.2a43](https://github.com/TigreGotico/text2spoken/tree/0.0.2a43) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a42...0.0.2a43)
-
-**Merged pull requests:**
-
-- feat: add the Basque language file [\#64](https://github.com/TigreGotico/text2spoken/pull/64) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a42](https://github.com/TigreGotico/text2spoken/tree/0.0.2a42) (2026-11-15)
 
@@ -396,10 +397,6 @@
 ## [0.0.2a30](https://github.com/TigreGotico/text2spoken/tree/0.0.2a30) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a29...0.0.2a30)
-
-**Merged pull requests:**
-
-- feat\(pt\): Portuguese language file [\#65](https://github.com/TigreGotico/text2spoken/pull/65) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a29](https://github.com/TigreGotico/text2spoken/tree/0.0.2a29) (2026-11-12)
 
