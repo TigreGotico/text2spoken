@@ -140,6 +140,7 @@ ENTRIES = {
         "number_marks": "Latn", "sign_words": "-", "case_words": "genitive", "articles": "στις",
         "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
+        "halves": "2",
     },
     "eu": {
         "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero",

@@ -24,11 +24,15 @@ The file reads cardinals, with a minus, percentages, common fractions, numeric d
 | `Αυξήθηκε κατά 20%.` | `el-GR` | Αυξήθηκε κατά είκοσι τοις εκατό. |
 | `Περίμενα 1/2 ώρα.` | `el-GR` | Περίμενα μισή ώρα. |
 | `Έφαγε τα 3/4 της πίτας.` | `el-GR` | Έφαγε τα τρία τέταρτα της πίτας. |
+| `Το 1/60 του συνόλου.` | `el-GR` | Το ένα εξηκοστό του συνόλου. |
+| `Πέρασαν 2 1/2 ώρες.` | `el-GR` | Πέρασαν δυόμισι ώρες. |
+| `Πήρε 3 1/2 κιλά.` | `el-GR` | Πήρε τριάμισι κιλά. |
+| `Πέρασαν 1 1/2 ώρα.` | `el-GR` | Πέρασαν μιάμιση ώρα. |
 | `Η συνάντηση είναι στις 12/03/2024.` | `el-GR` | Η συνάντηση είναι στις δώδεκα Μαρτίου δύο χιλιάδες είκοσι τέσσερα. |
 
 The file finds the noun in the words after the number. It skips up to two adjectives, and it skips a second number after `ή`, `έως`, `ως`, `μέχρι` or `με`, as in `3 ή 4 γυναίκες`. An article right before the number, as `τα`, `τις` or `στους`, gives the gender when no noun follows, and it decides when it and the noun disagree. A form that is only accusative or only genitive gives its case, as `σκύλους` and `βιβλίων`. A day before a month name takes the feminine of ημέρα, and day 1 reads πρώτη.
 
-A percentage reads its number in the neuter, the gender that CLDR gives "τοις εκατό". A half agrees with the noun after it, as μισό κιλό and μισή ώρα. Any other fraction reads its numerator in the neuter and the name of its denominator, a neuter noun: "ένα τρίτο", "τρία τέταρτα". The names are the one-word fraction names of the English Wiktionary appendix "Greek numerals", for the denominators 2 to 12, 20 and 100. A numeric date reads day, month and year, with the month name of CLDR in the genitive and no weekday. When both of the first two fields are 12 or below, the day comes first, as in the CLDR date formats of `el`.
+A percentage reads its number in the neuter, the gender that CLDR gives "τοις εκατό". A half agrees with the noun after it, as μισό κιλό and μισή ώρα. Any other fraction reads its numerator in the neuter and the name of its denominator, a neuter noun: "ένα τρίτο", "τρία τέταρτα". The names are the one-word fraction names of the English Wiktionary appendix "Greek numerals", for the denominators 2 to 12, 20, 60, 70, 80 and 100. A fraction with a denominator up to 12 may also be a day and a month, so it reads only after a neuter article, as in `τα 3/4`, before a genitive, as in `1/4 της ώρας`, or, for a half, before a noun. A whole number and a half read as one word of the Λεξικό της κοινής νεοελληνικής and the English Wiktionary: δυόμισι, τριάμισι or τρεισήμισι, τεσσεράμισι or τεσσερισήμισι, πεντέμισι and οκτώμισι, and ενάμισι, μιάμιση or ενάμισης. A numeric date reads day, month and year, with the month name of CLDR in the genitive and no weekday. When both of the first two fields are 12 or below, the day comes first, as in the CLDR date formats of `el`.
 
 ## Varieties
 
@@ -61,7 +65,7 @@ The marks come from CLDR. `el` serves every Greek tag.
 
 The number words come from the CLDR RBNF rule sets of `el`. The case words come from the accusative and genitive rule sets of CLDR on its main branch. Three words take the spelling of CLDR main and of the English Wiktionary: `χιλιάδες`, `ενενήντα` and `δεκατρείς`. The core table `text2spoken/data/rbnf_corrections.json` holds them with their sources. The gender of a noun comes from `text2spoken/data/wiktionary/el_nouns.json`. The script `scripts/extract_el_nouns.py` makes that file from the categories "Greek masculine nouns", "Greek feminine nouns", "Greek neuter nouns" and "Greek adjectives" of the English Wiktionary (CC BY-SA 4.0). The inflected forms come from the Wiktextract dump at kaikki.org. The `source` field of that file names both. The word of a percentage and its gender come from the CLDR units of `el` (`concentr-percent`), and the month names and the order of a date from the CLDR Gregorian calendar of `el`. The fraction names come from the English Wiktionary appendix "Greek numerals" and the entries "μισός", "μισό", "τρίτο" and "τέταρτο". The rules of agreement cite Wikipedia, "Modern Greek grammar", UTS #35 and the English Wiktionary. The docstring of [`el.py`](../../text2spoken/lang/el.py) names the entry of each rule.
 
-Each of the 87 test rows in `tests/data/el.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 108 test rows in `tests/data/el.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
@@ -72,6 +76,8 @@ Greek leaves these forms as written, or reads them as shown:
 | `Κοστίζει 5 €.` | `el-GR` | stays as written | Money and measures stay as written, as in a language with no file. |
 | `Ο πληθωρισμός ήταν 3,5%.` | `el-GR` | stays as written | A percentage with a decimal, a per mille sign, two percentages that a dash joins, and a percentage that a symbol touches, as in `100 €-5%`, stay as written. |
 | `Ένα κομμάτι 1/16 της ίντσας.` | `el-GR` | stays as written | A fraction whose denominator has no one-word name stays as written. |
+| `Αποφασίστηκε στις 3/8.` | `el-GR` | stays as written | A fraction that may be a day and a month, with no article, genitive or noun that marks a fraction, stays as written. So do a score and a fraction with a leading zero, as in `(03/09)`. |
+| `Πήρε 6 1/2 κιλά.` | `el-GR` | stays as written | A whole number and a half with no word in the sources stays as written: each whole number but 1 to 5 and 8. So does a masculine accusative of one and a half, as in `1 1/2 χρόνο`. |
 | `Το υπόλοιπο είναι -50 €.` | `el-GR` | stays as written | An amount with a minus stays as written too. |
 | `Πήρε 3,5 κιλά.` | `el-GR` | stays as written | The file reads no decimal. |
 | `Μένω στον 2ο όροφο.` | `el-GR` | stays as written | The file reads no ordinal. |

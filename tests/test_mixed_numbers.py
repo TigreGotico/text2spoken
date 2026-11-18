@@ -63,7 +63,7 @@ def test_the_gap_is_a_space_or_a_no_break_space(gap):
     assert normalize(f"Add 2{gap}1/2 cups.", "en-US") == "Add two and a half cups."
 
 
-DECLINING = ["el-GR", "ar", "ru-RU", "eu-ES", "sv-SE", "pl-PL", "fi-FI", "tr-TR", "ja-JP", "da-DK"]
+DECLINING = ["ar", "ru-RU", "eu-ES", "sv-SE", "pl-PL", "fi-FI", "tr-TR", "ja-JP", "da-DK"]
 """Language files that give no reading of a mixed number, and languages with no file, which read through RBNF or
 ovos-number-parser."""
 
@@ -80,7 +80,7 @@ def test_a_language_with_no_reading_keeps_the_mixed_number_as_written(caplog, la
 
 
 @pytest.mark.parametrize("lang", ["en-US", "en-GB", "pt-PT", "pt-BR", "es-ES", "fr-FR", "it-IT", "de-DE", "nl-NL",
-                                  *DECLINING])
+                                  "el-GR", *DECLINING])
 @pytest.mark.parametrize("text", ["2 1/2", "Wait 10 3/4 hours.", "2 1/2, 3 1/3 e 4 3/4", "0 1/2", "5 1 1/2"])
 def test_a_second_pass_changes_nothing(lang, text):
     once = normalize(text, lang)

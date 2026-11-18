@@ -59,11 +59,31 @@ gives the unit the neuter gender: `20%` reads "είκοσι τοις εκατό"
 per mille sign and two percentages that a dash joins stay as written.
 
 A fraction reads when its denominator has a one-word name in the English Wiktionary appendix "Greek numerals",
-Fraction column: 2 to 12, 20 and 100. The half is the adjective μισός, which agrees with its noun (English Wiktionary,
-"μισός": "μισή ώρα", half an hour; "μισό": "μισό κιλό κρασί"). Any other name is a neuter noun, as "τρίτο", plural
-"τρίτα", and "τέταρτο", plural "τέταρτα" (English Wiktionary), so its numerator reads in the neuter: `1/3` reads "ένα
-τρίτο" and `3/4` "τρία τέταρτα". The plural of each name is the neuter plural of its ordinal adjective in -ος. Any
-other fraction stays as written.
+Fraction column: 2 to 12, 20, 60, 70, 80 and 100. The Λεξικό της κοινής νεοελληνικής gives the names of 60, 70 and
+80 as nouns: "το εξηκοστό, το ένα από τα εξήντα ίσα μέρη ενός συνόλου" ("εξηκοστός"), "το εβδομηκοστό, το ένα από
+τα εβδομήντα ίσα μέρη ενός συνόλου: Μου ανήκουν τα τριάντα εβδομηκοστά του οικοπέδου" ("εβδομηκοστός") and "το
+ογδοηκοστό, το ένα από τα ογδόντα ίσα μέρη ενός συνόλου" ("ογδοηκοστός"). The half is the adjective μισός, which
+agrees with its noun (English Wiktionary, "μισός": "μισή ώρα", half an hour; "μισό": "μισό κιλό κρασί"). Any other
+name is a neuter noun, as "τρίτο", plural "τρίτα", and "τέταρτο", plural "τέταρτα" (English Wiktionary), so its
+numerator reads in the neuter: `1/3` reads "ένα τρίτο" and `3/4` "τρία τέταρτα". The plural of each name is the
+neuter plural of its ordinal adjective in -ος. Any other fraction stays as written.
+
+A fraction with a denominator up to 12 may be a day and a month: the CLDR 49 date formats of `el` write `d/M/yy`
+(short) and `d/M` (`Md`). With no mark of a fraction, such a form stays as written (design section 10), as do a
+score and a count of tries. The marks are a neuter article before it, as the fraction is a neuter noun ("Το μισό
+αριθμητικά γράφεται ως 1/2 ή 0,5", Λεξικό της κοινής νεοελληνικής, "μισός"); a genitive article or noun after it,
+the whole that it divides ("Ένα τέταρτο της ώρας", "ώρα" 1); and, for 1/2, a noun after it ("Μισό μέτρο / κιλό.
+Μισή ώρα.", "μισός"). So `Έφαγε τα 3/4 της πίτας` reads and `στις 3/8` stays as written. A denominator with a
+leading zero, as in `03/09`, has no name, so such a form stays as written too.
+
+A whole number and a half are one word. The Λεξικό της κοινής νεοελληνικής, "-μισι": "β' συνθετικό σε σύνθεση με τα
+απόλυτα αριθμητικά συνήθ. ως το είκοσι· προσδίδει στο οποιουδήποτε γένους ουσιαστικό που προσδιορίζει την έννοια
+του αριθμητικού αυξημένη κατά μισή μονάδα: οκτώ ~ : Εργασία οκτώ ~ ωρών [...] τρεισήμισι και τριά ~ , τεσσερισήμισι
+και τεσσερά ~". The English Wiktionary gives δυόμισι ("invariable", "two and a half"), πεντέμισι, τρεισήμισι
+("g=m|g2=f|neuter|τριάμισι") and τεσσερισήμισι ("g=m|g2=f|neuter|τεσσεράμισι"). One and a half declines:
+"ενάμισης μιάμιση ενάμισι [...] αριθμτ. επίθ. : ένας και μισός: ~ χρόνος. Μιάμιση ώρα. Ενάμισι μέτρο. Σε διάστημα
+ενάμιση χρόνου / μιάμισης ώρας / ενάμισι έτους" ("ενάμισης"). `halves` holds these words by gender and case. The
+masculine accusative of ενάμισης, and a whole number that no source names with -μισι, as 6, stay as written.
 
 A numeric date reads day, month and year, as the CLDR long date format of `el`, `d MMMM y`, writes it, with the month
 name of `months`, CLDR 49 format wide, in the genitive. The day is the feminine ημέρα, as above, and the year reads
@@ -87,9 +107,11 @@ from importlib.resources import files
 from text2spoken.core.language import LanguageSpec, Request, Variety
 from text2spoken.core.recognizers import (GAPS, SHARED, OrdinalStop, _free_before, numbers_in, signed,
                                           speak_lexicon, written_shapes)
-from text2spoken.core.spans import FIELDS, Features, Recognizer, Span, SpanContext
+from text2spoken.core.spans import (FIELDS, Features, Recognizer, Span, SpanContext, clause_breaks, clause_window,
+                                    context_words)
 from text2spoken.core.spellers import RbnfSpeller
 from text2spoken.core.tokens import Token
+from text2spoken.errors import DeclinedReading
 from text2spoken.params import OPTIONS, FrozenMap, Form, GrammaticalGender, freeze
 
 M, F, N = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE, GrammaticalGender.NEUTER
@@ -113,7 +135,20 @@ DATA = freeze({
     "fraction_names": {"3": ["τρίτο", "τρίτα"], "4": ["τέταρτο", "τέταρτα"], "5": ["πέμπτο", "πέμπτα"],
                        "6": ["έκτο", "έκτα"], "7": ["έβδομο", "έβδομα"], "8": ["όγδοο", "όγδοα"],
                        "9": ["ένατο", "ένατα"], "10": ["δέκατο", "δέκατα"], "11": ["ενδέκατο", "ενδέκατα"],
-                       "12": ["δωδέκατο", "δωδέκατα"], "20": ["εικοστό", "εικοστά"], "100": ["εκατοστό", "εκατοστά"]},
+                       "12": ["δωδέκατο", "δωδέκατα"], "20": ["εικοστό", "εικοστά"], "60": ["εξηκοστό", "εξηκοστά"],
+                       "70": ["εβδομηκοστό", "εβδομηκοστά"], "80": ["ογδοηκοστό", "ογδοηκοστά"],
+                       "100": ["εκατοστό", "εκατοστά"]},
+    "halves": {
+        "1": {MASCULINE: {NOMINATIVE: "ενάμισης", GENITIVE: "ενάμιση"},
+              FEMININE: {NOMINATIVE: "μιάμιση", ACCUSATIVE: "μιάμιση", GENITIVE: "μιάμισης"},
+              NEUTER: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), "ενάμισι")},
+        **{whole: {MASCULINE: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), other),
+                   FEMININE: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), other),
+                   NEUTER: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), neuter)}
+           for whole, other, neuter in (("2", "δυόμισι", "δυόμισι"), ("3", "τρεισήμισι", "τριάμισι"),
+                                        ("4", "τεσσερισήμισι", "τεσσεράμισι"), ("5", "πεντέμισι", "πεντέμισι"),
+                                        ("8", "οκτώμισι", "οκτώμισι"))},
+    },
     "leads": {},
     "case_words": {
         ACCUSATIVE: {"ένας": "έναν", "χίλιοι": "χίλιους", **{f"{h}οι": f"{h}ους" for h in _HUNDREDS}},
@@ -323,9 +358,15 @@ def speak_percent(span: Span, context: SpanContext) -> str:
 
 
 def speak_fraction(span: Span, context: SpanContext) -> str:
-    """A fraction in the gender and case of the noun phrase around it, which only a half shows."""
+    """A fraction in the gender and case of the noun phrase around it, which only a half shows, and a whole number
+    and a half as the one word of `halves`."""
     fields = span.fields
     features, _ = number_features(context)
+    if fields["whole"]:
+        words = context.request.data["halves"][fields["whole"]][(features.gender or N).value]
+        if (features.case or NOMINATIVE) not in words:
+            raise DeclinedReading(f"no word for {fields['whole']} 1/2 in the {features.case}")
+        return words[features.case or NOMINATIVE]
     return signed(SPELLER.fraction(fields["numerator"], fields["denominator"], features, context.request),
                   fields["sign"], context.request)
 
@@ -356,19 +397,34 @@ class ReadPercent:
 
 @dataclass(frozen=True)
 class ListedFraction:
-    """A proper fraction whose denominator has a name: 2 and the keys of `fraction_names`. Any other fraction stays
-    as written, as does a mixed number: `2 1/2` is the one word δυόμισι, which the file does not give."""
+    """A proper fraction whose denominator has a name: 2 and the keys of `fraction_names`, and a whole number of
+    `halves` and 1/2. A fraction that may be a day and a month, with a denominator up to 12, reads only after a
+    neuter article, before a genitive article or noun, or, for 1/2, before a noun. Any other fraction and mixed
+    number stays as written."""
     name: str = "listed_fraction"
     form: Form = Form.FRACTION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        names = request.data["fraction_names"]
+        data = request.data
+        words, breaks = context_words(tokens), clause_breaks(text)
+        nouns = noun_readings()
         for span in SHARED["fraction"].find(text, tokens, request):
             fields = span.fields
-            denominator = str(int(fields["denominator"]))
-            read = (not span.keep and not fields["whole"] and (denominator == "2" or denominator in names)
-                    and (not fields["sign"] or fields["sign"] in request.data["sign_words"]))
-            yield span if read else replace(span, keep=True)
+            numerator, denominator = fields["numerator"], fields["denominator"]
+            if fields["whole"]:
+                read = fields["whole"] in data["halves"] and numerator == "1" and denominator == "2"
+            else:
+                before = clause_window(text, words, span.start, span.end, -1, limit=1, breaks=breaks)
+                after = [word.lower() for word in clause_window(text, words, span.start, span.end, 1, limit=1,
+                                                                breaks=breaks)]
+                article = data["articles"].get(before[0].lower(), ()) if before else ()
+                genitive = after and {case for _, case in data["articles"].get(after[0]) or nouns.get(after[0], ())
+                                      } == {GENITIVE}
+                read = ((denominator == "2" or denominator in data["fraction_names"])
+                        and (int(denominator) > 12 or any(gender == NEUTER for gender, _ in article) or genitive
+                             or (denominator == "2" and after and after[0] in nouns))
+                        and (not fields["sign"] or fields["sign"] in data["sign_words"]))
+            yield span if read and not span.keep else replace(span, keep=True)
 
 
 @dataclass(frozen=True)
