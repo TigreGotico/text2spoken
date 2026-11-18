@@ -33,12 +33,12 @@ abreviativo que ha de preceder a las letras voladas dentro de la abreviatura" (R
 española, 2010, chapter V, 3.2.2 «Formación»; the same section gives "1.º por primero, 2.ª por segunda"). The form
 without the full stop, `1º` and `1ª`, is common in running text, and a reader says the same word for both forms, so
 `1º` reads "primero" as `1.º` does. A `º` after a number also writes a degree in running text, as in "Precalentar el
-horno a 180º." (design section 10: a form with two readings and no deciding context stays as written). So `\d+º`
-reads as the ordinal only in a context that a degree does not take: a singular determiner before it (`el 2º piso`),
-`de` or `del` after it (`el 1º de mayo`, `4º de ESO`), or a legal division before it (`artículo 6º`). In every other
-context it stays as written, as `Quedó 1º en la carrera.` and `Hace 25º hoy.` do. `25ºC` and `25 ºC` read as a
-temperature, because the unit `ºC` claims first. `\d+ª` writes no degree, so it reads as the ordinal in every
-context.
+horno a 180º." (design section 10: a form with two readings and no deciding context stays as written). So `\\d+º`
+reads as the ordinal only in a context that a degree does not take: a singular masculine determiner before it
+(`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a legal division word before it
+(`artículo 6º`). In every other context it stays as written, as `Quedó 1º en la carrera.` and `Hace 25º hoy.` do.
+`25ºC` and `25 ºC` read as a temperature, because the unit `ºC` claims first. `\\d+ª` writes no degree, so it
+reads as the ordinal in every context.
 """
 from __future__ import annotations
 
@@ -156,8 +156,8 @@ DATA = freeze({
     "ordinal_marks": {"ª": "feminine", "º": "masculine", ".º": "masculine", ".ª": "feminine", ".er": "apocope",
                       ".ᵉʳ": "apocope", "er": "apocope", ".os": "masculine plural", ".as": "feminine plural"},
     "degree_marks": ["º"],
-    "ordinal_leads": ["el", "la", "al", "del", "su", "este", "esta", "cada", "artículo", "art.", "inciso"],
-    "ordinal_follows": ["de", "del"],
+    "ordinal_leads": ["el", "al", "del", "su", "este", "cada", "artículo", "art.", "inciso"],
+    "ordinal_follows": ["de"],
     "function_words": ["a", "al", "ante", "bajo", "con", "contra", "de", "del", "desde", "durante", "en", "entre",
                        "hacia", "hasta", "para", "por", "según", "sin", "sobre", "tras", "y", "e", "o", "u", "ni",
                        "que", "pero", "sino", "porque", "como", "cuando", "si", "el", "la", "los", "las", "lo",
@@ -642,8 +642,9 @@ class SpanishTelephone(Telephone):
 class Ordinal:
     """`1.º`, `2.ª`, `1.er`, `3.os`: a whole number and a marker of the `ordinal_marks` table (DPD «abreviatura»,
     5.b: `n.º`, letters written high). `1ª` and `3er` with no full stop read as the ordinal too. A marker of
-    `degree_marks` also writes a degree, so `1º` reads as the ordinal only after a word of `ordinal_leads` or before a
-    word of `ordinal_follows` (see the module docstring)."""
+    `degree_marks` also writes a degree, so `1º` reads as the ordinal only in a context that a degree does not take:
+    a singular masculine determiner before it (`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a
+    legal division word before it (`artículo 6º`) (see the module docstring)."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 
@@ -655,8 +656,8 @@ class Ordinal:
             marker = next((m for m in marks if text.startswith(m, number.end)), None)
             if marker is None or not is_bounded(text, number.start, number.end + len(marker)):
                 continue
-            if marker in request.data["degree_marks"] and not _ordinal_context(text, number.start,
-                                                                                number.end + len(marker), request):
+            if marker in request.data["degree_marks"] and (bounded_integer(number.integer) == 0
+                    or not _ordinal_context(text, number.start, number.end + len(marker), request)):
                 continue
             yield Span(number.start, number.end + len(marker), Form.ORDINAL,
                        FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
@@ -664,12 +665,13 @@ class Ordinal:
 
 
 def _ordinal_context(text: str, start: int, end: int, request: Request) -> bool:
-    """Whether a word of `ordinal_leads` stands right before text[start:end], or a word of `ordinal_follows` right
-    after it, with only spaces between."""
+    """Whether a word of `ordinal_leads` stands right before text[start:end], or a word of `ordinal_follows` stands
+    right after it with only spaces between and a month name after it, as in `el 1º de mayo`."""
     before = re.search(r"(?:^|\s)(\S+)\s+$", text[:start])
-    after = re.match(r"\s+(\w+)(?!\w)", text[end:])
+    after = re.match(r"\s+(\w+)\s+(\w+)(?!\w)", text[end:])
     return bool((before and before.group(1).lower() in request.data["ordinal_leads"])
-                or (after and after.group(1).lower() in request.data["ordinal_follows"]))
+                or (after and after.group(1).lower() in request.data["ordinal_follows"]
+                    and after.group(2).lower() in (*request.data["months"], *request.data["month_variants"])))
 
 
 @dataclass(frozen=True)
