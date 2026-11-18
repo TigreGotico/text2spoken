@@ -94,7 +94,7 @@ The file reads no ranges, dates, times, telephone numbers, identifiers, words in
 | `Op 12-03-2024 om 14.30 uur.` | `nl-NL` | stays as written | ovos-date-parser reads no Dutch date or time, so a numeric date and a clock time stay as written. |
 | `Een groei van 12 000 %.` | `nl-NL` | stays as written | A number with spaces between its groups stays as written before a percent sign or a dimension mark. |
 | `Er zijn 12 000,5 liter.` | `nl-NL` | stays as written | A number with spaces between its groups and a decimal comma reads only in an amount. |
-| `Het kost 10 000-20 000 euro.` | `nl-NL` | Het kost tien 000-20 000 euro. | The file reads no ranges. A run of groups that a mark joins to another digit run is no number, so its groups read alone. |
+| `Het kost 10 000-20 000 euro.` | `nl-NL` | stays as written | The file reads no ranges. No group of a number grouped with spaces reads alone. |
 | `Bel 020 123 4567.` | `nl-NL` | Bel 020 honderddrieëntwintig vierduizend vijfhonderdzevenenzestig. | The file reads no telephone numbers. Each group of digits reads as a cardinal, and a group that starts with 0 stays as written. |
 | `Ik noem koning Leopold II.` | `nl-NL` | stays as written | A Roman numeral after a name stays as written. Taaladvies.net reads `Leopold II` as "Leopold de Tweede". |
 | `Een kamer van 3 × 4 m.` | `nl-NL` | stays as written | No source gives the Dutch word for the dimension mark. |

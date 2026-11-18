@@ -15,7 +15,7 @@ from text2spoken.core import language as loader
 from text2spoken.core.language import cldr_locale
 from text2spoken.core.numbers import find_numbers
 from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_matches
-from text2spoken.core.spans import Span, _inside, _joined, _sides, check_features, splits_token
+from text2spoken.core.spans import Span, _group_spaces, _inside, _joined, _sides, check_features, splits_token
 from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words, protect_blocks
 from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form, freeze, thaw
@@ -461,8 +461,21 @@ def test_a_digit_next_to_a_span_is_no_joiner():
     span = Span(0, 2, Form.CARDINAL, FrozenMap())
     text = "ab12"
     sides = _sides(span, {}, {})
-    assert not _joined(text, span, bytearray(len(text)), [None] * len(text), sides)
-    assert _joined("ab/2", span, bytearray(4), [None] * 4, sides)
+    assert not _joined(text, span, bytearray(len(text)), [None] * len(text), sides, bytearray(len(text)))
+    assert _joined("ab/2", span, bytearray(4), [None] * 4, sides, bytearray(4))
+
+
+def test_a_space_between_groups_of_three_digits_joins_them():
+    """Section 2.1 and BIPM, SI Brochure, 9th edition, section 5.4.4: digits "may be divided into groups of three by
+    a space", so the space joins the groups as a mark does. A space next to a group of another length joins
+    nothing."""
+    span = Span(0, 2, Form.CARDINAL, FrozenMap())
+    sides = _sides(span, {}, {})
+    assert _joined("12 000", span, bytearray(6), [None] * 6, sides, _group_spaces("12 000"))
+    assert not _joined("12 00", span, bytearray(5), [None] * 5, sides, _group_spaces("12 00"))
+    assert list(_group_spaces("12 000 0001")) == [0] * 11
+    assert list(_group_spaces("0800 123 456")) == [0] * 12
+    assert list(_group_spaces("1 000 000-2")) == [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
 
 
 def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():
@@ -758,3 +771,15 @@ def test_a_signed_fraction_after_a_mark_reads_once_the_number_before_the_mark_re
 def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(text, caplog):
     assert normalize(text, "en-GB") == text
     assert "unread written form" in caplog.text
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Il faut 1 000 000-2 000 000 personnes.", "de-DE"), ("Il faut 1 000 000-2 000 000 personnes.", "es-BO"),
+    ("Il faut 1 000 000-2 000 000 personnes.", "es-ES"), ("Il faut 1 000 000-2 000 000 personnes.", "es-US"),
+    ("Il faut 1 000 000-2 000 000 personnes.", "es-UY"), ("Het kost € 12 000 000,00.", "it-IT"),
+    ("Het kost € 12 000", "it-IT"), ("Het kost € 12 000.", "it-IT"), ("Het kost € 12 000.", "it-SM"),
+])
+def test_a_number_grouped_with_spaces_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. No span reads one group of a number grouped with spaces, so no group is left for a second pass."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once

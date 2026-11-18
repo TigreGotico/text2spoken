@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import heapq
 import logging
+import re
 import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -10,7 +11,8 @@ from dataclasses import KW_ONLY, dataclass, replace
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
-from text2spoken.core.tokens import EMOJI_MARKS, Token, context_word, is_digit, is_letter, is_mark, is_punctuation
+from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_digit, is_letter, is_mark,
+                                     is_punctuation)
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
                                 UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
@@ -153,13 +155,36 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
     return (left, left - 1), (span.end, after.get(span.end, span.end + 1))
 
 
+_GROUP_GAPS = " \u00a0\u202f"
+
+
+def _group_spaces(text: str) -> bytearray:
+    """The spaces between the groups of a number written in groups of three digits, as in `12 000` and `0,264 7`
+    (`SPACE_GROUPS`). A run that one space joins to another digit run, as in `123 456 78` and `0800 123 456`, is no
+    such number."""
+    from text2spoken.core.recognizers import SPACE_GROUPS
+
+    folded = fold_digits(text)
+    marked = bytearray(len(text))
+    for match in re.finditer(f"(?<![0-9])(?:{SPACE_GROUPS.pattern})(?![0-9])", folded):
+        start, end = match.span()
+        if (start > 1 and folded[start - 1] in _GROUP_GAPS and "0" <= folded[start - 2] <= "9") \
+                or (end + 1 < len(folded) and folded[end] in _GROUP_GAPS and "0" <= folded[end + 1] <= "9"):
+            continue
+        for position in range(start, end):
+            if folded[position] in _GROUP_GAPS:
+                marked[position] = 1
+    return marked
+
+
 def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None],
-            sides: Sequence[tuple[int, int]]) -> bool:
-    """Whether one character that is not a digit or a space joins the span, on either side, to a digit that no
-    span reads, or to a character of a waiting span of another form. A joiner that a waiting span of the same
-    form holds is no joiner: the two spans are one range, as in `$5-$10`."""
+            sides: Sequence[tuple[int, int]], grouped: bytearray) -> bool:
+    """Whether one character that is not a digit or a space, or a space between two groups of digits, joins the
+    span, on either side, to a digit that no span reads, or to a character of a waiting span of another form. A
+    joiner that a waiting span of the same form holds is no joiner: the two spans are one range, as in `$5-$10`."""
     def side(joiner: int, beyond: int) -> bool:
-        if not (0 <= beyond < len(text) and _joiner(text[joiner]) and not read[joiner] and not read[beyond]):
+        if not (0 <= beyond < len(text) and (_joiner(text[joiner]) or grouped[joiner])
+                and not read[joiner] and not read[beyond]):
             return False
         partner = holder[joiner]
         if partner is not None and partner.form is span.form:
@@ -193,6 +218,11 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     a symbol or an emoji. So with a key `cats`, `2,cats` reads "two,kats", and with a key `GPT-4`, `©` or `#️⃣`,
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
+
+    A space between groups of three digits joins them as a mark does, because the groups are one number (BIPM, SI
+    Brochure, 9th edition, section 5.4.4: the digits "may be divided into groups of three by a space"). So a span
+    that reads one group of `12 000` waits, as `€ 12` does in `€ 12 000`, and the run stays as written unless a span
+    reads it whole. A second pass, which finds the same groups, keeps it as written too.
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
@@ -235,6 +265,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
                 if not (_inside(span, blocks)
                         or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
 
+    grouped = _group_spaces(view)
     first, others = [], request
     if say_as is not None:
         others = replace(request, params=say_as.plain, memo={("written", view): text}, say_as=None)
@@ -244,7 +275,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         unit_at: list[Span | None] = [None] * len(text)
         for unit in units:
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
-        evidence = _evidence_words(text, tokens, held)
+        evidence = _evidence_words(text, tokens, held, grouped)
         first = [span for span in first if not (_cuts(span, unit_at) or any(evidence[span.start:span.end]))]
     say_as_count = len(first)
     candidates = [*first, *found(recognizers, others)]
@@ -273,7 +304,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
             while last > span.start and is_mark(view[last]):
                 last -= 1
             sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
-        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
+        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides, grouped):
             if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
                 for position in range(span.start, span.end):
                     holder[position] = span
@@ -301,16 +332,19 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
     return tuple(sorted(claimed, key=lambda s: s.start)), (*claimed, *held), held
 
 
-def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span]) -> bytearray:
+def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span], grouped: bytearray) -> bytearray:
     """The words next to each span that stays as written: a recognizer reads them as the evidence that keeps the
-    span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4` in `3/4 kg`."""
+    span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4` in `3/4 kg`. A group of digits that a
+    group space joins to the span is no such word: it is part of the same number, as `351` is in `+351 912`."""
     marked = bytearray(len(text))
     words = [token for token in tokens if context_word(token.text) is not None]
     starts = [token.start for token in words]
     for span in held:
         before, after = bisect_left(starts, span.start) - 1, bisect_left(starts, span.end)
         for word in (words[before] if before >= 0 else None, words[after] if after < len(words) else None):
-            if word is not None and (word.end <= span.start or word.start >= span.end):
+            if word is not None and (word.end <= span.start or word.start >= span.end) \
+                    and not (word.end + 1 == span.start and grouped[word.end]) \
+                    and not (span.end + 1 == word.start and grouped[span.end]):
                 marked[word.start:word.end] = b"\x01" * (word.end - word.start)
     return marked
 
