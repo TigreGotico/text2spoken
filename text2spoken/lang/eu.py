@@ -282,7 +282,8 @@ def speak_abbreviation(span: Span, context: SpanContext) -> str:
 
 def _symbol_suffix(text: str, end: int, data) -> tuple[int, str] | None:
     """The end and the case ending after a symbol: a hyphen and a declared ending, as in `€-etik` and `kg-ek`
-    (Araua 197, section 6.4), or what `_suffix` reads."""
+    (Araua 197, section 6.4), or the end of the symbol when `_suffix` finds no letters after it. Letters that touch
+    the symbol are no ending, because the hyphen joins one, so `0033 sei` holds no unit `s`: `sei` is a word."""
     if text.startswith("-", end):
         stop = end + 1
         while stop < len(text) and (is_letter(text[stop]) or is_mark(text[stop])):
@@ -290,7 +291,8 @@ def _symbol_suffix(text: str, end: int, data) -> tuple[int, str] | None:
         ending = text[end + 1:stop]
         if ending in data.get("case_suffixes", ()) and not (stop < len(text) and is_word_char(text[stop])):
             return stop, ending
-    return _suffix(text, end, data, ())
+    after = _suffix(text, end, data, ())
+    return None if after is None or after[1] else after
 
 
 def _ordinal_follower(text: str, stop: int, data) -> tuple[int, str] | None:
