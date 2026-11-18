@@ -156,7 +156,6 @@ NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
     ("uk-UA", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
     ("bg-BG", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
     ("he-IL", ("יתרה: -50 ₪", "יתרה: ₪ -50")),
-    ("ja-JP", ("残高: -50 €", "残高: € -50")),
     ("pl-PL", ("Saldo: -50 €", "Saldo: € -50")),
 ) for text in texts]
 
@@ -185,7 +184,6 @@ NO_FILE_RBNF_DECIMALS = [
     ("th-TH", "th", "spellout-cardinal", "."),
     ("sw-TZ", "sw", "spellout-cardinal", "."),
     ("vi-VN", "vi", "spellout-cardinal", ","),
-    ("ja-JP", "ja", "spellout-cardinal", "."),
     ("km-KH", "km", "spellout-numbering", "."),
     ("hy-AM", "hy", "spellout-cardinal", ","),
     ("ka-GE", "ka", "spellout-cardinal", ","),

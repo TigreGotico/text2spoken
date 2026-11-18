@@ -1,0 +1,24 @@
+id	tag	form	text	expected	source	checked_by
+ja-001	ja-JP	decimal	9.58	九点五八	English Wiktionary, 小数点, Japanese, Usage notes: "A decimal point itself is pronounced as てん. For example, 9.58 is pronounced as きゅう てん ごー はち and 19.19 is pronounced as じゅうきゅう てん いち きゅう"; CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal-financial: x.x: ←←点→→→;	unchecked
+ja-002	ja-JP	decimal	19.19	十九点一九	English Wiktionary, 小数点, Japanese, Usage notes: "A decimal point itself is pronounced as てん. For example, 9.58 is pronounced as きゅう てん ごー はち and 19.19 is pronounced as じゅうきゅう てん いち きゅう"; CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal-financial: x.x: ←←点→→→;	unchecked
+ja-003	ja-JP	decimal	3.5	三点五	English Wiktionary, 小数点, Japanese, Usage notes: "A decimal point itself is pronounced as てん. For example, 9.58 is pronounced as きゅう てん ごー はち and 19.19 is pronounced as じゅうきゅう てん いち きゅう"; CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal-financial: x.x: ←←点→→→;; 3.5 reads 三点五 (TigreGotico/text2spoken#216)	unchecked
+ja-004	ja-JP	decimal	円周率は「3.14」です。	円周率は「三点一四」です。	English Wiktionary, 小数点, Japanese, Usage notes: "A decimal point itself is pronounced as てん. For example, 9.58 is pronounced as きゅう てん ごー はち and 19.19 is pronounced as じゅうきゅう てん いち きゅう"; CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal-financial: x.x: ←←点→→→;	unchecked
+ja-005	ja-JP	decimal	気温は（-3.5）度。	気温は（マイナス三点五）度。	English Wiktionary, 小数点, Japanese, Usage notes: "A decimal point itself is pronounced as てん. For example, 9.58 is pronounced as きゅう てん ごー はち and 19.19 is pronounced as じゅうきゅう てん いち きゅう"; CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal-financial: x.x: ←←点→→→;; CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal: 1: 一; 10: 十[→→]; 20: ←←十[→→]; -x: マイナス→→;	unchecked
+ja-006	ja-JP	decimal	0.5	〇点五	English Wiktionary, 小数点, Japanese, Usage notes: "A decimal point itself is pronounced as てん. For example, 9.58 is pronounced as きゅう てん ごー はち and 19.19 is pronounced as じゅうきゅう てん いち きゅう"; CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal-financial: x.x: ←←点→→→;; CLDR RBNF ja, spellout-cardinal: 0: 〇;	unchecked
+ja-007	ja-JP	cardinal	23	二十三	CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal: 1: 一; 10: 十[→→]; 20: ←←十[→→]; -x: マイナス→→;	unchecked
+ja-008	ja-JP	cardinal	-5	マイナス五	CLDR RBNF ja (unicode-rbnf 2.5.0), spellout-cardinal: 1: 一; 10: 十[→→]; 20: ←←十[→→]; -x: マイナス→→;	unchecked
+ja-009	ja-JP	none	私は23個のリンゴを持っています。	私は23個のリンゴを持っています。	ja.py module docstring: a number next to a kanji or a kana stays as written; pyopenjtalk-plus 0.4.1.post10 reads 3個 サンコ and 23個 ニジューサンコ by itself	unchecked
+ja-010	ja-JP	none	3.5キロ	3.5キロ	ja.py module docstring: a number next to a kanji or a kana stays as written; pyopenjtalk-plus 0.4.1.post10 reads 3個 サンコ and 23個 ニジューサンコ by itself	unchecked
+ja-011	ja-JP	none	3.0	3.0	RbnfDecimal: a fraction of zeros stays as written, because RBNF reads 3.0 as the integer	unchecked
+ja-012	ja-JP	cardinal	日付 13/13/2024 は存在しない。	日付 13/13/2024 は存在しない。	Section 13: a row that must stay unread	unchecked
+ja-013	ja-JP	cardinal	画面の比率は 16:9 です。	画面の比率は 16:9 です。	Section 13: a row that must stay unread	unchecked
+ja-014	ja-JP	cardinal	ヨハネ 3:16 を読む。	ヨハネ 3:16 を読む。	Section 13: a row that must stay unread	unchecked
+ja-015	ja-JP	cardinal	ハッシュタグ #decade が流行した。	ハッシュタグ #decade が流行した。	Section 13: a row that must stay unread	unchecked
+ja-016	ja-JP	none	残高: -50 €	残高: -50 €	design section 6.1: a minus next to a currency symbol belongs to the amount, and money stays as written	unchecked
+ja-017	ja-JP	none	残高: € -50	残高: € -50	design section 6.1: a minus next to a currency symbol belongs to the amount, and money stays as written	unchecked
+ja-018	ja-JP	none	価格は 5 € です。	価格は 5 € です。	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; ja.py keeps that scope	unchecked
+ja-019	ja-JP	none	増加率は 20% です。	増加率は 20% です。	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; ja.py keeps that scope	unchecked
+ja-020	ja-JP	none	重さは 5 kg です。	重さは 5 kg です。	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; ja.py keeps that scope	unchecked
+ja-021	ja-JP	none	日付は 2024/12/25 です。	日付は 2024/12/25 です。	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; ja.py keeps that scope	unchecked
+ja-022	ja-JP	none	確率は 1/2 です。	確率は 1/2 です。	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; ja.py keeps that scope	unchecked
+ja-023	ja-JP	none	項目 1.a を見る。	項目 1.a を見る。	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; ja.py keeps that scope	unchecked

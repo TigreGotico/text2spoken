@@ -104,4 +104,4 @@ The file reads no ranges, dates, times, telephone numbers, identifiers, words in
 | `Ik sprak Mr. Smith.` | `nl-NL` | stays as written | `Mr.` with a capital is also the English title, so only the lowercase `mr.` reads "meester". |
 
 ---
-[← Italian](it.md) · [Home](../index.md) · [Portuguese →](pt.md)
+[← Japanese](ja.md) · [Home](../index.md) · [Portuguese →](pt.md)
