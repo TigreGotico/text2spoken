@@ -19,3 +19,22 @@ ko-017	ko-KR	none	화면 비율 16:9 와 구절 3:16	화면 비율 16:9 와 구�
 ko-018	ko-KR	none	태그 #decade	태그 #decade	text2spoken-design section 4.2: # is no lead in ko	unchecked
 ko-019	ko-KR	none	날짜 13/13/2024	날짜 13/13/2024	text2spoken-design section 4.2: no month 13	unchecked
 ko-020	ko-KR	none	가격 ₩ 5,000	가격 ₩ 5,000	text2spoken-design section 6.1: money stays as written, as for a language with no file, also with a space after the sign	unchecked
+ko-021	ko-KR	cardinal	저는 사과가 23개 있어요.	저는 사과가 스물세 개 있어요.	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "21: 스물[→→];", "3: 세;"; 표준국어대사전, 개: "사탕 한 개"; 한글 맞춤법 제43항: 단위를 나타내는 명사는 띄어 쓴다, "10개"	unchecked
+ko-022	ko-KR	cardinal	사과 23 개	사과 스물세 개	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "21: 스물[→→];", "3: 세;"; 표준국어대사전, 두: "사과 두 개"	unchecked
+ko-023	ko-KR	cardinal	학생 3명이 왔다.	학생 세 명이 왔다.	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "3: 세;"; 표준국어대사전, 명: "한 명"; 표준국어대사전, 이 (조사)	unchecked
+ko-024	ko-KR	cardinal	고양이 2마리	고양이 두 마리	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "2: 두;"; 표준국어대사전, 마리: "새 두 마리"	unchecked
+ko-025	ko-KR	cardinal	저는 20살이에요.	저는 스무 살이에요.	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "20: 스무;"; 표준국어대사전, 스무: "스무 살"; 표준국어대사전, 이다 (조사)	unchecked
+ko-026	ko-KR	cardinal	3시에 만나요.	세 시에 만나요.	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "3: 세;"; 표준국어대사전, 시: "지금은 세 시가 조금 넘었다"; 표준국어대사전, 에 (조사)	unchecked
+ko-027	ko-KR	cardinal	24시간 영업	스물네 시간 영업	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "21: 스물[→→];", "4: 네;"; 표준국어대사전, 네: "네 시간"	unchecked
+ko-028	ko-KR	cardinal	3시 20분	세 시 이십 분	한글 맞춤법 제43항: 단위를 나타내는 명사는 띄어 쓴다, "두 시 삼십 분 오 초"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "20: ←←십[→→];"	unchecked
+ko-029	ko-KR	cardinal	2011년에 갔다	이천십일 년에 갔다	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering; 표준국어대사전, 년: "팔 년"; 표준국어대사전, 에 (조사)	unchecked
+ko-030	ko-KR	cardinal	6월에 만나요	유월에 만나요	한글 맞춤법 제52항: 유월(六月); 표준국어대사전, 유월; 표준국어대사전, 에 (조사)	unchecked
+ko-031	ko-KR	cardinal	10월 9일	시월 구 일	한글 맞춤법 제52항: 시월(十月); 표준국어대사전, 시월; 표준국어대사전, 일: "삼 일 동안"	unchecked
+ko-032	ko-KR	cardinal	1,000원	천 원	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1000: 천[→→];"; 표준국어대사전, 원: "천 원으로 과자를 사 먹었다"	unchecked
+ko-033	ko-KR	cardinal	5층	오 층	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering; 한글 맞춤법 제43항: 단위를 나타내는 명사는 띄어 쓴다, "육 층"; 표준국어대사전, 삼: "교실은 삼 층에 있다"	unchecked
+ko-034	ko-KR	cardinal	3개월	삼 개월	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering; 표준국어대사전, 개월: "삼 개월"	unchecked
+ko-035	ko-KR	cardinal	3개씩	세 개씩	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: "3: 세;"; 표준국어대사전, -씩: "다섯 마리씩"	unchecked
+ko-036	ko-KR	none	3분 동안	3분 동안	표준국어대사전, 분: a minute, and honoured persons in native numerals ("손님 다섯 분"); text2spoken-design section 10: an ambiguous form stays as written	unchecked
+ko-037	ko-KR	none	123개	123개	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-native-attributive: the native tens end at 아흔 (표준국어대사전, 아흔: "열의 아홉 배가 되는 수"), and 100 takes the Sino-Korean 백; no source gives the reading of 100 and up before a native counter, so it stays as written	unchecked
+ko-038	ko-KR	none	3~4개	3~4개	No source gives the reading of a range of numbers before a counter, so it stays as written	unchecked
+ko-039	ko-KR	none	13시	13시	표준국어대사전, 시: "정각 열 시에 만납시다"; no source gives the reading of 13 and up before 시, so it stays as written	unchecked
