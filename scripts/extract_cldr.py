@@ -59,7 +59,8 @@ UCD = f"https://www.unicode.org/Public/{UNICODE}/ucd/"
 EMOJI = f"https://www.unicode.org/Public/{UNICODE}/emoji/"
 EMOJI_FILES = ("emoji-sequences.txt", "emoji-zwj-sequences.txt")
 SELECTOR = "\ufe0f"
-TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE", "nl-SR")
+TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "ca-ES", "ca-AD", "ca-ES-valencia", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE",
+        "nl-SR")
 DATE_LOCALES = (
     "af", "ak", "am", "an", "ast", "az", "be", "bg", "bs", "ca", "ccp", "chr", "cs", "cy", "da", "ee", "eo", "et",
     "fa", "ff", "fi", "fil", "fo", "fy", "ga", "gl", "he", "hi", "hr", "hu", "hy", "id", "is", "ja", "ka", "kab",

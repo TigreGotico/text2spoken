@@ -78,12 +78,11 @@ def test_a_language_with_no_file_reads_cardinals_through_rbnf():
 # README: "A language with no file reads cardinal numbers from the CLDR spell-out rules, and keeps all other forms
 # as written." Each text holds one form other than a cardinal, so it stays whole.
 WRITTEN_FORMS = [
-    ("ca-ES", "Ha pagat £5."), ("ca-ES", "Ha pagat 5 €."), ("ca-ES", "Ha pagat 5\u00a0€."), ("ca-ES", "50%"),
-    ("ca-ES", "És un 25 % més barat."), ("lb-LU", "Et kascht $5."), ("lb-LU", "Et kascht 50%."),
+    ("lb-LU", "Et kascht £5."), ("lb-LU", "Et kascht 5 €."), ("lb-LU", "Et kascht 5\u00a0€."),
+    ("lb-LU", "Den 12/03/2024 um 7:30."), ("lb-LU", "Et kascht $5."), ("lb-LU", "Et kascht 50%."),
     ("lb-LU", "Et weit 5 kg."), ("lb-LU", "Et huet 25°."), ("lb-LU", "Mir fueren 50 km/h."), ("lb-LU", "den 3. Mee"),
     ("lb-LU", "Hie gouf 2. Sieger."), ("mt-MT", "Il-prezz: $5."), ("mt-MT", "Jiswa R$5."), ("gl-ES", "o 1.º de maio"),
-    ("gl-ES", "a 2.ª vez"), ("ca-ES", "Costa 5 € al dia."), ("ca-ES", "El 12/03/2024 a les 7:30."),
-    ("tr-TR", "%50 indirim"),
+    ("gl-ES", "a 2.ª vez"), ("tr-TR", "%50 indirim"),
 ]
 
 
@@ -97,8 +96,6 @@ def test_a_language_with_no_file_keeps_the_forms_it_cannot_read_as_written(tag, 
 
 
 def test_a_language_with_no_file_reads_the_cardinals_next_to_a_kept_form():
-    # Wiktionary, tres: Catalan "three".
-    assert normalize("Ha pagat £5 i 5 € per 3 pomes.", "ca-ES") == "Ha pagat £5 i 5 € per tres pomes."
     # Wiktionary, dräi (fetched): Luxembourgish "three".
     assert normalize("Den 3. Mee kaaft ech 3.", "lb-LU") == "Den 3. Mee kaaft ech dräi."
     # CLDR `digits-ordinal` writes 3.º in Portuguese, so a full stop and a space end a sentence.
@@ -160,7 +157,6 @@ NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
     ("bg-BG", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
     ("he-IL", ("יתרה: -50 ₪", "יתרה: ₪ -50")),
     ("ja-JP", ("残高: -50 €", "残高: € -50")),
-    ("ca-ES", ("Saldo: -50 €", "Saldo: € -50")),
     ("pl-PL", ("Saldo: -50 €", "Saldo: € -50")),
 ) for text in texts]
 
@@ -239,7 +235,7 @@ def test_a_language_with_no_file_reads_the_rbnf_rules_as_the_xml_writes_them(tag
 
 # Languages with no file that ovos-number-parser writes, with the decimal mark of CLDR 49: (tag, mark).
 NO_FILE_PARSER_DECIMALS = [("nb-NO", ","), ("fa-IR", "."), ("tr-TR", ","), ("pl-PL", ","), ("he-IL", "."),
-                           ("ca-ES", ","), ("sv-SE", ","), ("fy-NL", ",")]
+                           ("sv-SE", ","), ("fy-NL", ",")]
 
 
 @pytest.mark.parametrize(("tag", "mark"), NO_FILE_PARSER_DECIMALS)
@@ -265,7 +261,7 @@ def test_a_held_language_reads_decimals_through_rbnf():
 
 # A say-as `cardinal` reads a decimal in the CLDR mark of the locale, as a text with no say-as does. The mark of sw
 # is the full stop, so `3,5` stays as written in sw-TZ.
-SAY_AS_DECIMALS = [("ca-ES", "3,5"), ("da-DK", "3,5"), ("sv-SE", "3,5"), ("nb-NO", "3,5"), ("af-ZA", "3,5"),
+SAY_AS_DECIMALS = [("da-DK", "3,5"), ("sv-SE", "3,5"), ("nb-NO", "3,5"), ("af-ZA", "3,5"),
                    ("sw-TZ", "3.5"), ("fy-NL", "3,5")]
 
 
@@ -376,7 +372,7 @@ def test_a_language_with_no_decimal_rule_or_marks_keeps_the_decimal(code):
 # A language with no file whose number words ovos-number-parser writes with a module of its own reads them through
 # the parser, and RBNF reads every other language (design section 6.1). Expected words: English Wiktionary,
 # Module:number list/data/nb (3 tre), /az (7 yeddi, 60 altmış, 100 yüz) and /gl (0 cero); Galician "tres" from the
-# Wiktionary entry tres; Catalan "dos-cents" from the Wiktionary entry dos-cents, where RBNF writes "dos-cent".
+# Wiktionary entry tres.
 # Slovene reads through the parser, though the parser writes 2000 as "dve tisoč" where /sl writes "dva tisoč": RBNF
 # writes each number from 21 to 99 unit last, "štirideset dva", where /sl writes 7 sedem and 42 dvainštirideset.
 NO_FILE_PARSER = [
@@ -384,7 +380,6 @@ NO_FILE_PARSER = [
     ("gl-ES", "O Dr. Pérez ten 3 pacientes.", "O Dr. Pérez ten tres pacientes."),
     ("gl-ES", "Hai 0 erros", "Hai cero erros"),
     ("az-AZ", "bu gün 7 gün 60 il 100", "bu gün yeddi gün altmış il yüz"),
-    ("ca-ES", "avui 201 fa", "avui dos-cents un fa"),
     ("sl-SI", "danes 7 je 42 zelo", "danes sedem je dvainštirideset zelo"),
 ]
 

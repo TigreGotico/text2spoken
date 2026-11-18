@@ -18,10 +18,10 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"el": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
                                   "no_phone_shapes"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
-(the phone shape tables), or a row reads it only with a param other than the default (the 12-hour clock and the
+(the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
 phrase style of French, which tests/test_french.py checks)."""
 
 # One entry of each table of a language file; DELETE removes a table that holds one value.
@@ -164,6 +164,13 @@ ENTRIES = {
         "time_articles": "alle", "date_words": "il", "of_words": "del", "titles": "Dr.", "feminine_titles": "prof.",
         "feminine_determiners": "la", "possessives": "loro", "abbreviations": "ecc.", "sentence_final": "ecc.",
         "number_abbreviations": "art.", "patterns": "expression",
+    },
+    "ca": {
+        "number_marks": "Latn", "sign_words": "-", "digit_words": "u", "decimal_word": DELETE, "ordinal_marks": "è",
+        "fraction_names": "3", "of_words": "dels", "date_words": "el", "percent": "word", "currency_symbols": "EUR",
+        "currencies": "USD", "currency_genders": "EUR", "scales": "milions", "unit_symbols": "kg",
+        "dimension_marks": "×", "titles": "Dr.", "abbreviations": "p. ex.", "sentence_final": "etc.",
+        "number_abbreviations": "núm.", "symbol_names": "§",
     },
     "nl": {
         "number_marks": "Latn", "sign_words": "-", "digit_words": "nul", "decimal_word": DELETE, "leads": "nr. ",
