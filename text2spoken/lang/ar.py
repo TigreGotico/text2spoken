@@ -11,9 +11,10 @@ Ryding writes that "colloquial forms of Arabic do not have case marking" (p. 166
 register by default. Each code of `SERVES` but `arb` names a regional or ethnic variety in the ISO 639-3 code table,
 such as "Egyptian Arabic" or "Chadian Arabic"; `arb` is "Standard Arabic" and stays formal, as `ar` does. In the
 colloquial register, the number words of a lect come from ovos-number-parser with the code of the lect, so `arz`
-reads the Egyptian تلتاشر for 13. A lect with no dialect words in ovos-number-parser reads colloquial Standard Arabic,
-which the parser gives each member of the macrolanguage `ara`. `apc` (Levantine) is not in `SERVES`: a Levantine voice reads its own number words, and a reading
-here would replace them. It joins when ovos-number-parser writes Levantine number words.
+reads the Egyptian تلتاشر for 13 and `apc` the Levantine تلتعش. A lect with no dialect words in ovos-number-parser
+reads colloquial Standard Arabic, which the parser gives each member of the macrolanguage `ara`. ISO 639-3 change
+request 2022-006 merged the retired South Levantine `ajp` into `apc`, and linguatag standardizes `ajp` to `apc`, so an
+`ajp` tag reads as `apc`.
 
 The rules and their sources:
 
@@ -67,12 +68,10 @@ from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 MASCULINE, FEMININE = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE
 NOMINATIVE, OBLIQUE = "nominative", "oblique"
 
-SERVES = ("aao", "abh", "abv", "acm", "acq", "acw", "acx", "adf", "aeb", "aec", "afb", "apd", "arb", "arq",
-          "ars", "ary", "arz", "auz", "avl", "ayh", "ayl", "ayn", "ayp", "shu", "ssh")
+SERVES = ("aao", "abh", "abv", "acm", "acq", "acw", "acx", "adf", "aeb", "aec", "afb", "apc", "apd", "arb",
+          "arq", "ars", "ary", "arz", "auz", "avl", "ayh", "ayl", "ayn", "ayp", "shu", "ssh")
 """The active members of the ISO 639-3 macrolanguage `ara` that write Arabic script. `acy` and `pga` write Latin
-script (CLDR likely subtags), and `ajp` and `bbz` are retired codes. `apc` (Levantine) is left out until
-ovos-number-parser writes Levantine number words: a Levantine voice reads its own number words, and a reading of
-colloquial Standard Arabic here would replace them."""
+script (CLDR likely subtags), and `ajp` and `bbz` are retired codes."""
 
 LECT_REGIONS = {
     "aao": "DZ",  # "aao": "aao-Arab-DZ"; Glottolog alge1240: DZ, EH, LY, MA, NE
@@ -86,6 +85,7 @@ LECT_REGIONS = {
     "aeb": "TN",  # "aeb": "aeb-Arab-TN"; Glottolog tuni1259: DZ, LY, TN
     "aec": "EG",  # "aec": "aec-Arab-EG"; Glottolog said1239: EG, SD
     "afb": "KW",  # "afb": "afb-Arab-KW"; Glottolog gulf1241: AE, BH, IQ, IR, KW, OM, QA, SA, YE
+    "apc": "SY",  # "apc": "apc-Arab-SY"; Glottolog nort3139: IL, LB, SY, TR
     "apd": "SD",  # "apd": "apd-Arab-SD"; Glottolog suda1236: CF, EG, ER, ET, LY, SD, TD
     "arq": "DZ",  # "arq": "arq-Arab-DZ"; Glottolog alge1239: DZ, MA, TN
     "ars": "SA",  # "ars": "ars-Arab-SA"; Glottolog najd1235: AE, IL, IQ, JO, KW, LB, SA, SY, TR, YE
