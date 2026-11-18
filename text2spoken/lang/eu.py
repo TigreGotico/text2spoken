@@ -23,10 +23,13 @@ The `operators` table holds the words of the same page: `5 x 0 = 0` is "bost bid
 groups of three with a space, a no-break space or a narrow no-break space between them, which Araua 203, section
 3.2.1.1, page 12, recommends, as in `36 524`, read as one number: the group marks of this file are `.` and these
 spaces, so `1 000 000 lagun` reads "milioi bat lagun", as `1.000.000 lagun` does. Two forms stay as written through
-`KEPT_SPACE_GROUPS`. A run of three groups of three digits, as `943 123 456`, is also the shape of a Spanish telephone
-number (Wikipedia, "Telephone numbers in Spain": "a nine-digit number was used for all calls, e.g.: 9xx xxx xxx"),
-and this file has no telephone reading. A fraction in groups after the decimal comma, as `0,264 7`, would read its
-first group alone.
+`KEPT_SPACE_GROUPS`. A run of three groups of three digits, as `943 123 456`, is also the shape of a telephone
+number: Araua 203, footnote 12, page 14, "zenbakiak binaka edo hirunaka ere zatitu daitezke: Telefonoa: +34 944 15
+81 55 / +34 944 158 155", and this file has no telephone reading. The run stays as written also after one two-digit group,
+which may be a country code with no plus sign, and with the first group in brackets. Digit groups after a country
+code, `+34` or `0034`, stay as written, in threes or in pairs. A fraction in groups after the decimal comma, as
+`4 712,395 8`, which section 3.2.1.1 marks as unusual (ezohikoa), would read its first group alone, and so would a
+fraction in groups after a decimal point, as `3.141 592 6` (page 14), where the point would read as a group mark.
 """
 from __future__ import annotations
 
@@ -309,10 +312,15 @@ def _ordinal_follower(text: str, stop: int, data) -> tuple[int, str] | None:
 
 _GAP = "[ \u00a0\u202f]"
 KEPT_SPACE_GROUPS = SpaceGroups(pattern=re.compile(
-    f"(?<![0-9]{_GAP})(?<![0-9])(?:[0-9]{{3}}(?:{_GAP}[0-9]{{3}}){{2}}(?!{_GAP}?[0-9]|,[0-9])"
-    f"|[0-9]+,[0-9]{{1,3}}(?:{_GAP}[0-9]{{1,3}})+)"))
-"""The space-grouped runs that stay as written: three groups of three digits, the shape of a Spanish telephone
-number, and a fraction in groups after the decimal comma (module docstring)."""
+    f"(?<![0-9]{_GAP})(?<![0-9+])"
+    f"(?:(?:\\+|00)[0-9]{{1,3}}(?:{_GAP}[0-9]{{2,3}})+(?![0-9])"
+    f"|(?:[0-9]{{2}}{_GAP})?(?:[0-9]{{3}}|\\([0-9]{{3}}\\))(?:{_GAP}[0-9]{{3}}){{2}}(?!{_GAP}?[0-9]|,[0-9])"
+    f"|(?:[0-9]{{1,3}}(?:{_GAP}[0-9]{{3}})+|[0-9]+),[0-9]{{1,3}}(?:{_GAP}[0-9]{{1,3}})+"
+    f"|[0-9]+\\.[0-9]{{3}}(?:{_GAP}[0-9]{{3}})*{_GAP}[0-9]{{1,2}}(?![0-9]))"))
+"""The space-grouped runs that stay as written: digit groups after a country code, three groups of three digits, the
+shape of a Spanish telephone number, with a two-digit group or brackets before it, a fraction in groups after the
+decimal comma, with a whole part in groups or not, and a fraction in groups after a decimal point whose last group is
+short (module docstring)."""
 
 @dataclass(frozen=True)
 class BasqueOrdinal:
