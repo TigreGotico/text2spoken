@@ -195,8 +195,7 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
     before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
-    reads the number after it, finds no key there and reads the `5` before it. So the key and the `5` read on the
-    first pass.
+    reads the number after it, finds no key there and reads the `5` before it.
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
@@ -233,7 +232,6 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
     request.memo[("written", view)] = text
     say_as = request.say_as
     recognizers = [recognizer for recognizer in request.language.recognizers if recognizer.form in request.params.forms]
-    numbered = frozenset(key for key, word in request.data.get("number_abbreviations", {}).items() if word is not None)
 
     def found(group: Sequence[Recognizer], asked: Request) -> list[Span]:
         return [span for recognizer in group for span in recognizer.find(view, tokens, asked)
@@ -278,8 +276,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
             while last > span.start and is_mark(view[last]):
                 last -= 1
             sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
-        elif span.form is Form.ABBREVIATION and span.fields["key"] in numbered \
-                and next_visible(view, span.end).isdigit():
+        elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
+                and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
             sides = ()
         if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
             if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
