@@ -38,6 +38,11 @@ The rules and their sources:
   Hijri calendar: the month is the Hijri month, and the mark reads هجري (English Wiktionary, هـ: "abbreviation of
   هِجْرِيّ (hijriyy): in the year of the Hegira (AH)"). The mark م after a numeric date reads ميلادي (English
   Wiktionary, م: "abbreviation of مِيلَادِيّ (mīlādiyy), AD, CE").
+  In a range of days before one month, the first day is a date of that month and reads as an ordinal too, as
+  Arabic Wikipedia writes it: "من الأول إلى السابع من آذار" (أستراليا في الألعاب البارالمبية الشتوية 2002, oldid
+  71881762) and "من الثاني إلى الرابع من فبراير" (ردود الفعل على الأمر التنفيذي رقم 13769, oldid 76868665).
+- Ranges. إلى is a preposition, so the number after it is genitive (pp. 366-367). In a range of two percentages,
+  amounts or times, such as `10%-20%`, the second takes the genitive too.
 - Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
   thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour comes from
   the CLDR 49 day period rules of `ar` (`dayPeriods.json`).
@@ -310,16 +315,16 @@ def _governs(word: str, data: FrozenMap) -> bool:
 
 
 def _case(span: Span, context: SpanContext) -> str:
-    """Oblique after a preposition, a semi-preposition or a year noun, else nominative. The colloquial register reads
-    every number oblique: Ryding 2005, p. 343, note 11, gives the genitive-accusative for the spoken tens only, and
-    the README lists the rest as a choice with no source."""
+    """Oblique after a preposition, a semi-preposition, a year noun or the range word, else nominative. The colloquial
+    register reads every number oblique: Ryding 2005, p. 343, note 11, gives the genitive-accusative for the spoken
+    tens only, and the README lists the rest as a choice with no source."""
     request = context.request
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = request.data
     before = context.before[-1] if context.before else ""
     if (request.params.register == "colloquial" or span.fields.get("prefix", "") in data["prepositions"]
-            or _governs(before, data) or before in data["year_nouns"]):
+            or _governs(before, data) or before in data["year_nouns"] or span.lead.strip() == data["range_word"]):
         return OBLIQUE
     return NOMINATIVE
 
@@ -399,11 +404,15 @@ def speak_rank(span: Span, context: SpanContext, proclitic: str, noun: str) -> s
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """One and two follow the noun that they count (Ryding 2005, pp. 330 and 333), so a digit 1 or 2 before a noun
-    stays as written."""
-    fields, request = span.fields, context.request
+    stays as written. The first day of a range of days before a month, as 1 in من 1 إلى 7 مارس, is a date."""
+    fields, request, after = span.fields, context.request, context.after
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         raise DeclinedReading("a number with a leading zero has no cited reading")
+    if (len(after) == 3 and after[0] == request.data["range_word"] and not (fields["sign"] or fields["lead"])
+            and fold_digits(after[1]).isdigit() and 1 <= int(digits) < int(fold_digits(after[1])) <= 31
+            and after[2] in {name.split()[0] for name in request.data["months"]}):
+        return SPELLER.ordinal(digits, Features(gender=MASCULINE, case=_case(span, context)), request)
     rank = rank_noun(context)
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
@@ -444,6 +453,11 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
     if bounded_integer(fields["numerator"]) == 2 and context.after and _is_arabic_word(context.after[0]):
         words = words[:-1]
     return _signed(words, fields["sign"], context.request)
+
+
+def join_range(span: Span, following: Span, range_word: str) -> tuple[Span, Span]:
+    """The range word leads the second span, so `_case` reads that span in the genitive (Ryding 2005, pp. 366-367)."""
+    return replace(span, end=following.start, trail=" "), replace(following, lead=f"{range_word} ")
 
 
 def speak_range(span: Span, context: SpanContext) -> str:
@@ -657,6 +671,7 @@ LANGUAGE = LanguageSpec(
     numeral_systems=frozenset(),
     context_words=True,
     attach=attach,
+    join_range=join_range,
     options={
         "date_order": frozenset({"DMY", "MDY"}),
         "clock": frozenset({"12h"}),
