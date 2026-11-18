@@ -96,7 +96,8 @@ PT_ENTRIES = {
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
     "letter_free_consonants": "b", "roman_nouns": "capítulo", "roman_words": "MC", "letter_words": "DA",
-    "roman_letter_nouns": "capítulo", "unjoined_symbols": "ML",
+    "roman_letter_nouns": "capítulo", "unjoined_symbols": "ML", "label_nouns": "sala", "plural_labels": "a páginas",
+    "hour_periods": "tarde", "number_links": "vírgula", "letter_label_nouns": "vitamina",
     "roman_ordinal_limit": DELETE,
 }
 AR_ENTRIES = {
