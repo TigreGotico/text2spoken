@@ -41,7 +41,7 @@ The [docs index](docs/index.md) lists every page.
 
 ## Languages
 
-A tag with no language file reads cardinal numbers from the CLDR spell-out rules.
+A tag with no language file reads cardinal numbers, decimals and a minus from the CLDR spell-out rules, in the decimal and group marks of CLDR for the locale.
 
 | Language | Varieties | Extra |
 | --- | --- | --- |
