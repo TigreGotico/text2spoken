@@ -4,6 +4,7 @@ edits that cannot change the output (design section 12.1).
 A mutant never edits an installed file: each test copies the package that it edits, and a process with the copy
 first on its import path computes the revision."""
 import ast
+import json
 import os
 import re
 import shutil
@@ -19,6 +20,7 @@ import pytest
 import text2spoken
 from text2spoken import ArgumentTypeError, InvalidLanguageTagError, RevisionError, revision
 from text2spoken.core.language import select
+import text2spoken.core.revision as revision_module
 from text2spoken.core.revision import _revision, _top_level_digest, code_tokens, probe, tree_digest
 
 PACKAGE = Path(text2spoken.__file__).parent
@@ -203,6 +205,62 @@ def test_a_package_imported_from_a_zip_file_raises(tmp_path):
 def test_a_name_that_the_import_system_does_not_find_raises():
     with pytest.raises(RevisionError, match="t2s_no_such_module"):
         _top_level_digest("t2s_no_such_module")
+
+
+@pytest.fixture
+def fresh_probe():
+    probe.cache_clear()
+    _revision.cache_clear()
+    yield
+    probe.cache_clear()
+    _revision.cache_clear()
+
+
+def test_a_probe_that_prints_nothing_raises(fresh_probe, monkeypatch):
+    monkeypatch.setattr(revision_module, "_PROBE", "pass")
+    with pytest.raises(RevisionError, match="printed 0 results"):
+        revision("pt-PT")
+
+
+def test_a_print_at_exit_after_the_result_keeps_the_revision(fresh_probe, monkeypatch, tmp_path):
+    before = revision("pt-PT")
+    (tmp_path / "sitecustomize.py").write_text('import atexit\natexit.register(print, "done")\n', encoding="utf-8")
+    control = subprocess.run([sys.executable, "-c", "pass"], capture_output=True, text=True,
+                             env={**os.environ, "PYTHONPATH": str(tmp_path)})
+    assert control.stdout == "done\n"
+    monkeypatch.syspath_prepend(str(tmp_path))
+    probe.cache_clear()
+    _revision.cache_clear()
+    assert revision("pt-PT") == before
+
+
+def test_a_probe_that_runs_too_long_raises(fresh_probe, monkeypatch):
+    monkeypatch.setattr(revision_module, "_PROBE", "import time\ntime.sleep(10)")
+    monkeypatch.setattr(revision_module, "PROBE_TIMEOUT", 0.5, raising=False)
+    with pytest.raises(RevisionError, match="ran longer than 0.5 s") as raised:
+        revision("pt-PT")
+    assert isinstance(raised.value.__cause__, subprocess.TimeoutExpired)
+
+
+def test_a_probe_that_exits_with_an_error_raises(fresh_probe, monkeypatch):
+    monkeypatch.setattr(revision_module, "_PROBE", "import sys\nsys.stderr.write('the probe broke')\nsys.exit(3)")
+    with pytest.raises(RevisionError, match="exited with 3:\nthe probe broke") as raised:
+        revision("pt-PT")
+    assert isinstance(raised.value.__cause__, subprocess.CalledProcessError)
+    assert raised.value.__cause__.returncode == 3
+
+
+def test_a_probe_that_prints_two_results_raises(fresh_probe, monkeypatch):
+    monkeypatch.setattr(revision_module, "_PROBE", "import sys\nprint(sys.argv[1] + '[]')\nprint(sys.argv[1] + '[]')")
+    with pytest.raises(RevisionError, match="printed 2 results"):
+        revision("pt-PT")
+
+
+def test_a_probe_result_that_is_not_json_raises(fresh_probe, monkeypatch):
+    monkeypatch.setattr(revision_module, "_PROBE", "import sys\nprint(sys.argv[1] + '[not json')")
+    with pytest.raises(RevisionError, match="not JSON") as raised:
+        revision("pt-PT")
+    assert isinstance(raised.value.__cause__, json.JSONDecodeError)
 
 
 def test_the_text_of_a_string_at_the_end_of_a_statement_is_in_the_tokens():
