@@ -124,7 +124,7 @@ ES_ENTRIES = {
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "titles": "Dr.", "abbreviations": "etc.",
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
-    "abbreviation_plurals": "vol.",
+    "abbreviation_plurals": "vol.", "degree_marks": "º", "ordinal_leads": "el", "ordinal_follows": "de",
     "mixed_word": DELETE, "mixed_half": "other",
 }
 ENTRIES = {
@@ -151,7 +151,7 @@ ENTRIES = {
     },
     "it": {
         "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "decimal_word": DELETE, "leads": "pag. ",
-        "percent": "word", "currency_symbols": "CHF", "currencies": "EUR", "kept_currency_signs": "¥",
+        "percent": "word", "currency_symbols": "CHF", "currencies": "EUR",
         "scales": "milioni", "unit_symbols": "kg", "dimension_marks": "×", "dimension_word": DELETE, "operators": "+",
         "ordinal_marks": "ª", "noun_ordinal_marks": "°", "ordinal_nouns": "piano", "lo_onsets": "z",
         "half_links": "di", "mixed_word": DELETE, "mixed_half": "other", "label_abbreviations": "art.",

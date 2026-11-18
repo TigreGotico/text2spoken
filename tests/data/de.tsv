@@ -123,3 +123,4 @@ de-126	de-CH	cardinal	Im Sommer '89 sank der Kurs.	Im Sommer 'neunundachtzig san
 de-127	de-DE	fraction	Wir kennen uns seit 2 1/2 Jahren.	Wir kennen uns seit zweieinhalb Jahren.	Duden, "zweieinhalb": Zahlwort, Bruchzahl, "2 1/2", "wir kennen uns seit zweieinhalb Jahren"	unchecked
 de-128	de-AT	fraction	Es dauert 1 1/2 Tage.	Es dauert eineinhalb Tage.	Duden, "eineinhalb": "eineinhalb Tage"	unchecked
 de-129	de-DE	fraction	Es fehlen 2 3/4.	Es fehlen 2 3/4.	no source gives a mixed number of a fraction other than a half (design section 10: a reading that no source gives declines, and the text stays as written)	unchecked
+de-130	de-DE	money	Das kostet ¥5.	Das kostet ¥5.	design section 10 of text2spoken: a declined span stays as written; the currency table of the language has no ¥, so the amount stays whole and the sign does not touch a number word	unchecked

@@ -598,8 +598,8 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES + LECT_VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], DateNamed(), SHARED["date_numeric"], SHARED["time_clock"], Money(),
-                 SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"], SHARED["decimal"],
-                 SHARED["cardinal"]),
+                 SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"],
+                 SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction,

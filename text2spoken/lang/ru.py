@@ -1002,9 +1002,9 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], DateNamed(), LabelledDateNumeric(), Clock(), Year(), HyphenOrdinal(),
-                 SpacedNumber(), ScaledMoney(), SHARED["money"], SHARED["percent"], SHARED["measure"],
-                 ExpressionGuard(), SHARED["fraction"], Abbreviation(), OtherDecimalMark(), SHARED["decimal"],
-                 SHARED["cardinal"]),
+                 SpacedNumber(), ScaledMoney(), SHARED["money"], SHARED["kept_money"], SHARED["percent"],
+                 SHARED["measure"], ExpressionGuard(), SHARED["fraction"], Abbreviation(), OtherDecimalMark(),
+                 SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.YEAR: speak_year,
         Form.ORDINAL: speak_ordinal, Form.MONEY: speak_money, Form.PERCENT: speak_percent,

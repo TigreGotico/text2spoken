@@ -576,7 +576,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], Money(), SpacedMeasure(), SpacedCardinal(),
+    recognizers=(SHARED["lexicon"], Money(), SHARED["kept_money"], SpacedMeasure(), SpacedCardinal(),
                  KeptGroups(), KeptDate(), SHARED["percent"],
                  SHARED["measure"], SHARED["expression"], SHARED["fraction"], Ordinal(), Year(), Abbreviation(),
                  SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),

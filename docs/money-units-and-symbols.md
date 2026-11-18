@@ -24,6 +24,12 @@ A currency symbol before or after a number reads with the CLDR name of the curre
 
 A symbol that two currencies share reads as the currency whose CLDR symbol it is. Where the CLDR name carries the country, as "US dollar", the language file names the currency, as "dollar", and gives its source. Portuguese writes each currency name with a small first letter. A currency whose CLDR name is no word, as the `¤` of "(unknown currency)", does not read.
 
+An amount next to a currency sign that the language does not read stays as written, with its number, and the log names it. The number does not read alone, because the sign would then touch a word:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Das kostet ¥5 und 5 €.` | `de-DE` | Das kostet ¥5 und fünf Euro. |
+
 ## Measures
 
 | Written | Tag | Spoken |
