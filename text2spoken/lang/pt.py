@@ -215,10 +215,17 @@ takes the gender of the noun, which Priberam gives: "classe", "parte", "fase", "
 "canto", "ato", "acto", "grupo" and "nível" are "nome masculino". So `Classe II` reads "Classe segunda" and `o
 capítulo XV` "o capítulo quinze". A numeral of two letters or more, up to XXX, also reads after any other
 capitalised word, as in `João Paulo II` and `Isabel II`, and right after a title and its full stop, with the gender
-of the title, as in `D. XIV`, which reads "Dom Catorze". In pt-BR the ordinal stops at nine, and
-`roman_ordinal_limit` holds the last value that reads as an ordinal in each variety. Ciberdúvidas 9067: "os numerais
-se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono); mas, a partir daí, se
-pronunciarem como cardinais". So `Pio X` reads "Pio Décimo" in pt-PT and "Pio Dez" in pt-BR.
+of the title, as in `D. XIV`, which reads "Dom Catorze". `roman_ordinal_limit` holds the last value that reads as
+an ordinal, ten in both varieties, and `roman_noun_ordinal_limits` of a variety holds another limit after a noun. In pt-BR the
+ordinal after `artigo` stops at nine. Two Brazilian works, both quoted in Migalhas, Gramatigalhas, "Numeral", give
+ten for kings, popes, centuries and chapters. Luís A. P. Vitória, Dicionário de Dificuldades, Erros e Definições de
+Português (1969), p. 174: "para indicar a ordem dos séculos, ou a ordem de sucessão de soberanos, usa-se o ordinal
+até dez e o cardinal de onze em diante". Francisco da Silveira Bueno, Questões de Português (1957), vol. II, p. 318:
+"de 1 a 10, usam-se os ordinais [...] Pio X (décimo), século VIII (oitavo), capítulo V (quinto)". The same column
+quotes Celso Cunha for the articles of a law: "na numeração dos artigos de leis, decretos e portarias, usa-se o
+ordinal até nove, e o cardinal de dez em diante". So `Pio X` reads "Pio Décimo" in both varieties, and `artigo X`
+reads "artigo décimo" in pt-PT and "artigo dez" in pt-BR. Ciberdúvidas 9067 gives nine for every noun in Brazil ("no
+Brasil até ao nono"), but cites no grammar.
 
 A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun
 of `roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
@@ -276,8 +283,8 @@ this, and the numeral itself does: it is a word of the clause only when `letter_
 do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito do
 indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
 A numeral between a singular demonstrative contracted with `em` or `de` (`nesta`, `deste`, `naquele`) and a common
-noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, with no limit on the
-value: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
+noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, also above
+`roman_ordinal_limit`: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
 a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
 jurídica": "Se o numeral antecede o substantivo, é usual continuar a usar-se o ordinal, mesmo depois de dez".
 Ciberdúvidas 28509, "Plurais com números romanos": "«II directriz», «III directriz», etc. (os símbolos são lidos:
@@ -289,7 +296,7 @@ numeral of two letters or more up to C. The contraction starts a prepositional p
 is its noun. An article or a demonstrative alone gives no such evidence, because `O XV segundo a imprensa` and
 `ESTE XV NUNCA PERDEU` are sentences about the XV de Portugal, so `A II Guerra Mundial` stays as written. The gender
 of the noun comes from `noun_gender` or tugalex, which guesses from the ending of a word that it does not list, so a
-verb form such as `joga` in `O XV joga` gets a gender too: the gender of the article decides, and `O XV joga` keeps
+verb form such as `joga` gets a gender too. That is one more reason why an article alone, as in `O XV joga`, keeps
 the cardinal reading. A plural article, as in `As II partes`, keeps it too, because the ordinal would be plural.
 After any other word of `function_words` in any case, which starts many sentences
 in capitals, as the article in `O XV de Portugal`, a numeral reads only from 11 to 30, as a cardinal, so `O XV` and
@@ -520,7 +527,7 @@ VARIETIES = (
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
         "letter_names": _pt_electronic.VARIETIES["pt-BR"]["letter_names"],
-        "roman_ordinal_limit": 9,
+        "roman_noun_ordinal_limits": {"artigo": 9},
         "colors": {"808080": "cinza"},
         "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
     })),
@@ -941,7 +948,7 @@ def speak_abbreviation(span: Span, context: SpanContext) -> str:
 
 def speak_roman(span: Span, context: SpanContext) -> str:
     """Ordinal up to `roman_ordinal_limit` and cardinal after it (Ciberdúvidas 14167, for kings and popes; 12370, for
-    centuries; 11716, for the parts of a work; 9067, for the limit of pt-BR). After `século` or a noun of
+    centuries; 11716, for the parts of a work; Vitória, Bueno and Cunha, for pt-BR, as the module docstring quotes). After `século` or a noun of
     `roman_nouns`, the reading takes the gender of the noun and a small letter, and so does each numeral of a list that
     follows it, as in `séculos XI, XII e XIII`. After a title and its full stop,
     which ends the context words, it takes the gender of the title that the recognizer keeps in the memo of the
@@ -1389,7 +1396,7 @@ class Roman:
             previous = words[index - 1]
             if start in members:
                 request.memo.setdefault("pt_roman_series", {})[start] = members[start]
-                yield self._span(start, end, value, data)
+                yield self._span(start, end, value, data, members[start])
                 continue
             key = None
             in_clause = any(first <= previous.start and end <= last for first, last in clauses)
@@ -1431,7 +1438,7 @@ class Roman:
                     yield Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": "ordinal", "suffix": ""}),
                                recognizer=self.name)
                     continue
-                yield self._span(start, end, value, data)
+                yield self._span(start, end, value, data, key)
                 if key is not None:
                     last_value = value
                     for member_start, member_end, member in _list_members(text, end, links):
@@ -1442,8 +1449,9 @@ class Roman:
                         members[member_start] = key
                         last_value = member_value
 
-    def _span(self, start: int, end: int, value: int, data) -> Span:
-        role = "ordinal" if value <= data["roman_ordinal_limit"] else "cardinal"
+    def _span(self, start: int, end: int, value: int, data, noun: str | None = None) -> Span:
+        limit = data.get("roman_noun_ordinal_limits", {}).get(noun, data["roman_ordinal_limit"])
+        role = "ordinal" if value <= limit else "cardinal"
         return Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": role, "suffix": ""}),
                     recognizer=self.name)
 

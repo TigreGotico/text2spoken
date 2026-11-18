@@ -88,7 +88,7 @@ English, Portuguese and Basque read a Roman numeral when the text around it show
 | `Leia o capítulo V.` | `pt-PT` | Leia o capítulo quinto. |
 | `A D. XIV.` | `pt-PT` | A Dom Catorze. |
 | `O papa Pio X reinou.` | `pt-PT` | O papa Pio Décimo reinou. |
-| `O papa Pio X reinou.` | `pt-BR` | O papa Pio Dez reinou. |
+| `Veja o artigo X.` | `pt-BR` | Veja o artigo dez. |
 | `Henry VIII had six wives.` | `en-GB` | Henry the Eighth had six wives. |
 | `John Smith III spoke.` | `en-US` | John Smith the Third spoke. |
 | `World War II ended.` | `en-GB` | World War Two ended. |
