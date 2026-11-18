@@ -758,3 +758,10 @@ def test_a_signed_fraction_after_a_mark_reads_once_the_number_before_the_mark_re
 def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(text, caplog):
     assert normalize(text, "en-GB") == text
     assert "unread written form" in caplog.text
+
+
+@pytest.mark.parametrize("lang", ["es-CR", "es-ES"])
+def test_a_phone_word_after_a_hyphen_keeps_its_run_on_a_second_pass(lang):
+    """Section 11. A hyphen joins the reading of the amount to `Tel` on a second pass, and `Tel` still names the run."""
+    once = normalize("Dr. 12,50 €-Tel.. 1.000,5-", lang)
+    assert normalize(once, lang) == once
