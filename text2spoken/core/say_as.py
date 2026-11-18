@@ -23,9 +23,9 @@ from typing import TYPE_CHECKING
 
 from text2spoken.core.dates import is_valid, resolve as resolve_date
 from text2spoken.core.recognizers import (_DATE, PHONE_PLANS, _cluster_edge, _edge, _period_after, _phone_pattern,
-                                          _sentence_period, digit_run_matches, numbers_in)
+                                          _sentence_period, digit_run_matches, numbers_in, whole_part)
 from text2spoken.core.spans import SAY_AS_SPANS, Features, Recognizer, Span, SpanContext
-from text2spoken.core.spellers import spell_digits
+from text2spoken.core.spellers import bounded_integer, spell_digits
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_digit, is_word_char, one_digit_set
 from text2spoken.errors import ArgumentTypeError, ParameterNotHonouredWarning, UnsupportedParameterError, require_type
@@ -223,6 +223,30 @@ class BareTelephone:
 
 
 @dataclass(frozen=True)
+class PlusMixedNumber:
+    """A whole part, a plus sign and a proper fraction, as Amazon Polly writes a mixed number: `3+1/2` "is
+    pronounced "three and a half."" ("Controlling how special types of words are spoken", `fraction`). The span
+    holds the whole part in the field `whole`, as a mixed number with a space does (`whole_part`)."""
+    name: str = "say_as_mixed_number"
+    form: Form = Form.FRACTION
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for match in digit_run_matches("[0-9]+/[0-9]+", fold_digits(text)):
+            start, end = match.span()
+            numerator, denominator = match.group().split("/")
+            top, bottom = bounded_integer(numerator), bounded_integer(denominator)
+            if (not _edge(text, start, end) or numerator[0] == "0" or denominator[0] == "0" or bottom is None
+                    or not 2 <= bottom <= 100 or top is None or not 0 < top < bottom):
+                continue
+            begin = whole_part(text, start, end, ("+",))
+            if begin is not None and fold_digits(text[begin]) != "0" and one_digit_set(text[begin:end]):
+                yield Span(begin, end, Form.FRACTION,
+                           FrozenMap({"whole": fold_digits(text[begin:start - 1]), "numerator": numerator,
+                                      "denominator": denominator, "sign": "", "prefix": "", "suffix": ""}),
+                           recognizer=self.name)
+
+
+@dataclass(frozen=True)
 class DigitRun:
     """Each run of digits, which reads digit by digit."""
     name: str = "say_as_digits"
@@ -414,5 +438,7 @@ def read(say_as: SayAs, tag: str, language: LanguageSpec, data: FrozenMap,
             forced = BareOrdinal()
         elif value == "digits":
             forced = DigitRun()
+        elif value == "fraction":
+            forced = PlusMixedNumber()
     return ResolvedSayAs(value=value, format=attributes["format"], detail=attributes["detail"], forms=forms,
                          forced=forced), params

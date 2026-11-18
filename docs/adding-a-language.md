@@ -405,7 +405,7 @@ The shared verbalizers read these keys:
 | `speak_electronic` | `digit_words`, `electronic_schemes`, `electronic_symbols`, `electronic_vowels`, `letter_names` | `electronic_labels`, `symbol_names` |
 | `speak_letters` | `digit_words`, `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_runs` |
 | `speak_decimal` | `sign_words` | none |
-| `speak_fraction` | `sign_words` | none |
+| `speak_fraction` | `sign_words` | `mixed_half`, `mixed_word` |
 | `speak_ordinal` | none | none |
 | `speak_range` | none | `range_word` |
 | `speak_percent` | `percent`, `sign_words` | none |
@@ -414,6 +414,8 @@ The shared verbalizers read these keys:
 | `speak_abbreviation` | `abbreviations`, `number_abbreviations`, `titles` | none |
 | `speak_idiom` | `idioms` | none |
 | `speak_color` | `digit_words` | `colors` |
+
+`speak_fraction` reads a mixed number of a half, such as `2 1/2`, when the file gives `mixed_word` and `mixed_half`. `mixed_word` is the word between the two parts. `mixed_half` gives the half by gender, with the key `other` for any other gender or none. Portuguese gives `"mixed_word": "e"` and `"mixed_half": {"feminine": "meia", "other": "meio"}`. A file without these keys keeps every mixed number as written.
 
 `READERS` and `OPTIONAL` in `tests/data_keys.py` list the same keys, and `SHAPES` gives the shape of each key.
 

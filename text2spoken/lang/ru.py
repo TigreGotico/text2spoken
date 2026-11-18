@@ -521,6 +521,8 @@ def speak_decimal(span: Span, context: SpanContext) -> str:
 
 def speak_fraction(span: Span, context: SpanContext) -> str:
     fields, request = span.fields, context.request
+    if fields["whole"]:
+        raise DeclinedReading("no cited reading for a mixed number")
     words = SPELLER.fraction(fields["numerator"], fields["denominator"], Features(case=governed_case(context)),
                              request)
     return _signed(words, fields["sign"], request)

@@ -424,6 +424,8 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
     """A fraction before a noun is the first term of an iDaafa, so a dual drops its nuun (Ryding 2005, pp. 360-361:
     thulth-ay-i l-a'Daa'-i)."""
     fields = span.fields
+    if fields["whole"]:
+        raise DeclinedReading("no cited reading for a mixed number")
     words = SPELLER.fraction(fields["numerator"], fields["denominator"], agreement(span, context), context.request)
     if bounded_integer(fields["numerator"]) == 2 and context.after and _is_arabic_word(context.after[0]):
         words = words[:-1]
