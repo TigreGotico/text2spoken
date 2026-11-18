@@ -2,10 +2,13 @@
 gives the reading reads the two parts as one number; every other language keeps the text as written, and never
 reads the parts as two numbers (design section 10). The readings of each language file are rows of tests/data."""
 import logging
+import warnings
 
 import pytest
 
-from text2spoken import NormalizationParams, UnreadFormError, analyze, normalize
+from text2spoken import (FrozenMap, GrammaticalGender, NormalizationParams, SayAs, UnreadFormError, analyze,
+                         normalize, supports)
+from text2spoken.core import language
 
 
 def mixed_spans(text: str, lang: str) -> list:
@@ -82,3 +85,30 @@ def test_a_language_with_no_reading_keeps_the_mixed_number_as_written(caplog, la
 def test_a_second_pass_changes_nothing(lang, text):
     once = normalize(text, lang)
     assert normalize(once, lang) == once
+
+
+GENDERLESS = sorted({variety.tag for spec in language._registry().values() if not spec.genders
+                     for variety in spec.varieties} | {"sv-SE", "pl-PL", "fi-FI", "tr-TR", "ja-JP", "da-DK"})
+"""Every variety of a language file that declares no grammatical gender, and languages with no file."""
+
+
+def outcome(text: str, lang: str, params: NormalizationParams, say_as: SayAs | None = None) -> str:
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            return normalize(text, lang, params, say_as=say_as)
+        except Exception as error:
+            return type(error).__name__
+
+
+@pytest.mark.parametrize("lang", GENDERLESS)
+@pytest.mark.parametrize("strict", [False, True])
+def test_a_gender_has_no_effect_in_a_language_with_no_grammatical_gender(lang, strict):
+    """Design section 2.3: "`default_gender`, or a gender in a hint, for a language with no grammatical gender | No
+    effect. `supports(lang).genders` is empty"."""
+    assert not supports(lang).genders
+    plain = NormalizationParams(strict=strict)
+    for gender in GrammaticalGender:
+        params = NormalizationParams(strict=strict, default_gender=FrozenMap({lang.split("-")[0]: gender}))
+        for text, say_as in (("Het is 2 1/2.", None), ("2 1/2", None), ("3+1/2", SayAs(interpret_as="fraction"))):
+            assert outcome(text, lang, params, say_as) == outcome(text, lang, plain, say_as), (gender, text)

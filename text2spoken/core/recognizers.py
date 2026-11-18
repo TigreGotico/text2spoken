@@ -1067,7 +1067,9 @@ def speak_decimal(span: Span, context: SpanContext) -> str:
 def speak_mixed_half(span: Span, context: SpanContext) -> str:
     """A mixed number of a half, in a language whose data gives `mixed_word` and `mixed_half`: the whole part, the
     word and the half, both in the gender of `default_gender` (design section 5.6), as pt "dois e meio" and es "dos
-    y medio". `mixed_half` gives the half by gender, and under "other" for any other gender or none. The noun that
+    y medio". `mixed_half` gives the half by gender, and under "other" for any other gender or none. A language
+    with no grammatical gender takes no gender (design section 2.3), so nl reads "twee en een half" for any
+    `default_gender`. The noun that
     the number counts sets the gender of the half, and in pt, es, fr and it it stands between the whole part and the
     half, as in pt "uma página e meia", so a mixed number before a word declines, as does any other fraction and
     any language with no `mixed_half`."""
@@ -1080,6 +1082,8 @@ def speak_mixed_half(span: Span, context: SpanContext) -> str:
         raise DeclinedReading(f"a counted noun stands between the parts of a mixed number, and {context.after[0]!r} "
                               "follows it")
     gender = request.params.default_gender.get(language.code) or language.default_gender
+    if gender not in language.genders:
+        gender = None
     whole = language.spellers[Form.CARDINAL].cardinal(fields["whole"], Features(gender=gender), request)
     half = halves.get(gender.value if gender is not None else "other", halves["other"])
     return f"{whole} {request.data['mixed_word']} {half}"

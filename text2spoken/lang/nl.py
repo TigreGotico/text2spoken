@@ -56,8 +56,9 @@ geschreven", "Twee derde van de tekst", and "Het rangtelwoord in de noemer krijg
 numerator 1 reads "een", as Onze Taal, "telwoord", writes "Breuken bestaan uit een hoofdtelwoord en een rangtelwoord:
 een derde, drie vierde". 1/2 stays as written: its word "half" takes the form "halve" before some nouns (Wiktionary,
 "half", "een halve fles water"), and the file does not know the noun. A mixed number of a half with no word after it
-reads the whole part and "en een half": Onze Taal, "tweeënhalf / twee en half / twee-en-een-half": "Zowel tweeënhalf
-als twee en een half is juist", and "bij hogere getallen een voorkeur voor de versie met en een half". Before a noun
+reads the whole part and "en een half": Onze Taal, "Hoe schrijf je 2½ in letters: tweeënhalf, twee en half,
+tweeëneenhalf of twee en een half?" (https://onzetaal.nl/taalloket/twee): "Zowel tweeënhalf als twee en een half is
+juist", and "bij hogere getallen een voorkeur voor de versie met en een half". Before a noun
 the half inflects as 1/2 does ("tweeënhalve / twee en een halve"), so a mixed number before a word stays as written,
 as does a mixed number of another fraction, for which no source gives a reading. `1 1/2` stays as written: Dutch says
 "anderhalf" (Taaladvies, "het afgelopen anderhalf jaar / de afgelopen anderhalf jaar": "het afgelopen anderhalf uur"),
