@@ -19,7 +19,7 @@ from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGen
 
 if TYPE_CHECKING:
     from text2spoken.core.say_as import ResolvedSayAs, SayAs
-    from text2spoken.core.spans import Recognizer, Span, Verbalizer
+    from text2spoken.core.spans import Features, Recognizer, Span, Verbalizer
     from text2spoken.core.spellers import NumberSpeller
 
 
@@ -253,7 +253,13 @@ def core_language(code: str) -> LanguageSpec:
     A minus before a number reads when the speller reads it. The parser reads it when its reading of -1 has a word
     that its reading of 1 does not have. RBNF reads it when the cardinal rule set has a `-x` rule, in the rule set or
     in the rule set that its 0 rule names. `sign_words` holds that word, and `speak_rbnf_cardinal` reads the number
-    through the speller. `RBNF_CARDINAL` keeps as written a minus that may be no minus."""
+    through the speller. `RBNF_CARDINAL` keeps as written a minus that may be no minus.
+
+    An ordinal reads through the speller of the cardinals when it reads ordinals: the parser when it reads the
+    ordinal of 1, RBNF when the locale has an ordinal rule set (`rbnf_ordinals`). A language whose parser reads no
+    ordinal reads them through RBNF. The ordinal speller is the `ORDINAL` speller of the language, which a say-as
+    ordinal reads through (section 17.5); no recognizer of the language claims an ordinal. Where RBNF has an ordinal
+    rule set for more than one gender, `genders` holds them, and `default_gender` chooses the rule set."""
     from unicode_rbnf import RbnfEngine
     from unicode_rbnf.engine import RbnfSpecialRule, TextRulePart
 
@@ -278,14 +284,22 @@ def core_language(code: str) -> LanguageSpec:
             negative = []
         minus = " ".join(word for word in negative if word not in one)
         sign_words = {"-": minus} if minus else {}
+        try:
+            ordinal_speller = speller if parsers.pronounce_ordinal(1, tag) else None
+        except NotImplementedError:
+            ordinal_speller = None
+        ordinals = rbnf_ordinals(locale) if ordinal_speller is None and locale is not None else {}
+        if ordinals:
+            ordinal_speller = RbnfSpeller(cardinal={Features(): "spellout-numbering"}, ordinal=ordinals)
     elif locale is None:
         return bare
     else:
         names = rbnf_engine(locale).rulesets
         cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering")
                         if n in names)
-        ordinal = next((n for n in ("spellout-ordinal", "spellout-ordinal-masculine") if n in names), cardinal)
-        speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): ordinal})
+        ordinals = rbnf_ordinals(locale)
+        speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal})
+        ordinal_speller = speller if ordinals else None
         minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
         sign_words = {} if minus is None else {
             "-": "".join(part.text for part in minus.parts if isinstance(part, TextRulePart)).strip()}
@@ -298,7 +312,25 @@ def core_language(code: str) -> LanguageSpec:
                    recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), recognizers.RBNF_CARDINAL),
                    verbalizers={Form.LEXICON: recognizers.speak_lexicon,
                                 Form.CARDINAL: recognizers.speak_rbnf_cardinal},
-                   spellers={Form.CARDINAL: speller})
+                   spellers={Form.CARDINAL: speller, **({Form.ORDINAL: ordinal_speller} if ordinal_speller else {})},
+                   genders=frozenset(features.gender for features in ordinals if features.gender is not None))
+
+
+def rbnf_ordinals(locale: str) -> dict[Features, str]:
+    """The ordinal rule sets of an RBNF locale, by gender: `spellout-ordinal`, else the masculine, else the common
+    rule set reads with no gender. A gender keys its rule set only where RBNF has rule sets for more than one gender.
+    Empty when the locale has none of them."""
+    from text2spoken.core.spans import Features
+    from text2spoken.core.spellers import rbnf_engine
+
+    names = rbnf_engine(locale).rulesets
+    default = next((n for n in ("spellout-ordinal", "spellout-ordinal-masculine", "spellout-ordinal-common")
+                    if n in names), None)
+    if default is None:
+        return {}
+    gendered = {Features(gender=gender): f"spellout-ordinal-{gender}" for gender in GrammaticalGender
+                if f"spellout-ordinal-{gender}" in names}
+    return {Features(): default, **(gendered if len(gendered) > 1 else {})}
 
 
 def select(tag: str) -> tuple[str, LanguageSpec, Variety]:

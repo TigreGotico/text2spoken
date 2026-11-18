@@ -56,7 +56,20 @@ SSML markup can name the form of a run of text, as in `<say-as interpret-as="ord
 | `characters`, `spell-out`, `letters`, `verbatim` | `characters` | | Letter by letter, and digit by digit |
 | `fraction`, `unit`, `currency` | | | As a fraction, a measure or an amount of money |
 
-The rest of the text reads as plain text, as `people` does in the last example. Any other value, such as `address`, gives the plain reading and a `ParameterNotHonouredWarning`. A format or a detail that the language cannot use is dropped with the same warning. When the text holds nothing of the form, as `abc` with `cardinal`, the call gives the plain reading and logs one `WARNING`. With `strict=True`, these cases raise `UnsupportedParameterError` and `UnreadFormError` (see [Errors and warnings](errors.md)). `analysis.request.say_as` shows the say-as that the call read, or `None`.
+`digits` and `telephone` read in every language that has a word for each digit: the digit words of its language file, else the cardinal of each digit from ovos-number-parser, else from the CLDR rule set `spellout-numbering`. `characters` reads there too. A language with no table of letter names keeps each letter as written, alone, with a `ParameterNotHonouredWarning`. `ordinal` reads in every language with an ordinal speller: its language file, else the ordinal of ovos-number-parser, else the CLDR rule set `spellout-ordinal`. A `+` before a country code drops, with one logged `WARNING`, in a language with no word for it:
+
+```python
+>>> normalize("912 345 678", "nl-NL", say_as=SayAs(interpret_as="telephone"))
+'negen één twee drie vier vijf zes zeven acht'
+>>> normalize("+351 912", "pl-PL", say_as=SayAs(interpret_as="telephone"))
+'trzy pięć jeden dziewięć jeden dwa'
+>>> normalize("3", "pl-PL", say_as=SayAs(interpret_as="ordinal"))
+'trzeci'
+>>> normalize("XK7", "de-DE", say_as=SayAs(interpret_as="characters"))
+'X K sieben'
+```
+
+The rest of the text reads as plain text, as `people` does in the first examples. Any other value, such as `address`, gives the plain reading and a `ParameterNotHonouredWarning`. A format or a detail that the language cannot use is dropped with the same warning. When the text holds nothing of the form, as `abc` with `cardinal`, the call gives the plain reading and logs one `WARNING`. With `strict=True`, these cases raise `UnsupportedParameterError` and `UnreadFormError` (see [Errors and warnings](errors.md)). `analysis.request.say_as` shows the say-as that the call read, or `None`.
 
 ## analyze and render
 

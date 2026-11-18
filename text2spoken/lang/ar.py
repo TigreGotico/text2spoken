@@ -45,6 +45,9 @@ The `units` and `currencies` tables give each noun in every count form, with the
 CLDR 49 does not: `units.json` writes the dual of length-kilometer as "{0} كيلومتر", and `currencies.json` gives
 USD and SAR one name with no count forms. The count forms of دولار and ريال come from Wiktionary.
 
+The file claims no ordinal in plain text. A say-as ordinal (text2spoken design, section 17.5) reads through the
+ordinal of ovos-number-parser in the default gender, the masculine: `3` reads "الثالث".
+
 Ryding 2005 is Karin C. Ryding, *A Reference Grammar of Modern Standard Arabic*, Cambridge University Press. Wright
 1896 is W. Wright, *A Grammar of the Arabic Language*, 3rd edition, volume 1.
 """
@@ -603,7 +606,7 @@ LANGUAGE = LanguageSpec(
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction,
         Form.RANGE: speak_range, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
-    spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
+    spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER, Form.ORDINAL: SPELLER},
     genders=frozenset({MASCULINE, FEMININE}),
     default_gender=MASCULINE,
     animacies=frozenset(),
