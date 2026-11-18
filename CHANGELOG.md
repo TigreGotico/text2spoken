@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a74](https://github.com/TigreGotico/text2spoken/tree/0.0.2a74) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a73...0.0.2a74)
+
+**Merged pull requests:**
+
+- fix: read a mixed number as one number, or keep it as written [\#221](https://github.com/TigreGotico/text2spoken/pull/221) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a73](https://github.com/TigreGotico/text2spoken/tree/0.0.2a73) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a72...0.0.2a73)
