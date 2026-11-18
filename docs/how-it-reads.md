@@ -65,18 +65,19 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 
 A tag whose language has no file reads cardinal numbers and decimals, and keeps all other forms as written. Each number word has one owner. A language that `ovos-number-parser` writes with a module of its own reads the words of that module. Every other language reads the CLDR spell-out rules, and the table `text2spoken/data/rbnf_corrections.json` corrects the CLDR words that are wrong, with a source for each. A few languages with a module stay on the CLDR rules while the module reads a class of numbers worse. `RBNF_HELD` in `text2spoken/core/spellers.py` names them and the class. A language with neither reads only the lexicon.
 
-A decimal reads in the decimal mark and the group mark that CLDR gives the locale, for the digits of each script. The owner of the number words reads it: `ovos-number-parser`, or the `x.x` rule of the CLDR spell-out rules. Some numbers stay as written:
+A number reads in the decimal mark and the group mark that CLDR gives the locale, for the digits of each script. Each mark has one role in a locale, so `1.234` is one thousand two hundred and thirty-four in Turkish and `3,500` is three and a half in Norwegian Bokmål. Where the CLDR number pattern of the locale has a second group size, as `#,##,##0.###` in Hindi, Tamil and Indian English, `1,00,000` is one number. Groups of three read there too.
 
-- A number with one full stop or comma and three digits after it, when the locale gives the mark the other role than the CLDR root locale does. The root locale writes `1,234.5`. Such a number can be written in either convention.
-- A fraction of zeros, as in `3.0`. Both owners read it as the integer, without the zeros.
+The owner of the number words reads a decimal: `ovos-number-parser`, or the `x.x` rule of the CLDR spell-out rules. `ovos-number-parser` says the decimal mark of Czech, Ukrainian, Azerbaijani and Asturian with the word for a full stop, where these locales write a comma, so `RBNF_HELD_DECIMALS` reads their decimals through the CLDR rules. CLDR has no Asturian rules, so an Asturian decimal stays as written. A fraction of zeros, as in `3.0`, stays as written too, because both owners read it as the integer, without the zeros.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `3.5` | `hi` | तीन दशमलव पाँच |
 | `3,500` | `hi` | तीन हज़ार पाँच सौ |
+| `1,00,000` | `hi` | एक लाख |
 | `3,5` | `nb` | tre komma fem |
-| `3,500` | `nb` | stays as written |
-| `1.234` | `tr` | stays as written |
+| `3,500` | `nb` | tre komma fem null null |
+| `1.234` | `tr` | bin iki yüz otuz dört |
+| `1,5` | `cs` | jeden čárka pět |
 | `3.0` | `hi` | stays as written |
 
 A minus before a number reads when its owner has a word for it. A hyphen between two numbers, after a letter or before a percent sign is no minus. A minus after a number or after a dash can mark a range or a code, so the minus and its number stay as written. A minus next to a currency symbol stays as written with the amount. A negative number grouped with spaces that are no group mark of the locale, as in `-1 000`, stays as written whole:

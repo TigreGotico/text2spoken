@@ -21,7 +21,7 @@ from text2spoken.core.dates import date_locales, long_date
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
-from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
+from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries, number_grouping
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
@@ -55,7 +55,7 @@ def numbers_in(text: str, request: Request) -> tuple[Number, ...]:
     key = ("numbers", text)
     if key not in request.memo:
         request.memo[key] = find_numbers(text, number_marks(request.data, request.params.decimal_mark),
-                                         declared_marks(request.data))
+                                         declared_marks(request.data), number_grouping(request.tag, request.language))
     return request.memo[key]
 
 
@@ -261,21 +261,6 @@ _GROUP_SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space, which group the digits of a number."""
 
 
-_ROOT_ROLES = MappingProxyType({".": "decimal", ",": "group"})
-"""The role of the full stop and the comma in the CLDR root locale, which writes `1,234.5`."""
-
-
-def _root_reading_differs(text: str, number: Number) -> bool:
-    """Whether the CLDR root locale reads the number in other words than the locale: the number has one full stop
-    or comma, exactly three digits follow it, and the locale gives it the other role, as `1.234` in `tr` and `3,500`
-    in `nb`. Such a number could be written in either convention."""
-    written = text[number.start + len(number.sign):number.end]
-    marks = [char for char in written if not is_digit(char)]
-    if len(marks) != 1 or marks[0] not in _ROOT_ROLES or len(written.partition(marks[0])[2]) != 3:
-        return False
-    return _ROOT_ROLES[marks[0]] != ("decimal" if number.fraction is not None else "group")
-
-
 def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[Span, ...]:
     """The cardinal and decimal spans of a language with no file (section 6.1), in text order, with each span whose
     minus may mark something else kept as written; `RbnfCardinal` names the cases."""
@@ -313,8 +298,8 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
 class RbnfCardinal(Cardinal):
     """The cardinal of a language with no file (section 6.1), in the CLDR marks of the locale.
 
-    A number that the CLDR root locale reads in other words stays as written (`_root_reading_differs`). A number
-    with a minus stays as written where the minus may mark something else, or where the number goes on past the
+    Each mark reads in its CLDR role in the locale: `1.234` is a group in `tr`, `3,500` a decimal in `nb`. A
+    number with a minus stays as written where the minus may mark something else, or where the number goes on past the
     span: a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an amount next to
     a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a number grouped with
     one of `_GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
@@ -323,9 +308,6 @@ class RbnfCardinal(Cardinal):
 
     The number next to such a minus number stays as written too, so that a second pass finds the digit next to the
     minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. A dash is no digit, so `5` in `5--10` reads."""
-
-    def numbers(self, text: str, request: Request) -> Sequence[Number]:
-        return tuple(number for number in numbers_in(text, request) if not _root_reading_differs(text, number))
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         return (span for span in _rbnf_spans(text, tokens, request) if span.form is self.form)
