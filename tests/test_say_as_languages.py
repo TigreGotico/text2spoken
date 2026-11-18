@@ -28,10 +28,8 @@ NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw", "bn-IN"})
 """Tags with no writer of ovos-number-parser and no RBNF locale: no word for a digit, so `digits`, `telephone` and
 `characters` decline to the plain reading."""
 
-NO_ORDINAL = NO_NUMBERS | {"ko-KR", "cy-GB", "is-IS"}
-"""Tags whose say-as `ordinal` declines. RBNF `ko` has ordinal rule sets for the native and the Sino-Korean numbers
-and none with no qualifier, so the markup does not choose one; RBNF `cy` and `is` have no ordinal rule set, and no
-writer reads them."""
+NO_ORDINAL = NO_NUMBERS | {"cy-GB", "is-IS"}
+"""Tags whose say-as `ordinal` declines. RBNF `cy` and `is` have no ordinal rule set, and no writer reads them."""
 
 LETTER_NAMES = frozenset({"en-US", "pt-PT"})
 """Tags whose language file has a `letter_names` table."""
@@ -74,6 +72,14 @@ def spelled(tag: str, digits: str) -> str:
     return " ".join(digit_word(tag, digit) for digit in digits)
 
 
+def native_ordinal(number: int) -> str:
+    """The Korean native ordinal of RBNF `spellout-ordinal-native`. The native numerals end at 99, so 100 and up have
+    no native ordinal, and the rule set reads none for the test."""
+    if number > 99:
+        raise NoRuleForNumberError(f"no native ordinal of {number}")
+    return rbnf("ko-KR", number, "spellout-ordinal-native")
+
+
 ORDINALS = {
     **{tag: lambda number, tag=tag: pronounce_ordinal(number, tag)
        for tag in ("gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "fa-IR",
@@ -82,12 +88,13 @@ ORDINALS = {
     "el-GR": lambda number: rbnf("el-GR", number, "spellout-ordinal-neuter"),
     "da-DK": lambda number: rbnf("da-DK", number, "spellout-ordinal-common"),
     "hi-IN": lambda number: rbnf("hi-IN", number, "spellout-ordinal-masculine"),
+    "ko-KR": native_ordinal,
     **{tag: lambda number, tag=tag: rbnf(tag, number, "spellout-ordinal")
        for tag in ("zh-CN", "ja-JP", "sw-KE", "vi-VN", "ta-IN")},
 }
 """The source of the ordinal of each tag that no language file reads with an ordinal verbalizer. A language with a
 writer reads through it, as it reads its cardinals; `da` reads its cardinals through RBNF (`RBNF_HELD`), so its
-ordinals too. The Greek file reads a number with no noun in the neuter (`el.py`), and the Arabic file reads its
+ordinals too. The Korean file reads the native ordinal (`ko.py`). The Greek file reads a number with no noun in the neuter (`el.py`), and the Arabic file reads its
 default gender, the masculine (`ar.py`). With no gender, RBNF `hi` reads the masculine and RBNF `da` the common
 gender: neither has an ordinal rule set with no gender."""
 

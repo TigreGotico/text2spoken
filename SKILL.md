@@ -37,7 +37,7 @@ The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 - `el` reads cardinals in the gender and the case of their noun, a minus, percentages, common fractions and numeric dates. Money, measures, decimals and ordinals stay as written. A number with no known noun takes the neuter.
 - The `EMOJI` and `LETTERS` forms read emoji and runs of capital letters in `en` and `pt`. They are off by default. Turn one on with `NormalizationParams().plus(Form.EMOJI)`.
 - `it` reads no date, time or year in figures, so they stay as written.
-- `ko` reads cardinals and decimals in the Sino-Korean numerals, with a minus. Money, percentages, measures, numeric dates and a number with a word right after it stay as written.
+- `ko` reads cardinals and decimals in the Sino-Korean numerals, with a minus. A say-as ordinal reads the native ordinal (셋째), and a say-as date reads 유월 and 시월. Money, percentages, measures, numeric dates and a number with a word right after it stay as written.
 - `ca` reads no date or time in figures, so they stay as written. A year reads as a cardinal: `L'any 2024` reads "L'any dos mil vint-i-quatre". A number before a noun reads in the masculine, and only a unit or a currency gives it another gender.
 - A form that the library cannot read stays as written, with a WARNING log. `strict=True` raises `UnreadFormError`.
 - The English, German and French test rows name their source, and no native speaker has checked them.

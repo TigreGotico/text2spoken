@@ -18,11 +18,12 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads", "months"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
                                   "no_phone_shapes"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
-phrase style of French, which tests/test_french.py checks)."""
+phrase style of French, which tests/test_french.py checks). The Korean month names read only in a say-as date, which
+tests/data/say_as/rows.tsv checks."""
 
 # One entry of each table of a language file; DELETE removes a table that holds one value.
 EN_ENTRIES = {
