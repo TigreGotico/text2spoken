@@ -259,11 +259,17 @@ def core_language(code: str) -> LanguageSpec:
     ordinal of 1, RBNF when the locale has an ordinal rule set (`rbnf_ordinals`). A language whose parser reads no
     ordinal reads them through RBNF. The ordinal speller is the `ORDINAL` speller of the language, which a say-as
     ordinal reads through (section 17.5); no recognizer of the language claims an ordinal. Where RBNF has an ordinal
-    rule set for more than one gender, `genders` holds them, and `default_gender` chooses the rule set."""
+    rule set for more than one gender, `genders` holds them, and `default_gender` chooses the rule set.
+
+    A numeric date stays as written, and a say-as `date` reads through the `DATE` verbalizer (section 17.5): the
+    `spoken_date` of ovos-date-parser when it reads the language, else the CLDR `long` date pattern of the locale
+    (`speak_cldr_date`), when `long_date` gives its parts and the language has an ordinal speller for an ordinal
+    day."""
     from unicode_rbnf import RbnfEngine
     from unicode_rbnf.engine import RbnfSpecialRule, TextRulePart
 
     from text2spoken.core import parsers, recognizers
+    from text2spoken.core.dates import date_locales, long_date
     from text2spoken.core.spans import Features
     from text2spoken.core.spellers import RBNF_HELD, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
     import linguatag
@@ -306,12 +312,20 @@ def core_language(code: str) -> LanguageSpec:
     own_ordinal = locale is not None and any(
         "digits-ordinal" in RbnfEngine.for_language(name).rulesets
         for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
+    verbalizers = {Form.LEXICON: recognizers.speak_lexicon, Form.CARDINAL: recognizers.speak_rbnf_cardinal}
+    try:
+        parsers.spoken_date(tag, day=1, month=1, year=2000)
+        verbalizers[Form.DATE] = recognizers.speak_spoken_date
+    except NotImplementedError:
+        date_locale = cldr_locale(tag, date_locales(), bare)
+        pattern = None if date_locale is None else long_date(date_locale)
+        if pattern is not None and (ordinal_speller is not None or ("ordinal_day", "") not in pattern[0]):
+            verbalizers[Form.DATE] = recognizers.speak_cldr_date
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
               recognizers.SHARED["date_numeric"], recognizers.OrdinalStop(bare_stop=not own_ordinal))
     return replace(bare, data=FrozenMap({**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}),
                    recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), recognizers.RBNF_CARDINAL),
-                   verbalizers={Form.LEXICON: recognizers.speak_lexicon,
-                                Form.CARDINAL: recognizers.speak_rbnf_cardinal},
+                   verbalizers=verbalizers,
                    spellers={Form.CARDINAL: speller, **({Form.ORDINAL: ordinal_speller} if ordinal_speller else {})},
                    genders=frozenset(features.gender for features in ordinals if features.gender is not None))
 
