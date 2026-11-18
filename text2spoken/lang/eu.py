@@ -20,9 +20,13 @@ XXI. mendeetan". A noun followed by `bat`, bare or with a case ending, is no evi
 verbalizer reads one unit noun first: `1 °C` is "gradu bat" (Araua 203, page 21).
 
 The `operators` table holds the words of the same page: `5 x 0 = 0` is "bost bider zero berdin zero". Digits in
-groups of three with a space between them, which Araua 203, section 3.2.1.1, page 12, recommends, as in `36 524`,
-stay as written through the shared `space_groups` recognizer: the group mark of this file is `.`, so each group
-would read as a number of its own.
+groups of three with a space, a no-break space or a narrow no-break space between them, which Araua 203, section
+3.2.1.1, page 12, recommends, as in `36 524`, read as one number: the group marks of this file are `.` and these
+spaces, so `1 000 000 lagun` reads "milioi bat lagun", as `1.000.000 lagun` does. Two forms stay as written through
+`KEPT_SPACE_GROUPS`. A run of three groups of three digits, as `943 123 456`, is also the shape of a Spanish telephone
+number (Wikipedia, "Telephone numbers in Spain": "a nine-digit number was used for all calls, e.g.: 9xx xxx xxx"),
+and this file has no telephone reading. A fraction in groups after the decimal comma, as `0,264 7`, would read its
+first group alone.
 """
 from __future__ import annotations
 
@@ -33,10 +37,10 @@ from dataclasses import dataclass, replace
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety
 from text2spoken.core.numbers import SIGNS, Number
-from text2spoken.core.recognizers import (SHARED, _affixes, _cluster_edge, _free_before, _per_unit, _period_after,
-                                          _prefix, _sentence_period, _suffix, numbers_in, signed, speak_cardinal,
-                                          speak_decimal, speak_expression, speak_fraction, speak_lexicon,
-                                          speak_ordinal)
+from text2spoken.core.recognizers import (SHARED, SpaceGroups, _affixes, _cluster_edge, _free_before, _per_unit,
+                                          _period_after, _prefix, _sentence_period, _suffix, numbers_in, signed,
+                                          speak_cardinal, speak_decimal, speak_expression, speak_fraction,
+                                          speak_lexicon, speak_ordinal)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, _integer
 from text2spoken.core.times import clock_fields, day_hour, twelve_hour
@@ -301,6 +305,14 @@ def _ordinal_follower(text: str, stop: int, data) -> tuple[int, str] | None:
         return stop, ""
     return None
 
+
+
+_GAP = "[ \u00a0\u202f]"
+KEPT_SPACE_GROUPS = SpaceGroups(pattern=re.compile(
+    f"(?<![0-9]{_GAP})(?<![0-9])(?:[0-9]{{3}}(?:{_GAP}[0-9]{{3}}){{2}}(?!{_GAP}?[0-9]|,[0-9])"
+    f"|[0-9]+,[0-9]{{1,3}}(?:{_GAP}[0-9]{{1,3}})+)"))
+"""The space-grouped runs that stay as written: three groups of three digits, the shape of a Spanish telephone
+number, and a fraction in groups after the decimal comma (module docstring)."""
 
 @dataclass(frozen=True)
 class BasqueOrdinal:
@@ -690,7 +702,7 @@ class BasqueAbbreviation:
 
 
 DATA = freeze({
-    "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
+    "number_marks": {"Latn": [{"decimal": ",", "group": ". \u00a0\u202f"}]},
     "defaults": {"date_order": "DMY", "clock": "12h", "minute_style": "number", "decimal_mark": ",",
                  "scale": "long"},
     "sign_words": {"-": "minus", "+": "plus"},
@@ -749,7 +761,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=(Variety("eu-ES"),),
     data=DATA,
-    recognizers=(SHARED["lexicon"], RomanMonthDate(), SHARED["space_groups"], LetterCode(), LawNumber(),
+    recognizers=(SHARED["lexicon"], RomanMonthDate(), KEPT_SPACE_GROUPS, LetterCode(), LawNumber(),
                  SHARED["date_numeric"], BasqueTime(), BasqueMoney(), SHARED["kept_money"], BasquePercent(),
                  BasqueMeasure(), SHARED["expression"], SHARED["fraction"], BasqueOrdinal(), Roman(),
                  BasqueAbbreviation(), SHARED["decimal"], SHARED["cardinal"]),
