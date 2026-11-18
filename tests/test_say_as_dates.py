@@ -71,13 +71,13 @@ ORDINAL_DAYS = {
 }
 """The ordinal of a day that the pattern writes `d.`, through the ordinal speller of the language."""
 
-NO_DATE = frozenset({"uk-UA", "hu-HU", "is-IS", "yo-NG", "ha-NG", "tw", "apc", "bn-IN"})
+NO_DATE = frozenset({"uk-UA", "hu-HU", "is-IS", "yo-NG", "ha-NG", "tw", "bn-IN"})
 """Tags with no reading of a say-as date. `uk` writes `'р'.` after the year, an abbreviation, and `hu` a full stop
 after the year, `y. MMMM d.`; no source gives their words. `is` writes `d.`, an ordinal day, and has no ordinal. The
 other tags read no numbers."""
 
-FILES = frozenset({"en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "ru-RU", "eu-ES", "el-GR", "ar"})
-"""Tags whose language file reads a date of its own."""
+FILES = frozenset({"en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "ru-RU", "eu-ES", "el-GR", "ar", "apc"})
+"""Tags whose language file reads a date of its own; `apc` reads through the `ar` file."""
 
 assert set(TAGS) == set(DATES) | NO_DATE | FILES | {"nl-NL"}
 

@@ -16,6 +16,8 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Llega el 12/03/2024 a las 14:30.` | `es-ES` | Llega el doce de marzo de dos mil veinticuatro a las catorce treinta. |
 | `Es el 1 de mayo.` | `es-ES` | Es el uno de mayo. |
 | `Es el 1 de mayo.` | `es-MX` | Es el primero de mayo. |
+| `Vive en el 2.º piso.` | `es-ES` | Vive en el segundo piso. |
+| `Vive en el 2º piso.` | `es-ES` | Vive en el segundo piso. |
 | `Cuesta $5.` | `es-MX` | Cuesta cinco pesos. |
 | `Llame al #5.` | `es-MX` | Llame al número cinco. |
 | `Subió un 100 %.` | `es-ES` | Subió un cien por cien. |
@@ -52,7 +54,7 @@ The varieties also differ in the currency of `$`, the reading of `#`, the readin
 
 Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The long-scale words from `cuatrillón` to `sextillón` cite Wiktionary es. The docstring of [`es.py`](../../text2spoken/lang/es.py) names the entry of each rule.
 
-Of the 127 test rows in `tests/data/es.tsv`, 115 name a source for their reading. The other 12 are marked silver: 11 of them say that no source was found for the reading. Two of the silver test rows, es-059 and es-091, name no source at all. No native speaker has checked any row.
+Of the 153 test rows in `tests/data/es.tsv`, 141 name a source for their reading. The other 12 are marked silver: 11 of them say that no source was found for the reading. Two of the silver test rows, es-059 and es-091, name no source at all. No native speaker has checked any row.
 
 ## Limits
 
@@ -73,8 +75,9 @@ Spanish leaves these forms as written or reads them in a limited way:
 | `las 200 de la lista` | `es-ES` | las doscientos de la lista | The same rule: 200 reads in the masculine. |
 | `Elige las 21 mejores.` | `es-ES` | Elige las veintiún mejores. | An adjective after a number counts as its noun and takes the masculine. |
 | `del 1 al 5 de mayo` | `es-MX` | del uno al cinco de mayo | `primero` for the first day of the month needs `1 de` and a month name, so this `1` reads `uno` in every variety. |
-| `el 01 de mayo` | `es-MX` | stays as written | The same rule. `el 1° de mayo` and `el 1º de mayo` also stay as written. |
+| `el 01 de mayo` | `es-MX` | stays as written | The same rule. `el 1° de mayo` also stays as written. |
 | `Es la 1 de mayo.` | `es-MX` | Es la primero de mayo. | In America, this reads "la primero de mayo". |
+| `Hace 25º hoy.` | `es-ES` | stays as written | `º` with no full stop writes an ordinal or a degree. It reads as the ordinal only in a context that a degree does not take: a singular masculine determiner before it (`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a legal division word before it (`artículo 6º`). A temperature reads with a unit, as in `25 ºC`. |
 | `Llame al #5.` | `es-ES` | stays as written | `#` stays as written in `es-ES`, because the reading `número` is American. |
 | `Cuesta $5.` | `es-419` | stays as written | `$` follows the 2005 text of DPD appendix 4. It stays as written in `es-419`, `es-CO`, `es-VE`, `es-BO`, `es-PY` and `es-CR`, because it can be a peso or a dollar there. |
 | `Cuesta $5.` | `es-CU` | stays as written | `es-CU`, `es-SV` and `es-PA` get `es-419`, so `$` stays as written there too. |

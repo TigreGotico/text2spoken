@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 from text2spoken.errors import (DeclinedReading, InvalidLanguageTagError, InvalidLexiconError,
                                 ParameterNotHonouredWarning, UndefinedGrammaticalGender, UnsupportedParameterError,
                                 require_type)
-from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams
+from text2spoken.params import OPTIONS, Animacy, FrozenMap, Form, GrammaticalGender, NormalizationParams, freeze
 
 if TYPE_CHECKING:
     from text2spoken.core.say_as import ResolvedSayAs, SayAs
@@ -168,6 +168,22 @@ def rbnf_locales() -> frozenset[str]:
 
 
 @cache
+def cldr_number_marks() -> FrozenMap:
+    """The CLDR decimal and group marks of each locale, by the script of the digits, from
+    `data/cldr/number-marks.json`. A language holds its marks under its subtag, and another locale holds them under
+    its CLDR id only where they differ from the marks of its language (`scripts/extract_number_marks.py`)."""
+    import json
+
+    table = json.loads((files("text2spoken") / "data" / "cldr" / "number-marks.json").read_text(encoding="utf-8"))
+    return freeze(table["marks"])
+
+
+def _number_marks(marks: Mapping[str, Mapping[str, str]]) -> FrozenMap:
+    """CLDR marks as the `number_marks` data of a language file: one entry for each script."""
+    return FrozenMap({script: (entry,) for script, entry in marks.items()})
+
+
+@cache
 def plural_locales() -> frozenset[str]:
     """The locales with CLDR plural rules. `_load` is the one place in unicode_rbnf that holds the list."""
     from unicode_rbnf.plural_rules import PluralType, _load
@@ -261,6 +277,10 @@ def core_language(code: str) -> LanguageSpec:
     ordinal reads through (section 17.5); no recognizer of the language claims an ordinal. Where RBNF has an ordinal
     rule set for more than one gender, `genders` holds them, and `default_gender` chooses the rule set.
 
+    A decimal reads in the marks of CLDR for the locale (`cldr_number_marks`), when the speller reads it. The parser
+    reads it when it reads 1.5. RBNF reads it when the cardinal rule set has an `x.x` rule, in the rule set or in
+    the rule set that its 0 rule names. Each other CLDR locale of the language whose marks differ is a variety.
+
     A numeric date stays as written, and a say-as `date` reads through the `DATE` verbalizer (section 17.5): the
     `spoken_date` of ovos-date-parser when it reads the language, else the CLDR `long` date pattern of the locale
     (`speak_cldr_date`), when `long_date` gives its parts and the language has an ordinal speller for an ordinal
@@ -297,6 +317,10 @@ def core_language(code: str) -> LanguageSpec:
         ordinals = rbnf_ordinals(locale) if ordinal_speller is None and locale is not None else {}
         if ordinals:
             ordinal_speller = RbnfSpeller(cardinal={Features(): "spellout-numbering"}, ordinal=ordinals)
+        try:
+            decimals = bool(words(parsers.pronounce_number(1.5, tag, places=1)))
+        except (ValueError, NotImplementedError):
+            decimals = False
     elif locale is None:
         return bare
     else:
@@ -304,11 +328,14 @@ def core_language(code: str) -> LanguageSpec:
         cardinal = next(n for n in ("spellout-cardinal", "spellout-cardinal-masculine", "spellout-numbering")
                         if n in names)
         ordinals = rbnf_ordinals(locale)
-        speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal})
+        decimal = _special_rule_set(names, cardinal, RbnfSpecialRule.IMPROPER_FRACTION)
+        speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal},
+                              decimal=decimal)
         ordinal_speller = speller if ordinals else None
         minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
         sign_words = {} if minus is None else {
             "-": "".join(part.text for part in minus.parts if isinstance(part, TextRulePart)).strip()}
+        decimals = decimal is not None
     own_ordinal = locale is not None and any(
         "digits-ordinal" in RbnfEngine.for_language(name).rulesets
         for name in (locale, locale.split("_")[0]) if name in rbnf_locales())
@@ -322,11 +349,24 @@ def core_language(code: str) -> LanguageSpec:
         if pattern is not None and (ordinal_speller is not None or ("ordinal_day", "") not in pattern[0]):
             verbalizers[Form.DATE] = recognizers.speak_cldr_date
     shapes = (recognizers.SHARED["money"], recognizers.SHARED["percent"], recognizers.SHARED["measure"],
-              recognizers.SHARED["date_numeric"], recognizers.OrdinalStop(bare_stop=not own_ordinal))
-    return replace(bare, data=FrozenMap({**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}),
-                   recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), recognizers.RBNF_CARDINAL),
-                   verbalizers=verbalizers,
-                   spellers={Form.CARDINAL: speller, **({Form.ORDINAL: ordinal_speller} if ordinal_speller else {})},
+              recognizers.SHARED["date_numeric"], recognizers.SHARED["fraction"],
+              recognizers.OrdinalStop(bare_stop=not own_ordinal))
+    table = cldr_number_marks()
+    data = {**recognizers.written_shapes(), "sign_words": FrozenMap(sign_words)}
+    if code in table:
+        data["number_marks"] = _number_marks(table[code])
+    varieties = (Variety(tag), *(Variety(name.replace("_", "-"), FrozenMap({"number_marks": _number_marks(marks)}))
+                                 for name, marks in table.items() if name.startswith(code + "_")))
+    numbers = (recognizers.RBNF_CARDINAL, recognizers.RBNF_DECIMAL) if decimals else (recognizers.RBNF_CARDINAL,)
+    spellers = {Form.CARDINAL: speller}
+    if decimals:
+        verbalizers[Form.DECIMAL] = recognizers.speak_rbnf_decimal
+        spellers[Form.DECIMAL] = speller
+    if ordinal_speller:
+        spellers[Form.ORDINAL] = ordinal_speller
+    return replace(bare, varieties=varieties, data=FrozenMap(data),
+                   recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), *numbers),
+                   verbalizers=verbalizers, spellers=spellers,
                    genders=frozenset(features.gender for features in ordinals if features.gender is not None))
 
 
@@ -345,6 +385,20 @@ def rbnf_ordinals(locale: str) -> dict[Features, str]:
     gendered = {Features(gender=gender): f"spellout-ordinal-{gender}" for gender in GrammaticalGender
                 if f"spellout-ordinal-{gender}" in names}
     return {Features(): default, **(gendered if len(gendered) > 1 else {})}
+
+
+def _special_rule_set(names: Mapping, name: str, rule) -> str | None:
+    """The rule set that holds the special rule `rule` for the rule set `name`: the rule set itself, or the rule
+    set that its 0 rule names, as `RbnfRuleSet.find_special_rule` looks it up."""
+    from unicode_rbnf.engine import ReplaceRulePart
+
+    while name is not None:
+        if rule in names[name].special_rules:
+            return name
+        zero = names[name].numeric_rules.get(0)
+        name = zero.parts[0].ruleset_name if zero and zero.parts and isinstance(zero.parts[0], ReplaceRulePart) \
+            else None
+    return None
 
 
 def select(tag: str) -> tuple[str, LanguageSpec, Variety]:

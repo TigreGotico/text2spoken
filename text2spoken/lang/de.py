@@ -20,10 +20,14 @@ de-CH reads RBNF `de_CH`, which writes "dreissig", and its tables write ss. CLDR
   Aktualisierte Fassung des amtlichen Regelwerks, Mannheim 2018, by paragraph (rechtschreibrat.com).
 - CLDR: Unicode Common Locale Data Repository, RBNF `de` and `de_CH`, and `common/main` `de`, `de_AT` and `de_CH`
   (months, date formats, number marks).
-- Duden online, by entry: "Grad", "plus", "Prozent", "Uhr" (duden.de).
+- Duden online, by entry: "eineinhalb", "Grad", "plus", "Prozent", "Uhr", "zweieinhalb" (duden.de).
 - de.wiktionary, by entry and sense: "halb" [1], "Kaffee", "Komitee", "kosten" [1], "Tee", "vor" [1].
 - de.wikipedia, "Präposition", sections Rektion and Zeitlich.
 - en.wikipedia, "Grammatical gender in German", the tables of masculine, feminine and neuter endings.
+
+A mixed number of a half is one word of the whole part and "einhalb": Duden, "zweieinhalb": Zahlwort, Bruchzahl,
+"2 1/2", "wir kennen uns seit zweieinhalb Jahren"; Duden, "eineinhalb": "eineinhalb Tage". No source in the list
+gives the reading of a mixed number of another fraction, so it stays as written.
 
 `Abbreviation` and `Expression` are shared recognizers, and read only the data tables of the language. An
 expression reads each operator by its word in `operators`, and "=" as "gleich": Duden, "plus": "fünf plus drei
@@ -41,7 +45,8 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, plural_cat
 from text2spoken.core.numbers import written_amount
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Abbreviation, Telephone, amount_words, join_ranges,
                                           numbers_in, signed, speak_abbreviation, speak_decimal, speak_expression,
-                                          speak_fraction, speak_idiom, speak_lexicon, speak_range, speak_telephone)
+                                          speak_fraction as core_speak_fraction, speak_idiom, speak_lexicon,
+                                          speak_range, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.times import clock_fields
@@ -87,6 +92,7 @@ DATA = freeze({
     "digit_words": ["null", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun"],
     "leads": {"#": "Nummer", "-": ""},
     "half": "halb",
+    "mixed_suffix": "einhalb",
     "idioms": {"24/7": "vierundzwanzig sieben"},
     "range_word": "bis",
     "range_marks": ["-", "–"],
@@ -498,6 +504,23 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     return f"{joined} {unit[plural_category(request, written_amount(amounts[-1]))]}"
 
 
+def speak_fraction(span: Span, context: SpanContext) -> str:
+    """A fraction; a mixed number of a half is one word of the whole part and "einhalb": Duden, "zweieinhalb":
+    Zahlwort, Bruchzahl, "2 1/2", "wir kennen uns seit zweieinhalb Jahren", and "eineinhalb": "eineinhalb Tage".
+    The word takes no ending before a noun. A whole part whose cardinal ends in "eins" past 1, or is more than one
+    word, as "zwei Millionen", has no cited form, and nor has a mixed number of another fraction, so they stay as
+    written."""
+    fields, request = span.fields, context.request
+    if not fields["whole"]:
+        return core_speak_fraction(span, context)
+    if fields["denominator"] != "2":
+        raise DeclinedReading("no cited reading for a mixed number of a fraction other than a half")
+    whole = "ein" if fields["whole"] == "1" else SPELLER.cardinal(fields["whole"], Features(), request)
+    if " " in whole or whole.endswith("eins"):
+        raise DeclinedReading(f"no cited form of {whole!r} before einhalb")
+    return whole + request.data["mixed_suffix"]
+
+
 def speak_percent(span: Span, context: SpanContext) -> str:
     """Duden, "Prozent": "5 Prozent oder 5 %", and the noun stays unchanged after a number."""
     percent = context.request.data["percent"]
@@ -580,8 +603,9 @@ class Time:
 class Fraction:
     """The shared fraction recognizer. One half before a noun is the adjective "halb", which declines, as in "eine
     halbe Million" (de.wiktionary, "halb" [1]), and the file gives no declined reading, so `1/2 Pizza` stays as
-    written. A noun is a capitalised word of letters that no abbreviation of the file spells, so no other form
-    reads it and a second pass sees the same noun."""
+    written. A mixed number of a half, as in `2 1/2 Tage`, takes no ending, so it reads before a noun too. A noun
+    is a capitalised word of letters that no abbreviation of the file spells, so no other form reads it and a
+    second pass sees the same noun."""
     name: str = "fraction"
     form: Form = Form.FRACTION
 
@@ -598,7 +622,8 @@ class Fraction:
             word = text[start:stop]
             noun = (text[span.end:start].isspace() and word[:1].isupper() and word[1:].islower()
                     and is_bounded(text, start, stop) and word + text[stop:stop + 1] not in abbreviations)
-            yield replace(span, keep=True) if noun and bounded_integer(span.fields["denominator"]) == 2 else span
+            half = bounded_integer(span.fields["denominator"]) == 2 and not span.fields["whole"]
+            yield replace(span, keep=True) if noun and half else span
 
 
 @dataclass(frozen=True)
@@ -733,7 +758,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 Time(), TELEPHONE, Money(), SHARED["percent"], SHARED["measure"],
+                 Time(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
                  Year(), SHARED["expression"], Fraction(), SHARED["range"], Ordinal(), TitleAbbreviation(),
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon,

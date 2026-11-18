@@ -139,6 +139,8 @@ SHAPES: dict[str, Shape] = {
     "letter_words": list_of(capital_word),
     "letter_vowels": list_of(lower, minimum=1),
     "list_links": WORDS,
+    "mixed_half": map_of(one_of("masculine", "feminine", "neuter", "common", "other"), word),
+    "mixed_word": word,
     "number_abbreviations": map_of(word, reading),
     "number_gaps": list_of(text, minimum=1),
     "number_marks": map_of(script, list_of(record(decimal=word, group=text), minimum=1)),
@@ -191,6 +193,8 @@ READERS: dict[str, frozenset[str]] = {
                         "case_suffixes"}),
     "money": frozenset({"number_marks", "number_gaps", "currencies", "currency_symbols", "scales", "range_word",
                       "range_marks", "proclitics", "case_suffixes"}),
+    "kept_money": frozenset({"number_marks", "number_gaps", "proclitics", "case_suffixes", "symbols", "symbol_names",
+                           "currencies", "currency_symbols"}),
     "measure": frozenset({"number_marks", "number_gaps", "elision_marks", "symbols", "units", "unit_symbols",
                         "unjoined_symbols", "dimension_marks", "range_marks", "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
@@ -212,7 +216,7 @@ READERS: dict[str, frozenset[str]] = {
     "speak_letters": frozenset({"letter_names", "digit_words", "letter_vowels", "letter_onsets", "letter_codas",
                                 "letter_free_consonants", "letter_runs"}),
     "speak_decimal": frozenset({"sign_words"}),
-    "speak_fraction": frozenset({"sign_words"}),
+    "speak_fraction": frozenset({"sign_words", "mixed_half", "mixed_word"}),
     "speak_ordinal": frozenset(),
     "speak_range": frozenset({"range_word"}),
     "speak_percent": frozenset({"percent", "sign_words"}),
@@ -237,7 +241,7 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
     "letter_runs", "letter_free_consonants", "letter_words", "unjoined_symbols", "symbol_names", "function_words",
-    "colors", "number_gaps", "elision_marks",
+    "colors", "number_gaps", "elision_marks", "mixed_half", "mixed_word",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.
 Design section 4.2 lets a language have no range word: "A language that marks a range with case endings has no

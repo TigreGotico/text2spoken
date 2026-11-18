@@ -177,6 +177,8 @@ The first call for a language takes some seconds. It runs a probe in a new Pytho
 
 When a module of the output path loads from a zip file, or from another place that is not a directory or a file, `revision` raises `RevisionError`. It names the module and the place. It gives no revision over less than the code.
 
+The probe raises `RevisionError` too when it exits with an error, prints no readable result, or runs longer than 60 seconds, the value of `text2spoken.core.revision.PROBE_TIMEOUT`. The probe prints its result after a marker that is new for each call, so a line that a `sitecustomize` module or an exit handler prints does not change the result.
+
 ## Params
 
 `NormalizationParams` is a frozen dataclass. A field that is `None` takes the default of the language variety. The dataclass is hashable, so a caller can cache on it, and one value serves every language.

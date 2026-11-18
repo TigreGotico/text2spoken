@@ -20,14 +20,14 @@ Set up a checkout with the test extra, as [Development](development.md#set-up-an
 
 ## Step 1: see what your language reads now
 
-A language with no file reads cardinal numbers, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It knows no group mark, so `1.250` stays as written, and so does the date:
+A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`. A full stop with three digits after it can also be a decimal mark, as the CLDR root locale writes it, so `1.250` stays as written. So does the date:
 
 ```python
 >>> from text2spoken import normalize, supports
 >>> normalize("Saya punya 3 kucing dan 1.250 buku pada 12/03/2024.", "id")
 'Saya punya tiga kucing dan 1.250 buku pada 12/03/2024.'
 >>> sorted(form.name for form in supports("id").forms)
-['CARDINAL', 'LEXICON']
+['CARDINAL', 'DECIMAL', 'LEXICON']
 ```
 
 The library also logs a WARNING for each written form that stays as written. In a Python session, these lines appear on stderr:
@@ -383,6 +383,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `time_clock` | `TIME` | `clock_marks`, `time_words` | `day_periods`, `range_marks`, `range_word`, `time_suffixes` |
 | `percent` | `PERCENT` | `number_marks`, `percent` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
 | `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
+| `kept_money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `symbols` | `case_suffixes`, `number_gaps`, `proclitics`, `symbol_names` |
 | `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `elision_marks`, `number_gaps`, `proclitics`, `range_marks`, `unjoined_symbols` |
 | `telephone` | `TELEPHONE` | `currencies`, `currency_symbols`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names` |
 | `expression` | `EXPRESSION` | `number_marks`, `operators`, `patterns`, `symbols` | none |
@@ -405,7 +406,7 @@ The shared verbalizers read these keys:
 | `speak_electronic` | `digit_words`, `electronic_schemes`, `electronic_symbols`, `electronic_vowels`, `letter_names` | `electronic_labels`, `symbol_names` |
 | `speak_letters` | `digit_words`, `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_runs` |
 | `speak_decimal` | `sign_words` | none |
-| `speak_fraction` | `sign_words` | none |
+| `speak_fraction` | `sign_words` | `mixed_half`, `mixed_word` |
 | `speak_ordinal` | none | none |
 | `speak_range` | none | `range_word` |
 | `speak_percent` | `percent`, `sign_words` | none |
@@ -414,6 +415,8 @@ The shared verbalizers read these keys:
 | `speak_abbreviation` | `abbreviations`, `number_abbreviations`, `titles` | none |
 | `speak_idiom` | `idioms` | none |
 | `speak_color` | `digit_words` | `colors` |
+
+`speak_fraction` reads a mixed number of a half, such as `2 1/2`, when the file gives `mixed_word` and `mixed_half`. `mixed_word` is the word between the two parts. `mixed_half` gives the half by gender, with the key `other` for any other gender or none. Portuguese gives `"mixed_word": "e"` and `"mixed_half": {"feminine": "meia", "other": "meio"}`. A file without these keys keeps every mixed number as written.
 
 `READERS` and `OPTIONAL` in `tests/data_keys.py` list the same keys, and `SHAPES` gives the shape of each key.
 

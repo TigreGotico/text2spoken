@@ -357,7 +357,7 @@ class ReadPercent:
 @dataclass(frozen=True)
 class ListedFraction:
     """A proper fraction whose denominator has a name: 2 and the keys of `fraction_names`. Any other fraction stays
-    as written."""
+    as written, as does a mixed number: `2 1/2` is the one word δυόμισι, which the file does not give."""
     name: str = "listed_fraction"
     form: Form = Form.FRACTION
 
@@ -366,7 +366,7 @@ class ListedFraction:
         for span in SHARED["fraction"].find(text, tokens, request):
             fields = span.fields
             denominator = str(int(fields["denominator"]))
-            read = (not span.keep and (denominator == "2" or denominator in names)
+            read = (not span.keep and not fields["whole"] and (denominator == "2" or denominator in names)
                     and (not fields["sign"] or fields["sign"] in request.data["sign_words"]))
             yield span if read else replace(span, keep=True)
 

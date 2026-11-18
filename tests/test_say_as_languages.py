@@ -24,7 +24,7 @@ TAGS = ["en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "nl-NL", "ru-RU", 
         "cy-GB", "is-IS", "bn-IN", "ta-IN"]
 """Forty language tags: the languages with a file, and others with and without a CLDR RBNF locale."""
 
-NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw", "apc", "bn-IN"})
+NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw", "bn-IN"})
 """Tags with no writer of ovos-number-parser and no RBNF locale: no word for a digit, so `digits`, `telephone` and
 `characters` decline to the plain reading."""
 
@@ -40,6 +40,10 @@ WRITERS = frozenset(module.name.removeprefix("numbers_") for module in pkgutil.i
                     if module.name.startswith("numbers_"))
 """The languages with a writer module of their own in ovos-number-parser."""
 
+AR_LECTS = frozenset({"apc"})
+"""Arabic lect codes with no writer module of their own that the `ar` writer reads. linguatag standardizes `ajp` to
+`apc` (ISO 639-3 change request 2022-006), so both read the same."""
+
 
 def code(tag: str) -> str:
     return tag.split("-")[0]
@@ -51,7 +55,7 @@ def rbnf(tag: str, number: int, rule_set: str) -> str:
 
 def digit_word(tag: str, digit: str) -> str:
     """The cardinal of one digit: the writer of the language, else RBNF `spellout-numbering`."""
-    if code(tag) in WRITERS:
+    if code(tag) in WRITERS or code(tag) in AR_LECTS:
         return pronounce_number(int(digit), tag)
     return rbnf(tag, int(digit), "spellout-numbering")
 

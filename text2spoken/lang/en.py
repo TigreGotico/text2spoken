@@ -4,6 +4,12 @@ Number words come from CLDR RBNF. American English writes no "and" in the whole 
 British English writes "one hundred and one" (Wikipedia, "English numerals"), so each variety names its rule
 set. The design page `text2spoken-design.md`, section 5.4, gives the measured reason for each speller.
 
+A mixed number reads its whole part, "and", and its fraction: Wikipedia, "Fraction", Mixed numbers: "The mixed number
+2+3/4 is spoken two and three quarters or two and three fourths", "with the integer and fraction portions connected by
+the word and". A numerator 1 over 2 or 4 reads "a": Wikipedia, "English numerals", Fractions and decimals: "Fractions
+together with an integer are read as follows": "one and a half", "six and a quarter", "seven and five eighths". Every
+other fraction reads as a fraction alone reads, as "two and one-third".
+
 Unit words come from CLDR 49 (`cldr-units-full`, the `long` patterns of en-GB and en). A symbol that cannot be a
 plain word, such as `km/h`, `°C` or `µm`, reads with no list. `unit_symbols` names the symbols made only of
 letters that read as units: the SI symbols `kg`, `g`, `mg`, `km`, `m`, `cm`, `mm` and `ml`, and `mph`, `MHz`,
@@ -201,7 +207,8 @@ from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number, written_amount
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges,
                                           numbers_in, signed, speak_abbreviation, speak_cardinal, speak_decimal,
-                                          speak_expression, speak_fraction, speak_idiom, speak_lexicon, speak_ordinal,
+                                          speak_expression, speak_fraction as core_speak_fraction, speak_idiom,
+                                          speak_lexicon, speak_ordinal,
                                           speak_percent, speak_range, speak_telephone)
 from bisect import bisect_right
 
@@ -274,6 +281,7 @@ DATA = freeze({
     "digit_words": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
     "leads": {"#": "number", "-": ""},
     "fraction_names": {"2": ["half", "halves"], "4": ["quarter", "quarters"]},
+    "mixed_word": "and",
     "idioms": {"24/7": "twenty-four seven", "50/50": "fifty-fifty"},
     "range_word": "to",
     "range_marks": ["-", "–"],
@@ -444,6 +452,20 @@ SPELLER = EnglishSpeller()
 
 def _cardinal(digits: str, request: Request) -> str:
     return SPELLER.cardinal(digits, Features(), request)
+
+
+def speak_fraction(span: Span, context: SpanContext) -> str:
+    """A fraction; a mixed number reads its whole part, "and", and the fraction, with "a" for the numerator 1 of a
+    half and a quarter: "one and a half", "six and a quarter", "seven and five eighths" (Wikipedia, "English
+    numerals", Fractions and decimals: "Fractions together with an integer are read as follows")."""
+    fields, request = span.fields, context.request
+    if not fields["whole"]:
+        return core_speak_fraction(span, context)
+    numerator, denominator = fields["numerator"], fields["denominator"]
+    names = request.data["fraction_names"].get(denominator)
+    part = (f"a {names[0]}" if numerator == "1" and names is not None
+            else SPELLER.fraction(numerator, denominator, Features(), request))
+    return f"{SPELLER.cardinal(fields['whole'], Features(), request)} {request.data['mixed_word']} {part}"
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
@@ -876,9 +898,9 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
                  EnglishDateNumeric(), SHARED["time_clock"],
                  EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
-                 SHARED["money"], SHARED["percent"], SHARED["measure"], Year(), SHARED["expression"],
-                 SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"], SHARED["letters"],
-                 SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+                 SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"], Year(),
+                 SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"],
+                 SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.IDIOM: speak_idiom, Form.DATE: speak_date,
         Form.TIME: speak_time, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,

@@ -9,6 +9,12 @@ entry «fraccionarios» gives "un veintiunavo". It writes its own decimals, beca
 drops the written zero of `2,50`, and because the DLE entry «coma» (1.b) reads the decimal part as a number:
 "trescientos veinticinco coma ochenta y cinco".
 
+A mixed number of a half reads the whole part, `y` and `medio`, as `2 1/2` reads "dos y medio" (Wiktionary, "y
+medio": "(after a number) and a half"). The half agrees with the noun that it counts, and the noun stands between
+the whole part and the half: Wikipedia, "Fracción", Fracción mixta, «Una cucharadita y media de...». So with no
+noun the whole part and the half take the gender of `default_gender`, and `2 1/2 horas` stays as written. No
+source gives the reading of a mixed number of another fraction, so it stays as written.
+
 An abbreviation reads as its full word (DPD «abreviatura», 3: "deben leerse reponiendo la forma plena de la palabra
 abreviada"). A noun abbreviation that an integer other than one counts reads as the plural of that word, so `21 vol.`
 reads "veintiún volúmenes". No source states this rule. The file infers it from three passages: the full word of DPD
@@ -27,6 +33,18 @@ trillones (escala larga); es decir, diez elevado a veinticuatro"), «quintillón
 decir, diez elevado a treinta") and «sextillón» ("de un millón de quintillones; o sea, diez elevado a treinta y seis").
 A variety with the decimal point reads a decimal comma next to `€`, as in `23,88 €`, because CLDR 49 es
 writes the euro with that comma (`#,##0.00 ¤`).
+
+An ordinal in digits takes a full stop before its raised letters: "En cambio, no debe omitirse nunca el punto
+abreviativo que ha de preceder a las letras voladas dentro de la abreviatura" (RAE-ASALE, Ortografía de la lengua
+española, 2010, chapter V, 3.2.2 «Formación»; the same section gives "1.º por primero, 2.ª por segunda"). The form
+without the full stop, `1º` and `1ª`, is common in running text, and a reader says the same word for both forms, so
+`1º` reads "primero" as `1.º` does. A `º` after a number also writes a degree in running text, as in "Precalentar el
+horno a 180º." (design section 10: a form with two readings and no deciding context stays as written). So `\\d+º`
+reads as the ordinal only in a context that a degree does not take: a singular masculine determiner before it
+(`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a legal division word before it
+(`artículo 6º`). In every other context it stays as written, as `Quedó 1º en la carrera.` and `Hace 25º hoy.` do.
+`25ºC` and `25 ºC` read as a temperature, because the unit `ºC` claims first. `\\d+ª` writes no degree, so it
+reads as the ordinal in every context.
 """
 from __future__ import annotations
 
@@ -39,7 +57,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affix
 from text2spoken.core.numbers import written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, numbers_in, signed, speak_decimal,
-                                          speak_expression, speak_lexicon, speak_telephone)
+                                          speak_expression, speak_lexicon, speak_mixed_half, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_window
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.times import day_hour, twelve_hour
@@ -68,6 +86,8 @@ DATA = freeze({
     "decimal_words": {",": "coma", ".": "punto"},
     "digit_words": ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"],
     "leads": {"-": ""},
+    "mixed_word": "y",
+    "mixed_half": {"feminine": "media", "other": "medio"},
     "fraction_names": {"2": "medio", "3": "tercio", "4": "cuarto", "5": "quinto", "6": "sexto", "7": "séptimo",
                        "8": "octavo", "9": "noveno", "10": "décimo", "100": "centésimo"},
     "range_word": "a",
@@ -141,8 +161,11 @@ DATA = freeze({
     "sentence_final": ["etc."],
     "number_abbreviations": {"n.º": "número", "N.º": "número", "núm.": "número", "nro.": "número"},
     "symbols": {"%": "percent", "$": "money", "€": "money", "£": "money", "°": "measure", "×": "measure"},
-    "ordinal_marks": {"ª": "feminine", ".º": "masculine", ".ª": "feminine", ".er": "apocope",
+    "ordinal_marks": {"ª": "feminine", "º": "masculine", ".º": "masculine", ".ª": "feminine", ".er": "apocope",
                       ".ᵉʳ": "apocope", "er": "apocope", ".os": "masculine plural", ".as": "feminine plural"},
+    "degree_marks": ["º"],
+    "ordinal_leads": ["el", "al", "del", "su", "este", "cada", "artículo", "art.", "inciso"],
+    "ordinal_follows": ["de"],
     "function_words": ["a", "al", "ante", "bajo", "con", "contra", "de", "del", "desde", "durante", "en", "entre",
                        "hacia", "hasta", "para", "por", "según", "sin", "sobre", "tras", "y", "e", "o", "u", "ni",
                        "que", "pero", "sino", "porque", "como", "cuando", "si", "el", "la", "los", "las", "lo",
@@ -444,6 +467,8 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
     """`1/2` before a noun is `medio` or `media`, which agrees with it (DPD «fraccionarios», 2: "media
     tortilla"); in other places `un medio` (DPD «fraccionarios», 3.a)."""
     fields, request = span.fields, context.request
+    if fields["whole"]:
+        return speak_mixed_half(span, context)
     agree = agreement(span, context)
     if fields["numerator"] == "1" and fields["denominator"] == "2" and agree.noun is not None:
         words = "media" if agree.gender is F else "medio"
@@ -626,8 +651,10 @@ class SpanishTelephone(Telephone):
 @dataclass(frozen=True)
 class Ordinal:
     """`1.º`, `2.ª`, `1.er`, `3.os`: a whole number and a marker of the `ordinal_marks` table (DPD «abreviatura»,
-    5.b: `n.º`, letters written high). `1ª` and `3er` with no full stop are common, and their marker tells the
-    ordinal apart. A bare `º`, as in `25º`, is also written for a degree, so it stays as written."""
+    5.b: `n.º`, letters written high). `1ª` and `3er` with no full stop read as the ordinal too. A marker of
+    `degree_marks` also writes a degree, so `1º` reads as the ordinal only in a context that a degree does not take:
+    a singular masculine determiner before it (`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a
+    legal division word before it (`artículo 6º`) (see the module docstring)."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 
@@ -639,9 +666,22 @@ class Ordinal:
             marker = next((m for m in marks if text.startswith(m, number.end)), None)
             if marker is None or not is_bounded(text, number.start, number.end + len(marker)):
                 continue
+            if marker in request.data["degree_marks"] and (bounded_integer(number.integer) == 0
+                    or not _ordinal_context(text, number.start, number.end + len(marker), request)):
+                continue
             yield Span(number.start, number.end + len(marker), Form.ORDINAL,
                        FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
                                   "script": number.script}), recognizer=self.name)
+
+
+def _ordinal_context(text: str, start: int, end: int, request: Request) -> bool:
+    """Whether a word of `ordinal_leads` stands right before text[start:end], or a word of `ordinal_follows` stands
+    right after it with only spaces between and a month name after it, as in `el 1º de mayo`."""
+    before = re.search(r"(?:^|\s)(\S+)\s+$", text[:start])
+    after = re.match(r"\s+(\w+)\s+(\w+)(?!\w)", text[end:])
+    return bool((before and before.group(1).lower() in request.data["ordinal_leads"])
+                or (after and after.group(1).lower() in request.data["ordinal_follows"]
+                    and after.group(2).lower() in (*request.data["months"], *request.data["month_variants"])))
 
 
 @dataclass(frozen=True)
@@ -705,8 +745,9 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(reach=3), SHARED["money"],
-                 SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"], SHARED["range"],
-                 Ordinal(), CountedAbbreviation(), Abbreviation(), SHARED["decimal"], SHARED["cardinal"]),
+                 SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"],
+                 SHARED["range"], Ordinal(), CountedAbbreviation(), Abbreviation(), SHARED["decimal"],
+                 SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,

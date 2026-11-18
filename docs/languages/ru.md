@@ -104,7 +104,7 @@ A subject before the verb, or a word after the date, makes the date a time again
 
 The rules cite Грамматика-80 (Русская грамматика, АН СССР, 1980), Д. Э. Розенталь, Справочник по правописанию и литературной правке (1985), and the Правила русской орфографии и пунктуации (2006), by paragraph. The unit names and the digit groups cite ru.wikipedia.org. The docstring of [`ru.py`](../../text2spoken/lang/ru.py) lists them.
 
-Most test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules. Some cite Кузнецов's Большой толковый словарь, CLDR 49 or the design of text2spoken. No native speaker has checked them. Of the 177 rows, 3 are marked silver, because no source gives their reading.
+Most test rows in `tests/data/ru.tsv` cite Грамматика-80, Розенталь or the 2006 spelling rules. Some cite Кузнецов's Большой толковый словарь, CLDR 49 or the design of text2spoken. No native speaker has checked them. Of the 179 rows, 3 are marked silver, because no source gives their reading.
 
 ## Limits
 

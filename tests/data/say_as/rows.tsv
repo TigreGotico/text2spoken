@@ -14,3 +14,7 @@ SA17	pt-PT	3	ordinal			terceiro	W3C Note "SSML 1.0 say-as attribute values" (200
 SA18	pt-PT	12/03/2024	date	dmy		doze de março de dois mil e vinte e quatro	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.1, format dmy; text2spoken design section 15	unchecked
 SA19	en-US	21 people	cardinal			twenty-one people	SSML 1.1 section 3.1.9: "this additional text MUST be rendered"	unchecked
 SA20	en-US	abc	cardinal			abc	SSML 1.1 section 3.1.9: render the content "as if the interpret-as attribute were not present"	unchecked
+SA21	en-US	2 1/2	fraction			two and a half	Amazon Polly, "Controlling how special types of words are spoken": fraction reads "mixed fractions"; Wikipedia, "English numerals", Fractions and decimals: 1 1/2 is "one and a half"	unchecked
+SA22	en-US	3+1/2	fraction			three and a half	Amazon Polly, "Controlling how special types of words are spoken": 3+1/2 "is pronounced "three and a half.""	unchecked
+SA23	pt-PT	2 1/2	fraction			dois e meio	Amazon Polly: fraction reads "mixed fractions"; Ciberdúvidas 38523: "Esta concordância é determinada pelo elemento que está omitido", «pé-de-cabra e meio»	unchecked
+SA24	de-DE	3+1/2	fraction			dreieinhalb	Amazon Polly: 3+1/2 is a mixed fraction; Duden, "zweieinhalb": Zahlwort, Bruchzahl, "2 1/2"	unchecked
