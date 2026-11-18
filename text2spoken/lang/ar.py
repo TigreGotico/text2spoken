@@ -513,7 +513,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
     as after the year noun that may stand before it (pp. 351-353)."""
     request = context.request
     fields = span.fields
-    era = fields.get("era")
+    era = fields["era"]
     month = request.data["hijri_months" if era in request.data["hijri_marks"] else "months"][fields["month"] - 1]
     day = SPELLER.ordinal(str(fields["day"]), Features(gender=MASCULINE, case=_case(span, context)), request)
     if fields["year"] is None:
@@ -630,7 +630,7 @@ class DateNamed:
                 continue
             yield Span(start, end, Form.DATE,
                        FrozenMap({"year": year, "month": month, "day": day, "written_order": "DMY",
-                                  "month_written": "name", "prefix": "", "suffix": ""}), recognizer=self.name)
+                                  "month_written": "name", "era": "", "prefix": "", "suffix": ""}), recognizer=self.name)
 
 
 LANGUAGE = LanguageSpec(

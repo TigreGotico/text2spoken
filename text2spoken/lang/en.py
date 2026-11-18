@@ -885,7 +885,7 @@ class DateNamed:
                                         FrozenMap({"year": year_value, "month": month,
                                                    "day": int(day) if day else None,
                                                    "written_order": "DMY" if order == "DMY" else "MDY",
-                                                   "month_written": "name", "prefix": "", "suffix": ""}),
+                                                   "month_written": "name", "era": "", "prefix": "", "suffix": ""}),
                                         recognizer=self.name), text, request)
 
 

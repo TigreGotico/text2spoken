@@ -596,7 +596,7 @@ class DateNumeric:
             start, end, prefix, suffix = bounds
             yield Span(start, end, Form.DATE,
                        FrozenMap({"year": year, "month": month, "day": day, "written_order": order,
-                                  "month_written": "digits", "prefix": prefix, "suffix": suffix}),
+                                  "month_written": "digits", "era": "", "prefix": prefix, "suffix": suffix}),
                        recognizer=self.name)
 
 
