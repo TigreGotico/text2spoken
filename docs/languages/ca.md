@@ -42,7 +42,7 @@ An amount reads in the gender of its currency. The file gives the euro and the d
 
 | Tag | Notes |
 | --- | --- |
-| `ca-ES` (the default variety) | Central Catalan. |
+| `ca-ES` (the default variety) | Catalan of Spain, by the norm of the IEC. |
 | `ca-AD` | Andorra. The words are those of `ca-ES`. |
 | `ca-ES-valencia` | Valencian. The words are the forms of the IEC, which the AVL accepts. |
 
@@ -80,7 +80,7 @@ The file always reads the comma as the decimal mark and the full stop as the gro
 
 The rules cite the Ortografia catalana of the Institut d'Estudis Catalans, the Diccionari normatiu valencià of the Acadèmia Valenciana de la Llengua and the guide "Abreviacions" of the Generalitat de Catalunya. Currency names, unit names and the names of symbols and emoji come from CLDR 49. The docstring of [`ca.py`](../../text2spoken/lang/ca.py) quotes the source of each rule.
 
-Each of the 78 rows in `tests/data/ca.tsv` cites a source. 23 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Each of the 80 rows in `tests/data/ca.tsv` cites a source. 25 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 ## Limits
 
@@ -102,6 +102,7 @@ The file reads no dates, times, years, ranges, telephone numbers, identifiers, w
 | `Costa 2 £.` | `ca-ES` | stays as written | CLDR gives the pound no gender, so an amount whose words change in the feminine stays as written. |
 | `Costa 20 M€.` | `ca-ES` | Costa vint M€. | `M€` and `MEUR` do not read as "milions d'euros". |
 | `Fa -5 €.` | `ca-ES` | Fa menys cinc €. | A negative amount reads the number and keeps the sign. |
+| `Puja un +5 %.` | `ca-ES` | stays as written | No source gives the word for the sign `+`, so a number with it stays as written. |
 | `Un objectiu de 35 mm.` | `ca-ES` | stays as written | CLDR names the millimetre "mil·límetre" and the millilitre "mil·lilitre", and the library reads no name with the middle dot. CLDR gives `m` to the month and to the metre, so it does not read either. |
 | `Una sala de 3 × 4 cm.` | `ca-ES` | stays as written | No source gives the Catalan word for the dimension mark. |
 | `La Prof. Oliver.` | `ca-ES` | stays as written | `Prof.` is "professor" or "professora", and the file does not know the gender. |

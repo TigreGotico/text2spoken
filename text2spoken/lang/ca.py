@@ -97,9 +97,10 @@ from text2spoken.core import parsers
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import written_amount
-from text2spoken.core.recognizers import (SHARED, Money, OrdinalStop, numbers_in, signed, speak_abbreviation,
-                                          speak_cardinal as core_speak_cardinal, speak_cldr_date, speak_decimal,
-                                          speak_lexicon, speak_percent, written_shapes)
+from text2spoken.core.recognizers import (SHARED, Money, OrdinalStop, numbers_in, signed as core_signed,
+                                          speak_abbreviation, speak_cardinal as core_speak_cardinal, speak_cldr_date,
+                                          speak_decimal as core_speak_decimal, speak_lexicon,
+                                          speak_percent as core_speak_percent, written_shapes)
 from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import DIGIT_BOUND, OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
@@ -264,6 +265,28 @@ def counted(digits: str, gender: str | None, request: Request) -> str:
 def before_noun(words: str, noun: str) -> str:
     """The number words and the noun, with de after a scale noun: "tres milions de quilòmetres"."""
     return f"{words} {of(noun)}" if words.split()[-1] in scale_words() else f"{words} {noun}"
+
+
+def check_sign(sign: str, request: Request) -> None:
+    """A sign with no word in `sign_words`, as `+`, keeps the form as written: no source of the file gives the word."""
+    if sign and sign not in request.data["sign_words"]:
+        raise DeclinedReading(f"no word for the sign {sign!r}")
+
+
+def signed(words: str, sign: str, request: Request) -> str:
+    """The words of a number after the word of its sign."""
+    check_sign(sign, request)
+    return core_signed(words, sign, request)
+
+
+def speak_decimal(span: Span, context: SpanContext) -> str:
+    check_sign(span.fields["sign"], context.request)
+    return core_speak_decimal(span, context)
+
+
+def speak_percent(span: Span, context: SpanContext) -> str:
+    check_sign(span.fields["amount"]["sign"], context.request)
+    return core_speak_percent(span, context)
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
