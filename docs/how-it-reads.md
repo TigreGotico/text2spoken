@@ -94,6 +94,18 @@ A minus before a number reads when its owner has a word for it. A hyphen between
 
 A language with no file has no noun genders. A number before a noun takes the default form of `ovos-number-parser`, or the first CLDR cardinal rule set of `spellout-cardinal`, `spellout-cardinal-masculine` and `spellout-numbering`, whatever the gender of the noun. Agreement with the noun needs a language file that gives the genders.
 
+SSML `say-as` markup reads more forms in a language with no file, because the markup gives the evidence (see [API, say_as](api.md#say_as)). `digits` and `telephone` read each digit by its cardinal from the same owner, and `characters` keeps each letter alone, as written. `ordinal` reads the ordinal of the module, or the CLDR rule set `spellout-ordinal`, else `spellout-ordinal-masculine`, else `spellout-ordinal-common`. Where CLDR has an ordinal rule set for more than one gender, as Hindi does, `default_gender` chooses it:
+
+```python
+>>> from text2spoken import SayAs, normalize
+>>> normalize("912 345 678", "uk", say_as=SayAs(interpret_as="telephone"))
+"дев'ять один два три чотири п'ять шість сім вісім"
+>>> normalize("3", "uk", say_as=SayAs(interpret_as="ordinal"))
+'третій'
+>>> normalize("3", "hi", say_as=SayAs(interpret_as="ordinal"))
+'तीसरा'
+```
+
 ## Turn forms on and off
 
 `only` reads the forms that you name and no other:

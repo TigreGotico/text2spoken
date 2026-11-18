@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.2a77](https://github.com/TigreGotico/text2spoken/tree/0.0.2a77) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a76...0.0.2a77)
+
+**Merged pull requests:**
+
+- feat: say-as reads digits, telephone, characters and ordinal in every language with numbers [\#226](https://github.com/TigreGotico/text2spoken/pull/226) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a76](https://github.com/TigreGotico/text2spoken/tree/0.0.2a76) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a75...0.0.2a76)
+
+**Merged pull requests:**
+
+- fix: keep an amount whole next to a currency sign that the language does not read [\#220](https://github.com/TigreGotico/text2spoken/pull/220) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a75](https://github.com/TigreGotico/text2spoken/tree/0.0.2a75) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a74...0.0.2a75)
@@ -388,10 +404,6 @@
 ## [0.0.2a26](https://github.com/TigreGotico/text2spoken/tree/0.0.2a26) (2026-11-10)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a25...0.0.2a26)
-
-**Merged pull requests:**
-
-- fix: read a signed fraction after a mark as on a second pass [\#54](https://github.com/TigreGotico/text2spoken/pull/54) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a25](https://github.com/TigreGotico/text2spoken/tree/0.0.2a25) (2026-11-10)
 

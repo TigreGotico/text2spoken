@@ -1416,8 +1416,8 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["percent"], SHARED["measure"], SHARED["expression"],
-                 SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
+                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
+                 SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), SHARED["decimal"],
                  SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={

@@ -14,6 +14,7 @@ element."
 """
 from __future__ import annotations
 
+import logging
 import re
 import warnings
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -25,14 +26,18 @@ from text2spoken.core.dates import is_valid, resolve as resolve_date
 from text2spoken.core.recognizers import (_DATE, PHONE_PLANS, _cluster_edge, _edge, _period_after, _phone_pattern,
                                           _sentence_period, digit_run_matches, numbers_in, whole_part)
 from text2spoken.core.spans import SAY_AS_SPANS, Features, Recognizer, Span, SpanContext
-from text2spoken.core.spellers import bounded_integer, spell_digits
+from text2spoken.core.spellers import bounded_integer, cardinal_digit_words
 from text2spoken.core.times import clock_fields
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_digit, is_word_char, one_digit_set
-from text2spoken.errors import ArgumentTypeError, ParameterNotHonouredWarning, UnsupportedParameterError, require_type
+from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_digit, is_letter, is_mark, is_word_char,
+                                     one_digit_set)
+from text2spoken.errors import (ArgumentTypeError, DeclinedReading, ParameterNotHonouredWarning,
+                                UnsupportedParameterError, require_type)
 from text2spoken.params import FrozenMap, Form, NormalizationParams
 
 if TYPE_CHECKING:
     from text2spoken.core.language import LanguageSpec, Request
+
+LOG = logging.getLogger("text2spoken")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -261,15 +266,19 @@ class DigitRun:
 
 @dataclass(frozen=True)
 class CharacterRun:
-    """Each run of characters of which every one has a name: a letter of `letter_names` in any case, or a digit."""
+    """Each run of characters of which every one has a name: a letter of `letter_names` in any case, or a digit. In
+    a language with no `letter_names`, each run of letters, their combining marks and digits."""
     name: str = "say_as_characters"
     form: Form = Form.LETTERS
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        names = request.data["letter_names"]
+        names = request.data.get("letter_names")
         start = None
         for index, char in enumerate((*text, "")):
-            named = bool(char) and (is_digit(char) or char.casefold() in names)
+            if names is None:
+                named = bool(char) and (is_digit(char) or is_letter(char) or (start is not None and is_mark(char)))
+            else:
+                named = bool(char) and (is_digit(char) or char.casefold() in names)
             if named and start is None:
                 start = index
             elif not named and start is not None:
@@ -279,30 +288,82 @@ class CharacterRun:
                 start = None
 
 
+def digit_words(tag: str, language: LanguageSpec, data: Mapping) -> tuple[str, ...] | None:
+    """The word of each digit for the core readings: the `digit_words` of the language file, else the cardinal of
+    each digit (`cardinal_digit_words`). None when the language has no word for each digit."""
+    table = data.get("digit_words")
+    return tuple(table) if table is not None else cardinal_digit_words(tag, language)
+
+
+def _spell(digits: str, request: Request) -> str:
+    words = digit_words(request.tag, request.language, request.data)
+    return " ".join(words[int(digit)] for digit in fold_digits(digits))
+
+
 def speak_bare_ordinal(span: Span, context: SpanContext) -> str:
     """The ordinal through the ordinal speller of the language, with the `default_gender` of the params, else of
-    the language (Note 3.6: "the best representation of the ordinal that it can")."""
+    the language (Note 3.6: "the best representation of the ordinal that it can").
+
+    The markup sends any digit run to the speller, and some writers of ovos-number-parser raise `LookupError` or
+    `TypeError` past a number of digits. Such a span declines, so that no say-as case raises (section 17.6)."""
     request = context.request
     language = request.language
     gender = request.params.default_gender.get(language.code) or language.default_gender
     features = Features(gender=gender) if gender is not None and language.genders else Features()
-    return language.spellers[Form.ORDINAL].ordinal(span.fields["digits"], features, request)
+    try:
+        return language.spellers[Form.ORDINAL].ordinal(span.fields["digits"], features, request)
+    except (LookupError, TypeError) as error:
+        raise DeclinedReading(f"the ordinal speller of {request.tag} fails on {len(span.fields['digits'])} digits: "
+                              f"{type(error).__name__}: {error}") from error
 
 
 def speak_digits(span: Span, context: SpanContext) -> str:
-    return spell_digits(span.fields["digits"], context.request)
+    return _spell(span.fields["digits"], context.request)
+
+
+def speak_bare_telephone(span: Span, context: SpanContext) -> str:
+    """The telephone verbalizer of the language. With none, each group digit by digit, the groups in the order the
+    text writes them, as the `en` and `pt` files read them, after the `+` of `sign_words` and the country code. A
+    language with no `+` in `sign_words` reads the country code without it and logs one warning; in strict mode the
+    span declines."""
+    request = context.request
+    verbalizer = request.language.verbalizers.get(Form.TELEPHONE)
+    if verbalizer is not None:
+        return verbalizer(span, context)
+    groups = [_spell(group, request) for group in span.fields["groups"]]
+    country_code = span.fields["country_code"]
+    if country_code:
+        plus = request.data["sign_words"].get("+")
+        if plus is None:
+            if request.params.strict:
+                raise DeclinedReading(f"{request.tag} has no sign word for the + of a country code")
+            LOG.warning("%s has no sign word for the + of the country code %s; the code reads without it",
+                        request.tag, country_code)
+        groups.insert(0, _spell(country_code, request) if plus is None
+                      else f"{plus} {_spell(country_code, request)}")
+    return " ".join(groups)
+
+
+def _characters(letters: str) -> Iterator[str]:
+    """Each digit, and each letter with the combining marks after it."""
+    start = 0
+    for index in range(1, len(letters) + 1):
+        if index == len(letters) or not is_mark(letters[index]):
+            yield letters[start:index]
+            start = index
 
 
 def speak_characters(span: Span, context: SpanContext) -> str:
-    """Each character by its name: a digit by `digit_words`, a letter in any case by `letter_names` (Note 3.4)."""
-    data = context.request.data
-    names, digits = data["letter_names"], data["digit_words"]
-    return " ".join(digits[int(fold_digits(char))] if is_digit(char) else names[char.casefold()]
-                    for char in span.fields["letters"])
+    """Each character by its name: a digit by `digit_words`, a letter in any case by `letter_names` (Note 3.4). In a
+    language with no `letter_names`, a letter stays as written, alone, so a phonemizer reads it as one letter."""
+    request = context.request
+    names, digits = request.data.get("letter_names"), digit_words(request.tag, request.language, request.data)
+    return " ".join(digits[int(fold_digits(char))] if is_digit(char[0]) else char if names is None
+                    else names[char.casefold()] for char in _characters(span.fields["letters"]))
 
 
 READINGS = MappingProxyType({BareOrdinal.name: speak_bare_ordinal, DigitRun.name: speak_digits,
-                             CharacterRun.name: speak_characters})
+                             CharacterRun.name: speak_characters, BareTelephone.name: speak_bare_telephone})
 """The core readings, by the name of the recognizer whose spans they speak. Every other say-as span reads through
 the verbalizer of the language."""
 
@@ -326,7 +387,12 @@ class ResolvedSayAs:
 
     def fits(self, span: Span) -> bool:
         """Whether a span agrees with the format: a numeric date in the field order of the format, and a time with
-        no day period in the hours of the format."""
+        no day period in the hours of the format. With `telephone`, a span that a recognizer keeps as written for
+        want of evidence of a phone number does not fit: the markup is that evidence, so `912 345 678` reads as a
+        phone number. Each other value keeps such a span, as `6.000` in Italian, where the plain reading has no
+        evidence for the thousands or the decimal reading."""
+        if span.keep and self.value == "telephone":
+            return False
         if self.value == "date" and self.format in DATE_FORMATS and span.form is Form.DATE:
             return span.fields["month_written"] != "digits" or span.fields["written_order"] == DATE_FORMATS[self.format]
         if self.value == "time" and span.form is Form.TIME and span.fields["period"] is None:
@@ -349,14 +415,13 @@ def _not_honoured(message: str, strict: bool) -> None:
     warnings.warn(message, ParameterNotHonouredWarning, stacklevel=6)
 
 
-def _reads(value: str, language: LanguageSpec, data: FrozenMap) -> bool:
-    """Whether the language reads the value with no format."""
-    if value == "digits":
-        return "digit_words" in data
-    if value == "characters":
-        return "digit_words" in data and "letter_names" in data
+def _reads(value: str, tag: str, language: LanguageSpec, data: FrozenMap) -> bool:
+    """Whether the language reads the value with no format. `digits`, `telephone` and `characters` read in each
+    language with a word for each digit, and `ordinal` in each language with an ordinal speller."""
+    if value in ("digits", "telephone", "characters"):
+        return digit_words(tag, language, data) is not None
     if value == "ordinal":
-        return Form.ORDINAL in language.verbalizers and Form.ORDINAL in language.spellers
+        return Form.ORDINAL in language.spellers
     return all(form in language.verbalizers for form in VALUES[value] - {Form.DECIMAL})
 
 
@@ -393,7 +458,7 @@ def read(say_as: SayAs, tag: str, language: LanguageSpec, data: FrozenMap,
     strict = params.strict
     value = _clean(say_as.interpret_as) or ""
     value = ALIASES.get(value, value)
-    if value not in VALUES or not _reads(value, language, data):
+    if value not in VALUES or not _reads(value, tag, language, data):
         _not_honoured(f"{tag!r} reads no say-as {say_as.interpret_as!r}; the text reads as if no say-as were given",
                       strict)
         return None, params
@@ -431,6 +496,9 @@ def read(say_as: SayAs, tag: str, language: LanguageSpec, data: FrozenMap,
         elif value == "characters":
             if format is not None and format != "characters":
                 ignore("format", format)
+            if "letter_names" not in data:
+                _not_honoured(f"{tag!r} has no letter_names table; each letter of the say-as {value!r} reads alone, "
+                              "as written", strict)
             forced = CharacterRun()
         elif format is not None:
             ignore("format", format)

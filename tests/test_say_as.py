@@ -121,9 +121,9 @@ UNSUPPORTED = [
     ("10 Downing Street", "en-GB", "address"),
     ("Wow", "en-US", "interjection"),
     ("2024-01-02", "en-US", "vxml:date"),
-    ("3", "el-GR", "ordinal"),
-    ("3", "ar-SA", "digits"),
-    ("W3C", "ar-SA", "characters"),
+    ("3", "ko-KR", "ordinal"),
+    ("3", "yo-NG", "digits"),
+    ("W3C", "bn-IN", "characters"),
 ]
 """A value that the core does not read, a prefixed value, and a value whose form the language does not read."""
 

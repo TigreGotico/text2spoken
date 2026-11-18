@@ -194,6 +194,8 @@ READERS: dict[str, frozenset[str]] = {
                         "case_suffixes"}),
     "money": frozenset({"number_marks", "number_gaps", "currencies", "currency_symbols", "scales", "range_word",
                       "range_marks", "proclitics", "case_suffixes"}),
+    "kept_money": frozenset({"number_marks", "number_gaps", "proclitics", "case_suffixes", "symbols", "symbol_names",
+                           "currencies", "currency_symbols"}),
     "measure": frozenset({"number_marks", "number_gaps", "elision_marks", "symbols", "units", "unit_symbols",
                         "unjoined_symbols", "dimension_marks", "range_marks", "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
