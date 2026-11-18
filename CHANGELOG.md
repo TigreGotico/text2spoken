@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a77](https://github.com/TigreGotico/text2spoken/tree/0.0.2a77) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a76...0.0.2a77)
+
+**Merged pull requests:**
+
+- feat: say-as reads digits, telephone, characters and ordinal in every language with numbers [\#226](https://github.com/TigreGotico/text2spoken/pull/226) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a76](https://github.com/TigreGotico/text2spoken/tree/0.0.2a76) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a75...0.0.2a76)
