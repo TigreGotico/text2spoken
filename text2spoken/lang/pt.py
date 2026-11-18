@@ -282,12 +282,11 @@ jurídica": "Se o numeral antecede o substantivo, é usual continuar a usar-se o
 Ciberdúvidas 28509, "Plurais com números romanos": "«II directriz», «III directriz», etc. (os símbolos são lidos:
 «segunda», «terceira», etc.)". Migalhas, Gramatigalhas, "Numeral", after José de Nicola and Ernani Terra: "O numeral
 anteposto ao substantivo deve ser lido como ordinal, concordando com esse substantivo." The
-ordinal reads only between a singular article or demonstrative of `function_words` with a capital, as `A`, `O`,
-`Esta` or `Nesta`, and a common noun of the same gender that is no word of `function_words`, and only for a numeral of
-two letters or more up to C. The noun starts with a capital, as an event or a body does in `A II Guerra Mundial`,
-because `O XV segundo a imprensa` and `Este XV nunca perdeu` are sentences about the XV de Portugal. After a
-demonstrative contracted with `em` or `de`, which starts a prepositional phrase, a noun in lower case reads too, as in
-`Nesta XV edição`. The gender
+ordinal reads only between a singular demonstrative contracted with `em` or `de` and with a capital, as `Nesta`,
+`Deste` or `Daquele`, and a common noun of the same gender that is no word of `function_words`, and only for a
+numeral of two letters or more up to C. The contraction starts a prepositional phrase, so the word after the numeral
+is its noun. An article or a demonstrative alone gives no such evidence, because `O XV segundo a imprensa` and
+`ESTE XV NUNCA PERDEU` are sentences about the XV de Portugal, so `A II Guerra Mundial` stays as written. The gender
 of the noun comes from `noun_gender` or tugalex, which guesses from the ending of a word that it does not list, so a
 verb form such as `joga` in `O XV joga` gets a gender too: the gender of the article decides, and `O XV joga` keeps
 the cardinal reading. A plural article, as in `As II partes`, keeps it too, because the ordinal would be plural.
@@ -1265,9 +1264,6 @@ def _noun_gender(word: str, request: Request) -> GrammaticalGender | None:
     return None
 
 
-_SINGULAR_ARTICLES = {**dict.fromkeys(("o", "ao", "do", "no", "pelo", "um", "este", "esse", "aquele"), MASCULINE),
-                      **dict.fromkeys(("a", "da", "na", "pela", "uma", "esta", "essa", "aquela"), FEMININE)}
-"""The singular articles and demonstratives of `function_words` that may start a subject, and their gender."""
 _SINGULAR_CONTRACTIONS = {
     **dict.fromkeys(("neste", "nesse", "naquele", "deste", "desse", "daquele"), MASCULINE),
     **dict.fromkeys(("nesta", "nessa", "naquela", "desta", "dessa", "daquela"), FEMININE),
@@ -1277,20 +1273,18 @@ prepositional phrase, so the word after the numeral is its noun."""
 
 
 def _noun_after(text: str, end: int, article: str, request: Request) -> tuple[GrammaticalGender, bool] | None:
-    """The gender of a singular `article` and of the common noun right after the numeral and one space, and whether the
-    noun starts with a capital. After a demonstrative contracted with `em` or `de`, which starts a prepositional
-    phrase, the noun may be in lower case, as `edição` in `Nesta XV edição`. After an article or another
-    demonstrative, it starts with a capital, as the name of an event or a body does in `A II Guerra Mundial`, because
-    these words also start a sentence about a team, as in `O XV segundo a imprensa`. None when the article is none
-    of these, or the next word is a function word or no noun of its gender (`_noun_gender`)."""
-    contraction = _SINGULAR_CONTRACTIONS.get(article.lower())
-    gender = contraction or _SINGULAR_ARTICLES.get(article.lower())
+    """The gender of a singular demonstrative contracted with `em` or `de`, `article`, and of the common noun right
+    after the numeral and one space, and whether the noun starts with a capital. The contraction starts a
+    prepositional phrase, so the word after the numeral is its noun, as `edição` in `Nesta XV edição`. An article or a
+    demonstrative alone may start a sentence about a team, as in `O XV segundo a imprensa` or `ESTE XV NUNCA PERDEU`,
+    so it gives none. None also when the next word is a function word or no noun of the gender of the contraction
+    (`_noun_gender`)."""
+    gender = _SINGULAR_CONTRACTIONS.get(article.lower())
     match = re.match(r" (\w+)", text[end:])
     if gender is None or match is None:
         return None
     word = match.group(1)
-    if word.lower() in request.data["function_words"] or not (contraction or word[0].isupper()) \
-            or _noun_gender(word, request) != gender:
+    if word.lower() in request.data["function_words"] or _noun_gender(word, request) != gender:
         return None
     return gender, word[0].isupper()
 
@@ -1338,10 +1332,9 @@ class Roman:
     30, so an acronym such as `MIX` stays as written. These rules need spaces alone between the word before the numeral
     and the numeral. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as
     a cardinal, as `XX` in `No século XIX, XX pessoas`, and a smaller one stays as written, unless a regnal title comes
-    before the word. Between a singular article or demonstrative of `function_words` with a capital and a common noun
-    of the same gender, a numeral of two letters or more up to C that is no word of `roman_words` reads as an ordinal
-    that agrees with them, as in `A II Guerra Mundial`. The noun starts with a capital, except after a demonstrative
-    contracted with `em` or `de`, as in `Nesta XV edição`. After any other word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in
+    before the word. Between a singular demonstrative contracted with `em` or `de` and a common noun of the same
+    gender, a numeral of two letters or more up to C that is no word of `roman_words` reads as an ordinal that agrees
+    with them, as in `Nesta XV edição`. After any other word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in
     `O XV`.
     Outside a clause in capitals, no numeral reads right after a word of `letter_words` that is no function word, as
     `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a word of `letter_words` or a word that tugalex
