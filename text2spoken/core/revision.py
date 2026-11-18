@@ -61,9 +61,9 @@ installed = tuple(paths[key] for key in ("purelib", "platlib"))
 def outside_stdlib(module):
     where = getattr(module, "__file__", None)
     return where is None or not where.startswith(stdlib) or where.startswith(installed)
-print(marker + json.dumps(sorted(name for name, module in list(sys.modules.items())
-                                 if name not in before and name.split(".")[0] not in sys.stdlib_module_names
-                                 and outside_stdlib(module))), flush=True)
+print("\\n" + marker + json.dumps(sorted(name for name, module in list(sys.modules.items())
+                                         if name not in before and name.split(".")[0] not in sys.stdlib_module_names
+                                         and outside_stdlib(module))), flush=True)
 """
 """Prints, after a marker, the modules outside the standard library that a `normalize` and each parser writer import
 for a tag."""
