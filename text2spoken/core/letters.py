@@ -35,7 +35,7 @@ from typing import Literal
 
 from text2spoken.core.language import Request
 from text2spoken.core.roman import value as roman_value
-from text2spoken.core.spans import DECLINED, Features, Span, SpanContext
+from text2spoken.core.spans import DECLINED, Features, Span, SpanContext, context_words
 from text2spoken.core.tokens import Token, is_letter, is_word_char
 from text2spoken.params import FrozenMap, Form
 
@@ -156,6 +156,27 @@ def respell(text: str, request: Request) -> str:
             pieces += [text[position:start], spell(written, request)]
             position = end
     return "".join(pieces) + text[position:]
+
+
+def _label_letters(text: str, tokens: Sequence[Token], label_nouns: frozenset[str],
+                   names: FrozenMap) -> Iterator[tuple[int, int]]:
+    """The start and end of each single capital letter right after a word of `label_nouns`, as `C` in `vitamina C`,
+    which reads by its letter name (design section 4.6). A run of one letter otherwise needs a digit."""
+    if not label_nouns:
+        return
+    for word in context_words(tokens):
+        if word.text.lower() not in label_nouns:
+            continue
+        position = word.end
+        while position < len(text) and text[position].isspace():
+            position += 1
+        if position >= len(text) or not is_letter(text[position]) or not text[position].isupper():
+            continue
+        if text[position].lower() not in names:
+            continue
+        if position + 1 < len(text) and is_word_char(text[position + 1]):
+            continue
+        yield position, position + 1
 
 
 def _word_runs(text: str) -> Iterator[tuple[int, int]]:
@@ -279,7 +300,8 @@ class Letters:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         """A span for each run of design section 4.6. A run that reads as a word keeps its text. A word of a clause in
         capitals also gives its clause, because `classify` writes it in lower case when no part next to it stays as
-        written in capitals."""
+        written in capitals. A single capital letter after a noun of `letter_label_nouns`, as `C` in `vitamina C`,
+        reads by its letter name."""
         data = request.data
         for (start, end), known, clause in _runs_in_context(text, request):
             written = text[start:end]
@@ -287,6 +309,11 @@ class Letters:
             if read is not None:
                 yield Span(start, end, Form.LETTERS, FrozenMap({"letters": written, "reading": read, "clause": clause}),
                            recognizer=self.name, keep=read == "word" and written == _parts(written)[1])
+        label_nouns = frozenset(data.get("letter_label_nouns", ()))
+        for start, end in _label_letters(text, tokens, label_nouns, data.get("letter_names", FrozenMap())):
+            yield Span(start, end, Form.LETTERS,
+                       FrozenMap({"letters": text[start:end], "reading": "letters", "clause": ()}),
+                       recognizer=self.name)
 
 
 def speak_letters(span: Span, context: SpanContext) -> str:

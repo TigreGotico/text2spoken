@@ -134,6 +134,7 @@ SHAPES: dict[str, Shape] = {
     "letter_names": map_of(lower_letter, word),
     "letter_codas": list_of(lower),
     "letter_free_consonants": list_of(lower),
+    "letter_label_nouns": WORDS,
     "letter_onsets": list_of(lower),
     "letter_runs": map_of(capitals, one_of("word", "letters")),
     "letter_words": list_of(capital_word),
@@ -206,7 +207,7 @@ READERS: dict[str, frozenset[str]] = {
     "abbreviation": frozenset({"titles", "number_abbreviations", "abbreviations", "sentence_final"}),
     "space_groups": frozenset(),
     "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_free_consonants",
-                          "letter_runs", "letter_words"}),
+                          "letter_runs", "letter_words", "letter_label_nouns"}),
     "symbol": SYMBOL_KEYS,
     "emoji": SYMBOL_KEYS,
     "speak_cardinal": frozenset({"digit_words", "sign_words", "leads"}),
@@ -240,7 +241,8 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
-    "letter_runs", "letter_free_consonants", "letter_words", "unjoined_symbols", "symbol_names", "function_words",
+    "letter_runs", "letter_free_consonants", "letter_words", "letter_label_nouns", "unjoined_symbols",
+    "symbol_names", "function_words",
     "colors", "number_gaps", "elision_marks", "mixed_half", "mixed_word",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.

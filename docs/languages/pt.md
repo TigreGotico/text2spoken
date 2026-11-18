@@ -26,6 +26,19 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 
 A number agrees with the noun that it counts. The gender of a common noun comes from the noun lexicon of `tugalex`, and a number before a unit takes the gender of the unit.
 
+A number right after a noun that names one item of a series, such as `sala`, `página`, `artigo` or `Fig.`, reads in the masculine when no noun that it counts follows, because the word "número" is left out (Cunha and Cintra, quoted in Ciberdúvidas 33468). After `a páginas`, the number agrees with the plural noun (Bechara, quoted in Ciberdúvidas 33527). A number before `da tarde` counts hours. A number before `vezes` or `vírgula` and a second number reads in the masculine, unless a noun follows the second number and then `vezes` is the noun it counts. Two numbers that `a`, `e` or `ou` join stay as written when the noun after the second number gives the first number another gender, because no source gives that gender. An amount of money with one decimal reads the decimal as tens of cents. After `vitamina`, `grupo` or `classe`, `D.` is a letter, not a title.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Fica na sala 2, porta 4.` | `pt-PT` | Fica na sala dois, porta quatro. |
+| `Está a páginas 21 da obra.` | `pt-PT` | Está a páginas vinte e uma da obra. |
+| `Já são 2 da tarde.` | `pt-BR` | Já são duas da tarde. |
+| `2 vezes 2 são 4.` | `pt-PT` | dois vezes dois são quatro. |
+| `Mede (1) vírgula 5 m.` | `pt-PT` | Mede (um) vírgula cinco metros. |
+| `O prazo é de 1 a 3 semanas.` | `pt-PT` | stays as written |
+| `O bilhete custa 12,5 €.` | `pt-PT` | O bilhete custa doze euros e cinquenta cêntimos. |
+| `Tome a vitamina D. Boa noite.` | `pt-PT` | stays as written |
+
 The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
 
 | Written | Spoken (`pt-PT`, `lexicon=FrozenMap({"pt": FrozenMap({"às": "às"})})`) |
@@ -60,7 +73,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 488 rows in `tests/data/pt.tsv`, 15 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 522 rows in `tests/data/pt.tsv`, 14 are marked silver.
 
 ## Roman numerals
 

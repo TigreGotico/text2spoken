@@ -391,7 +391,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `space_groups` | `CARDINAL` | none | none |
 | `color` | `COLOR` | `color_words` | none |
 | `electronic` | `ELECTRONIC` | `electronic_schemes`, `electronic_tlds` | none |
-| `letters` | `LETTERS` | `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_runs`, `letter_words` |
+| `letters` | `LETTERS` | `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_label_nouns`, `letter_runs`, `letter_words` |
 | `symbol` | `SYMBOL` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
 | `emoji` | `EMOJI` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
 

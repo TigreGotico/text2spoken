@@ -119,7 +119,7 @@ These limits hold in English and in Portuguese. The limits of one language are o
 | `Em 2020 kWh os preços subiram.` | `pt-PT` | Em dois mil e vinte quilowatts-hora os preços subiram. | A year before a unit symbol in its CLDR case reads as a measure. |
 | `In 2019-2020 kWh were sold.` | `en-GB` | In two thousand and nineteen to two thousand and twenty kilowatt-hours were sold. | A list of years before such a symbol reads each year as a cardinal. |
 | `₹10.50` | `en-GB` | ten point five zero Indian rupees | Two decimals read as a decimal when the language names no minor unit for the currency. |
-| `₹10,50` | `pt-PT` | dez vírgula cinco rupias indianas | Two decimals read as a decimal when the language names no minor unit for the currency. |
+| `₹10,50` | `pt-PT` | dez vírgula cinquenta rupias indianas | Two decimals read as a decimal when the language names no minor unit for the currency. |
 | `₿1` | `en-GB` | bitcoin one | A sign that CLDR names before a number reads before the number. |
 | `₿1` | `pt-PT` | bitcoin um | A sign that CLDR names before a number reads before the number. |
 | `$5-10` | `en-US` | stays as written | A money range with a symbol at one end only stays as written. |

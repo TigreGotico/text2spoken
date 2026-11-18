@@ -20,16 +20,61 @@ another fraction, so it stays as written.
 A number agrees with the noun that it counts. The hint of a frontend decides first, then the noun after the
 number, then a determiner before it, then `default_gender`. `um`, `dois` and the hundreds from `duzentos` have a
 feminine form; a scale word from `milhão` up is a masculine noun, so the words before it stay masculine (Priberam,
-"duas": "uma mesa e duas cadeiras"; "uma": "Flexão feminina de um"; "milhão": "nome masculino").
+"duas": "uma mesa e duas cadeiras"; "uma": "Flexão feminina de um"; "milhão": "nome masculino"; "trilhão": "nome
+masculino"; "trilião": "nome masculino").
+
+A number right after a noun of `label_nouns` or `roman_letter_nouns` names one item of a series, and it reads in the
+masculine when no noun that it counts follows it — the number ends the text, or a punctuation mark, a function word
+or a verb of `label_verbs` follows it: `sala 2, porta 4` reads "sala dois, porta quatro" and `o artigo 2 das
+disposições` "o artigo dois das disposições". A counted noun after it, as `semanas` in `em casa 2 semanas`, gives the
+number its gender: "duas semanas". `label_verbs` holds the third-person verbs that a numbered figure or table
+stands before, which the ending `a` reads as a feminine noun: Priberam, "mostrar": "verbo transitivo". Priberam,
+"mas": "conjunção adversativa", and "cada": "quantificador universal", join the words of `function_words`. Cunha and
+Cintra, Nova Gramática do Português Contemporâneo, p. 374, quoted in
+Ciberdúvidas 33468: "Na enumeração de páginas e de folhas de um livro, assim como na de casas, apartamentos, quartos
+de hotel, cabines de navio, poltronas de casas de diversões e equivalentes, empregam-se os CARDINAIS. Nestes casos
+sente-se a omissão da palavra número: Página 3 (três) [...] Cabine 2 (dois)". The Gramática do Português (Fundação
+Calouste Gulbenkian, 2013, p. 929), quoted in the same answer, names the class: such a cardinal occurs "em forma
+invariável à direita do nome" and serves "para especificar um exemplar único do tipo denotado pelo nome". So
+`label_nouns` holds the nouns of Cunha and Cintra and the nouns that name one numbered room, door, figure, table,
+line, row or seat; `fig` is the abbreviation of "figura" in `Fig. 2`. The parts of a work of `roman_letter_nouns`
+take the same reading (Ciberdúvidas 9067: "parte doze [mas: na página cinco; na página trinta e dois]"). After the
+preposition `a` and the plural `páginas` or `folhas` of `plural_labels`, the number agrees with the noun: Bechara,
+Moderna Gramática Portuguesa, 37.ª ed., quoted in Ciberdúvidas 33527: "Com a preposição a, usa-se o substantivo no
+plural [...] "a páginas duas", "a páginas vinte e uma" [...] com páginas, no plural, o cardinal se flexiona em
+gênero". So `a páginas 21 da obra` reads "a páginas vinte e uma da obra".
+
+A number before `da` and a word of `hour_periods` counts hours that the text leaves out, so it reads in the
+feminine: `são 2 da tarde` reads "são duas da tarde". Senado Federal, Manual de Comunicação, "Hora": "diga "são duas
+da tarde", e não "são 14 horas"", and "às dez da noite, e não às vinte e duas horas".
+
+A number before a word of `number_links` and a second number reads in the masculine. Before `vezes`, it is a factor of a
+product: `2 vezes 2` reads "dois vezes dois". When a noun that the number counts follows the second number, as `frases`
+in `2 vezes 3 frases`, `vezes` is the feminine noun "vez" and the number agrees with it: "duas vezes três frases".
+Priberam, "vez", sense 7: "Usa-se a seguir a um numeral e antes de outro
+numeral para indicar multiplicação (ex.: dois vezes dois são quatro)". The dictionary of the Academia das Ciências de
+Lisboa, quoted in Ciberdúvidas 33489, gives the same reading: "Mat. Designação de um operador de multiplicação [...] Um
+vezes três (1x3)". The same answer recommends "duas vezes dois" after Botelho de Amaral (1958) and Sá Nogueira (1989);
+the Academy dictionary and Priberam are the more reputable sources, and the masculine is also the reading of `2×2`.
+Before `vírgula`, it is the whole part of a decimal written with the word: `(1) vírgula 5 m` reads "(um) vírgula cinco
+metros". Ciberdúvidas 25561 quotes "dois vírgula cinco milhões de euros" and answers "Não se pode considerar errado".
+
+Two numbers that `a`, `e` or `ou` join, as in `de 1 a 3 semanas` and `entre 1 e 2 semanas`, stay as written when the
+noun after the second number gives the first number another reading. No source gives the gender of the first number
+of such a pair, so the pair declines (design section 10).
 
 The gender of a common noun comes from the noun lexicon of `tugalex`, behind the `pt` extra (design section 16).
-Without the extra, the `noun_gender` table and the endings of `gender_suffixes` give it.
+Without the extra, the `noun_gender` table and the endings of `gender_suffixes` give it. A noun of two genders
+(`mf` in tugalex) takes the determiner before the number, else the common sense that `two_gender_feminine` names:
+Priberam, "caixa", sense 1: "Qualquer recipiente rígido usado para guardar ou transportar alguma coisa.", "nome
+feminino"; sense 16, the employee: "Empregado que tem a caixa a seu cargo", "nome de dois géneros". So `Comprei 2
+caixas.` reads "Comprei duas caixas.", and `os 2 caixas` still reads "os dois caixas".
 
 Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of pt-PT and pt):
 `5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because
 CLDR gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`,
 reads with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`,
-`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "o símbolo da unidade hora é h
+`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h
 e a abreviatura de minuto é min"). `unjoined_symbols` holds `ML`, the CLDR symbol of the megalitre, because CLDR
 also names `mL` the millilitre, so `ML` in capitals may be either unit, and `2ML` stays as written.
 
@@ -59,7 +104,11 @@ CLDR 49 pt annotations name `$` "dólar" and `¥` "iene", so `$` reads as the do
 shares the narrow `$` and `¥` between currencies. A `$` after the number is the escudo (see `Money`); CLDR 49 pt-PT
 gives the escudo `$` as its decimal mark. The minor units: Priberam, "cêntimo": "Moeda divisionária que corresponde à
 centésima parte do euro"; "dólar": "dividida em 100 cêntimos". The design keeps the cêntimo of the euro in pt-BR
-(design section 7.1), because no source names the centavo of the euro.
+(design section 7.1), because no source names the centavo of the euro. An amount with one decimal reads the decimal
+as tens of the minor unit: `2,5 €` reads "dois euros e cinquenta cêntimos" and pt-BR `R$ 2,5` "dois reais e
+cinquenta centavos". Ciberdúvidas 25561, asked about "cinquenta vírgula três euros": "não é habitual referir a vírgula
+numa representação por extenso dum numeral", and "Escreveria também: «o casaco custou cinquenta euros e trinta
+cêntimos»".
 
 A character that no other form claims reads by its CLDR 49 annotation name (`cldr-annotations-full` and
 `cldr-annotations-derived-full`). A name of pt-PT wins over the pt name, so `©` reads "direitos de autor" in pt-PT
@@ -75,7 +124,9 @@ estrutura silábica da língua em causa". The Gramática do Português (Fundaç�
 Ciberdúvidas answer 39064, gives the two readings: a sigla such as IRS has "a sua pronúncia ... feita letra a
 letra", and acronyms such as IVA and ETAR "têm estrutura silábica, isto é, são pronunciados como uma palavra da
 língua". A run that splits into syllables stays as written. Any other run reads each letter by its name in
-`lang/_pt_electronic.py`.
+`lang/_pt_electronic.py`. A single capital letter after a noun of `letter_label_nouns` reads by its letter name too,
+so with the `LETTERS` form on, `Tome vitamina C.` reads "Tome vitamina cê.": Dicio names "vitamina C" (see the
+titles below).
 
 The vowels are a, e, i, o and u, with the acute and the circumflex of AO1990, Bases VIII to XI, the grave of Base
 XII, and the tilde of "ã" ("representa-se a nasalidade pelo til, se essa vogal é de timbre a", Base VI, 1) and of
@@ -170,7 +221,7 @@ letters: the parts of a work and of a law (capítulo, volume, tomo, livro, parte
 secção, seção), as Ciberdúvidas 11716 applies the rule "a todas as partes em que se divide uma obra". A group, a
 class, a category, a level and a phase are labelled with letters as well as numbers: the measurement for
 the measurement below found `Grupo C` and `classe C`, and "meio milhão de frases" holds `No Grupo I, houve duas
-goleadas` (mmf-210324), a group of a series from A. So `Grupo I`, `Fase I`, `classe A`, `anexo C` and `vitamina C`
+goleadas` (mmf-210324), a group of a series from A. So `Grupo I`, `Fase I`, `classe A` and `vitamina E`
 stay as written, and `Grupo II` reads "Grupo segundo".
 
 After a capitalised word that is no noun of `roman_nouns`, the value is at most 30, as after a regnal title, because an
@@ -261,7 +312,12 @@ doutora"; "D.": "Abreviatura de dom e de dona". Dicio, "Abreviaturas: lista de a
 Sra.", "doutora - Dra. ou Dr.ª", "dona - D., d., D.ª ou Da.". The Manual de Comunicação of the Senado Federal writes
 the titles before a name in lowercase: "prefira abreviá-las: sr. e sra. (use com inicial minúscula)". Dicio,
 "Abreviação de senhora e senhor": "O ponto abreviativo deverá ser grafado no fim da abreviatura (como em Sr. e Sra.)
-ou antes das letras em expoente (como em Sr.ª)", so `Drª.` and `Dª` are no titles.
+ou antes das letras em expoente (como em Sr.ª)", so `Drª.` and `Dª` are no titles. After a noun of
+`letter_label_nouns`, `D.` is the letter D and a full stop, so `a vitamina D. Boa noite.` stays as written: Priberam,
+"vitamina", names "vitamina A", "vitamina B", "vitamina D" and "vitamina E", and Dicio, "vitamina C"
+(dicio.com.br, fetched 2026-11-18): "substantivo feminino [Bioquímica] O ácido ascórbico (C6H8O6), molécula
+hidrossolúvel essencial ao funcionamento do corpo humano", names the most common vitamin. A group and a class are
+labelled with letters, as the Roman numerals above show.
 
 pt-PT writes the space as the group mark of an amount: CLDR 49 pt-PT gives the group mark U+00A0 and the currency
 format `#,##0.00 ¤`, so `250 000 €` reads "duzentos e cinquenta mil euros". pt-BR takes the full stop (CLDR 49 pt).
@@ -281,7 +337,7 @@ from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
-from text2spoken.core.numbers import SIGNS, Number, written_amount
+from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
@@ -335,12 +391,21 @@ DATA = freeze({
     "currency_symbols": ["EUR", "USD", "BRL", "GBP", "JPY", "CHF"],
     "symbol_names": {"§": "parágrafo"},
     "scales": {"mil": "mil", "milhão": "milhão de", "milhões": "milhões de", "bilhão": "bilhão de",
-               "bilhões": "bilhões de", "bilião": "bilião de", "biliões": "biliões de"},
+               "bilhões": "bilhões de", "bilião": "bilião de", "biliões": "biliões de",
+               "trilhão": "trilhão de", "trilhões": "trilhões de", "trilião": "trilião de",
+               "triliões": "triliões de"},
     "symbols_before_only": ["$"],
     "percent": {"signs": ["%"], "position": "after", "word": "por cento"},
     "fraction_names": {"2": "meio", "3": "terço", "4": "quarto", "5": "quinto", "6": "sexto", "7": "sétimo",
                        "8": "oitavo", "9": "nono", "10": "décimo", "100": "centésimo"},
     "fraction_word": "avos",
+    "label_nouns": ["página", "folha", "casa", "apartamento", "quarto", "cabine", "poltrona", "sala", "porta",
+                    "figura", "fig", "tabela", "linha", "fila", "lugar"],
+    "plural_labels": {"a páginas": "feminine", "a folhas": "feminine"},
+    "hour_periods": ["manhã", "tarde", "noite", "madrugada"],
+    "number_links": ["vezes", "vírgula"],
+    "letter_label_nouns": ["vitamina", "grupo", "classe"],
+    "label_verbs": ["mostra", "apresenta", "indica", "mostram", "apresentam", "indicam"],
     "mixed_word": "e",
     "mixed_half": {"feminine": "meia", "other": "meio"},
     "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml", "h", "min", "s"],
@@ -354,7 +419,8 @@ DATA = freeze({
     "phone_kept_shapes": ["[1-9][0-9]{0,2}(?: [0-9]{3})+"],
     "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
     "function_words": ["o", "a", "os", "as", "um", "uma", "de", "do", "da", "dos", "das", "em", "no", "na", "nos",
-                       "nas", "para", "pelo", "pela", "por", "e", "ou", "com", "ao", "que", "agora", "já", "hoje"],
+                       "nas", "para", "pelo", "pela", "por", "e", "ou", "com", "ao", "que", "agora", "já", "hoje",
+                       "mas", "cada"],
     "color_words": ["cor", "cores"],
     "colors": {"000000": "preto", "0000ff": "azul", "008000": "verde", "ff0000": "vermelho", "ffff00": "amarelo",
                "ffffff": "branco"},
@@ -389,6 +455,7 @@ DATA = freeze({
         "lei": "feminine", "leis": "feminine", "vez": "feminine", "vezes": "feminine", "noite": "feminine",
         "noites": "feminine", "tarde": "feminine", "tardes": "feminine", "parte": "feminine", "partes": "feminine",
         "mulher": "feminine", "mulheres": "feminine", "flor": "feminine", "flores": "feminine",
+        "frase": "feminine", "frases": "feminine",
         "Isabel": "feminine", "Leonor": "feminine", "Beatriz": "feminine", "Inês": "feminine", "Maria": "feminine",
         "Lula": "masculine",
         "rainha": "feminine", "imperatriz": "feminine", "princesa": "feminine", "infanta": "feminine",
@@ -398,6 +465,7 @@ DATA = freeze({
     },
     "currency_noun_gender": {"taka": "masculine", "takas": "masculine", "córdoba": "masculine",
                              "córdobas": "masculine"},
+    "two_gender_feminine": ["caixa", "caixas"],
     "gender_suffixes": [["dade", "feminine"], ["dades", "feminine"], ["agem", "feminine"], ["agens", "feminine"],
                         ["ção", "feminine"], ["ções", "feminine"], ["a", "feminine"], ["as", "feminine"]],
     "symbols": {"%": "percent", "€": "money", "$": "money", "°": "measure", "×": "measure"},
@@ -458,7 +526,18 @@ class PortugueseSpeller:
         return self.ovos.ordinal(digits, Features(gender=gender), at_variety(request))
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        return self.ovos.decimal(integer, fraction, Features(), at_variety(request))
+        """The whole part, `vírgula`, each leading zero of the decimal part as `zero`, and the rest of the decimal
+        part as a cardinal: `2,25` reads "dois vírgula vinte e cinco" and `1,05` "um vírgula zero cinco".
+        ovos-number-parser reads a float, which drops a trailing zero, so the decimal part with a trailing zero is
+        read here from the written digits: `1,80` reads "um vírgula oitenta", as `1,97` reads "um vírgula noventa e
+        sete", and never "um vírgula oito", which is the reading of `1,8`."""
+        words = self.ovos.decimal(integer, fraction, Features(), at_variety(request))
+        rest = fraction.lstrip("0")
+        if not fraction.endswith("0") or not rest:
+            return words
+        zeros = [request.data["digit_words"][0]] * (len(fraction) - len(rest))
+        return " ".join([self.cardinal(integer or "0", Features(), request), "vírgula", *zeros,
+                         self.cardinal(rest, Features(), request)])
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """`um meio`, `três quartos`, `um centésimo`, and the cardinal and `avos` for any other denominator:
@@ -559,6 +638,14 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     numeral cardinal de dois géneros"), so `2 mil pessoas` takes the gender of `pessoas`, as `2000 pessoas` does. A
     partitive `das` or `dos` right after the number gives the gender, as in `1 das casas`.
 
+    A number after a noun of `label_nouns` or `roman_letter_nouns` names an item and reads in the masculine when no
+    noun that the number counts follows it — the number ends the text, or a punctuation mark, a function word or a
+    verb of `label_verbs` follows it. Otherwise it falls through to the noun after it. A number after `a páginas` or
+    `a folhas` agrees with that noun (the module docstring gives the sources). A number before `da tarde` and the
+    other words of `hour_periods` counts the hours that the text leaves out, and a number before a word of
+    `number_links` and a second number reads in the masculine, unless a noun that the number counts follows the
+    second number, and then `vezes` is the feminine noun that the number counts.
+
     The tables of `_listed_gender` name a noun first. When tugalex knows the word after the number, a determiner comes
     before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
     a noun"), and that word can be an adjective with no noun, as in `as 2 melhores`. A noun of two genders, such as
@@ -568,6 +655,23 @@ def agreement(context: SpanContext) -> GrammaticalGender:
         return context.hint.gender
     request = context.request
     data = request.data
+    before = [word.lower() for word in context.before]
+    if before and before[-1] in (*data["label_nouns"], *data["roman_letter_nouns"]):
+        following = [word.lower() for word in context.after]
+        if not following or following[0] in data["function_words"] or following[0] in data["label_verbs"] \
+                or following[0] in (*data["label_nouns"], *data["roman_letter_nouns"]):
+            return MASCULINE
+        # A noun that the number counts follows, so it falls through to the noun lookup below.
+    if " ".join(before[-2:]) in data["plural_labels"]:
+        return GrammaticalGender(data["plural_labels"][" ".join(before[-2:])])
+    following = [word.lower() for word in context.after[:2]]
+    if len(following) == 2 and following[0] == "da" and following[1] in data["hour_periods"]:
+        return FEMININE
+    if len(following) == 2 and following[0] in data["number_links"] and following[1].isdigit():
+        third = context.after[2].lower() if len(context.after) > 2 else ""
+        if not third or _gender_of(third, request) is None:
+            return MASCULINE
+        # A noun that the number counts follows the second number, so `vezes` is the noun, not a factor.
     after = list(context.after)
     if after and after[0].lower() == "mil":
         after = after[1:]
@@ -581,7 +685,10 @@ def agreement(context: SpanContext) -> GrammaticalGender:
         found = _gender_of(noun, request) if noun else None
         gender = found or (GrammaticalGender(determiner) if determiner else None)
     else:
-        name = determiner or _LEXICON_GENDERS.get(code)
+        if code == "mf" and noun.lower() in data["two_gender_feminine"]:
+            name = determiner or "feminine"
+        else:
+            name = determiner or _LEXICON_GENDERS.get(code)
         gender = GrammaticalGender(name) if name else None
     return gender or request.params.default_gender.get(LANGUAGE.code) or LANGUAGE.default_gender
 
@@ -597,6 +704,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         words = spell_digits(digits, request)
     else:
         words = _cardinal(digits, request, agreement(context))
+        _check_pair(digits, context)
         if _SCALE_WORD.fullmatch(words.split()[-1]) and context.after \
                 and context.after[0].lower() not in request.data["function_words"]:
             words += " de"
@@ -605,6 +713,51 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         lead = request.data["leads"][fields["lead"]]
         words = f"{lead} {words}" if lead else f" {words}"
     return words
+
+
+def _pair_digits(token: str, request: Request) -> str | None:
+    """The digits of `token` when it is a number: all digits, or digits with the group mark of the variety between
+    groups, as `10.000` and `400.000`. None when the token is no number. The group marks come from `number_marks`."""
+    if token.isdigit():
+        return token
+    for _, _, group in number_marks(request.data, request.params.decimal_mark):
+        if group and group in token and token.replace(group, "").isdigit():
+            return token.replace(group, "")
+    return None
+
+
+def _first_of_pair_differs(digits: str, before: Sequence[str], after: Sequence[str], context: SpanContext) -> bool:
+    """Whether the number `digits`, which `before` and `after` surround, is the first of a pair that a link word of
+    `list_links` or the `range_word` joins to a second number, as `1` in `de 1 a 3 semanas`, and the noun after the
+    second number gives it another reading. The far reading is computed only when a noun comes right after the
+    second number: a word of `function_words`, a conjunction or a punctuation mark ends the pair, and then the pair
+    does not decline."""
+    request = context.request
+    data = request.data
+    if len(after) < 3 or _pair_digits(after[1], request) is None \
+            or after[0].lower() not in (*data["list_links"], data["range_word"]):
+        return False
+    if after[2].lower() in data["function_words"]:
+        return False
+    near = agreement(replace(context, before=tuple(before), after=tuple(after)))
+    far = agreement(replace(context, before=(*before, digits, after[0]), after=tuple(after[2:])))
+    return _cardinal(digits, context.request, near) != _cardinal(digits, context.request, far)
+
+
+def _check_pair(digits: str, context: SpanContext) -> None:
+    """Decline both numbers of a pair such as `de 1 a 3 semanas` or `entre 1 e 2 semanas` when the noun after the
+    second number gives the first number another gender. No source gives the gender of the first number, so the
+    pair stays as written. The second number declines too, so a second pass leaves the text unchanged."""
+    if context.hint is not None:
+        return
+    before, after = context.before, context.after
+    first = _first_of_pair_differs(digits, before, after, context)
+    if not first and len(before) > 1:
+        second = _pair_digits(before[-2], context.request)
+        if second is not None:
+            first = _first_of_pair_differs(second, before[:-2], (before[-1], digits, *after), context)
+    if first:
+        raise DeclinedReading("the noun after the second number of the pair may give the first another gender")
 
 
 def speak_ordinal(span: Span, context: SpanContext) -> str:
@@ -664,9 +817,10 @@ def _contracted_word(prefix: str, hour: int, request: Request) -> str:
 def speak_time(span: Span, context: SpanContext) -> str:
     """`catorze e trinta` for `14:30`, `vinte e uma horas` for `21:00`, and `meia-noite` for `0:00`. A time that
     writes the hour symbol `h` reads its units, so `17h30` reads `dezassete horas e trinta minutos` (Ciberdúvidas
-    14648; Ciberdúvidas 3267: "às onze horas e trinta minutos"), and its seconds (Ciberdúvidas 14586: "vinte horas,
-    trinta minutos e vinte e quatro segundos"). The parser gives words with no comma, so `17 h 34 min 25 s` reads
-    `dezassete horas trinta e quatro minutos e vinte e cinco segundos`. A written zero second is not read."""
+    14648; Ciberdúvidas, O nosso idioma, article 3267: "às onze horas e trinta minutos"), and its seconds
+    (Ciberdúvidas 14586: "vinte horas, trinta minutos e vinte e quatro segundos"). The parser gives words with no
+    comma, so `17 h 34 min 25 s` reads `dezassete horas trinta e quatro minutos e vinte e cinco segundos`. A
+    written zero second is not read."""
     fields = span.fields
     request = context.request
     tag = request.variety.tag
@@ -691,10 +845,11 @@ def _currency(currency: FrozenMap, category: str) -> str:
 
 
 def speak_money(span: Span, context: SpanContext) -> str:
-    """Two decimals are the minor unit, when the currency names one: `dois euros e cinquenta cêntimos`. A scale
-    word that the text writes reads before the plural name: `dois milhões de reais`. The number agrees with the
-    first word of the currency name, so `2 £` reads `duas libras`; before a scale word from `milhão` up it stays
-    masculine, and before `mil` it agrees with the name: `duas mil libras`."""
+    """One or two decimals are the minor unit, when the currency names one: `2,50 €` and `2,5 €` read `dois euros e
+    cinquenta cêntimos` (Ciberdúvidas 25561). A scale word that the text writes reads before the plural name: `dois
+    milhões de reais`. The number agrees with the first word of the currency name, so `2 £` reads `duas libras`;
+    before a scale word from `milhão` up it stays masculine, and before `mil` it agrees with the name: `duas mil
+    libras`."""
     request = context.request
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
@@ -705,9 +860,9 @@ def speak_money(span: Span, context: SpanContext) -> str:
         scale = request.data["scales"][fields["scale"]]
         number = amount_words(amount, request, Features(gender=gender if fields["scale"] == "mil" else None))
         words = f"{number} {scale} {_currency(currency, 'other')}"
-    elif len(fraction) == 2 and "minor" in currency:
+    elif len(fraction) in (1, 2) and "minor" in currency:
         major = f"{_cardinal(integer, request, gender)} {_currency(currency, _plural(request, integer))}"
-        cents = str(int(fraction))
+        cents = str(int(fraction.ljust(2, "0")))
         minor = f"{_cardinal(cents, request)} {currency['minor'][_plural(request, cents)]}"
         if int(fraction) == 0:
             words = major
@@ -795,12 +950,12 @@ that ends its clause or that a function word follows. Two years that a dash join
 
 @dataclass(frozen=True)
 class Clock(TimeClock):
-    """The times of the core, and two Portuguese forms that it leaves. One is the unit symbols `h`, `min` and `s`
-    around the digits, spaced or not: `17 h`, `17h30 min`, `17h30min`, `17:30 h` (Ciberdúvidas 14648: "17h30 min";
-    "Considero perfeitamente aceitável 17:30 h") and `17 h 34 min 25 s` (Ciberdúvidas 3267). The other is two times
-    that a range mark joins, as in `das 9h-17h` and `das 9:00-17:00`, where the second time takes the article of the
-    first (Ciberdúvidas 22241: "das cinco às seis horas"). A chain of three times or more stays as written. A time
-    that writes `h` keeps it in the `suffix` field, so it reads its units.
+    """The times of the core, and two Portuguese forms that it leaves. One is the unit symbols `h`, `min` and `s` around
+    the digits, spaced or not: `17 h`, `17h30 min`, `17h30min`, `17:30 h` (Ciberdúvidas 14648: "17h30 min"; "Considero
+    perfeitamente aceitável 17:30 h") and `17 h 34 min 25 s` (Ciberdúvidas, O nosso idioma, article 3267: "às 17 h 34
+    min 25 s"). The other is two times that a range mark joins, as in `das 9h-17h` and `das 9:00-17:00`, where the
+    second time takes the article of the first (Ciberdúvidas 22241: "das cinco às seis horas"). A chain of three times
+    or more stays as written. A time that writes `h` keeps it in the `suffix` field, so it reads its units.
 
     Before "meia-noite" or "meio-dia", a word of `time_contractions` right before the time takes the article of that
     noun, when only white space stands between them. The span then starts at the word and holds the word and the
@@ -1237,6 +1392,14 @@ class Abbreviation(CoreAbbreviation):
             if span.fields["key"] in titles and not text[span.end:].strip():
                 span = replace(span, trail=".")
             yield span
+
+    def refuses(self, text: str, position: int, table: str, data) -> bool:
+        """`D.` after a noun of `letter_label_nouns` is the letter D and a full stop, as in `a vitamina D. Boa
+        noite.`"""
+        head = text[:position]
+        words = head.split()
+        return table == "honorific_before_name" and head[-1:].isspace() and bool(words) \
+            and words[-1].lower() in data["letter_label_nouns"]
 
     def tables(self, data) -> tuple[tuple[str, Iterable[str], Callable[[str], bool]], ...]:
         return (("titles", data["titles"], str.isupper),
