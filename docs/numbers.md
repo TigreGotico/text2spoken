@@ -95,7 +95,7 @@ English, Portuguese and Basque read a Roman numeral when the text around it show
 | `Super Bowl LVII was close.` | `en-US` | Super Bowl Fifty-Seven was close. |
 | `XX. mendean.` | `eu-ES` | hogeigarren mendean. |
 
-Portuguese reads an ordinal up to ten and a cardinal from eleven, and pt-BR stops the ordinal at nine, as Ciberdúvidas gives the rule. English reads "the" and an ordinal after a regnal title and a name, after a name of a monarch or a pope, and after a given name and a surname, and a cardinal after a noun of a series. Any other English numeral stays as written. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
+Portuguese reads an ordinal up to ten and a cardinal from eleven, and in pt-BR a numeral after `artigo` reads as an ordinal only up to nine. English reads "the" and an ordinal after a regnal title and a name, after a name of a monarch or a pope, and after a given name and a surname, and a cardinal after a noun of a series. Any other English numeral stays as written. The [English](languages/en.md#roman-numerals) and [Portuguese](languages/pt.md#roman-numerals) pages give the rules and their sources.
 
 A numeral stays as written when the text does not show that it is a number:
 
