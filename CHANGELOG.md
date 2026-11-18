@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a80](https://github.com/TigreGotico/text2spoken/tree/0.0.2a80) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a79...0.0.2a80)
+
+**Merged pull requests:**
+
+- fix\(core\): a digit reading writes zero as the plain cardinal of the locale does [\#291](https://github.com/TigreGotico/text2spoken/pull/291) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a79](https://github.com/TigreGotico/text2spoken/tree/0.0.2a79) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a78...0.0.2a79)
@@ -385,10 +393,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a30...0.0.2a31)
 
-**Merged pull requests:**
-
-- feat\(de\): German language file [\#61](https://github.com/TigreGotico/text2spoken/pull/61) ([JarbasAl](https://github.com/JarbasAl))
-
 ## [0.0.2a30](https://github.com/TigreGotico/text2spoken/tree/0.0.2a30) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a29...0.0.2a30)
@@ -400,10 +404,6 @@
 ## [0.0.2a29](https://github.com/TigreGotico/text2spoken/tree/0.0.2a29) (2026-11-12)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a28...0.0.2a29)
-
-**Merged pull requests:**
-
-- feat\(ru\): Russian language file [\#62](https://github.com/TigreGotico/text2spoken/pull/62) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a28](https://github.com/TigreGotico/text2spoken/tree/0.0.2a28) (2026-11-10)
 
