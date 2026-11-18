@@ -139,6 +139,7 @@ ENTRIES = {
     "el": {
         "number_marks": "Latn", "sign_words": "-", "case_words": "genitive", "articles": "στις",
         "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
+        "walk_adverbs": "ακόμη", "pronoun_adjectives": "άλλες", "hour_phrases": ("η", "ώρα"), "weekdays": "παρασκευή",
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
     },
     "eu": {
