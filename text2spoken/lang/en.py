@@ -205,7 +205,7 @@ from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number, written_amount
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, amount_words, join_ranges,
                                           numbers_in, signed, speak_abbreviation, speak_cardinal, speak_decimal,
                                           speak_expression, speak_fraction as core_speak_fraction, speak_idiom,
                                           speak_lexicon, speak_ordinal,
@@ -224,7 +224,6 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
           "November", "December"]
 _MONTH = "(" + "|".join(MONTHS) + ")"
 _ORDINAL_MARK = "(?:st|nd|rd|th)"
-_TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
 
 COLORS = {
     "000000": "black", "0000cd": "medium blue", "0000ff": "blue", "006400": "dark green", "008000": "green",
@@ -591,21 +590,6 @@ def speak_year(span: Span, context: SpanContext) -> str:
     return words
 
 
-def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_words: frozenset[str]) -> bool:
-    """Whether a space and a day period, or a space and a lowercase word that is no function word, follow
-    text[:end], as `8 am` and `24 hours a day` follow a phone number."""
-    if not text.startswith(" ", end):
-        return False
-    if any(text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period))
-           for period in day_periods):
-        return True
-    stop = end + 1
-    while stop < len(text) and is_letter(text[stop]):
-        stop += 1
-    word = text[end + 1:stop]
-    return word.islower() and word not in function_words
-
-
 class EnglishTelephone(Telephone):
     """The shared telephone recognizer with the English conventions of design section 4.3.
 
@@ -619,20 +603,18 @@ class EnglishTelephone(Telephone):
     `phone_kept_shapes` keep thousands that spaces group, as in `10 000`, as written, and its `no_phone_shapes`
     take the phone shape from two years that a dash joins.
 
-    A last group of one or two digits is the hour or a count, not a phone group, when the run ends inside a word,
-    when a full stop and two digits complete it, or when a space and a day period or a lowercase word that is no
-    function word follow it, so `Call 0800 123 456 8 am to 8 pm.` and `Ring 0800 123 456 24 hours a day.` read
-    the number and the hour."""
+    A last group of one or two digits is the hour or a count, not a phone group, when the shared recognizer drops
+    it as an hour, and also when a space and a lowercase word that is no function word follow it, so
+    `Call 0800 123 456 8 am to 8 pm.` and `Ring 0800 123 456 24 hours a day.` read the number and the hour."""
 
-    def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
-        function_words = frozenset(request.data.get("function_words", ()))
-        day_periods = [period for periods in request.data.get("day_periods", {}).values() for period in periods]
-        cut, after = written.rfind(" "), start + len(written)
-        if cut != -1 and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
-                "." in written[cut:] or not _edge(text, start, after)
-                or _hour_follows(text, after, day_periods, function_words)):
-            return written[:cut]
-        return written
+    def hour_after(self, text: str, end: int, request: Request) -> bool:
+        if super().hour_after(text, end, request):
+            return True
+        stop = end + 1
+        while stop < len(text) and is_letter(text[stop]):
+            stop += 1
+        word = text[end + 1:stop]
+        return text.startswith(" ", end) and word.islower() and word not in request.data.get("function_words", ())
 
 
 @dataclass(frozen=True)

@@ -758,3 +758,14 @@ def test_a_signed_fraction_after_a_mark_reads_once_the_number_before_the_mark_re
 def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(text, caplog):
     assert normalize(text, "en-GB") == text
     assert "unread written form" in caplog.text
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Call 1-800-555-0199 8 a.m. to 5 p.m.", "es-US"), ("Llame al 1-800-555-0199 8 a.m. a 5 p.m.", "es-US"),
+    ("23.59 +1 800 555 1234 2.5 2ª", "fr-CH"),
+])
+def test_an_hour_after_a_phone_number_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A last group of one or two digits that a day period follows, or that a word continues, is no
+    phone group, so the run is the one that a second pass finds."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once

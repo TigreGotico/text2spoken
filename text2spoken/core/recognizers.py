@@ -374,6 +374,7 @@ _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
 _DIGIT_RUN = re.compile("[0-9]+")
+_TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
 
 
 @lru_cache(maxsize=8)
@@ -941,8 +942,14 @@ class Telephone:
     code that ends its clause or that a function word follows when `names_short_codes` is set, as in `Call the
     police on 999 now.`, and not the count in `The phone rang 101 times.`
 
+    A last group of one or two digits after a space is the hour of a time, not a phone group, when the run ends
+    inside a word, when a full stop and two digits complete it, or when a space and a day period of `day_periods`
+    follow it. So `Call 1-800-555-0199 8 a.m.` reads the number and the time: a second pass, which sees the words
+    of the time, finds the same run.
+
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
-    methods `trimmed`, `window` and `names_back` as it needs. `EnglishTelephone` replaces only `trimmed`."""
+    methods `trimmed`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone` replaces only
+    `hour_after`."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
     reach: int = 1
@@ -953,8 +960,18 @@ class Telephone:
     plans: FrozenMap = PHONE_PLANS
 
     def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
-        """The run of digit groups that starts at `start`, less a last group that the language reads apart."""
+        """The run of digit groups that starts at `start`, less a last group that is the hour of a time."""
+        cut, after = written.rfind(" "), start + len(written)
+        if cut != -1 and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
+                "." in written[cut:] or not _edge(text, start, after) or self.hour_after(text, after, request)):
+            return written[:cut]
         return written
+
+    def hour_after(self, text: str, end: int, request: Request) -> bool:
+        """Whether a space and a day period follow text[:end], as `8 am` follows a phone number."""
+        periods = [period for written in request.data.get("day_periods", {}).values() for period in written]
+        return text.startswith(" ", end) and any(
+            text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period)) for period in periods)
 
     def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                request: Request) -> range:
