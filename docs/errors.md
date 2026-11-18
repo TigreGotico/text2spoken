@@ -75,7 +75,7 @@ A language with no genders ignores a gender in a hint or in `default_gender`. En
 
 The library declines a reading that it cannot give for sure. A speller or a verbalizer that cannot read a span that the library found raises `DeclinedReading`. The span then stays as written, and the library logs one WARNING that names the form, the span and the reason. In strict mode, `UnreadFormError` replaces the warning, chained to the cause. A digit or a symbol of a form in `forms` that stays in the output gets the same treatment.
 
-The logger is `logging.getLogger("text2spoken")`. A log warning names the form and the text, so a reader can tell a gap in a language file from a bug. The Spanish file reads no number from 10^42 up, so this number stays as written:
+The logger is `logging.getLogger("text2spoken")`. A log warning names the form and the text, so a reader can find each form that the library left unread. The Spanish file reads no number from 10^42 up, so this number stays as written:
 
 ```python
 >>> import logging, sys
