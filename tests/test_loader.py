@@ -168,6 +168,30 @@ def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
     assert normalize(expected, tag) == expected
 
 
+# In ast the full stop groups (CLDR 49 numbers.json, `symbols-numberSystem-latn` group `.`), so `3.5` is no number.
+# A minus and digits after a number and a space may mark a range or a code, as in `5 -10`, so the number before them
+# stays as written too, whether or not a number of the locale covers the digits. A minus at the start of the next
+# line is no range, and neither is a minus before a letter, so `5` reads there; ovos-number-parser owns the word.
+NO_FILE_NUMBER_BEFORE_MINUS = [
+    ("ast-ES", "5 -3.5", "5 -3.5"),
+    ("ast-ES", "de 5 \u22123.5 graos", "de 5 \u22123.5 graos"),
+    ("ast-ES", "5\t-3.5", "5\t-3.5"),
+    ("ast-ES", "5 -1.2.3", "5 -1.2.3"),
+    ("uk-UA", "від 5 -3.5 градусів", "від 5 -3.5 градусів"),
+    ("ast-ES", "5\n-3.5", "{5}\n-3.5"),
+    ("ast-ES", "5 -abc", "{5} -abc"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_NUMBER_BEFORE_MINUS)
+def test_a_number_before_a_minus_and_digits_stays_as_written(tag, text, expected):
+    from ovos_number_parser import pronounce_number
+
+    expected = expected.replace("{5}", pronounce_number(5, tag))
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
 def _rbnf_words(locale: str, rule_set: str, number: str) -> str:
     """unicode_rbnf called directly, with the rule set that holds the rule, as words separated by single spaces."""
     from unicode_rbnf import RbnfEngine
@@ -357,7 +381,7 @@ def test_the_languages_without_the_rules_are_listed():
     assert [code for code in parser if raises(1.5, code)] == list(NO_PARSER_DECIMAL)
 
 
-@pytest.mark.parametrize("code", NO_MINUS_RULE + NO_PARSER_MINUS)
+@pytest.mark.parametrize("code", [code for code in NO_MINUS_RULE + NO_PARSER_MINUS if language_file(code) is None])
 def test_a_language_with_no_minus_word_keeps_the_minus(code):
     for text in ("-5", "x -5 y", "-3.5", "-3,5"):
         assert normalize(text, code) == text
@@ -396,7 +420,15 @@ NO_FILE_LAO = [
 ]
 
 
-@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_PARSER + NO_FILE_LAO)
+# Icelandic reads through RBNF, and the core table rbnf_corrections.json gives sjö where CLDR writes sjó, a form of
+# sjór, "sea". Árnastofnun, Íslensk nútímamálsorðabók: sjö, töluorð, "talan 7"; English Wiktionary, sjötíu: "seventy".
+NO_FILE_ICELANDIC = [
+    ("is", "Ég á 7 hesta.", "Ég á sjö hesta."),
+    ("is-IS", "Ég á 7 hesta og 77 kindur.", "Ég á sjö hesta og sjötíu og sjö kindur."),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_PARSER + NO_FILE_LAO + NO_FILE_ICELANDIC)
 def test_a_language_with_no_file_reads_each_number_word_from_its_one_owner(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
@@ -407,6 +439,14 @@ def test_a_lao_number_holds_no_thai_letter(tag):
     """The Thai block is U+0E00 to U+0E7F, and Lao is U+0E80 to U+0EFF (The Unicode Standard, Thai and Lao blocks)."""
     spoken = normalize("0 7 42 100 1234 21000 150000 1000000 -5", tag)
     assert not [char for char in spoken if "\u0e00" <= char <= "\u0e7f"], spoken
+
+
+@pytest.mark.parametrize("tag", ["is", "is-IS"])
+def test_no_icelandic_number_reads_the_word_for_sea(tag):
+    """sjó is a form of sjór, "sea" (Íslensk nútímamálsorðabók)."""
+    for number in range(1001):
+        spoken = normalize(str(number), tag)
+        assert not any(char.isdigit() for char in spoken) and "sjó" not in spoken, (number, spoken)
 
 
 def test_a_language_that_rbnf_holds_reads_through_rbnf():
