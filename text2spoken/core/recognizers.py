@@ -1150,6 +1150,9 @@ def speak_cldr_date(span: Span, context: SpanContext) -> str:
                 if words[index].endswith(ending):
                     words[index] = words[index].removesuffix(ending) + replacement
                     break
+            else:
+                if form.get("endings"):
+                    raise DeclinedReading(f"no date form of the ordinal {' '.join(words)!r}")
         return " ".join(words)
 
     readings = {

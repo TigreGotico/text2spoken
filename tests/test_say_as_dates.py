@@ -197,3 +197,27 @@ def test_the_languages_with_no_date_reading_are_exactly_the_listed_ones():
         if any("reads no say-as" in str(w.message) for w in caught):
             declining.add(tag)
     assert declining == NO_DATE
+
+
+@pytest.fixture
+def readings(monkeypatch):
+    """A copy of `date_readings.json` that a test may change, as a data edit would."""
+    import text2spoken.core.dates as dates
+    copy = json.loads(json.dumps(date_readings()))
+    monkeypatch.setattr(dates, "date_readings", lambda: copy)
+    long_date.cache_clear()
+    yield copy
+    long_date.cache_clear()
+
+
+def test_an_ordinal_with_no_date_form_stays_as_written(readings, caplog):
+    """Design section 10: a reading that cannot be made declines, leaves the written form and logs one WARNING."""
+    readings["cs"]["day"]["endings"] = [["ý", "ého"]]
+    with caplog.at_level("WARNING"):
+        assert say("2026-11-03", "cs-CZ") == "2026-11-03"
+    assert [r.levelname for r in caplog.records if "třetí" in r.getMessage()] == ["WARNING"]
+
+
+def test_a_cardinal_entry_reads_the_day_as_a_cardinal(readings):
+    readings["pl"]["day"] = {"reading": "cardinal"}
+    assert say("2026-11-09", "pl-PL").startswith(f"{writer('pl-PL')(9)} listopada ")

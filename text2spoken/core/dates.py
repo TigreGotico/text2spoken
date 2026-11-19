@@ -100,5 +100,5 @@ def long_date(locale: str) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]
     for index, (name, _) in enumerate(parts):
         field = name.removeprefix("ordinal_")
         if field in forms:
-            parts[index] = ("ordinal_" + field, "")
+            parts[index] = ("ordinal_" + field if forms[field]["reading"] == "ordinal" else field, "")
     return tuple(parts), tuple(stored["months"]), forms
