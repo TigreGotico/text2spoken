@@ -28,3 +28,5 @@ SA31	sr-Latn	21	ordinal			dvadeset i prvi	UTS #35 Part 3: "If a rule body begins
 SA32	sr-Latn	201	ordinal			dvesta prvi	UTS #35 Part 3: "If a rule body begins with an apostrophe, the apostrophe is ignored"; sr.xml reads 201 двеста први	unchecked
 SA33	is	7	digits			sjö	Árnastofnun, Íslensk nútímamálsorðabók: sjö, töluorð, "talan 7"	unchecked
 SA34	is	77	cardinal			sjötíu og sjö	Íslensk nútímamálsorðabók: sjö, "talan 7"; English Wiktionary, sjötíu: Icelandic numeral "seventy"	unchecked
+SA40	pt-PT	(212) 555-0199	telephone			dois um dois cinco cinco cinco zero um nove nove	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.3: "the chunking algorithm itself is processor specific"; the brackets group the area code; read digit by digit with the digit words of pt.py (text2spoken design section 4.3)	unchecked
+SA41	pl-PL	(212) 555-0199	telephone			dwa jeden dwa pięć pięć pięć zero jeden dziewięć dziewięć	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.3: "the chunking algorithm itself is processor specific"; read digit by digit (design section 17.5); Wiktionary: zero, jeden, dwa, pięć, dziewięć are the Polish cardinals 0, 1, 2, 5, 9	unchecked
