@@ -1,12 +1,19 @@
 # Changelog
 
-## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
+## [0.0.2a84](https://github.com/TigreGotico/text2spoken/tree/0.0.2a84) (2026-11-19)
 
-[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a82...0.0.2a83)
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a83...0.0.2a84)
 
 **Merged pull requests:**
 
+- feat: Catalan language file [\#303](https://github.com/TigreGotico/text2spoken/pull/303) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): a numeric date with an era mark reads its calendar and the era word [\#300](https://github.com/TigreGotico/text2spoken/pull/300) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ar\): a percent sign before its number reads, as a right-to-left line shows it [\#298](https://github.com/TigreGotico/text2spoken/pull/298) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): a Roman numeral after a contracted demonstrative and before its noun reads as an agreeing ordinal [\#290](https://github.com/TigreGotico/text2spoken/pull/290) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a82...0.0.2a83)
 
 ## [0.0.2a82](https://github.com/TigreGotico/text2spoken/tree/0.0.2a82) (2026-11-18)
 
@@ -386,10 +393,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a33...0.0.2a34)
 
-**Merged pull requests:**
-
-- feat: read units from CLDR 49 for en and pt [\#71](https://github.com/TigreGotico/text2spoken/pull/71) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a33](https://github.com/TigreGotico/text2spoken/tree/0.0.2a33) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a32...0.0.2a33)
@@ -397,10 +400,6 @@
 ## [0.0.2a32](https://github.com/TigreGotico/text2spoken/tree/0.0.2a32) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a31...0.0.2a32)
-
-**Merged pull requests:**
-
-- fix\(pt\): read 14 as quatorze in pt-BR [\#70](https://github.com/TigreGotico/text2spoken/pull/70) ([JarbasAl](https://github.com/JarbasAl))
 
 ## [0.0.2a31](https://github.com/TigreGotico/text2spoken/tree/0.0.2a31) (2026-11-13)
 
