@@ -138,7 +138,7 @@ ENTRIES = {
     "pt": PT_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
     "el": {
-        "number_marks": "Latn", "sign_words": "-", "case_words": "genitive", "articles": "στις",
+        "number_marks": "Latn", "sign_words": "-", "decimal_word": DELETE, "case_words": "genitive", "articles": "στις",
         "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
         "walk_adverbs": "ακόμη", "pronoun_adjectives": "άλλες", "hour_phrases": ("η", "ώρα"), "weekdays": "παρασκευή",
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
