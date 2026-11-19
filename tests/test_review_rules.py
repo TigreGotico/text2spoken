@@ -765,3 +765,15 @@ def test_a_phone_word_after_a_hyphen_keeps_its_run_on_a_second_pass(lang):
     """Section 11. A hyphen joins the reading of the amount to `Tel` on a second pass, and `Tel` still names the run."""
     once = normalize("Dr. 12,50 €-Tel.. 1.000,5-", lang)
     assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
+    ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
+    ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),
+])
+def test_a_number_that_a_mark_joins_to_a_number_abbreviation_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A number abbreviation is a key only before a digit, and a second pass sees the reading of that
+    digit, so the abbreviation does not wait on the number before it."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once

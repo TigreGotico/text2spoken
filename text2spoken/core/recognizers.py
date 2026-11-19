@@ -372,6 +372,8 @@ _FRACTION = re.compile("[-+−]?[0-9]+/[0-9]+")
 _DATE = re.compile("[0-9]+/[0-9]+/[0-9]+|[0-9]+-[0-9]+-[0-9]+|[0-9]+[.][0-9]+[.][0-9]+")
 _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
+_WORD_OPENERS = "([{«\"'“‘"
+"""The opening brackets and quotes that may stand right before a word."""
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
 _DIGIT_RUN = re.compile("[0-9]+")
 
@@ -681,10 +683,19 @@ class TimeClock:
                                       "prefix": "", "suffix": suffix}), trail=trail, recognizer=self.name)
 
 
+def _starts_word(text: str, start: int) -> bool:
+    """Whether text[start] starts a word: the start of the text, a space or an opening bracket or quote comes before
+    it, or a dash right after a digit, which joins a range as in `%10-%20`."""
+    before = text[start - 1] if start else " "
+    return before.isspace() or before in _WORD_OPENERS \
+        or before in "-\u2013" and start >= 2 and is_digit(text[start - 2])
+
+
 @dataclass(frozen=True)
 class Percent:
     """`20%`, and `10%-20%`, where a dash alone between two percentages reads the range word. A dash right after
-    a percent sign is no minus sign."""
+    a percent sign is no minus sign. A sign before its number starts a word (`_starts_word`), so the escape `%20` in
+    `?q=%20` stays as written."""
     name: str = "percent"
     form: Form = Form.PERCENT
 
@@ -711,6 +722,7 @@ class Percent:
                 for sign in percent["signs"]:
                     start = number.start - len(sign)
                     if start >= 0 and text[start:number.start] == sign \
+                            and _starts_word(text, start) \
                             and (bounds := _affixes(text, start, number.end, request.data, ())) is not None:
                         yield Span(bounds[0], bounds[1], Form.PERCENT,
                                    FrozenMap({"amount": number.amount(), "sign_position": "before",
