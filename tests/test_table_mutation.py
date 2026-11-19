@@ -19,7 +19,7 @@ DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
 NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads", "months"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
-                                  "no_phone_shapes"}}
+                                  "no_phone_shapes"}, "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
 phrase style of French, which tests/test_french.py checks). The Korean month names read only in a say-as date, which
@@ -150,7 +150,7 @@ ENTRIES = {
         "code_nouns": "Lege", "ordinal_words": "1",
         "ordinal_suffix": DELETE, "fraction_names": "2", "fraction_word": DELETE, "percent": "word",
         "currencies": "EUR", "units": "kg", "operators": "+", "patterns": "expression", "abbreviations": "etab.",
-        "sentence_final": "etab.",
+        "sentence_final": "etab.", "range_marks": "-", "range_followers": "bitartean",
     },
     "it": {
         "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "decimal_word": DELETE, "leads": "pag. ",
@@ -191,6 +191,11 @@ ENTRIES = {
         "case_choices": "в", "plural_endings": "ах",
         "ordinal_endings": "м", "percent": "noun", "currencies": "USD", "scales": "млн", "scale_nouns": "миллион",
         "units": "кг", "titles": "проф.", "abbreviations": "р-н",
+    },
+    "zh": {
+        "number_marks": "Latn", "sign_words": "-", "percent": "word", "fraction_word": DELETE,
+        "ordinal_marker": DELETE, "currency_symbols": DELETE, "currencies": "CNY", "unit_symbols": "kg",
+        "number_words": "个", "year_words": "公元前", "round_thousand_years": DELETE,
     },
 }
 FIELD_ONLY = {"electronic_schemes"}

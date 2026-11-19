@@ -396,7 +396,15 @@ NO_FILE_LAO = [
 ]
 
 
-@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_PARSER + NO_FILE_LAO)
+# Icelandic reads through RBNF, and the core table rbnf_corrections.json gives sjö where CLDR writes sjó, a form of
+# sjór, "sea". Árnastofnun, Íslensk nútímamálsorðabók: sjö, töluorð, "talan 7"; English Wiktionary, sjötíu: "seventy".
+NO_FILE_ICELANDIC = [
+    ("is", "Ég á 7 hesta.", "Ég á sjö hesta."),
+    ("is-IS", "Ég á 7 hesta og 77 kindur.", "Ég á sjö hesta og sjötíu og sjö kindur."),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_PARSER + NO_FILE_LAO + NO_FILE_ICELANDIC)
 def test_a_language_with_no_file_reads_each_number_word_from_its_one_owner(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
@@ -407,6 +415,14 @@ def test_a_lao_number_holds_no_thai_letter(tag):
     """The Thai block is U+0E00 to U+0E7F, and Lao is U+0E80 to U+0EFF (The Unicode Standard, Thai and Lao blocks)."""
     spoken = normalize("0 7 42 100 1234 21000 150000 1000000 -5", tag)
     assert not [char for char in spoken if "\u0e00" <= char <= "\u0e7f"], spoken
+
+
+@pytest.mark.parametrize("tag", ["is", "is-IS"])
+def test_no_icelandic_number_reads_the_word_for_sea(tag):
+    """sjó is a form of sjór, "sea" (Íslensk nútímamálsorðabók)."""
+    for number in range(1001):
+        spoken = normalize(str(number), tag)
+        assert not any(char.isdigit() for char in spoken) and "sjó" not in spoken, (number, spoken)
 
 
 def test_a_language_that_rbnf_holds_reads_through_rbnf():
