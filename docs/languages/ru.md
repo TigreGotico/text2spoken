@@ -139,4 +139,4 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 | `Он сказал: «Сегодня,1 мая».` | Он сказал: «Сегодня,одна мая». | A date after a comma with no space is not taken as a date, so the number reads as a cardinal. |
 
 ---
-[← Portuguese](pt.md) · [Home](../index.md) · [Adding a language →](../adding-a-language.md)
+[← Portuguese](pt.md) · [Home](../index.md) · [Chinese →](zh.md)
