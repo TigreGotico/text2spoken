@@ -437,7 +437,6 @@ DATA = freeze({
     "list_links": ["e", "ou"],
     "phone_shapes": ["[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}"],
     "phone_unit_shapes": ["[29][0-9]{2} [0-9]{3} [0-9]{3}"],
-    "phone_kept_shapes": ["[1-9][0-9]{0,2}(?: [0-9]{3})+"],
     "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
     "function_words": ["o", "a", "os", "as", "um", "uma", "de", "do", "da", "dos", "das", "em", "no", "na", "nos",
                        "nas", "para", "pelo", "pela", "por", "e", "ou", "com", "ao", "que", "agora", "já", "hoje",

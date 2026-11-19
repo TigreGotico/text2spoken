@@ -18,7 +18,7 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes",
                                   "no_phone_shapes"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
@@ -35,7 +35,7 @@ EN_ENTRIES = {
     "number_abbreviations": "No.", "patterns": "expression", "range_marks": "-", "year_words": "in",
     "scales": "million", "sentence_final": "etc.", "ordinal_marks": "th", "year_links": "and",
     "function_words": "the", "list_links": "or", "short_codes": "911", "phone_shapes": "[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}",
-    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})",
     "clock_marks": freeze({"mark": ".", "seconds": False, "needs": "day_period"}),
     "electronic_symbols": "@", "letter_names": "w", "electronic_vowels": "i", "electronic_schemes": "https",
@@ -52,7 +52,7 @@ DE_ENTRIES = {
     "months": "März", "month_numbers": "März", "year_words": "Jahr", "currencies": "EUR", "scales": "Mio.",
     "scale_plurals": "Million", "percent": "word", "units": "kg", "phone_words": "notruf", "short_codes": "112",
     "list_links": "oder", "phone_shapes": "0[1-9][0-9]{1,4} [0-9]+-[0-9]+",
-    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "color_words": "Farbe", "titles": "Dr.",
     "abbreviations": "z. B.", "sentence_final": "usw.", "number_abbreviations": "Nr.", "dative_prepositions": "mit",
     "accusative_prepositions": "für", "two_way_prepositions": "in", "determiners": "am", "noun_genders": "auge",
@@ -87,7 +87,7 @@ PT_ENTRIES = {
     "percent": "word",
     "unit_symbols": "kg", "phone_words": "ligue", "short_codes": "112", "list_links": "ou",
     "phone_shapes": "[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}",
-    "phone_unit_shapes": "[29][0-9]{2} [0-9]{3} [0-9]{3}", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "phone_unit_shapes": "[29][0-9]{2} [0-9]{3} [0-9]{3}",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "function_words": "agora",
     "color_words": "cor", "colors": "000000", "titles": "Dr.", "abbreviations_any_case": "dr.",
     "honorific_before_name": "D.", "abbreviations": "etc.", "sentence_final": "etc.", "number_abbreviations": "n.º",
@@ -121,7 +121,7 @@ ES_ENTRIES = {
     "first_of_month": DELETE, "currencies": "EUR", "scales": "millones", "percent": "word", "units": "kg",
     "dimension_marks": "x", "dimension_word": DELETE, "operators": "+", "phone_words": "teléfono",
     "phone_links": "al", "short_codes": "112", "list_links": "o", "phone_shapes": "6[0-9]{2} [0-9]{3} [0-9]{3}",
-    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
+    "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "titles": "Dr.", "abbreviations": "etc.",
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",

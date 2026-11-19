@@ -321,7 +321,6 @@ DATA = freeze({
     "list_links": ["and", "or"],
     "phone_shapes": ["[(][2-9][0-9]{2}[)] [2-9][0-9]{2}[- ][0-9]{4}", "[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}"],
     "phone_unit_shapes": ["(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+"],
-    "phone_kept_shapes": ["[1-9][0-9]{0,2}(?: [0-9]{3})+"],
     "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
     "color_words": ["color", "colour", "colors", "colours"],
     "colors": COLORS,
@@ -615,8 +614,7 @@ class EnglishTelephone(Telephone):
     not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer.
 
     The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
-    brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
-    `phone_kept_shapes` keep thousands that spaces group, as in `10 000`, as written, and its `no_phone_shapes`
+    brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its `no_phone_shapes`
     take the phone shape from two years that a dash joins.
 
     A last group of one or two digits is the hour or a count, not a phone group, when the run ends inside a word,

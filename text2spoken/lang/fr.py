@@ -643,7 +643,6 @@ DATA = freeze(
         "list_links": ["et", "ou"],
         "phone_shapes": [],
         "phone_unit_shapes": ["0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}"],
-        "phone_kept_shapes": [],
         "no_phone_shapes": [],
         "phone_reading": "pairs",
         "roman_headings": [

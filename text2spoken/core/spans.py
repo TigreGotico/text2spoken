@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import heapq
 import logging
-import re
 import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -157,18 +156,20 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
 
 
 _GROUP_GAPS = " \u00a0\u202f"
-_GROUPED_NUMBER = re.compile(f"(?<![0-9])(?:{SPACE_GROUPS.pattern})(?![0-9])")
 
 
 def _group_spaces(text: str) -> bytearray:
     """The spaces between the groups of a number written in groups of three digits, as in `12 000` and `0,264 7`.
-    A run that one space joins to another digit run, as in `123 456 78` and `0800 123 456`, is no such number."""
+    A run that a digit, or one space and a digit, continues, as in `123 456 78` and `0800 123 456`, is no such
+    number."""
     folded = fold_digits(text)
     marked = bytearray(len(text))
-    for match in _GROUPED_NUMBER.finditer(folded):
+    for match in SPACE_GROUPS.finditer(folded):
         start, end = match.span()
-        if (start > 1 and folded[start - 1] in _GROUP_GAPS and "0" <= folded[start - 2] <= "9") \
-                or (end + 1 < len(folded) and folded[end] in _GROUP_GAPS and "0" <= folded[end + 1] <= "9"):
+        before, after = folded[max(start - 2, 0):start], folded[end:end + 2]
+        if "0" <= before[-1:] <= "9" or "0" <= after[:1] <= "9" \
+                or (len(before) == 2 and before[1] in _GROUP_GAPS and "0" <= before[0] <= "9") \
+                or (len(after) == 2 and after[0] in _GROUP_GAPS and "0" <= after[1] <= "9"):
             continue
         for position in range(start, end):
             if folded[position] in _GROUP_GAPS:

@@ -150,7 +150,6 @@ SHAPES: dict[str, Shape] = {
     "percent": record(signs=list_of(word, minimum=1), position=one_of("after", "before", "either"),
                       optional={"word": word}),
     "no_phone_shapes": WORDS,
-    "phone_kept_shapes": WORDS,
     "phone_shapes": WORDS,
     "phone_unit_shapes": WORDS,
     "phone_words": WORDS,
@@ -198,7 +197,7 @@ READERS: dict[str, frozenset[str]] = {
                            "currencies", "currency_symbols"}),
     "measure": frozenset({"number_marks", "number_gaps", "elision_marks", "symbols", "units", "unit_symbols",
                         "unjoined_symbols", "dimension_marks", "range_marks", "proclitics", "case_suffixes"}),
-    "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
+    "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes",
                           "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
                           "case_suffixes", "function_words"}) | SYMBOL_KEYS,
     "expression": frozenset({"number_marks", "operators", "patterns", "symbols"}),
@@ -236,7 +235,7 @@ reads, by its name in the core, and the keys of the unread check of `render` and
 reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
 them to find a character that `SYMBOL` reads between a phone word and the digits."""
 
-PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
+PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 
 OPTIONAL = frozenset({

@@ -146,7 +146,6 @@ DATA = freeze({
     "list_links": ["y", "o"],
     "phone_shapes": ["6[0-9]{2} [0-9]{3} [0-9]{3}", "7[1-9][0-9] [0-9]{3} [0-9]{3}"],
     "phone_unit_shapes": ["(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+"],
-    "phone_kept_shapes": ["[1-9][0-9]{0,2}(?: [0-9]{3})+"],
     "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
     "titles": {"Sr.": "señor", "Sra.": "señora", "Srta.": "señorita", "Dr.": "doctor", "Dra.": "doctora",
                "D.": "don", "D.ª": "doña", "Dña.": "doña", "Prof.": "profesor", "Prof.ª": "profesora",
