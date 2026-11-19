@@ -512,8 +512,8 @@ class ListedFraction:
                 after = [word.lower() for word in clause_window(text, words, span.start, span.end, 1, limit=1,
                                                                 breaks=breaks)]
                 article = data["articles"].get(before[0].lower(), ()) if before else ()
-                genitive = after and {case for _, case in data["articles"].get(after[0]) or nouns.get(after[0], ())
-                                      } == {GENITIVE}
+                readings = (data["articles"].get(after[0]) or nouns.get(after[0], ())) if after else ()
+                genitive = {case for _, case in readings} == {GENITIVE}
                 read = ((denominator == "2" or denominator in data["fraction_names"])
                         and (denominator in ("20", "100") or any(gender == NEUTER for gender, _ in article) or genitive
                              or (denominator == "2" and after and after[0] in nouns))
