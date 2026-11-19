@@ -1,32 +1,14 @@
-"""The ELECTRONIC form: the Portuguese rows of tests/data/electronic, and the rules that no shipped table uses.
-
-The Portuguese rows run on `tests/fixtures/pt_electronic.py`, a language with the address tables of
-`text2spoken/lang/_pt_electronic.py` and no other form. The English rows are in tests/data/en.tsv."""
-import csv
+"""The ELECTRONIC form: the rules that no shipped table uses. The rows are in tests/data/en.tsv and
+tests/data/pt.tsv."""
 from dataclasses import replace
 
 import pytest
 
-from tests.conftest import DATA
-from tests.fixtures import pt_electronic
 from text2spoken import Form, NormalizationParams, analyze, normalize
 from text2spoken.core import language
 from text2spoken.params import FrozenMap, freeze
 
 EN = language.language_file("en")
-
-
-def electronic_rows(code: str) -> list[dict]:
-    with open(DATA / "electronic" / f"{code}.tsv", encoding="utf-8") as f:
-        return list(csv.DictReader(f, delimiter="\t"))
-
-
-PT_ROWS = electronic_rows("pt")
-
-
-@pytest.fixture
-def pt(monkeypatch):
-    monkeypatch.setattr(language, "_registry", lambda: {"pt": pt_electronic.LANGUAGE})
 
 
 @pytest.fixture
@@ -35,22 +17,6 @@ def en_with(monkeypatch):
     def patch(**changes):
         monkeypatch.setattr(language, "_registry", lambda: {"en": replace(EN, data=freeze({**EN.data, **changes}))})
     return patch
-
-
-@pytest.mark.parametrize("row", PT_ROWS, ids=[r["id"] for r in PT_ROWS])
-def test_pt_row(pt, row):
-    assert normalize(row["text"], row["tag"]) == row["expected"]
-
-
-@pytest.mark.parametrize("row", PT_ROWS, ids=[r["id"] for r in PT_ROWS])
-def test_pt_row_is_idempotent(pt, row):
-    once = normalize(row["text"], row["tag"])
-    assert normalize(once, row["tag"]) == once
-
-
-def test_pt_rows_cover_both_varieties_and_cite_a_source():
-    assert {r["tag"] for r in PT_ROWS} == {"pt-PT", "pt-BR"}
-    assert all(r["form"] == "electronic" and r["source"].strip() and r["checked_by"].strip() for r in PT_ROWS)
 
 
 def test_the_fields_of_each_kind():
@@ -96,7 +62,7 @@ def test_without_the_form_an_address_stays_as_written():
 
 
 @pytest.mark.parametrize("tag", ["pt-PT", "pt-BR"])
-def test_without_the_form_a_pt_address_stays_as_written(pt, tag):
+def test_without_the_form_a_pt_address_stays_as_written(tag):
     text = "Escreva para ana@sapo.pt ou veja www.exemplo.com.br."
     assert normalize(text, tag) != text
     assert normalize(text, tag, NormalizationParams().without(Form.ELECTRONIC)) == text
