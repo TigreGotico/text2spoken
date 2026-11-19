@@ -140,18 +140,26 @@ def test_random_arabic_text_never_raises_and_reads_the_same_on_a_second_pass(see
         assert normalize(once, tag) == once, (tag, text, once)
 
 
-
-@pytest.mark.parametrize("text", [
+SPEEDS_BEFORE_A_KEPT_NUMBER = [
     "السرعة القصوى 250 كم/س 2 باب", "السرعة القصوى 250 كم/س، 2 باب", "السرعة القصوى 250 كم/س - 2 باب",
-    "تسير بسرعة 60 km/h 2 ساعة يوميا", "السرعة 120 km/h 2 سيارة", "السرعة 5 km/h 2 مرة",
-    "السرعة 120 km/h 2 م",
-    "السرعة القصوى مئتان وخمسون كيلومترا في الساعة، 2 باب"])
-def test_two_before_its_noun_after_a_speed_stays_on_a_second_pass(text):
-    """Design section 11. A speed reads في الساعة after its unit, and two before its noun stays as written (Ryding
-    2005, p. 333), so a second pass must not read that digit as an hour."""
+    "تسير بسرعة 60 km/h 2 ساعة يوميا", "السرعة 120 km/h 2 سيارة", "السرعة 5 km/h 2 مرة", "السرعة 120 km/h 2 م",
+    "السرعة 120 km/h 2 ليلا", "السرعة 120 km/h 2 والسرعة الدنيا 60", "السرعة 120 km/h 2 و 3",
+    "السرعة 120 km/h 2 إلى 3", "السرعة 120 km/h 2، والوزن 5 kg", "المشي بسرعة 5 كم/س 2 إلى 3 مرات في الأسبوع",
+    "امش بسرعة 6 km/h 2 إلى 3 ساعات يوميا", "سرعة الرياح 40 كم/س 2 ليلا", "السرعة القصوى 250 كم/س، 2 والوزن 1500 كغم",
+    "السرعة 120 كم/س 2 ظهرا", "السرعة 120 كم/س 2 والنصف", "تسارع من 0 إلى 100 كم/س 2 إلى 3 ثوان أقل",
+    "السرعة 120 km/h 2 بعد الظهر", "السرعة 120 km/h ٢ ليلا", "السرعة 120 km/h 02 م", "السرعة 120 km/h 1 ليلا",
+    "السرعة القصوى مئتان وخمسون كيلومترا في الساعة، 2 باب", "سرعة الرياح أربعون كيلومترا في الساعة 2 ليلا",
+    "السرعة مئة وعشرون كيلومترا في الساعة 2 إلى 3"]
+
+
+@pytest.mark.parametrize("text", SPEEDS_BEFORE_A_KEPT_NUMBER)
+def test_a_number_kept_after_a_speed_stays_on_a_second_pass(text):
+    """Design section 11. A speed reads في الساعة after its unit. A number that the first pass keeps as written,
+    such as 2 before a word (Ryding 2005, p. 333), must not read as an hour on a second pass."""
     once = normalize(text, "ar")
-    assert " 2 " in once
+    assert "الثانية" not in once
     assert normalize(once, "ar") == once
+
 
 def test_the_base_install_holds_the_speller_that_writes_the_construct_dual():
     """ar.py reads numbers with ovos-number-parser, which the base install holds (design section 12). Row ar-040

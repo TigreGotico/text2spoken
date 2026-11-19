@@ -295,12 +295,32 @@ def _is_arabic_word(word: str) -> bool:
     return all("\u0621" <= char <= "\u064a" for char in word)
 
 
-def counted_noun(context: SpanContext) -> str | None:
+def counted_noun(after: Sequence[str]) -> str | None:
     """The indefinite Arabic word right after the number, which the number counts (Ryding 2005, p. 335)."""
-    if not context.after:
+    if not after:
         return None
-    word = context.after[0]
+    word = after[0]
     return word if _is_arabic_word(word) and not word.startswith("ال") else None
+
+
+def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: FrozenMap) -> bool:
+    """Whether a whole hour right after الساعة reads as the hour of a time (Ryding 2005, p. 361). It does not before
+    a noun that the number counts, as in حتى الساعة 10 شهداء (p. 335): و, إلى, a definite word, a day period or the end
+    of the clause may follow the hour. A speed reads في الساعة after its unit, as in "… miJat-in wa-sab'iina
+    kiiluumitr-an fii l-saacat-i" (p. 349). A number with a leading zero, and 1 or 2 before a noun that it counts
+    (pp. 330 and 333), stay as written, so they stay as written after في الساعة too. This last rule is the inference
+    of this file, with no source: it makes a second pass read the same text."""
+    digits = fold_digits(digits)
+    if not before or before[-1] not in data["time_words"] or int(digits) > 23 or (len(digits) > 1 and digits[0] == "0"):
+        return False
+    noun = counted_noun(after)
+    if noun is None:
+        return True
+    if digits in ("1", "2") and len(before) > 1 and before[-2].removeprefix("و") == "في":
+        return False
+    periods = data["spoken_periods"].values()
+    return (noun.startswith("وال") or noun in ("و", data["range_word"]) or noun in periods
+            or " ".join(after[:2]) in periods or any(noun in forms for forms in data["day_periods"].values()))
 
 
 def noun_gender(noun: str, data: FrozenMap) -> GrammaticalGender:
@@ -338,7 +358,7 @@ def agreement(span: Span, context: SpanContext, gender: GrammaticalGender | None
         gender = context.hint.gender
     elif gender is None:
         before = context.before[-1] if context.before else ""
-        noun = counted_noun(context)
+        noun = counted_noun(context.after)
         if before in request.data["year_nouns"]:
             gender = GrammaticalGender(request.data["year_nouns"][before])
         elif noun is not None:
@@ -405,21 +425,17 @@ def speak_rank(span: Span, context: SpanContext, proclitic: str, noun: str) -> s
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """One and two follow the noun that they count (Ryding 2005, pp. 330 and 333), so a digit 1 or 2 before a noun
-    stays as written. A whole hour after الساعة reads as the hour of a time (p. 361), unless a noun follows that the
-    number counts, as in حتى الساعة 10 شهداء. و, إلى, a definite word or a day period may follow the hour."""
+    stays as written. A whole hour after الساعة reads as the hour of a time, as `hour_after` gives."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         raise DeclinedReading("a number with a leading zero has no cited reading")
-    noun = counted_noun(context)
-    if (context.before and context.before[-1] in request.data["time_words"] and not (fields["sign"] or fields["lead"])
-            and int(digits) <= 23
-            and (noun is None or noun in ("و", request.data["range_word"]) or noun.startswith("وال")
-                 or noun in request.data["spoken_periods"].values())):
+    if not (fields["sign"] or fields["lead"]) and hour_after(context.before, digits, context.after, request.data):
         return clock(int(digits), 0, None, request)
     rank = rank_noun(context)
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
+    noun = counted_noun(context.after)
     if noun is not None and digits in ("1", "2"):
         raise DeclinedReading("one and two follow the noun that they count")
     features = agreement(span, context)
@@ -516,7 +532,8 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     amount = span.fields["amount"]
     if isinstance(amount, tuple) or amount["fraction"] or amount["sign"]:
         raise DeclinedReading("no cited reading for a range, a dimension, a sign or a fraction of a unit")
-    if span.fields["unit"] == "كم" and counted_noun(context) and context.after[0] not in request.data["prepositions"]:
+    if (span.fields["unit"] == "كم" and counted_noun(context.after)
+            and context.after[0] not in request.data["prepositions"]):
         raise DeclinedReading("كم before an indefinite noun is the question word 'how many' (Ryding 2005, pp. 402-403)")
     forms = request.data["units"][span.fields["unit"]]
     return counted(amount["integer"], forms, agreement(span, context, GrammaticalGender(forms["gender"])), request)
@@ -584,8 +601,8 @@ def clock(written_hour: int, minute: int, period: str | None, request: Request) 
 
 @dataclass(frozen=True)
 class Clock(TimeClock):
-    """The core time, where an hour with no minutes before ص or م needs الساعة: `المسافة 7 م` is the metre. A rate
-    ends in في الساعة, as in "170 kiiluumitr-an fii l-saacat-i" (Ryding 2005, p. 349), so that hour is not after في."""
+    """The core time, where an hour with no minutes before ص or م needs الساعة, as `hour_after` gives: `المسافة 7 م`
+    is the metre."""
 
     def _times(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
@@ -595,7 +612,7 @@ class Clock(TimeClock):
                 yield span
                 continue
             before = clause_window(text, context_words(tokens), span.start, span.end, -1, 2)
-            if before and before[-1] in data["time_words"] and before[0] != "في":
+            if hour_after(before, written[:-1].strip(), (written[-1],), data):
                 yield span
 
 
