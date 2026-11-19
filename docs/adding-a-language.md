@@ -385,7 +385,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
 | `kept_money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `symbols` | `case_suffixes`, `number_gaps`, `proclitics`, `symbol_names` |
 | `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `elision_marks`, `number_gaps`, `proclitics`, `range_marks`, `unjoined_symbols` |
-| `telephone` | `TELEPHONE` | `currencies`, `currency_symbols`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names` |
+| `telephone` | `TELEPHONE` | `clock_marks`, `currencies`, `currency_symbols`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names` |
 | `expression` | `EXPRESSION` | `number_marks`, `operators`, `patterns`, `symbols` | none |
 | `abbreviation` | `ABBREVIATION` | `abbreviations`, `number_abbreviations`, `sentence_final`, `titles` | none |
 | `space_groups` | `CARDINAL` | none | none |
