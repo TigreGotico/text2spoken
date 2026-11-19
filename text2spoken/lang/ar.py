@@ -401,8 +401,8 @@ def rank_noun(context: SpanContext) -> tuple[str, str] | None:
     if not context.before:
         return None
     word, nouns = context.before[-1], context.request.data["rank_nouns"]
-    if word.startswith("لل") and "ا" + word[1:] in nouns:
-        return "ل", "ا" + word[1:]
+    if word.startswith("لل") and (noun := "ا" + word[1:]) in nouns:
+        return "ل", noun
     for proclitic in ("", *context.request.data["proclitics"]):
         if word.startswith(proclitic) and word[len(proclitic):] in nouns:
             return proclitic, word[len(proclitic):]
