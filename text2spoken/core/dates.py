@@ -73,8 +73,8 @@ def long_date(locale: str) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]
     UTS #35, Part 4, "Date Format Patterns": text in apostrophes is literal, two apostrophes are one, and a run of
     one ASCII letter is a field. In Czech, Danish, Finnish, Icelandic, Norwegian and other languages, "a period or
     full stop is written after the numeral" of an ordinal (Wikipedia, "Ordinal indicator"), so `d.` is an ordinal
-    day: `d. MMMM y` reads the ordinal of the day. A full stop anywhere else, as after the year in `y. MMMM d.` or in
-    the abbreviation `'р'.`, has no source for its words, and the pattern gives None. So do a field outside
+    day: `d. MMMM y` reads the ordinal of the day. A full stop anywhere else gives None, unless an entry of
+    `date_readings` gives the words. So do a field outside
     `DATE_FIELDS` and the year of two digits `yy`."""
     stored = json.loads((files("text2spoken") / "data" / "cldr" / f"{locale}.dates.json").read_text(encoding="utf-8"))
     reading = date_readings().get(locale)
@@ -100,5 +100,5 @@ def long_date(locale: str) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]
     for index, (name, _) in enumerate(parts):
         field = name.removeprefix("ordinal_")
         if field in forms:
-            parts[index] = ("ordinal_" + field if forms[field]["reading"] == "ordinal" else field, "")
+            parts[index] = ("ordinal_" + field, "")
     return tuple(parts), tuple(stored["months"]), forms
