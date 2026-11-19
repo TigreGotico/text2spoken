@@ -1,0 +1,7 @@
+id	tag	form	text	expected	source	checked_by
+qac-001	qac	cardinal	ko 3 la.	ko ri la.	the tables of tests/fixtures/qac.py: digit_words	stub
+qac-002	qac	cardinal	ko 1,250 la.	ko wa tu fa ze la.	the tables of tests/fixtures/qac.py: the group mark of number_marks, digit_words	stub
+qac-003	qac	cardinal	ko -7 la.	ko minu se la.	the tables of tests/fixtures/qac.py: sign_words, digit_words	stub
+qac-004	qac	cardinal	ko #9 la.	ko numo ni la.	the tables of tests/fixtures/qac.py: leads, digit_words	stub
+qac-005	qac	cardinal	ko #007 la.	ko numo ze ze se la.	the tables of tests/fixtures/qac.py: leads; a leading zero reads digit by digit	stub
+qac-006	qac	cardinal	ko 1.5 la.	ko 1.5 la.	the tables of tests/fixtures/qac.py: no recognizer of the stub claims a decimal	stub
