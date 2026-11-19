@@ -1,17 +1,78 @@
 # Changelog
 
+## [0.0.2a90](https://github.com/TigreGotico/text2spoken/tree/0.0.2a90) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a89...0.0.2a90)
+
+**Merged pull requests:**
+
+- fix\(core\): read the CLDR marks and grouping of a language with no file [\#342](https://github.com/TigreGotico/text2spoken/pull/342) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ja\): a decimal reads 点 for its mark, as in 三点五 [\#322](https://github.com/TigreGotico/text2spoken/pull/322) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): a phone word is also the last part of a hyphenated word [\#319](https://github.com/TigreGotico/text2spoken/pull/319) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a89](https://github.com/TigreGotico/text2spoken/tree/0.0.2a89) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a88...0.0.2a89)
+
+**Merged pull requests:**
+
+- docs\(el\): cite CLDR 49 for the case rule sets [\#361](https://github.com/TigreGotico/text2spoken/pull/361) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(el\): a day and a month stay as written, 2 1/2 reads δυόμισι, 1/60 to 1/80 read [\#359](https://github.com/TigreGotico/text2spoken/pull/359) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): read a decimal written with a full stop before a unit, and the zeros after vírgula [\#352](https://github.com/TigreGotico/text2spoken/pull/352) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): a say-as date of a language with no file reads its day and year in the cited form [\#315](https://github.com/TigreGotico/text2spoken/pull/315) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a88](https://github.com/TigreGotico/text2spoken/tree/0.0.2a88) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a87...0.0.2a88)
+
+**Merged pull requests:**
+
+- fix\(numbers\): a group run that starts with 0 is no grouped number [\#357](https://github.com/TigreGotico/text2spoken/pull/357) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ko\): a number before a counter reads in the numerals of the counter [\#330](https://github.com/TigreGotico/text2spoken/pull/330) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a87](https://github.com/TigreGotico/text2spoken/tree/0.0.2a87) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a86...0.0.2a87)
+
+**Merged pull requests:**
+
+- fix\(ar\): a region with the CLDR months and marks of ar reads ar-001 [\#369](https://github.com/TigreGotico/text2spoken/pull/369) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(el\): a percentage with a decimal reads, as 2,5% δύο κόμμα πέντε τοις εκατό [\#360](https://github.com/TigreGotico/text2spoken/pull/360) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): read a clock after "são", and 24:00 as midnight [\#354](https://github.com/TigreGotico/text2spoken/pull/354) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): a number next to a currency sign reads only as an amount [\#349](https://github.com/TigreGotico/text2spoken/pull/349) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): pt-BR reads a Roman numeral up to ten as an ordinal, artigo up to nine [\#332](https://github.com/TigreGotico/text2spoken/pull/332) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ko\): a say-as ordinal reads the native ordinal, a date reads 유월 and 시월 [\#329](https://github.com/TigreGotico/text2spoken/pull/329) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat\(ko\): Korean language file, a minus reads 마이너스 [\#328](https://github.com/TigreGotico/text2spoken/pull/328) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(nl\): groups after a percentage read as a cardinal [\#318](https://github.com/TigreGotico/text2spoken/pull/318) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix: a say-as telephone reads an area code in brackets in every language [\#314](https://github.com/TigreGotico/text2spoken/pull/314) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a85...0.0.2a86)
+
+**Merged pull requests:**
+
+- fix\(el\): a number finds its noun past και, ακόμη, άλλος, capitals and an hour [\#358](https://github.com/TigreGotico/text2spoken/pull/358) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): read mg, cl and dl, and m2 with its exponent on the line [\#353](https://github.com/TigreGotico/text2spoken/pull/353) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): decline a Serbian RBNF ordinal past its last rule [\#348](https://github.com/TigreGotico/text2spoken/pull/348) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): correct the CLDR RBNF words of da, hi, is and sr [\#347](https://github.com/TigreGotico/text2spoken/pull/347) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ar\): count kilograms and speeds, more feminine plurals and rank nouns [\#346](https://github.com/TigreGotico/text2spoken/pull/346) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ar\): a percent range reads its second number in the genitive, and a day range before a month reads both days [\#344](https://github.com/TigreGotico/text2spoken/pull/344) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): keep a number before a minus and digits that no number covers [\#343](https://github.com/TigreGotico/text2spoken/pull/343) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ca\): read §§ as paràgrafs [\#341](https://github.com/TigreGotico/text2spoken/pull/341) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(es\): an ordinal takes the apocope only before its own masculine noun [\#331](https://github.com/TigreGotico/text2spoken/pull/331) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(eu\): letters that touch a unit symbol are no case ending [\#320](https://github.com/TigreGotico/text2spoken/pull/320) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix: a language with no file reads the writer ordinal in its genders, and sk reads ordinals [\#313](https://github.com/TigreGotico/text2spoken/pull/313) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix: a say-as ordinal declines when the parser writer returns the cardinal [\#312](https://github.com/TigreGotico/text2spoken/pull/312) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat: Chinese language file [\#311](https://github.com/TigreGotico/text2spoken/pull/311) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a84...0.0.2a85)
 
 **Merged pull requests:**
 
-- fix\(core\): decline a Serbian RBNF ordinal past its last rule [\#348](https://github.com/TigreGotico/text2spoken/pull/348) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): correct the CLDR RBNF words of da, hi, is and sr [\#347](https://github.com/TigreGotico/text2spoken/pull/347) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): count kilograms and speeds, more feminine plurals and rank nouns [\#346](https://github.com/TigreGotico/text2spoken/pull/346) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ca\): read §§ as paràgrafs [\#341](https://github.com/TigreGotico/text2spoken/pull/341) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): a number abbreviation does not wait on the number before it [\#316](https://github.com/TigreGotico/text2spoken/pull/316) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- feat: Chinese language file [\#311](https://github.com/TigreGotico/text2spoken/pull/311) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(eu\): read a hyphen range with the endings -tik and -ra [\#309](https://github.com/TigreGotico/text2spoken/pull/309) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - docs: a form with one easy reading must read [\#293](https://github.com/TigreGotico/text2spoken/pull/293) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
@@ -235,10 +296,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a56...0.0.2a57)
 
-**Merged pull requests:**
-
-- feat: French language file \(from \#55, by Gaëtan Trellu\) [\#109](https://github.com/TigreGotico/text2spoken/pull/109) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a56](https://github.com/TigreGotico/text2spoken/tree/0.0.2a56) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a55...0.0.2a56)
@@ -251,41 +308,21 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a54...0.0.2a55)
 
-**Merged pull requests:**
-
-- fix: read titles and forms the old dialog normaliser read [\#113](https://github.com/TigreGotico/text2spoken/pull/113) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a54](https://github.com/TigreGotico/text2spoken/tree/0.0.2a54) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a53...0.0.2a54)
-
-**Merged pull requests:**
-
-- feat: read Roman numerals, text in capitals and letter-digit codes [\#111](https://github.com/TigreGotico/text2spoken/pull/111) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a53](https://github.com/TigreGotico/text2spoken/tree/0.0.2a53) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a52...0.0.2a53)
 
-**Merged pull requests:**
-
-- docs: rewrite the guides for readers [\#110](https://github.com/TigreGotico/text2spoken/pull/110) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a52](https://github.com/TigreGotico/text2spoken/tree/0.0.2a52) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a51...0.0.2a52)
 
-**Merged pull requests:**
-
-- docs: short README and a docs folder [\#107](https://github.com/TigreGotico/text2spoken/pull/107) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a51](https://github.com/TigreGotico/text2spoken/tree/0.0.2a51) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a50...0.0.2a51)
-
-**Merged pull requests:**
-
-- fix\(es\): plural abbreviations after a number, ordinals before etc. [\#101](https://github.com/TigreGotico/text2spoken/pull/101) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a50](https://github.com/TigreGotico/text2spoken/tree/0.0.2a50) (2026-11-15)
 
@@ -295,34 +332,17 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a48...0.0.2a49)
 
-**Merged pull requests:**
-
-- fix: read small decimals, en scaled amounts, hex alpha logs and de-CH marks [\#103](https://github.com/TigreGotico/text2spoken/pull/103) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- docs: correct core docstrings and check clause 12 at runtime [\#102](https://github.com/TigreGotico/text2spoken/pull/102) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a48](https://github.com/TigreGotico/text2spoken/tree/0.0.2a48) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a47...0.0.2a48)
-
-**Merged pull requests:**
-
-- refactor: move shared language helpers into the core [\#96](https://github.com/TigreGotico/text2spoken/pull/96) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a47](https://github.com/TigreGotico/text2spoken/tree/0.0.2a47) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a46...0.0.2a47)
 
-**Merged pull requests:**
-
-- fix\(deps\): floor ovos-date-parser at 0.36.2a1 [\#98](https://github.com/TigreGotico/text2spoken/pull/98) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a46](https://github.com/TigreGotico/text2spoken/tree/0.0.2a46) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a45...0.0.2a46)
-
-**Merged pull requests:**
-
-- feat: add Modern Standard Arabic \(ar\) [\#93](https://github.com/TigreGotico/text2spoken/pull/93) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a45](https://github.com/TigreGotico/text2spoken/tree/0.0.2a45) (2026-11-15)
 
@@ -332,10 +352,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a43...0.0.2a44)
 
-**Merged pull requests:**
-
-- fix: compute plural categories at the precision of the number [\#91](https://github.com/TigreGotico/text2spoken/pull/91) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a43](https://github.com/TigreGotico/text2spoken/tree/0.0.2a43) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a42...0.0.2a43)
@@ -344,25 +360,13 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a41...0.0.2a42)
 
-**Merged pull requests:**
-
-- fix\(pt\): take date and time words from ovos-date-parser; read midnight and noon [\#86](https://github.com/TigreGotico/text2spoken/pull/86) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a41](https://github.com/TigreGotico/text2spoken/tree/0.0.2a41) (2026-11-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a40...0.0.2a41)
 
-**Merged pull requests:**
-
-- test: pin the combining-mark step-back on the right edge of a lexicon key [\#88](https://github.com/TigreGotico/text2spoken/pull/88) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a40](https://github.com/TigreGotico/text2spoken/tree/0.0.2a40) (2026-11-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a39...0.0.2a40)
-
-**Merged pull requests:**
-
-- fix: a lexicon claim does not wait on a joined digit [\#83](https://github.com/TigreGotico/text2spoken/pull/83) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a39](https://github.com/TigreGotico/text2spoken/tree/0.0.2a39) (2026-11-14)
 

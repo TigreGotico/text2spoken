@@ -39,11 +39,29 @@ A number right after a noun that names one item of a series, such as `sala`, `p�
 | `O bilhete custa 12,5 €.` | `pt-PT` | O bilhete custa doze euros e cinquenta cêntimos. |
 | `Tome a vitamina D. Boa noite.` | `pt-PT` | stays as written |
 
+The comma is the decimal mark. The full stop is the decimal mark of the English convention (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A decimal with a full stop reads with a unit symbol, a percent sign or a currency, and before the name of a unit. A unit of duration is no evidence, because `1.30 h` may write one hour and thirty minutes. Elsewhere the decimal stays as written, because such digits are mostly a version, an engine size or a section number. Digits with a leading zero after `vírgula` read as the digits of a decimal part.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `A temperatura é de 10.4 graus.` | `pt-PT` | A temperatura é de dez vírgula quatro graus. |
+| `Corri 1.5 km.` | `pt-PT` | Corri um vírgula cinco quilómetros. |
+| `A versão 14.2 está pronta.` | `pt-PT` | stays as written |
+| `Durou 1.30 h.` | `pt-PT` | stays as written |
+| `A taxa é 0 vírgula 02.` | `pt-PT` | A taxa é zero vírgula zero dois. |
+
 The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
 
 | Written | Spoken (`pt-PT`, `lexicon=FrozenMap({"pt": FrozenMap({"às": "às"})})`) |
 | --- | --- |
 | `Chega às 0:00.` | Chega às zero horas. |
+
+A clock with a colon reads after a time word, such as `às`, `das` or the verb `são` (Priberam, "ser": "são 18h00"). A clock with no time word before it stays as written, because `16:10` may also be a ratio. `24:00` is the end of the day, and it reads as midnight.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `São 16:30.` | `pt-PT` | São dezasseis e trinta. |
+| `Já são 12:00!` | `pt-PT` | Já são doze horas! |
+| `Fecha às 24:00.` | `pt-PT` | Fecha à meia-noite. |
 
 A length unit with `2` or `3` right after it writes its exponent on the line, so `80 m2` reads as `80 m²`.
 
@@ -51,6 +69,14 @@ A length unit with `2` or `3` right after it writes its exponent on the line, so
 | --- | --- | --- |
 | `A casa tem 80m2.` | `pt-PT` | A casa tem oitenta metros quadrados. |
 | `Tomar 500 mg por dia.` | `pt-PT` | Tomar quinhentos miligramas por dia. |
+
+In `pt-PT`, the space is the group mark (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A run of spaced groups is also a code, such as a tax number or a Multibanco reference, so a spaced number reads only when its last group is `000` or when it has a decimal part. Any other spaced run stays as written. In `pt-BR`, the group mark is the full stop.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Tem 100 000 habitantes.` | `pt-PT` | Tem cem mil habitantes. |
+| `Custa 1 250 000,50.` | `pt-PT` | Custa um milhão duzentos e cinquenta mil vírgula cinquenta. |
+| `O NIF é 509 876 543.` | `pt-PT` | stays as written |
 
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
@@ -80,11 +106,11 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` name their source, and no native speaker has checked them. Of the 595 rows, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` name their source, and no native speaker has checked them. Of the 637 rows, 14 are marked silver.
 
 ## Roman numerals
 
-A Roman numeral reads after a century word, after a noun of a part, a class or a series, after a capitalised word, and after a title and its full stop. It reads as an ordinal up to ten and as a cardinal from eleven. Ciberdúvidas 9067 gives the pt-BR limit: "os numerais se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono)". The noun or the title before the numeral gives the gender. After a name, the gender comes from the title before it, then from a common noun that tugalex knows, then from the given-name list of tugalex, and a name that no list holds takes the masculine. After a capitalised word that is no noun of a series, the value is at most 30, and the word reads the numeral only when spaces alone part them. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as a cardinal, and a smaller one stays as written. After an article, as in `O XV de Portugal`, a numeral from 11 to 30 reads as a cardinal. A numeral of one letter, `I`, `V` or `X`, reads only after a noun of the `roman_letter_nouns` table: the parts of a work, such as `capítulo`, `livro`, `parte`, `cena`, `secção`, `canto`, `cláusula` and `artigo`. Ciberdúvidas 11716 applies the ordinal rule "a todas as partes em que se divide uma obra". A group, a class or a phase is labelled with letters too, so `Grupo I` stays as written. A numeral of the `roman_words` table, such as `XL`, `CL` or `MC`, is also a word or an initialism. It reads only after a noun of `roman_letter_nouns`, and only when no word in lowercase follows it, so after `classe` or `grupo` it stays as written. No numeral reads after a word of the `letter_words` table, such as the pronoun `EU`. In a clause in capitals, a numeral is a word only when `letter_words` holds it or tugalex knows it, as `VI` in `EU VI`. A list after a century word or a noun of a series reads with that noun: a comma and a space part its numerals, and `e` or `ou`, in any case, comes before the last one. Each numeral of the list passes the same checks as the first and holds a larger value than the numeral before it, and the list ends at the first numeral that fails. A numeral after a comma with no closing link word is no member, and it reads as a numeral after a comma reads. A letter that a full stop and a capitalised word follow is an initial, as `V.` in `V. Silva`. Without the `pt` extra, a Roman numeral stays as written, and one log warning names the extra.
+A Roman numeral reads after a century word, after a noun of a part, a class or a series, after a capitalised word, and after a title and its full stop. It reads as an ordinal up to ten and as a cardinal from eleven. In pt-BR, a numeral after `artigo` reads as an ordinal only up to nine. Celso Cunha, quoted in Migalhas, Gramatigalhas, "Numeral", gives the rule: "na numeração dos artigos de leis, decretos e portarias, usa-se o ordinal até nove, e o cardinal de dez em diante". The noun or the title before the numeral gives the gender. After a name, the gender comes from the title before it, then from a common noun that tugalex knows, then from the given-name list of tugalex, and a name that no list holds takes the masculine. After a capitalised word that is no noun of a series, the value is at most 30, and the word reads the numeral only when spaces alone part them. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as a cardinal, and a smaller one stays as written. After an article, as in `O XV de Portugal`, a numeral from 11 to 30 reads as a cardinal. A numeral of one letter, `I`, `V` or `X`, reads only after a noun of the `roman_letter_nouns` table: the parts of a work, such as `capítulo`, `livro`, `parte`, `cena`, `secção`, `canto`, `cláusula` and `artigo`. Ciberdúvidas 11716 applies the ordinal rule "a todas as partes em que se divide uma obra". A group, a class or a phase is labelled with letters too, so `Grupo I` stays as written. A numeral of the `roman_words` table, such as `XL`, `CL` or `MC`, is also a word or an initialism. It reads only after a noun of `roman_letter_nouns`, and only when no word in lowercase follows it, so after `classe` or `grupo` it stays as written. No numeral reads after a word of the `letter_words` table, such as the pronoun `EU`. In a clause in capitals, a numeral is a word only when `letter_words` holds it or tugalex knows it, as `VI` in `EU VI`. A list after a century word or a noun of a series reads with that noun: a comma and a space part its numerals, and `e` or `ou`, in any case, comes before the last one. Each numeral of the list passes the same checks as the first and holds a larger value than the numeral before it, and the list ends at the first numeral that fails. A numeral after a comma with no closing link word is no member, and it reads as a numeral after a comma reads. A letter that a full stop and a capitalised word follow is an initial, as `V.` in `V. Silva`. Without the `pt` extra, a Roman numeral stays as written, and one log warning names the extra.
 
 | Written | Tag | Spoken | Note |
 | --- | --- | --- | --- |

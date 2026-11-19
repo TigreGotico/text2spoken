@@ -40,11 +40,21 @@ The rules and their sources:
   Hijri calendar: the month is the Hijri month, and the mark reads هجري (English Wiktionary, هـ: "abbreviation of
   هِجْرِيّ (hijriyy): in the year of the Hegira (AH)"). The mark م after a numeric date reads ميلادي (English
   Wiktionary, م: "abbreviation of مِيلَادِيّ (mīlādiyy), AD, CE").
+  In a range of days before one month, the first day is a date of that month and reads as an ordinal too, as
+  Arabic Wikipedia writes it: "من الأول إلى السابع من آذار" (أستراليا في الألعاب البارالمبية الشتوية 2002, oldid
+  71881762) and "من الثاني إلى الرابع من فبراير" (ردود الفعل على الأمر التنفيذي رقم 13769, oldid 76868665).
   Before the definite article, li- drops the alif of the article: "the laam of li- attaches directly to the laam
   of the definite article (e.g., li-l-jaamicat-i)" (p. 371). So للطابق is ل and الطابق.
+- Ranges. إلى is a preposition, so the number after it is genitive (pp. 366-367). In a range of two percentages,
+  amounts or times, such as `10%-20%`, the second takes the genitive too.
 - Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
   thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour comes from
-  the CLDR 49 day period rules of `ar` (`dayPeriods.json`).
+  the CLDR 49 day period rules of `ar` (`dayPeriods.json`). "The word “hour” (saaca) may or may not be mentioned,
+  but the ordinal numeral is in the feminine form, agreeing with that noun": "fii l-saacat-i l-thaaminat-i", "at
+  eight o'clock" (p. 361). So a whole hour after الساعة reads as the hour of a time.
+- The CLDR 49 format names of the day periods of `ar` are ص and م (`ca-gregorian.json`, dayPeriods, format), and
+  the short time pattern is "h:mm a". So ص and م after a time are its day period. م is also the CLDR 49 short
+  symbol of the metre (`units.json`, length-meter), so an hour with no minutes takes ص or م only after الساعة.
 - Percent: the number and في المئة (p. 347). CLDR 49 writes the sign after the number in logical order (`#,##0%`),
   and a right-to-left line shows that sign to the left of the number, so a percentage typed as it looks, `%10`,
   reads the same. The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of the minus sign is سالب
@@ -72,8 +82,8 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
-from text2spoken.core.recognizers import SHARED, Money as CoreMoney, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext
+from text2spoken.core.recognizers import SHARED, Money as CoreMoney, TimeClock, speak_lexicon
+from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import day_hour, twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, one_digit_set
@@ -178,7 +188,8 @@ DATA = freeze({
     "dimension_marks": ["×"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"}],
     "time_words": ["الساعة"],
-    "day_periods": {"am": ["صباحًا", "صباحا"], "pm": ["مساءً", "مساء"]},
+    "day_periods": {"am": ["صباحًا", "صباحا", "ص"], "pm": ["مساءً", "مساء", "م"]},
+    "short_periods": ["ص", "م"],
     "spoken_periods": {"morning1": "في الصباح", "morning2": "صباحا", "afternoon1": "ظهرا",
                        "afternoon2": "بعد الظهر", "evening1": "مساء", "night2": "ليلا"},
     "minute_phrases": {"0": "{hour}", "15": "{hour} والربع", "20": "{hour} والثلث", "30": "{hour} والنصف",
@@ -217,10 +228,12 @@ word ريال read ريال. `fraction_names`: Ryding 2005, pp. 360-361. `minute
 count forms of `currencies` and `units`: Wiktionary دولار, ريال and كيلوغرام (revision 95591224: masculine, with the
 sound feminine plural), CLDR units.json (length-kilometer, and the symbols كغم of mass-kilogram and كم/س of
 speed-kilometer-per-hour), and the count rules of Ryding 2005, pp. 330-345. `symbols_after_only`: ريال is a counted
-noun, which follows the number (Ryding 2005, p. 335)."""
+noun, which follows the number (Ryding 2005, p. 335). `short_periods`: the CLDR 49 format names of `day_periods`."""
 
 VARIETIES = (
     Variety("ar-001"),
+    *(Variety(f"ar-{region}") for region in ("AE", "BH", "DJ", "EG", "EH", "ER", "IL", "KM", "KW", "OM", "QA", "SA",
+                                             "SD", "SO", "SS", "TD", "YE")),
     Variety("ar-DZ", freeze({"defaults": {"decimal_mark": ","}, "months": MAGHREB_MONTHS})),
     Variety("ar-TN", freeze({"defaults": {"decimal_mark": ","}, "months": MAGHREB_MONTHS})),
     Variety("ar-IQ", freeze({"months": SYRIAC_MONTHS})),
@@ -236,7 +249,9 @@ VARIETIES = (
                              "months": ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغشت", "شتمبر",
                                         "أكتوبر", "نوفمبر", "دجمبر"]})),
 )
-"""The CLDR locales whose month names or Latin number marks differ from `ar`. Each other region reads as `ar-001`."""
+"""The CLDR 49 locales of `ar`. A locale whose month names or Latin number marks differ from `ar` holds them. Each
+other region reads as `ar-001`. The varieties with no data come first, because `closest_lang` gives a tie to the
+first candidate."""
 
 REGION_DATA = {variety.tag.split("-")[1]: variety.data for variety in VARIETIES}
 
@@ -312,12 +327,32 @@ def _is_arabic_word(word: str) -> bool:
     return all("\u0621" <= char <= "\u064a" for char in word)
 
 
-def counted_noun(context: SpanContext) -> str | None:
+def counted_noun(after: Sequence[str]) -> str | None:
     """The indefinite Arabic word right after the number, which the number counts (Ryding 2005, p. 335)."""
-    if not context.after:
+    if not after:
         return None
-    word = context.after[0]
+    word = after[0]
     return word if _is_arabic_word(word) and not word.startswith("ال") else None
+
+
+def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: FrozenMap) -> bool:
+    """Whether a whole hour right after الساعة reads as the hour of a time (Ryding 2005, p. 361). It does not before
+    a noun that the number counts, as in حتى الساعة 10 شهداء (p. 335): و, إلى, a definite word, a day period or the end
+    of the clause may follow the hour. A speed reads في الساعة after its unit, as in "… miJat-in wa-sab'iina
+    kiiluumitr-an fii l-saacat-i" (p. 349). A number with a leading zero, and 1 or 2 before a noun that it counts
+    (pp. 330 and 333), stay as written, so they stay as written after في الساعة too. This last rule is the inference
+    of this file, with no source: it makes a second pass read the same text."""
+    digits = fold_digits(digits)
+    if not before or before[-1] not in data["time_words"] or int(digits) > 23 or (len(digits) > 1 and digits[0] == "0"):
+        return False
+    noun = counted_noun(after)
+    if noun is None:
+        return True
+    if digits in ("1", "2") and len(before) > 1 and before[-2].removeprefix("و") == "في":
+        return False
+    periods = data["spoken_periods"].values()
+    return (noun.startswith("وال") or noun in ("و", data["range_word"]) or noun in periods
+            or " ".join(after[:2]) in periods or any(noun in forms for forms in data["day_periods"].values()))
 
 
 def noun_gender(noun: str, data: FrozenMap) -> GrammaticalGender:
@@ -333,16 +368,16 @@ def _governs(word: str, data: FrozenMap) -> bool:
 
 
 def _case(span: Span, context: SpanContext) -> str:
-    """Oblique after a preposition, a semi-preposition or a year noun, else nominative. The colloquial register reads
-    every number oblique: Ryding 2005, p. 343, note 11, gives the genitive-accusative for the spoken tens only, and
-    the README lists the rest as a choice with no source."""
+    """Oblique after a preposition, a semi-preposition, a year noun or the range word, else nominative. The colloquial
+    register reads every number oblique: Ryding 2005, p. 343, note 11, gives the genitive-accusative for the spoken
+    tens only, and the README lists the rest as a choice with no source."""
     request = context.request
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = request.data
     before = context.before[-1] if context.before else ""
     if (request.params.register == "colloquial" or span.fields.get("prefix", "") in data["prepositions"]
-            or _governs(before, data) or before in data["year_nouns"]):
+            or _governs(before, data) or before in data["year_nouns"] or span.lead.strip() == data["range_word"]):
         return OBLIQUE
     return NOMINATIVE
 
@@ -355,7 +390,7 @@ def agreement(span: Span, context: SpanContext, gender: GrammaticalGender | None
         gender = context.hint.gender
     elif gender is None:
         before = context.before[-1] if context.before else ""
-        noun = counted_noun(context)
+        noun = counted_noun(context.after)
         if before in request.data["year_nouns"]:
             gender = GrammaticalGender(request.data["year_nouns"][before])
         elif noun is not None:
@@ -424,15 +459,26 @@ def speak_rank(span: Span, context: SpanContext, proclitic: str, noun: str) -> s
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """One and two follow the noun that they count (Ryding 2005, pp. 330 and 333), so a digit 1 or 2 before a noun
-    stays as written."""
-    fields, request = span.fields, context.request
+    stays as written. A whole hour after الساعة reads as the hour of a time, as `hour_after` gives. An hour that the
+    clock does not read, such as 13, stays as written whatever follows it, so that a second pass reads the same
+    text. The first day of a range of days before a month, as 1 in من 1 إلى 7 مارس, is a date."""
+    fields, request, before, after = span.fields, context.request, context.before, context.after
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         raise DeclinedReading("a number with a leading zero has no cited reading")
+    if (not (fields["sign"] or fields["lead"]) and before and before[-1] in request.data["time_words"]
+            and int(digits) <= 23):
+        hour = clock(int(digits), 0, None, request)  # declines 0, 1 and 13, so they stay as written here
+        if hour_after(before, digits, after, request.data):
+            return hour
+    if (len(after) > 2 and after[0] == request.data["range_word"] and not (fields["sign"] or fields["lead"])
+            and (high := fold_digits(after[1])).isdigit() and 1 <= int(digits) < int(high) <= 31
+            and any(name.split()[0] == after[2] for name in request.data["months"])):
+        return SPELLER.ordinal(digits, Features(gender=MASCULINE, case=_case(span, context)), request)
     rank = rank_noun(context)
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
-    noun = counted_noun(context)
+    noun = counted_noun(after)
     if noun is not None and digits in ("1", "2"):
         raise DeclinedReading("one and two follow the noun that they count")
     features = agreement(span, context)
@@ -469,6 +515,11 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
     if bounded_integer(fields["numerator"]) == 2 and context.after and _is_arabic_word(context.after[0]):
         words = words[:-1]
     return _signed(words, fields["sign"], context.request)
+
+
+def join_range(span: Span, following: Span, range_word: str) -> tuple[Span, Span]:
+    """The range word leads the second span, so `_case` reads that span in the genitive (Ryding 2005, pp. 366-367)."""
+    return replace(span, end=following.start, trail=" "), replace(following, lead=f"{range_word} ")
 
 
 def speak_range(span: Span, context: SpanContext) -> str:
@@ -529,7 +580,8 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     amount = span.fields["amount"]
     if isinstance(amount, tuple) or amount["fraction"] or amount["sign"]:
         raise DeclinedReading("no cited reading for a range, a dimension, a sign or a fraction of a unit")
-    if span.fields["unit"] == "كم" and counted_noun(context) and context.after[0] not in request.data["prepositions"]:
+    if (span.fields["unit"] == "كم" and counted_noun(context.after)
+            and context.after[0] not in request.data["prepositions"]):
         raise DeclinedReading("كم before an indefinite noun is the question word 'how many' (Ryding 2005, pp. 402-403)")
     forms = request.data["units"][span.fields["unit"]]
     words = counted(amount["integer"], forms, agreement(span, context, GrammaticalGender(forms["gender"])), request)
@@ -574,23 +626,43 @@ def _hour(face: int, request: Request) -> str:
 
 
 def speak_time(span: Span, context: SpanContext) -> str:
+    fields = span.fields
+    if fields["second"] is not None:
+        raise DeclinedReading("no cited reading for seconds")
+    return clock(fields["hour"], fields["minute"], fields["period"], context.request)
+
+
+def clock(written_hour: int, minute: int, period: str | None, request: Request) -> str:
     """Quarters, thirds and halves of the hour, with إلا before the next hour for 40 and 45 minutes, and other
     minutes as a feminine ordinal after والدقيقة (Ryding 2005, pp. 361-362). A written day period, or an hour
     from 13 to 23, reads the CLDR day period of the hour."""
-    request = context.request
-    fields = span.fields
-    hour, minute = day_hour(fields["hour"], fields["period"]), fields["minute"]
-    if fields["second"] is not None:
-        raise DeclinedReading("no cited reading for seconds")
+    hour = day_hour(written_hour, period)
     phrases = request.data["minute_phrases"]
     template = phrases.get(str(minute), phrases["other"])
     next_hour = _hour(twelve_hour(hour + 1), request) if "{next_hour}" in template else ""
     words = template.format(hour=_hour(twelve_hour(hour), request) if "{hour}" in template else "",
                             next_hour=next_hour,
                             minute=_clock_ordinal(str(minute), request) if "{minute}" in template else "")
-    if hour == 0 or fields["period"] is not None or hour >= 13:
+    if hour == 0 or period is not None or hour >= 13:
         words += " " + _day_period(hour, request)
     return words
+
+
+@dataclass(frozen=True)
+class Clock(TimeClock):
+    """The core time, where an hour with no minutes before ص or م needs الساعة, as `hour_after` gives: `المسافة 7 م`
+    is the metre."""
+
+    def _times(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        for span in super()._times(text, tokens, request):
+            written = text[span.start:span.end]
+            if not (written.endswith(data["short_periods"]) and written[:-1].strip().isdigit()):
+                yield span
+                continue
+            before = clause_window(text, context_words(tokens), span.start, span.end, -1, 2)
+            if hour_after(before, written[:-1].strip(), (written[-1],), data):
+                yield span
 
 
 @dataclass(frozen=True)
@@ -667,7 +739,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES + LECT_VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], SHARED["time_clock"], Money(),
+    recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], Clock(), Money(),
                  SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"],
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
@@ -683,6 +755,7 @@ LANGUAGE = LanguageSpec(
     numeral_systems=frozenset(),
     context_words=True,
     attach=attach,
+    join_range=join_range,
     options={
         "date_order": frozenset({"DMY", "MDY"}),
         "clock": frozenset({"12h"}),

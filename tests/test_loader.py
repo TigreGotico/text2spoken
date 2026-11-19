@@ -156,7 +156,6 @@ NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
     ("uk-UA", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
     ("bg-BG", ("Баланс: -50 €", "Баланс: € -50", "Баланс: -1 000 €")),
     ("he-IL", ("יתרה: -50 ₪", "יתרה: ₪ -50")),
-    ("ja-JP", ("残高: -50 €", "残高: € -50")),
     ("pl-PL", ("Saldo: -50 €", "Saldo: € -50")),
 ) for text in texts]
 
@@ -164,6 +163,30 @@ NO_FILE_KEPT_MONEY = [(tag, text, text) for tag, texts in (
 @pytest.mark.parametrize(("tag", "text", "expected"),
                          NO_FILE_MINUS + NO_FILE_KEPT_MINUS + NO_FILE_LINE_BREAKS + NO_FILE_KEPT_MONEY)
 def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+# In ast the full stop groups (CLDR 49 numbers.json, `symbols-numberSystem-latn` group `.`), so `3.5` is no number.
+# A minus and digits after a number and a space may mark a range or a code, as in `5 -10`, so the number before them
+# stays as written too, whether or not a number of the locale covers the digits. A minus at the start of the next
+# line is no range, and neither is a minus before a letter, so `5` reads there; ovos-number-parser owns the word.
+NO_FILE_NUMBER_BEFORE_MINUS = [
+    ("ast-ES", "5 -3.5", "5 -3.5"),
+    ("ast-ES", "de 5 \u22123.5 graos", "de 5 \u22123.5 graos"),
+    ("ast-ES", "5\t-3.5", "5\t-3.5"),
+    ("ast-ES", "5 -1.2.3", "5 -1.2.3"),
+    ("uk-UA", "від 5 -3.5 градусів", "від 5 -3.5 градусів"),
+    ("ast-ES", "5\n-3.5", "{5}\n-3.5"),
+    ("ast-ES", "5 -abc", "{5} -abc"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_NUMBER_BEFORE_MINUS)
+def test_a_number_before_a_minus_and_digits_stays_as_written(tag, text, expected):
+    from ovos_number_parser import pronounce_number
+
+    expected = expected.replace("{5}", pronounce_number(5, tag))
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
 
@@ -185,7 +208,6 @@ NO_FILE_RBNF_DECIMALS = [
     ("th-TH", "th", "spellout-cardinal", "."),
     ("sw-TZ", "sw", "spellout-cardinal", "."),
     ("vi-VN", "vi", "spellout-cardinal", ","),
-    ("ja-JP", "ja", "spellout-cardinal", "."),
     ("km-KH", "km", "spellout-numbering", "."),
     ("hy-AM", "hy", "spellout-cardinal", ","),
     ("ka-GE", "ka", "spellout-cardinal", ","),
@@ -274,22 +296,36 @@ def test_a_say_as_cardinal_reads_a_decimal_of_a_language_with_no_file(tag, text)
     assert normalize(text, tag, say_as=SayAs(interpret_as="cardinal")) == expected
 
 
-# The marks of each locale come from CLDR 49 numbers.json. hi writes 3,500 (group `,`), nb 3,5 (decimal `,`, group
-# no-break space), tr 1.234,5 (decimal `,`, group `.`), and sw-CD 3,5 where sw writes 3.5. A number with one full
-# stop or comma and three digits after it, which the CLDR root locale (1,234.5) reads in the other role, stays as
-# written: `1.234` in tr and `3,500` in nb. A full stop where the locale has no such mark splits the number, so
-# `3.5` stays as written in nb.
+def _parser_words(tag: str, number: str) -> str:
+    """ovos-number-parser called directly, with as many places as the written fraction has digits."""
+    from ovos_number_parser import pronounce_number
+
+    places = len(number.partition(".")[2])
+    value = float(number) if places else int(number)
+    return " ".join(pronounce_number(value, tag, places=places).split())
+
+
+# The marks of each locale come from CLDR 49 numbers.json, `symbols-numberSystem-latn`. hi writes 3,500 (group `,`),
+# nb 3,5 (decimal `,`, group no-break space), tr, da and vi 1.234,5 (decimal `,`, group `.`), and sw-CD 3,5 where sw
+# writes 3.5. Each mark reads in the role that the locale gives it, as in a language file: `1.234` is a group in tr
+# and `3,500` a decimal in nb. A full stop where the locale has no such mark splits the number, so `3.5` stays as
+# written in nb. da reads through RBNF (RBNF_HELD), in spellout-cardinal-neuter, the rule set that the 0 rule of its
+# spellout-cardinal names.
 NO_FILE_MARKS = [
     ("hi-IN", "3,500", _rbnf_words("hi", "spellout-cardinal", "3500")),
     ("hi-IN", "1,234.5", _rbnf_words("hi", "spellout-cardinal", "1234.5")),
     ("sw-TZ", "3,500", _rbnf_words("sw", "spellout-cardinal", "3500")),
     ("sw-CD", "3,5", _rbnf_words("sw", "spellout-cardinal", "3.5")),
-    ("sw-CD", "3,500", "3,500"),
+    ("sw-CD", "3,500", _rbnf_words("sw", "spellout-cardinal", "3.500")),
     ("vi-VN", "1.234.567", _rbnf_words("vi", "spellout-cardinal", "1234567")),
-    ("vi-VN", "1.234", "1.234"),
-    ("nb-NO", "3,500", "3,500"),
+    ("vi-VN", "1.234", _rbnf_words("vi", "spellout-cardinal", "1234")),
+    ("vi-VN", "10.000", _rbnf_words("vi", "spellout-cardinal", "10000")),
+    ("da-DK", "10.000", _rbnf_words("da", "spellout-cardinal-neuter", "10000")),
+    ("nb-NO", "3,500", _parser_words("nb-NO", "3.500")),
+    ("nb-NO", "2,500", _parser_words("nb-NO", "2.500")),
     ("nb-NO", "3.5", "3.5"),
-    ("tr-TR", "1.234", "1.234"),
+    ("tr-TR", "1.234", _parser_words("tr-TR", "1234")),
+    ("tr-TR", "10.000", _parser_words("tr-TR", "10000")),
     ("hi-IN", "3.0", "3.0"),
     ("nb-NO", "3,0", "3,0"),
     ("hi-IN", "03.5", "03.5"),
@@ -303,6 +339,61 @@ NO_FILE_MARKS = [
 def test_a_language_with_no_file_reads_the_marks_of_its_locale(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
+
+
+# CLDR 49 gives hi, ta and en-IN the pattern `#,##,##0.###` (`decimalFormats-numberSystem-latn`, standard), and hi
+# the same pattern for its Deva digits: three digits last, then groups of two. Groups of three read too.
+# ta-MY writes `#,##0.###`, and a head of three digits or a group of three before a group of two is no
+# grouping of either pattern. Words: unicode_rbnf hi and ta; en-IN "one lakh" from Wikipedia, "Indian numbering
+# system": "1,00,000 (one lakh)".
+NO_FILE_INDIAN_GROUPING = [
+    ("hi-IN", "1,00,000", _rbnf_words("hi", "spellout-cardinal", "100000")),
+    ("hi-IN", "12,34,567", _rbnf_words("hi", "spellout-cardinal", "1234567")),
+    ("hi-IN", "1,234,567", _rbnf_words("hi", "spellout-cardinal", "1234567")),
+    ("hi-IN", "\u0967,\u0966\u0966,\u0966\u0966\u0966", _rbnf_words("hi", "spellout-cardinal", "100000")),
+    ("hi-IN", "1,00,000.5", _rbnf_words("hi", "spellout-cardinal", "100000.5")),
+    ("ta-IN", "1,00,000", _rbnf_words("ta", "spellout-cardinal", "100000")),
+    ("en-IN", "1,00,000", "one lakh"),
+    ("hi-IN", "123,45,678", "123,45,678"),
+    ("hi-IN", "1,23,456,789", "1,23,456,789"),
+    ("ta-MY", "1,00,000", "1,00,000"),
+    ("en-GB", "1,00,000", "1,00,000"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_INDIAN_GROUPING)
+def test_a_number_reads_in_the_secondary_grouping_of_its_locale(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+# ovos-number-parser says the decimal mark of cs, uk, az and ast with the word for a full stop, where CLDR 49 gives
+# each the decimal comma: English Wiktionary, tečka "period, full stop", крапка "full stop, period", nöqtə "period",
+# "dot", "full stop". `RBNF_HELD_DECIMALS` reads their decimals through the x.x rule of RBNF: cs.xml `←← čárka →→`,
+# uk.xml `←← кома →→`, az.xml `←← tam →→`. RBNF has no ast rules, so `1,5` stays as written there.
+HELD_DECIMALS = [
+    ("cs-CZ", "1,5", _rbnf_words("cs", "spellout-cardinal-masculine", "1.5")),
+    ("cs-CZ", "-1,5", _rbnf_words("cs", "spellout-cardinal-masculine", "-1.5")),
+    ("uk-UA", "1,5", _rbnf_words("uk", "spellout-cardinal-masculine", "1.5")),
+    ("az-AZ", "1,5", _rbnf_words("az", "spellout-cardinal", "1.5")),
+    ("ast-ES", "1,5", "1,5"),
+    ("ast-ES", "-1,5", "-1,5"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), HELD_DECIMALS)
+def test_a_decimal_that_the_parser_reads_with_the_full_stop_word_reads_through_rbnf(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+def test_a_held_decimal_language_reads_its_cardinals_through_the_parser():
+    from text2spoken.core.spellers import RBNF_HELD_DECIMALS, OvosNumberSpeller
+
+    assert RBNF_HELD_DECIMALS == {"ast", "az", "cs", "uk"}
+    for code in RBNF_HELD_DECIMALS:
+        assert isinstance(select(code)[1].spellers[Form.CARDINAL], OvosNumberSpeller)
+    assert normalize("15", "cs") == _parser_words("cs-CZ", "15")
 
 
 NO_MINUS_RULE = ("ko", "zu")
@@ -357,7 +448,7 @@ def test_the_languages_without_the_rules_are_listed():
     assert [code for code in parser if raises(1.5, code)] == list(NO_PARSER_DECIMAL)
 
 
-@pytest.mark.parametrize("code", NO_MINUS_RULE + NO_PARSER_MINUS)
+@pytest.mark.parametrize("code", [code for code in NO_MINUS_RULE + NO_PARSER_MINUS if language_file(code) is None])
 def test_a_language_with_no_minus_word_keeps_the_minus(code):
     for text in ("-5", "x -5 y", "-3.5", "-3,5"):
         assert normalize(text, code) == text

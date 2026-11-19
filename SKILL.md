@@ -37,6 +37,8 @@ The result is `Doctor Smith paid three pounds and fifty pence for two tickets.`
 - `el` reads cardinals in the gender and the case of their noun, a minus, percentages, common fractions and numeric dates. Money, measures, decimals and ordinals stay as written. A number with no known noun takes the neuter.
 - The `EMOJI` and `LETTERS` forms read emoji and runs of capital letters in `en` and `pt`. They are off by default. Turn one on with `NormalizationParams().plus(Form.EMOJI)`.
 - `it` reads no date, time or year in figures, so they stay as written.
+- `ja` reads what a language with no file reads, and the decimal mark reads 点: `3.5` reads "三点五". A number next to a kanji or a kana, as in `3個`, stays as written, because the phonemizer pyopenjtalk-plus reads it with the sound of its counter.
+- `ko` reads cardinals and decimals in the Sino-Korean numerals, with a minus. A say-as ordinal reads the native ordinal (셋째), and a say-as date reads 유월 and 시월. A number before a counter reads in the numerals of the counter (스물세 개, 삼 층). Money, percentages, measures and numeric dates stay as written.
 - `zh` reads a number next to the word that follows it, as Chinese writes it. Before a measure word 2 reads 两, and a year reads digit by digit. A time stays as written, and so does a number whose reading the next word does not settle, as in `2人`.
 - `ca` reads no date or time in figures, so they stay as written. A year reads as a cardinal: `L'any 2024` reads "L'any dos mil vint-i-quatre". A number before a noun reads in the masculine, and only a unit or a currency gives it another gender.
 - A form that the library cannot read stays as written, with a WARNING log. `strict=True` raises `UnreadFormError`.
