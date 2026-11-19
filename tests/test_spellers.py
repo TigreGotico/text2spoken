@@ -303,6 +303,16 @@ def test_ovos_speller_declines_an_ordinal_that_the_library_writes_in_digits(gend
         OvosNumberSpeller(OVOS_GENDER).ordinal("8901234567890", Features(), request(gendered, "el"))
 
 
+def test_ovos_speller_declines_an_ordinal_that_the_library_writes_as_the_cardinal(gendered, monkeypatch):
+    """The cardinal is no ordinal: Turkish adds -inci, as "yüzüncü", "hundredth" (Wiktionary)."""
+    import ovos_number_parser
+
+    monkeypatch.setattr(ovos_number_parser, "pronounce_ordinal", lambda number, lang, **kwargs: "iki yüz")
+    monkeypatch.setattr(ovos_number_parser, "pronounce_number", lambda number, lang, **kwargs: "iki yüz")
+    with pytest.raises(DeclinedReading, match="the cardinal for the ordinal of 3 digits in tr-TR"):
+        OvosNumberSpeller(OVOS_GENDER).ordinal("200", Features(), request(gendered, "tr-TR"))
+
+
 def test_rbnf_speller_falls_back_case_then_animacy_then_numeral_system_then_bare(gendered):
     table = {Features(): "a", Features(gender=F): "f", Features(gender=F, case="genitive"): "fg",
              Features(gender=F, animacy="animate"): "fa"}
