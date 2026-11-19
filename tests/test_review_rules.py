@@ -814,7 +814,8 @@ def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang)
     ("Het kost € 12 000", "it-IT"), ("Het kost € 12 000.", "it-IT"), ("Het kost € 12 000.", "it-SM"),
     ("+34 481.312 50 2x.", "de-DE"), ("+34 481.312 50 2x.", "es-ES"), ("+34 481.312 50 2x.", "pt-PT"),
     ("091 081-95 3/7", "de-DE"), ("+49 914-622 56 329:47", "en-GB"), ("+351 514 579.16 091 36", "en-GB"),
-    ("+1 633-427 864 3D", "de-AT"), ("Fax: 83:044 5226 470-2 487", "de-DE"),
+    ("+1 633-427 864 3D", "de-AT"), ("Fax: 83:044 5226 470-2 487", "de-DE"), ("174 01-426 534 589", "en-GB"),
+    ("Fax: (491:62 7 6-8181-7 964)", "es-MX"),
 ])
 def test_a_number_grouped_with_spaces_reads_the_same_on_a_second_pass(text, lang):
     """Section 11. No span reads one group of a number grouped with spaces, so no group is left for a second pass.
