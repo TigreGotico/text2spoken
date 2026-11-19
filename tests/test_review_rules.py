@@ -468,7 +468,8 @@ def test_a_digit_next_to_a_span_is_no_joiner():
 def test_a_space_between_groups_of_three_digits_joins_them():
     """Section 2.1 and BIPM, SI Brochure, 9th edition, section 5.4.4: digits "may be divided into groups of three by
     a space", so the space joins the groups as a mark does. A space next to a group of another length joins
-    nothing, and nor does a space after a digit and the mark of another number, as in `1.6 125`."""
+    nothing, and nor does a space after a code, as in `K1 500`, or after a digit and the mark of another number,
+    as in `1.6 125`."""
     span = Span(0, 2, Form.CARDINAL, FrozenMap())
     sides = _sides(span, {}, {})
     assert _joined("12 000", span, bytearray(6), [None] * 6, sides, _group_spaces("12 000"))
@@ -477,6 +478,7 @@ def test_a_space_between_groups_of_three_digits_joins_them():
     assert list(_group_spaces("0800 123 456")) == [0] * 12
     assert list(_group_spaces("1 000 000-2")) == [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
     assert list(_group_spaces("1.6 125")) == [0] * 7
+    assert list(_group_spaces("K1 500")) == [0] * 6
     assert list(_group_spaces("3.537,03 176.851")) == [0] * 16
 
 
