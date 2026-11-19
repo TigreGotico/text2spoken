@@ -2,10 +2,14 @@
 17.5), over forty language tags from the major language families.
 
 Each expected value comes from the writer of ovos-number-parser or from a CLDR RBNF rule set of unicode_rbnf, which
-the test calls directly. No expected value comes from text2spoken."""
+the test calls directly, with the cited words of data/rbnf_corrections.json. No expected value comes from text2spoken
+code."""
+import json
 import logging
 import pkgutil
+import re
 import warnings
+from pathlib import Path
 
 import ovos_number_parser
 import pytest
@@ -54,8 +58,14 @@ def code(tag: str) -> str:
     return tag.split("-")[0]
 
 
+CORRECTIONS = {(row["language"], row["wrong"]): row["right"] for row in json.loads(
+    (Path(__file__).parents[1] / "text2spoken" / "data" / "rbnf_corrections.json").read_text(encoding="utf-8"))[
+    "corrections"]}
+
+
 def rbnf(tag: str, number: int, rule_set: str) -> str:
-    return RbnfEngine.for_language(code(tag)).format_number(number, ruleset_names=[rule_set]).text_by_ruleset[rule_set]
+    text = RbnfEngine.for_language(code(tag)).format_number(number, ruleset_names=[rule_set]).text_by_ruleset[rule_set]
+    return "".join(CORRECTIONS.get((code(tag), part), part) for part in re.split("([ \u00a0\u200b]+)", text))
 
 
 def digit_word(tag: str, digit: str) -> str:

@@ -54,7 +54,7 @@ The varieties also differ in the currency of `$`, the reading of `#`, the readin
 
 Its rules cite the RAE: the Diccionario panhispánico de dudas and the DLE. The long-scale words from `cuatrillón` to `sextillón` cite Wiktionary es. The docstring of [`es.py`](../../text2spoken/lang/es.py) names the entry of each rule.
 
-Of the 155 test rows in `tests/data/es.tsv`, 143 name a source for their reading. The other 12 are marked silver: 11 of them say that no source was found for the reading. Two of the silver test rows, es-059 and es-091, name no source at all. No native speaker has checked any row.
+Of the 157 test rows in `tests/data/es.tsv`, 145 name a source for their reading. The other 12 are marked silver: 11 of them say that no source was found for the reading. Two of the silver test rows, es-059 and es-091, name no source at all. No native speaker has checked any row.
 
 ## Limits
 
