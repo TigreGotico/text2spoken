@@ -44,17 +44,19 @@ _OPENERS = {")": "(", "]": "[", "}": "{"}
 def _marked(text: str, start: int, end: int, token: re.Match, tlds: frozenset[str]) -> bool:
     """Whether `text[start:end]`, a part of `token` outside its `[[...]]` blocks, holds an address marker: `@`
     between two characters that are not spaces, `www.`, `://`, or a full stop followed by a label of `tlds` that no
-    letter or digit follows."""
+    letter or digit follows. A domain label is never empty, so a full stop after a full stop or `…` is no marker, as
+    in `sei...eu`."""
     if (text.find("@", max(start, token.start() + 1), min(end, token.end() - 1)) != -1
             or text.find("://", start, end) != -1 or _WWW_START.search(text, start, end) is not None):
         return True
     dot = text.find(".", start, end)
     while dot != -1:
-        for tld in tlds:
-            after = dot + 1 + len(tld)
-            if text.startswith(tld, dot + 1, end) and (after == len(text) or not (is_letter(text[after])
-                                                                                  or is_digit(text[after]))):
-                return True
+        if dot == start or text[dot - 1] not in ".…":
+            for tld in tlds:
+                after = dot + 1 + len(tld)
+                if text.startswith(tld, dot + 1, end) and (after == len(text) or not (is_letter(text[after])
+                                                                                      or is_digit(text[after]))):
+                    return True
         dot = text.find(".", dot + 1, end)
     return False
 
