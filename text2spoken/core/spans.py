@@ -210,9 +210,11 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     of the say-as that its format refuses (`ResolvedSayAs.fits`) is no candidate, and nor is a span of the say-as that
     cuts a span of the analysis with no say-as, claimed, kept as written or waiting: a URL, an e-mail address or a
     phone number reads whole, as it reads with no say-as. Nor is a say-as span over the word next to a span that the
-    plain reading keeps as written, because that word is the evidence that keeps it. A say-as span that waits holds its
-    characters only against the other say-as spans: before the other recognizers claim, its characters are free, so
-    the other text reads as it reads with no say-as. So with `digits`, `Flight 12 at 10:30` reads the time.
+    plain reading keeps as written, because that word is the evidence that keeps it. With `telephone`, a say-as span
+    that holds the kept span whole reads it, as `(212) 555-0199`, where the plain reading keeps `555-0199`. A say-as
+    span that waits holds its characters only against the other say-as spans: before the other recognizers claim, its
+    characters are free, so the other text reads as it reads with no say-as. So with `digits`, `Flight 12 at 10:30`
+    reads the time.
 
     An emoji sequence is one character to every other form, with `EMOJI` on or off, so a text reads as it reads with
     `😀` in place of the sequence (design section 4.7). The recognizers read the view of `emoji_view`, in which the
@@ -250,7 +252,15 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         for unit in units:
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
         evidence = _evidence_words(text, tokens, held)
-        first = [span for span in first if not (_cuts(span, unit_at) or any(evidence[span.start:span.end]))]
+        telephone = say_as.value == "telephone"
+        fitting = []
+        for span in first:
+            # The spans kept as written whose evidence word the span holds. A telephone number holds its own groups.
+            keeps = [written for spans in evidence[span.start:span.end] for written in spans
+                     if not (telephone and span.start <= written.start and written.end <= span.end)]
+            if not (_cuts(span, unit_at) or keeps):
+                fitting.append(span)
+        first = fitting
     say_as_count = len(first)
     candidates = [*first, *found(recognizers, others)]
     before = {end: start for start, end in sequences}
@@ -312,17 +322,19 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
     return tuple(sorted(claimed, key=lambda s: s.start)), (*claimed, *held), held
 
 
-def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span]) -> bytearray:
-    """The words next to each span that stays as written: a recognizer reads them as the evidence that keeps the
-    span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4` in `3/4 kg`."""
-    marked = bytearray(len(text))
+def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span]) -> list[tuple[Span, ...]]:
+    """For each character, the spans that stay as written next to the word that holds it: a recognizer reads that
+    word as the evidence that keeps the span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4`
+    in `3/4 kg`."""
+    marked: list[tuple[Span, ...]] = [()] * len(text)
     words = [token for token in tokens if context_word(token.text) is not None]
     starts = [token.start for token in words]
     for span in held:
         before, after = bisect_left(starts, span.start) - 1, bisect_left(starts, span.end)
         for word in (words[before] if before >= 0 else None, words[after] if after < len(words) else None):
             if word is not None and (word.end <= span.start or word.start >= span.end):
-                marked[word.start:word.end] = b"\x01" * (word.end - word.start)
+                for position in range(word.start, word.end):
+                    marked[position] += (span,)
     return marked
 
 

@@ -77,7 +77,7 @@ The file always reads the comma as the decimal mark and the full stop as the gro
 
 The rules cite the advice pages of the Nederlandse Taalunie (taaladvies.net), the advice pages of Genootschap Onze Taal and the Dutch Wiktionary. Currency names, unit names and the names of symbols and emoji come from CLDR 49. The docstring of [`nl.py`](../../text2spoken/lang/nl.py) quotes the page of each rule.
 
-Each of the 166 rows in `tests/data/nl.tsv` cites a source. 35 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Each of the 168 rows in `tests/data/nl.tsv` cites a source. 35 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 ## Limits
 
@@ -104,4 +104,4 @@ The file reads no ranges, dates, times, telephone numbers, identifiers, words in
 | `Ik sprak Mr. Smith.` | `nl-NL` | stays as written | `Mr.` with a capital is also the English title, so only the lowercase `mr.` reads "meester". |
 
 ---
-[← Italian](it.md) · [Home](../index.md) · [Portuguese →](pt.md)
+[← Korean](ko.md) · [Home](../index.md) · [Portuguese →](pt.md)

@@ -32,10 +32,8 @@ NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw", "bn-IN"})
 """Tags with no writer of ovos-number-parser and no RBNF locale: no word for a digit, so `digits`, `telephone` and
 `characters` decline to the plain reading."""
 
-NO_ORDINAL = NO_NUMBERS | {"ko-KR", "cy-GB", "is-IS"}
-"""Tags whose say-as `ordinal` declines. RBNF `ko` has ordinal rule sets for the native and the Sino-Korean numbers
-and none with no qualifier, so the markup does not choose one; RBNF `cy` and `is` have no ordinal rule set, and no
-writer reads them."""
+NO_ORDINAL = NO_NUMBERS | {"cy-GB", "is-IS"}
+"""Tags whose say-as `ordinal` declines. RBNF `cy` and `is` have no ordinal rule set, and no writer reads them."""
 
 LETTER_NAMES = frozenset({"en-US", "pt-PT"})
 """Tags whose language file has a `letter_names` table."""
@@ -84,6 +82,14 @@ def spelled(tag: str, digits: str) -> str:
     return " ".join(digit_word(tag, digit) for digit in digits)
 
 
+def native_ordinal(number: int) -> str:
+    """The Korean native ordinal of RBNF `spellout-ordinal-native`. The native numerals end at 99, so 100 and up have
+    no native ordinal, and the rule set reads none for the test."""
+    if number > 99:
+        raise NoRuleForNumberError(f"no native ordinal of {number}")
+    return rbnf("ko-KR", number, "spellout-ordinal-native")
+
+
 ORDINALS = {
     **{tag: lambda number, tag=tag: pronounce_ordinal(number, tag)
        for tag in ("gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "fa-IR",
@@ -92,12 +98,13 @@ ORDINALS = {
     "el-GR": lambda number: rbnf("el-GR", number, "spellout-ordinal-neuter"),
     "da-DK": lambda number: rbnf("da-DK", number, "spellout-ordinal-common"),
     "hi-IN": lambda number: rbnf("hi-IN", number, "spellout-ordinal-masculine"),
+    "ko-KR": native_ordinal,
     **{tag: lambda number, tag=tag: rbnf(tag, number, "spellout-ordinal")
        for tag in ("zh-CN", "ja-JP", "sw-KE", "vi-VN", "ta-IN")},
 }
 """The source of the ordinal of each tag that no language file reads with an ordinal verbalizer. A language with a
 writer reads through it, as it reads its cardinals; `da` reads its cardinals through RBNF (`RBNF_HELD`), so its
-ordinals too. The Greek file reads a number with no noun in the neuter (`el.py`), and the Arabic file reads its
+ordinals too. The Korean file reads the native ordinal (`ko.py`). The Greek file reads a number with no noun in the neuter (`el.py`), and the Arabic file reads its
 default gender, the masculine (`ar.py`). With no gender, RBNF `hi` reads the masculine and RBNF `da` the common
 gender: neither has an ordinal rule set with no gender."""
 
@@ -136,13 +143,13 @@ def test_a_digit_reading_writes_zero_as_the_plain_reading_does(tag):
 
 
 @pytest.mark.parametrize("tag", [tag for tag in READ if tag != "fr-FR"])
-@pytest.mark.parametrize("text", ["912 345 678", "555-0199", "3981900"])
+@pytest.mark.parametrize("text", ["912 345 678", "555-0199", "3981900", "(212) 555-0199", "212 555-0199"])
 def test_a_telephone_number_reads_digit_by_digit(tag, text):
     """W3C Note, section 3.3: the telephone format is processor specific; each group reads digit by digit, as in
     the `en` and `pt` files, and the groups stay in the order the text writes them. The French file reads a group of
-    an even length in pairs, by the numbering plan of France (`fr.py`)."""
+    an even length in pairs, by the numbering plan of France (`fr.py`). An area code in brackets is a group."""
     spoken = say(text, tag, "telephone")
-    assert spoken == spelled(tag, text.replace(" ", "").replace("-", ""))
+    assert spoken == spelled(tag, "".join(char for char in text if char.isdigit()))
     assert reads_again_the_same(spoken, tag)
 
 
@@ -162,14 +169,17 @@ NO_PLUS = [tag for tag in READ if code(tag) not in {"en", "pt", "de", "fr", "es"
 
 
 @pytest.mark.parametrize("tag", NO_PLUS)
-def test_a_country_code_reads_without_a_plus_that_the_language_has_no_word_for(caplog, tag):
+@pytest.mark.parametrize("text,country_code", [("+351 912 345 678", "351"), ("+1 (212) 555-0199", "1")])
+def test_a_country_code_reads_without_a_plus_that_the_language_has_no_word_for(caplog, tag, text, country_code):
+    """A country code before an area code in brackets is part of the phone number, as in `+1 (212) 555-0199`."""
     with caplog.at_level(logging.WARNING, logger="text2spoken"):
-        spoken = say("+351 912 345 678", tag, "telephone")
-    assert spoken == spelled(tag, "351912345678")
+        spoken = say(text, tag, "telephone")
+    assert spoken == spelled(tag, "".join(char for char in text if char.isdigit()))
     records = [record for record in caplog.records if "+" in record.getMessage()]
-    assert len(records) == 1 and records[0].levelno == logging.WARNING and "351" in records[0].getMessage()
+    assert len(records) == 1 and records[0].levelno == logging.WARNING
+    assert f"country code {country_code};" in records[0].getMessage()
     with pytest.raises(UnreadFormError):
-        say("+351 912 345 678", tag, "telephone", NormalizationParams(strict=True))
+        say(text, tag, "telephone", NormalizationParams(strict=True))
 
 
 NO_LETTER_NAMES = [tag for tag in READ if tag not in LETTER_NAMES]
