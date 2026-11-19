@@ -374,6 +374,10 @@ WRITER_GENDERS = FrozenMap({GrammaticalGender.MASCULINE: "masculine", Grammatica
                             GrammaticalGender.NEUTER: "neutral"})
 """The `gender` argument of ovos-number-parser for each gender that it reads."""
 
+NEUTER_READS_MASCULINE = frozenset({"ro"})
+"""Languages whose neuter ordinal is the masculine one, which ovos-number-parser reads with no article in the neuter,
+as Romanian "al treilea", masculine and neuter (Wiktionary, "treilea")."""
+
 
 def writer_ordinals(tag: str) -> tuple[NumberSpeller | None, frozenset[GrammaticalGender]]:
     """The writer ordinal speller, or None when the writer reads no ordinal of 1, and its genders: those whose
@@ -394,8 +398,10 @@ def writer_ordinals(tag: str) -> tuple[NumberSpeller | None, frozenset[Grammatic
     masculine = readings(GrammaticalGender.MASCULINE)
     others = frozenset(gender for gender in WRITER_GENDERS
                        if gender is not GrammaticalGender.MASCULINE and readings(gender) != masculine)
-    return OvosNumberSpeller(WRITER_GENDERS), (others | {GrammaticalGender.MASCULINE}) if others else frozenset()
-
+    gender_arg = WRITER_GENDERS
+    if tag.split("-")[0] in NEUTER_READS_MASCULINE:
+        gender_arg = {**WRITER_GENDERS, GrammaticalGender.NEUTER: "masculine"}
+    return OvosNumberSpeller(gender_arg), (others | {GrammaticalGender.MASCULINE}) if others else frozenset()
 
 
 def rbnf_ordinals(locale: str) -> dict[Features, str]:

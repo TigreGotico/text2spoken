@@ -232,6 +232,17 @@ def test_the_default_gender_chooses_the_gender_of_the_writer_ordinal(tag, number
     assert say(str(number), tag, "ordinal") == " ".join(pronounce_ordinal(number, tag).replace(",", " ").split())
 
 
+@pytest.mark.parametrize("number, gender, expected", [
+    ("2", GrammaticalGender.MASCULINE, "al doilea"), ("2", GrammaticalGender.NEUTER, "al doilea"),
+    ("2", GrammaticalGender.FEMININE, "a doua"), ("3", GrammaticalGender.MASCULINE, "al treilea"),
+    ("3", GrammaticalGender.NEUTER, "al treilea"), ("3", GrammaticalGender.FEMININE, "a treia")])
+def test_a_romanian_neuter_ordinal_reads_the_masculine(number, gender, expected):
+    """Wiktionary, "doilea": "al doilea" m or n, feminine "a doua"; "treilea": "al treilea" m or n, feminine
+    "a treia"."""
+    params = NormalizationParams(default_gender=FrozenMap({"ro": gender}))
+    assert say(number, "ro-RO", "ordinal", params) == expected
+
+
 def test_a_language_whose_writer_reads_genders_declares_them():
     """Polish "trzeci", "trzecia", "trzecie"; Galician "terceiro", "terceira"; Turkish "üçüncü" in every gender."""
     assert supports("pl-PL").genders == {GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE,
