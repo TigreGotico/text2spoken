@@ -15,10 +15,12 @@ right after it, alone or after one space, and the counter reads after one space,
 스물세 개. The longest counter counts, so that `3개월` is no 개, and the Hangul after the counter must be empty or start with a
 word of `counter_followers`; it stays as written after the counter, so that `3명이` reads 세 명이. Any other Hangul right
 after the number keeps the number as written, as for a language with no file, and so does Hangul right before it, as
-`25` in `9월25일` and `3` in `제3`. A range mark that joins the digits of the number to another digit keeps it as written,
-as in `3~4개`; a minus after a range mark is a sign, as for a language with no file (design section 6.1), so `0~-5` reads
-공~마이너스 오. A number before a space and a word that is no counter reads as a plain number. The decimal recognizer claims
-before the cardinal recognizer, so that a decimal after a counter and one mark reads: `3월(50.5)` reads 삼월(오십점오).
+`25` in `9월25일`. The text, not the copy with the space, decides the sign and the range rule of design section 6.1: in
+`7명-5` the minus after 명 is no sign and marks no range, and the line reads 일곱 명-오, as a second pass reads it. A range
+mark that joins the digits of the number to another digit keeps it as written, as in `3~4개`; a minus after a range mark
+is a sign, as for a language with no file (design section 6.1), so `0~-5` reads 공~마이너스 오. A number before a space and a
+word that is no counter reads as a plain number. The decimal recognizer claims before the cardinal recognizer, so that a
+decimal after a counter and one mark reads: `3월(50.5)` reads 삼월(오십점오).
 
 The counter decides the numerals. The Standard Korean Language Dictionary (표준국어대사전) gives each:
 
@@ -80,8 +82,8 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import long_date
 from text2spoken.core.language import LanguageSpec, Request, Variety
-from text2spoken.core.recognizers import (RBNF_DECIMAL, SHARED, OrdinalStop, RbnfCardinal, signed, speak_decimal,
-                                          speak_lexicon, written_shapes)
+from text2spoken.core.recognizers import (_GROUP_SPACES, RBNF_DECIMAL, SHARED, OrdinalStop, RbnfCardinal, _rbnf_spans,
+                                          signed, speak_decimal, speak_lexicon, written_shapes)
 from text2spoken.core.spans import FIELDS, Features, Recognizer, Span, SpanContext
 from text2spoken.core.tokens import Token
 from text2spoken.core.spellers import RbnfSpeller, bounded_integer
@@ -133,9 +135,6 @@ DIGIT_HANGUL = re.compile("([0-9])[가-힣]")
 HOUR = re.compile("[0-9] ?시 ?")
 """An hour, as `3시 ` before `20분`. A minute reads only right after it."""
 
-RANGE_AFTER = re.compile("[~～–-][0-9]")
-"""A range mark and a digit after a number, as `~4` after `3` in `3~4개`."""
-
 RANGE_BEFORE = re.compile("[0-9][~～–-]")
 """A digit and a range mark before a number, as `3~` before `4` in `3~4개`."""
 
@@ -150,7 +149,8 @@ def is_hangul(char: str) -> bool:
 @dataclass(frozen=True)
 class KoCardinal(RbnfCardinal):
     """The core cardinal, with the counter after it in the recognizer name. A number that the core does not find
-    in the text, because a Hangul syllable follows it, is found with that syllable as a space."""
+    in the text, because a Hangul syllable follows it, is found with that syllable as a space. The text decides its
+    sign, and it stays as written beside a minus number only when the text groups it with that number, as in `-5 7명`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         counters = request.data["counters"]
@@ -158,13 +158,20 @@ class KoCardinal(RbnfCardinal):
         spaced, hidden = DIGIT_HANGUL.subn(r"\1 ", text)
         if hidden:
             taken = {position for span in spans for position in range(span.start, span.end)}
-            spans += (span for span in super().find(spaced, tokens, request)
-                      if taken.isdisjoint(range(span.start, span.end)))
+            grouped = {span.end + 1 for span in _rbnf_spans(text, tokens, request)
+                       if span.fields["sign"] and text[span.end:span.end + 1] in _GROUP_SPACES}
+            for span in super().find(spaced, tokens, request):
+                if not taken.isdisjoint(range(span.start, span.end)):
+                    continue
+                sign = span.fields["sign"]
+                if sign and is_hangul(text[span.start - 1:span.start]):
+                    span = replace(span, start=span.start + len(sign), fields=FrozenMap({**span.fields, "sign": ""}))
+                spans.append(span if span.start in grouped else replace(span, keep=False))
             spans.sort(key=lambda span: span.start)
         for span in spans:
             start = span.start + len(span.fields["prefix"])
             rest = text[span.end:]
-            if span.keep or is_hangul(text[start - 1:start]) or RANGE_AFTER.match(text, span.end) \
+            if span.keep or is_hangul(text[start - 1:start]) \
                     or (not span.fields["sign"] and RANGE_BEFORE.fullmatch(text, max(start - 2, 0), start)):
                 yield replace(span, keep=True)
                 continue
@@ -219,7 +226,6 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     kind = request.data["counters"][counter]
     if kind == "month":
         return request.data["months"][int(digits) - 1]
-    # The native numerals end at 99 (아흔아홉).
     speller = NATIVE if kind == "hour" or (kind == "native" and len(digits) < 3) else SPELLER
     return f"{speller.cardinal(digits, Features(), request)} {counter}"
 
