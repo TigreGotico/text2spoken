@@ -298,22 +298,36 @@ def test_a_say_as_cardinal_reads_a_decimal_of_a_language_with_no_file(tag, text)
     assert normalize(text, tag, say_as=SayAs(interpret_as="cardinal")) == expected
 
 
-# The marks of each locale come from CLDR 49 numbers.json. hi writes 3,500 (group `,`), nb 3,5 (decimal `,`, group
-# no-break space), tr 1.234,5 (decimal `,`, group `.`), and sw-CD 3,5 where sw writes 3.5. A number with one full
-# stop or comma and three digits after it, which the CLDR root locale (1,234.5) reads in the other role, stays as
-# written: `1.234` in tr and `3,500` in nb. A full stop where the locale has no such mark splits the number, so
-# `3.5` stays as written in nb.
+def _parser_words(tag: str, number: str) -> str:
+    """ovos-number-parser called directly, with as many places as the written fraction has digits."""
+    from ovos_number_parser import pronounce_number
+
+    places = len(number.partition(".")[2])
+    value = float(number) if places else int(number)
+    return " ".join(pronounce_number(value, tag, places=places).split())
+
+
+# The marks of each locale come from CLDR 49 numbers.json, `symbols-numberSystem-latn`. hi writes 3,500 (group `,`),
+# nb 3,5 (decimal `,`, group no-break space), tr, da and vi 1.234,5 (decimal `,`, group `.`), and sw-CD 3,5 where sw
+# writes 3.5. Each mark reads in the role that the locale gives it, as in a language file: `1.234` is a group in tr
+# and `3,500` a decimal in nb. A full stop where the locale has no such mark splits the number, so `3.5` stays as
+# written in nb. da reads through RBNF (RBNF_HELD), in spellout-cardinal-neuter, the rule set that the 0 rule of its
+# spellout-cardinal names.
 NO_FILE_MARKS = [
     ("hi-IN", "3,500", _rbnf_words("hi", "spellout-cardinal", "3500")),
     ("hi-IN", "1,234.5", _rbnf_words("hi", "spellout-cardinal", "1234.5")),
     ("sw-TZ", "3,500", _rbnf_words("sw", "spellout-cardinal", "3500")),
     ("sw-CD", "3,5", _rbnf_words("sw", "spellout-cardinal", "3.5")),
-    ("sw-CD", "3,500", "3,500"),
+    ("sw-CD", "3,500", _rbnf_words("sw", "spellout-cardinal", "3.500")),
     ("vi-VN", "1.234.567", _rbnf_words("vi", "spellout-cardinal", "1234567")),
-    ("vi-VN", "1.234", "1.234"),
-    ("nb-NO", "3,500", "3,500"),
+    ("vi-VN", "1.234", _rbnf_words("vi", "spellout-cardinal", "1234")),
+    ("vi-VN", "10.000", _rbnf_words("vi", "spellout-cardinal", "10000")),
+    ("da-DK", "10.000", _rbnf_words("da", "spellout-cardinal-neuter", "10000")),
+    ("nb-NO", "3,500", _parser_words("nb-NO", "3.500")),
+    ("nb-NO", "2,500", _parser_words("nb-NO", "2.500")),
     ("nb-NO", "3.5", "3.5"),
-    ("tr-TR", "1.234", "1.234"),
+    ("tr-TR", "1.234", _parser_words("tr-TR", "1234")),
+    ("tr-TR", "10.000", _parser_words("tr-TR", "10000")),
     ("hi-IN", "3.0", "3.0"),
     ("nb-NO", "3,0", "3,0"),
     ("hi-IN", "03.5", "03.5"),
@@ -327,6 +341,61 @@ NO_FILE_MARKS = [
 def test_a_language_with_no_file_reads_the_marks_of_its_locale(tag, text, expected):
     assert normalize(text, tag) == expected
     assert normalize(expected, tag) == expected
+
+
+# CLDR 49 gives hi, ta and en-IN the pattern `#,##,##0.###` (`decimalFormats-numberSystem-latn`, standard), and hi
+# the same pattern for its Deva digits: three digits last, then groups of two. Groups of three read too.
+# ta-MY writes `#,##0.###`, and a head of three digits or a group of three before a group of two is no
+# grouping of either pattern. Words: unicode_rbnf hi and ta; en-IN "one lakh" from Wikipedia, "Indian numbering
+# system": "1,00,000 (one lakh)".
+NO_FILE_INDIAN_GROUPING = [
+    ("hi-IN", "1,00,000", _rbnf_words("hi", "spellout-cardinal", "100000")),
+    ("hi-IN", "12,34,567", _rbnf_words("hi", "spellout-cardinal", "1234567")),
+    ("hi-IN", "1,234,567", _rbnf_words("hi", "spellout-cardinal", "1234567")),
+    ("hi-IN", "\u0967,\u0966\u0966,\u0966\u0966\u0966", _rbnf_words("hi", "spellout-cardinal", "100000")),
+    ("hi-IN", "1,00,000.5", _rbnf_words("hi", "spellout-cardinal", "100000.5")),
+    ("ta-IN", "1,00,000", _rbnf_words("ta", "spellout-cardinal", "100000")),
+    ("en-IN", "1,00,000", "one lakh"),
+    ("hi-IN", "123,45,678", "123,45,678"),
+    ("hi-IN", "1,23,456,789", "1,23,456,789"),
+    ("ta-MY", "1,00,000", "1,00,000"),
+    ("en-GB", "1,00,000", "1,00,000"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_INDIAN_GROUPING)
+def test_a_number_reads_in_the_secondary_grouping_of_its_locale(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+# ovos-number-parser says the decimal mark of cs, uk, az and ast with the word for a full stop, where CLDR 49 gives
+# each the decimal comma: English Wiktionary, tečka "period, full stop", крапка "full stop, period", nöqtə "period",
+# "dot", "full stop". `RBNF_HELD_DECIMALS` reads their decimals through the x.x rule of RBNF: cs.xml `←← čárka →→`,
+# uk.xml `←← кома →→`, az.xml `←← tam →→`. RBNF has no ast rules, so `1,5` stays as written there.
+HELD_DECIMALS = [
+    ("cs-CZ", "1,5", _rbnf_words("cs", "spellout-cardinal-masculine", "1.5")),
+    ("cs-CZ", "-1,5", _rbnf_words("cs", "spellout-cardinal-masculine", "-1.5")),
+    ("uk-UA", "1,5", _rbnf_words("uk", "spellout-cardinal-masculine", "1.5")),
+    ("az-AZ", "1,5", _rbnf_words("az", "spellout-cardinal", "1.5")),
+    ("ast-ES", "1,5", "1,5"),
+    ("ast-ES", "-1,5", "-1,5"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), HELD_DECIMALS)
+def test_a_decimal_that_the_parser_reads_with_the_full_stop_word_reads_through_rbnf(tag, text, expected):
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
+def test_a_held_decimal_language_reads_its_cardinals_through_the_parser():
+    from text2spoken.core.spellers import RBNF_HELD_DECIMALS, OvosNumberSpeller
+
+    assert RBNF_HELD_DECIMALS == {"ast", "az", "cs", "uk"}
+    for code in RBNF_HELD_DECIMALS:
+        assert isinstance(select(code)[1].spellers[Form.CARDINAL], OvosNumberSpeller)
+    assert normalize("15", "cs") == _parser_words("cs-CZ", "15")
 
 
 NO_MINUS_RULE = ("ko", "zu")

@@ -20,24 +20,23 @@ Set up a checkout with the test extra, as [Development](development.md#set-up-an
 
 ## Step 1: see what your language reads now
 
-A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`. A full stop with three digits after it can also be a decimal mark, as the CLDR root locale writes it, so `1.250` stays as written. So does the date:
+A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`, so `1.250` reads. The date stays as written:
 
 ```python
 >>> from text2spoken import normalize, supports
 >>> normalize("Saya punya 3 kucing dan 1.250 buku pada 12/03/2024.", "id")
-'Saya punya tiga kucing dan 1.250 buku pada 12/03/2024.'
+'Saya punya tiga kucing dan seribu dua ratus lima puluh buku pada 12/03/2024.'
 >>> sorted(form.name for form in supports("id").forms)
 ['CARDINAL', 'DECIMAL', 'LEXICON']
 ```
 
-The library also logs a WARNING for each written form that stays as written. In a Python session, these lines appear on stderr:
+The library also logs a WARNING for each written form that stays as written. In a Python session, this line appears on stderr:
 
 ```text stderr
-unread written form '1.250' for id-ID
 unread written form '12/03/2024.' for id-ID
 ```
 
-Each line names a form that a file for the language could read. [Errors and warnings](errors.md#when-a-reading-stays-as-written) explains the log.
+Each such line names a form that a file for the language could read. [Errors and warnings](errors.md#when-a-reading-stays-as-written) explains the log.
 
 ## Step 2: write the smallest file
 
@@ -80,7 +79,7 @@ Each part has one job:
 - `verbalizers` gives one verbalizer for each form that a recognizer claims, and `spellers` one speller for each form that speaks a number.
 - Indonesian has no grammatical gender, so `genders` is empty and `default_gender` is `None`. The file offers no option yet, so every option is in `not_applicable`.
 
-Run it. `1.250` now reads, because the file gives the group mark:
+Run it. The file reads the same numbers, with the group mark of its own table:
 
 ```python
 >>> normalize("Saya punya 3 kucing dan 1.250 buku pada 12/03/2024.", "id")
