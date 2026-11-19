@@ -2,10 +2,14 @@
 17.5), over forty language tags from the major language families.
 
 Each expected value comes from the writer of ovos-number-parser or from a CLDR RBNF rule set of unicode_rbnf, which
-the test calls directly. No expected value comes from text2spoken."""
+the test calls directly, with the cited words of data/rbnf_corrections.json. No expected value comes from text2spoken
+code."""
+import json
 import logging
 import pkgutil
+import re
 import warnings
+from pathlib import Path
 
 import ovos_number_parser
 import pytest
@@ -16,13 +20,13 @@ from unicode_rbnf import RbnfEngine
 from unicode_rbnf.engine import NoRuleForNumberError
 
 from text2spoken import (FrozenMap, GrammaticalGender, NormalizationParams, ParameterNotHonouredWarning, SayAs,
-                         UnreadFormError, UnsupportedParameterError, normalize)
+                         UndefinedGrammaticalGender, UnreadFormError, UnsupportedParameterError, normalize, supports)
 
 TAGS = ["en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "nl-NL", "ru-RU", "eu-ES", "el-GR", "ar", "ca-ES",
         "gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "da-DK", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "zh-CN", "ja-JP",
         "ko-KR", "hi-IN", "fa-IR", "he-IL", "sw-KE", "yo-NG", "ha-NG", "tw", "apc", "oc-FR", "vi-VN", "id-ID",
-        "cy-GB", "is-IS", "bn-IN", "ta-IN"]
-"""Forty language tags: the languages with a file, and others with and without a CLDR RBNF locale."""
+        "cy-GB", "is-IS", "bn-IN", "ta-IN", "sk-SK"]
+"""Forty-one language tags: the languages with a file, and others with and without a CLDR RBNF locale."""
 
 NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw", "bn-IN"})
 """Tags with no writer of ovos-number-parser and no RBNF locale: no word for a digit, so `digits`, `telephone` and
@@ -54,8 +58,14 @@ def code(tag: str) -> str:
     return tag.split("-")[0]
 
 
+CORRECTIONS = {(row["language"], row["wrong"]): row["right"] for row in json.loads(
+    (Path(__file__).parents[1] / "text2spoken" / "data" / "rbnf_corrections.json").read_text(encoding="utf-8"))[
+    "corrections"]}
+
+
 def rbnf(tag: str, number: int, rule_set: str) -> str:
-    return RbnfEngine.for_language(code(tag)).format_number(number, ruleset_names=[rule_set]).text_by_ruleset[rule_set]
+    text = RbnfEngine.for_language(code(tag)).format_number(number, ruleset_names=[rule_set]).text_by_ruleset[rule_set]
+    return "".join(CORRECTIONS.get((code(tag), part), part) for part in re.split("([ \u00a0\u200b]+)", text))
 
 
 def digit_word(tag: str, digit: str) -> str:
@@ -77,7 +87,7 @@ def spelled(tag: str, digits: str) -> str:
 ORDINALS = {
     **{tag: lambda number, tag=tag: pronounce_ordinal(number, tag)
        for tag in ("gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "fa-IR",
-                   "he-IL", "oc-FR", "id-ID")},
+                   "he-IL", "oc-FR", "id-ID", "sk-SK")},
     "ar": lambda number: pronounce_ordinal(number, "ar", gender=ParserGender.MASCULINE),
     "el-GR": lambda number: rbnf("el-GR", number, "spellout-ordinal-neuter"),
     "da-DK": lambda number: rbnf("da-DK", number, "spellout-ordinal-common"),
@@ -211,6 +221,46 @@ def test_a_bare_ordinal_reads_through_the_ordinal_of_the_language(tag, number):
 def test_the_default_gender_chooses_the_rbnf_ordinal_rule_set(gender, rule_set):
     params = NormalizationParams(default_gender=FrozenMap({"hi": gender}))
     assert say("3", "hi-IN", "ordinal", params) == rbnf("hi-IN", 3, rule_set)
+
+
+WRITER_GENDERED = {"pl-PL": ParserGender.FEMININE, "uk-UA": ParserGender.FEMININE, "cs-CZ": ParserGender.NEUTRAL,
+                   "ro-RO": ParserGender.FEMININE, "gl-ES": ParserGender.FEMININE, "oc-FR": ParserGender.FEMININE}
+"""Tags whose writer reads the ordinal in another gender than the masculine, and that gender."""
+
+TEXT2SPOKEN_GENDER = {ParserGender.FEMININE: GrammaticalGender.FEMININE, ParserGender.NEUTRAL: GrammaticalGender.NEUTER}
+
+
+@pytest.mark.parametrize("tag", sorted(WRITER_GENDERED))
+@pytest.mark.parametrize("number", [1, 2, 3, 21])
+def test_the_default_gender_chooses_the_gender_of_the_writer_ordinal(tag, number):
+    """Design section 17.5: a bare digit run reads through the `ORDINAL` speller "with the `default_gender` of the
+    params". The expected value is the writer called with that gender."""
+    gender = WRITER_GENDERED[tag]
+    params = NormalizationParams(default_gender=FrozenMap({code(tag): TEXT2SPOKEN_GENDER[gender]}))
+    expected = " ".join(pronounce_ordinal(number, tag, gender=gender).replace(",", " ").split())
+    assert say(str(number), tag, "ordinal", params) == expected
+    assert say(str(number), tag, "ordinal") == " ".join(pronounce_ordinal(number, tag).replace(",", " ").split())
+
+
+@pytest.mark.parametrize("number, gender, expected", [
+    ("2", GrammaticalGender.MASCULINE, "al doilea"), ("2", GrammaticalGender.NEUTER, "al doilea"),
+    ("2", GrammaticalGender.FEMININE, "a doua"), ("3", GrammaticalGender.MASCULINE, "al treilea"),
+    ("3", GrammaticalGender.NEUTER, "al treilea"), ("3", GrammaticalGender.FEMININE, "a treia")])
+def test_a_romanian_neuter_ordinal_reads_the_masculine(number, gender, expected):
+    """Wiktionary, "doilea": "al doilea" m or n, feminine "a doua"; "treilea": "al treilea" m or n, feminine
+    "a treia"."""
+    params = NormalizationParams(default_gender=FrozenMap({"ro": gender}))
+    assert say(number, "ro-RO", "ordinal", params) == expected
+
+
+def test_a_language_whose_writer_reads_genders_declares_them():
+    """Polish "trzeci", "trzecia", "trzecie"; Galician "terceiro", "terceira"; Turkish "üçüncü" in every gender."""
+    assert supports("pl-PL").genders == {GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE,
+                                         GrammaticalGender.NEUTER}
+    assert supports("gl-ES").genders == {GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE}
+    assert supports("tr-TR").genders == frozenset()
+    with pytest.raises(UndefinedGrammaticalGender):
+        say("3", "gl-ES", "ordinal", NormalizationParams(default_gender=FrozenMap({"gl": GrammaticalGender.NEUTER})))
 
 
 @pytest.mark.parametrize("tag", TAGS)
