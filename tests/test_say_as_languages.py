@@ -20,13 +20,13 @@ from unicode_rbnf import RbnfEngine
 from unicode_rbnf.engine import NoRuleForNumberError
 
 from text2spoken import (FrozenMap, GrammaticalGender, NormalizationParams, ParameterNotHonouredWarning, SayAs,
-                         UnreadFormError, UnsupportedParameterError, normalize)
+                         UndefinedGrammaticalGender, UnreadFormError, UnsupportedParameterError, normalize, supports)
 
 TAGS = ["en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "nl-NL", "ru-RU", "eu-ES", "el-GR", "ar", "ca-ES",
         "gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "da-DK", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "zh-CN", "ja-JP",
         "ko-KR", "hi-IN", "fa-IR", "he-IL", "sw-KE", "yo-NG", "ha-NG", "tw", "apc", "oc-FR", "vi-VN", "id-ID",
-        "cy-GB", "is-IS", "bn-IN", "ta-IN"]
-"""Forty language tags: the languages with a file, and others with and without a CLDR RBNF locale."""
+        "cy-GB", "is-IS", "bn-IN", "ta-IN", "sk-SK"]
+"""Forty-one language tags: the languages with a file, and others with and without a CLDR RBNF locale."""
 
 NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw", "bn-IN"})
 """Tags with no writer of ovos-number-parser and no RBNF locale: no word for a digit, so `digits`, `telephone` and
@@ -87,7 +87,7 @@ def spelled(tag: str, digits: str) -> str:
 ORDINALS = {
     **{tag: lambda number, tag=tag: pronounce_ordinal(number, tag)
        for tag in ("gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "fa-IR",
-                   "he-IL", "oc-FR", "id-ID")},
+                   "he-IL", "oc-FR", "id-ID", "sk-SK")},
     "ar": lambda number: pronounce_ordinal(number, "ar", gender=ParserGender.MASCULINE),
     "el-GR": lambda number: rbnf("el-GR", number, "spellout-ordinal-neuter"),
     "da-DK": lambda number: rbnf("da-DK", number, "spellout-ordinal-common"),
@@ -136,13 +136,13 @@ def test_a_digit_reading_writes_zero_as_the_plain_reading_does(tag):
 
 
 @pytest.mark.parametrize("tag", [tag for tag in READ if tag != "fr-FR"])
-@pytest.mark.parametrize("text", ["912 345 678", "555-0199", "3981900"])
+@pytest.mark.parametrize("text", ["912 345 678", "555-0199", "3981900", "(212) 555-0199", "212 555-0199"])
 def test_a_telephone_number_reads_digit_by_digit(tag, text):
     """W3C Note, section 3.3: the telephone format is processor specific; each group reads digit by digit, as in
     the `en` and `pt` files, and the groups stay in the order the text writes them. The French file reads a group of
-    an even length in pairs, by the numbering plan of France (`fr.py`)."""
+    an even length in pairs, by the numbering plan of France (`fr.py`). An area code in brackets is a group."""
     spoken = say(text, tag, "telephone")
-    assert spoken == spelled(tag, text.replace(" ", "").replace("-", ""))
+    assert spoken == spelled(tag, "".join(char for char in text if char.isdigit()))
     assert reads_again_the_same(spoken, tag)
 
 
@@ -162,14 +162,17 @@ NO_PLUS = [tag for tag in READ if code(tag) not in {"en", "pt", "de", "fr", "es"
 
 
 @pytest.mark.parametrize("tag", NO_PLUS)
-def test_a_country_code_reads_without_a_plus_that_the_language_has_no_word_for(caplog, tag):
+@pytest.mark.parametrize("text,country_code", [("+351 912 345 678", "351"), ("+1 (212) 555-0199", "1")])
+def test_a_country_code_reads_without_a_plus_that_the_language_has_no_word_for(caplog, tag, text, country_code):
+    """A country code before an area code in brackets is part of the phone number, as in `+1 (212) 555-0199`."""
     with caplog.at_level(logging.WARNING, logger="text2spoken"):
-        spoken = say("+351 912 345 678", tag, "telephone")
-    assert spoken == spelled(tag, "351912345678")
+        spoken = say(text, tag, "telephone")
+    assert spoken == spelled(tag, "".join(char for char in text if char.isdigit()))
     records = [record for record in caplog.records if "+" in record.getMessage()]
-    assert len(records) == 1 and records[0].levelno == logging.WARNING and "351" in records[0].getMessage()
+    assert len(records) == 1 and records[0].levelno == logging.WARNING
+    assert f"country code {country_code};" in records[0].getMessage()
     with pytest.raises(UnreadFormError):
-        say("+351 912 345 678", tag, "telephone", NormalizationParams(strict=True))
+        say(text, tag, "telephone", NormalizationParams(strict=True))
 
 
 NO_LETTER_NAMES = [tag for tag in READ if tag not in LETTER_NAMES]
@@ -221,6 +224,46 @@ def test_a_bare_ordinal_reads_through_the_ordinal_of_the_language(tag, number):
 def test_the_default_gender_chooses_the_rbnf_ordinal_rule_set(gender, rule_set):
     params = NormalizationParams(default_gender=FrozenMap({"hi": gender}))
     assert say("3", "hi-IN", "ordinal", params) == rbnf("hi-IN", 3, rule_set)
+
+
+WRITER_GENDERED = {"pl-PL": ParserGender.FEMININE, "uk-UA": ParserGender.FEMININE, "cs-CZ": ParserGender.NEUTRAL,
+                   "ro-RO": ParserGender.FEMININE, "gl-ES": ParserGender.FEMININE, "oc-FR": ParserGender.FEMININE}
+"""Tags whose writer reads the ordinal in another gender than the masculine, and that gender."""
+
+TEXT2SPOKEN_GENDER = {ParserGender.FEMININE: GrammaticalGender.FEMININE, ParserGender.NEUTRAL: GrammaticalGender.NEUTER}
+
+
+@pytest.mark.parametrize("tag", sorted(WRITER_GENDERED))
+@pytest.mark.parametrize("number", [1, 2, 3, 21])
+def test_the_default_gender_chooses_the_gender_of_the_writer_ordinal(tag, number):
+    """Design section 17.5: a bare digit run reads through the `ORDINAL` speller "with the `default_gender` of the
+    params". The expected value is the writer called with that gender."""
+    gender = WRITER_GENDERED[tag]
+    params = NormalizationParams(default_gender=FrozenMap({code(tag): TEXT2SPOKEN_GENDER[gender]}))
+    expected = " ".join(pronounce_ordinal(number, tag, gender=gender).replace(",", " ").split())
+    assert say(str(number), tag, "ordinal", params) == expected
+    assert say(str(number), tag, "ordinal") == " ".join(pronounce_ordinal(number, tag).replace(",", " ").split())
+
+
+@pytest.mark.parametrize("number, gender, expected", [
+    ("2", GrammaticalGender.MASCULINE, "al doilea"), ("2", GrammaticalGender.NEUTER, "al doilea"),
+    ("2", GrammaticalGender.FEMININE, "a doua"), ("3", GrammaticalGender.MASCULINE, "al treilea"),
+    ("3", GrammaticalGender.NEUTER, "al treilea"), ("3", GrammaticalGender.FEMININE, "a treia")])
+def test_a_romanian_neuter_ordinal_reads_the_masculine(number, gender, expected):
+    """Wiktionary, "doilea": "al doilea" m or n, feminine "a doua"; "treilea": "al treilea" m or n, feminine
+    "a treia"."""
+    params = NormalizationParams(default_gender=FrozenMap({"ro": gender}))
+    assert say(number, "ro-RO", "ordinal", params) == expected
+
+
+def test_a_language_whose_writer_reads_genders_declares_them():
+    """Polish "trzeci", "trzecia", "trzecie"; Galician "terceiro", "terceira"; Turkish "üçüncü" in every gender."""
+    assert supports("pl-PL").genders == {GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE,
+                                         GrammaticalGender.NEUTER}
+    assert supports("gl-ES").genders == {GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE}
+    assert supports("tr-TR").genders == frozenset()
+    with pytest.raises(UndefinedGrammaticalGender):
+        say("3", "gl-ES", "ordinal", NormalizationParams(default_gender=FrozenMap({"gl": GrammaticalGender.NEUTER})))
 
 
 @pytest.mark.parametrize("tag", TAGS)

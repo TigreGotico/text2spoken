@@ -777,6 +777,13 @@ def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(t
     assert "unread written form" in caplog.text
 
 
+@pytest.mark.parametrize("lang", ["eu-x-nafarra-beherea", "eu-ES"])
+def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang):
+    """Section 11. `sei` is a word, not the unit `s` and the ending `ei`, so a second pass reads no measure."""
+    once = normalize("Appelez le 0033 6 12 34 56 78 ici.", lang)
+    assert normalize(once, lang) == once
+
+
 @pytest.mark.parametrize(("text", "lang"), [
     ("Il faut 1 000 000-2 000 000 personnes.", "de-DE"), ("Il faut 1 000 000-2 000 000 personnes.", "es-BO"),
     ("Il faut 1 000 000-2 000 000 personnes.", "es-ES"), ("Il faut 1 000 000-2 000 000 personnes.", "es-US"),
