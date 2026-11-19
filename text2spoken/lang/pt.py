@@ -63,6 +63,19 @@ vezes três (1x3)". The same answer recommends "duas vezes dois" after Botelho d
 the Academy dictionary and Priberam are the more reputable sources, and the masculine is also the reading of `2×2`.
 Before `vírgula`, it is the whole part of a decimal written with the word: `(1) vírgula 5 m` reads "(um) vírgula cinco
 metros". Ciberdúvidas 25561 quotes "dois vírgula cinco milhões de euros" and answers "Não se pode considerar errado".
+Digits with a leading zero after the number and `vírgula` are the digits of the decimal part, and they read as the
+digits after a decimal mark: `0 vírgula 02` reads "zero vírgula zero dois", as `0,02` does.
+
+The comma is the decimal mark, and the full stop is the decimal mark of the English convention. Norma Portuguesa 9
+(IPQ, 2006), quoted in Ciberdúvidas 12873: "Esses sinais são o ponto e a vírgula, sendo o primeiro empregado nos
+países de língua inglesa, e o segundo, nos restantes." So a full stop with one, two, or four or more digits after
+it, which no group of three explains, is a decimal mark, and `1.500` still reads as a number grouped with the full
+stop. Such a decimal reads with a percent sign, a currency or the symbol of a unit that `Measure` reads, as in
+`1.5 km`, and before the CLDR 49 name of such a unit, as in `10.4 graus`. Anywhere else it stays as written: in the
+"meio milhão de frases" sentence set, digits that a full stop parts are mostly a version, an engine size or a section
+(`Versão 14.2`, mmf-487795; `motor 1.6`, mmf-431047; `Termo de Referência, 5.3`, mmf-462875), which a speaker does
+not read with "vírgula". A unit of duration, as a symbol or a name, is no evidence: `1.30 h` and `1.30 horas` may
+write one hour and thirty minutes, and `às 9.30h` writes a clock.
 
 Two numbers that `a`, `e` or `ou` join, as in `de 1 a 3 semanas` and `entre 1 e 2 semanas`, stay as written when the
 noun after the second number gives the first number another reading. No source gives the gender of the first number
@@ -386,17 +399,18 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affix
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
 from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
+from text2spoken.core.recognizers import Decimal as CoreDecimal
 from text2spoken.core.recognizers import Measure as CoreMeasure
 from text2spoken.core.recognizers import Money as CoreMoney
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
-                                          speak_decimal, speak_expression, speak_fraction, speak_lexicon,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, numbers_in,
+                                          signed, speak_decimal, speak_expression, speak_fraction, speak_lexicon,
                                           speak_percent, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char, one_digit_set
-from text2spoken.core.units import unit_reading
+from text2spoken.core.units import cldr_data, joined_table, unit_reading, unit_table
 from text2spoken.errors import DeclinedReading
 from text2spoken.lang import _pt_electronic
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
@@ -407,7 +421,8 @@ MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "
 _MONTH = "(" + "|".join(f"[{m[0]}{m[0].upper()}]{m[1:]}" for m in MONTHS) + ")"
 
 DATA = freeze({
-    "number_marks": {"Latn": [{"decimal": ",", "group": "."}, {"decimal": ".", "group": ","}]},
+    "number_marks": {"Latn": [{"decimal": ",.", "group": "."}, {"decimal": ".", "group": ","}]},
+    "decimal_word": "vírgula",
     "sign_words": {"-": "menos", "+": "mais"},
     "digit_words": ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"],
     "leads": {"#": "número", "-": ""},
@@ -587,12 +602,16 @@ class PortugueseSpeller:
         read here from the written digits: `1,80` reads "um vírgula oitenta", as `1,97` reads "um vírgula noventa e
         sete", and never "um vírgula oito", which is the reading of `1,8`."""
         words = self.ovos.decimal(integer, fraction, Features(), at_variety(request))
-        rest = fraction.lstrip("0")
-        if not fraction.endswith("0") or not rest:
+        if not fraction.endswith("0") or not fraction.strip("0"):
             return words
+        return " ".join([self.cardinal(integer or "0", Features(), request), request.data["decimal_word"],
+                         self.decimal_part(fraction, request)])
+
+    def decimal_part(self, fraction: str, request: Request) -> str:
+        """The digits after the decimal mark: each leading zero as `zero`, and the rest as a cardinal."""
+        rest = fraction.lstrip("0")
         zeros = [request.data["digit_words"][0]] * (len(fraction) - len(rest))
-        return " ".join([self.cardinal(integer or "0", Features(), request), "vírgula", *zeros,
-                         self.cardinal(rest, Features(), request)])
+        return " ".join([*zeros, self.cardinal(rest, Features(), request)] if rest else zeros)
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """`um meio`, `três quartos`, `um centésimo`, and the cardinal and `avos` for any other denominator:
@@ -757,7 +776,8 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
-        words = spell_digits(digits, request)
+        after_mark = context.before and context.before[-1].lower() == request.data["decimal_word"]
+        words = SPELLER.decimal_part(digits, request) if after_mark else spell_digits(digits, request)
     else:
         words = _cardinal(digits, request, agreement(context))
         _check_pair(digits, context)
@@ -1235,6 +1255,76 @@ def _line_powers(symbols: tuple[str, ...]) -> re.Pattern[str]:
 
 
 @dataclass(frozen=True)
+class SpelledDecimal:
+    """`0 vírgula 02`: digits with a leading zero after a number and the decimal word are a decimal part."""
+    name: str = "spelled_decimal"
+    form: Form = Form.CARDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        link = f" {request.data['decimal_word']} "
+        numbers = numbers_in(text, request)
+        ends = {number.end for number in numbers if number.fraction is None}
+        for number in numbers:
+            digits = number.integer
+            if number.fraction is None and not number.sign and len(digits) > 1 and digits[0] == "0" \
+                    and text[number.start - len(link):number.start].lower() == link \
+                    and number.start - len(link) in ends \
+                    and is_bounded(text, number.start, number.end):
+                yield Span(number.start, number.end, Form.CARDINAL,
+                           FrozenMap({"digits": digits, "sign": "", "lead": "", "prefix": "", "suffix": "",
+                                      "script": number.script}), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class PointDecimal(CoreDecimal):
+    """The decimals of the core. A decimal with the full stop reads only before a word of `_unit_names`, as
+    `10.4 graus`, or with a symbol that `PointMeasure`, `Percent` or `Money` reads."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        points = _point_starts(text, request)
+        words = context_words(tokens)
+        names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
+        for span in super().find(text, tokens, request):
+            if span.start + len(span.fields["prefix"]) not in points:
+                yield span
+                continue
+            index = bisect_left(words, span.end, key=lambda word: word.start)
+            if index < len(words) and text[span.end:words[index].start].isspace() \
+                    and words[index].text in names:
+                yield span
+
+
+@dataclass(frozen=True)
+class PointMeasure(Measure):
+    """The measures of `Measure`. A decimal with the full stop reads only with a unit whose name starts with a word of
+    `_unit_names`, so `1.30 h` and `9.30h` stay as written."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        points = _point_starts(text, request)
+        names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
+        for span in super().find(text, tokens, request):
+            if not any(span.start <= start < span.end for start in points) \
+                    or unit_reading(request, span.fields["unit"], "other")[0].replace("{0}", "").split()[0] in names:
+                yield span
+
+
+def _point_starts(text: str, request: Request) -> set[int]:
+    """The start of each number of the text with a full stop, not the canonical comma, before its decimal part."""
+    canonical = number_marks(request.data, request.params.decimal_mark)[0][1][:1]
+    return {number.start for number in numbers_in(text, request)
+            if number.fraction and text[number.end - len(number.fraction) - 1] != canonical}
+
+
+@cache
+def _unit_names(tag: str, *tables: FrozenMap) -> frozenset[str]:
+    """The first word of each CLDR name of the units of the tables that is no function word, as `quilómetros` and
+    `graus`, apart from the units of duration."""
+    durations = [unit for key, unit in cldr_data(tag)["units"].items() if key.startswith("duration-")]
+    return frozenset(name.replace("{0}", "").split()[0] for table in tables for unit in table.values()
+                     if unit not in durations for name in unit["names"].values()) - frozenset(DATA["function_words"])
+
+
+@dataclass(frozen=True)
 class Ordinal:
     """`1.º`, `2.ª`, `3º`: a whole number and the ordinal indicator, with or without the full stop."""
     name: str = "ordinal"
@@ -1561,10 +1651,10 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], Measure(),
+                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], PointMeasure(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
-                 Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), SHARED["decimal"],
-                 SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+                 Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), PointDecimal(),
+                 SpelledDecimal(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,

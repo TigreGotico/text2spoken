@@ -39,6 +39,16 @@ A number right after a noun that names one item of a series, such as `sala`, `p�
 | `O bilhete custa 12,5 €.` | `pt-PT` | O bilhete custa doze euros e cinquenta cêntimos. |
 | `Tome a vitamina D. Boa noite.` | `pt-PT` | stays as written |
 
+The comma is the decimal mark. The full stop is the decimal mark of the English convention (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A decimal with a full stop reads with a unit symbol, a percent sign or a currency, and before the name of a unit. A unit of duration is no evidence, because `1.30 h` may write one hour and thirty minutes. Elsewhere the decimal stays as written, because such digits are mostly a version, an engine size or a section number. Digits with a leading zero after `vírgula` read as the digits of a decimal part.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `A temperatura é de 10.4 graus.` | `pt-PT` | A temperatura é de dez vírgula quatro graus. |
+| `Corri 1.5 km.` | `pt-PT` | Corri um vírgula cinco quilómetros. |
+| `A versão 14.2 está pronta.` | `pt-PT` | stays as written |
+| `Durou 1.30 h.` | `pt-PT` | stays as written |
+| `A taxa é 0 vírgula 02.` | `pt-PT` | A taxa é zero vírgula zero dois. |
+
 The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
 
 | Written | Spoken (`pt-PT`, `lexicon=FrozenMap({"pt": FrozenMap({"às": "às"})})`) |
@@ -88,7 +98,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 570 rows in `tests/data/pt.tsv`, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 589 rows in `tests/data/pt.tsv`, 14 are marked silver.
 
 ## Roman numerals
 
