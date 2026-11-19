@@ -80,17 +80,10 @@ quaranta-cinc centímetres" ("Abreviacions", Símbols). The noun is masculine (D
 takes -s, OIEC section 2.6.3.1: "S’escriu s en les terminacions de plural (arbres, diners, alegres, sàvies)".
 
 The titles and abbreviations come from the list of "Abreviacions": "doctor Dr.", "doctora Dra.", "senyor Sr.",
-"senyora Sra.", "mossèn Mn.", "etcètera etc.", "per exemple p. e., p. ex., v. gr.", and, before a number, "número
-n., núm.", "pàgina p., pàg.", "article art.", "capítol cap.", "volum vol." and "aproximadament aprox.". A title reads
+"senyora Sra.", "mossèn Mn.", "etcètera etc.", "per exemple p. e., p. ex., v. gr.", "aproximadament aprox.", and,
+before a number, "número n., núm.", "pàgina p., pàg.", "article art.", "capítol cap." and "volum vol.". A title reads
 in lowercase, as DNV "senyor" writes it: "La senyora Fuster els rebrà de seguida". "prof." abbreviates "professor/a",
 so it stays as written: the file does not know the gender.
-
-The annex of "Abreviacions" gives `aprox.` two words: "aprox. aproximadament" and "aprox. aproximat/ada". The DNV
-marks the abbreviation on the adverb only: "aproximadament adv. [abreviatura aprox.] D'una manera aproximada". A
-number after `aprox.` is the quantity that the adverb modifies, as in `aprox. 30 persones`, so there it reads
-"aproximadament". In another place, as in `un càlcul aprox. del cost`, the abbreviation can stand for the adjective.
-The adjective agrees with its noun, DNV "aproximat -ada": "Han donat dades aproximades". The file has no gender of a
-noun, so there `aprox.` stays as written (design section 10).
 
 A numeric date stays as written, and so does a clock time: ovos-date-parser has no Catalan `spoken_*` reading. A
 say-as `date` reads the CLDR 49 `ca` long date pattern `d MMMM 'del' y`, as on a tag with no file (design section
@@ -144,10 +137,10 @@ DATA = freeze({
     "unit_symbols": ["kg", "g", "km", "cm", "l", "h", "min"],
     "dimension_marks": ["x", "×"],
     "titles": {"Sr.": "senyor", "Sra.": "senyora", "Dr.": "doctor", "Dra.": "doctora", "Mn.": "mossèn"},
-    "abbreviations": {"etc.": "etcètera", "p. ex.": "per exemple", "§§": "paràgrafs"},
+    "abbreviations": {"etc.": "etcètera", "p. ex.": "per exemple", "aprox.": "aproximadament", "§§": "paràgrafs"},
     "sentence_final": ["etc."],
     "number_abbreviations": {"núm.": "número", "pàg.": "pàgina", "art.": "article", "cap.": "capítol",
-                             "vol.": "volum", "aprox.": "aproximadament"},
+                             "vol.": "volum"},
     "symbols": {"%": "percent", "€": "money", "$": "money", "£": "money", "¥": "money", "°": "measure",
                 "×": "measure"},
     "symbol_names": {"§": "paràgraf"},

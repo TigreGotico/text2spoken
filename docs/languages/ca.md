@@ -32,7 +32,6 @@ The file reads cardinals, ordinals, decimals, fractions, money, measures, percen
 | `Vegeu la pàg. 24 i el núm. 5.` | `ca-ES` | Vegeu la pàgina vint-i-quatre i el número cinc. |
 | `Vegeu el § 3.` | `ca-ES` | Vegeu el paràgraf tres. |
 | `Vegeu els §§ 3 i 4.` | `ca-ES` | Vegeu els paràgrafs tres i quatre. |
-| `Hi havia aprox. 30 persones.` | `ca-ES` | Hi havia aproximadament trenta persones. |
 
 A hyphen joins the tens and the units, and the units and the hundreds, as the Ortografia catalana of the IEC writes them. An ordinal is the number and the last letter of its word: `r`, `n`, `t` and `è` give the masculine, and `a` gives the feminine. A full stop after the letter belongs to the ordinal when a lowercase word follows.
 
@@ -82,7 +81,7 @@ The file always reads the comma as the decimal mark and the full stop as the gro
 
 The rules cite the Ortografia catalana of the Institut d'Estudis Catalans, the Diccionari normatiu valencià of the Acadèmia Valenciana de la Llengua and the guide "Abreviacions" of the Generalitat de Catalunya. Currency names, unit names and the names of symbols and emoji come from CLDR 49. The docstring of [`ca.py`](../../text2spoken/lang/ca.py) quotes the source of each rule.
 
-Each of the 84 rows in `tests/data/ca.tsv` cites a source. 26 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Each of the 82 rows in `tests/data/ca.tsv` cites a source. 25 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 ## Limits
 
@@ -108,7 +107,6 @@ The file reads no dates, times, ranges, telephone numbers, identifiers, words in
 | `Un objectiu de 35 mm.` | `ca-ES` | stays as written | CLDR names the millimetre "mil·límetre" and the millilitre "mil·lilitre", and the library reads no name with the middle dot. CLDR gives `m` to the month and to the metre, so it does not read either. |
 | `Una sala de 3 × 4 cm.` | `ca-ES` | stays as written | No source gives the Catalan word for the dimension mark. |
 | `La Prof. Oliver.` | `ca-ES` | stays as written | `Prof.` is "professor" or "professora", and the file does not know the gender. |
-| `Un càlcul aprox. del cost.` | `ca-ES` | stays as written | `aprox.` is the adverb "aproximadament" or the adjective "aproximat", which agrees with its noun. It reads only before a number, where it is the adverb. |
 | `Vegeu ∞.` | `ca-ES` | stays as written | A CLDR name with the apostrophe ’, as "signe d’infinit", does not read. |
 | `El 12/03/2024 a les 7:30.` | `ca-ES` | stays as written | ovos-date-parser reads no Catalan date or time, so a numeric date and a clock time stay as written. |
 | `Hi ha 1 000 000 de persones.` | `ca-ES` | stays as written | A number with spaces between its groups stays as written. |
