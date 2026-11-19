@@ -39,7 +39,7 @@ The tag selects the language file and the variety. A tag with no region takes th
 >>> support = supports("pt-PT")
 >>> support.tag, support.code
 ('pt-PT', 'pt')
->>> Form.ROMAN in support.forms, Form.ELECTRONIC in support.forms
+>>> Form.ROMAN in support.forms, Form.IDIOM in support.forms
 (True, False)
 >>> supports("en").tag, supports("pt").tag
 ('en-GB', 'pt-PT')
