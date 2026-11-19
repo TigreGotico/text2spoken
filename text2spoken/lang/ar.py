@@ -238,8 +238,9 @@ VARIETIES = (
                              "months": ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغشت", "شتمبر",
                                         "أكتوبر", "نوفمبر", "دجمبر"]})),
 )
-"""The CLDR 49 locales of `ar`. A locale whose month names or Latin number marks differ from `ar` holds them; each
-other locale reads the data of `ar-001`."""
+"""The CLDR 49 locales of `ar`. A locale whose month names or Latin number marks differ from `ar` holds them. Each
+other region reads as `ar-001`. The varieties with no data come first, because `closest_lang` gives a tie to the
+first candidate."""
 
 REGION_DATA = {variety.tag.split("-")[1]: variety.data for variety in VARIETIES}
 
