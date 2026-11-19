@@ -55,8 +55,10 @@ A minus reads "μείον", the word of the RBNF rule `-x: μείον →→`. A
 (design section 6.1), and so does an amount with a minus, as `-50 €` and `€ -50`.
 
 A percentage reads its number and "τοις εκατό", the unit pattern of `concentr-percent` in the CLDR units of `el`, which
-gives the unit the neuter gender: `20%` reads "είκοσι τοις εκατό" and `-5%` "μείον πέντε τοις εκατό". A decimal, a
-per mille sign and two percentages that a dash joins stay as written.
+gives the unit the neuter gender: `20%` reads "είκοσι τοις εκατό" and `-5%` "μείον πέντε τοις εκατό". A decimal
+before it reads by the rule `x.x: << κόμμα >>` of `spellout-cardinal-neuter` (CLDR 49, common/rbnf/el.xml): the
+integer, κόμμα and each written digit, as RBNF reads 2.25 "δύο κόμμα δύο πέντε". So `2,5%` reads "δύο κόμμα πέντε
+τοις εκατό". A per mille sign and two percentages that a dash joins stay as written.
 
 A fraction reads when its denominator has a one-word name in the English Wiktionary appendix "Greek numerals",
 Fraction column: 2 to 12, 20 and 100. The half is the adjective μισός, which agrees with its noun (English Wiktionary,
@@ -102,6 +104,7 @@ DATA = freeze({
     **written_shapes(),
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
     "sign_words": {"-": "μείον"},
+    "decimal_word": "κόμμα",
     "percent": {**written_shapes()["percent"], "word": "τοις εκατό"},
     "months": ["Ιανουαρίου", "Φεβρουαρίου", "Μαρτίου", "Απριλίου", "Μαΐου", "Ιουνίου", "Ιουλίου", "Αυγούστου",
                "Σεπτεμβρίου", "Οκτωβρίου", "Νοεμβρίου", "Δεκεμβρίου"],
@@ -180,7 +183,9 @@ class GreekSpeller:
         raise NotImplementedError("the Greek file reads no year")
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        raise NotImplementedError("the Greek file reads no decimal")
+        """The RBNF rule `x.x: << κόμμα >>`: the integer, `decimal_word` and each written digit."""
+        digits = " ".join(self.cardinal(digit, features, request) for digit in fraction)
+        return f"{self.cardinal(integer, features, request)} {request.data['decimal_word']} {digits}"
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """A half in the gender and case of `features`, as μισή; any other fraction as the neuter numerator and the
@@ -318,7 +323,9 @@ def speak_percent(span: Span, context: SpanContext) -> str:
     """The amount in the neuter, the gender of τοις εκατό, then the word of the `percent` table."""
     request = context.request
     amount = span.fields["amount"]
-    words = SPELLER.cardinal(amount["integer"], Features(gender=N, case=NOMINATIVE), request)
+    neuter = Features(gender=N, case=NOMINATIVE)
+    words = (SPELLER.decimal(amount["integer"], amount["fraction"], neuter, request) if amount["fraction"]
+             else SPELLER.cardinal(amount["integer"], neuter, request))
     return f"{signed(words, amount['sign'], request)} {request.data['percent']['word']}"
 
 
@@ -335,8 +342,8 @@ DASHES = ("-", "–", "−")
 
 @dataclass(frozen=True)
 class ReadPercent:
-    """A whole number before a percent sign, with no sign or a minus. A decimal, a per mille sign, a sign before
-    the number and two percentages that a dash joins, as `10%-20%`, stay as written: the file has no range word. So
+    """A number before a percent sign, with no sign or a minus. A per mille sign, a sign before the number and two
+    percentages that a dash joins, as `10%-20%`, stay as written: the file has no range word. So
     does a percentage that a word character or a symbol touches from the left, as the fraction recognizer of the core
     decides, because its words would join that character."""
     name: str = "read_percent"
@@ -345,7 +352,7 @@ class ReadPercent:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in SHARED["percent"].find(text, tokens, request):
             amount = span.fields["amount"]
-            read = (isinstance(amount, FrozenMap) and not amount["fraction"] and amount["integer"]
+            read = (isinstance(amount, FrozenMap) and amount["integer"]
                     and (not amount["sign"] or amount["sign"] in request.data["sign_words"])
                     and span.fields["sign_position"] == "after" and "%" in text[span.start:span.end]
                     and _free_before(text, span.start, request.data["symbols"])
