@@ -31,6 +31,7 @@ The file reads cardinals, ordinals, decimals, fractions, money, measures, percen
 | `Porta pomes, peres, etc.` | `ca-ES` | Porta pomes, peres, etcètera. |
 | `Vegeu la pàg. 24 i el núm. 5.` | `ca-ES` | Vegeu la pàgina vint-i-quatre i el número cinc. |
 | `Vegeu el § 3.` | `ca-ES` | Vegeu el paràgraf tres. |
+| `Vegeu els §§ 3 i 4.` | `ca-ES` | Vegeu els paràgrafs tres i quatre. |
 
 A hyphen joins the tens and the units, and the units and the hundreds, as the Ortografia catalana of the IEC writes them. An ordinal is the number and the last letter of its word: `r`, `n`, `t` and `è` give the masculine, and `a` gives the feminine. A full stop after the letter belongs to the ordinal when a lowercase word follows.
 
@@ -80,7 +81,7 @@ The file always reads the comma as the decimal mark and the full stop as the gro
 
 The rules cite the Ortografia catalana of the Institut d'Estudis Catalans, the Diccionari normatiu valencià of the Acadèmia Valenciana de la Llengua and the guide "Abreviacions" of the Generalitat de Catalunya. Currency names, unit names and the names of symbols and emoji come from CLDR 49. The docstring of [`ca.py`](../../text2spoken/lang/ca.py) quotes the source of each rule.
 
-Each of the 80 rows in `tests/data/ca.tsv` cites a source. 25 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Each of the 82 rows in `tests/data/ca.tsv` cites a source. 25 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 ## Limits
 
