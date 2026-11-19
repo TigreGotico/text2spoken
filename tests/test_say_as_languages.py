@@ -104,9 +104,9 @@ ORDINALS = {
 }
 """The source of the ordinal of each tag that no language file reads with an ordinal verbalizer. A language with a
 writer reads through it, as it reads its cardinals; `da` reads its cardinals through RBNF (`RBNF_HELD`), so its
-ordinals too. The Korean file reads the native ordinal (`ko.py`). The Greek file reads a number with no noun in the neuter (`el.py`), and the Arabic file reads its
-default gender, the masculine (`ar.py`). With no gender, RBNF `hi` reads the masculine and RBNF `da` the common
-gender: neither has an ordinal rule set with no gender."""
+ordinals too. The Korean file reads the native ordinal (`ko.py`). The Greek file reads a number with no noun in the
+neuter (`el.py`), and the Arabic file reads its default gender, the masculine (`ar.py`). With no gender, RBNF `hi`
+reads the masculine and RBNF `da` the common gender: neither has an ordinal rule set with no gender."""
 
 
 def say(text: str, tag: str, value: str, params: NormalizationParams | None = None, **fields) -> str:
