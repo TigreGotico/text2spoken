@@ -248,9 +248,14 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
         evidence = _evidence_words(text, tokens, held)
         telephone = say_as.value == "telephone"
-        first = [span for span in first if not (_cuts(span, unit_at) or any(
-            not (telephone and span.start <= kept.start and kept.end <= span.end)
-            for kept_spans in evidence[span.start:span.end] for kept in kept_spans))]
+        fitting = []
+        for span in first:
+            # The spans kept as written whose evidence word the span holds. A telephone number holds its own groups.
+            keeps = [written for spans in evidence[span.start:span.end] for written in spans
+                     if not (telephone and span.start <= written.start and written.end <= span.end)]
+            if not (_cuts(span, unit_at) or keeps):
+                fitting.append(span)
+        first = fitting
     say_as_count = len(first)
     candidates = [*first, *found(recognizers, others)]
     before = {end: start for start, end in sequences}
