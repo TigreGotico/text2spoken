@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a88](https://github.com/TigreGotico/text2spoken/tree/0.0.2a88) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a87...0.0.2a88)
+
+**Merged pull requests:**
+
+- fix\(numbers\): a group run that starts with 0 is no grouped number [\#357](https://github.com/TigreGotico/text2spoken/pull/357) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ko\): a number before a counter reads in the numerals of the counter [\#330](https://github.com/TigreGotico/text2spoken/pull/330) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a87](https://github.com/TigreGotico/text2spoken/tree/0.0.2a87) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a86...0.0.2a87)
@@ -321,11 +330,6 @@
 ## [0.0.2a49](https://github.com/TigreGotico/text2spoken/tree/0.0.2a49) (2026-11-15)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a48...0.0.2a49)
-
-**Merged pull requests:**
-
-- fix: read small decimals, en scaled amounts, hex alpha logs and de-CH marks [\#103](https://github.com/TigreGotico/text2spoken/pull/103) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- docs: correct core docstrings and check clause 12 at runtime [\#102](https://github.com/TigreGotico/text2spoken/pull/102) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a48](https://github.com/TigreGotico/text2spoken/tree/0.0.2a48) (2026-11-15)
 
