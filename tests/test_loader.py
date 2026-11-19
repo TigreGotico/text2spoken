@@ -168,6 +168,30 @@ def test_a_language_with_no_file_reads_the_minus_of_rbnf(tag, text, expected):
     assert normalize(expected, tag) == expected
 
 
+# In ast the full stop groups (CLDR 49 numbers.json, `symbols-numberSystem-latn` group `.`), so `3.5` is no number.
+# A minus and digits after a number and a space may mark a range or a code, as in `5 -10`, so the number before them
+# stays as written too, whether or not a number of the locale covers the digits. A minus at the start of the next
+# line is no range, and neither is a minus before a letter, so `5` reads there; ovos-number-parser owns the word.
+NO_FILE_NUMBER_BEFORE_MINUS = [
+    ("ast-ES", "5 -3.5", "5 -3.5"),
+    ("ast-ES", "de 5 \u22123.5 graos", "de 5 \u22123.5 graos"),
+    ("ast-ES", "5\t-3.5", "5\t-3.5"),
+    ("ast-ES", "5 -1.2.3", "5 -1.2.3"),
+    ("uk-UA", "від 5 -3.5 градусів", "від 5 -3.5 градусів"),
+    ("ast-ES", "5\n-3.5", "{5}\n-3.5"),
+    ("ast-ES", "5 -abc", "{5} -abc"),
+]
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), NO_FILE_NUMBER_BEFORE_MINUS)
+def test_a_number_before_a_minus_and_digits_stays_as_written(tag, text, expected):
+    from ovos_number_parser import pronounce_number
+
+    expected = expected.replace("{5}", pronounce_number(5, tag))
+    assert normalize(text, tag) == expected
+    assert normalize(expected, tag) == expected
+
+
 def _rbnf_words(locale: str, rule_set: str, number: str) -> str:
     """unicode_rbnf called directly, with the rule set that holds the rule, as words separated by single spaces."""
     from unicode_rbnf import RbnfEngine
