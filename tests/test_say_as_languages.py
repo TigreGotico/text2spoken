@@ -45,6 +45,11 @@ AR_LECTS = frozenset({"apc"})
 `apc` (ISO 639-3 change request 2022-006), so both read the same."""
 
 
+RBNF_DIGITS = frozenset({"ca"})
+"""Languages with a writer whose file names each digit by RBNF `spellout-numbering`. The Catalan file names the digit 1
+"u", by the `1: u` rule of RBNF `ca`, where the writer writes "un"."""
+
+
 def code(tag: str) -> str:
     return tag.split("-")[0]
 
@@ -56,7 +61,7 @@ def rbnf(tag: str, number: int, rule_set: str) -> str:
 def digit_word(tag: str, digit: str) -> str:
     """The cardinal of one digit: the writer of the language, else RBNF `spellout-numbering`, with zero from the
     first plain cardinal rule set of the locale (`spellout-numbering` of `zh` writes the digit sign 〇 for zero)."""
-    if code(tag) in WRITERS or code(tag) in AR_LECTS:
+    if (code(tag) in WRITERS or code(tag) in AR_LECTS) and code(tag) not in RBNF_DIGITS:
         return pronounce_number(int(digit), tag)
     if digit == "0":
         names = RbnfEngine.for_language(code(tag)).rulesets
@@ -71,7 +76,7 @@ def spelled(tag: str, digits: str) -> str:
 
 ORDINALS = {
     **{tag: lambda number, tag=tag: pronounce_ordinal(number, tag)
-       for tag in ("ca-ES", "gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "fa-IR",
+       for tag in ("gl-ES", "pl-PL", "tr-TR", "uk-UA", "sv-SE", "fi-FI", "hu-HU", "cs-CZ", "ro-RO", "fa-IR",
                    "he-IL", "oc-FR", "id-ID")},
     "ar": lambda number: pronounce_ordinal(number, "ar", gender=ParserGender.MASCULINE),
     "el-GR": lambda number: rbnf("el-GR", number, "spellout-ordinal-neuter"),

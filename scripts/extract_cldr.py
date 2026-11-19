@@ -59,8 +59,8 @@ UCD = f"https://www.unicode.org/Public/{UNICODE}/ucd/"
 EMOJI = f"https://www.unicode.org/Public/{UNICODE}/emoji/"
 EMOJI_FILES = ("emoji-sequences.txt", "emoji-zwj-sequences.txt")
 SELECTOR = "\ufe0f"
-TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE", "nl-SR", "zh-CN",
-        "zh-TW")
+TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR", "ca-ES", "ca-AD", "ca-ES-valencia", "it-IT", "it-CH", "it-SM", "nl-NL", "nl-BE",
+        "nl-SR", "zh-CN", "zh-TW")
 LIKELY_SCRIPT = {"zh-TW": "zh-Hant-TW"}
 """The tags whose CLDR locale holds a script that the tag leaves out, by CLDR 49 likelySubtags.json: `"zh-TW":
 "zh-Hant-TW"`. The parent chain of such a tag starts at the locale with the script, so zh-TW reads zh-Hant and not

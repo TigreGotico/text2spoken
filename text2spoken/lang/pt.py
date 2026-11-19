@@ -275,9 +275,25 @@ this, and the numeral itself does: it is a word of the clause only when `letter_
 `letter_words` holds "vi", the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito perfeito
 do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito do
 indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
-After a word of `function_words` in any case, which starts many sentences in capitals, as the article in `O XV de
-Portugal`, a numeral reads only from 11 to 30, as a cardinal, so `O XV` and `O XV DE PORTUGAL VENCEU` read "O
-Quinze", and `A II Guerra Mundial` stays as written. A function word is never the capitalised word before a numeral.
+A numeral between a singular demonstrative contracted with `em` or `de` (`nesta`, `deste`, `naquele`) and a common
+noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, with no limit on the
+value: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
+a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
+jurídica": "Se o numeral antecede o substantivo, é usual continuar a usar-se o ordinal, mesmo depois de dez".
+Ciberdúvidas 28509, "Plurais com números romanos": "«II directriz», «III directriz», etc. (os símbolos são lidos:
+«segunda», «terceira», etc.)". Migalhas, Gramatigalhas, "Numeral", after José de Nicola and Ernani Terra: "O numeral
+anteposto ao substantivo deve ser lido como ordinal, concordando com esse substantivo." The
+ordinal reads only between a singular demonstrative contracted with `em` or `de` and with a capital, as `Nesta`,
+`Deste` or `Daquele`, and a common noun of the same gender that is no word of `function_words`, and only for a
+numeral of two letters or more up to C. The contraction starts a prepositional phrase, so the word after the numeral
+is its noun. An article or a demonstrative alone gives no such evidence, because `O XV segundo a imprensa` and
+`ESTE XV NUNCA PERDEU` are sentences about the XV de Portugal, so `A II Guerra Mundial` stays as written. The gender
+of the noun comes from `noun_gender` or tugalex, which guesses from the ending of a word that it does not list, so a
+verb form such as `joga` in `O XV joga` gets a gender too: the gender of the article decides, and `O XV joga` keeps
+the cardinal reading. A plural article, as in `As II partes`, keeps it too, because the ordinal would be plural.
+After any other word of `function_words` in any case, which starts many sentences
+in capitals, as the article in `O XV de Portugal`, a numeral reads only from 11 to 30, as a cardinal, so `O XV` and
+`O XV DE PORTUGAL VENCEU` read "O Quinze". A function word is never the capitalised word before a numeral.
 
 In a clause in capitals, a run of `letter_words` reads as a word, so `SAIA DA SALA` keeps `DA`. A clause in capitals
 is the text between two marks of a clause, a full stop, a comma, a semicolon, a colon, a bracket, a quote or the
@@ -929,14 +945,19 @@ def speak_roman(span: Span, context: SpanContext) -> str:
     `roman_nouns`, the reading takes the gender of the noun and a small letter, and so does each numeral of a list that
     follows it, as in `séculos XI, XII e XIII`. After a title and its full stop,
     which ends the context words, it takes the gender of the title that the recognizer keeps in the memo of the
-    request, and a capital. After a name, it agrees with the name and takes a capital, as the name does."""
+    request, and a capital. After a name, it agrees with the name and takes a capital, as the name does. Between a
+    singular article and a common noun, it takes the gender of both, which the recognizer keeps in the memo of the
+    request, and a capital when the noun has one."""
     request = context.request
     data = request.data
     value = str(span.fields["value"])
     before = context.before
     last = before[-1] if before else ""
     noun = request.memo.get("pt_roman_series", {}).get(span.start) or _roman_noun(before, data["roman_nouns"])
-    if noun in data["century_words"] or last.lower() in data["century_words"]:
+    noun_after = request.memo.get("pt_roman_before_noun", {}).get(span.start)
+    if noun_after is not None:
+        gender, capital = noun_after
+    elif noun in data["century_words"] or last.lower() in data["century_words"]:
         gender, capital = MASCULINE, False
     elif noun is not None:
         gender, capital = GrammaticalGender(data["roman_nouns"][noun]), False
@@ -1232,8 +1253,9 @@ def _title_gender(title: str, request: Request) -> GrammaticalGender:
 
 
 def _noun_gender(word: str, request: Request) -> GrammaticalGender | None:
-    """The gender of a common noun with no guess from its ending: the `noun_gender` table, else tugalex for a word that
-    it knows. A noun of two genders has none."""
+    """The gender of a common noun: the `noun_gender` table, else tugalex for a word that it knows. tugalex guesses
+    from the ending of a word that its exceptions do not list, so a caller checks the gender against other evidence.
+    A noun of two genders has none."""
     entry = _listed_gender(word, request.data)
     if entry:
         return GrammaticalGender(entry)
@@ -1241,6 +1263,31 @@ def _noun_gender(word: str, request: Request) -> GrammaticalGender | None:
         name = _LEXICON_GENDERS.get(_lexicon_gender(word.lower()) or "")
         return GrammaticalGender(name) if name else None
     return None
+
+
+_SINGULAR_CONTRACTIONS = {
+    **dict.fromkeys(("neste", "nesse", "naquele", "deste", "desse", "daquele"), MASCULINE),
+    **dict.fromkeys(("nesta", "nessa", "naquela", "desta", "dessa", "daquela"), FEMININE),
+}
+"""The singular demonstratives of `function_words` contracted with `em` or `de`, and their gender. Each starts a
+prepositional phrase, so the word after the numeral is its noun."""
+
+
+def _noun_after(text: str, end: int, article: str, request: Request) -> tuple[GrammaticalGender, bool] | None:
+    """The gender of a singular demonstrative contracted with `em` or `de`, `article`, and of the common noun right
+    after the numeral and one space, and whether the noun starts with a capital. The contraction starts a
+    prepositional phrase, so the word after the numeral is its noun, as `edição` in `Nesta XV edição`. An article or a
+    demonstrative alone may start a sentence about a team, as in `O XV segundo a imprensa` or `ESTE XV NUNCA PERDEU`,
+    so it gives none. None also when the next word is a function word or no noun of the gender of the contraction
+    (`_noun_gender`)."""
+    gender = _SINGULAR_CONTRACTIONS.get(article.lower())
+    match = re.match(r" (\w+)", text[end:])
+    if gender is None or match is None:
+        return None
+    word = match.group(1)
+    if word.lower() in request.data["function_words"] or _noun_gender(word, request) != gender:
+        return None
+    return gender, word[0].isupper()
 
 
 def _given_name_gender(name: str, request: Request) -> GrammaticalGender | None:
@@ -1286,7 +1333,10 @@ class Roman:
     30, so an acronym such as `MIX` stays as written. These rules need spaces alone between the word before the numeral
     and the numeral. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as
     a cardinal, as `XX` in `No século XIX, XX pessoas`, and a smaller one stays as written, unless a regnal title comes
-    before the word. After a word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in `O XV`.
+    before the word. Between a singular demonstrative contracted with `em` or `de` and a common noun of the same
+    gender, a numeral of two letters or more up to C that is no word of `roman_words` reads as an ordinal that agrees
+    with them, as in `Nesta XV edição`. After any other word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in
+    `O XV`.
     Outside a clause in capitals, no numeral reads right after a word of `letter_words` that is no function word, as
     `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a word of `letter_words` or a word that tugalex
     knows, as `VI` in `EU VI`. A short numeral after another capitalised word, as in `Malcolm X`, stays as written.
@@ -1365,6 +1415,11 @@ class Roman:
                     reads = in_series(numeral, value, key, end)
                 elif previous.text in not_names or not before[-1][0].isupper():
                     reads = False
+                elif function_word and len(numeral) >= 2 and value <= 100 \
+                        and (noun_after := _noun_after(text, end, previous.text, request)) is not None:
+                    reads = numeral not in numeral_words and not is_word
+                    if reads:
+                        request.memo.setdefault("pt_roman_before_noun", {})[start] = noun_after
                 elif function_word:
                     reads = len(numeral) >= 2 and 11 <= value <= 30 and not is_word
                 elif title:
@@ -1372,6 +1427,10 @@ class Roman:
                 else:
                     reads = len(numeral) >= 2 and not is_word and value <= 30
             if reads:
+                if start in request.memo.get("pt_roman_before_noun", {}):
+                    yield Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": "ordinal", "suffix": ""}),
+                               recognizer=self.name)
+                    continue
                 yield self._span(start, end, value, data)
                 if key is not None:
                     last_value = value

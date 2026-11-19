@@ -466,7 +466,7 @@ def test_a_digit_next_to_a_span_is_no_joiner():
 
 
 def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():
-    assert normalize("Té １2 habitacions.", "ca") == "Té １2 habitacions."
+    assert normalize("Et huet １2 Zëmmer.", "lb") == "Et huet １2 Zëmmer."
 
 
 @pytest.mark.parametrize("space", [" ", "\t", "\n"])
