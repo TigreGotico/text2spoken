@@ -87,4 +87,4 @@ Korean leaves these forms as written:
 | `구간 5 -10` | `ko-KR` | stays as written | A minus after a number can mark a range, so both numbers stay as written. |
 
 ---
-[← Italian](it.md) · [Home](../index.md) · [Dutch →](nl.md)
+[← Japanese](ja.md) · [Home](../index.md) · [Dutch →](nl.md)

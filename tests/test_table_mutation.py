@@ -18,7 +18,7 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads"},
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": {"leads"},
           "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes", "no_phone_shapes"},
           "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
@@ -114,7 +114,7 @@ AR_ENTRIES = {
     "currencies": "USD", "symbols_after_only": "ريال", "scales": "مليون", "units": "كم", "dimension_marks": "×",
     "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_words": "الساعة",
     "day_periods": "pm", "spoken_periods": "afternoon2", "minute_phrases": "30", "months": "مارس",
-    "date_reading": "full", "era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ",
+    "date_reading": "full", "era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ", "short_periods": "م",
 }
 ES_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
@@ -147,6 +147,7 @@ ENTRIES = {
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
         "halves": "2",
     },
+    "ja": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg"},
     "ko": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg",
            "counters": "개", "counter_followers": "이", "months": "유월"},
     "eu": {

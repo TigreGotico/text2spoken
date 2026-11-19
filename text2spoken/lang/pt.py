@@ -381,6 +381,15 @@ labelled with letters, as the Roman numerals above show.
 
 pt-PT writes the space as the group mark of an amount: CLDR 49 pt-PT gives the group mark U+00A0 and the currency
 format `#,##0.00 ¤`, so `250 000 €` reads "duzentos e cinquenta mil euros". pt-BR takes the full stop (CLDR 49 pt).
+Norma Portuguesa 9 (IPQ, 2006), quoted in Ciberdúvidas 12873, gives the same mark to any number: "Os grupos de três
+algarismos serão separados por um espaço em branco", as in «Assistiram ao jogo 109 456 espectadores.» A run of spaced
+groups is also a code: a tax number, a Multibanco entity or reference, a number of utente or a service line, as
+`509 876 543` and `800 112 233` in the authored pt prompt pool. A cardinal of such a code is a wrong reading, so in
+pt-PT a spaced number reads only with evidence of a quantity: a last group `000`, as in `100 000 habitantes`, or a
+decimal part, as in `1 250 000,50`. In the "meio milhão de frases" set and the authored pool, each of the 85 runs
+with a last group `000` is a count, as `130 000 anos` and `3 000 toneladas`. NP 9 also groups the digits of the
+decimal part, as in `78 890,322 14`, and no source gives the spoken form of such a part, so that number stays as
+written. A run with no such evidence, as `109 456 espectadores`, stays as written.
 """
 from __future__ import annotations
 
@@ -1222,7 +1231,7 @@ class SpacedMoney(Money):
     def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
         if not request.data.get("space_group_money"):
             return ()
-        phones = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
+        phones = _phones(text, tokens, request)
         found = []
         for match in _SPACE_GROUPS.finditer(fold_digits(text)):
             start, end = match.span()
@@ -1252,6 +1261,90 @@ class Measure(CoreMeasure):
 def _line_powers(symbols: tuple[str, ...]) -> re.Pattern[str]:
     alternatives = "|".join(map(re.escape, sorted(symbols, key=len, reverse=True)))
     return re.compile(f"([0-9](?: |\u00a0)?(?:{alternatives}))([23])")
+
+
+_GROUPED = "[1-9][0-9]{0,2}(?:[ \u00a0\u202f][0-9]{3})+"
+_SPACED_NUMBER = re.compile(f"({_GROUPED})(?:,([0-9]+)((?:[ \u00a0\u202f][0-9]{{1,3}})*))?")
+_SPACED_RANGE = re.compile(f"({_GROUPED})[-–]({_GROUPED})")
+
+
+def _digits(written: str) -> str:
+    return re.sub("[^0-9]", "", written)
+
+
+def _phones(text: str, tokens: Sequence[Token], request: Request) -> list[Span]:
+    """The telephone spans that read, found once for each text in one request."""
+    key = ("phones", text)
+    if key not in request.memo:
+        request.memo[key] = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
+    return request.memo[key]
+
+
+def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], request: Request) -> Iterator[re.Match[str]]:
+    """The matches of `pattern` where the variety writes the space as its group mark (`space_group_money`), with no
+    sign, digit or mark between digits next to them (`+351 912 000`, `1.200 000`) and no telephone run over them."""
+    if not request.data.get("space_group_money"):
+        return
+    for match in pattern.finditer(fold_digits(text)):
+        start, end = match.span()
+        after = text[end:end + 2]
+        if not is_bounded(text, start, end) or (start and text[start - 1] in "+-−–(.,") \
+                or (after[:1] and after[:1] in ".,:/-–" and after[1:2].isdigit()) \
+                or not one_digit_set(text[start:end]):
+            continue
+        if not any(phone.start < end and start < phone.end for phone in _phones(text, tokens, request)):
+            yield match
+
+
+@dataclass(frozen=True)
+class SpacedRange:
+    """A range of two numbers grouped with spaces. It reads when both end in the group `000` and it goes up, as in
+    `10 000-20 000`, and any other such range stays whole as written, so that no part of it reads."""
+    name: str = "spaced_range"
+    form: Form = Form.RANGE
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for match in _spaced(_SPACED_RANGE, text, tokens, request):
+            low, high = (_digits(group) for group in match.groups())
+            reads = low.endswith("000") and high.endswith("000") and int(low) < int(high)
+            yield Span(*match.span(), Form.RANGE, FrozenMap({"low": low, "high": high, "prefix": "", "suffix": ""}),
+                       recognizer=self.name, keep=not reads)
+
+
+@dataclass(frozen=True)
+class SpacedNumber:
+    """A whole number grouped with spaces reads when its last group is `000`, as `100 000 habitantes`; a number with
+    a decimal part grouped with spaces, as `78 890,322 14`, stays whole as written."""
+    name: str = "spaced_number"
+    form: Form = Form.CARDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for match in _spaced(_SPACED_NUMBER, text, tokens, request):
+            start, end = match.span()
+            whole, fraction, grouped = match.groups()
+            integer = _digits(whole)
+            if grouped or (not fraction and integer.endswith("000")):
+                yield Span(start, end, Form.CARDINAL,
+                           FrozenMap({"digits": integer, "sign": "", "lead": "", "prefix": "", "suffix": "",
+                                      "script": digit_script(text[start:end])}),
+                           recognizer=self.name, keep=bool(grouped))
+
+
+@dataclass(frozen=True)
+class SpacedDecimal:
+    """A decimal whose whole part is grouped with spaces, where the variety writes the space as its group mark: `1 250
+    000,50` reads as `1250000,50` does. A decimal part grouped with a space is left to `SpacedNumber`."""
+    name: str = "spaced_decimal"
+    form: Form = Form.DECIMAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for match in _spaced(_SPACED_NUMBER, text, tokens, request):
+            whole, fraction, grouped = match.groups()
+            if fraction and not grouped:
+                start, end = match.span()
+                yield Span(start, end, Form.DECIMAL,
+                           Number(start, end, "", _digits(whole), fraction, digit_script(text[start:end])).amount(),
+                           recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -1651,8 +1744,9 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], PointMeasure(),
-                 SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
+                 SpacedMoney(), SpacedRange(), SpacedNumber(), SpacedDecimal(), TELEPHONE, Money(),
+                 SHARED["kept_money"], SHARED["percent"], PointMeasure(), SHARED["expression"], SHARED["fraction"],
+                 SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), PointDecimal(),
                  SpelledDecimal(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={

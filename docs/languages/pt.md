@@ -70,6 +70,14 @@ A length unit with `2` or `3` right after it writes its exponent on the line, so
 | `A casa tem 80m2.` | `pt-PT` | A casa tem oitenta metros quadrados. |
 | `Tomar 500 mg por dia.` | `pt-PT` | Tomar quinhentos miligramas por dia. |
 
+In `pt-PT`, the space is the group mark (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A run of spaced groups is also a code, such as a tax number or a Multibanco reference, so a spaced number reads only when its last group is `000` or when it has a decimal part. Any other spaced run stays as written. In `pt-BR`, the group mark is the full stop.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Tem 100 000 habitantes.` | `pt-PT` | Tem cem mil habitantes. |
+| `Custa 1 250 000,50.` | `pt-PT` | Custa um milhão duzentos e cinquenta mil vírgula cinquenta. |
+| `O NIF é 509 876 543.` | `pt-PT` | stays as written |
+
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the emoji.
 
 ## Varieties
@@ -98,7 +106,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 592 rows in `tests/data/pt.tsv`, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 600 rows in `tests/data/pt.tsv`, 14 are marked silver.
 
 ## Roman numerals
 
