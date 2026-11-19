@@ -942,14 +942,15 @@ class Telephone:
     code that ends its clause or that a function word follows when `names_short_codes` is set, as in `Call the
     police on 999 now.`, and not the count in `The phone rang 101 times.`
 
-    A last group of one or two digits after a space is the hour of a time, not a phone group, when the run ends
-    inside a word, when a full stop and two digits complete it, or when a space and a day period of `day_periods`
-    follow it. So `Call 1-800-555-0199 8 a.m.` reads the number and the time: a second pass, which sees the words
-    of the time, finds the same run.
+    A last group of one or two digits after a space is the hour of a time, not a phone group, when a letter
+    continues the run, when a full stop and two digits complete it, or when a space and a day period of
+    `day_periods` follow it. So `Call 1-800-555-0199 8 a.m.` reads the number and the time: a second pass, which
+    sees the words of the time, finds the same run. A mark after the group keeps it in the run, as in
+    `02 08/85 98-0`, because the group and the digits after the mark may be one number.
 
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
-    methods `trimmed`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone` replaces only
-    `hour_after`."""
+    methods `trimmed`, `continued`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone`
+    replaces only `continued` and `hour_after`."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
     reach: int = 1
@@ -961,11 +962,15 @@ class Telephone:
 
     def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
         """The run of digit groups that starts at `start`, less a last group that is the hour of a time."""
-        cut, after = written.rfind(" "), start + len(written)
+        cut, after = max(written.rfind(space) for space in self.spaces), start + len(written)
         if cut != -1 and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
-                "." in written[cut:] or not _edge(text, start, after) or self.hour_after(text, after, request)):
+                "." in written[cut:] or self.continued(text, start, after) or self.hour_after(text, after, request)):
             return written[:cut]
         return written
+
+    def continued(self, text: str, start: int, end: int) -> bool:
+        """Whether a letter continues text[start:end], so that its last group belongs to a word, as in `555 3rd`."""
+        return end < len(text) and is_letter(text[end])
 
     def hour_after(self, text: str, end: int, request: Request) -> bool:
         """Whether a space and a day period follow text[:end], as `8 am` follows a phone number."""

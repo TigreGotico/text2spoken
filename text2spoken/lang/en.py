@@ -205,7 +205,7 @@ from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number, written_amount
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, amount_words, join_ranges,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges,
                                           numbers_in, signed, speak_abbreviation, speak_cardinal, speak_decimal,
                                           speak_expression, speak_fraction as core_speak_fraction, speak_idiom,
                                           speak_lexicon, speak_ordinal,
@@ -604,8 +604,12 @@ class EnglishTelephone(Telephone):
     take the phone shape from two years that a dash joins.
 
     A last group of one or two digits is the hour or a count, not a phone group, when the shared recognizer drops
-    it as an hour, and also when a space and a lowercase word that is no function word follow it, so
-    `Call 0800 123 456 8 am to 8 pm.` and `Ring 0800 123 456 24 hours a day.` read the number and the hour."""
+    it as an hour, and also when a word character, a digit or a cluster mark continues the run on either side, or
+    a space and a lowercase word that is no function word follow it, so `Call 0800 123 456 8 am to 8 pm.` and
+    `Ring 0800 123 456 24 hours a day.` read the number and the hour."""
+
+    def continued(self, text: str, start: int, end: int) -> bool:
+        return not _edge(text, start, end)
 
     def hour_after(self, text: str, end: int, request: Request) -> bool:
         if not text.startswith(" ", end):
@@ -614,7 +618,7 @@ class EnglishTelephone(Telephone):
         while stop < len(text) and is_letter(text[stop]):
             stop += 1
         word = text[end + 1:stop]
-        return word.islower() and word not in request.data.get("function_words", ()) \
+        return (word.islower() and word not in request.data.get("function_words", ())) \
             or super().hour_after(text, end, request)
 
 

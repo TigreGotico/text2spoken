@@ -769,3 +769,13 @@ def test_an_hour_after_a_phone_number_reads_the_same_on_a_second_pass(text, lang
     phone group, so the run is the one that a second pass finds."""
     once = normalize(text, lang)
     assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Composez le 1\u00a0800\u00a0555\u00a01234\u00a08 a.m.", "fr-CA"),
+    ("Appelez le 01\u00a023\u00a045\u00a067\u00a089\u00a08h", "fr-FR"),
+])
+def test_a_last_hour_group_after_a_no_break_space_reads_as_after_a_space(text, lang):
+    """A no-break space parts two groups of a phone run as a space does, so a last hour group after it leaves the
+    run as it does after a space."""
+    assert normalize(text, lang).replace("\u00a0", " ") == normalize(text.replace("\u00a0", " "), lang)
