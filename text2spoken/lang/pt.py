@@ -415,9 +415,9 @@ from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Decimal as CoreDecimal
 from text2spoken.core.recognizers import Measure as CoreMeasure
 from text2spoken.core.recognizers import Money as CoreMoney
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, numbers_in,
-                                          signed, speak_decimal, speak_expression, speak_fraction, speak_lexicon,
-                                          speak_percent, speak_telephone)
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, digit_run_matches,
+                                          numbers_in, signed, speak_decimal, speak_expression, speak_fraction,
+                                          speak_lexicon, speak_percent, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
@@ -1430,7 +1430,7 @@ class Ordinal:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         marks = "".join(request.data["ordinal_marks"])
-        for match in re.finditer(f"[0-9]+([.]?[{marks}])", fold_digits(text)):
+        for match in digit_run_matches(f"[0-9]+([.]?[{marks}])", fold_digits(text)):
             start, end = match.span()
             if not is_bounded(text, start, end) or not one_digit_set(text[start:match.start(1)]):
                 continue

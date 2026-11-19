@@ -23,7 +23,8 @@ from dataclasses import dataclass, replace
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import written_amount
-from text2spoken.core.recognizers import SHARED, DateNumeric, _sentence_period, numbers_in, speak_lexicon
+from text2spoken.core.recognizers import (SHARED, DateNumeric, _sentence_period, digit_run_matches, numbers_in,
+                                          speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
@@ -870,7 +871,7 @@ class HyphenOrdinal:
     form: Form = Form.ORDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in re.finditer("([0-9]{1,3}(?:[ \u00a0][0-9]{3})+|[0-9]+)-", fold_digits(text)):
+        for match in digit_run_matches("([0-9]{1,3}(?:[ \u00a0][0-9]{3})+|[0-9]+)-", fold_digits(text)):
             start, stop = match.span()
             end = stop
             while end < len(text) and is_letter(text[end]):
@@ -970,7 +971,7 @@ class OtherDecimalMark:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         other = "." if request.params.decimal_mark == "," else ","
-        for match in re.finditer("[0-9]+(?:[.,][0-9]+)+", fold_digits(text)):
+        for match in digit_run_matches("[0-9]+(?:[.,][0-9]+)+", fold_digits(text)):
             start, end = match.span()
             if other in match.group() and is_bounded(text, start, end):
                 integer, fraction = re.split("[.,]", match.group(), maxsplit=1)
@@ -986,7 +987,7 @@ class ExpressionGuard:
     form: Form = Form.CARDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in re.finditer("[0-9]+(?: ?[+=÷] ?[0-9]+)+", fold_digits(text)):
+        for match in digit_run_matches("[0-9]+(?: ?[+=÷] ?[0-9]+)+", fold_digits(text)):
             start, end = match.span()
             if is_bounded(text, start, end):
                 yield Span(start, end, Form.CARDINAL,

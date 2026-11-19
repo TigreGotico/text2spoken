@@ -234,16 +234,35 @@ def _no_digit_character(items: list) -> bool:
                for o, a in ([items[0]] if op is _parser.LITERAL else arg))
 
 
-def _starts_with_digit_run(items: list) -> bool:
-    """Whether the parsed items start with an optional character that is no digit and then a greedy `[0-9]+`, or
-    with an alternation whose every branch does. A lazy run can end a match inside a digit run, and the helper
-    tries one match for each run."""
+def _branches(items: list) -> list[list]:
+    """The alternatives of the parsed items, each with the items after its alternation. A group at the start reads
+    as the items it holds, and an optional character that is no digit at the start of an alternative is dropped."""
+    if items and items[0][0] is _parser.SUBPATTERN:
+        return _branches([*items[0][1][3], *items[1:]])
     if items and items[0][0] is _parser.BRANCH:
-        return all(_starts_with_digit_run(list(branch)) for branch in items[0][1][1])
+        return [opened for branch in items[0][1][1] for opened in _branches([*branch, *items[1:]])]
     if items and items[0][0] in REPEATS and items[0][1][:2] == (0, 1) and _no_digit_character(list(items[0][1][2])):
-        items = items[1:]
-    return (bool(items) and items[0][0] is _parser.MAX_REPEAT and items[0][1][:2] == (1, _parser.MAXREPEAT)
-            and list(items[0][1][2]) == DIGIT_RUN)
+        return [items[1:]]
+    return [items]
+
+
+def _leaves_the_run(items: list) -> bool:
+    """Whether the parsed items start with a character that is no digit, also inside a repeat that matches once or
+    more."""
+    if not items:
+        return False
+    op, arg = items[0]
+    if op in REPEATS and arg[0] >= 1:
+        return all(_leaves_the_run(branch) for branch in _branches(list(arg[2])))
+    return _no_digit_character([items[0]])
+
+
+def _starts_with_digit_run(branch: list) -> bool:
+    """Whether one alternative starts with a greedy `[0-9]+`, or with a greedy `[0-9]{1,3}` and a character that is
+    no digit. A lazy run can end a match inside a digit run, and the helper tries one match for each run."""
+    if not branch or branch[0][0] is not _parser.MAX_REPEAT or list(branch[0][1][2]) != DIGIT_RUN:
+        return False
+    return branch[0][1][:2] == (1, _parser.MAXREPEAT) or branch[0][1][:2] == (1, 3) and _leaves_the_run(branch[1:])
 
 
 def _ends_at_a_run_end(items: list) -> bool:
@@ -269,18 +288,23 @@ def _ends_at_a_run_end(items: list) -> bool:
 
 @cache
 def has_digit_run_shape(pattern: re.Pattern | str) -> bool:
-    """`digit_run_matches` gives the matches of `finditer` only for a pattern that starts with an optional character
-    that is no digit and then `[0-9]+`, or for an alternation of such patterns, and whose every match ends at the end
-    of a digit run or after a character that is no digit. The check reads the parsed pattern."""
+    """`digit_run_matches` gives the matches of `finditer` only for a pattern whose every alternative starts with an
+    optional character that is no digit and then `[0-9]+`, or with `[0-9]{1,3}` and a character that is no digit.
+    No match may end inside the digit run where it starts: each match ends at the end of a digit run or after a
+    character that is no digit, or each alternative holds a character that is no digit right after its first
+    digits. The check reads the parsed pattern."""
     pattern = re.compile(pattern)
     items = list(_parser.parse(pattern.pattern, pattern.flags))
-    return _starts_with_digit_run(items) and _ends_at_a_run_end(items)
+    branches = _branches(items)
+    return all(_starts_with_digit_run(branch) for branch in branches) and (
+        _ends_at_a_run_end(items) or all(_leaves_the_run(branch[1:]) for branch in branches))
 
 
 def check_digit_run_pattern(pattern: re.Pattern | str) -> None:
     assert has_digit_run_shape(pattern), (
         f"{re.compile(pattern).pattern!r} reaches digit_run_matches, and does not start with an optional character"
-        " that is no digit and then a greedy [0-9]+, or can end a match inside a digit run")
+        " that is no digit and then a greedy [0-9]+ or [0-9]{1,3} and a character that is no digit, or can end a"
+        " match inside the digit run where it starts")
 
 
 def clause_7(name: str, spec: LanguageSpec) -> None:
