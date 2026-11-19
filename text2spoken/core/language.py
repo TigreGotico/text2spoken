@@ -212,8 +212,8 @@ def _likely_script(tag: str) -> str | None:
 def cldr_locale(tag: str, available: Collection[str], language: LanguageSpec) -> str | None:
     """The first CLDR locale id that `available` holds: from the tag, then the file code, then its aliases.
 
-    A tag with no script takes the script that CLDR likely-subtags gives for its region (`likely_script` of
-    linguatag), as the CLDR lookup does: `zh-TW` is `zh_Hant_TW`, so it reads the `zh_Hant` number words."""
+    A tag with no script takes the script of `linguatag.likely_script`, which reads the likely-subtags table of
+    langcodes: `zh-TW` is `zh_Hant_TW`, so it reads the `zh_Hant` number words."""
     lang, script, region = subtags(tag)
     script = script or _likely_script(tag)
     candidates = []

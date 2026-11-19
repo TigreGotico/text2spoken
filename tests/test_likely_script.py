@@ -4,6 +4,16 @@ CLDR 49 likelySubtags.xml (unicode-org/cldr, tag release-49):
   <likelySubtag from="zh_TW" to="zh_Hant_TW"/>
   <likelySubtag from="zh_HK" to="zh_Hant_HK"/>
   <likelySubtag from="sr_ME" to="sr_Latn_ME"/>
+
+CLDR RBNF sr_Latn.xml (as unicode-rbnf ships it), which reads 1999 as "hiljadu devetsto devedeset i devet":
+  spellout-cardinal-masculine:
+    <rbnfrule value="9">devet;</rbnfrule>
+    <rbnfrule value="90">devedeset[ i →→];</rbnfrule>
+    <rbnfrule value="400">←%spellout-cardinal-feminine←sto[ →→];</rbnfrule>
+    <rbnfrule value="1000">hiljadu[ →→];</rbnfrule>
+  spellout-cardinal-feminine:
+    <rbnfrule value="3">=%spellout-cardinal-masculine=;</rbnfrule>
+sr.xml holds the same rules in Cyrillic: девет, деведесет, сто, хиљаду.
 """
 import pytest
 
@@ -22,6 +32,5 @@ def test_zh_tw_reads_the_decimal_point_in_traditional_characters():
 
 
 def test_sr_me_reads_numbers_in_latin_script():
-    spoken = normalize("1999", "sr-ME")
-    assert spoken and all(not "Ѐ" <= char <= "ӿ" for char in spoken)
-    assert spoken != normalize("1999", "sr-RS")
+    assert normalize("1999", "sr-ME") == "hiljadu devetsto devedeset i devet"
+    assert normalize("1999", "sr-RS") == "хиљаду деветсто деведесет и девет"
