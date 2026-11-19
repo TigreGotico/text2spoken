@@ -85,7 +85,7 @@ PT_ENTRIES = {
     "operators": "+", "months": "março", "currencies": "EUR", "currency_symbols": "CHF", "symbol_names": DELETE,
     "scales": "milhões",
     "percent": "word",
-    "unit_symbols": "kg", "phone_words": "ligue", "short_codes": "112", "list_links": "ou",
+    "unit_symbols": "kg", "line_power_symbols": "m", "phone_words": "ligue", "short_codes": "112", "list_links": "ou",
     "phone_shapes": "[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}",
     "phone_unit_shapes": "[29][0-9]{2} [0-9]{3} [0-9]{3}", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "function_words": "agora",
@@ -126,6 +126,7 @@ ES_ENTRIES = {
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
     "abbreviation_plurals": "vol.", "degree_marks": "º", "ordinal_leads": "el", "ordinal_follows": "de",
+    "ordinal_determiners": "el", "feminine_determiners": "la",
     "mixed_word": DELETE, "mixed_half": "other",
 }
 ENTRIES = {
@@ -139,6 +140,7 @@ ENTRIES = {
     "el": {
         "number_marks": "Latn", "sign_words": "-", "case_words": "genitive", "articles": "στις",
         "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
+        "walk_adverbs": "ακόμη", "pronoun_adjectives": "άλλες", "hour_phrases": ("η", "ώρα"), "weekdays": "παρασκευή",
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
     },
     "eu": {
