@@ -125,9 +125,9 @@ class OvosNumberSpeller:
         return spoken
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """The ordinal of the number. Two more refusals of the writer decline: a `ValueError`, which several writers
-        raise for the ordinal of zero, as "Greek ordinals start at 1", and a reading that holds a digit, which some
-        writers return past a number of digits."""
+        """The ordinal of the number. Three more refusals of the writer decline: a `ValueError`, which several writers
+        raise for the ordinal of zero, as "Greek ordinals start at 1", a reading that holds a digit, which some
+        writers return past a number of digits, and the cardinal of the number, as Turkish "iki yüz" for 200."""
         number, kwargs = _integer(digits), self._kwargs(features, request)
         try:
             spoken = self._read("ordinal", f"{len(digits)} digits", request,
@@ -139,6 +139,9 @@ class OvosNumberSpeller:
                                   f"{error}") from error
         if any(char.isdigit() for char in spoken):
             raise DeclinedReading(f"ovos-number-parser gives digits for the ordinal of {len(digits)} digits in "
+                                  f"{request.tag}")
+        if spoken == self.cardinal(digits, features, request):
+            raise DeclinedReading(f"ovos-number-parser gives the cardinal for the ordinal of {len(digits)} digits in "
                                   f"{request.tag}")
         return spoken
 
@@ -218,6 +221,23 @@ def rbnf_engine(locale: str) -> RbnfEngine:
     return engine
 
 
+@cache
+def rbnf_bound(locale: str, name: str) -> int | None:
+    """The first number whose magnitude a rule set has no rule for, or None. RBNF reads past the last rule through
+    that rule, and a quotient there reaches the radix: sr spellout-ordinal ends at 400 and reads 2000 двадесетстоти."""
+    from unicode_rbnf.engine import SubRulePart, SubType
+
+    rules = rbnf_engine(locale).rulesets[name].numeric_rules
+    value = max(rules)
+    last = rules[value]
+    if not any(isinstance(part, SubRulePart) and part.type == SubType.QUOTIENT for part in last.parts):
+        return None
+    divisor = 1
+    while divisor * last.radix <= value:
+        divisor *= last.radix
+    return divisor * last.radix
+
+
 _WORD_BREAK = re.compile("([ \u00a0\u200b]+)")
 """A space, a no-break space, or a zero-width space, which the Lao rules of CLDR write between the parts of a
 number."""
@@ -282,6 +302,9 @@ class RbnfSpeller:
         from unicode_rbnf.engine import NoRuleForNumberError
 
         locale = self.locale(request)
+        bound = rbnf_bound(locale, name)
+        if bound is not None and abs(number) >= bound:
+            raise DeclinedReading(f"{name} of {locale} has no rule for a number of {size}")
         try:
             result = rbnf_engine(locale).format_number(number, ruleset_names=[name])
         except (NoRuleForNumberError, OverflowError) as error:

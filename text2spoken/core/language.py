@@ -283,10 +283,12 @@ def core_language(code: str) -> LanguageSpec:
     through the speller. `RBNF_CARDINAL` keeps as written a minus that may be no minus.
 
     An ordinal reads through the speller of the cardinals when it reads ordinals: the parser when it reads the
-    ordinal of 1, RBNF when the locale has an ordinal rule set (`rbnf_ordinals`). A language whose parser reads no
-    ordinal reads them through RBNF. The ordinal speller is the `ORDINAL` speller of the language, which a say-as
-    ordinal reads through (section 17.5); no recognizer of the language claims an ordinal. Where RBNF has an ordinal
-    rule set for more than one gender, `genders` holds them, and `default_gender` chooses the rule set.
+    ordinal of 1 (`writer_ordinals`), RBNF when the locale has an ordinal rule set (`rbnf_ordinals`). A language
+    whose parser reads no ordinal reads them through RBNF, and a language of `RBNF_HELD` with no RBNF ordinal rule
+    set reads them through the parser, because `RBNF_HELD` names a class of cardinals. The ordinal speller
+    is the `ORDINAL` speller of the language, which a say-as ordinal reads through (section 17.5); no recognizer of
+    the language claims an ordinal. Where the ordinal speller reads more than one gender, `genders` holds them, and
+    `default_gender` chooses the gender.
 
     A decimal reads in the marks of CLDR for the locale (`cldr_number_marks`), when the speller reads it. The parser
     reads it when it reads 1.5, except in `RBNF_HELD_DECIMALS`, which read through RBNF. RBNF reads it when the
@@ -324,10 +326,7 @@ def core_language(code: str) -> LanguageSpec:
             negative = []
         minus = " ".join(word for word in negative if word not in one)
         sign_words = {"-": minus} if minus else {}
-        try:
-            ordinal_speller = speller if parsers.pronounce_ordinal(1, tag) else None
-        except NotImplementedError:
-            ordinal_speller = None
+        ordinal_speller, genders = writer_ordinals(tag)
         ordinals = rbnf_ordinals(locale) if ordinal_speller is None and locale is not None else {}
         if ordinals:
             ordinal_speller = RbnfSpeller(cardinal={Features(): "spellout-numbering"}, ordinal=ordinals)
@@ -354,7 +353,9 @@ def core_language(code: str) -> LanguageSpec:
         decimal = _special_rule_set(names, cardinal, RbnfSpecialRule.IMPROPER_FRACTION)
         speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal},
                               decimal=decimal)
-        ordinal_speller = speller if ordinals else None
+        ordinal_speller, genders = speller if ordinals else None, frozenset()
+        if not ordinals and code in parsers.number_writer_languages():
+            ordinal_speller, genders = writer_ordinals(tag)
         decimal_speller = speller
         minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
         sign_words = {} if minus is None else {
@@ -391,7 +392,41 @@ def core_language(code: str) -> LanguageSpec:
     return replace(bare, varieties=varieties, data=FrozenMap(data),
                    recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), *numbers),
                    verbalizers=verbalizers, spellers=spellers,
-                   genders=frozenset(features.gender for features in ordinals if features.gender is not None))
+                   genders=genders | {features.gender for features in ordinals if features.gender is not None})
+
+
+WRITER_GENDERS = FrozenMap({GrammaticalGender.MASCULINE: "masculine", GrammaticalGender.FEMININE: "feminine",
+                            GrammaticalGender.NEUTER: "neutral"})
+"""The `gender` argument of ovos-number-parser for each gender that it reads."""
+
+NEUTER_READS_MASCULINE = frozenset({"ro"})
+"""Languages whose neuter ordinal is the masculine one, which ovos-number-parser reads with no article in the neuter,
+as Romanian "al treilea", masculine and neuter (Wiktionary, "treilea")."""
+
+
+def writer_ordinals(tag: str) -> tuple[NumberSpeller | None, frozenset[GrammaticalGender]]:
+    """The writer ordinal speller, or None when the writer reads no ordinal of 1, and its genders: those whose
+    ordinals of 1 to 3 differ from the masculine ones, with the masculine, as Polish "trzeci", "trzecia", "trzecie"."""
+    from text2spoken.core import parsers
+    from text2spoken.core.spellers import OvosNumberSpeller, words
+
+    try:
+        if not parsers.pronounce_ordinal(1, tag):
+            return None, frozenset()
+    except NotImplementedError:
+        return None, frozenset()
+
+    def readings(gender: GrammaticalGender) -> tuple[str, ...]:
+        argument = parsers.GrammaticalGender(WRITER_GENDERS[gender])
+        return tuple(words(parsers.pronounce_ordinal(number, tag, gender=argument)) for number in (1, 2, 3))
+
+    masculine = readings(GrammaticalGender.MASCULINE)
+    others = frozenset(gender for gender in WRITER_GENDERS
+                       if gender is not GrammaticalGender.MASCULINE and readings(gender) != masculine)
+    gender_arg = WRITER_GENDERS
+    if tag.split("-")[0] in NEUTER_READS_MASCULINE:
+        gender_arg = {**WRITER_GENDERS, GrammaticalGender.NEUTER: "masculine"}
+    return OvosNumberSpeller(gender_arg), (others | {GrammaticalGender.MASCULINE}) if others else frozenset()
 
 
 def rbnf_ordinals(locale: str) -> dict[Features, str]:

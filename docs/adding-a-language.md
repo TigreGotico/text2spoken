@@ -14,7 +14,7 @@ def speak_date(span: Span, context: SpanContext) -> str:
     `primero` in America (DPD «primero», 3)."""
 ```
 
-A wrong reading is worse than none. If the file cannot read a form for sure, the form stays as written.
+A wrong reading is worse than none. If the file cannot read a form for sure, the form stays as written. A form is unsure when it has two readings that the context does not choose between. A form with one reading that a speaker reads with ease must read, and the file quotes a source for that reading. To leave such a form as written is a bug, and it gets an issue.
 
 Set up a checkout with the test extra, as [Development](development.md#set-up-and-run-the-tests) shows. The commands on this page run from the root of the checkout.
 
@@ -439,4 +439,4 @@ The shared verbalizers read these keys:
 | 12 | Importing the file reads no file, opens no network connection and changes no state outside the module. It imports only the core, its own private modules such as `_pt_electronic`, the standard library and the declared dependencies. It never imports another language file. An optional dependency is imported inside a function, behind the extra of the language. | The loader imports every language file, so one file that needs a missing package or the network would break every language. |
 
 ---
-[← Russian](languages/ru.md) · [Home](index.md) · [Development →](development.md)
+[← Chinese](languages/zh.md) · [Home](index.md) · [Development →](development.md)
