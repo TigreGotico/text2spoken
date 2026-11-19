@@ -350,10 +350,10 @@ class SpacedCardinal:
                 continue
             head = text[:number.start].rstrip(GROUP_SPACES)
             before = head[-1:]
-            read_sign = unicodedata.category(before) == "Sc" \
-                or (symbols.get(before) == "percent" and head[:-1].rstrip(GROUP_SPACES)[-1:].isdecimal())
             after = number.end + (text[number.end:number.end + 1] in GROUP_SPACES)
-            if (before in symbols and not read_sign) or text[after:after + 1] in symbols \
+            if (before in symbols and unicodedata.category(before) != "Sc"
+                    and not (symbols[before] == "percent" and head[:-1].rstrip(GROUP_SPACES)[-1:].isdecimal())) \
+                    or text[after:after + 1] in symbols \
                     or (text[number.end:number.end + 1] and is_word_char(text[number.end])):
                 continue
             yield Span(number.start, number.end, Form.CARDINAL,
