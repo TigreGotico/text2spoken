@@ -1,0 +1,21 @@
+id	tag	form	text	expected	source	checked_by
+ko-001	ko-KR	cardinal	정답은 42	정답은 사십이	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "20: ←←십[→→];"	unchecked
+ko-002	ko-KR	cardinal	인구 51,740,000	인구 오천백칠십사만	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "20000: ←←만[ →→];"; CLDR 49 ko: the group mark ,	unchecked
+ko-003	ko-KR	cardinal	천 단위 1,234	천 단위 천이백삼십사	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "1000: 천[→→];"; CLDR 49 ko: the group mark ,	unchecked
+ko-004	ko-KR	cardinal	오늘 -5 날씨가	오늘 마이너스 오 날씨가	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "-x: 마이너스 →→;"; issue 203	unchecked
+ko-005	ko-KR	cardinal	변화량은 -12	변화량은 마이너스 십이	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "-x: 마이너스 →→;"	unchecked
+ko-006	ko-KR	decimal	비율 3.5	비율 삼점오	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "x.x: ←←점→→→;"; CLDR 49 ko: the decimal mark .	unchecked
+ko-007	ko-KR	decimal	값 -3.5	값 마이너스 삼점오	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "x.x: ←←점→→→;"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "-x: 마이너스 →→;"	unchecked
+ko-008	ko-KR	none	값 -0	값 -0	text2spoken-design section 10: the -x rule of RBNF reads no sign for zero	unchecked
+ko-009	ko-KR	none	구간 5 -10	구간 5 -10	text2spoken-design section 6.1: a minus after a number may mark a range	unchecked
+ko-010	ko-KR	none	가격 -50 ₩	가격 -50 ₩	text2spoken-design section 6.1: an amount with a minus stays as written, as for a language with no file	unchecked
+ko-011	ko-KR	none	가격 ₩5,000	가격 ₩5,000	text2spoken-design section 6.1: money stays as written, as for a language with no file	unchecked
+ko-012	ko-KR	none	할인 50%	할인 50%	text2spoken-design section 6.1: a percentage stays as written, as for a language with no file	unchecked
+ko-013	ko-KR	none	무게 3 kg	무게 3 kg	text2spoken-design section 6.1: a measure stays as written, as for a language with no file	unchecked
+ko-014	ko-KR	none	날짜 2026-06-10	날짜 2026-06-10	text2spoken-design section 6.1: a numeric date stays as written, as for a language with no file	unchecked
+ko-015	ko-KR	none	비율 1/2	비율 1/2	text2spoken-design section 6.1: a fraction stays as written, as for a language with no file	unchecked
+ko-016	ko-KR	none	목록 1.a 항목	목록 1.a 항목	text2spoken-design section 6.1: an ordinal with a full stop stays as written, as for a language with no file	unchecked
+ko-017	ko-KR	none	화면 비율 16:9 와 구절 3:16	화면 비율 16:9 와 구절 3:16	text2spoken-design section 4.2: the file reads no time	unchecked
+ko-018	ko-KR	none	태그 #decade	태그 #decade	text2spoken-design section 4.2: # is no lead in ko	unchecked
+ko-019	ko-KR	none	날짜 13/13/2024	날짜 13/13/2024	text2spoken-design section 4.2: no month 13	unchecked
+ko-020	ko-KR	none	가격 ₩ 5,000	가격 ₩ 5,000	text2spoken-design section 6.1: money stays as written, as for a language with no file, also with a space after the sign	unchecked

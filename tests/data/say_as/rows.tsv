@@ -18,3 +18,19 @@ SA21	en-US	2 1/2	fraction			two and a half	Amazon Polly, "Controlling how specia
 SA22	en-US	3+1/2	fraction			three and a half	Amazon Polly, "Controlling how special types of words are spoken": 3+1/2 "is pronounced "three and a half.""	unchecked
 SA23	pt-PT	2 1/2	fraction			dois e meio	Amazon Polly: fraction reads "mixed fractions"; Ciberdúvidas 38523: "Esta concordância é determinada pelo elemento que está omitido", «pé-de-cabra e meio»	unchecked
 SA24	de-DE	3+1/2	fraction			dreieinhalb	Amazon Polly: 3+1/2 is a mixed fraction; Duden, "zweieinhalb": Zahlwort, Bruchzahl, "2 1/2"	unchecked
+SA25	da-DK	21	ordinal			enogtyvende	Dansk Sprognævn, Retskrivningsordbogen, entry enogtyvende [talord]	unchecked
+SA26	da-DK	2026-12-31	date			enogtredivte december to tusind og seksogtyve	Retskrivningsordbogen, entry tredivte [talord]; English Wiktionary, Appendix:Danish numerals: "So 31 is enogtredive, not *etogtredive."	unchecked
+SA27	da-DK	41	ordinal			enogfyrrende	Retskrivningsordbogen, entry fyrrende [talord]; English Wiktionary, Appendix:Danish numerals: "1 is pronounced en if it is the last digit, and the penultimate digit is non-zero"	unchecked
+SA28	sr	200	ordinal			двестоти	Правописни приручник српског језика (ITHS, 2019): "двестоти, тристоти… деветстоти"	unchecked
+SA29	sr	300	ordinal			тристоти	Правописни приручник српског језика (ITHS, 2019): "двестоти, тристоти… деветстоти"	unchecked
+SA30	sr-Latn	200	ordinal			dvestoti	Правописни приручник српског језика (ITHS, 2019): "двестоти, тристоти… деветстоти"; Serbian writes the same word in Latin letters	unchecked
+SA31	sr-Latn	21	ordinal			dvadeset i prvi	UTS #35 Part 3: "If a rule body begins with an apostrophe, the apostrophe is ignored"; sr.xml reads 21 двадесет и први	unchecked
+SA32	sr-Latn	201	ordinal			dvesta prvi	UTS #35 Part 3: "If a rule body begins with an apostrophe, the apostrophe is ignored"; sr.xml reads 201 двеста први	unchecked
+SA33	is	7	digits			sjö	Árnastofnun, Íslensk nútímamálsorðabók: sjö, töluorð, "talan 7"	unchecked
+SA34	is	77	cardinal			sjötíu og sjö	Íslensk nútímamálsorðabók: sjö, "talan 7"; English Wiktionary, sjötíu: Icelandic numeral "seventy"	unchecked
+SA35	ko-KR	3	ordinal			셋째	Standard Korean Language Dictionary (국립국어원), "셋째": 수사, "순서가 세 번째가 되는 차례"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-ordinal-native	unchecked
+SA36	ko-KR	12	ordinal			열두째	Standard Korean Language Dictionary (국립국어원), "열두째": 수사, "순서가 열두 번째가 되는 차례"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-ordinal-native; Standard Language Rules (표준어 규정) article 6: 열두째	unchecked
+SA37	ko-KR	2026-06-10	date			이천이십육년 유월 십일	CLDR 49 ko long date pattern "y년 MMMM d일"; Hangul Orthography (한글 맞춤법) article 52: "유월(六月)"; Standard Korean Language Dictionary (국립국어원), "유월(六月)"	unchecked
+SA38	ko-KR	2026-10-06	date			이천이십육년 시월 육일	CLDR 49 ko long date pattern "y년 MMMM d일"; Hangul Orthography (한글 맞춤법) article 52: "시월(十月)"; Standard Korean Language Dictionary (국립국어원), "시월(十月)"	unchecked
+SA40	pt-PT	(212) 555-0199	telephone			dois um dois cinco cinco cinco zero um nove nove	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.3: "the chunking algorithm itself is processor specific"; the brackets group the area code; read digit by digit with the digit words of pt.py (text2spoken design section 4.3)	unchecked
+SA41	pl-PL	(212) 555-0199	telephone			dwa jeden dwa pięć pięć pięć zero jeden dziewięć dziewięć	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.3: "the chunking algorithm itself is processor specific"; read digit by digit (design section 17.5); Wiktionary: zero, jeden, dwa, pięć, dziewięć are the Polish cardinals 0, 1, 2, 5, 9	unchecked

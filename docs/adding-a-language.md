@@ -440,4 +440,4 @@ The shared verbalizers read these keys:
 | 12 | Importing the file reads no file, opens no network connection and changes no state outside the module. It imports only the core, its own private modules such as `_pt_electronic`, the standard library and the declared dependencies. It never imports another language file. An optional dependency is imported inside a function, behind the extra of the language. | The loader imports every language file, so one file that needs a missing package or the network would break every language. |
 
 ---
-[← Russian](languages/ru.md) · [Home](index.md) · [Development →](development.md)
+[← Chinese](languages/zh.md) · [Home](index.md) · [Development →](development.md)

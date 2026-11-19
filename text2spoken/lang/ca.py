@@ -71,7 +71,13 @@ form d' before a vowel, "precedida o no de h", but not before i or u "amb valor 
 
 A character that no other form claims reads by its CLDR 49 annotation name of the variety. `symbol_names` replaces
 the CLDR name "secció" of `§` with the name that "Abreviacions" gives in its section on symbols: "§ & paràgraf i",
-"vegeu el § 4.1".
+"vegeu el § 4.1". The doubled sign `§§` reads "paràgrafs", the plural. The OIEC writes it before more than one
+section number, in section 2.1.3.1: "nyora, senyal, lluny (§§ 2.5.1 i 2.8.1)". "Abreviacions", 4, Plural, reads a
+doubled abbreviation as the plural of its word, and asks writers not to double it: "Cal evitar les reduplicacions",
+"23 pàg. * 23 pp. 23 pàgines". A symbol takes no plural ending, but its word does: "Els símbols no admeten morfema
+de plural, encara que allò que abreugen o representen (paraules, sintagmes, valors) sigui un plural", "145 cm cent
+quaranta-cinc centímetres" ("Abreviacions", Símbols). The noun is masculine (DNV "paràgraf", "m."), and its plural
+takes -s, OIEC section 2.6.3.1: "S’escriu s en les terminacions de plural (arbres, diners, alegres, sàvies)".
 
 The titles and abbreviations come from the list of "Abreviacions": "doctor Dr.", "doctora Dra.", "senyor Sr.",
 "senyora Sra.", "mossèn Mn.", "etcètera etc.", "per exemple p. e., p. ex., v. gr.", "aproximadament aprox.", and,
@@ -131,7 +137,7 @@ DATA = freeze({
     "unit_symbols": ["kg", "g", "km", "cm", "l", "h", "min"],
     "dimension_marks": ["x", "×"],
     "titles": {"Sr.": "senyor", "Sra.": "senyora", "Dr.": "doctor", "Dra.": "doctora", "Mn.": "mossèn"},
-    "abbreviations": {"etc.": "etcètera", "p. ex.": "per exemple", "aprox.": "aproximadament"},
+    "abbreviations": {"etc.": "etcètera", "p. ex.": "per exemple", "aprox.": "aproximadament", "§§": "paràgrafs"},
     "sentence_final": ["etc."],
     "number_abbreviations": {"núm.": "número", "pàg.": "pàgina", "art.": "article", "cap.": "capítol",
                              "vol.": "volum"},

@@ -76,12 +76,19 @@ feminino"; sense 16, the employee: "Empregado que tem a caixa a seu cargo", "nom
 caixas.` reads "Comprei duas caixas.", and `os 2 caixas` still reads "os dois caixas".
 
 Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of pt-PT and pt):
-`5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because
-CLDR gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`,
-reads with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`,
-`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h
-e a abreviatura de minuto é min"). `unjoined_symbols` holds `ML`, the CLDR symbol of the megalitre, because CLDR
-also names `mL` the millilitre, so `ML` in capitals may be either unit, and `2ML` stays as written.
+`5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because CLDR
+gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`, reads
+with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`, `g`, `mg`,
+`km`, `m`, `cm`, `mm`, `l`, `ml`, `cl` and `dl` of CLDR 49 pt-PT (`mass-milligram` `mg`, `volume-centiliter` `cl`,
+`volume-deciliter` `dl`), and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h e a abreviatura
+de minuto é min"). The litre symbol `L` (Priberam, "litro": "Unidade de medida de capacidade (símbolo: l ou L)"), `cL`
+and `dL` stay as written, because each symbol of `unit_symbols` is a CLDR 49 symbol, and CLDR 49 writes `l`, `cl` and
+`dl`. `mL` stays as written, because CLDR also names `ML` the megalitre, and the case of the prefix alone tells the two
+apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it writes the exponent on the line, as
+a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros quadrados" (Priberam, "metro": "metro
+quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo: m²)"). `unjoined_symbols` holds `ML`,
+the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so `ML` in capitals may be either unit,
+and `2ML` stays as written.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of pt-PT and pt), and
 a symbol with a currency sign reads with no list: `20 CHF` reads "vinte francos suíços" and `₹50` "cinquenta rupias
@@ -187,6 +194,18 @@ the LETTERS form spells. A time that writes `h`, such as `0h` or `12h`, reads th
 ruling keeps it: "zero horas" in pt-PT and "zero hora" in pt-BR (Dicio, "Zero grau ou zero graus": "No Brasil, o
 zero é encarado como singular: zero grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero
 graus; zero reais; zero horas.").
+
+A clock with a colon reads after a word of `time_words`. `são`, the verb that tells the time, is one: Priberam, "ser",
+sense 14: "Indica o momento, o dia, a estação, o ano, a época (ex.: já é noite; são 18h00)". In the "meio milhão de
+frases" sentence set, each of the 148 clocks after `são` is a time, as mmf-286695 "São 17:30. Está na hora de ir buscar
+o Pedro à escola." `são` is plural and agrees with the hours, so 12:00 after it reads the 24-hour form, as after `as`:
+`São 12:00` reads "São doze horas". A clock 0:00 or 24:00 after `são` stays as written, because pt-BR reads the hour
+zero in the singular, "zero hora" (Dicio, above), which does not agree with `são`. A clock after `são` with `h` or
+`horas` after it stays as written, because the reading of a whole hour ends in "horas": `Já são 11:00 horas!`. So does a
+clock with a mark between it and `são`, as in mmf-178704 "Os lotes proibidos são: 17:00, de geleia de uva", where the
+clocks are lot numbers. A clock `24:00` is midnight, the end of the day: Priberam, "meia-noite": "Fim da vigésima quarta
+hora do dia civil que acaba às 24h00 (ou 00h00, o mesmo momento em que começa a primeira hora do dia seguinte)". So it
+reads as `0:00` does, with the ruling above: `Fecha às 24:00` reads "Fecha à meia-noite".
 
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
@@ -347,7 +366,7 @@ from __future__ import annotations
 
 import logging
 import re
-from bisect import bisect_right
+from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
@@ -360,6 +379,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affix
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
 from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
+from text2spoken.core.recognizers import Measure as CoreMeasure
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
                                           speak_decimal, speak_expression, speak_fraction, speak_lexicon,
@@ -388,7 +408,8 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
-    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde"],
+    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são"],
+    "plural_time_verbs": ["são"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
     "time_contractions": {"às": {"0": "à", "12": "ao"}, "à": {"0": "à", "12": "ao"}, "as": {"0": "a", "12": "o"},
@@ -429,7 +450,8 @@ DATA = freeze({
     "label_verbs": ["mostra", "apresenta", "indica", "mostram", "apresentam", "indicam"],
     "mixed_word": "e",
     "mixed_half": {"feminine": "meia", "other": "meio"},
-    "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml", "h", "min", "s"],
+    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "l", "ml", "cl", "dl", "h", "min", "s"],
+    "line_power_symbols": ["km", "m", "cm", "mm"],
     "unjoined_symbols": ["ML"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
                     "contacto", "contato", "celular"],
@@ -821,9 +843,9 @@ def speak_date(span: Span, context: SpanContext) -> str:
 
 def _day_point(fields: FrozenMap) -> int | None:
     """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds. A `prefix`
-    of None marks a time whose word of `time_contractions` stays as written, so its hour reads the 24-hour form that
-    the plural article agrees with. A written `a.m.` or `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.":
-    "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
+    of None marks a time whose word before it stays as written and agrees with plural hours, a word of
+    `time_contractions` or a verb of `plural_time_verbs`, so its hour reads the 24-hour form. A written `a.m.` or
+    `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.": "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
     hour = day_hour(fields["hour"], fields["period"])
     whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"] and fields["prefix"] is not None
     return hour if whole and hour in (0, 12) else None
@@ -1003,7 +1025,16 @@ class Clock(TimeClock):
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
-        for span in self._symbols(text, request):
+        words = context_words(tokens)
+        day_ends = []
+        for match in re.finditer("24:00", text):
+            start, end = match.span()
+            joined = text[end:end + 1] in (":", ".", ",") and text[end + 1:end + 2].isdigit()
+            before = clause_window(text, words, start, end, -1, limit=1)
+            if is_bounded(text, start, end) and not joined and before \
+                    and before[0].lower() in request.data["time_words"]:
+                day_ends.append(replace(self._time(start, "24", "00", ""), end=end))
+        for span in (*self._symbols(text, request), *day_ends):
             if not any(span.start < other.end and other.start < span.end for other in own):
                 own.append(span)
         for span in super().find(text, tokens, request):
@@ -1017,6 +1048,16 @@ class Clock(TimeClock):
         words = context_words(tokens)
         out: list[Span] = []
         for span in spans:
+            index = bisect_right(words, span.start, key=lambda word: word.end)
+            word = words[index - 1] if index else None
+            verb = word is not None and word.text.lower() in request.data["plural_time_verbs"] \
+                and not (span.fields["suffix"] or span.fields["period"])
+            plural = verb and text[word.end:span.start].isspace()
+            after = bisect_left(words, span.end, key=lambda word: word.start)
+            hour_word = after < len(words) and text[span.end:words[after].start].isspace() \
+                and words[after].text.lower() in ("h", "hora", "horas")
+            if verb and (not plural or hour_word):
+                continue
             hour = _day_point(span.fields)
             if hour is None:
                 out.append(span)
@@ -1028,8 +1069,10 @@ class Clock(TimeClock):
                            for first in out]
                 out.append(span)
                 continue
-            index = bisect_right(words, span.start, key=lambda word: word.end)
-            word = words[index - 1] if index else None
+            if plural:
+                if hour != 0:
+                    out.append(replace(span, fields=FrozenMap({**span.fields, "prefix": None})))
+                continue
             if word is None or word.text.lower() not in contractions:
                 out.append(span)
                 continue
@@ -1052,6 +1095,9 @@ class Clock(TimeClock):
         return replace(span, fields=FrozenMap({**span.fields, "suffix": "h"}))
 
     def _time(self, start: int, hour: str, minute: str | None, symbol: str, second: str | None = None) -> Span | None:
+        """The time span at `start`. A clock `24:00` is the end of the day, which is midnight: hour 0."""
+        if (hour, minute, symbol, second) == ("24", "00", "", None):
+            hour = "0"
         fields = clock_fields(hour, minute or "00", second)
         if fields is None:
             return None
@@ -1158,6 +1204,27 @@ class SpacedMoney(Money):
                 integer, _, fraction = re.sub("[ \u00a0\u202f]", "", match.group()).partition(",")
                 found.append(Number(start, end, "", integer, fraction or None, digit_script(text[start:end])))
         return found
+
+
+_SUPERSCRIPTS = {"2": "²", "3": "³"}
+
+
+@dataclass(frozen=True)
+class Measure(CoreMeasure):
+    """The measures of the core, and a unit of `line_power_symbols` with its exponent on the line right after the
+    number, as `80 m2` and `5cm3`, which read as `80 m²` and `5cm³`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        lined = _line_powers(request.data["line_power_symbols"]).sub(
+            lambda match: match.group() if text[match.end():match.end() + 1].isalnum()
+            else match.group(1) + _SUPERSCRIPTS[match.group(2)], text)
+        return super().find(lined, tokens, request)
+
+
+@cache
+def _line_powers(symbols: tuple[str, ...]) -> re.Pattern[str]:
+    alternatives = "|".join(map(re.escape, sorted(symbols, key=len, reverse=True)))
+    return re.compile(f"([0-9](?: |\u00a0)?(?:{alternatives}))([23])")
 
 
 @dataclass(frozen=True)
@@ -1486,7 +1553,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
+                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], Measure(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), SHARED["decimal"],
                  SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),

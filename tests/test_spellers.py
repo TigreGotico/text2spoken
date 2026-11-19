@@ -6,12 +6,14 @@ import subprocess
 import sys
 from dataclasses import replace
 from decimal import Decimal, localcontext
+from pathlib import Path
 
 import pytest
 
-from text2spoken import DeclinedReading, Features, GrammaticalGender, NormalizationParams, UnreadFormError, normalize
-from text2spoken.core.language import Request, Variety, plural_category
-from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, corrected,
+from text2spoken import (DeclinedReading, Features, GrammaticalGender, NormalizationParams, SayAs, UnreadFormError,
+                         normalize)
+from text2spoken.core.language import Request, Variety, plural_category, rbnf_locales
+from text2spoken.core.spellers import (DigitSpeller, OvosNumberSpeller, RbnfSpeller, _integer, corrected, rbnf_bound,
                                        rbnf_corrections, rbnf_engine, words)
 
 F, M = GrammaticalGender.FEMININE, GrammaticalGender.MASCULINE
@@ -301,6 +303,16 @@ def test_ovos_speller_declines_an_ordinal_that_the_library_writes_in_digits(gend
         OvosNumberSpeller(OVOS_GENDER).ordinal("8901234567890", Features(), request(gendered, "el"))
 
 
+def test_ovos_speller_declines_an_ordinal_that_the_library_writes_as_the_cardinal(gendered, monkeypatch):
+    """The cardinal is no ordinal: Turkish adds -inci, as "yüzüncü", "hundredth" (Wiktionary)."""
+    import ovos_number_parser
+
+    monkeypatch.setattr(ovos_number_parser, "pronounce_ordinal", lambda number, lang, **kwargs: "iki yüz")
+    monkeypatch.setattr(ovos_number_parser, "pronounce_number", lambda number, lang, **kwargs: "iki yüz")
+    with pytest.raises(DeclinedReading, match="the cardinal for the ordinal of 3 digits in tr-TR"):
+        OvosNumberSpeller(OVOS_GENDER).ordinal("200", Features(), request(gendered, "tr-TR"))
+
+
 def test_rbnf_speller_falls_back_case_then_animacy_then_numeral_system_then_bare(gendered):
     table = {Features(): "a", Features(gender=F): "f", Features(gender=F, case="genitive"): "fg",
              Features(gender=F, animacy="animate"): "fa"}
@@ -336,6 +348,29 @@ def test_rbnf_speller_reads_integers_only(gendered):
         speller.fraction("1", "2", Features(), request(gendered, "en"))
     with pytest.raises(ValueError):
         RbnfSpeller(cardinal={Features(gender=F): "x"}, ordinal={Features(): "y"})
+
+
+def test_only_the_serbian_ordinal_rule_sets_end_in_a_rule_that_counts_its_divisor():
+    """sr spellout-ordinal ends at 400, divisor 100; a unicode-rbnf release with a rule for 1000 fails here."""
+    bounds = {(locale, name): rbnf_bound(locale, name) for locale in sorted(rbnf_locales())
+              for name, rule_set in rbnf_engine(locale).rulesets.items() if not rule_set.is_private}
+    assert {key: bound for key, bound in bounds.items() if bound is not None} == {
+        ("sr", "spellout-ordinal"): 1000, ("sr_Latn", "spellout-ordinal"): 1000}
+
+
+@pytest.mark.parametrize("tag", ["sr", "sr-Latn"])
+@pytest.mark.parametrize("text", ["1000", "2000", "2024", "-1000", "1000000"])
+def test_a_serbian_ordinal_past_the_last_rule_gives_the_plain_reading(tag, text):
+    """Serbian writes двехиљадити, not двадесетстоти (Правописни приручник српског језика, ITHS, 2019); a declined
+    say-as gives the plain reading (design section 17.6)."""
+    assert normalize(text, tag, say_as=SayAs(interpret_as="ordinal")) == normalize(text, tag)
+
+
+@pytest.mark.parametrize(("tag", "text", "expected"), [
+    ("sr", "400", "четиристоти"), ("sr", "900", "деветстоти"), ("sr-Latn", "500", "petstoti")])
+def test_a_serbian_ordinal_below_the_bound_reads(tag, text, expected):
+    """Правописни приручник српског језика (ITHS, 2019): "двестоти, тристоти… деветстоти"."""
+    assert normalize(text, tag, say_as=SayAs(interpret_as="ordinal")) == expected
 
 
 def test_an_rbnf_engine_with_no_rule_sets_is_refused(monkeypatch):
@@ -546,18 +581,53 @@ def test_the_plural_category_agrees_with_unicode_rbnf_where_it_reads_no_exponent
 
 def test_each_rbnf_correction_names_a_word_that_the_rbnf_data_writes():
     """A release of unicode-rbnf that fixes a word of `data/rbnf_corrections.json` fails here, so the row goes."""
-    numbers = (0, 13, 90, 100, 1000, 3000, 10_000, 100_000, 10**6, -5)
+    from text2spoken.core.language import rbnf_locales
+
+    numbers = (*range(1001), 3000, 10_000, 100_000, 10**6, 10**7, 10**9, 10**11, -5)
     for language, table in rbnf_corrections().items():
-        engine = rbnf_engine(language)
         written = set()
-        for name in engine.rulesets:
-            for number in numbers:
-                try:
-                    text = engine.format_number(number, ruleset_names=[name]).text_by_ruleset[name]
-                except Exception:  # a private or a numbering rule set may refuse a number; others still read it
-                    continue
-                written.update(re.split("[ \u00a0\u200b]+", text))
+        for locale in sorted(name for name in rbnf_locales() if name.split("_")[0] == language):
+            engine = rbnf_engine(locale)
+            for name in engine.rulesets:
+                for number in numbers:
+                    try:
+                        text = engine.format_number(number, ruleset_names=[name]).text_by_ruleset[name]
+                    except Exception:  # a private or a numbering rule set may refuse a number; others still read it
+                        continue
+                    written.update(re.split("[ \u00a0\u200b]+", text))
         assert set(table) <= written, (language, sorted(set(table) - written))
+
+
+CORRECTION_ROWS = json.loads((Path(__file__).parents[1] / "text2spoken" / "data" / "rbnf_corrections.json").read_text(
+    encoding="utf-8"))["corrections"]
+SENTENCES = {"el": "Σελίδα {}.", "is": "Ég á {} hesta.", "lo": "ມື້ນີ້ {} ອາກາດ"}
+"""A sentence for each language whose rows RBNF writes in a cardinal."""
+
+
+@pytest.mark.parametrize("row", CORRECTION_ROWS, ids=[f"{row['language']}-{row['wrong']}" for row in CORRECTION_ROWS])
+def test_each_rbnf_correction_reads_through_normalize(row):
+    """The number is the first one whose RBNF words, read in unicode_rbnf, hold the wrong word of the row."""
+    from text2spoken import FrozenMap, SayAs
+    from text2spoken.core.language import rbnf_locales
+
+    locale, name, number = next(
+        (locale, name, number) for number in (*range(1001), *(10**power for power in range(3, 13)), -5)
+        for locale in sorted(rbnf_locales()) if locale.split("_")[0] == row["language"]
+        for name, rule_set in rbnf_engine(locale).rulesets.items()
+        if not rule_set.is_private and name.startswith(("spellout-cardinal", "spellout-numbering", "spellout-ordinal"))
+        and name != "spellout-numbering-year"
+        and row["wrong"] in re.split("[ \u00a0\u200b]+", rbnf_engine(locale).format_number(
+            number, ruleset_names=[name]).text_by_ruleset[name]))
+    gender = name.rsplit("-", 1)[1]
+    params = NormalizationParams(default_gender=FrozenMap({row["language"]: GrammaticalGender(gender)})) \
+        if gender in {member.value for member in GrammaticalGender} else NormalizationParams()
+    tag = locale.replace("_", "-")
+    if "ordinal" in name:
+        spoken = normalize(str(number), tag, params, say_as=SayAs(interpret_as="ordinal"))
+    else:
+        spoken = normalize(SENTENCES[row["language"]].format(number), tag, params)
+    spoken_words = re.split("[\\s\u200b.]+", spoken)
+    assert row["right"] in spoken_words and row["wrong"] not in spoken_words, (name, number, spoken)
 
 
 def test_a_correction_replaces_whole_words_only():
