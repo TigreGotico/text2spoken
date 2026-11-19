@@ -222,6 +222,8 @@ def test_a_bare_ordinal_reads_through_the_ordinal_of_the_language(tag, number):
         expected = " ".join(ORDINALS[tag](number).replace(",", " ").split())
     except NoRuleForNumberError:
         expected = normalize(str(number), tag)
+    if any(char.isdigit() for char in expected):  # unicode-rbnf 2.5.1 writes digits for a number with no rule
+        expected = normalize(str(number), tag)
     assert spoken == expected
     assert reads_again_the_same(spoken, tag)
 

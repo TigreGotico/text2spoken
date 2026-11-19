@@ -195,6 +195,15 @@ leaves the set when text2spoken takes the floor of the parser release that fixes
 wrong too, the side with the narrower class wins: sl reads through the writer, which misreads 2000 to 2999, because
 RBNF misreads every number from 21 to 99."""
 
+RBNF_HELD_DECIMALS = frozenset({
+    "ast",  # "un punto cinco"; Wiktionary, puntu (Asturian): "dot; full stop, period"; no ast RBNF, kept as written
+    "az",  # "bir nöqtə beş"; Wiktionary, nöqtə: "period", "dot", "full stop"; az.xml x.x: ←← tam →→
+    "cs",  # "jedna tečka pět"; Wiktionary, tečka: "period, full stop"; cs.xml x.x: ←← čárka →→
+    "uk",  # "один крапка п'ять"; Wiktionary, крапка: "full stop, period"; uk.xml x.x: ←← кома →→
+})
+"""Writer languages whose writer says the decimal comma of CLDR 49 with the word for a full stop. Their decimals read
+through the RBNF `x.x` rule, or stay as written with no RBNF locale, until the parser writes the comma word."""
+
 
 def _rbnf_key(features: Features) -> Features:
     return Features(gender=features.gender, animacy=features.animacy, case=features.case,
@@ -298,9 +307,12 @@ class RbnfSpeller:
             raise DeclinedReading(f"{name} of {locale} has no rule for a number of {size}")
         try:
             result = rbnf_engine(locale).format_number(number, ruleset_names=[name])
-        except (NoRuleForNumberError, OverflowError) as error:
+        except (NoRuleForNumberError, ArithmeticError) as error:  # 2.5.1 raises decimal.InvalidOperation on a 30-digit ordinal
             raise DeclinedReading(f"no rule of {name} reads a number of {size}") from error
-        return words(corrected(result.text_by_ruleset[name], locale))
+        text = result.text_by_ruleset[name]
+        if any(char.isdigit() for char in text):  # unicode-rbnf 2.5.1 writes digits where no rule reads the number
+            raise DeclinedReading(f"no rule of {name} reads a number of {size}")
+        return words(corrected(text, locale))
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._format(digits, self.rule_set(self.cardinal_sets, features), request)

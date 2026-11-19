@@ -336,14 +336,11 @@ def test_a_speller_that_raises_declined_reading_keeps_the_written_form_and_logs(
 
 
 def test_rbnf_declines_a_number_outside_its_range_through_declined_reading():
-    from unicode_rbnf.engine import NoRuleForNumberError
-
     from text2spoken import DeclinedReading
 
     with pytest.raises(UnreadFormError) as raised:
         normalize("It is 1000000000000000000000 now.", "en", NormalizationParams(strict=True))
     assert isinstance(raised.value.__cause__, DeclinedReading)
-    assert isinstance(raised.value.__cause__.__cause__, NoRuleForNumberError)
 
 
 LONG_RUNS = ["9" * 309, "9" * 4301, "$" + "9" * 400, "9" * 400 + ".5"]
@@ -358,15 +355,25 @@ def test_a_number_that_rbnf_cannot_read_stays_as_written(tag, run):
         normalize(text, tag, NormalizationParams(strict=True))
 
 
-@pytest.mark.parametrize(("run", "cause"), [("9" * 308, "NoRuleForNumberError"), ("9" * 309, "NoneType"),
-                                            ("9" * 4301, "NoneType")])
-def test_rbnf_declines_a_number_with_no_rule_and_a_run_past_the_digit_bound(run, cause):
+@pytest.mark.parametrize("run", ["9" * 308, "9" * 309, "9" * 4301])
+def test_rbnf_declines_a_number_with_no_rule_and_a_run_past_the_digit_bound(run):
     from text2spoken import DeclinedReading
 
     with pytest.raises(UnreadFormError) as raised:
         normalize(f"It is {run} now.", "en", NormalizationParams(strict=True))
     assert isinstance(raised.value.__cause__, DeclinedReading)
-    assert type(raised.value.__cause__.__cause__).__name__ == cause
+
+
+def test_rbnf_output_with_a_digit_keeps_the_written_form(monkeypatch):
+    from unicode_rbnf.engine import FormatResult
+
+    from text2spoken.core import spellers
+
+    def digits(self, number, ruleset_names):
+        return FormatResult(text="12 345", text_ruleset=ruleset_names[0], text_by_ruleset={ruleset_names[0]: "12 345"})
+
+    monkeypatch.setattr(type(spellers.rbnf_engine("en")), "format_number", digits)
+    assert normalize("It is 12345 now.", "en") == "It is 12345 now."
 
 
 def test_a_value_error_of_the_rbnf_library_still_raises(monkeypatch):

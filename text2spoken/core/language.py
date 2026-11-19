@@ -178,6 +178,17 @@ def cldr_number_marks() -> FrozenMap:
     return freeze(table["marks"])
 
 
+@lru_cache(maxsize=128)
+def number_grouping(tag: str, language: LanguageSpec) -> FrozenMap:
+    """The CLDR secondary grouping size of each script in the locale of the tag, as 2 for `Latn` in `hi` and `en_IN`
+    (`#,##,##0.###`)."""
+    table = cldr_number_marks()
+    locale = cldr_locale(tag, table, language)
+    marks = table[locale] if locale is not None else FrozenMap()
+    return FrozenMap({script: entry["secondary_grouping"] for script, entry in marks.items()
+                      if "secondary_grouping" in entry})
+
+
 def _number_marks(marks: Mapping[str, Mapping[str, str]]) -> FrozenMap:
     """CLDR marks as the `number_marks` data of a language file: one entry for each script."""
     return FrozenMap({script: (entry,) for script, entry in marks.items()})
@@ -280,8 +291,10 @@ def core_language(code: str) -> LanguageSpec:
     `default_gender` chooses the gender.
 
     A decimal reads in the marks of CLDR for the locale (`cldr_number_marks`), when the speller reads it. The parser
-    reads it when it reads 1.5. RBNF reads it when the cardinal rule set has an `x.x` rule, in the rule set or in
-    the rule set that its 0 rule names. Each other CLDR locale of the language whose marks differ is a variety.
+    reads it when it reads 1.5, except in `RBNF_HELD_DECIMALS`, which read through RBNF. RBNF reads it when the
+    cardinal rule set has an `x.x` rule, in the rule set or in the rule set that its 0 rule names. Each other CLDR
+    locale of the language whose marks differ is a variety. The marks come from `symbols-numberSystem-<system>` of
+    CLDR 49 cldr-numbers-full/main/<locale>/numbers.json, for `latn`, `defaultNumberingSystem` and the native system.
 
     A numeric date stays as written, and a say-as `date` reads through the `DATE` verbalizer (section 17.5): the
     `spoken_date` of ovos-date-parser when it reads the language, else the CLDR `long` date pattern of the locale
@@ -293,7 +306,8 @@ def core_language(code: str) -> LanguageSpec:
     from text2spoken.core import parsers, recognizers
     from text2spoken.core.dates import date_locales, long_date
     from text2spoken.core.spans import Features
-    from text2spoken.core.spellers import CARDINAL_RULE_SETS, RBNF_HELD, OvosNumberSpeller, RbnfSpeller, rbnf_engine, words
+    from text2spoken.core.spellers import (CARDINAL_RULE_SETS, RBNF_HELD, RBNF_HELD_DECIMALS, OvosNumberSpeller,
+                                           RbnfSpeller, rbnf_engine, words)
     import linguatag
 
     tag = linguatag.with_default_region(code)
@@ -320,6 +334,16 @@ def core_language(code: str) -> LanguageSpec:
             decimals = bool(words(parsers.pronounce_number(1.5, tag, places=1)))
         except (ValueError, NotImplementedError):
             decimals = False
+        decimal_speller = speller
+        if code in RBNF_HELD_DECIMALS:
+            names = rbnf_engine(locale).rulesets if locale is not None else {}
+            cardinal = next((name for name in CARDINAL_RULE_SETS if name in names), None)
+            decimal = None if cardinal is None else _special_rule_set(names, cardinal,
+                                                                      RbnfSpecialRule.IMPROPER_FRACTION)
+            decimals = decimal is not None
+            # This speller reads only decimals, so its ordinal map, which RbnfSpeller requires, is never read.
+            rule_sets = {Features(): cardinal}
+            decimal_speller = RbnfSpeller(cardinal=rule_sets, ordinal=rule_sets, decimal=decimal) if decimals else None
     elif locale is None:
         return bare
     else:
@@ -332,6 +356,7 @@ def core_language(code: str) -> LanguageSpec:
         ordinal_speller, genders = speller if ordinals else None, frozenset()
         if not ordinals and code in parsers.number_writer_languages():
             ordinal_speller, genders = writer_ordinals(tag)
+        decimal_speller = speller
         minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
         sign_words = {} if minus is None else {
             "-": "".join(part.text for part in minus.parts if isinstance(part, TextRulePart)).strip()}
@@ -362,7 +387,7 @@ def core_language(code: str) -> LanguageSpec:
     spellers = {Form.CARDINAL: speller}
     if decimals:
         verbalizers[Form.DECIMAL] = recognizers.speak_rbnf_decimal
-        spellers[Form.DECIMAL] = speller
+        spellers[Form.DECIMAL] = decimal_speller
     if ordinal_speller:
         spellers[Form.ORDINAL] = ordinal_speller
     return replace(bare, varieties=varieties, data=FrozenMap(data),

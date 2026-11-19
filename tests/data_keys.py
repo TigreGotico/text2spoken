@@ -204,7 +204,7 @@ READERS: dict[str, frozenset[str]] = {
     "expression": frozenset({"number_marks", "operators", "patterns", "symbols"}),
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
-    "abbreviation": frozenset({"titles", "number_abbreviations", "abbreviations", "sentence_final"}),
+    "abbreviation": frozenset({"titles", "number_abbreviations", "abbreviations", "sentence_final", "electronic_tlds"}),
     "space_groups": frozenset(),
     "letters": frozenset({"letter_names", "letter_vowels", "letter_onsets", "letter_codas", "letter_free_consonants",
                           "letter_runs", "letter_words", "letter_label_nouns"}),
@@ -246,7 +246,7 @@ PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "n
 OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "range_marks", "range_word", "day_periods", "electronic_labels",
     "letter_runs", "letter_free_consonants", "letter_words", "letter_label_nouns", "unjoined_symbols",
-    "symbol_names", "function_words",
+    "symbol_names", "function_words", "electronic_tlds",
     "colors", "number_gaps", "elision_marks", "mixed_half", "mixed_word",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.

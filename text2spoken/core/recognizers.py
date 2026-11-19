@@ -20,9 +20,9 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.currencies import cldr_part, currency_signs, currency_symbols, words_only
 from text2spoken.core.dates import date_locales, long_date
 from text2spoken.core.dates import resolve as resolve_date
-from text2spoken.core.electronic import ELECTRONIC
+from text2spoken.core.electronic import ELECTRONIC, tld_after
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
-from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
+from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries, number_grouping
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
 from text2spoken.core.spans import (PHONE_WAITS, Features, Recognizer, SpanContext, Span, Word, clause_breaks,
@@ -56,7 +56,7 @@ def numbers_in(text: str, request: Request) -> tuple[Number, ...]:
     key = ("numbers", text)
     if key not in request.memo:
         request.memo[key] = find_numbers(text, number_marks(request.data, request.params.decimal_mark),
-                                         declared_marks(request.data))
+                                         declared_marks(request.data), number_grouping(request.tag, request.language))
     return request.memo[key]
 
 
@@ -274,21 +274,6 @@ _GROUP_SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space, which group the digits of a number."""
 
 
-_ROOT_ROLES = MappingProxyType({".": "decimal", ",": "group"})
-"""The role of the full stop and the comma in the CLDR root locale, which writes `1,234.5`."""
-
-
-def _root_reading_differs(text: str, number: Number) -> bool:
-    """Whether the CLDR root locale reads the number in other words than the locale: the number has one full stop
-    or comma, exactly three digits follow it, and the locale gives it the other role, as `1.234` in `tr` and `3,500`
-    in `nb`. Such a number could be written in either convention."""
-    written = text[number.start + len(number.sign):number.end]
-    marks = [char for char in written if not is_digit(char)]
-    if len(marks) != 1 or marks[0] not in _ROOT_ROLES or len(written.partition(marks[0])[2]) != 3:
-        return False
-    return _ROOT_ROLES[marks[0]] != ("decimal" if number.fraction is not None else "group")
-
-
 def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[Span, ...]:
     """The cardinal and decimal spans of a language with no file (section 6.1), in text order, with each span whose
     minus may mark something else kept as written; `RbnfCardinal` names the cases."""
@@ -329,8 +314,8 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
 class RbnfCardinal(Cardinal):
     """The cardinal of a language with no file (section 6.1), in the CLDR marks of the locale.
 
-    A number that the CLDR root locale reads in other words stays as written (`_root_reading_differs`). A number
-    with a minus stays as written where the minus may mark something else, or where the number goes on past the
+    Each mark reads in its CLDR role in the locale: `1.234` is a group in `tr`, `3,500` a decimal in `nb`. A
+    number with a minus stays as written where the minus may mark something else, or where the number goes on past the
     span: a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an amount next to
     a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a number grouped with
     one of `_GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
@@ -341,9 +326,6 @@ class RbnfCardinal(Cardinal):
     minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. So does a number before a space, a minus and a
     digit that no number covers, as `5` in `5 -3.5` where the full stop groups. A dash is no digit, so `5` in
     `5--10` reads."""
-
-    def numbers(self, text: str, request: Request) -> Sequence[Number]:
-        return tuple(number for number in numbers_in(text, request) if not _root_reading_differs(text, number))
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         return (span for span in _rbnf_spans(text, tokens, request) if span.form is self.form)
@@ -971,15 +953,22 @@ def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple
     return tuple(sorted(found, key=lambda word: word.start))
 
 
+def _last_parts(words: str) -> list[str]:
+    """The words of a window slot in lower case, each hyphenated word as its last part."""
+    return [word.rsplit("-", 1)[-1] for word in words.lower().split()]
+
+
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
     region in `phone_regions`, a shape of the `phone_shapes` table, as in `(212) 555-0123`, or a phone word that
     names the run.
 
-    A phone word names the run right after it, with no letter or digit between them. A run that a word of
-    `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only add
-    words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
+    A phone word names the run right after it, with no letter or digit between them. The last part of a hyphenated
+    word counts as a word, as a colour word does (design section 4.2). So in `12,50 €-Tel.. 1.000,5-`, `Tel` names
+    the run on a second pass too, where a hyphen joins it to "céntimos", the last word of the amount. A run that a
+    word of `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only
+    add words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
 
     A named run of 7 to 15 digits reads digit by digit. A shorter named run reads digit by digit only when it is a
     short code, so `Call 100 customers.` reads a count. A run right after a phone word that no plan reads stays as
@@ -1153,11 +1142,11 @@ class Telephone:
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
                 written.startswith("+") or digits.startswith("0") or any(c in self.spaces + ".()-" for c in written))
             window = self.window(text, words, breaks, start, end, request)
-            phone_ends = [words[i].end for i in window if phone_words.intersection(words[i].text.lower().split())]
+            phone_ends = [words[i].end for i in window if phone_words.intersection(_last_parts(words[i].text))]
             between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
             direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
             spoken = lexicon.get(words[window[-1]].end, words[window[-1]].text) if window else ""
-            keeps = direct and bool(phone_words.intersection(spoken.lower().split()[-1:]))
+            keeps = direct and bool(phone_words.intersection(_last_parts(spoken)[-1:]))
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
@@ -1571,7 +1560,9 @@ class Abbreviation:
     """A title before a capitalised name, a number abbreviation before a number, and the abbreviations of the
     table, as in `Dr. Smith`, `No. 5` and `etc.` A key of `sentence_final` that ends the sentence, before a capital
     letter or at the end of the text, keeps its full stop as the trail of the span. A title before a capital
-    letter comes before a name, so it keeps no full stop.
+    letter comes before a name, so it keeps no full stop. A key that ends in a full stop stays as written before a
+    second full stop and a label of `electronic_tlds`, as in `etc..com`, because "et cetera.com" reads as an address
+    on a second pass.
 
     A language file that reads other tables replaces `tables`, and one that refuses a key in some places replaces
     `refuses`."""
@@ -1595,6 +1586,7 @@ class Abbreviation:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
         final = frozenset(data["sentence_final"])
+        tlds = data.get("electronic_tlds", ())
         for table, keys, follows in self.tables(data):
             for key in sorted(keys, key=len, reverse=True):
                 position = text.find(key)
@@ -1602,7 +1594,8 @@ class Abbreviation:
                     end = position + len(key)
                     following = next_visible(text, end)
                     if is_bounded(text, position, end) and follows(following) \
-                            and not self.refuses(text, position, table, data):
+                            and not self.refuses(text, position, table, data) \
+                            and not (text.startswith("..", end - 1) and tld_after(text, end, len(text), tlds)):
                         sentence_end = table != "titles" and key in final \
                             and (following == "" or following.isupper())
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),

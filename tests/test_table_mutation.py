@@ -8,8 +8,6 @@ from importlib import import_module
 import pytest
 
 from tests.conftest import language_names, registry_with_stubs, row_params, rows
-from tests.fixtures import pt_electronic
-from tests.test_electronic import PT_ROWS
 from text2spoken import NormalizationParams, UnreadFormError, analyze, normalize
 from text2spoken.core import language as loader
 from text2spoken.params import FrozenMap, freeze
@@ -18,7 +16,7 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads"},
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": {"leads"},
           "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes", "no_phone_shapes"},
           "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
@@ -99,6 +97,7 @@ PT_ENTRIES = {
     "time_contractions": "às", "time_article_prepositions": "as",
     "plural_time_verbs": "são",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
+    "electronic_symbols": "@", "electronic_vowels": "a", "electronic_schemes": "https", "electronic_tlds": "pt",
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
     "letter_free_consonants": "b", "roman_nouns": "capítulo", "roman_words": "MC", "letter_words": "DA",
     "roman_letter_nouns": "capítulo", "unjoined_symbols": "ML", "label_nouns": "sala", "plural_labels": "a páginas",
@@ -114,7 +113,7 @@ AR_ENTRIES = {
     "currencies": "USD", "symbols_after_only": "ريال", "scales": "مليون", "units": "كم", "dimension_marks": "×",
     "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_words": "الساعة",
     "day_periods": "pm", "spoken_periods": "afternoon2", "minute_phrases": "30", "months": "مارس",
-    "date_reading": "full", "era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ",
+    "date_reading": "full", "era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ", "short_periods": "م",
 }
 ES_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
@@ -147,6 +146,7 @@ ENTRIES = {
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
         "halves": "2",
     },
+    "ja": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg"},
     "ko": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg",
            "counters": "개", "counter_followers": "이", "months": "유월"},
     "eu": {
@@ -253,39 +253,21 @@ def test_dropping_a_symbol_hides_it_from_the_unread_check(monkeypatch):
     assert normalize("Pay in $ only.", "en", strict) == "Pay in $ only."
 
 
-PT_ADDRESS = pt_electronic.LANGUAGE
-PT_ADDRESS_ENTRIES = {"electronic_symbols": "@", "letter_names": "p", "electronic_vowels": "a",
-                      "electronic_schemes": "https", "electronic_tlds": "pt", "digit_words": "zero"}
-PT_ADDRESS_VARIETY_ENTRIES = {("pt-PT", "electronic_symbols"): "_", ("pt-BR", "electronic_symbols"): "#",
-                              ("pt-PT", "letter_names"): "w", ("pt-BR", "letter_names"): "w"}
-"""One entry of each address table of Portuguese, in its language data and in each variety."""
+PT = import_module("text2spoken.lang.pt").LANGUAGE
+PT_VARIETY_ENTRIES = {("pt-PT", "electronic_symbols"): "_", ("pt-BR", "electronic_symbols"): "#",
+                      ("pt-PT", "letter_names"): "w", ("pt-BR", "letter_names"): "w"}
+"""One entry of each address table that a Portuguese variety holds."""
 
 
-def _pt_failures(monkeypatch, spec) -> list[str]:
-    monkeypatch.setattr(loader, "_registry", lambda: {"pt": spec})
-    return [r["id"] for r in PT_ROWS if _fails(r)]
-
-
-def test_every_pt_address_table_has_an_entry_to_drop():
-    assert set(PT_ADDRESS_ENTRIES) == set(PT_ADDRESS.data)
-    assert {(v.tag, table) for v in PT_ADDRESS.varieties for table in v.data} == set(PT_ADDRESS_VARIETY_ENTRIES)
-
-
-@pytest.mark.parametrize("table", sorted(set(PT_ADDRESS_ENTRIES) - FIELD_ONLY))
-def test_dropping_a_pt_address_entry_fails_a_row(monkeypatch, table):
-    assert _pt_failures(monkeypatch, PT_ADDRESS) == []
-    assert _pt_failures(monkeypatch, replace(PT_ADDRESS, data=drop(PT_ADDRESS.data, table, PT_ADDRESS_ENTRIES[table])))
-
-
-@pytest.mark.parametrize(("tag", "table"), sorted(PT_ADDRESS_VARIETY_ENTRIES))
+@pytest.mark.parametrize(("tag", "table"), sorted(PT_VARIETY_ENTRIES))
 def test_dropping_a_pt_variety_entry_fails_a_row(monkeypatch, tag, table):
-    entry = PT_ADDRESS_VARIETY_ENTRIES[tag, table]
-    varieties = tuple(replace(v, data=drop(v.data, table, entry)) if v.tag == tag else v for v in PT_ADDRESS.varieties)
-    assert _pt_failures(monkeypatch, PT_ADDRESS) == []
-    assert _pt_failures(monkeypatch, replace(PT_ADDRESS, varieties=varieties))
+    entry = PT_VARIETY_ENTRIES[tag, table]
+    varieties = tuple(replace(v, data=drop(v.data, table, entry)) if v.tag == tag else v for v in PT.varieties)
+    assert _failures(monkeypatch, PT) == []
+    assert _failures(monkeypatch, replace(PT, varieties=varieties))
 
 
-@pytest.mark.parametrize(("spec", "tag"), [(EN, "en"), (PT_ADDRESS, "pt-PT")])
+@pytest.mark.parametrize(("spec", "tag"), [(EN, "en"), (PT, "pt-PT")])
 def test_dropping_a_scheme_changes_the_fields(monkeypatch, spec, tag):
     text = "See https://example.com now."
     monkeypatch.setattr(loader, "_registry", lambda: dict.fromkeys((spec.code, *spec.serves), spec))

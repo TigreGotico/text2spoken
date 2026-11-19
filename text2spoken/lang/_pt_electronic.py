@@ -1,14 +1,14 @@
-"""The tables with which Portuguese reads an e-mail or web address (design section 4.2), for pt-PT and pt-BR.
+"""The tables with which Portuguese reads an e-mail or web address (design section 4.5), for pt-PT and pt-BR.
 
 `pt.py` takes `ELECTRONIC` into its language data and each entry of `VARIETIES` into the data of that variety.
 
 Each symbol reads by its name in the Dicionário Priberam da Língua Portuguesa (dicionario.priberam.org): "@" is
-"arroba" ("arroba": "Sinal (@) usado em endereços antes da indicação de domínio"), "." is "ponto" ("ponto", 7:
-"Sinal gráfico (.)"), "-" is "hífen" ("hífen": "Sinal gráfico horizontal (-)"), "/" is "barra" ("barra", 10:
-"Sinal gráfico (/) constituído por um traço oblíquo"), ":" is "dois pontos" ("dois pontos": "Sinal ortográfico
-de pontuação (:)"; the Brazilian norm writes "dois-pontos", with the same sound), "~" is "til" ("til", 1: "Sinal
-ortográfico (~)"), "?" is "ponto de interrogação" ("ponto de interrogação": "Sinal de pontuação (?)"), "=" is
-"igual" ("igual", 6: "Sinal aritmético (=) de igualdade"), "&" is "e comercial" ("e comercial": "Sinal gráfico
+"arroba" ("arroba": "Sinal (@) usado em endereços electrónicos antes da indicação de domínio"), "." is "ponto"
+("ponto", 7: "Sinal gráfico (.)"), "-" is "hífen" ("hífen": "Sinal gráfico horizontal (-)"), "/" is "barra"
+("barra", 10: "Sinal gráfico (/) constituído por um traço oblíquo"), ":" is "dois pontos" ("dois pontos": "Sinal
+ortográfico de pontuação (:)"; the Brazilian norm writes "dois-pontos", with the same sound), "~" is "til" ("til",
+1: "Sinal ortográfico (~)"), "?" is "ponto de interrogação" ("ponto de interrogação": "Sinal de pontuação (?)"), "="
+is "igual" ("igual", 6: "Sinal aritmético (=) de igualdade"), "&" is "e comercial" ("e comercial": "Sinal gráfico
 (&)") and "+" is "mais" ("mais", 13: "Usa-se para indicar adição"). Wiktionary, "dot", gives "ponto" as the
 Portuguese word for the dot "in URL's or email addresses".
 
