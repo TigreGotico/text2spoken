@@ -8,11 +8,12 @@ The number words come from the CLDR RBNF rule set `spellout-cardinal` of `ja` (u
 and group marks are the full stop and the comma, the CLDR number symbols of `ja`.
 
 The decimal mark reads 点. The English Wiktionary, "小数点", Japanese, Usage notes: "A decimal point itself is
-pronounced as てん. For example, 9.58 is pronounced as きゅう てん ごー はち and 19.19 is pronounced as じゅうきゅう
-てん いち きゅう". Its etymology: "From 小数 (しょうすう, decimal) + 点 (てん, point, dot)". The CLDR rule set
-`spellout-cardinal-financial` of `ja` writes the same word, "x.x: ←←点→→→;". The rule set `spellout-cardinal` writes
-the mark as ・ ("x.x: ←←・→→→;"), a sign with no reading, so the speller writes 点 in its place. The digits after the
-mark read one by one, as the rule `→→→` writes them: 3.14 reads 三点一四.
+pronounced as てん (ten, literally “dot”). For example, 9.58 is pronounced as きゅうてんごーはち (kyū ten gō hachi,
+literally “nine point five eight”) and 19.19 is pronounced as じゅうきゅうてんいちきゅう (jū-kyū ten ichi kyū,
+literally “ten-nine point one nine”)." Its Etymology: "From 小数(しょうすう) (shōsū, “decimal”) + 点(てん) (ten, “point,
+dot”)." The CLDR rule set `spellout-cardinal-financial` of `ja` writes the same word, "x.x: ←←点→→→;". The rule set
+`spellout-cardinal` writes the mark as ・ ("x.x: ←←・→→→;"), a sign with no reading, so the speller writes 点 in its
+place. The digits after the mark read one by one, as the rule `→→→` writes them: 3.14 reads 三点一四.
 
 A number next to a kanji or a kana, as in 3個, 2024年 and 3.5キロ, stays as written, as for a language with no file.
 The Japanese phonemizer of the speech stack, pyopenjtalk-plus (0.4.1.post10), reads such a number with the sound of
@@ -22,12 +23,13 @@ its counter (3本 サンボン, 1杯 イッパイ). In kanji numerals it reads s
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import replace
 
 from text2spoken.core.language import LanguageSpec, Request, Variety
-from text2spoken.core.recognizers import (LEXICON, RBNF_CARDINAL, RBNF_DECIMAL, SHARED, OrdinalStop, speak_cldr_date,
-                                          speak_lexicon, speak_rbnf_cardinal, speak_rbnf_decimal, written_shapes)
-from text2spoken.core.spans import FIELDS, Features, Recognizer, Span
+from text2spoken.core.recognizers import (LEXICON, RBNF_CARDINAL, RBNF_DECIMAL, SHARED, OrdinalStop, Written,
+                                          speak_cldr_date, speak_lexicon, speak_rbnf_cardinal, speak_rbnf_decimal,
+                                          written_shapes)
+from text2spoken.core.spans import FIELDS, Features, Span
 from text2spoken.core.spellers import RbnfSpeller
 from text2spoken.core.tokens import Token
 from text2spoken.params import OPTIONS, Form, freeze
@@ -43,11 +45,8 @@ DATA = freeze({
 class JaSpeller(RbnfSpeller):
     """`spellout-cardinal` of `ja`, with 点 for the mark ・ of its `x.x` rule."""
 
-    def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        return super().decimal(integer, fraction, features, request).replace("・", "点")
-
-    def negative_decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        return super().negative_decimal(integer, fraction, features, request).replace("・", "点")
+    def _decimal(self, integer: str, fraction: str, request: Request, sign: int) -> str:
+        return super()._decimal(integer, fraction, request, sign).replace("・", "点")
 
 
 SPELLER = JaSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"},
@@ -56,16 +55,9 @@ SPELLER = JaSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Feature
 KEPT_FIELDS = freeze(dict.fromkeys(FIELDS[Form.CARDINAL], ""))
 
 
-@dataclass(frozen=True)
-class Kept:
-    """The spans of a shape recognizer as written, as cardinals, so that they guard the digits when only `CARDINAL`
-    is on."""
-    shape: Recognizer
-    form: Form = Form.CARDINAL
-
-    @property
-    def name(self) -> str:
-        return self.shape.name
+class Kept(Written):
+    """`Written` with cardinal spans: the language file contract (design section 5.2) asks that each span has the
+    form of its recognizer."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in self.shape.find(text, tokens, request):
