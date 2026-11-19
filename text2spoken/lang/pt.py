@@ -70,11 +70,12 @@ The comma is the decimal mark, and the full stop is the decimal mark of the Engl
 (IPQ, 2006), quoted in Ciberdúvidas 12873: "Esses sinais são o ponto e a vírgula, sendo o primeiro empregado nos
 países de língua inglesa, e o segundo, nos restantes." So a full stop with one, two, or four or more digits after
 it, which no group of three explains, is a decimal mark, and `1.500` still reads as a number grouped with the full
-stop. Such a decimal reads with a unit symbol, a percent sign or a currency, as in `1.5 km`, and before the CLDR 49
-name of a unit, as in `10.4 graus`. Anywhere else it stays as written: in the "meio milhão de frases" sentence set,
-digits that a full stop parts are mostly a version, an engine size or a section (`Versão 14.2`, mmf-487795; `motor
-1.6`, mmf-431047; `Termo de Referência, 5.3`, mmf-462875), which a speaker does not read with "vírgula". A unit of
-duration is no evidence, because `1.30 horas` may write one hour and thirty minutes.
+stop. Such a decimal reads with a percent sign, a currency or the symbol of a unit that `Measure` reads, as in
+`1.5 km`, and before the CLDR 49 name of such a unit, as in `10.4 graus`. Anywhere else it stays as written: in the
+"meio milhão de frases" sentence set, digits that a full stop parts are mostly a version, an engine size or a section
+(`Versão 14.2`, mmf-487795; `motor 1.6`, mmf-431047; `Termo de Referência, 5.3`, mmf-462875), which a speaker does
+not read with "vírgula". A unit of duration, as a symbol or a name, is no evidence: `1.30 h` and `1.30 horas` may
+write one hour and thirty minutes, and `às 9.30h` writes a clock.
 
 Two numbers that `a`, `e` or `ou` join, as in `de 1 a 3 semanas` and `entre 1 e 2 semanas`, stay as written when the
 noun after the second number gives the first number another reading. No source gives the gender of the first number
@@ -373,6 +374,7 @@ from text2spoken.core.letters import Letters, capital_clauses, speak_letters
 from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Decimal as CoreDecimal
+from text2spoken.core.recognizers import Measure as CoreMeasure
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, numbers_in,
                                           signed, speak_decimal, speak_expression, speak_fraction, speak_lexicon,
@@ -382,7 +384,7 @@ from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char, one_digit_set
-from text2spoken.core.units import cldr_data, unit_reading
+from text2spoken.core.units import cldr_data, joined_table, unit_reading, unit_table
 from text2spoken.errors import DeclinedReading
 from text2spoken.lang import _pt_electronic
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
@@ -745,11 +747,9 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     masculino"): `um milhão de pessoas`."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
-    if len(digits) > 1 and digits[0] == "0" and context.before \
-            and context.before[-1].lower() == request.data["decimal_word"]:
-        words = SPELLER.decimal_part(digits, request)
-    elif len(digits) > 1 and digits[0] == "0":
-        words = spell_digits(digits, request)
+    if len(digits) > 1 and digits[0] == "0":
+        after_mark = context.before and context.before[-1].lower() == request.data["decimal_word"]
+        words = SPELLER.decimal_part(digits, request) if after_mark else spell_digits(digits, request)
     else:
         words = _cardinal(digits, request, agreement(context))
         _check_pair(digits, context)
@@ -1204,13 +1204,13 @@ class SpelledDecimal:
 
 @dataclass(frozen=True)
 class PointDecimal(CoreDecimal):
-    """The decimals of the core. A decimal with the full stop reads only before the name of a unit, as `10.4 graus`,
-    or with a symbol that `Measure`, `Percent` or `Money` reads."""
+    """The decimals of the core. A decimal with the full stop reads only before a word of `_unit_names`, as
+    `10.4 graus`, or with a symbol that `PointMeasure`, `Percent` or `Money` reads."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         canonical = number_marks(request.data, request.params.decimal_mark)[0][1][:1]
         words = context_words(tokens)
-        names = _unit_names(request.variety.tag)
+        names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
         for span in super().find(text, tokens, request):
             fraction = span.fields["fraction"]
             mark = text[span.end - len(span.fields["suffix"]) - len(fraction) - 1]
@@ -1219,18 +1219,33 @@ class PointDecimal(CoreDecimal):
                 continue
             index = bisect_left(words, span.end, key=lambda word: word.start)
             if index < len(words) and text[span.end:words[index].start].isspace() \
-                    and words[index].text.lower() in names:
+                    and words[index].text in names:
+                yield span
+
+
+@dataclass(frozen=True)
+class PointMeasure(CoreMeasure):
+    """The measures of the core. A decimal with the full stop reads only with a unit whose name starts with a word of
+    `_unit_names`, so `1.30 h` and `9.30h` stay as written."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        canonical = number_marks(request.data, request.params.decimal_mark)[0][1][:1]
+        names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
+        points = [number.start for number in numbers_in(text, request)
+                  if number.fraction and text[number.end - len(number.fraction) - 1] != canonical]
+        for span in super().find(text, tokens, request):
+            if not any(span.start <= start < span.end for start in points) \
+                    or unit_reading(request, span.fields["unit"], "other")[0].replace("{0}", "").split()[0] in names:
                 yield span
 
 
 @cache
-def _unit_names(tag: str) -> frozenset[str]:
-    """The first word of each CLDR unit name of a variety that is no function word, as `graus` and `metros`, with no
-    unit of duration, `concentr` or `graphics` (`{0} item`, `{0} parte`, `{0} ponto`)."""
-    return frozenset(name.replace("{0}", "").split()[0] for key, unit in cldr_data(tag)["units"].items()
-                     if key.split("-")[0] not in ("duration", "concentr", "graphics")
-                     for name in unit["names"].values() if name.replace("{0}", "").split()) \
-        - frozenset(DATA["function_words"])
+def _unit_names(tag: str, *tables: FrozenMap) -> frozenset[str]:
+    """The first word of each CLDR name of the units of the tables that is no function word, as `quilómetros` and
+    `graus`, apart from the units of duration."""
+    durations = [unit for key, unit in cldr_data(tag)["units"].items() if key.startswith("duration-")]
+    return frozenset(name.replace("{0}", "").split()[0] for table in tables for unit in table.values()
+                     if unit not in durations for name in unit["names"].values()) - frozenset(DATA["function_words"])
 
 
 @dataclass(frozen=True)
@@ -1559,7 +1574,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
+                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], PointMeasure(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), PointDecimal(),
                  SpelledDecimal(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
