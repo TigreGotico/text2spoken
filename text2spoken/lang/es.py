@@ -213,8 +213,8 @@ DATA = freeze({
     "patterns": {"expression": "[-−+]?[0-9]+(?: ?[+−×÷=] ?[-−+]*[0-9]+)+"},
 })
 
-_LEAD_WORDS = frozenset(word.rstrip(".") for word in DATA["ordinal_leads"])
-"""The words of `ordinal_leads` as context words give them, with no final full stop."""
+_PARTED = "es_ordinal_parted"
+"""Request memo key: the start of each ordinal that a mark parts from the next word."""
 
 AMERICA = {"first_of_month": "ordinal", "percent": {"whole": "ciento por ciento"}, "leads": {"#": "número"}}
 """What every American variety changes: `primero` for the first day of the month (DPD «primero», 3), `ciento por
@@ -464,11 +464,8 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
 
 
 def speak_ordinal(span: Span, context: SpanContext) -> str:
-    """The marker gives the gender and the number: `1.º`, `1.ª`, `1.os`. `1.er`, and a masculine singular ordinal
-    before its noun, take the apocope (see the module docstring); `etc.` closes a list (DPD «etcétera», 1) and is no
-    noun. After a word of `ordinal_determiners` a capitalised noun and a noun in `s` count. With no determiner the
-    ordinal can head a list, so only a lowercase word with no final `s` counts. A word in capitals counts only after
-    a determiner in capitals, and a word of one letter, such as the door letter of `el 3.º B`, never counts."""
+    """The marker gives the gender and the number. `1.er`, and a masculine singular ordinal before its noun, take
+    the apocope; the module docstring gives the rule for what counts as the noun."""
     request, data = context.request, context.request.data
     kind = data["ordinal_marks"][span.fields["marker"]]
     gender = F if kind.startswith("feminine") else M
@@ -478,13 +475,14 @@ def speak_ordinal(span: Span, context: SpanContext) -> str:
     first = context.after[0] if context.after else ""
     lead = context.before[-1] if context.before else ""
     determined = lead.lower() in data["ordinal_determiners"]
-    postposed = not determined and lead.lower() in _LEAD_WORDS
+    leads = data["ordinal_leads"]
+    postposed = not determined and (lead.lower() in leads or f"{lead.lower()}." in leads)
     if determined:
         shaped = first.islower() or first.istitle() or (first.isupper() and lead.isupper())
     else:
         shaped = first.islower() and not first.endswith("s")
     noun = first.lower()
-    parted = span.start in request.memo.get("es_ordinal_parted", ())
+    parted = span.start in request.memo.get(_PARTED, ())
     before_noun = (shaped and not postposed and not parted and first.isalpha() and len(first) > 1
                    and noun not in data["function_words"] and f"{noun}." not in data["sentence_final"]
                    and noun_gender(noun, data) is not F)
@@ -702,12 +700,12 @@ class Ordinal:
                     or not _ordinal_context(text, number.start, number.end + len(marker), request)):
                 continue
             end = number.end + len(marker)
-            head = text[:number.start]
-            last = (head.rsplit(None, 1) or [""])[-1].lower()
-            contradicted = (request.data["ordinal_marks"][marker] == "masculine" and head[-1:].isspace()
+            before = text[max(0, number.start - 20):number.start]
+            last = before.split()[-1].lower() if before.strip() else ""
+            contradicted = (request.data["ordinal_marks"][marker] == "masculine" and before[-1:].isspace()
                             and last in request.data["feminine_determiners"])
             if not (text[end:end + 1].isspace() and next_visible(text, end).isalpha()):
-                request.memo.setdefault("es_ordinal_parted", set()).add(number.start)
+                request.memo.setdefault(_PARTED, set()).add(number.start)
             yield Span(number.start, end, Form.ORDINAL,
                        FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
                                   "script": number.script}), recognizer=self.name, keep=contradicted)
