@@ -58,6 +58,7 @@ A tag with no language file reads cardinal numbers, decimals and a minus from th
 | [Dutch](docs/languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` | `nl` |
 | [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` | `pt` |
 | [Russian](docs/languages/ru.md) | `ru-RU` | `ru` |
+| [Chinese](docs/languages/zh.md) | `zh-CN`, `zh-TW`, and `cmn` | none |
 
 ## Where this fits
 

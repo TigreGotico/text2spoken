@@ -35,5 +35,6 @@ Each language page gives what the language reads, its varieties and the codes th
 | Dutch | [nl](languages/nl.md) |
 | Portuguese | [pt](languages/pt.md) |
 | Russian | [ru](languages/ru.md) |
+| Chinese | [zh](languages/zh.md) |
 
 The language pages come after [Errors and warnings](errors.md) in the reading order.
