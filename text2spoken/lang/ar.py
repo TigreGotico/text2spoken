@@ -221,6 +221,8 @@ noun, which follows the number (Ryding 2005, p. 335)."""
 
 VARIETIES = (
     Variety("ar-001"),
+    *(Variety(f"ar-{region}") for region in ("AE", "BH", "DJ", "EG", "EH", "ER", "IL", "KM", "KW", "OM", "QA", "SA",
+                                             "SD", "SO", "SS", "TD", "YE")),
     Variety("ar-DZ", freeze({"defaults": {"decimal_mark": ","}, "months": MAGHREB_MONTHS})),
     Variety("ar-TN", freeze({"defaults": {"decimal_mark": ","}, "months": MAGHREB_MONTHS})),
     Variety("ar-IQ", freeze({"months": SYRIAC_MONTHS})),
@@ -236,7 +238,8 @@ VARIETIES = (
                              "months": ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغشت", "شتمبر",
                                         "أكتوبر", "نوفمبر", "دجمبر"]})),
 )
-"""The CLDR locales whose month names or Latin number marks differ from `ar`. Each other region reads as `ar-001`."""
+"""The CLDR 49 locales of `ar`. A locale whose month names or Latin number marks differ from `ar` holds them; each
+other locale reads the data of `ar-001`."""
 
 REGION_DATA = {variety.tag.split("-")[1]: variety.data for variety in VARIETIES}
 
