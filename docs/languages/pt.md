@@ -4,7 +4,7 @@ The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, money, measures, percentages, telephone numbers, abbreviations, Roman numerals, colours, symbols and lexicon entries. With the form on, it also reads runs of capital letters and emoji. It has no address form.
+The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, money, measures, percentages, telephone numbers, abbreviations, Roman numerals, colours, e-mail and web addresses, symbols and lexicon entries. With the form on, it also reads runs of capital letters and emoji.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ The words of a date, a clock time and a year come from `ovos-date-parser`. A clo
 | --- | --- |
 | `Chega às 0:00.` | Chega às zero horas. |
 
-[Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the emoji.
+[Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
 ## Varieties
 
@@ -73,7 +73,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 547 rows in `tests/data/pt.tsv`, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` name their source, and no native speaker has checked them. Of the 587 rows, 14 are marked silver.
 
 ## Roman numerals
 
@@ -105,6 +105,28 @@ A Roman numeral reads after a century word, after a noun of a part, a class or a
 | `Vi o Godzilla II no cinema.` | `pt-PT` | Vi o Godzilla Segundo no cinema. | A name that no list holds takes the masculine. |
 | `EU LI O LIVRO` | `pt-PT` | stays as written | `LI` follows the pronoun `EU`, and `letter_words` holds it, the verb form of "ler". |
 
+## E-mail and web addresses
+
+An address reads piece by piece. Each symbol reads by its name in Priberam, such as "arroba" for `@` and "ponto" for `.`. A label of three or more letters with a vowel reads as a word. Any other label reads each letter by its name in AO1990, Base I. So `com` reads as a word and `pt` reads letter by letter, as Ciberdúvidas 19059 advises. A digit reads by its digit word. Three names differ by variety:
+
+| Sign | `pt-PT` | `pt-BR` |
+| --- | --- | --- |
+| `_` | traço inferior | sublinha |
+| `#` | cardinal | cerquilha |
+| `w` | dâblio | dáblio |
+
+A full stop, a comma or another mark at the end of an address stays with the sentence. The docstring of [`_pt_electronic.py`](../../text2spoken/lang/_pt_electronic.py) quotes each source.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Escreva para joao.silva@exemplo.pt hoje.` | `pt-PT` | Escreva para joao ponto silva arroba exemplo ponto pê tê hoje. |
+| `Escreva a maria_santos@exemplo.pt.` | `pt-PT` | Escreva a maria traço inferior santos arroba exemplo ponto pê tê. |
+| `Escreva a maria_santos@exemplo.pt.` | `pt-BR` | Escreva a maria sublinha santos arroba exemplo ponto pê tê. |
+| `Acesse www.gov.br hoje.` | `pt-BR` | Acesse dáblio dáblio dáblio ponto gov ponto bê érre hoje. |
+| `O Sr. Silva escreveu a silva@exemplo.pt.` | `pt-PT` | O Senhor Silva escreveu a silva arroba exemplo ponto pê tê. |
+
+To keep an address as written, pass `NormalizationParams().without(Form.ELECTRONIC)`.
+
 ## Runs of capital letters
 
 A run that splits into Portuguese syllables stays as written, and any other run reads each letter by its name. In Portuguese, a consonant can also stand where a reader adds a vowel. A table in the language file holds the runs that the rule reads wrong: `EUA`, `APPO`, `OCDE`, `ANS` and `ONS` read letter by letter. A syllable can close with `ns`, as AO1990 Base XX divides "ins- crição" and "trans- gredir".
@@ -119,7 +141,7 @@ A run of three letters or more that tugalex knows reads as a word anywhere. A cl
 | `O IBGE.` | stays as written | Limit: no source in the language file names it, so the rule reads it as a word. |
 | `O DIV, o CIV e o LIV.` | O dê i vê, o cê i vê e o éle i vê. | Limit: a well-formed Roman numeral that the `ROMAN` form does not read is spelled. |
 | `A WEB.` | A dâblio é bê. | Limit: Portuguese has no onset or coda with `k`, `w` or `y`, which AO1990 keeps for foreign names. |
-| `geral@RTP.pt` | geral@érre tê pê.pt | Limit: Portuguese has no address form, so the form spells only the run in an address. |
+| `geral@RTP.pt` | geral arroba érre tê pê ponto pê tê | The address form reads the whole address. `RTP` has no vowel, so it reads letter by letter. |
 | `EU VI O FILME` | stays as written | A clause in capitals: `letter_words` holds `VI`, the verb form of "ver". |
 | `AR CONDICIONADO` | stays as written | A clause in capitals: tugalex knows "ar". |
 | `INSTITUTO DE ESTUDOS` | stays as written | The run splits into ins-ti-tu-to. |
@@ -163,8 +185,8 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 
 | Written | Spoken (`pt-PT`) | Why |
 | --- | --- | --- |
-| `Veja www.x.pt/5µm` | Veja www.x.pt/cinco micrómetros | Portuguese has no address form, so a unit inside a Portuguese address reads as a measure. |
-| `x@a©b.pt` | x@a direitos de autor b.pt | For the same reason, a symbol inside a Portuguese address reads by its name. |
+| `Veja www.x.pt/5µm` | Veja dâblio dâblio dâblio ponto xis ponto pê tê barra cinco µm | No unit reads inside an address. `µ` has no name in the address tables, so it stays as written. |
+| `x@a©b.pt` | xis arroba á direitos de autor bê ponto pê tê | A symbol of CLDR inside an address reads by its CLDR name. |
 
 The edge cases that Portuguese shares with English are on the [Money, units and symbols](../money-units-and-symbols.md#limits) and [Addresses, letters and emoji](../addresses-letters-and-emoji.md#edge-cases) pages.
 

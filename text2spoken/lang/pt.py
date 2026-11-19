@@ -122,6 +122,9 @@ takes a name that its locale does not give from pt, so `†` reads "obelisco" in
 CLDR name "secção" and "seção" of `§` with the name of the sign: Priberam, "parágrafo", sense 3: "Sinal desta divisão
 (§)." So `Veja o § 5` reads "Veja o parágrafo cinco".
 
+An e-mail or web address reads by the `ELECTRONIC` form (design section 4.5), with the tables of
+`lang/_pt_electronic.py`, whose docstring quotes their sources.
+
 A run of capital letters reads by the `LETTERS` form (design section 4.6) when the caller turns the form on.
 Correia and San Payo de Lemos, Inovação Lexical em Português (2005, p. 46), quoted in Ciberdúvidas answer 26164,
 give the rule: "aquilo que distingue uma sigla de um acrónimo é apenas a sua concordância/não-concordância com a
@@ -356,6 +359,7 @@ from text2spoken.core import parsers
 from text2spoken.core.color import speak_color
 from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
+from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
 from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
@@ -380,6 +384,7 @@ MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "
 _MONTH = "(" + "|".join(f"[{m[0]}{m[0].upper()}]{m[1:]}" for m in MONTHS) + ")"
 
 DATA = freeze({
+    **_pt_electronic.ELECTRONIC,
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}, {"decimal": ".", "group": ","}]},
     "sign_words": {"-": "menos", "+": "mais"},
     "digit_words": ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"],
@@ -516,10 +521,10 @@ VARIETIES = (
     Variety("pt-PT", freeze({"defaults": {**DEFAULTS, "scale": "long"},
                              "space_group_money": True,
                              "colors": {"808080": "cinzento"},
-                             "letter_names": _pt_electronic.VARIETIES["pt-PT"]["letter_names"]})),
+                             **_pt_electronic.VARIETIES["pt-PT"]})),
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
-        "letter_names": _pt_electronic.VARIETIES["pt-BR"]["letter_names"],
+        **_pt_electronic.VARIETIES["pt-BR"],
         "roman_ordinal_limit": 9,
         "colors": {"808080": "cinza"},
         "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
@@ -1485,8 +1490,8 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
+    recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], DateNamed(), SHARED["date_numeric"],
+                 Clock(), SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), SHARED["decimal"],
                  SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
@@ -1497,7 +1502,7 @@ LANGUAGE = LanguageSpec(
         Form.RANGE: speak_range,
         Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman, Form.ABBREVIATION: speak_abbreviation,
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
-        Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
+        Form.ELECTRONIC: speak_electronic, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=drop_affixes,  # the one suffix, the `h` of `14:30h`, is a word of the time reading

@@ -4,7 +4,7 @@ This page shows how text2spoken reads e-mail and web addresses, runs of capital 
 
 ## E-mail and web addresses
 
-English reads an address symbol by symbol. A word with `@`, `www.`, `://` or a top-level domain such as `.com` is spoken in full, even when it is not one valid address:
+English and Portuguese read an address symbol by symbol. A word with `@`, `www.`, `://` or a top-level domain such as `.com` is spoken in full, even when it is not one valid address:
 
 | Written | Spoken (`en-GB`) |
 | --- | --- |
@@ -13,7 +13,7 @@ English reads an address symbol by symbol. A word with `@`, `www.`, `://` or a t
 | `Have you seen www.example.com?!` | Have you seen double-u double-u double-u dot example dot com?! |
 | `See 20%.com` | See two zero % dot com |
 
-The closing punctuation at the end of the word stays with the sentence, as `?!` does above. A character with no word in the address tables stays as written, between spaces, as `%` does above. English is the one language that offers this form, and its limits are on the [English page](languages/en.md#edge-cases).
+The closing punctuation at the end of the word stays with the sentence, as `?!` does above. A character with no word in the address tables stays as written, between spaces, as `%` does above. English and Portuguese offer this form. The [Portuguese page](languages/pt.md#e-mail-and-web-addresses) gives the Portuguese names. The English limits are on the [English page](languages/en.md#edge-cases).
 
 ## Runs of capital letters
 

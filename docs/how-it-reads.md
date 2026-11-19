@@ -57,7 +57,7 @@ Each written form has a `Form` value. `NormalizationParams().forms` holds every 
 | `IDIOM` | `24/7`, `50/50`, from a table of the language | On | de, en |
 | `ROMAN` | `Luís XIV`, `XX. mendea`, `século XIX`, `Henry VIII` | On | en, eu, pt |
 | `COLOR` | `#FF0000` | On | de, en, pt |
-| `ELECTRONIC` | An e-mail or web address: `ann@example.com`, `www.example.org` | On | en |
+| `ELECTRONIC` | An e-mail or web address: `ann@example.com`, `www.example.org` | On | en, pt |
 | `SYMBOL` | A character with a CLDR name, such as `©`, `§` or `→`, when no other form claims it | On | en, pt |
 | `EMOJI` | An emoji, by its CLDR name | Off | en, pt |
 

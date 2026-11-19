@@ -33,7 +33,7 @@ Each expected value comes from a cited rule, from arithmetic done by hand, or fr
 
 `tests/test_rows.py` runs each row, and checks that a second pass changes nothing. A row whose source holds the words `README limit` is a known exception to the second-pass rule, and `tests/known_limits.py` names each such case. The test also checks that each language file has a row file, and that the rows of a file cover each form that the file declares, except `LEXICON`, and each variety. The rows of each file must also hold four texts that stay as written, in rows whose expected value equals the text: `16:9`, `3:16`, `#decade` and `13/13/2024`.
 
-`tests/data/electronic/pt.tsv` holds the Portuguese address rows. They run on the stub language `tests/fixtures/pt_electronic.py`, which has the address tables of `text2spoken/lang/_pt_electronic.py` and no other form. `tests/fixtures/qac.py` is a stub language whose rows, in `tests/fixtures/qac.tsv`, run beside the rows of each shipped file.
+`tests/fixtures/qac.py` is a stub language whose rows, in `tests/fixtures/qac.tsv`, run beside the rows of each shipped file.
 
 ## Other tests
 
