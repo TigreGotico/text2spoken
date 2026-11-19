@@ -236,7 +236,7 @@ reads, by its name in the core, and the keys of the unread check of `render` and
 reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
 them to find a character that `SYMBOL` reads between a phone word and the digits."""
 
-THROUGH_SYMBOL = dict.fromkeys(("cardinal", "decimal"), SYMBOL_KEYS - {"leads"})
+THROUGH_SYMBOL = dict.fromkeys(("cardinal", "decimal", "fraction"), SYMBOL_KEYS - {"leads"})
 """The keys that `reads_symbol` reads for these shared recognizers, in a file that uses `SYMBOL`, to find whether
 `SYMBOL` reads a currency sign next to a number. A file with no `SYMBOL` needs none of these keys for them."""
 

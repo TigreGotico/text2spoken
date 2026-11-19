@@ -489,15 +489,17 @@ def proper_fraction(top: int | None, bottom: int | None) -> bool:
 def _currency_beside(pairs: tuple[tuple[str, str], ...],
                      gaps: tuple[str, ...]) -> tuple[re.Pattern, re.Pattern, int] | None:
     """A pattern of a currency symbol and a gap before a number, a pattern of a gap and a currency symbol after a
-    number, and the most characters that the first one matches, or None with no symbol. Group 1 holds a digit and a
-    gap on the other side of the symbol, which make the symbol the symbol of that number, as `€` in `5€ 2 1/2`."""
+    number, and the most characters that the first one matches, or None with no symbol. The patterns run on the text
+    with its digits folded. Group 1 of the first pattern and group 2 of the second hold a digit and a gap on the other
+    side of the symbol, which make the symbol the symbol of that number, as `€` in `5€ 2 1/2`; the other group holds
+    the symbol."""
     if not pairs:
         return None
     symbol = "|".join(re.escape(symbol) for symbol, _ in pairs)
     gap = "|".join(map(re.escape, sorted(gaps, key=len, reverse=True)))
     width = 1 + 2 * max(map(len, gaps), default=0) + max(len(symbol) for symbol, _ in pairs)
-    before = re.compile(f"([0-9](?:{gap}))?(?:{symbol})(?:{gap})")
-    return before, re.compile(f"(?:{gap})(?:{symbol})((?:{gap})[0-9])?"), width
+    before = re.compile(f"([0-9](?:{gap}))?({symbol})(?:{gap})")
+    return before, re.compile(f"(?:{gap})({symbol})((?:{gap})[0-9])?"), width
 
 
 MIXED_GAPS = (" ", "\u00a0")
@@ -534,11 +536,12 @@ class Fraction:
 
         A proper fraction after a whole part (`whole_part`) is a mixed number, as `2 1/2`, and its span holds the
         whole part in the field `whole`. A leading zero in a field, a sign before the whole part, a symbol next to
-        the span, a unit after it, a currency symbol next to it that no other number holds, as in `2 1/2 €`, or digits
-        from two digit sets keep the mixed number as written. The span of the fraction alone follows, and it reads
-        only where another span claims the whole part first."""
+        the span, a unit after it, a currency symbol next to it that no other number holds and that `SYMBOL` does not
+        read in part, as in `2 1/2 €`, or digits from two digit sets keep the mixed number as written. The span of
+        the fraction alone follows, and it reads only where another span claims the whole part first."""
         symbols = request.data.get("symbols", FrozenMap())
         units = unit_table(request)
+        folded = fold_digits(text)
         for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(_FRACTION, text,
                                                                                                  request):
             sign = "-" if written[0] in "-−" else "+" if written[0] == "+" else ""
@@ -555,9 +558,14 @@ class Fraction:
                 currency = False
                 if patterns is not None:
                     before, after, width = patterns
-                    matches = (next((match for match in before.finditer(text, max(0, begin - width), begin)
-                                     if match.end() == begin), None), after.match(text, end))
-                    currency = any(match is not None and match.group(1) is None for match in matches)
+                    reads = SYMBOL in request.language.recognizers
+                    beside = ((next((match for match in before.finditer(folded, max(0, begin - width), begin)
+                                     if match.end() == begin), None), 2, 1), (after.match(folded, end), 1, 2))
+                    # A symbol that `SYMBOL` reads in part, as `₵` of `GH₵`, does not stay beside the number.
+                    currency = any(match is not None and match.group(other) is None
+                                   and not (reads and any(reads_symbol(text, index, request)
+                                                          for index in range(*match.span(symbol))))
+                                   for match, symbol, other in beside)
                 signed_whole = begin and text[begin - 1] in SIGNS and not (begin > 1 and is_digit(text[begin - 2]))
                 keep = ("0" in (fold_digits(text[begin]), numerator[0], denominator[0]) or signed_whole or unit
                         or not (_free_before(text, begin, symbols) and _free_after(text, end, symbols))
@@ -780,8 +788,9 @@ class Money:
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         numbers = [(number, every_symbol) for number in self.numbers(text, tokens, request)]
         numbers += [(number, euro) for number in _comma_decimals(text, request)]
+        folded = fold_digits(text)
         for number, symbols in numbers:
-            fraction = _FRACTION.match(text, number.end + 1)
+            fraction = _FRACTION.match(folded, number.end + 1)
             if fraction and fraction.group()[0] not in SIGNS:
                 if (proper_fraction(*map(bounded_integer, fraction.group().split("/")))
                         and whole_part(text, fraction.start(), fraction.end()) == number.start):
