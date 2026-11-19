@@ -107,7 +107,7 @@ A Roman numeral reads after a century word, after a noun of a part, a class or a
 
 ## E-mail and web addresses
 
-An address reads piece by piece. Each symbol reads by its name in Priberam, such as "arroba" for `@` and "ponto" for `.`. A label of three or more letters with a vowel reads as a word. Any other label reads each letter by its name in AO1990, Base I. So `com` reads as a word and `pt` reads letter by letter, as Ciberdúvidas 19059 advises. A digit reads by its digit word. Three names differ by variety:
+An address reads piece by piece. Each symbol reads by the name that Priberam or Ciberdúvidas gives it, such as "arroba" for `@` and "ponto" for `.`. A label of three or more letters with a vowel reads as a word. Any other label reads each letter by its name in AO1990, Base I. So `com` reads as a word and `pt` reads letter by letter, as Ciberdúvidas 19059 advises. A digit reads by its digit word. Three names differ by variety:
 
 | Sign | `pt-PT` | `pt-BR` |
 | --- | --- | --- |
