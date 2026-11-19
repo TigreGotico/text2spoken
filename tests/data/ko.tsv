@@ -1,7 +1,7 @@
 id	tag	form	text	expected	source	checked_by
-ko-001	ko-KR	cardinal	정답은 42	정답은 사십이	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;", "20: ←←십[→→];"	unchecked
-ko-002	ko-KR	cardinal	인구 51,740,000	인구 오천백칠십사만	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;", "20000: ←←만[ →→];"; CLDR 49 ko: the group mark ,	unchecked
-ko-003	ko-KR	cardinal	천 단위 1,234	천 단위 천이백삼십사	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;", "1000: 천[→→];"; CLDR 49 ko: the group mark ,	unchecked
+ko-001	ko-KR	cardinal	정답은 42	정답은 사십이	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "20: ←←십[→→];"	unchecked
+ko-002	ko-KR	cardinal	인구 51,740,000	인구 오천백칠십사만	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "20000: ←←만[ →→];"; CLDR 49 ko: the group mark ,	unchecked
+ko-003	ko-KR	cardinal	천 단위 1,234	천 단위 천이백삼십사	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "1: =%spellout-cardinal-sinokorean=;"; CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "1000: 천[→→];"; CLDR 49 ko: the group mark ,	unchecked
 ko-004	ko-KR	cardinal	오늘 -5 날씨가	오늘 마이너스 오 날씨가	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "-x: 마이너스 →→;"; issue 203	unchecked
 ko-005	ko-KR	cardinal	변화량은 -12	변화량은 마이너스 십이	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-cardinal-sinokorean: "-x: 마이너스 →→;"	unchecked
 ko-006	ko-KR	decimal	비율 3.5	비율 삼점오	CLDR RBNF ko (unicode-rbnf 2.5.0), spellout-numbering: "x.x: ←←점→→→;"; CLDR 49 ko: the decimal mark .	unchecked
