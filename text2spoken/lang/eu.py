@@ -30,6 +30,26 @@ which may be a country code with no plus sign, and with the first group in brack
 code, `+34` or `0034`, stay as written, in threes or in pairs. A fraction in groups after the decimal comma, as
 `4 712,395 8`, which section 3.2.1.1 marks as unusual (ezohikoa), would read its first group alone, and so would a
 fraction in groups after a decimal point, as `3.141 592 6` (page 14), where the point would read as a group mark.
+
+A hyphen between two numbers, or between two percentages, amounts or measures of one kind, marks a range, as in
+`% 2-% 5 bitartean` (Araua 203, section 7.1, page 32) and `1999-2011 bitartean` (section 19, page 70). Basque has no
+range word, and case endings mark the range. Section 14.3.1, page 52, reads the timetable `09:00-13:00` as
+"bederatzietatik ordu batera", because "Irakurtzean, berriz, dagokien artikulua eta kasu-marka jartzen zaizkie". So
+`join_range` gives the first end the ablative `-tik` and the second end the allative `-ra`, as in "orduak zerotik
+hogeita laura doaz" (page 50). The norm puts the same endings before `bitartean`: "Hogei zenbakitik ehun zenbakira
+bitartean" (page 21).
+
+A range reads before a word of the `range_followers` table. A range of percentages, amounts or measures also reads
+where its clause or its line ends. Two bare numbers there may be a score, as in "Urdinak 0-2 aitzinatu dira"
+(page 45), so they stay as written. Before any other word the pair stays as written. Before a noun, the ending
+belongs on the noun, as in "Donibane Garazitik 20 km-ra" (page 44). Before a verb, `% 2-% 5 igoko da` may give the
+size of the rise or its start and its end. Before `artean`, as in `1898-1900 artean` (page 70), the norm gives no
+reading. A case ending on one end, as in `1914-1918ko` (page 69), keeps the pair as written too.
+
+An en dash stays as written: Araua 197, note 13, page 30, gives it to the minus sign, "minus eta ken adierazteko,
+tarte bikoitzeko marratxoa erabiltzen da". A number with no group mark before a number in groups, as in
+`15-20 000`, may stand for thousands, so the pair stays as written when the first number is less than the first
+group of the second.
 """
 from __future__ import annotations
 
@@ -40,9 +60,9 @@ from dataclasses import dataclass, replace
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety
 from text2spoken.core.numbers import SIGNS, Number
-from text2spoken.core.recognizers import (SHARED, SpaceGroups, _affixes, _cluster_edge, _free_before, _per_unit,
-                                          _period_after, _prefix, _sentence_period, _suffix, numbers_in, signed,
-                                          speak_cardinal, speak_decimal, speak_expression, speak_fraction,
+from text2spoken.core.recognizers import (SHARED, Range, SpaceGroups, _affixes, _cluster_edge, _free_before,
+                                          _per_unit, _period_after, _prefix, _sentence_period, _suffix, numbers_in,
+                                          signed, speak_cardinal, speak_decimal, speak_expression, speak_fraction,
                                           speak_lexicon, speak_ordinal)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, _integer
@@ -54,8 +74,9 @@ from text2spoken.params import FrozenMap, Form, freeze
 GAPS = ("", " ", "\u00a0")
 """The gaps between a number and its symbol: none, a space or a no-break space (Araua 197, section 6.3)."""
 
-RANGE_MARKS = ("-", "–")
-"""The marks that join two amounts as a range, as in `% 2-% 5` (Araua 203, section 7.1, page 32)."""
+DASHES = ("-", "–")
+"""The marks that may join two amounts as a range: a hyphen, as in `% 2-% 5` (Araua 203, section 7.1, page 32), and
+an en dash. Two amounts that one of them joins never read as two amounts."""
 
 ROMAN_NUMERAL = re.compile("[IVXLCDM]+[.]")
 """An upper-case Roman numeral and the full stop of an ordinal."""
@@ -106,6 +127,13 @@ def attach(spoken: str, prefix: str, suffix: str) -> str:
     elif word[-1] not in "aeiou" and suffix[0] not in "aeiou":
         word += "e"
     return prefix + head + space + word + suffix
+
+
+def join_range(span: Span, following: Span, range_word: str) -> tuple[Span, Span]:
+    """The two ends of a range with their case endings: the first takes `-tik` and the second `-ra`, and the hyphen
+    between them reads as a space (module docstring)."""
+    return (replace(span, end=following.start, trail=" ", fields=FrozenMap({**span.fields, "suffix": "tik"})),
+            replace(following, fields=FrozenMap({**following.fields, "suffix": "ra"})))
 
 
 def genitive(words: str) -> str:
@@ -274,6 +302,13 @@ def speak_percent(span: Span, context: SpanContext) -> str:
     request = context.request
     amount = span.fields["amount"]
     return signed(f"{request.data['percent']['word']} {_number(amount, request)}", amount["sign"], request)
+
+
+def speak_range(span: Span, context: SpanContext) -> str:
+    """The two ends as cardinals with the endings of `join_range`: `10-20 bitartean` is "hamarretik hogeira
+    bitartean"."""
+    low, high = (_cardinal(span.fields[end], context.request) for end in ("low", "high"))
+    return f"{attach(low, '', 'tik')} {attach(high, '', 'ra')}"
 
 
 def speak_abbreviation(span: Span, context: SpanContext) -> str:
@@ -447,18 +482,20 @@ class LetterCode:
     """`COVID-19`, `BI-2617`, `sub-23`: letters, a hyphen and digits, as a code or an alphanumeric sigla (Araua
     196, section 6.1, pages 56 and 57). Araua 203, section 15.3, page 67, reads one capital letter, a hyphen and a
     day as a sigla and a number: `M-8an` is "eme zortzian". No source reads a longer sigla, so these stay as
-    written."""
+    written. A unit of the `units` table after a number is a measure and no code, as `km` in `5 km-10 km`."""
     name: str = "letter_code"
     form: Form = Form.CARDINAL
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in re.finditer("-[0-9]+", fold_digits(text)):
+        folded = fold_digits(text)
+        for match in re.finditer("-[0-9]+", folded):
             hyphen, end = match.span()
             start = hyphen
             while start > 0 and is_letter(text[start - 1]):
                 start -= 1
             letters = text[start:hyphen]
             if (not letters or (len(letters) == 1 and letters.isupper()) or (start and is_word_char(text[start - 1]))
+                    or (letters in request.data["units"] and re.search("[0-9][ \u00a0]?\\Z", folded[:start]))
                     or not _cluster_edge(text, hyphen + 1, end)):
                 continue
             yield Span(hyphen + 1, end, Form.CARDINAL,
@@ -588,20 +625,70 @@ def _amount_spans(text: str, request: Request, symbols: Sequence[str]) -> Iterat
             yield number, *found
 
 
-def _kept_ranges(spans: Iterable[Span], text: str) -> Iterator[Span]:
-    """The spans, where two that a mark of `RANGE_MARKS` joins stay as written: `10%-20%`, `5 €-10 €`. A Basque
-    range reads with the case endings `-tik` and `-ra` (design section 4.2), and this file has no rule for them."""
-    spans = sorted(spans, key=lambda span: span.start)
-    ranged = {index for pair in range(len(spans) - 1)
-              if text[spans[pair].end:spans[pair + 1].start] in RANGE_MARKS for index in (pair, pair + 1)}
-    for index, span in enumerate(spans):
-        yield replace(span, keep=True) if index in ranged else span
+CLAUSE_ENDS = frozenset(".,;:!?)\n")
+"""The marks after which a range of percentages, amounts or measures ends its clause or its line."""
+
+
+def _range_follows(text: str, end: int, data, alone: bool) -> bool:
+    """Whether a range that ends at text[end] reads: a word of the `range_followers` table comes next, or, when the
+    range may stand `alone`, the text ends or a mark of `CLAUSE_ENDS` comes next (module docstring)."""
+    rest = text[end:].lstrip("  ")
+    word = re.match(r"\w+", rest)
+    if word is not None:
+        return word.group() in data["range_followers"]
+    return alone and (not rest or rest[0] in CLAUSE_ENDS)
+
+
+def _ranges(spans: Iterable[Span], text: str, request: Request) -> Iterator[Span]:
+    """The spans, where two that a mark of `DASHES` joins are a range: `10%-20%`, `5 €-10 €`. The pair reads
+    through `join_range` when a mark of `range_marks` joins it, no end has a case ending, and `_range_follows`
+    lets it stand alone. Otherwise both ends stay as written, as do three ends or more that dashes chain."""
+    chains: list[list[Span]] = []
+    for span in sorted(spans, key=lambda span: span.start):
+        if chains and text[chains[-1][-1].end:span.start] in DASHES:
+            chains[-1].append(span)
+        else:
+            chains.append([span])
+    data = request.data
+    for chain in chains:
+        if len(chain) == 1:
+            yield chain[0]
+        elif (len(chain) == 2 and text[chain[0].end:chain[1].start] in data["range_marks"]
+              and not any(span.keep or span.fields["prefix"] or span.fields["suffix"] for span in chain)
+              and _range_follows(text, chain[1].end, data, alone=True)):
+            yield from request.language.join_range(*chain, "")
+        else:
+            yield from (replace(span, keep=True) for span in chain)
+
+
+def _scale_elided(low: str, high: str, data) -> bool:
+    """Whether the first end of `15-20 000` may stand for thousands: it has no group mark, the second end has one,
+    and the first end is less than the first group of the second (module docstring)."""
+    marks = data["number_marks"]["Latn"][0]["group"]
+    groups = re.split(f"[{re.escape(marks)}]", high)
+    return low.isdigit() and len(groups) > 1 and int(low) < int(groups[0])
+
+
+@dataclass(frozen=True)
+class BasqueRange(Range):
+    """`10-20 bitartean`, `1 999-2 000 bitartean`: two numbers that a hyphen joins, the lower one first, before a
+    word of the `range_followers` table (module docstring). Two numbers where the reading is not clear make no
+    span, so the waiting rule keeps them as written, as `Osasunak 2-0` and `15-20 000 lagun`."""
+    name: str = "basque_range"
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        data = request.data
+        for span in super().find(text, tokens, request):
+            low, _, high = text[span.start:span.end].partition("-")
+            if not (span.keep or span.fields["prefix"] or span.fields["suffix"] or _scale_elided(low, high, data)
+                    or not _range_follows(text, span.end, data, alone=False)):
+                yield span
 
 
 @dataclass(frozen=True)
 class BasqueMoney:
     """`5 €`, `3,25 €`, `1 €-etik`, `$5`: a number and a currency symbol of the `currencies` table. A dash right
-    after a symbol is no minus sign, and two amounts that a dash joins stay as written, as in `5 €-10 €`.
+    after a symbol is no minus sign, and two amounts that a dash joins are a range, as in `5 €-10 €` (`_ranges`).
 
     The reading puts the currency noun last, so a case ending written on the digits of `€5eko` belongs to the
     number and not to the noun: "bost euroeko" is wrong, and the amount stays as written."""
@@ -609,7 +696,7 @@ class BasqueMoney:
     form: Form = Form.MONEY
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return _kept_ranges(self._amounts(text, request), text)
+        return _ranges(self._amounts(text, request), text, request)
 
     def _amounts(self, text: str, request: Request) -> Iterator[Span]:
         codes = {symbol: code for code, currency in request.data["currencies"].items()
@@ -624,12 +711,12 @@ class BasqueMoney:
 @dataclass(frozen=True)
 class BasqueMeasure:
     """`5 km`, `25 °C`, `1 kg-ek`: a number and a unit of the `units` table after it. A dash right after a unit
-    is no minus sign, and two measures that a dash joins stay as written, as in `5 km-10 km`."""
+    is no minus sign, and two measures that a dash joins are a range, as in `5 km-10 km` (`_ranges`)."""
     name: str = "basque_measure"
     form: Form = Form.MEASURE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return _kept_ranges(self._measures(text, request), text)
+        return _ranges(self._measures(text, request), text, request)
 
     def _measures(self, text: str, request: Request) -> Iterator[Span]:
         units = tuple(request.data["units"])
@@ -647,12 +734,12 @@ class BasquePercent:
     27; Araua 197, section 6.6, page 13).
 
     A dash right after a percent sign is no minus sign. Two percentages that a dash joins, as in `10%-20%` and
-    `% 2-% 5`, are a range, and the range stays as written."""
+    `% 2-% 5`, are a range (`_ranges`)."""
     name: str = "basque_percent"
     form: Form = Form.PERCENT
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return _kept_ranges(self._percents(text, request), text)
+        return _ranges(self._percents(text, request), text, request)
 
     def _percents(self, text: str, request: Request) -> Iterator[Span]:
         data = request.data
@@ -763,6 +850,8 @@ DATA = freeze({
                       "tel.": "telefonoa"},
     "sentence_final": ["etab.", "hurr."],
     "symbols": {"%": "percent", "€": "money", "$": "money", "£": "money", "°": "measure"},
+    "range_marks": ["-"],
+    "range_followers": ["bitartean"],
 })
 """The day period of each hour follows the table of Araua 203, pages 53 to 55, which gives hours 1 to 5, 11 to 15,
 20, 21, 23, 24 and 0, and elides the hours between two hours that take the same word."""
@@ -775,12 +864,12 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], RomanMonthDate(), KEPT_SPACE_GROUPS, LetterCode(), LawNumber(),
                  SHARED["date_numeric"], BasqueTime(), BasqueMoney(), SHARED["kept_money"], BasquePercent(),
-                 BasqueMeasure(), SHARED["expression"], SHARED["fraction"], BasqueOrdinal(), Roman(),
+                 BasqueMeasure(), BasqueRange(), SHARED["expression"], SHARED["fraction"], BasqueOrdinal(), Roman(),
                  BasqueAbbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
-        Form.FRACTION: speak_fraction, Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman,
+        Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
@@ -799,4 +888,5 @@ LANGUAGE = LanguageSpec(
     },
     not_applicable=frozenset({"default_gender", "register", "phone_regions"}),
     attach=attach,
+    join_range=join_range,
 )

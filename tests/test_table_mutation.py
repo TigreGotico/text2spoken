@@ -148,7 +148,7 @@ ENTRIES = {
         "code_nouns": "Lege", "ordinal_words": "1",
         "ordinal_suffix": DELETE, "fraction_names": "2", "fraction_word": DELETE, "percent": "word",
         "currencies": "EUR", "units": "kg", "operators": "+", "patterns": "expression", "abbreviations": "etab.",
-        "sentence_final": "etab.",
+        "sentence_final": "etab.", "range_marks": "-", "range_followers": "bitartean",
     },
     "it": {
         "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "decimal_word": DELETE, "leads": "pag. ",

@@ -765,3 +765,15 @@ def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang)
     """Section 11. `sei` is a word, not the unit `s` and the ending `ei`, so a second pass reads no measure."""
     once = normalize("Appelez le 0033 6 12 34 56 78 ici.", lang)
     assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
+    ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
+    ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),
+])
+def test_a_number_that_a_mark_joins_to_a_number_abbreviation_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A number abbreviation is a key only before a digit, and a second pass sees the reading of that
+    digit, so the abbreviation does not wait on the number before it."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
