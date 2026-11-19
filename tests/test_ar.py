@@ -167,6 +167,18 @@ def test_a_number_kept_after_a_speed_stays_on_a_second_pass(text):
     assert normalize(once, "ar") == once
 
 
+@pytest.mark.parametrize(("text", "spoken"), [
+    ("الساعة 13 11", "الساعة 13 أحد عشر"), ("في الساعة 0 3", "في الساعة 0 ثلاثة"),
+    ("الساعة 0 11 الصباح", "الساعة 0 أحد عشر الصباح"), ("وفي الساعة 13 2-3", "وفي الساعة 13 اثنان إلى ثلاثة"),
+    ("الساعة 13 و3", "الساعة 13 وثلاثة"), ("حتى الساعة 13 قتيلا", "حتى الساعة 13 قتيلا"),
+    ("الساعة 1 و30 دقيقة", "الساعة 1 وثلاثون دقيقة"), ("الساعة 2 و3 دقائق", "الساعة الثانية وثلاث دقائق")])
+def test_an_hour_with_no_clock_reading_stays_as_written_whatever_follows(text, spoken):
+    """Design section 11. 0, 1 and 13 have no clock reading here. A second pass reads the number after them as a
+    word, so they stay as written before a number and before a word alike."""
+    assert normalize(text, "ar") == spoken
+    assert normalize(spoken, "ar") == spoken
+
+
 def test_the_base_install_holds_the_speller_that_writes_the_construct_dual():
     """ar.py reads numbers with ovos-number-parser, which the base install holds (design section 12). Row ar-040
     needs مئتا ألف for 200,000 (Ryding 2005, p. 350), which ovos-number-parser writes from 0.24.3a1."""

@@ -459,14 +459,18 @@ def speak_rank(span: Span, context: SpanContext, proclitic: str, noun: str) -> s
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """One and two follow the noun that they count (Ryding 2005, pp. 330 and 333), so a digit 1 or 2 before a noun
-    stays as written. A whole hour after الساعة reads as the hour of a time, as `hour_after` gives. The first day
-    of a range of days before a month, as 1 in من 1 إلى 7 مارس, is a date."""
-    fields, request, after = span.fields, context.request, context.after
+    stays as written. A whole hour after الساعة reads as the hour of a time, as `hour_after` gives. An hour that the
+    clock does not read, such as 13, stays as written whatever follows it, so that a second pass reads the same
+    text. The first day of a range of days before a month, as 1 in من 1 إلى 7 مارس, is a date."""
+    fields, request, before, after = span.fields, context.request, context.before, context.after
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         raise DeclinedReading("a number with a leading zero has no cited reading")
-    if not (fields["sign"] or fields["lead"]) and hour_after(context.before, digits, after, request.data):
-        return clock(int(digits), 0, None, request)
+    if (not (fields["sign"] or fields["lead"]) and before and before[-1] in request.data["time_words"]
+            and int(digits) <= 23):
+        hour = clock(int(digits), 0, None, request)
+        if hour_after(before, digits, after, request.data):
+            return hour
     if (len(after) > 2 and after[0] == request.data["range_word"] and not (fields["sign"] or fields["lead"])
             and (high := fold_digits(after[1])).isdigit() and 1 <= int(digits) < int(high) <= 31
             and any(name.split()[0] == after[2] for name in request.data["months"])):
@@ -474,7 +478,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     rank = rank_noun(context)
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
-    noun = counted_noun(context.after)
+    noun = counted_noun(after)
     if noun is not None and digits in ("1", "2"):
         raise DeclinedReading("one and two follow the noun that they count")
     features = agreement(span, context)
