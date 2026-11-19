@@ -40,7 +40,7 @@ The rules and their sources:
   Wiktionary, م: "abbreviation of مِيلَادِيّ (mīlādiyy), AD, CE").
 - Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
   thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour comes from
-  the CLDR 49 day period rules of `ar` (`dayPeriods.json`). "The word "hour" (saaca) may or may not be mentioned,
+  the CLDR 49 day period rules of `ar` (`dayPeriods.json`). "The word “hour” (saaca) may or may not be mentioned,
   but the ordinal numeral is in the feminine form, agreeing with that noun": "fii l-saacat-i l-thaaminat-i", "at
   eight o'clock" (p. 361). So a whole hour after الساعة reads as the hour of a time.
 - The CLDR 49 format names of the day periods of `ar` are ص and م (`ca-gregorian.json`, dayPeriods, format), and
@@ -71,7 +71,7 @@ from dataclasses import dataclass, replace
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
 from text2spoken.core.recognizers import SHARED, Money as CoreMoney, TimeClock, speak_lexicon
-from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
+from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import day_hour, twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, one_digit_set
@@ -405,18 +405,21 @@ def speak_rank(span: Span, context: SpanContext, proclitic: str, noun: str) -> s
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """One and two follow the noun that they count (Ryding 2005, pp. 330 and 333), so a digit 1 or 2 before a noun
-    stays as written. A whole hour after الساعة reads as the hour of a time (p. 361)."""
+    stays as written. A whole hour after الساعة reads as the hour of a time (p. 361), unless a noun follows that the
+    number counts, as in حتى الساعة 10 شهداء. و, إلى, a definite word or a day period may follow the hour."""
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         raise DeclinedReading("a number with a leading zero has no cited reading")
+    noun = counted_noun(context)
     if (context.before and context.before[-1] in request.data["time_words"] and not (fields["sign"] or fields["lead"])
-            and int(digits) <= 23):
+            and int(digits) <= 23
+            and (noun is None or noun in ("و", request.data["range_word"]) or noun.startswith("وال")
+                 or noun in request.data["spoken_periods"].values())):
         return clock(int(digits), 0, None, request)
     rank = rank_noun(context)
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
-    noun = counted_noun(context)
     if noun is not None and digits in ("1", "2"):
         raise DeclinedReading("one and two follow the noun that they count")
     features = agreement(span, context)
@@ -581,19 +584,18 @@ def clock(written_hour: int, minute: int, period: str | None, request: Request) 
 
 @dataclass(frozen=True)
 class Clock(TimeClock):
-    """The core time, where an hour with no minutes before ص or م needs الساعة: `المسافة 7 م` is the metre."""
+    """The core time, where an hour with no minutes before ص or م needs الساعة: `المسافة 7 م` is the metre. A rate
+    ends in في الساعة, as in "170 kiiluumitr-an fii l-saacat-i" (Ryding 2005, p. 349), so that hour is not after في."""
 
     def _times(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
-        words, breaks = context_words(tokens), clause_breaks(text)
-        short, marks = tuple(data["short_periods"]), [entry["mark"] for entry in data["clock_marks"]]
         for span in super()._times(text, tokens, request):
             written = text[span.start:span.end]
-            if any(mark in written for mark in marks) or not written.endswith(short):
+            if not (written.endswith(data["short_periods"]) and written[:-1].strip().isdigit()):
                 yield span
                 continue
-            before = clause_window(text, words, span.start, span.end, -1, 1, breaks)
-            if before and before[0] in data["time_words"]:
+            before = clause_window(text, context_words(tokens), span.start, span.end, -1, 2)
+            if before and before[-1] in data["time_words"] and before[0] != "في":
                 yield span
 
 

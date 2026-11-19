@@ -140,6 +140,19 @@ def test_random_arabic_text_never_raises_and_reads_the_same_on_a_second_pass(see
         assert normalize(once, tag) == once, (tag, text, once)
 
 
+
+@pytest.mark.parametrize("text", [
+    "السرعة القصوى 250 كم/س 2 باب", "السرعة القصوى 250 كم/س، 2 باب", "السرعة القصوى 250 كم/س - 2 باب",
+    "تسير بسرعة 60 km/h 2 ساعة يوميا", "السرعة 120 km/h 2 سيارة", "السرعة 5 km/h 2 مرة",
+    "السرعة 120 km/h 2 م",
+    "السرعة القصوى مئتان وخمسون كيلومترا في الساعة، 2 باب"])
+def test_two_before_its_noun_after_a_speed_stays_on_a_second_pass(text):
+    """Design section 11. A speed reads في الساعة after its unit, and two before its noun stays as written (Ryding
+    2005, p. 333), so a second pass must not read that digit as an hour."""
+    once = normalize(text, "ar")
+    assert " 2 " in once
+    assert normalize(once, "ar") == once
+
 def test_the_base_install_holds_the_speller_that_writes_the_construct_dual():
     """ar.py reads numbers with ovos-number-parser, which the base install holds (design section 12). Row ar-040
     needs مئتا ألف for 200,000 (Ryding 2005, p. 350), which ovos-number-parser writes from 0.24.3a1."""
