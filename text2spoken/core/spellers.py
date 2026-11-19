@@ -193,7 +193,7 @@ wrong too, the side with the narrower class wins: sl reads through the writer, w
 RBNF misreads every number from 21 to 99."""
 
 RBNF_HELD_DECIMALS = frozenset({
-    "ast",  # "un punto cinco"; Asturian writes puntu, and RBNF has no ast rules, so the decimal stays as written
+    "ast",  # "un punto cinco"; Wiktionary, puntu (Asturian): "dot; full stop, period"; no ast RBNF, kept as written
     "az",  # "bir nöqtə beş"; Wiktionary, nöqtə: "period", "dot", "full stop"; az.xml x.x: ←← tam →→
     "cs",  # "jedna tečka pět"; Wiktionary, tečka: "period, full stop"; cs.xml x.x: ←← čárka →→
     "uk",  # "один крапка п'ять"; Wiktionary, крапка: "full stop, period"; uk.xml x.x: ←← кома →→

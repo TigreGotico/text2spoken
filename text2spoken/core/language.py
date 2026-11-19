@@ -342,8 +342,9 @@ def core_language(code: str) -> LanguageSpec:
             decimal = None if cardinal is None else _special_rule_set(names, cardinal,
                                                                       RbnfSpecialRule.IMPROPER_FRACTION)
             decimals = decimal is not None
-            decimal_speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal={Features(): cardinal},
-                                          decimal=decimal) if decimals else None
+            # This speller reads only decimals, so its ordinal map, which RbnfSpeller requires, is never read.
+            rule_sets = {Features(): cardinal}
+            decimal_speller = RbnfSpeller(cardinal=rule_sets, ordinal=rule_sets, decimal=decimal) if decimals else None
     elif locale is None:
         return bare
     else:
