@@ -236,9 +236,9 @@ reads, by its name in the core, and the keys of the unread check of `render` and
 reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
 them to find a character that `SYMBOL` reads between a phone word and the digits."""
 
-THROUGH_SYMBOL = frozenset({"cardinal", "decimal"})
-"""The shared recognizers that also read the `SYMBOL_KEYS` in a file that uses `SYMBOL`, to find whether `SYMBOL`
-reads a currency sign next to a number. A file with no `SYMBOL` needs none of these keys for them."""
+THROUGH_SYMBOL = dict.fromkeys(("cardinal", "decimal"), SYMBOL_KEYS - {"leads"})
+"""The keys that `reads_symbol` reads for these shared recognizers, in a file that uses `SYMBOL`, to find whether
+`SYMBOL` reads a currency sign next to a number. A file with no `SYMBOL` needs none of these keys for them."""
 
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""

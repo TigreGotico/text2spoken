@@ -88,6 +88,34 @@ def test_an_amount_with_no_mixed_number_still_reads(lang, text, expected):
     assert normalize(text, lang) == expected
 
 
+# A symbol with a number on its other side is the symbol of that number, so the mixed number beside it reads, and a
+# second pass changes nothing (design sections 4.7 and 11).
+MIXED_BESIDE_AMOUNTS = [
+    ("en-GB", "x 3 1/2 €5 y", "x three and a half five euros y"),
+    ("en-GB", "I paid 5€ 2 1/2 years ago.", "I paid five euros two and a half years ago."),
+    ("en-GB", "Mix 2 1/2 £5 bags.", "Mix two and a half five pounds bags."),
+    ("en-GB", "5$ 1 1/2", "five dollars one and a half"),
+    ("en-GB", "wait 1 1/2 $5", "wait one and a half five dollars"),
+    ("en-US", "x 3 1/2 €5 y", "x three and a half five euros y"),
+    ("en-US", "I paid 5€ 2 1/2 years ago.", "I paid five euros two and a half years ago."),
+    ("en-US", "Mix 2 1/2 £5 bags.", "Mix two and a half five pounds bags."),
+    ("en-US", "wait 1 1/2 $5", "wait one and a half five dollars"),
+    ("de-DE", "Gab 5 € 2 1/2 Tage", "Gab fünf Euro zweieinhalb Tage"),
+    ("de-DE", "x 3 1/2 €5 y", "x dreieinhalb fünf Euro y"),
+    ("de-DE", "5$ 1 1/2", "fünf Dollar eineinhalb"),
+    ("de-DE", "wait 1 1/2 $5", "wait eineinhalb fünf Dollar"),
+    ("fr-FR", "5$ 1 1/2", "cinq dollars un et demi"),
+    ("es-ES", "5$ 1 1/2", "cinco dólares uno y medio"),
+    ("it-IT", "5$ 1 1/2", "cinque dollari uno e mezzo"),
+]
+
+
+@pytest.mark.parametrize(("lang", "text", "expected"), MIXED_BESIDE_AMOUNTS)
+def test_a_mixed_number_beside_a_separate_amount_reads(lang, text, expected):
+    assert normalize(text, lang) == expected
+    assert normalize(expected, lang) == expected
+
+
 DECLINING = ["el-GR", "ar", "ru-RU", "eu-ES", "sv-SE", "pl-PL", "fi-FI", "tr-TR", "ja-JP", "da-DK"]
 """Language files that give no reading of a mixed number, and languages with no file, which read through RBNF or
 ovos-number-parser."""
