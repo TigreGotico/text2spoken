@@ -16,8 +16,9 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
-                                  "no_phone_shapes"}, "zh": {"leads", "scales", "dimension_marks"}}
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": {"leads"},
+          "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes", "no_phone_shapes"},
+          "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
 phrase style of French, which tests/test_french.py checks)."""
@@ -78,12 +79,13 @@ FR_ENTRIES = {
 }
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
+    "decimal_word": DELETE,
     "range_marks": "-", "clock_marks": freeze({"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}),
     "time_words": "às", "time_suffixes": "h", "day_periods": "pm", "dimension_marks": "x", "dimension_word": DELETE,
     "operators": "+", "months": "março", "currencies": "EUR", "currency_symbols": "CHF", "symbol_names": DELETE,
     "scales": "milhões",
     "percent": "word",
-    "unit_symbols": "kg", "phone_words": "ligue", "short_codes": "112", "list_links": "ou",
+    "unit_symbols": "kg", "line_power_symbols": "m", "phone_words": "ligue", "short_codes": "112", "list_links": "ou",
     "phone_shapes": "[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}",
     "phone_unit_shapes": "[29][0-9]{2} [0-9]{3} [0-9]{3}", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "function_words": "agora",
@@ -93,6 +95,7 @@ PT_ENTRIES = {
     "currency_noun_gender": "córdobas", "two_gender_feminine": "caixas",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "h",
     "time_contractions": "às", "time_article_prepositions": "as",
+    "plural_time_verbs": "são",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
     "electronic_symbols": "@", "electronic_vowels": "a", "electronic_schemes": "https", "electronic_tlds": "pt",
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
@@ -110,7 +113,7 @@ AR_ENTRIES = {
     "currencies": "USD", "symbols_after_only": "ريال", "scales": "مليون", "units": "كم", "dimension_marks": "×",
     "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_words": "الساعة",
     "day_periods": "pm", "spoken_periods": "afternoon2", "minute_phrases": "30", "months": "مارس",
-    "date_reading": "full", "era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ",
+    "date_reading": "full", "era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ", "short_periods": "م",
 }
 ES_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
@@ -125,6 +128,7 @@ ES_ENTRIES = {
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
     "abbreviation_plurals": "vol.", "degree_marks": "º", "ordinal_leads": "el", "ordinal_follows": "de",
+    "ordinal_determiners": "el", "feminine_determiners": "la",
     "mixed_word": DELETE, "mixed_half": "other",
 }
 ENTRIES = {
@@ -136,10 +140,15 @@ ENTRIES = {
     "pt": PT_ENTRIES,
     "qac": {"number_marks": "Latn", "digit_words": "wa", "sign_words": "-", "leads": "#"},
     "el": {
-        "number_marks": "Latn", "sign_words": "-", "case_words": "genitive", "articles": "στις",
+        "number_marks": "Latn", "sign_words": "-", "decimal_word": DELETE, "case_words": "genitive", "articles": "στις",
         "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
+        "walk_adverbs": "ακόμη", "pronoun_adjectives": "άλλες", "hour_phrases": ("η", "ώρα"), "weekdays": "παρασκευή",
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
+        "halves": "2",
     },
+    "ja": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg"},
+    "ko": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg",
+           "counters": "개", "counter_followers": "이", "months": "유월"},
     "eu": {
         "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero",
         "leads": "-", "case_suffixes": "ko", "time_suffixes": "etan", "time_words": "arratsaldeko",
