@@ -307,9 +307,12 @@ class RbnfSpeller:
             raise DeclinedReading(f"{name} of {locale} has no rule for a number of {size}")
         try:
             result = rbnf_engine(locale).format_number(number, ruleset_names=[name])
-        except (NoRuleForNumberError, OverflowError) as error:
+        except (NoRuleForNumberError, ArithmeticError) as error:  # 2.5.1 raises decimal.InvalidOperation on a 30-digit ordinal
             raise DeclinedReading(f"no rule of {name} reads a number of {size}") from error
-        return words(corrected(result.text_by_ruleset[name], locale))
+        text = result.text_by_ruleset[name]
+        if any(char.isdigit() for char in text):  # unicode-rbnf 2.5.1 writes digits where no rule reads the number
+            raise DeclinedReading(f"no rule of {name} reads a number of {size}")
+        return words(corrected(text, locale))
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._format(digits, self.rule_set(self.cardinal_sets, features), request)
