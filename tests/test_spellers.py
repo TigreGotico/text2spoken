@@ -6,6 +6,7 @@ import subprocess
 import sys
 from dataclasses import replace
 from decimal import Decimal, localcontext
+from pathlib import Path
 
 import pytest
 
@@ -546,18 +547,53 @@ def test_the_plural_category_agrees_with_unicode_rbnf_where_it_reads_no_exponent
 
 def test_each_rbnf_correction_names_a_word_that_the_rbnf_data_writes():
     """A release of unicode-rbnf that fixes a word of `data/rbnf_corrections.json` fails here, so the row goes."""
-    numbers = (0, 13, 90, 100, 1000, 3000, 10_000, 100_000, 10**6, -5)
+    from text2spoken.core.language import rbnf_locales
+
+    numbers = (*range(1001), 3000, 10_000, 100_000, 10**6, 10**7, 10**9, 10**11, -5)
     for language, table in rbnf_corrections().items():
-        engine = rbnf_engine(language)
         written = set()
-        for name in engine.rulesets:
-            for number in numbers:
-                try:
-                    text = engine.format_number(number, ruleset_names=[name]).text_by_ruleset[name]
-                except Exception:  # a private or a numbering rule set may refuse a number; others still read it
-                    continue
-                written.update(re.split("[ \u00a0\u200b]+", text))
+        for locale in sorted(name for name in rbnf_locales() if name.split("_")[0] == language):
+            engine = rbnf_engine(locale)
+            for name in engine.rulesets:
+                for number in numbers:
+                    try:
+                        text = engine.format_number(number, ruleset_names=[name]).text_by_ruleset[name]
+                    except Exception:  # a private or a numbering rule set may refuse a number; others still read it
+                        continue
+                    written.update(re.split("[ \u00a0\u200b]+", text))
         assert set(table) <= written, (language, sorted(set(table) - written))
+
+
+CORRECTION_ROWS = json.loads((Path(__file__).parents[1] / "text2spoken" / "data" / "rbnf_corrections.json").read_text(
+    encoding="utf-8"))["corrections"]
+SENTENCES = {"el": "Σελίδα {}.", "is": "Ég á {} hesta.", "lo": "ມື້ນີ້ {} ອາກາດ"}
+"""A sentence for each language whose rows RBNF writes in a cardinal."""
+
+
+@pytest.mark.parametrize("row", CORRECTION_ROWS, ids=[f"{row['language']}-{row['wrong']}" for row in CORRECTION_ROWS])
+def test_each_rbnf_correction_reads_through_normalize(row):
+    """The number is the first one whose RBNF words, read in unicode_rbnf, hold the wrong word of the row."""
+    from text2spoken import FrozenMap, SayAs
+    from text2spoken.core.language import rbnf_locales
+
+    locale, name, number = next(
+        (locale, name, number) for number in (*range(1001), *(10**power for power in range(3, 13)), -5)
+        for locale in sorted(rbnf_locales()) if locale.split("_")[0] == row["language"]
+        for name, rule_set in rbnf_engine(locale).rulesets.items()
+        if not rule_set.is_private and name.startswith(("spellout-cardinal", "spellout-numbering", "spellout-ordinal"))
+        and name != "spellout-numbering-year"
+        and row["wrong"] in re.split("[ \u00a0\u200b]+", rbnf_engine(locale).format_number(
+            number, ruleset_names=[name]).text_by_ruleset[name]))
+    gender = name.rsplit("-", 1)[1]
+    params = NormalizationParams(default_gender=FrozenMap({row["language"]: GrammaticalGender(gender)})) \
+        if gender in {member.value for member in GrammaticalGender} else NormalizationParams()
+    tag = locale.replace("_", "-")
+    if "ordinal" in name:
+        spoken = normalize(str(number), tag, params, say_as=SayAs(interpret_as="ordinal"))
+    else:
+        spoken = normalize(SENTENCES[row["language"]].format(number), tag, params)
+    spoken_words = re.split("[\\s\u200b.]+", spoken)
+    assert row["right"] in spoken_words and row["wrong"] not in spoken_words, (name, number, spoken)
 
 
 def test_a_correction_replaces_whole_words_only():
