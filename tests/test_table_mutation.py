@@ -126,6 +126,7 @@ ES_ENTRIES = {
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
     "abbreviation_plurals": "vol.", "degree_marks": "º", "ordinal_leads": "el", "ordinal_follows": "de",
+    "ordinal_determiners": "el", "feminine_determiners": "la",
     "mixed_word": DELETE, "mixed_half": "other",
 }
 ENTRIES = {
