@@ -442,8 +442,8 @@ def grouped_matches(pattern: re.Pattern | str, text: str, request: Request) -> I
         spaces = frozenset(group_spaces(text, number_marks(request.data, request.params.decimal_mark),
                                         declared_marks(request.data)))
         kept = tuple(i for i in range(len(text)) if i not in spaces)
-        request.memo[key] = ("".join(folded[i] for i in kept), kept) if spaces else (folded, None)
-    view, kept = request.memo[key]
+        request.memo[key] = (folded, "".join(folded[i] for i in kept), kept) if spaces else (folded, folded, None)
+    _, view, kept = request.memo[key]
     for match in digit_run_matches(pattern, view):
         start, end = match.span()
         if kept is not None:
@@ -541,7 +541,7 @@ class Fraction:
         the fraction alone follows, and it reads only where another span claims the whole part first."""
         symbols = request.data.get("symbols", FrozenMap())
         units = unit_table(request)
-        folded = fold_digits(text)
+        reads = SYMBOL in request.language.recognizers
         for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(_FRACTION, text,
                                                                                                  request):
             sign = "-" if written[0] in "-−" else "+" if written[0] == "+" else ""
@@ -558,10 +558,9 @@ class Fraction:
                 currency = False
                 if patterns is not None:
                     before, after, width = patterns
-                    reads = SYMBOL in request.language.recognizers
+                    folded = request.memo[("grouped", text)][0]
                     beside = ((next((match for match in before.finditer(folded, max(0, begin - width), begin)
                                      if match.end() == begin), None), 2, 1), (after.match(folded, end), 1, 2))
-                    # A symbol that `SYMBOL` reads in part, as `₵` of `GH₵`, does not stay beside the number.
                     currency = any(match is not None and match.group(other) is None
                                    and not (reads and any(reads_symbol(text, index, request)
                                                           for index in range(*match.span(symbol))))
@@ -788,7 +787,7 @@ class Money:
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         numbers = [(number, every_symbol) for number in self.numbers(text, tokens, request)]
         numbers += [(number, euro) for number in _comma_decimals(text, request)]
-        folded = fold_digits(text)
+        folded = fold_digits(text) if "/" in text else text
         for number, symbols in numbers:
             fraction = _FRACTION.match(folded, number.end + 1)
             if fraction and fraction.group()[0] not in SIGNS:
