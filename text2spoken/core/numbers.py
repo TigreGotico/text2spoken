@@ -14,8 +14,9 @@ _CLUSTER_JOINERS = frozenset(":/")
 GROUP_SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space, which group the digits of a number."""
 
-SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{1,3})*)?"
-                          "|[0-9]+,[0-9]{3}(?:[ \u00a0\u202f][0-9]{1,3})+")
+SPACE_GROUPS = re.compile(f"[0-9]{{1,3}}(?:[{GROUP_SPACES}][0-9]{{3}})+"
+                          f"(?:,[0-9]{{1,3}}(?:[{GROUP_SPACES}][0-9]{{1,3}})*)?"
+                          f"|[0-9]+,[0-9]{{3}}(?:[{GROUP_SPACES}][0-9]{{1,3}})+")
 """Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the
 whole part or in the fraction after a decimal comma: `36 524`, `123 456 789,987 546`, `0,264 7` (Araua 203,
 section 3.2.1.1, page 12)."""

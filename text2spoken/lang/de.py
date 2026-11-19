@@ -126,6 +126,7 @@ DATA = freeze({
     "list_links": ["und", "oder"],
     "phone_shapes": ["0[1-9][0-9]{1,4} [0-9]+-[0-9]+"],
     "phone_unit_shapes": ["(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+"],
+    "phone_kept_shapes": ["[1-9][0-9]{0,2}(?: [0-9]{3})+"],
     "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
     "color_words": ["Farbe", "Farben", "Farbcode"],
     "titles": {"Dr.": "Doktor", "Prof.": "Professor", "Hr.": "Herr", "Hrn.": "Herrn", "Fr.": "Frau"},

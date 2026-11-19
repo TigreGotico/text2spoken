@@ -157,17 +157,19 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
 
 def _group_spaces(text: str) -> bytearray:
     """The spaces between the groups of a number written in groups of three digits, as in `12 000` and `0,264 7`.
-    A run that a digit, or one space and a digit, continues, as in `123 456 78` and `0800 123 456`, is no such
-    number. Nor is a run after a letter, as in the code `K1 500`, or after a digit and a full stop or a comma, as in
-    `HTTP/1.1 404` and `1.6 125`: its first group belongs to the code or to the number before the mark."""
+    A run that a digit, or one space and a digit, continues or starts, as in `123 456 78` and `0800 123 456`, is no
+    such number. Nor is a run after a letter, as in the code `K1 500`, or after a digit and a full stop or a comma,
+    as in `HTTP/1.1 404` and `1.6 125`: its first group belongs to the code or to the number before the mark."""
     folded = fold_digits(text)
     marked = bytearray(len(text))
     for match in SPACE_GROUPS.finditer(folded):
         start, end = match.span()
         before, after = folded[max(start - 2, 0):start], folded[end:end + 2]
-        if "0" <= before[-1:] <= "9" or "0" <= after[:1] <= "9" or (before and is_letter(before[-1])) \
-                or (len(before) == 2 and before[1] in GROUP_SPACES + ".," and "0" <= before[0] <= "9") \
-                or (len(after) == 2 and after[0] in GROUP_SPACES and "0" <= after[1] <= "9"):
+        continued = "0" <= after.lstrip(GROUP_SPACES)[:1] <= "9"
+        started = "0" <= before.rstrip(GROUP_SPACES)[-1:] <= "9"
+        coded = bool(before) and is_letter(before[-1])
+        marked_before = len(before) == 2 and before[1] in ".," and "0" <= before[0] <= "9"
+        if continued or started or coded or marked_before:
             continue
         for position in range(start, end):
             if folded[position] in GROUP_SPACES:

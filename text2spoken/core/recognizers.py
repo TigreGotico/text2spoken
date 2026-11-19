@@ -934,9 +934,11 @@ class Telephone:
     characters, so `Call ⇒ 999 or → 112.` reads both runs digit by digit. For the same reason, a lexicon key as
     that last word counts by its spoken words: with a key `call` for "kall", `call+351` reads the number.
 
-    Two tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
-    matches whole reads digit by digit as one unit with no other evidence. A run that a shape of `no_phone_shapes`
-    matches whole has no phone shape.
+    Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
+    matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
+    `phone_kept_shapes` matches whole stays as written when it has no phone reading, as `1 000 000` in
+    `1 000 000 2nd`, where the last group drops. A run that a shape of `no_phone_shapes` matches whole has no phone
+    shape.
 
     `spaces` holds the spaces that may part two groups of a run, and `plans` the numbering plans that the recognizer
     reads, by region. A language whose `phone_regions` option offers a region that `PHONE_PLANS` lacks passes the
@@ -996,6 +998,7 @@ class Telephone:
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
         unit_shapes = [re.compile(shape) for shape in request.data.get("phone_unit_shapes", ())]
+        kept_shapes = [re.compile(shape) for shape in request.data.get("phone_kept_shapes", ())]
         no_shapes = [re.compile(shape) for shape in request.data.get("no_phone_shapes", ())]
         short_codes = frozenset(request.data.get("short_codes", ()))
         codes = sorted((plan["country_code"] for plan in self.plans.values()), key=len, reverse=True)
@@ -1074,6 +1077,8 @@ class Telephone:
                 yield Span(first, last, Form.TELEPHONE,
                            FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
                                       "suffix": suffix}), recognizer=self.name)
+            elif any(shape.fullmatch(written) for shape in kept_shapes):
+                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
 
 
 def speak_lexicon(span: Span, context: SpanContext) -> str:

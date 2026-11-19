@@ -139,7 +139,7 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.numbers import SIGNS, Number, written_amount
+from text2spoken.core.numbers import GROUP_SPACES, SIGNS, Number, written_amount
 from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, numbers_in, signed,
                                           speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_lexicon, speak_ordinal, speak_percent, speak_spoken_date)
@@ -166,9 +166,6 @@ dash."""
 WORD_JOINERS = "'\u2019-\u2010"
 """The apostrophe, the right single quotation mark, the hyphen-minus and the hyphen, which join a suffix or a second
 word to a word, as in `euro's` and `euro-cent`."""
-
-GROUP_SPACES = " \u00a0\u202f"
-"""The spaces between the groups of a number: the space, the no-break space and the narrow no-break space."""
 
 DIGIT_BEFORE = re.compile("[0-9][ \u00a0\u202f/:.,–-]?$")
 DIGIT_AFTER = re.compile("[ \u00a0\u202f/:.,–-]?[0-9]")
