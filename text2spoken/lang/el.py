@@ -34,8 +34,8 @@ decides, because the noun lists also hold forms of other words. A phrase that le
 the default gender when that gender is one of them, and else the masculine: `οι 200` reads "διακόσιοι", and so does
 `200 γιατροί`, a noun of both genders that the English Wiktionary heads `{{el-noun|m|g2=f}}`, masculine first.
 
-The case of the noun form changes the number, by the rules of CLDR (common/rbnf/el.xml on the main branch of
-unicode-org/cldr): `spellout-cardinal-masculine-accusative` gives "έναν", the hundreds in "-κόσιους" and "χίλιους",
+The case of the noun form changes the number, by the rules of CLDR 49 (`release-49/common/rbnf/el.xml`):
+`spellout-cardinal-masculine-accusative` gives "έναν", the hundreds in "-κόσιους" and "χίλιους",
 and the genitive rule sets give "ενός", "μιας", "τριών", "τεσσάρων", the hundreds in "-κοσίων", "χιλίων",
 "χιλιάδων" and "εκατομμυρίων". The feminine and the neuter accusative are the nominative ("0:
 =%spellout-cardinal-feminine=;"). `case_words` holds these words. A noun form that is only accusative or only
@@ -77,7 +77,7 @@ The RBNF data of unicode-rbnf writes "χίλιάδες" with two accents, "εν�
 no accent. The core table `data/rbnf_corrections.json` gives the right words and their sources, and `RbnfSpeller`
 reads it (design section 5.4).
 
-A minus reads "μείον", the word of the RBNF rule `-x: μείον →→`. As in the other files, the hyphen of `5-10` and
+A minus reads "μείον", the word of the RBNF rule `-x: μείον >>;`. As in the other files, the hyphen of `5-10` and
 `A-5` is no minus. Money, measures and an ordinal with a full stop stay as written, as for a language with no file
 (design section 6.1), and so does an amount with a minus, as `-50 €` and `€ -50`.
 
