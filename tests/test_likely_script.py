@@ -34,3 +34,9 @@ def test_zh_tw_reads_the_decimal_point_in_traditional_characters():
 def test_sr_me_reads_numbers_in_latin_script():
     assert normalize("1999", "sr-ME") == "hiljadu devetsto devedeset i devet"
     assert normalize("1999", "sr-RS") == "хиљаду деветсто деведесет и девет"
+
+
+def test_bare_yue_reads_simplified_and_yue_hk_reads_traditional():
+    # A bare tag takes its motherland region: `yue` is `yue-CN`, and CLDR 49 gives `yue_CN` as `yue_Hans_CN`.
+    assert normalize("10.05", "yue") == "十点零五"
+    assert normalize("10.05", "yue-HK") == "十點零五"
