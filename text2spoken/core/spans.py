@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Literal, Protocol
 from text2spoken.core.emoji import emoji_view, sequences_in
 from text2spoken.core.numbers import GROUP_SPACES, SPACE_GROUPS
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_digit, is_letter, is_mark,
-                                     is_punctuation)
+                                     is_punctuation, next_visible)
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
                                 UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
@@ -215,7 +215,9 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     side it waits like any span, because a number recognizer refuses digits that one character joins to a digit,
     a symbol or an emoji. So with a key `cats`, `2,cats` reads "two,kats", and with a key `GPT-4`, `©` or `#️⃣`,
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
-    waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`.
+    waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
+    before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
+    reads the number after it, finds no key there and reads the `5` before it.
 
     A space between groups of three digits joins them as a mark does, because the groups are one number (BIPM, SI
     Brochure, 9th edition, section 5.4.4: the digits "may be divided into groups of three by a space"). So a span
@@ -302,6 +304,9 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
             while last > span.start and is_mark(view[last]):
                 last -= 1
             sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
+        elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
+                and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
+            sides = ()
         if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides, grouped):
             if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
                 for position in range(span.start, span.end):
