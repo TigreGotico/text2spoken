@@ -280,10 +280,10 @@ def speak_abbreviation(span: Span, context: SpanContext) -> str:
     return context.request.data["abbreviations"][span.fields["key"]]
 
 
-def _symbol_suffix(text: str, end: int, data) -> tuple[int, str] | None:
-    """The end and the case ending after a symbol: a hyphen and a declared ending, as in `€-etik` and `kg-ek`
-    (Araua 197, section 6.4), or the end of the symbol when `_suffix` finds no letters after it. Letters that touch
-    the symbol are no ending, because the hyphen joins one, so `0033 sei` holds no unit `s`: `sei` is a word."""
+def _symbol_suffix(text: str, end: int, symbol: str, data) -> tuple[int, str] | None:
+    """The end and the case ending after `symbol`: a hyphen and a declared ending, as in `€-etik` and `kg-ek`
+    (Araua 197, section 6.4), or what `_suffix` reads, as in `5€ko` (design section 4.4). Letters that touch a symbol
+    of one letter are no ending, because the symbol and the letters may be one word: `0033 sei` holds no unit `s`."""
     if text.startswith("-", end):
         stop = end + 1
         while stop < len(text) and (is_letter(text[stop]) or is_mark(text[stop])):
@@ -292,7 +292,9 @@ def _symbol_suffix(text: str, end: int, data) -> tuple[int, str] | None:
         if ending in data.get("case_suffixes", ()) and not (stop < len(text) and is_word_char(text[stop])):
             return stop, ending
     after = _suffix(text, end, data, ())
-    return None if after is None or after[1] else after
+    if after is not None and after[1] and len(symbol) == 1 and is_letter(symbol):
+        return None
+    return after
 
 
 def _ordinal_follower(text: str, stop: int, data) -> tuple[int, str] | None:
@@ -568,7 +570,7 @@ def _amount_spans(text: str, request: Request, symbols: Sequence[str]) -> Iterat
             symbol = next((s for s in ordered if text.startswith(gap + s, number.end)), None)
             if symbol is None:
                 continue
-            after = _symbol_suffix(text, number.end + len(gap) + len(symbol), data)
+            after = _symbol_suffix(text, number.end + len(gap) + len(symbol), symbol, data)
             before = _prefix(text, number.start, data, ())
             if after is not None and before is not None and not _per_unit(text, after[0]):
                 found = (symbol, before[0], after[0], before[1], after[1], False)
@@ -675,7 +677,7 @@ class BasquePercent:
                     if not text.startswith(gap + sign, number.end):
                         continue
                     before = _prefix(text, number.start, data, ())
-                    after = _symbol_suffix(text, number.end + len(gap) + len(sign), data)
+                    after = _symbol_suffix(text, number.end + len(gap) + len(sign), sign, data)
                     if before is not None and after is not None:
                         yield self._span(number, number.sign, "after", (before[0], after[0], before[1], after[1]))
                     break
