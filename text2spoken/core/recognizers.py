@@ -951,15 +951,22 @@ def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple
     return tuple(sorted(found, key=lambda word: word.start))
 
 
+def _last_parts(words: str) -> list[str]:
+    """The words of a window slot in lower case, each hyphenated word as its last part."""
+    return [word.rsplit("-", 1)[-1] for word in words.lower().split()]
+
+
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
     region in `phone_regions`, a shape of the `phone_shapes` table, as in `(212) 555-0123`, or a phone word that
     names the run.
 
-    A phone word names the run right after it, with no letter or digit between them. A run that a word of
-    `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only add
-    words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
+    A phone word names the run right after it, with no letter or digit between them. The last part of a hyphenated
+    word counts as a word, as a colour word does (design section 4.2). So in `12,50 €-Tel.. 1.000,5-`, `Tel` names
+    the run on a second pass too, where a hyphen joins it to "céntimos", the last word of the amount. A run that a
+    word of `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only
+    add words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
 
     A named run of 7 to 15 digits reads digit by digit. A shorter named run reads digit by digit only when it is a
     short code, so `Call 100 customers.` reads a count. A run right after a phone word that no plan reads stays as
@@ -1070,11 +1077,11 @@ class Telephone:
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
                 written.startswith("+") or digits.startswith("0") or any(c in self.spaces + ".()-" for c in written))
             window = self.window(text, words, breaks, start, end, request)
-            phone_ends = [words[i].end for i in window if phone_words.intersection(words[i].text.lower().split())]
+            phone_ends = [words[i].end for i in window if phone_words.intersection(_last_parts(words[i].text))]
             between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
             direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
             spoken = lexicon.get(words[window[-1]].end, words[window[-1]].text) if window else ""
-            keeps = direct and bool(phone_words.intersection(spoken.lower().split()[-1:]))
+            keeps = direct and bool(phone_words.intersection(_last_parts(spoken)[-1:]))
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
