@@ -183,7 +183,7 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
                    "clock_marks": [{"mark": ":", "seconds": True, "needs": "evidence"},
                                    {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
                    "electronic_symbols": {"@": "et"}, "letter_names": {"a": "ha"}, "electronic_vowels": ["a"],
-                   "electronic_schemes": {"http": "read"}, "electronic_tlds": ["qa"], "letter_vowels": ["a"],
+                   "electronic_schemes": {"http": "read"}, "letter_vowels": ["a"],
                    "letter_onsets": ["q"], "letter_codas": ["c"], "phone_words": ["fon"], "phone_shapes": [],
                    "phone_unit_shapes": [], "phone_kept_shapes": [], "no_phone_shapes": [], "short_codes": [],
                    "list_links": [], "operators": {}, "unit_symbols": [], "currency_symbols": [],
