@@ -43,14 +43,13 @@ maar in de praktijk is ook de schrijfwijze met punten gebruikelijk". So `1 000 0
 "twaalfduizend", alone, in an amount and in a measure, as in `€ 12 000` and `10 000 km`. A digit run that continues the
 groups after one space, as in the phone number `+31 20 123 4567`, shows no number of groups, so each group reads as it
 would alone. A first group that starts with 0, as in `020 123 456`, and a mark that joins the groups to another digit
-run, as in `10 000-20 000`, show no number of groups either, and the run stays as written: the core reads no group of
-a number grouped with spaces alone. A date splits into groups of one, two
-or four digits, so it holds no group of three after a space. An amount reads the groups and a decimal comma after them
-whole: the same page writes "$ 34 898 456,78", and `€ 12 000,50` reads "twaalfduizend euro vijftig". No group of a
-number of groups reads alone as an amount. An amount or a measure whose whole part starts with 0 and holds more
-digits, as in `€ 05,00` and `012 000 kg`, stays as written, and so does a run whose first group starts with 0 and
-that has a decimal comma, as in `012 000,5`. Outside an amount, a number with spaces between its groups and a decimal
-comma, a percent sign or a dimension mark stays as written.
+run, as in `10 000-20 000`, show no number of groups either, and the run stays as written: the core reads no group of a
+number grouped with spaces alone. A date splits into groups of one, two or four digits, so it holds no group of three
+after a space. An amount reads the groups and a decimal comma after them whole: the same page writes "$ 34 898 456,78",
+and `€ 12 000,50` reads "twaalfduizend euro vijftig". No group of a number of groups reads alone as an amount. An amount
+or a measure whose whole part starts with 0 and holds more digits, as in `€ 05,00` and `012 000 kg`, stays as written,
+and so does a run whose first group starts with 0 and that has a decimal comma, as in `012 000,5`. Outside an amount, a
+number with spaces between its groups and a decimal comma, a percent sign or a dimension mark stays as written.
 
 A fraction is a cardinal and an ordinal, written apart: Taaladvies.net, "Aaneenschrijven van telwoorden", Breukgetallen:
 "Bij breuken is de teller een hoofdtelwoord en de noemer een rangtelwoord [...] Teller en noemer worden los van elkaar

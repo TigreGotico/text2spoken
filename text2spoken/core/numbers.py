@@ -11,6 +11,9 @@ from text2spoken.params import FrozenMap
 SIGNS = {"-": "-", "−": "-", "+": "+"}
 _CLUSTER_JOINERS = frozenset(":/")
 
+GROUP_SPACES = " \u00a0\u202f"
+"""The space, the no-break space and the narrow no-break space, which group the digits of a number."""
+
 SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{1,3})*)?"
                           "|[0-9]+,[0-9]{3}(?:[ \u00a0\u202f][0-9]{1,3})+")
 """Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the

@@ -23,8 +23,8 @@ from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
 from text2spoken.core.letters import LETTERS
-from text2spoken.core.numbers import (SIGNS, SPACE_GROUPS, Number, declared_marks, find_numbers, group_spaces,
-                                      number_marks)
+from text2spoken.core.numbers import (GROUP_SPACES, SIGNS, SPACE_GROUPS, Number, declared_marks, find_numbers,
+                                      group_spaces, number_marks)
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
@@ -258,10 +258,6 @@ class Cardinal:
 _DASHES = "-\u2010\u2011\u2012\u2013\u2014\u2212"
 """The hyphen, the dashes and the minus sign."""
 
-_GROUP_SPACES = " \u00a0\u202f"
-"""The space, the no-break space and the narrow no-break space, which group the digits of a number."""
-
-
 _ROOT_ROLES = MappingProxyType({".": "decimal", ",": "group"})
 """The role of the full stop and the comma in the CLDR root locale, which writes `1,234.5`."""
 
@@ -299,7 +295,7 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
         neighbours = []
         if before and is_digit(before[-1]):
             neighbours.append((index - 1, line_start + len(before) - 1))
-        if len(group) == 2 and group[0] in _GROUP_SPACES and is_digit(group[1]):
+        if len(group) == 2 and group[0] in GROUP_SPACES and is_digit(group[1]):
             neighbours.append((index + 1, number_end + 1))
         if neighbours or (before and (before[-1] in _DASHES or before[-1] in symbols)) or after[:1] in symbols:
             kept.add(index)
@@ -318,7 +314,7 @@ class RbnfCardinal(Cardinal):
     with a minus stays as written where the minus may mark something else, or where the number goes on past the
     span: a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an amount next to
     a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a number grouped with
-    one of `_GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
+    one of `GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
     group. A minus at the start of a line reads, as in a language file. A line break or a tab groups no digits, so
     in `-5\n10` the `10` of the next line reads.
 

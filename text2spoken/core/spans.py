@@ -10,7 +10,7 @@ from dataclasses import KW_ONLY, dataclass, replace
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
-from text2spoken.core.numbers import SPACE_GROUPS
+from text2spoken.core.numbers import GROUP_SPACES, SPACE_GROUPS
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_digit, is_letter, is_mark,
                                      is_punctuation)
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
@@ -155,24 +155,22 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
     return (left, left - 1), (span.end, after.get(span.end, span.end + 1))
 
 
-_GROUP_GAPS = " \u00a0\u202f"
-
-
 def _group_spaces(text: str) -> bytearray:
     """The spaces between the groups of a number written in groups of three digits, as in `12 000` and `0,264 7`.
     A run that a digit, or one space and a digit, continues, as in `123 456 78` and `0800 123 456`, is no such
-    number."""
+    number, and nor is a run after a digit and a full stop or a comma, as in `HTTP/1.1 404` and `1.6 125`: its first
+    group belongs to the number before the mark."""
     folded = fold_digits(text)
     marked = bytearray(len(text))
     for match in SPACE_GROUPS.finditer(folded):
         start, end = match.span()
         before, after = folded[max(start - 2, 0):start], folded[end:end + 2]
         if "0" <= before[-1:] <= "9" or "0" <= after[:1] <= "9" \
-                or (len(before) == 2 and before[1] in _GROUP_GAPS and "0" <= before[0] <= "9") \
-                or (len(after) == 2 and after[0] in _GROUP_GAPS and "0" <= after[1] <= "9"):
+                or (len(before) == 2 and before[1] in GROUP_SPACES + ".," and "0" <= before[0] <= "9") \
+                or (len(after) == 2 and after[0] in GROUP_SPACES and "0" <= after[1] <= "9"):
             continue
         for position in range(start, end):
-            if folded[position] in _GROUP_GAPS:
+            if folded[position] in GROUP_SPACES:
                 marked[position] = 1
     return marked
 
