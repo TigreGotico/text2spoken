@@ -208,6 +208,18 @@ ruling keeps it: "zero horas" in pt-PT and "zero hora" in pt-BR (Dicio, "Zero gr
 zero é encarado como singular: zero grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero
 graus; zero reais; zero horas.").
 
+A clock with a colon reads after a word of `time_words`. `são`, the verb that tells the time, is one: Priberam, "ser",
+sense 14: "Indica o momento, o dia, a estação, o ano, a época (ex.: já é noite; são 18h00)". In the "meio milhão de
+frases" sentence set, each of the 148 clocks after `são` is a time, as mmf-286695 "São 17:30. Está na hora de ir buscar
+o Pedro à escola." `são` is plural and agrees with the hours, so 12:00 after it reads the 24-hour form, as after `as`:
+`São 12:00` reads "São doze horas". A clock 0:00 or 24:00 after `são` stays as written, because pt-BR reads the hour
+zero in the singular, "zero hora" (Dicio, above), which does not agree with `são`. A clock after `são` with `h` or
+`horas` after it stays as written, because the reading of a whole hour ends in "horas": `Já são 11:00 horas!`. So does a
+clock with a mark between it and `são`, as in mmf-178704 "Os lotes proibidos são: 17:00, de geleia de uva", where the
+clocks are lot numbers. A clock `24:00` is midnight, the end of the day: Priberam, "meia-noite": "Fim da vigésima quarta
+hora do dia civil que acaba às 24h00 (ou 00h00, o mesmo momento em que começa a primeira hora do dia seguinte)". So it
+reads as `0:00` does, with the ruling above: `Fecha às 24:00` reads "Fecha à meia-noite".
+
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
@@ -235,10 +247,17 @@ takes the gender of the noun, which Priberam gives: "classe", "parte", "fase", "
 "canto", "ato", "acto", "grupo" and "nível" are "nome masculino". So `Classe II` reads "Classe segunda" and `o
 capítulo XV` "o capítulo quinze". A numeral of two letters or more, up to XXX, also reads after any other
 capitalised word, as in `João Paulo II` and `Isabel II`, and right after a title and its full stop, with the gender
-of the title, as in `D. XIV`, which reads "Dom Catorze". In pt-BR the ordinal stops at nine, and
-`roman_ordinal_limit` holds the last value that reads as an ordinal in each variety. Ciberdúvidas 9067: "os numerais
-se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono); mas, a partir daí, se
-pronunciarem como cardinais". So `Pio X` reads "Pio Décimo" in pt-PT and "Pio Dez" in pt-BR.
+of the title, as in `D. XIV`, which reads "Dom Catorze". `roman_ordinal_limit` holds the last value that reads as
+an ordinal, ten in both varieties, and `roman_noun_ordinal_limits` of a variety holds another limit after a noun. In pt-BR the
+ordinal after `artigo` stops at nine. Two Brazilian works, both quoted in Migalhas, Gramatigalhas, "Numeral", give
+ten for kings, popes, centuries and chapters. Luís A. P. Vitória, Dicionário de Dificuldades, Erros e Definições de
+Português (1969), p. 174: "para indicar a ordem dos séculos, ou a ordem de sucessão de soberanos, usa-se o ordinal
+até dez e o cardinal de onze em diante". Francisco da Silveira Bueno, Questões de Português (1957), vol. II, p. 318:
+"de 1 a 10, usam-se os ordinais [...] Pio X (décimo), século VIII (oitavo), capítulo V (quinto)". The same column
+quotes Celso Cunha for the articles of a law: "na numeração dos artigos de leis, decretos e portarias, usa-se o
+ordinal até nove, e o cardinal de dez em diante". So `Pio X` reads "Pio Décimo" in both varieties, and `artigo X`
+reads "artigo décimo" in pt-PT and "artigo dez" in pt-BR. Ciberdúvidas 9067 gives nine for every noun in Brazil ("no
+Brasil até ao nono"), but cites no grammar.
 
 A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun
 of `roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
@@ -296,8 +315,8 @@ this, and the numeral itself does: it is a word of the clause only when `letter_
 do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito do
 indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
 A numeral between a singular demonstrative contracted with `em` or `de` (`nesta`, `deste`, `naquele`) and a common
-noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, with no limit on the
-value: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
+noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, also above
+`roman_ordinal_limit`: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
 a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
 jurídica": "Se o numeral antecede o substantivo, é usual continuar a usar-se o ordinal, mesmo depois de dez".
 Ciberdúvidas 28509, "Plurais com números romanos": "«II directriz», «III directriz», etc. (os símbolos são lidos:
@@ -309,7 +328,7 @@ numeral of two letters or more up to C. The contraction starts a prepositional p
 is its noun. An article or a demonstrative alone gives no such evidence, because `O XV segundo a imprensa` and
 `ESTE XV NUNCA PERDEU` are sentences about the XV de Portugal, so `A II Guerra Mundial` stays as written. The gender
 of the noun comes from `noun_gender` or tugalex, which guesses from the ending of a word that it does not list, so a
-verb form such as `joga` in `O XV joga` gets a gender too: the gender of the article decides, and `O XV joga` keeps
+verb form such as `joga` gets a gender too. That is one more reason why an article alone, as in `O XV joga`, keeps
 the cardinal reading. A plural article, as in `As II partes`, keeps it too, because the ordinal would be plural.
 After any other word of `function_words` in any case, which starts many sentences
 in capitals, as the article in `O XV de Portugal`, a numeral reads only from 11 to 30, as a cardinal, so `O XV` and
@@ -411,7 +430,8 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
-    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde"],
+    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são"],
+    "plural_time_verbs": ["são"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
     "time_contractions": {"às": {"0": "à", "12": "ao"}, "à": {"0": "à", "12": "ao"}, "as": {"0": "a", "12": "o"},
@@ -544,7 +564,7 @@ VARIETIES = (
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
         "letter_names": _pt_electronic.VARIETIES["pt-BR"]["letter_names"],
-        "roman_ordinal_limit": 9,
+        "roman_noun_ordinal_limits": {"artigo": 9},
         "colors": {"808080": "cinza"},
         "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
     })),
@@ -850,9 +870,9 @@ def speak_date(span: Span, context: SpanContext) -> str:
 
 def _day_point(fields: FrozenMap) -> int | None:
     """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds. A `prefix`
-    of None marks a time whose word of `time_contractions` stays as written, so its hour reads the 24-hour form that
-    the plural article agrees with. A written `a.m.` or `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.":
-    "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
+    of None marks a time whose word before it stays as written and agrees with plural hours, a word of
+    `time_contractions` or a verb of `plural_time_verbs`, so its hour reads the 24-hour form. A written `a.m.` or
+    `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.": "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
     hour = day_hour(fields["hour"], fields["period"])
     whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"] and fields["prefix"] is not None
     return hour if whole and hour in (0, 12) else None
@@ -970,7 +990,7 @@ def speak_abbreviation(span: Span, context: SpanContext) -> str:
 
 def speak_roman(span: Span, context: SpanContext) -> str:
     """Ordinal up to `roman_ordinal_limit` and cardinal after it (Ciberdúvidas 14167, for kings and popes; 12370, for
-    centuries; 11716, for the parts of a work; 9067, for the limit of pt-BR). After `século` or a noun of
+    centuries; 11716, for the parts of a work; Vitória, Bueno and Cunha, for pt-BR, as the module docstring quotes). After `século` or a noun of
     `roman_nouns`, the reading takes the gender of the noun and a small letter, and so does each numeral of a list that
     follows it, as in `séculos XI, XII e XIII`. After a title and its full stop,
     which ends the context words, it takes the gender of the title that the recognizer keeps in the memo of the
@@ -1032,7 +1052,16 @@ class Clock(TimeClock):
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
-        for span in self._symbols(text, request):
+        words = context_words(tokens)
+        day_ends = []
+        for match in re.finditer("24:00", text):
+            start, end = match.span()
+            joined = text[end:end + 1] in (":", ".", ",") and text[end + 1:end + 2].isdigit()
+            before = clause_window(text, words, start, end, -1, limit=1)
+            if is_bounded(text, start, end) and not joined and before \
+                    and before[0].lower() in request.data["time_words"]:
+                day_ends.append(replace(self._time(start, "24", "00", ""), end=end))
+        for span in (*self._symbols(text, request), *day_ends):
             if not any(span.start < other.end and other.start < span.end for other in own):
                 own.append(span)
         for span in super().find(text, tokens, request):
@@ -1046,6 +1075,16 @@ class Clock(TimeClock):
         words = context_words(tokens)
         out: list[Span] = []
         for span in spans:
+            index = bisect_right(words, span.start, key=lambda word: word.end)
+            word = words[index - 1] if index else None
+            verb = word is not None and word.text.lower() in request.data["plural_time_verbs"] \
+                and not (span.fields["suffix"] or span.fields["period"])
+            plural = verb and text[word.end:span.start].isspace()
+            after = bisect_left(words, span.end, key=lambda word: word.start)
+            hour_word = after < len(words) and text[span.end:words[after].start].isspace() \
+                and words[after].text.lower() in ("h", "hora", "horas")
+            if verb and (not plural or hour_word):
+                continue
             hour = _day_point(span.fields)
             if hour is None:
                 out.append(span)
@@ -1057,8 +1096,10 @@ class Clock(TimeClock):
                            for first in out]
                 out.append(span)
                 continue
-            index = bisect_right(words, span.start, key=lambda word: word.end)
-            word = words[index - 1] if index else None
+            if plural:
+                if hour != 0:
+                    out.append(replace(span, fields=FrozenMap({**span.fields, "prefix": None})))
+                continue
             if word is None or word.text.lower() not in contractions:
                 out.append(span)
                 continue
@@ -1081,6 +1122,9 @@ class Clock(TimeClock):
         return replace(span, fields=FrozenMap({**span.fields, "suffix": "h"}))
 
     def _time(self, start: int, hour: str, minute: str | None, symbol: str, second: str | None = None) -> Span | None:
+        """The time span at `start`. A clock `24:00` is the end of the day, which is midnight: hour 0."""
+        if (hour, minute, symbol, second) == ("24", "00", "", None):
+            hour = "0"
         fields = clock_fields(hour, minute or "00", second)
         if fields is None:
             return None
@@ -1509,7 +1553,7 @@ class Roman:
             previous = words[index - 1]
             if start in members:
                 request.memo.setdefault("pt_roman_series", {})[start] = members[start]
-                yield self._span(start, end, value, data)
+                yield self._span(start, end, value, data, members[start])
                 continue
             key = None
             in_clause = any(first <= previous.start and end <= last for first, last in clauses)
@@ -1551,7 +1595,7 @@ class Roman:
                     yield Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": "ordinal", "suffix": ""}),
                                recognizer=self.name)
                     continue
-                yield self._span(start, end, value, data)
+                yield self._span(start, end, value, data, key)
                 if key is not None:
                     last_value = value
                     for member_start, member_end, member in _list_members(text, end, links):
@@ -1562,8 +1606,9 @@ class Roman:
                         members[member_start] = key
                         last_value = member_value
 
-    def _span(self, start: int, end: int, value: int, data) -> Span:
-        role = "ordinal" if value <= data["roman_ordinal_limit"] else "cardinal"
+    def _span(self, start: int, end: int, value: int, data, noun: str | None = None) -> Span:
+        limit = data.get("roman_noun_ordinal_limits", {}).get(noun, data["roman_ordinal_limit"])
+        role = "ordinal" if value <= limit else "cardinal"
         return Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": role, "suffix": ""}),
                     recognizer=self.name)
 

@@ -71,7 +71,8 @@ def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, s
         return None
     if group and any(m in integer for m in group):
         head, *rest = integer.translate({ord(m): group[0] for m in group}).split(group[0])
-        if not (1 <= len(head) <= 3 and head.isdigit() and all(len(g) == 3 and g.isdigit() for g in rest)):
+        if not (1 <= len(head) <= 3 and head.isdigit() and head[0] != "0"
+                and all(len(g) == 3 and g.isdigit() for g in rest)):
             return None
         integer = head + "".join(rest)
     if integer and not integer.isdigit():
