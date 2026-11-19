@@ -23,7 +23,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from text2spoken.core.dates import is_valid, resolve as resolve_date
-from text2spoken.core.recognizers import (_DATE, PHONE_PLANS, _cluster_edge, _edge, _period_after, _phone_pattern,
+from text2spoken.core.recognizers import (_DATE, PHONE_PLANS, _cluster_edge, _edge, _period_after,
                                           _sentence_period, digit_run_matches, numbers_in, whole_part)
 from text2spoken.core.spans import SAY_AS_SPANS, Features, Recognizer, Span, SpanContext
 from text2spoken.core.spellers import bounded_integer, cardinal_digit_words
@@ -198,6 +198,10 @@ class BareClock:
                                       "prefix": "", "suffix": ""}), trail=trail, recognizer=self.name)
 
 
+_TELEPHONE = re.compile("(?:[+]?[(][0-9]+[)] ?|[+][0-9]{1,3} ?[(][0-9]+[)] ?|[+])?[0-9]+(?:[ .-][0-9]+)*")
+"""Digit groups, with a `+`, a country code and an area code in brackets as in `+1 (212) 555-0199`."""
+
+
 @dataclass(frozen=True)
 class BareTelephone:
     """A run of digit groups that a space, a full stop or a hyphen part, with an optional `+` and a country code and
@@ -207,7 +211,7 @@ class BareTelephone:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         codes = sorted((plan["country_code"] for plan in PHONE_PLANS.values()), key=len, reverse=True)
-        for match in _phone_pattern(" ").finditer(fold_digits(text)):
+        for match in _TELEPHONE.finditer(fold_digits(text)):
             start, end = match.span()
             written = match.group()
             if not (_edge(text, start, end) and one_digit_set(text[start:end])):
