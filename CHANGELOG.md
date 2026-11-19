@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.2a92](https://github.com/TigreGotico/text2spoken/tree/0.0.2a92) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a91...0.0.2a92)
+
+**Merged pull requests:**
+
+- fix\(pt\): read e-mail and web addresses [\#351](https://github.com/TigreGotico/text2spoken/pull/351) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a91](https://github.com/TigreGotico/text2spoken/tree/0.0.2a91) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a90...0.0.2a91)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a pt-PT number grouped with spaces when it is a quantity [\#355](https://github.com/TigreGotico/text2spoken/pull/355) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ar\): a whole hour after الساعة reads as a time, and ص and م mark the day period [\#345](https://github.com/TigreGotico/text2spoken/pull/345) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a90](https://github.com/TigreGotico/text2spoken/tree/0.0.2a90) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a89...0.0.2a90)
@@ -240,10 +257,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a63...0.0.2a64)
 
-**Merged pull requests:**
-
-- feat: Italian language file [\#114](https://github.com/TigreGotico/text2spoken/pull/114) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a63](https://github.com/TigreGotico/text2spoken/tree/0.0.2a63) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a62...0.0.2a63)
@@ -299,10 +312,6 @@
 ## [0.0.2a56](https://github.com/TigreGotico/text2spoken/tree/0.0.2a56) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a55...0.0.2a56)
-
-**Merged pull requests:**
-
-- fix: read fewer initialisms and cut titles as Roman numerals [\#116](https://github.com/TigreGotico/text2spoken/pull/116) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a55](https://github.com/TigreGotico/text2spoken/tree/0.0.2a55) (2026-11-16)
 
