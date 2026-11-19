@@ -73,17 +73,25 @@ A fraction with a denominator up to 12 may be a day and a month: the CLDR 49 dat
 score and a count of tries. The marks are a neuter article before it, as the fraction is a neuter noun ("Το μισό
 αριθμητικά γράφεται ως 1/2 ή 0,5", Λεξικό της κοινής νεοελληνικής, "μισός"); a genitive article or noun after it,
 the whole that it divides ("Ένα τέταρτο της ώρας", "ώρα" 1); and, for 1/2, a noun after it ("Μισό μέτρο / κιλό.
-Μισή ώρα.", "μισός"). So `Έφαγε τα 3/4 της πίτας` reads and `στις 3/8` stays as written. A denominator with a
-leading zero, as in `03/09`, has no name, so such a form stays as written too.
+Μισή ώρα.", "μισός"). So `Έφαγε τα 3/4 της πίτας` reads and `στις 3/8` stays as written. The same marks decide for
+60, 70 and 80, which follow the number of a law or a decree as a two-digit year, as in `Νόμος 14/60`, and a ratio, as
+in `40/60`. A denominator with a leading zero, as in `03/09`, has no name, so such a form stays as written too.
 
-A whole number and a half are one word. The Λεξικό της κοινής νεοελληνικής, "-μισι": "β' συνθετικό σε σύνθεση με τα
-απόλυτα αριθμητικά συνήθ. ως το είκοσι· προσδίδει στο οποιουδήποτε γένους ουσιαστικό που προσδιορίζει την έννοια
-του αριθμητικού αυξημένη κατά μισή μονάδα: οκτώ ~ : Εργασία οκτώ ~ ωρών [...] τρεισήμισι και τριά ~ , τεσσερισήμισι
-και τεσσερά ~". The English Wiktionary gives δυόμισι ("invariable", "two and a half"), πεντέμισι, τρεισήμισι
-("g=m|g2=f|neuter|τριάμισι") and τεσσερισήμισι ("g=m|g2=f|neuter|τεσσεράμισι"). One and a half declines:
-"ενάμισης μιάμιση ενάμισι [...] αριθμτ. επίθ. : ένας και μισός: ~ χρόνος. Μιάμιση ώρα. Ενάμισι μέτρο. Σε διάστημα
-ενάμιση χρόνου / μιάμισης ώρας / ενάμισι έτους" ("ενάμισης"). `halves` holds these words by gender and case. The
-masculine accusative of ενάμισης, and a whole number that no source names with -μισι, as 6, stay as written.
+A whole number up to 20 and a half are one word. The Λεξικό της κοινής νεοελληνικής, "-μισι": "-μισι [misi], όταν
+το α' συνθετικό λήγει σε φωνήεν & -ήμισι [ímisi], όταν το α' συνθετικό λήγει σε σύμφωνο : β' συνθετικό σε σύνθεση με
+τα απόλυτα αριθμητικά συνήθ. ως το είκοσι· προσδίδει στο οποιουδήποτε γένους ουσιαστικό που προσδιορίζει την έννοια
+του αριθμητικού αυξημένη κατά μισή μονάδα: οκτώ ~ : Εργασία οκτώ ~ ωρών· δεκατρεισήμισι: Απόσταση δεκατρεισήμισι
+χιλιομέτρων· τρεισήμισι και τριά ~ , τεσσερισήμισι και τεσσερά ~". Before -μισι, the CLDR cardinal takes the
+accent on its last syllable, as in τεσσεράμισι, δωδεκάμισι and οκτώμισι (Βικιλεξικό, "-μισι") and εξίμισι
+(Βικιλεξικό, "εξίμισι", after Μπαμπινιώτης: "γράφεται εξίμισι (εξί - μισι), όπως τα ενάμισι, δυόμισι, πεντέμισι").
+The Λεξικό allows that accent on επτά and εννέα: "επτά- [...] όταν κατά τη σύνθεση ο τόνος ανεβαίνει στο α'
+συνθετικό" ("επτα-"), and the same for "εννεά-". The English Wiktionary gives τρεισήμισι ("g=m|g2=f|neuter|τριάμισι")
+and τεσσερισήμισι ("g=m|g2=f|neuter|τεσσεράμισι"), so the neuter of 3, 4, 13 and 14 takes -μισι after τρία and
+τέσσερα. The genitive of these numbers is one form for each gender, as τριών, and the Λεξικό writes δεκατρεισήμισι
+with the neuter χιλιομέτρων, so the genitive takes -ήμισι. One and a half declines: "ενάμισης μιάμιση ενάμισι [...]
+αριθμτ. επίθ. : ένας και μισός: ~ χρόνος. Μιάμιση ώρα. Ενάμισι μέτρο. Σε διάστημα ενάμιση χρόνου / μιάμισης ώρας /
+ενάμισι έτους" ("ενάμισης"). `halves` holds these words by gender and case. The masculine accusative of ενάμισης and
+a whole number above 20, where the Λεξικό names no word, stay as written.
 
 A numeric date reads day, month and year, as the CLDR long date format of `el`, `d MMMM y`, writes it, with the month
 name of `months`, CLDR 49 format wide, in the genitive. The day is the feminine ημέρα, as above, and the year reads
@@ -144,10 +152,16 @@ DATA = freeze({
               NEUTER: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), "ενάμισι")},
         **{whole: {MASCULINE: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), other),
                    FEMININE: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), other),
-                   NEUTER: dict.fromkeys((NOMINATIVE, ACCUSATIVE, GENITIVE), neuter)}
-           for whole, other, neuter in (("2", "δυόμισι", "δυόμισι"), ("3", "τρεισήμισι", "τριάμισι"),
-                                        ("4", "τεσσερισήμισι", "τεσσεράμισι"), ("5", "πεντέμισι", "πεντέμισι"),
-                                        ("8", "οκτώμισι", "οκτώμισι"))},
+                   NEUTER: {NOMINATIVE: neuter, ACCUSATIVE: neuter, GENITIVE: other}}
+           for whole, other, neuter in (
+               ("2", "δυόμισι", "δυόμισι"), ("3", "τρεισήμισι", "τριάμισι"), ("4", "τεσσερισήμισι", "τεσσεράμισι"),
+               ("5", "πεντέμισι", "πεντέμισι"), ("6", "εξίμισι", "εξίμισι"), ("7", "επτάμισι", "επτάμισι"),
+               ("8", "οκτώμισι", "οκτώμισι"), ("9", "εννεάμισι", "εννεάμισι"), ("10", "δεκάμισι", "δεκάμισι"),
+               ("11", "εντεκάμισι", "εντεκάμισι"), ("12", "δωδεκάμισι", "δωδεκάμισι"),
+               ("13", "δεκατρεισήμισι", "δεκατριάμισι"), ("14", "δεκατεσσερισήμισι", "δεκατεσσεράμισι"),
+               ("15", "δεκαπεντέμισι", "δεκαπεντέμισι"), ("16", "δεκαεξίμισι", "δεκαεξίμισι"),
+               ("17", "δεκαεπτάμισι", "δεκαεπτάμισι"), ("18", "δεκαοκτώμισι", "δεκαοκτώμισι"),
+               ("19", "δεκαεννεάμισι", "δεκαεννεάμισι"), ("20", "εικοσίμισι", "εικοσίμισι"))},
     },
     "leads": {},
     "case_words": {
@@ -398,17 +412,19 @@ class ReadPercent:
 @dataclass(frozen=True)
 class ListedFraction:
     """A proper fraction whose denominator has a name: 2 and the keys of `fraction_names`, and a whole number of
-    `halves` and 1/2. A fraction that may be a day and a month, with a denominator up to 12, reads only after a
-    neuter article, before a genitive article or noun, or, for 1/2, before a noun. Any other fraction and mixed
-    number stays as written."""
+    `halves` and 1/2. A fraction whose denominator is not 20 or 100 may be a date or a number with a year, so it
+    reads only after a neuter article, before a genitive article or noun, or, for 1/2, before a noun. Any other
+    fraction and mixed number stays as written."""
     name: str = "listed_fraction"
     form: Form = Form.FRACTION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        data = request.data
+        spans = list(SHARED["fraction"].find(text, tokens, request))
+        if not spans:
+            return
+        data, nouns = request.data, noun_readings()
         words, breaks = context_words(tokens), clause_breaks(text)
-        nouns = noun_readings()
-        for span in SHARED["fraction"].find(text, tokens, request):
+        for span in spans:
             fields = span.fields
             numerator, denominator = fields["numerator"], fields["denominator"]
             if fields["whole"]:
@@ -421,7 +437,7 @@ class ListedFraction:
                 genitive = after and {case for _, case in data["articles"].get(after[0]) or nouns.get(after[0], ())
                                       } == {GENITIVE}
                 read = ((denominator == "2" or denominator in data["fraction_names"])
-                        and (int(denominator) > 12 or any(gender == NEUTER for gender, _ in article) or genitive
+                        and (denominator in ("20", "100") or any(gender == NEUTER for gender, _ in article) or genitive
                              or (denominator == "2" and after and after[0] in nouns))
                         and (not fields["sign"] or fields["sign"] in data["sign_words"]))
             yield span if read and not span.keep else replace(span, keep=True)
