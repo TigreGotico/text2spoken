@@ -1158,7 +1158,7 @@ class SpacedMoney(Money):
     def numbers(self, text: str, tokens: Sequence[Token], request: Request) -> Sequence[Number]:
         if not request.data.get("space_group_money"):
             return ()
-        phones = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
+        phones = _phones(text, tokens, request)
         found = []
         for match in _SPACE_GROUPS.finditer(fold_digits(text)):
             start, end = match.span()
@@ -1178,12 +1178,19 @@ def _digits(written: str) -> str:
     return re.sub("[^0-9]", "", written)
 
 
+def _phones(text: str, tokens: Sequence[Token], request: Request) -> list[Span]:
+    """The telephone spans that read, found once for each text in one request."""
+    key = ("phones", text)
+    if key not in request.memo:
+        request.memo[key] = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
+    return request.memo[key]
+
+
 def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], request: Request) -> Iterator[re.Match[str]]:
     """The matches of `pattern` where the variety writes the space as its group mark (`space_group_money`), with no
     sign, digit or mark between digits next to them (`+351 912 000`, `1.200 000`) and no telephone run over them."""
     if not request.data.get("space_group_money"):
         return
-    phones = None
     for match in pattern.finditer(fold_digits(text)):
         start, end = match.span()
         after = text[end:end + 2]
@@ -1191,9 +1198,7 @@ def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], reques
                 or (after[:1] and after[:1] in ".,:/-–" and after[1:2].isdigit()) \
                 or not one_digit_set(text[start:end]):
             continue
-        if phones is None:
-            phones = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
-        if not any(phone.start < end and start < phone.end for phone in phones):
+        if not any(phone.start < end and start < phone.end for phone in _phones(text, tokens, request)):
             yield match
 
 
@@ -1246,7 +1251,6 @@ class SpacedDecimal:
                 yield Span(start, end, Form.DECIMAL,
                            Number(start, end, "", _digits(whole), fraction, digit_script(text[start:end])).amount(),
                            recognizer=self.name)
-
 
 
 @dataclass(frozen=True)
