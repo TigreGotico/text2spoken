@@ -156,9 +156,12 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
     return (left, left - 1), (span.end, after.get(span.end, span.end + 1))
 
 
-_GROUP_RUNS = re.compile(f"(?:{SPACE_GROUPS.pattern})(?:[^\\s0-9][0-9]+(?:[{GROUP_SPACES}][0-9]{{3}})*)*")
+_GROUP_RUNS = re.compile(f"(?:{SPACE_GROUPS.pattern})"
+                         "(?:[^0-9\t-\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000][0-9]+"
+                         f"(?:[{GROUP_SPACES}][0-9]{{3}})*)*")
 """A run of `SPACE_GROUPS` with each mark and digit group after it: the fraction of `1 250.5`, the high end of the
-ranges `081-95` and `1 000 000-2 000 000`, or the rest of a number such as `34 481.312`."""
+ranges `081-95` and `1 000 000-2 000 000`, or the rest of a number such as `34 481.312`. A mark is one character
+that is no digit and no space (`str.isspace`)."""
 
 
 def _group_spaces(text: str) -> bytearray:
