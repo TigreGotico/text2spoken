@@ -92,9 +92,9 @@ A minus before a number reads when its owner has a word for it. A hyphen between
 | `Баланс: -50 €` | `uk` | stays as written |
 | `температура -1 000 градусів` | `uk` | stays as written |
 
-A language with no file has no noun genders. A number before a noun takes the default form of `ovos-number-parser`, or the first CLDR cardinal rule set of `spellout-cardinal`, `spellout-cardinal-masculine` and `spellout-numbering`, whatever the gender of the noun. Agreement with the noun needs a language file that gives the genders.
+A language with no file reads no noun genders. A number before a noun takes the default form of `ovos-number-parser`, or the first CLDR cardinal rule set of `spellout-cardinal`, `spellout-cardinal-masculine` and `spellout-numbering`, whatever the gender of the noun. Agreement with the noun needs a language file that gives the genders. The genders of a language with no file are the genders of its ordinals, and only a say-as ordinal reads them (see below).
 
-SSML `say-as` markup reads more forms in a language with no file, because the markup gives the evidence (see [API, say_as](api.md#say_as)). `digits` and `telephone` read each digit by its cardinal from the same owner, and `characters` keeps each letter alone, as written. `ordinal` reads the ordinal of the module, or the CLDR rule set `spellout-ordinal`, else `spellout-ordinal-masculine`, else `spellout-ordinal-common`. Where CLDR has an ordinal rule set for more than one gender, as Hindi does, `default_gender` chooses it:
+SSML `say-as` markup reads more forms in a language with no file, because the markup gives the evidence (see [API, say_as](api.md#say_as)). `digits` and `telephone` read each digit by its cardinal from the same owner, and `characters` keeps each letter alone, as written. `ordinal` reads the ordinal of the module, or the CLDR rule set `spellout-ordinal`, else `spellout-ordinal-masculine`, else `spellout-ordinal-common`. Where the module reads the ordinal in more than one gender, as for Polish, or CLDR has an ordinal rule set for more than one gender, as for Hindi, `default_gender` chooses the gender:
 
 ```python
 >>> from text2spoken import SayAs, normalize
@@ -104,9 +104,13 @@ SSML `say-as` markup reads more forms in a language with no file, because the ma
 'третій'
 >>> normalize("3", "hi", say_as=SayAs(interpret_as="ordinal"))
 'तीसरा'
+>>> from text2spoken import FrozenMap, GrammaticalGender, NormalizationParams
+>>> feminine = NormalizationParams(default_gender=FrozenMap({"pl": GrammaticalGender.FEMININE}))
+>>> normalize("3", "pl", feminine, say_as=SayAs(interpret_as="ordinal"))
+'trzecia'
 ```
 
-A `date` reads by the CLDR `long` date pattern of the language, with the month name of CLDR and the numbers of the same owner. In Danish, Finnish and Czech the pattern writes the day as `d.`, an ordinal, so the day reads as an ordinal. A pattern with a field or an abbreviation that has no words, as the Ukrainian `р.` after the year, gives the plain reading:
+A `date` reads by the CLDR `long` date pattern of the language, with the month name of CLDR and the numbers of the same owner. In Danish, Finnish, Czech and Slovak the pattern writes the day as `d.`, an ordinal, so the day reads as an ordinal. A pattern with a field or an abbreviation that has no words, as the Ukrainian `р.` after the year, gives the plain reading:
 
 ```python
 >>> normalize("2026-11-09", "pl", say_as=SayAs(interpret_as="date"))
