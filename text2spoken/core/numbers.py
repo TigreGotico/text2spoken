@@ -75,8 +75,8 @@ def _parse(cluster: str, decimal: str | None, group: str | None,
     if group and any(m in integer for m in group):
         head, *rest = integer.translate({ord(m): group[0] for m in group}).split(group[0])
         sizes = [len(g) for g in rest]
-        if not ((1 <= len(head) <= 3 and set(sizes) == {3})
-                or (secondary and 1 <= len(head) <= secondary and sizes[-1] == 3 and set(sizes[:-1]) <= {secondary})):
+        if head.startswith("0") or not ((1 <= len(head) <= 3 and set(sizes) == {3}) or (
+                secondary and 1 <= len(head) <= secondary and sizes[-1] == 3 and set(sizes[:-1]) <= {secondary})):
             return None
         integer = head + "".join(rest)
     if integer and not integer.isdigit():

@@ -407,7 +407,7 @@ DATE_FIELDS = {"year": SPELLER.year, "month": SPELLER.cardinal, "day": SPELLER.c
 def speak_date(span: Span, context: SpanContext) -> str:
     """A date in the parts of the CLDR long date pattern."""
     request, fields = context.request, span.fields
-    parts, _ = long_date(cldr_locale(request.tag, date_locales(), request.language))
+    parts, _, _ = long_date(cldr_locale(request.tag, date_locales(), request.language))
     if any(name not in DATE_FIELDS and name != "text" for name, _ in parts):
         raise DeclinedReading("the long date pattern holds a field that the file does not read")
     return "".join(literal if name == "text" else DATE_FIELDS[name](str(fields[name]), Features(), request)

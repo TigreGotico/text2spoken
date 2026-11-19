@@ -19,6 +19,8 @@ The file reads cardinals, decimals, fractions, ranges, dates, times, money, meas
 | `%10 خصم` | `ar` | عشرة في المئة خصم |
 | `الساعة 3:30` | `ar` | الساعة الثالثة والنصف |
 | `موعدك 15/9/1447هـ` | `ar` | موعدك الخامس عشر من رمضان ألف وأربعمئة وسبعة وأربعين هجري |
+| `النسبة 10%-20%` | `ar` | النسبة عشرة في المئة إلى عشرين في المئة |
+| `العرض من 1 إلى 7 مارس` | `ar` | العرض من الأول إلى السابع من مارس |
 
 These stay as written: telephone numbers, operators such as `5+3`, a number with a `+` sign, and the word `ريال` before a number.
 
@@ -35,6 +37,7 @@ These stay as written: telephone numbers, operators such as `5+3`, a number with
 | --- | --- |
 | `ar-001` | The default variety. A bare `ar` reads as `ar-001` |
 | `ar-DZ`, `ar-TN`, `ar-IQ`, `ar-JO`, `ar-PS`, `ar-SY`, `ar-LB`, `ar-LY`, `ar-MA`, `ar-MR` | Each regional tag reads the month names and number marks of its CLDR locale |
+| `ar-AE`, `ar-BH`, `ar-DJ`, `ar-EG`, `ar-EH`, `ar-ER`, `ar-IL`, `ar-KM`, `ar-KW`, `ar-OM`, `ar-QA`, `ar-SA`, `ar-SD`, `ar-SO`, `ar-SS`, `ar-TD`, `ar-YE` | Each reads as `ar-001`, because CLDR 49 gives these locales the month names and number marks of `ar` |
 
 A regional tag such as `ar-EG` reads Modern Standard Arabic words.
 
@@ -90,7 +93,7 @@ The `register` option chooses formal or colloquial words. A spoken lect such as 
 
 The rules cite Karin C. Ryding, *A Reference Grammar of Modern Standard Arabic* (Cambridge University Press, 2005), W. Wright, *A Grammar of the Arabic Language* (3rd edition, 1896), Wiktionary, Arabic Wikipedia, the ISO 639-3 macrolanguage table of iso639-3.sil.org, the CLDR 49 data of each locale, the CLDR 49 likely subtags and the country lists of Glottolog. The number words of a lect come from `ovos-number-parser`, whose tables cite a grammar for each word. The docstring of [`ar.py`](../../text2spoken/lang/ar.py) gives the page of each rule.
 
-In `tests/data/ar.tsv`, the 184 rows cite their source, and no native speaker has checked them. A row of a lect takes its number words from `ovos-number-parser` and says so.
+In `tests/data/ar.tsv`, the 205 rows cite their source, and no native speaker has checked them. A row of a lect takes its number words from `ovos-number-parser` and says so.
 
 ## Limits
 
