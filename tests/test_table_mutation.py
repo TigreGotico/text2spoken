@@ -18,7 +18,7 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
                                   "no_phone_shapes"}, "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
@@ -126,6 +126,7 @@ ES_ENTRIES = {
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",
     "year_words": "en", "noun_gender": "día", "gender_suffixes": "a", "tonic_a": "arma", "patterns": "expression",
     "abbreviation_plurals": "vol.", "degree_marks": "º", "ordinal_leads": "el", "ordinal_follows": "de",
+    "ordinal_determiners": "el", "feminine_determiners": "la",
     "mixed_word": DELETE, "mixed_half": "other",
 }
 ENTRIES = {
@@ -139,8 +140,10 @@ ENTRIES = {
     "el": {
         "number_marks": "Latn", "sign_words": "-", "case_words": "genitive", "articles": "στις",
         "number_links": "ή", "month_names": "μαΐου", "currencies": "Sc", "percent": "signs", "units": "km",
+        "walk_adverbs": "ακόμη", "pronoun_adjectives": "άλλες", "hour_phrases": ("η", "ώρα"), "weekdays": "παρασκευή",
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
     },
+    "ko": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg"},
     "eu": {
         "number_marks": "Latn", "defaults": "clock", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zero",
         "leads": "-", "case_suffixes": "ko", "time_suffixes": "etan", "time_words": "arratsaldeko",
