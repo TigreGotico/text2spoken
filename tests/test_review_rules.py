@@ -770,3 +770,15 @@ def test_groups_after_a_percentage_read_the_same_on_a_second_pass(text):
 def test_groups_at_the_start_of_the_text_read_as_a_cardinal():
     """Taaladvies.net, 10.000.000 / 10 000 000: the space groups the digits, so `12 000` reads "twaalfduizend"."""
     assert normalize("12 000 mensen wonen hier.", "nl-NL") == "twaalfduizend mensen wonen hier."
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
+    ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
+    ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),
+])
+def test_a_number_that_a_mark_joins_to_a_number_abbreviation_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A number abbreviation is a key only before a digit, and a second pass sees the reading of that
+    digit, so the abbreviation does not wait on the number before it."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
