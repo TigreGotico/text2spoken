@@ -23,7 +23,9 @@ The rules and their sources:
   (p. 333), and a noun in the dual counts two with no numeral (p. 332). From 3 to 10 a number takes the gender
   opposite to its noun (p. 334), and eight before a feminine plural is ثماني (p. 336). From 11 to 99 the noun follows
   in the accusative singular (pp. 339-345). A noun that ends in taa' marbuuTa is feminine (p. 121), and the plurals
-  in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table.
+  in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table. The gender of a
+  plural is the gender of its singular: "if the singular noun is feminine, the numeral will be in the masculine
+  form" (p. 334). So the table holds plurals whose singular ends in taa' marbuuTa.
 - Case. A number after a preposition or a semi-preposition (p. 367) or a year noun (pp. 351-353) is genitive. Ryding
   writes that "colloquial forms of Arabic do not have case marking" (p. 166), and "In spoken Arabic, the tens numbers
   are reduced to one case, the genitive-accusative" (p. 343, note 11). So the colloquial register reads the tens in
@@ -41,6 +43,8 @@ The rules and their sources:
   In a range of days before one month, the first day is a date of that month and reads as an ordinal too, as
   Arabic Wikipedia writes it: "من الأول إلى السابع من آذار" (أستراليا في الألعاب البارالمبية الشتوية 2002, oldid
   71881762) and "من الثاني إلى الرابع من فبراير" (ردود الفعل على الأمر التنفيذي رقم 13769, oldid 76868665).
+  Before the definite article, li- drops the alif of the article: "the laam of li- attaches directly to the laam
+  of the definite article (e.g., li-l-jaamicat-i)" (p. 371). So للطابق is ل and الطابق.
 - Ranges. إلى is a preposition, so the number after it is genitive (pp. 366-367). In a range of two percentages,
   amounts or times, such as `10%-20%`, the second takes the genitive too.
 - Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
@@ -53,8 +57,11 @@ The rules and their sources:
 - كم before an indefinite noun is the question word "how many" (pp. 402-403), not the kilometre.
 
 The `units` and `currencies` tables give each noun in every count form, with the nominative and the oblique dual.
-CLDR 49 does not: `units.json` writes the dual of length-kilometer as "{0} كيلومتر", and `currencies.json` gives
-USD and SAR one name with no count forms. The count forms of دولار and ريال come from Wiktionary.
+CLDR 49 does not: `units.json` writes the dual of length-kilometer as "{0} كيلومتر", writes mass-kilogram as
+"{0} كيلوغرام" in every count, and `currencies.json` gives USD and SAR one name with no count forms. The count forms
+of دولار, ريال and كيلوغرام come from Wiktionary. A speed counts the kilometre and adds في الساعة: "miJat-in
+wa-sab'iina kiiluumitr-an fii l-saacat-i", "170 kilometers an hour" (p. 349), as the CLDR 49 long name of
+speed-kilometer-per-hour, "{0} كيلومتر في الساعة", does.
 
 The file claims no ordinal in plain text. A say-as ordinal (text2spoken design, section 17.5) reads through the
 ordinal of ovos-number-parser in the default gender, the masculine: `3` reads "الثالث".
@@ -130,6 +137,9 @@ confirms for midnight, so a time in it declines."""
 
 KILOMETRE = {"gender": "masculine", "one": "كيلومتر", "two": ["كيلومتران", "كيلومترين"], "few": "كيلومترات",
              "many": "كيلومترا", "other": "كيلومتر"}
+KILOMETRE_PER_HOUR = {**KILOMETRE, "per": "في الساعة"}
+KILOGRAM = {"gender": "masculine", "one": "كيلوغرام", "two": ["كيلوغرامان", "كيلوغرامين"], "few": "كيلوغرامات",
+            "many": "كيلوغراما", "other": "كيلوغرام"}
 
 SCALE_DUALS = ("مئتان", "مئتين", "ألفان", "ألفين", "مليونان", "مليونين")
 
@@ -142,8 +152,9 @@ DATA = freeze({
     "semi_prepositions": ["بعد", "قبل", "نحو", "خلال", "طوال", "مع"],
     "year_nouns": {"عام": "masculine", "سنة": "feminine"},
     "feminine_plurals": ["مخطوطات", "قصائد", "مقابلات", "آبار", "مرات", "فرق", "ساعات", "سيارات", "دقائق",
-                         "سنوات"],
-    "rank_nouns": ["الطابق", "الفئة", "المرتبة", "القرن"],
+                         "سنوات", "سنين", "ثوان", "ثواني", "ليال", "ليالي", "قطع", "نسخ", "دفعات", "سرعات",
+                         "أسطوانات", "عجلات", "وسائد", "شاشات", "فئات", "رحلات", "غرف", "كلمات"],
+    "rank_nouns": ["الطابق", "الفئة", "المرتبة", "القرن", "الدور", "الصف", "الجيل", "المركز", "الفصل", "الدرجة"],
     "sign_words": {"-": "سالب"},
     "leads": {"#": "رقم"},
     "decimal_word": "فاصلة",
@@ -167,7 +178,8 @@ DATA = freeze({
     },
     "symbols_after_only": ["ريال"],
     "scales": {"مليون": "000000"},
-    "units": {unit: KILOMETRE for unit in ("كم", "km")},
+    "units": {"كم": KILOMETRE, "km": KILOMETRE, "كم/س": KILOMETRE_PER_HOUR, "km/h": KILOMETRE_PER_HOUR,
+              "كغم": KILOGRAM, "kg": KILOGRAM},
     "dimension_marks": ["×"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"}],
     "time_words": ["الساعة"],
@@ -193,13 +205,24 @@ two months that start with ذو take the genitive ذي after من, as Arabic Wik
 "العشر الأوائل من ذي الحجة". `semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
 3.21.1 qabl-a (p. 395), 3.25 Tiwaal-a (p. 397) and 3.31 xilaal-a (p. 398). `year_nouns`: Ryding 2005, pp. 351-353.
 `feminine_plurals`: the counted plurals of Ryding 2005, pp. 335-336, دقائق of CLDR (units.json, duration-minute), and
-سنوات, the plural of the feminine sana (pp. 352-353). `rank_nouns`: nouns that an ordinal follows (Ryding 2005,
-pp. 354-359). `currencies`: `SAR` reads the CLDR name ريال سعودي, and the sign ر.س (English Wikipedia, Saudi riyal,
-revision 1252604873) and the word ريال read ريال. `fraction_names`: Ryding 2005, pp. 360-361. `minute_phrases`:
-Ryding 2005, pp. 361-362. `decimal_word`: Wiktionary, فاصلة, sense "decimal point". `sign_words`: Arabic Wikipedia,
-عدد سالب, section التسمية. The count forms of `currencies` and `units`: Wiktionary دولار and ريال, CLDR units.json
-(length-kilometer), and the count rules of Ryding 2005, pp. 330-345. `symbols_after_only`: ريال is a counted noun,
-which follows the number (Ryding 2005, p. 335)."""
+سنوات, the plural of the feminine sana (pp. 352-353). ثوان is the few form of the feminine duration-second of CLDR
+(units.json). Each other plural is counted by the short form of a number in an Arabic Wikipedia revision, and its
+singular ends in taa' marbuuTa: سنين (سنة, oldid 72786001, "ثلاث سنين"), ثواني (ثانية, 72093480, "ثلاث ثواني"), ليال and
+ليالي (ليلة, 72678607, "سبع ليال", and 75675456, "ثلاث ليالي"), قطع (قطعة, 76375538, "ست قطع"), نسخ (نسخة, 76989156,
+"ثلاث نسخ"), دفعات (دفعة, 75774492, "أربع دفعات"), سرعات (سرعة, 72665705, "ثماني سرعات"), أسطوانات (أسطوانة, 76540398,
+"ست أسطوانات"), عجلات (عجلة, 77054753, "أربع عجلات"), وسائد (وسادة, 75479234, "ست وسائد"), شاشات (شاشة, 74093250, "ثلاث
+شاشات"), فئات (فئة, 68531917, "خمس فئات"), رحلات (رحلة, 75094475, "ثلاث رحلات"), غرف (غرفة, 76576561, "أربع غرف") and
+كلمات (كلمة, 73435197, "خمس كلمات"). `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
+Wikipedia revision shows each noun before an agreeing ordinal: الدور (oldid 74639116, "الدور الخامس والثلاثين"), الصف
+(74030867, "الصف الثالث والثلاثين"), الجيل (76361085, "الجيل السادس والسبعين"), المركز (73375269, "المركز التاسع
+والتسعين"), الفصل (73569717, "الفصل السادس والتسعين") and الدرجة (76373966, "الدرجة الثالثة والأربعين"). `currencies`:
+`SAR` reads the CLDR name ريال سعودي, and the sign ر.س (English Wikipedia, Saudi riyal, revision 1252604873) and the
+word ريال read ريال. `fraction_names`: Ryding 2005, pp. 360-361. `minute_phrases`: Ryding 2005, pp. 361-362.
+`decimal_word`: Wiktionary, فاصلة, sense "decimal point". `sign_words`: Arabic Wikipedia, عدد سالب, section التسمية. The
+count forms of `currencies` and `units`: Wiktionary دولار, ريال and كيلوغرام (revision 95591224: masculine, with the
+sound feminine plural), CLDR units.json (length-kilometer, and the symbols كغم of mass-kilogram and كم/س of
+speed-kilometer-per-hour), and the count rules of Ryding 2005, pp. 330-345. `symbols_after_only`: ريال is a counted
+noun, which follows the number (Ryding 2005, p. 335)."""
 
 VARIETIES = (
     Variety("ar-001"),
@@ -379,10 +402,12 @@ def _signed(words: str, sign: str, request: Request) -> str:
 
 
 def rank_noun(context: SpanContext) -> tuple[str, str] | None:
-    """The rank noun right before the number, as in الطابق 3 and بالمرتبة 1, with the proclitic that it carries."""
+    """The rank noun right before the number, as in الطابق 3, بالمرتبة 1 and للطابق 3, with its proclitic."""
     if not context.before:
         return None
     word, nouns = context.before[-1], context.request.data["rank_nouns"]
+    if word.startswith("لل") and (noun := "ا" + word[1:]) in nouns:
+        return "ل", noun
     for proclitic in ("", *context.request.data["proclitics"]):
         if word.startswith(proclitic) and word[len(proclitic):] in nouns:
             return proclitic, word[len(proclitic):]
@@ -521,7 +546,8 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     if span.fields["unit"] == "كم" and counted_noun(context) and context.after[0] not in request.data["prepositions"]:
         raise DeclinedReading("كم before an indefinite noun is the question word 'how many' (Ryding 2005, pp. 402-403)")
     forms = request.data["units"][span.fields["unit"]]
-    return counted(amount["integer"], forms, agreement(span, context, GrammaticalGender(forms["gender"])), request)
+    words = counted(amount["integer"], forms, agreement(span, context, GrammaticalGender(forms["gender"])), request)
+    return f"{words} {forms['per']}" if "per" in forms else words
 
 
 def speak_date(span: Span, context: SpanContext) -> str:
