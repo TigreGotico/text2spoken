@@ -409,9 +409,9 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
         raise DeclinedReading("a number with a leading zero has no cited reading")
-    if (len(after) == 3 and after[0] == request.data["range_word"] and not (fields["sign"] or fields["lead"])
-            and fold_digits(after[1]).isdigit() and 1 <= int(digits) < int(fold_digits(after[1])) <= 31
-            and after[2] in {name.split()[0] for name in request.data["months"]}):
+    if (len(after) > 2 and after[0] == request.data["range_word"] and not (fields["sign"] or fields["lead"])
+            and (high := fold_digits(after[1])).isdigit() and 1 <= int(digits) < int(high) <= 31
+            and any(name.split()[0] == after[2] for name in request.data["months"])):
         return SPELLER.ordinal(digits, Features(gender=MASCULINE, case=_case(span, context)), request)
     rank = rank_noun(context)
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
