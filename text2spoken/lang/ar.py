@@ -41,8 +41,10 @@ The rules and their sources:
 - Fractions from 2 to 10 read by name (pp. 360-361). The time reads the hour as a feminine ordinal, and the quarters,
   thirds and halves of the hour, with إلا before the next hour (pp. 361-362). The day period of an hour comes from
   the CLDR 49 day period rules of `ar` (`dayPeriods.json`).
-- Percent: the number and في المئة (p. 347). The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of
-  the minus sign is سالب (Arabic Wikipedia, عدد سالب, section التسمية).
+- Percent: the number and في المئة (p. 347). CLDR 49 writes the sign after the number in logical order (`#,##0%`),
+  and a right-to-left line shows that sign to the left of the number, so a percentage typed as it looks, `%10`,
+  reads the same. The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of the minus sign is سالب
+  (Arabic Wikipedia, عدد سالب, section التسمية).
 - كم before an indefinite noun is the question word "how many" (pp. 402-403), not the kilometre.
 
 The `units` and `currencies` tables give each noun in every count form, with the nominative and the oblique dual.
@@ -148,7 +150,7 @@ DATA = freeze({
     "construct_duals": list(SCALE_DUALS),
     "range_word": "إلى",
     "range_marks": ["-", "–"],
-    "percent": {"signs": ["%", "٪"], "position": "after", "word": "في المئة"},
+    "percent": {"signs": ["%", "٪"], "position": "either", "word": "في المئة"},
     "currencies": {
         "USD": {"symbols": ["$", "US$"], "gender": "masculine", "one": "دولار", "two": ["دولاران", "دولارين"],
                 "few": "دولارات", "many": "دولارا", "other": "دولار"},

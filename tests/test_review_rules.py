@@ -779,3 +779,15 @@ def test_a_last_hour_group_after_a_no_break_space_reads_as_after_a_space(text, l
     """A no-break space parts two groups of a phone run as a space does, so a last hour group after it leaves the
     run as it does after a space."""
     assert normalize(text, lang).replace("\u00a0", " ") == normalize(text.replace("\u00a0", " "), lang)
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
+    ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
+    ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),
+])
+def test_a_number_that_a_mark_joins_to_a_number_abbreviation_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A number abbreviation is a key only before a digit, and a second pass sees the reading of that
+    digit, so the abbreviation does not wait on the number before it."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
