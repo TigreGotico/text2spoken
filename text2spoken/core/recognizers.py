@@ -21,13 +21,13 @@ from text2spoken.core.dates import date_locales, long_date
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
-from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
+from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries, number_grouping
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
 from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
-from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces
+from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces, reads_symbol
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
@@ -55,7 +55,7 @@ def numbers_in(text: str, request: Request) -> tuple[Number, ...]:
     key = ("numbers", text)
     if key not in request.memo:
         request.memo[key] = find_numbers(text, number_marks(request.data, request.params.decimal_mark),
-                                         declared_marks(request.data))
+                                         declared_marks(request.data), number_grouping(request.tag, request.language))
     return request.memo[key]
 
 
@@ -70,6 +70,14 @@ def _free_before(text: str, start: int, symbols) -> bool:
 def _free_after(text: str, end: int, symbols) -> bool:
     """Whether no word character and no form symbol touches text[:end] from the right."""
     return end == len(text) or not (is_word_char(text[end]) or text[end] in symbols)
+
+
+def _currency_sign_touches(text: str, start: int, end: int, request: Request) -> bool:
+    """Whether a currency sign (category `Sc`) that the `SYMBOL` form of the language does not read touches the
+    number, as in `a¥5` and `¥-5`: such a number reads only as an amount (design section 10)."""
+    return any(0 <= index < len(text) and unicodedata.category(text[index]) == "Sc"
+               and not (SYMBOL in request.language.recognizers and reads_symbol(text, index, request))
+               for index in (start - 1, end))
 
 
 def _affixes(text: str, start: int, end: int, data, symbols=None) -> tuple[int, int, str, str] | None:
@@ -235,7 +243,8 @@ class Cardinal:
         leads = request.data.get("leads", FrozenMap())
         sign_words = request.data.get("sign_words", FrozenMap())
         for number in self.numbers(text, request):
-            if number.fraction is not None or (number.sign and number.sign not in sign_words):
+            if number.fraction is not None or (number.sign and number.sign not in sign_words) \
+                    or _currency_sign_touches(text, number.start, number.end, request):
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
             proclitic = bounds is not None and bounds[2]
@@ -257,23 +266,11 @@ class Cardinal:
 _DASHES = "-\u2010\u2011\u2012\u2013\u2014\u2212"
 """The hyphen, the dashes and the minus sign."""
 
+_SPACED_MINUS = re.compile("[ \t\u00a0\u202f]+[-\u2212]")
+"""A space or a tab, then a minus, as after `5` in `5 -3.5`."""
+
 _GROUP_SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space, which group the digits of a number."""
-
-
-_ROOT_ROLES = MappingProxyType({".": "decimal", ",": "group"})
-"""The role of the full stop and the comma in the CLDR root locale, which writes `1,234.5`."""
-
-
-def _root_reading_differs(text: str, number: Number) -> bool:
-    """Whether the CLDR root locale reads the number in other words than the locale: the number has one full stop
-    or comma, exactly three digits follow it, and the locale gives it the other role, as `1.234` in `tr` and `3,500`
-    in `nb`. Such a number could be written in either convention."""
-    written = text[number.start + len(number.sign):number.end]
-    marks = [char for char in written if not is_digit(char)]
-    if len(marks) != 1 or marks[0] not in _ROOT_ROLES or len(written.partition(marks[0])[2]) != 3:
-        return False
-    return _ROOT_ROLES[marks[0]] != ("decimal" if number.fraction is not None else "group")
 
 
 def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[Span, ...]:
@@ -287,6 +284,9 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
                     *Decimal.find(RBNF_DECIMAL, text, tokens, request)), key=lambda span: span.start)
     kept = set()
     for index, span in enumerate(spans):
+        minus = _SPACED_MINUS.match(text, span.end)
+        if minus and minus.end() < len(text) and is_digit(text[minus.end()]):
+            kept.add(index)
         if not span.fields["sign"]:
             continue
         sign = span.start + len(span.fields["prefix"])
@@ -313,8 +313,8 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
 class RbnfCardinal(Cardinal):
     """The cardinal of a language with no file (section 6.1), in the CLDR marks of the locale.
 
-    A number that the CLDR root locale reads in other words stays as written (`_root_reading_differs`). A number
-    with a minus stays as written where the minus may mark something else, or where the number goes on past the
+    Each mark reads in its CLDR role in the locale: `1.234` is a group in `tr`, `3,500` a decimal in `nb`. A
+    number with a minus stays as written where the minus may mark something else, or where the number goes on past the
     span: a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an amount next to
     a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a number grouped with
     one of `_GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
@@ -322,10 +322,9 @@ class RbnfCardinal(Cardinal):
     in `-5\n10` the `10` of the next line reads.
 
     The number next to such a minus number stays as written too, so that a second pass finds the digit next to the
-    minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. A dash is no digit, so `5` in `5--10` reads."""
-
-    def numbers(self, text: str, request: Request) -> Sequence[Number]:
-        return tuple(number for number in numbers_in(text, request) if not _root_reading_differs(text, number))
+    minus again (section 11): `5` in `5 -10`, and `000` in `-1 000`. So does a number before a space, a minus and a
+    digit that no number covers, as `5` in `5 -3.5` where the full stop groups. A dash is no digit, so `5` in
+    `5--10` reads."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         return (span for span in _rbnf_spans(text, tokens, request) if span.form is self.form)
@@ -341,7 +340,7 @@ class Decimal:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for number in self.numbers(text, request):
-            if number.fraction is None:
+            if number.fraction is None or _currency_sign_touches(text, number.start, number.end, request):
                 continue
             bounds = _affixes(text, number.start, number.end, request.data)
             if bounds is None:
@@ -435,8 +434,8 @@ def grouped_matches(pattern: re.Pattern | str, text: str, request: Request) -> I
         spaces = frozenset(group_spaces(text, number_marks(request.data, request.params.decimal_mark),
                                         declared_marks(request.data)))
         kept = tuple(i for i in range(len(text)) if i not in spaces)
-        request.memo[key] = ("".join(folded[i] for i in kept), kept) if spaces else (folded, None)
-    view, kept = request.memo[key]
+        request.memo[key] = (folded, "".join(folded[i] for i in kept), kept) if spaces else (folded, folded, None)
+    _, view, kept = request.memo[key]
     for match in digit_run_matches(pattern, view):
         start, end = match.span()
         if kept is not None:
@@ -470,6 +469,29 @@ def _unit_after(text: str, end: int, units: Iterable[str], gaps: Sequence[str] =
     apostrophe and a letter is an elided word."""
     return any(text.startswith(gap + unit, end) and is_bounded(text, end + len(gap), end + len(gap) + len(unit))
                and not elided(text, end + len(gap) + len(unit)) for gap in gaps for unit in units)
+
+
+def proper_fraction(top: int | None, bottom: int | None) -> bool:
+    """Whether a fraction may be the fraction of a mixed number: a denominator from 2 to 100 and a smaller numerator
+    above zero."""
+    return top is not None and bottom is not None and 2 <= bottom <= 100 and 0 < top < bottom
+
+
+@lru_cache(maxsize=64)
+def _currency_beside(pairs: tuple[tuple[str, str], ...],
+                     gaps: tuple[str, ...]) -> tuple[re.Pattern, re.Pattern, int] | None:
+    """A pattern of a currency symbol and a gap before a number, a pattern of a gap and a currency symbol after a
+    number, and the most characters that the first one matches, or None with no symbol. The patterns run on the text
+    with its digits folded. Group 1 of the first pattern and group 2 of the second hold a digit and a gap on the other
+    side of the symbol, which make the symbol the symbol of that number, as `€` in `5€ 2 1/2`; the other group holds
+    the symbol."""
+    if not pairs:
+        return None
+    symbol = "|".join(re.escape(symbol) for symbol, _ in pairs)
+    gap = "|".join(map(re.escape, sorted(gaps, key=len, reverse=True)))
+    width = 1 + 2 * max(map(len, gaps), default=0) + max(len(symbol) for symbol, _ in pairs)
+    before = re.compile(f"([0-9](?:{gap}))?({symbol})(?:{gap})")
+    return before, re.compile(f"(?:{gap})({symbol})((?:{gap})[0-9])?"), width
 
 
 MIXED_GAPS = (" ", "\u00a0")
@@ -506,11 +528,12 @@ class Fraction:
 
         A proper fraction after a whole part (`whole_part`) is a mixed number, as `2 1/2`, and its span holds the
         whole part in the field `whole`. A leading zero in a field, a sign before the whole part, a symbol next to
-        the span, a unit after it or digits from two digit sets keep the mixed number as written. The span of the
-        fraction alone follows, and it reads only where another span claims the whole part first, as a currency
-        amount claims `$2` in `$2 1/2`."""
+        the span, a unit after it, a currency symbol next to it that no other number holds and that `SYMBOL` does not
+        read in part, as in `2 1/2 €`, or digits from two digit sets keep the mixed number as written. The span of
+        the fraction alone follows, and it reads only where another span claims the whole part first."""
         symbols = request.data.get("symbols", FrozenMap())
         units = unit_table(request)
+        reads = SYMBOL in request.language.recognizers
         for written, matched_start, matched_end, start, end, prefix, suffix in _affixed_matches(_FRACTION, text,
                                                                                                  request):
             sign = "-" if written[0] in "-−" else "+" if written[0] == "+" else ""
@@ -521,12 +544,23 @@ class Fraction:
             unclear = (not (_free_before(text, start, symbols) and _free_after(text, end, symbols)) or unit
                        or not one_digit_set(text[matched_start:matched_end]))
             top, bottom = bounded_integer(numerator), bounded_integer(denominator)
-            proper = bottom is not None and 2 <= bottom <= 100 and top is not None and 0 < top < bottom
-            begin = None if sign or prefix or not proper else whole_part(text, start, end)
+            begin = None if sign or prefix or not proper_fraction(top, bottom) else whole_part(text, start, end)
             if begin is not None:
+                patterns = _currency_beside(currency_symbols(request), number_gaps(request.data))
+                currency = False
+                if patterns is not None:
+                    before, after, width = patterns
+                    folded = request.memo[("grouped", text)][0]
+                    beside = ((next((match for match in before.finditer(folded, max(0, begin - width), begin)
+                                     if match.end() == begin), None), 2, 1), (after.match(folded, end), 1, 2))
+                    currency = any(match is not None and match.group(other) is None
+                                   and not (reads and any(reads_symbol(text, index, request)
+                                                          for index in range(*match.span(symbol))))
+                                   for match, symbol, other in beside)
                 signed_whole = begin and text[begin - 1] in SIGNS and not (begin > 1 and is_digit(text[begin - 2]))
                 keep = ("0" in (fold_digits(text[begin]), numerator[0], denominator[0]) or signed_whole or unit
                         or not (_free_before(text, begin, symbols) and _free_after(text, end, symbols))
+                        or currency
                         or not one_digit_set(text[begin:start - 1] + text[matched_start:matched_end]))
                 yield Span(begin - 1 if signed_whole else begin, end, Form.FRACTION,
                            FrozenMap({"whole": fold_digits(text[begin:start - 1]), "numerator": numerator,
@@ -748,13 +782,20 @@ class Money:
         that no earlier span holds. So a symbol that one amount reads is not the symbol of the next number: in
         `5 R$ 10£` the second amount is `10£`. A symbol that a phone number holds is still free for the amount after
         it: `Call 999 £ 5 now.` reads "five pounds". A number with a decimal comma in a variety with the decimal
-        point reads only next to `€` (`_comma_decimals`)."""
+        point reads only next to `€` (`_comma_decimals`). The whole part of a mixed number, as `$2` in `$2 1/2`, is no
+        amount."""
         every_symbol = currency_symbols(request)
         euro = tuple((symbol, code) for symbol, code in every_symbol if code == "EUR")
         scales = sorted(request.data.get("scales", FrozenMap()), key=len, reverse=True)
         numbers = [(number, every_symbol) for number in self.numbers(text, tokens, request)]
         numbers += [(number, euro) for number in _comma_decimals(text, request)]
+        folded = fold_digits(text) if "/" in text else text
         for number, symbols in numbers:
+            fraction = _FRACTION.match(folded, number.end + 1)
+            if fraction and fraction.group()[0] not in SIGNS:
+                if (proper_fraction(*map(bounded_integer, fraction.group().split("/")))
+                        and whole_part(text, fraction.start(), fraction.end()) == number.start):
+                    continue
             if number.sign:
                 continue
             for symbol, code in symbols:
@@ -910,15 +951,22 @@ def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple
     return tuple(sorted(found, key=lambda word: word.start))
 
 
+def _last_parts(words: str) -> list[str]:
+    """The words of a window slot in lower case, each hyphenated word as its last part."""
+    return [word.rsplit("-", 1)[-1] for word in words.lower().split()]
+
+
 @dataclass(frozen=True)
 class Telephone:
     """A digit run with phone evidence (section 4.3): `+` or `00` and a country code, a trunk prefix of a
     region in `phone_regions`, a shape of the `phone_shapes` table, as in `(212) 555-0123`, or a phone word that
     names the run.
 
-    A phone word names the run right after it, with no letter or digit between them. A run that a word of
-    `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only add
-    words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
+    A phone word names the run right after it, with no letter or digit between them. The last part of a hyphenated
+    word counts as a word, as a colour word does (design section 4.2). So in `12,50 €-Tel.. 1.000,5-`, `Tel` names
+    the run on a second pass too, where a hyphen joins it to "céntimos", the last word of the amount. A run that a
+    word of `list_links` or a comma joins to a named run is named too, as `112` in `Call 999 or 112.` Readings only
+    add words before a run, so a run that a first pass leaves unnamed stays unnamed on a second pass.
 
     A named run of 7 to 15 digits reads digit by digit. A shorter named run reads digit by digit only when it is a
     short code, so `Call 100 customers.` reads a count. A run right after a phone word that no plan reads stays as
@@ -1029,11 +1077,11 @@ class Telephone:
             shaped = not any(shape.fullmatch(written) for shape in no_shapes) and (
                 written.startswith("+") or digits.startswith("0") or any(c in self.spaces + ".()-" for c in written))
             window = self.window(text, words, breaks, start, end, request)
-            phone_ends = [words[i].end for i in window if phone_words.intersection(words[i].text.lower().split())]
+            phone_ends = [words[i].end for i in window if phone_words.intersection(_last_parts(words[i].text))]
             between = range(phone_ends[-1], start - len(prefix)) if phone_ends else range(0)
             direct = bool(phone_ends) and not any(is_word_char(text[index]) for index in between)
             spoken = lexicon.get(words[window[-1]].end, words[window[-1]].text) if window else ""
-            keeps = direct and bool(phone_words.intersection(spoken.lower().split()[-1:]))
+            keeps = direct and bool(phone_words.intersection(_last_parts(spoken)[-1:]))
             country_code = ""
             if written.startswith("+"):
                 if len(groups) > 1 and len(groups[0]) <= 3:
@@ -1143,23 +1191,38 @@ def speak_spoken_date(span: Span, context: SpanContext) -> str:
 def speak_cldr_date(span: Span, context: SpanContext) -> str:
     """A date of a language with no file, by the parts of its CLDR `long` date pattern (`long_date`): the literal
     text as CLDR writes it, the month name of CLDR with each number in it read as a cardinal, as `11월` in
-    Korean, an ordinal day through the ordinal speller, and the day, a month number and the year through the cardinal
-    speller (section 17.5). The year reads as a cardinal: unicode_rbnf drops the zeros of the RBNF `zh` and `ja`
-    rule set `spellout-numbering-year`, which reads 2026 "二二六"."""
+    Korean, an ordinal day or year through the ordinal speller with the endings of its form, and the day, a month
+    number and the year through the cardinal speller (section 17.5). The year reads as a cardinal where no form makes
+    it an ordinal: unicode_rbnf drops the zeros of the RBNF `zh` and `ja` rule set `spellout-numbering-year`, which
+    reads 2026 "二二六"."""
     fields, request = span.fields, context.request
     spellers = request.language.spellers
-    parts, months = long_date(cldr_locale(request.tag, date_locales(), request.language))
+    parts, months, forms = long_date(cldr_locale(request.tag, date_locales(), request.language))
 
     def cardinal(number: object) -> str:
         return spellers[Form.CARDINAL].cardinal(str(number), Features(), request)
 
+    def ordinal(field: str) -> str:
+        words = spellers[Form.ORDINAL].ordinal(str(fields[field]), Features(), request).split()
+        form = forms.get(field, {})
+        for index in range(len(words)) if form.get("declines") == "every" else (len(words) - 1,):
+            for ending, replacement in form.get("endings", ()):
+                if words[index].endswith(ending):
+                    words[index] = words[index].removesuffix(ending) + replacement
+                    break
+            else:
+                if form.get("endings"):
+                    raise DeclinedReading(f"no date form of the ordinal {' '.join(words)!r}")
+        return " ".join(words)
+
     readings = {
         "day": lambda: cardinal(fields["day"]),
-        "ordinal_day": lambda: spellers[Form.ORDINAL].ordinal(str(fields["day"]), Features(), request),
+        "ordinal_day": lambda: ordinal("day"),
         "month": lambda: cardinal(fields["month"]),
         "month_name": lambda: re.sub("[0-9]+", lambda number: cardinal(number.group()),
                                      months[fields["month"] - 1]),
         "year": lambda: cardinal(fields["year"]),
+        "ordinal_year": lambda: ordinal("year"),
     }
     return "".join(literal if name == "text" else readings[name]() for name, literal in parts)
 

@@ -63,6 +63,19 @@ vezes três (1x3)". The same answer recommends "duas vezes dois" after Botelho d
 the Academy dictionary and Priberam are the more reputable sources, and the masculine is also the reading of `2×2`.
 Before `vírgula`, it is the whole part of a decimal written with the word: `(1) vírgula 5 m` reads "(um) vírgula cinco
 metros". Ciberdúvidas 25561 quotes "dois vírgula cinco milhões de euros" and answers "Não se pode considerar errado".
+Digits with a leading zero after the number and `vírgula` are the digits of the decimal part, and they read as the
+digits after a decimal mark: `0 vírgula 02` reads "zero vírgula zero dois", as `0,02` does.
+
+The comma is the decimal mark, and the full stop is the decimal mark of the English convention. Norma Portuguesa 9
+(IPQ, 2006), quoted in Ciberdúvidas 12873: "Esses sinais são o ponto e a vírgula, sendo o primeiro empregado nos
+países de língua inglesa, e o segundo, nos restantes." So a full stop with one, two, or four or more digits after
+it, which no group of three explains, is a decimal mark, and `1.500` still reads as a number grouped with the full
+stop. Such a decimal reads with a percent sign, a currency or the symbol of a unit that `Measure` reads, as in
+`1.5 km`, and before the CLDR 49 name of such a unit, as in `10.4 graus`. Anywhere else it stays as written: in the
+"meio milhão de frases" sentence set, digits that a full stop parts are mostly a version, an engine size or a section
+(`Versão 14.2`, mmf-487795; `motor 1.6`, mmf-431047; `Termo de Referência, 5.3`, mmf-462875), which a speaker does
+not read with "vírgula". A unit of duration, as a symbol or a name, is no evidence: `1.30 h` and `1.30 horas` may
+write one hour and thirty minutes, and `às 9.30h` writes a clock.
 
 Two numbers that `a`, `e` or `ou` join, as in `de 1 a 3 semanas` and `entre 1 e 2 semanas`, stay as written when the
 noun after the second number gives the first number another reading. No source gives the gender of the first number
@@ -76,12 +89,19 @@ feminino"; sense 16, the employee: "Empregado que tem a caixa a seu cargo", "nom
 caixas.` reads "Comprei duas caixas.", and `os 2 caixas` still reads "os dois caixas".
 
 Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of pt-PT and pt):
-`5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because
-CLDR gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`,
-reads with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`,
-`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h
-e a abreviatura de minuto é min"). `unjoined_symbols` holds `ML`, the CLDR symbol of the megalitre, because CLDR
-also names `mL` the millilitre, so `ML` in capitals may be either unit, and `2ML` stays as written.
+`5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because CLDR
+gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`, reads
+with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`, `g`, `mg`,
+`km`, `m`, `cm`, `mm`, `l`, `ml`, `cl` and `dl` of CLDR 49 pt-PT (`mass-milligram` `mg`, `volume-centiliter` `cl`,
+`volume-deciliter` `dl`), and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h e a abreviatura
+de minuto é min"). The litre symbol `L` (Priberam, "litro": "Unidade de medida de capacidade (símbolo: l ou L)"), `cL`
+and `dL` stay as written, because each symbol of `unit_symbols` is a CLDR 49 symbol, and CLDR 49 writes `l`, `cl` and
+`dl`. `mL` stays as written, because CLDR also names `ML` the megalitre, and the case of the prefix alone tells the two
+apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it writes the exponent on the line, as
+a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros quadrados" (Priberam, "metro": "metro
+quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo: m²)"). `unjoined_symbols` holds `ML`,
+the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so `ML` in capitals may be either unit,
+and `2ML` stays as written.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of pt-PT and pt), and
 a symbol with a currency sign reads with no list: `20 CHF` reads "vinte francos suíços" and `₹50` "cinquenta rupias
@@ -188,6 +208,18 @@ ruling keeps it: "zero horas" in pt-PT and "zero hora" in pt-BR (Dicio, "Zero gr
 zero é encarado como singular: zero grau; zero real; zero hora. Em Portugal, o zero é encarado como plural: zero
 graus; zero reais; zero horas.").
 
+A clock with a colon reads after a word of `time_words`. `são`, the verb that tells the time, is one: Priberam, "ser",
+sense 14: "Indica o momento, o dia, a estação, o ano, a época (ex.: já é noite; são 18h00)". In the "meio milhão de
+frases" sentence set, each of the 148 clocks after `são` is a time, as mmf-286695 "São 17:30. Está na hora de ir buscar
+o Pedro à escola." `são` is plural and agrees with the hours, so 12:00 after it reads the 24-hour form, as after `as`:
+`São 12:00` reads "São doze horas". A clock 0:00 or 24:00 after `são` stays as written, because pt-BR reads the hour
+zero in the singular, "zero hora" (Dicio, above), which does not agree with `são`. A clock after `são` with `h` or
+`horas` after it stays as written, because the reading of a whole hour ends in "horas": `Já são 11:00 horas!`. So does a
+clock with a mark between it and `são`, as in mmf-178704 "Os lotes proibidos são: 17:00, de geleia de uva", where the
+clocks are lot numbers. A clock `24:00` is midnight, the end of the day: Priberam, "meia-noite": "Fim da vigésima quarta
+hora do dia civil que acaba às 24h00 (ou 00h00, o mesmo momento em que começa a primeira hora do dia seguinte)". So it
+reads as `0:00` does, with the ruling above: `Fecha às 24:00` reads "Fecha à meia-noite".
+
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
@@ -215,10 +247,17 @@ takes the gender of the noun, which Priberam gives: "classe", "parte", "fase", "
 "canto", "ato", "acto", "grupo" and "nível" are "nome masculino". So `Classe II` reads "Classe segunda" and `o
 capítulo XV` "o capítulo quinze". A numeral of two letters or more, up to XXX, also reads after any other
 capitalised word, as in `João Paulo II` and `Isabel II`, and right after a title and its full stop, with the gender
-of the title, as in `D. XIV`, which reads "Dom Catorze". In pt-BR the ordinal stops at nine, and
-`roman_ordinal_limit` holds the last value that reads as an ordinal in each variety. Ciberdúvidas 9067: "os numerais
-se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono); mas, a partir daí, se
-pronunciarem como cardinais". So `Pio X` reads "Pio Décimo" in pt-PT and "Pio Dez" in pt-BR.
+of the title, as in `D. XIV`, which reads "Dom Catorze". `roman_ordinal_limit` holds the last value that reads as
+an ordinal, ten in both varieties, and `roman_noun_ordinal_limits` of a variety holds another limit after a noun. In pt-BR the
+ordinal after `artigo` stops at nine. Two Brazilian works, both quoted in Migalhas, Gramatigalhas, "Numeral", give
+ten for kings, popes, centuries and chapters. Luís A. P. Vitória, Dicionário de Dificuldades, Erros e Definições de
+Português (1969), p. 174: "para indicar a ordem dos séculos, ou a ordem de sucessão de soberanos, usa-se o ordinal
+até dez e o cardinal de onze em diante". Francisco da Silveira Bueno, Questões de Português (1957), vol. II, p. 318:
+"de 1 a 10, usam-se os ordinais [...] Pio X (décimo), século VIII (oitavo), capítulo V (quinto)". The same column
+quotes Celso Cunha for the articles of a law: "na numeração dos artigos de leis, decretos e portarias, usa-se o
+ordinal até nove, e o cardinal de dez em diante". So `Pio X` reads "Pio Décimo" in both varieties, and `artigo X`
+reads "artigo décimo" in pt-PT and "artigo dez" in pt-BR. Ciberdúvidas 9067 gives nine for every noun in Brazil ("no
+Brasil até ao nono"), but cites no grammar.
 
 A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun
 of `roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
@@ -276,8 +315,8 @@ this, and the numeral itself does: it is a word of the clause only when `letter_
 do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito do
 indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
 A numeral between a singular demonstrative contracted with `em` or `de` (`nesta`, `deste`, `naquele`) and a common
-noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, with no limit on the
-value: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
+noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, also above
+`roman_ordinal_limit`: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
 a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
 jurídica": "Se o numeral antecede o substantivo, é usual continuar a usar-se o ordinal, mesmo depois de dez".
 Ciberdúvidas 28509, "Plurais com números romanos": "«II directriz», «III directriz», etc. (os símbolos são lidos:
@@ -289,7 +328,7 @@ numeral of two letters or more up to C. The contraction starts a prepositional p
 is its noun. An article or a demonstrative alone gives no such evidence, because `O XV segundo a imprensa` and
 `ESTE XV NUNCA PERDEU` are sentences about the XV de Portugal, so `A II Guerra Mundial` stays as written. The gender
 of the noun comes from `noun_gender` or tugalex, which guesses from the ending of a word that it does not list, so a
-verb form such as `joga` in `O XV joga` gets a gender too: the gender of the article decides, and `O XV joga` keeps
+verb form such as `joga` gets a gender too. That is one more reason why an article alone, as in `O XV joga`, keeps
 the cardinal reading. A plural article, as in `As II partes`, keeps it too, because the ordinal would be plural.
 After any other word of `function_words` in any case, which starts many sentences
 in capitals, as the article in `O XV de Portugal`, a numeral reads only from 11 to 30, as a cardinal, so `O XV` and
@@ -347,7 +386,7 @@ from __future__ import annotations
 
 import logging
 import re
-from bisect import bisect_right
+from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
@@ -360,16 +399,18 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affix
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
 from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
+from text2spoken.core.recognizers import Decimal as CoreDecimal
+from text2spoken.core.recognizers import Measure as CoreMeasure
 from text2spoken.core.recognizers import Money as CoreMoney
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
-                                          speak_decimal, speak_expression, speak_fraction, speak_lexicon,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, numbers_in,
+                                          signed, speak_decimal, speak_expression, speak_fraction, speak_lexicon,
                                           speak_percent, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char, one_digit_set
-from text2spoken.core.units import unit_reading
+from text2spoken.core.units import cldr_data, joined_table, unit_reading, unit_table
 from text2spoken.errors import DeclinedReading
 from text2spoken.lang import _pt_electronic
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
@@ -380,7 +421,8 @@ MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "
 _MONTH = "(" + "|".join(f"[{m[0]}{m[0].upper()}]{m[1:]}" for m in MONTHS) + ")"
 
 DATA = freeze({
-    "number_marks": {"Latn": [{"decimal": ",", "group": "."}, {"decimal": ".", "group": ","}]},
+    "number_marks": {"Latn": [{"decimal": ",.", "group": "."}, {"decimal": ".", "group": ","}]},
+    "decimal_word": "vírgula",
     "sign_words": {"-": "menos", "+": "mais"},
     "digit_words": ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"],
     "leads": {"#": "número", "-": ""},
@@ -388,7 +430,8 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
-    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde"],
+    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são"],
+    "plural_time_verbs": ["são"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
     "time_contractions": {"às": {"0": "à", "12": "ao"}, "à": {"0": "à", "12": "ao"}, "as": {"0": "a", "12": "o"},
@@ -429,7 +472,8 @@ DATA = freeze({
     "label_verbs": ["mostra", "apresenta", "indica", "mostram", "apresentam", "indicam"],
     "mixed_word": "e",
     "mixed_half": {"feminine": "meia", "other": "meio"},
-    "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml", "h", "min", "s"],
+    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "l", "ml", "cl", "dl", "h", "min", "s"],
+    "line_power_symbols": ["km", "m", "cm", "mm"],
     "unjoined_symbols": ["ML"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
                     "contacto", "contato", "celular"],
@@ -520,7 +564,7 @@ VARIETIES = (
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
         "letter_names": _pt_electronic.VARIETIES["pt-BR"]["letter_names"],
-        "roman_ordinal_limit": 9,
+        "roman_noun_ordinal_limits": {"artigo": 9},
         "colors": {"808080": "cinza"},
         "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
     })),
@@ -558,12 +602,16 @@ class PortugueseSpeller:
         read here from the written digits: `1,80` reads "um vírgula oitenta", as `1,97` reads "um vírgula noventa e
         sete", and never "um vírgula oito", which is the reading of `1,8`."""
         words = self.ovos.decimal(integer, fraction, Features(), at_variety(request))
-        rest = fraction.lstrip("0")
-        if not fraction.endswith("0") or not rest:
+        if not fraction.endswith("0") or not fraction.strip("0"):
             return words
+        return " ".join([self.cardinal(integer or "0", Features(), request), request.data["decimal_word"],
+                         self.decimal_part(fraction, request)])
+
+    def decimal_part(self, fraction: str, request: Request) -> str:
+        """The digits after the decimal mark: each leading zero as `zero`, and the rest as a cardinal."""
+        rest = fraction.lstrip("0")
         zeros = [request.data["digit_words"][0]] * (len(fraction) - len(rest))
-        return " ".join([self.cardinal(integer or "0", Features(), request), "vírgula", *zeros,
-                         self.cardinal(rest, Features(), request)])
+        return " ".join([*zeros, self.cardinal(rest, Features(), request)] if rest else zeros)
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """`um meio`, `três quartos`, `um centésimo`, and the cardinal and `avos` for any other denominator:
@@ -728,7 +776,8 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     fields, request = span.fields, context.request
     digits = fields["digits"]
     if len(digits) > 1 and digits[0] == "0":
-        words = spell_digits(digits, request)
+        after_mark = context.before and context.before[-1].lower() == request.data["decimal_word"]
+        words = SPELLER.decimal_part(digits, request) if after_mark else spell_digits(digits, request)
     else:
         words = _cardinal(digits, request, agreement(context))
         _check_pair(digits, context)
@@ -821,9 +870,9 @@ def speak_date(span: Span, context: SpanContext) -> str:
 
 def _day_point(fields: FrozenMap) -> int | None:
     """0 or 12 for a whole hour that reads "meia-noite" or "meio-dia": a clock with no `h` and no seconds. A `prefix`
-    of None marks a time whose word of `time_contractions` stays as written, so its hour reads the 24-hour form that
-    the plural article agrees with. A written `a.m.` or `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.":
-    "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
+    of None marks a time whose word before it stays as written and agrees with plural hours, a word of
+    `time_contractions` or a verb of `plural_time_verbs`, so its hour reads the 24-hour form. A written `a.m.` or
+    `p.m.` gives the hour of the 24-hour clock (Priberam, "a.m.": "antes do meio-dia"; "p.m.": "depois do meio-dia")."""
     hour = day_hour(fields["hour"], fields["period"])
     whole = fields["minute"] == 0 and not fields["second"] and not fields["suffix"] and fields["prefix"] is not None
     return hour if whole and hour in (0, 12) else None
@@ -941,7 +990,7 @@ def speak_abbreviation(span: Span, context: SpanContext) -> str:
 
 def speak_roman(span: Span, context: SpanContext) -> str:
     """Ordinal up to `roman_ordinal_limit` and cardinal after it (Ciberdúvidas 14167, for kings and popes; 12370, for
-    centuries; 11716, for the parts of a work; 9067, for the limit of pt-BR). After `século` or a noun of
+    centuries; 11716, for the parts of a work; Vitória, Bueno and Cunha, for pt-BR, as the module docstring quotes). After `século` or a noun of
     `roman_nouns`, the reading takes the gender of the noun and a small letter, and so does each numeral of a list that
     follows it, as in `séculos XI, XII e XIII`. After a title and its full stop,
     which ends the context words, it takes the gender of the title that the recognizer keeps in the memo of the
@@ -1003,7 +1052,16 @@ class Clock(TimeClock):
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
-        for span in self._symbols(text, request):
+        words = context_words(tokens)
+        day_ends = []
+        for match in re.finditer("24:00", text):
+            start, end = match.span()
+            joined = text[end:end + 1] in (":", ".", ",") and text[end + 1:end + 2].isdigit()
+            before = clause_window(text, words, start, end, -1, limit=1)
+            if is_bounded(text, start, end) and not joined and before \
+                    and before[0].lower() in request.data["time_words"]:
+                day_ends.append(replace(self._time(start, "24", "00", ""), end=end))
+        for span in (*self._symbols(text, request), *day_ends):
             if not any(span.start < other.end and other.start < span.end for other in own):
                 own.append(span)
         for span in super().find(text, tokens, request):
@@ -1017,6 +1075,16 @@ class Clock(TimeClock):
         words = context_words(tokens)
         out: list[Span] = []
         for span in spans:
+            index = bisect_right(words, span.start, key=lambda word: word.end)
+            word = words[index - 1] if index else None
+            verb = word is not None and word.text.lower() in request.data["plural_time_verbs"] \
+                and not (span.fields["suffix"] or span.fields["period"])
+            plural = verb and text[word.end:span.start].isspace()
+            after = bisect_left(words, span.end, key=lambda word: word.start)
+            hour_word = after < len(words) and text[span.end:words[after].start].isspace() \
+                and words[after].text.lower() in ("h", "hora", "horas")
+            if verb and (not plural or hour_word):
+                continue
             hour = _day_point(span.fields)
             if hour is None:
                 out.append(span)
@@ -1028,8 +1096,10 @@ class Clock(TimeClock):
                            for first in out]
                 out.append(span)
                 continue
-            index = bisect_right(words, span.start, key=lambda word: word.end)
-            word = words[index - 1] if index else None
+            if plural:
+                if hour != 0:
+                    out.append(replace(span, fields=FrozenMap({**span.fields, "prefix": None})))
+                continue
             if word is None or word.text.lower() not in contractions:
                 out.append(span)
                 continue
@@ -1052,6 +1122,9 @@ class Clock(TimeClock):
         return replace(span, fields=FrozenMap({**span.fields, "suffix": "h"}))
 
     def _time(self, start: int, hour: str, minute: str | None, symbol: str, second: str | None = None) -> Span | None:
+        """The time span at `start`. A clock `24:00` is the end of the day, which is midnight: hour 0."""
+        if (hour, minute, symbol, second) == ("24", "00", "", None):
+            hour = "0"
         fields = clock_fields(hour, minute or "00", second)
         if fields is None:
             return None
@@ -1158,6 +1231,97 @@ class SpacedMoney(Money):
                 integer, _, fraction = re.sub("[ \u00a0\u202f]", "", match.group()).partition(",")
                 found.append(Number(start, end, "", integer, fraction or None, digit_script(text[start:end])))
         return found
+
+
+_SUPERSCRIPTS = {"2": "²", "3": "³"}
+
+
+@dataclass(frozen=True)
+class Measure(CoreMeasure):
+    """The measures of the core, and a unit of `line_power_symbols` with its exponent on the line right after the
+    number, as `80 m2` and `5cm3`, which read as `80 m²` and `5cm³`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        lined = _line_powers(request.data["line_power_symbols"]).sub(
+            lambda match: match.group() if text[match.end():match.end() + 1].isalnum()
+            else match.group(1) + _SUPERSCRIPTS[match.group(2)], text)
+        return super().find(lined, tokens, request)
+
+
+@cache
+def _line_powers(symbols: tuple[str, ...]) -> re.Pattern[str]:
+    alternatives = "|".join(map(re.escape, sorted(symbols, key=len, reverse=True)))
+    return re.compile(f"([0-9](?: |\u00a0)?(?:{alternatives}))([23])")
+
+
+@dataclass(frozen=True)
+class SpelledDecimal:
+    """`0 vírgula 02`: digits with a leading zero after a number and the decimal word are a decimal part."""
+    name: str = "spelled_decimal"
+    form: Form = Form.CARDINAL
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        link = f" {request.data['decimal_word']} "
+        numbers = numbers_in(text, request)
+        ends = {number.end for number in numbers if number.fraction is None}
+        for number in numbers:
+            digits = number.integer
+            if number.fraction is None and not number.sign and len(digits) > 1 and digits[0] == "0" \
+                    and text[number.start - len(link):number.start].lower() == link \
+                    and number.start - len(link) in ends \
+                    and is_bounded(text, number.start, number.end):
+                yield Span(number.start, number.end, Form.CARDINAL,
+                           FrozenMap({"digits": digits, "sign": "", "lead": "", "prefix": "", "suffix": "",
+                                      "script": number.script}), recognizer=self.name)
+
+
+@dataclass(frozen=True)
+class PointDecimal(CoreDecimal):
+    """The decimals of the core. A decimal with the full stop reads only before a word of `_unit_names`, as
+    `10.4 graus`, or with a symbol that `PointMeasure`, `Percent` or `Money` reads."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        points = _point_starts(text, request)
+        words = context_words(tokens)
+        names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
+        for span in super().find(text, tokens, request):
+            if span.start + len(span.fields["prefix"]) not in points:
+                yield span
+                continue
+            index = bisect_left(words, span.end, key=lambda word: word.start)
+            if index < len(words) and text[span.end:words[index].start].isspace() \
+                    and words[index].text in names:
+                yield span
+
+
+@dataclass(frozen=True)
+class PointMeasure(Measure):
+    """The measures of `Measure`. A decimal with the full stop reads only with a unit whose name starts with a word of
+    `_unit_names`, so `1.30 h` and `9.30h` stay as written."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        points = _point_starts(text, request)
+        names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
+        for span in super().find(text, tokens, request):
+            if not any(span.start <= start < span.end for start in points) \
+                    or unit_reading(request, span.fields["unit"], "other")[0].replace("{0}", "").split()[0] in names:
+                yield span
+
+
+def _point_starts(text: str, request: Request) -> set[int]:
+    """The start of each number of the text with a full stop, not the canonical comma, before its decimal part."""
+    canonical = number_marks(request.data, request.params.decimal_mark)[0][1][:1]
+    return {number.start for number in numbers_in(text, request)
+            if number.fraction and text[number.end - len(number.fraction) - 1] != canonical}
+
+
+@cache
+def _unit_names(tag: str, *tables: FrozenMap) -> frozenset[str]:
+    """The first word of each CLDR name of the units of the tables that is no function word, as `quilómetros` and
+    `graus`, apart from the units of duration."""
+    durations = [unit for key, unit in cldr_data(tag)["units"].items() if key.startswith("duration-")]
+    return frozenset(name.replace("{0}", "").split()[0] for table in tables for unit in table.values()
+                     if unit not in durations for name in unit["names"].values()) - frozenset(DATA["function_words"])
 
 
 @dataclass(frozen=True)
@@ -1389,7 +1553,7 @@ class Roman:
             previous = words[index - 1]
             if start in members:
                 request.memo.setdefault("pt_roman_series", {})[start] = members[start]
-                yield self._span(start, end, value, data)
+                yield self._span(start, end, value, data, members[start])
                 continue
             key = None
             in_clause = any(first <= previous.start and end <= last for first, last in clauses)
@@ -1431,7 +1595,7 @@ class Roman:
                     yield Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": "ordinal", "suffix": ""}),
                                recognizer=self.name)
                     continue
-                yield self._span(start, end, value, data)
+                yield self._span(start, end, value, data, key)
                 if key is not None:
                     last_value = value
                     for member_start, member_end, member in _list_members(text, end, links):
@@ -1442,8 +1606,9 @@ class Roman:
                         members[member_start] = key
                         last_value = member_value
 
-    def _span(self, start: int, end: int, value: int, data) -> Span:
-        role = "ordinal" if value <= data["roman_ordinal_limit"] else "cardinal"
+    def _span(self, start: int, end: int, value: int, data, noun: str | None = None) -> Span:
+        limit = data.get("roman_noun_ordinal_limits", {}).get(noun, data["roman_ordinal_limit"])
+        role = "ordinal" if value <= limit else "cardinal"
         return Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": role, "suffix": ""}),
                     recognizer=self.name)
 
@@ -1486,10 +1651,10 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
+                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], PointMeasure(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
-                 Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), SHARED["decimal"],
-                 SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+                 Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), PointDecimal(),
+                 SpelledDecimal(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,

@@ -111,6 +111,12 @@ def test_a_lect_in_the_formal_register_reads_the_literary_words():
     assert normalize("الطقس 13 جميل 250 جدا", "arz", params) == "الطقس ثلاثة عشر جميل مئتان وخمسون جدا"
 
 
+@pytest.mark.parametrize("tag", ["ar-FR", "ar-TR", "ar-145"])
+def test_a_region_with_no_cldr_locale_reads_as_ar_001(tag):
+    # Under the CLDR 49 distance, these tags are as close to ar-IQ as to ar-AE, and a tie goes to the first variety.
+    assert normalize("15/03/2024", tag) == normalize("15/03/2024", "ar-001") == "الخامس عشر من مارس ألفين وأربعة وعشرين"
+
+
 def test_a_lect_tag_with_its_region_reads_as_the_bare_lect():
     for code, region in LECT_REGIONS.items():
         assert normalize("الطقس 13 جميل 250 جدا 25/7/1930", f"{code}-{region}") == \

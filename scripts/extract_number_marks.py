@@ -10,6 +10,9 @@ and `group` symbols of three numbering systems: `latn`, the default system and t
 the ISO 15924 script of the digits, as `text2spoken.core.tokens.digit_script` names them, so the core reads `3.5`
 and `३.५` with the marks of their own digits.
 
+An entry keeps `secondary_grouping` where the `standard` pattern of `decimalFormats-numberSystem-<system>` has a
+secondary grouping size other than its primary size: 2 for `#,##,##0.###` of `hi` (UTS #35, Part 3, "Number Patterns").
+
 The file holds each language under its language subtag, and each other locale, under its CLDR id with `_`, only
 when its marks differ from the marks of its language. The runtime reads one file and does no inheritance.
 """
@@ -67,6 +70,10 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             symbols = fields[f"symbols-numberSystem-{system}"]
             entry = {"decimal": symbols["decimal"], "group": symbols["group"]}
+            pattern = fields[f"decimalFormats-numberSystem-{system}"]["standard"]
+            sizes = [sum(char in "#0" for char in group) for group in pattern.split(";")[0].split(".")[0].split(",")]
+            if len(sizes) > 2 and sizes[-2] != sizes[-1]:
+                entry["secondary_grouping"] = sizes[-2]
             script = SCRIPTS[system]
             if script in marks and marks[script] != entry:
                 print(f"{locale}: {system} gives {script} other marks, {entry} after {marks[script]}; kept the first")

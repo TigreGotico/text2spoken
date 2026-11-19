@@ -23,13 +23,13 @@
       "language": "el",
       "wrong": "χίλιάδες",
       "right": "χιλιάδες",
-      "source": "CLDR main branch, common/rbnf/el.xml, writes χιλιάδες; English Wiktionary, χιλιάδα, plural χιλιάδες"
+      "source": "CLDR 49, unicode-org/cldr release-49/common/rbnf/el.xml: 2000: <%spellout-cardinal-feminine< χιλιάδες[ >>]; English Wiktionary, χιλιάδα, plural χιλιάδες"
     },
     {
       "language": "el",
       "wrong": "εννενήντα",
       "right": "ενενήντα",
-      "source": "CLDR main branch, common/rbnf/el.xml, writes ενενήντα; English Wiktionary, ενενήντα"
+      "source": "CLDR 49, unicode-org/cldr release-49/common/rbnf/el.xml: 90: ενενήντα[ >>]; English Wiktionary, ενενήντα"
     },
     {
       "language": "el",
