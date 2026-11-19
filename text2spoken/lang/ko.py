@@ -6,26 +6,30 @@ number reads through `spellout-numbering`, whose rule "1: =%spellout-cardinal-si
 reads zero. A decimal reads through the rule "x.x: ←←점→→→;" of the same rule set: `3.5` reads 삼점오. The decimal
 mark `.` and the group mark `,` come from the CLDR 49 number symbols of `ko`.
 
-Korean writes a number in digits right before its counter, with no space: the Hangul Orthography (한글 맞춤법),
-article 43, "단위를 나타내는 명사는 띄어 쓴다", and "다만, 순서를 나타내는 경우나 숫자와 어울리어 쓰이는 경우에는 붙여 쓸 수 있다", with
-"1446년 10월 9일", "80원" and "10개". The cardinal recognizer reads the text with each Hangul syllable as a space
-so that it finds the number, and the words after the number decide its reading. A number reads with a
-counter of `counters` right after it, alone or after one space, and the counter reads after one space, as article 43
-writes it: `23개` reads 스물세 개. The longest counter counts, so that `3개월` is no 개, and the Hangul after the
-counter must be empty or start with a word of `counter_followers`; it stays as written after the counter, so that
-`3명이` reads 세 명이. Any other Hangul right after the number keeps the number as written, as it stays on dev, and so
-does Hangul right before it, as in `제3`, and a range mark next to it, as in `3~4개`. A number before a space and a
-word that is no counter reads as a plain number.
+Korean writes a number in digits right before its counter, with no space: the Hangul Orthography (한글 맞춤법), article 43,
+"단위를 나타내는 명사는 띄어 쓴다", and "다만, 순서를 나타내는 경우나 숫자와 어울리어 쓰이는 경우에는 붙여 쓸 수 있다", with "1446년 10월 9일", "80원" and "10개". The
+cardinal recognizer finds a number as for a language with no file, so a mark between a word and a number stays a mark,
+as in `조회수:12,316` and `학생-200`. A number that a Hangul syllable right after it hides, it finds with that syllable as a
+space, as `23` in `23개`, and the words after the number decide its reading. A number reads with a counter of `counters`
+right after it, alone or after one space, and the counter reads after one space, as article 43 writes it: `23개` reads
+스물세 개. The longest counter counts, so that `3개월` is no 개, and the Hangul after the counter must be empty or start with a
+word of `counter_followers`; it stays as written after the counter, so that `3명이` reads 세 명이. Any other Hangul right
+after the number keeps the number as written, as for a language with no file, and so does Hangul right before it, as
+`25` in `9월25일` and `3` in `제3`. A range mark that joins the digits of the number to another digit keeps it as written,
+as in `3~4개`; a minus after a range mark is a sign, as for a language with no file (design section 6.1), so `0~-5` reads
+공~마이너스 오. A number before a space and a word that is no counter reads as a plain number. The decimal recognizer claims
+before the cardinal recognizer, so that a decimal after a counter and one mark reads: `3월(50.5)` reads 삼월(오십점오).
 
 The counter decides the numerals. The Standard Korean Language Dictionary (표준국어대사전) gives each:
 
 - `native`, the attributive native numeral of RBNF `spellout-cardinal-native-attributive` ("1: 한;", "2: 두;", "3: 세;",
   "4: 네;", "20: 스무;", "21: 스물[→→];"), which the dictionary heads "「관형사」 ((일부 단위를 나타내는 말 앞에 쓰여))", as
   "두": "사과 두 개" and "스무": "스무 살. 스무 명. 스무 개. 스무 마리쯤 되는 닭". 개 ("사탕 한 개"), 명 ("한 명", "열댓 명"),
-  마리 ("소 한 마리. 새 두 마리. 모기 다섯 마리"), 살 ("((주로 고유어 수 뒤에 쓰여)) 나이를 세는 단위. 두 살 먹은 꼬마") and
-  시간 ("두 시간 동안 책을 읽다", and "네": "네 시간"). The native numerals end at 99 (아흔아홉), and the dictionary gives no
-  reading of 100 and up before these counters, so such a number stays as written; so does 0. 명 also counts in the
-  Sino-Korean numerals ("학생 삼십 명"), and the file reads the native ones, which the dictionary gives first.
+  마리 ("소 한 마리. 새 두 마리. 고등어 두 마리. 모기 다섯 마리"), 살 ("((주로 고유어 수 뒤에 쓰여)) 나이를 세는 단위. 두 살
+  먹은 꼬마") and 시간 ("두 시간 동안 책을 읽다", and "네": "네 시간"). The native numerals end at 99 (아흔아홉). From 100 up
+  the number reads in the Sino-Korean numerals: "백" (百), 「관형사」, "십의 열 배가 되는 수의", with "백 미터. 백 개. 백 근.
+  백 날. 백 년. 백 살. 백 사람", so `100 마리` reads 백 마리 and `123개` 백이십삼 개. 0 stays as written. 명 also counts in
+  the Sino-Korean numerals ("학생 삼십 명"), and the file reads the native ones, which the dictionary gives first.
 - `hour`, 시 for the hour of a clock: "지금은 세 시가 조금 넘었다. 정각 열 시에 만납시다", and article 43: "두 시 삼십 분 오
   초". It reads the native numeral from 1 to 12; the dictionary gives no hour of a 24-hour clock, so 13 and up stays as
   written.
@@ -70,6 +74,7 @@ of the 속음. The Standard Korean Language Dictionary, "유월": "‘유월(六
 ‘유월’로 적는다", and "시월": "‘十’은 본음이 ‘십’이지만 ‘십월’로 적지 않고 ‘시월’로 적는다". So `2026-06-10` reads 이천이십육년
 유월 십일 and `2026-10-06` 이천이십육년 시월 육일.
 """
+import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
@@ -83,7 +88,7 @@ from text2spoken.core.spellers import RbnfSpeller, bounded_integer
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import OPTIONS, Form, FrozenMap, freeze
 
-SPELLER = RbnfSpeller(cardinal={Features(): "spellout-numbering"}, ordinal={Features(): "spellout-numbering"},
+SPELLER = RbnfSpeller(cardinal={Features(): "spellout-numbering"}, ordinal={Features(): "spellout-ordinal-native"},
                       decimal="spellout-numbering")
 
 DATA = freeze({
@@ -100,8 +105,8 @@ DATA = freeze({
 
 
 NATIVE = RbnfSpeller(cardinal={Features(): "spellout-cardinal-native-attributive"},
-                     ordinal={Features(): "spellout-cardinal-native-attributive"})
-"""The attributive native numerals, which a native counter reads."""
+                     ordinal={Features(): "spellout-ordinal-native"})
+"""The attributive native numerals, which a native counter reads up to 99."""
 
 
 class OrdinalSpeller(RbnfSpeller):
@@ -122,58 +127,65 @@ SHAPES = (SHARED["money"], SHARED["percent"], SHARED["measure"], SHARED["date_nu
 """The forms that stay as written. The RBNF data of `ko` has its own rule set `digits-ordinal`, so a full stop after
 a number is no ordinal mark alone (`OrdinalStop` with no `bare_stop`), as for a language with no file."""
 
-HANGUL_SPACES = dict.fromkeys(range(ord("가"), ord("힣") + 1), " ")
-"""Each precomposed Hangul syllable as a space, for `str.translate`."""
+DIGIT_HANGUL = re.compile("([0-9])[가-힣]")
+"""A digit and the Hangul syllable after it, which hides the number from the core cardinal."""
 
-RANGE_MARKS = "~～-–"
-"""The marks that join two numbers into a range, as in `3~4개`."""
+HOUR = re.compile("[0-9] ?시 ?")
+"""An hour, as `3시 ` before `20분`. A minute reads only right after it."""
 
-LIMITS = {"native": 99, "hour": 12, "month": 12}
-"""The largest number that each kind of counter reads."""
+RANGE_AFTER = re.compile("[~～–-][0-9]")
+"""A range mark and a digit after a number, as `~4` after `3` in `3~4개`."""
+
+RANGE_BEFORE = re.compile("[0-9][~～–-]")
+"""A digit and a range mark before a number, as `3~` before `4` in `3~4개`."""
+
+LIMITS = {"hour": 12, "month": 12}
+"""The largest number that a kind of counter reads."""
 
 
 def is_hangul(char: str) -> bool:
     return "가" <= char <= "힣"
 
 
-def _reading(text: str, span: Span, data) -> tuple[Span, str | None]:
-    """The span with its counter and the counter, the span and "" for a plain number, or None to keep it as written."""
-    start = span.start + len(span.fields["prefix"])
-    rest = text[span.end:]
-    if is_hangul(text[start - 1:start]) or (rest[1:2].isdecimal() and rest[0] in RANGE_MARKS) \
-            or (start > 1 and text[start - 1] in RANGE_MARKS and text[start - 2].isdecimal()):
-        return span, None
-    gap = 1 if rest[:1] == " " and is_hangul(rest[1:2]) else 0
-    counter = max((word for word in data["counters"] if rest.startswith(word, gap)), key=len, default="")
-    end = gap + len(counter)
-    while counter and is_hangul(rest[end:end + 1]):
-        end += 1
-    after = rest[gap + len(counter):end]
-    if not counter or (after and not after.startswith(data["counter_followers"])):
-        return span, (None if is_hangul(rest[:1]) else "")
-    kind = data["counters"][counter]
-    value = bounded_integer(span.fields["digits"])
-    hour = text[max(span.start - 4, 0):span.start].removesuffix(" ")
-    if span.fields["sign"] or not value or value > LIMITS.get(kind, value) or (kind == "minute" and not (
-            hour.endswith("시") and hour[:-1].removesuffix(" ")[-1:].isdecimal())):
-        return span, None
-    return replace(span, end=span.end + end, fields=FrozenMap({**span.fields, "suffix": after})), counter
-
-
 @dataclass(frozen=True)
 class KoCardinal(RbnfCardinal):
-    """The core cardinal, found with Hangul as spaces, with the counter after it in the recognizer name."""
+    """The core cardinal, with the counter after it in the recognizer name. A number that the core does not find
+    in the text, because a Hangul syllable follows it, is found with that syllable as a space."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for span in super().find(text.translate(HANGUL_SPACES), tokens, request):
-            if span.keep:
-                yield span
-                continue
-            span, counter = _reading(text, span, request.data)
-            if counter is None:
+        counters = request.data["counters"]
+        spans = list(super().find(text, tokens, request))
+        spaced, hidden = DIGIT_HANGUL.subn(r"\1 ", text)
+        if hidden:
+            taken = {position for span in spans for position in range(span.start, span.end)}
+            spans += (span for span in super().find(spaced, tokens, request)
+                      if taken.isdisjoint(range(span.start, span.end)))
+            spans.sort(key=lambda span: span.start)
+        for span in spans:
+            start = span.start + len(span.fields["prefix"])
+            rest = text[span.end:]
+            if span.keep or is_hangul(text[start - 1:start]) or RANGE_AFTER.match(text, span.end) \
+                    or (not span.fields["sign"] and RANGE_BEFORE.fullmatch(text, max(start - 2, 0), start)):
                 yield replace(span, keep=True)
-            else:
-                yield replace(span, recognizer=f"{self.name}:{counter}" if counter else self.name)
+                continue
+            gap = 1 if rest[:1] == " " and is_hangul(rest[1:2]) else 0
+            counter = max((word for word in counters if rest.startswith(word, gap)), key=len, default="")
+            end = gap + len(counter)
+            while counter and is_hangul(rest[end:end + 1]):
+                end += 1
+            after = rest[gap + len(counter):end]
+            if not counter or (after and not after.startswith(request.data["counter_followers"])):
+                yield replace(span, keep=is_hangul(rest[:1]))
+                continue
+            kind = counters[counter]
+            value = bounded_integer(span.fields["digits"])
+            hour = HOUR.search(text, max(span.start - 4, 0), span.start) if kind == "minute" else None
+            if span.fields["sign"] or not value or value > LIMITS.get(kind, value) \
+                    or (kind == "minute" and (hour is None or hour.end() != span.start)):
+                yield replace(span, keep=True)
+                continue
+            yield replace(span, end=span.end + end, fields=FrozenMap({**span.fields, "suffix": after}),
+                          recognizer=f"{self.name}:{counter}")
 
 
 KEPT_FIELDS = FrozenMap(dict.fromkeys(FIELDS[Form.CARDINAL], ""))
@@ -207,7 +219,8 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     kind = request.data["counters"][counter]
     if kind == "month":
         return request.data["months"][int(digits) - 1]
-    speller = NATIVE if kind in ("native", "hour") else SPELLER
+    # The native numerals end at 99 (아흔아홉).
+    speller = NATIVE if kind == "hour" or (kind == "native" and len(digits) < 3) else SPELLER
     return f"{speller.cardinal(digits, Features(), request)} {counter}"
 
 
@@ -226,7 +239,7 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=(Variety("ko-KR"),),
     data=DATA,
-    recognizers=(SHARED["lexicon"], *map(Kept, SHAPES), KoCardinal(), RBNF_DECIMAL),
+    recognizers=(SHARED["lexicon"], *map(Kept, SHAPES), RBNF_DECIMAL, KoCardinal()),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DECIMAL: speak_decimal,
                  Form.DATE: speak_date},
     spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.ORDINAL: ORDINAL},
