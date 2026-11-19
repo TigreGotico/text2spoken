@@ -19,8 +19,13 @@ A Basque case ending joins the digits, as in `2024ko`, `25ean` and `15:00etan`, 
 | `Ikus 5. or.` | Ikus bosgarren orrialdea. |
 | `Gernikako pl. 3` | Gernikako plaza hiru |
 | `30 000 pertsona` | hogeita hamar mila pertsona |
+| `10%-20%` | ehuneko hamarretik ehuneko hogeira |
+| `5 €-10 €` | bost eurotik hamar eurora |
+| `10 000-20 000 bitartean` | hamar milatik hogei milara bitartean |
 
 The file reads `00:00ak` and `01:00ak` with the day period. The file follows the table of Araua 203, page 53, which reads `01:00` with "goizeko". The worked example on the same page reads it as "gaueko ordu bata". The abbreviation `or.` always reads "orrialdea" and `pl.` "plaza", although the norm also lists other readings.
+
+Basque has no range word. A hyphen between two amounts reads with case endings: the first end takes `-tik` and the second end takes `-ra`, as Araua 203, page 52, reads the timetable `09:00-13:00` "bederatzietatik ordu batera". Two percentages, amounts or measures read so before `bitartean` or at the end of a clause. Two bare numbers read so only before `bitartean`, because at the end of a clause they may be a score, such as `0-2`.
 
 Araua 203, section 3.2.1.1, groups digits with a space, so a space is a group mark of the file, as the full stop is. Three groups of three digits stay as written, because that is also the shape of a telephone number: alone, after a two-digit group, or with the first group in brackets. Digit groups after a country code, such as `+34`, also stay as written. A fraction in groups after the decimal comma, or after a decimal point, stays as written.
 
@@ -49,9 +54,9 @@ The file has no variety for a dialect, so a tag such as `eu-x-zuberera` reads th
 
 The rules come from the norms of Euskaltzaindia, the Basque academy: Araua 7 (cardinals), Araua 196 (abbreviations), Araua 197 (symbols) and Araua 203, "Zenbakizko adierazpenak". The rule for a code noun and a number pair also cites EIMA, *Ortotipografia*, the style guide of the Basque Government. The docstring of [`eu.py`](../../text2spoken/lang/eu.py) gives the section of each rule.
 
-Of the 149 rows in `tests/data/eu.tsv`, 138 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 18 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Of the 165 rows in `tests/data/eu.tsv`, 155 cite a page of the norm, and one of them is silver. 15 rows cite EIMA, *Ortotipografia*, and 2 of them cite it alone. 23 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
-The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-088, eu-091, eu-093, eu-112, eu-134, eu-137, eu-138 and eu-140 to eu-147. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `10%-20%`, `5 €-10 €`, `€5eko`, `U2`, `¥5`, the telephone shapes `943 123 456`, `+34 944 158 155`, `+34 944 15 81 55`, `0034 943 123 456`, `34 943 123 456` and `(943) 123 456`, and the grouped fractions `0,264 7`, `4 712,395 8`, `74 835,140 71` and `3.141 592 6`.
+The silver row is eu-002, the day-first order of a slash date with the year last, which the norm does not write. The guard rows are eu-080, eu-081, eu-082, eu-093, eu-112, eu-134, eu-137, eu-138, eu-140 to eu-147 and eu-154 to eu-160. They hold `16:9` and `3:16`, `#decade`, `13/13/2024`, `€5eko`, `U2`, `¥5`, the telephone shapes `943 123 456`, `+34 944 158 155`, `+34 944 15 81 55`, `0034 943 123 456`, `34 943 123 456` and `(943) 123 456`, the grouped fractions `0,264 7`, `4 712,395 8`, `74 835,140 71` and `3.141 592 6`, and seven ranges that stay as written, such as `10%–20%`, `10 000-20 000 lagun` and `Urdinak 0-2 aitzinatu dira`.
 
 ## Limits
 
@@ -61,8 +66,12 @@ These forms stay as written in Basque:
 | --- | --- | --- |
 | `+34 944 158 155` | stays as written | The file has no telephone reading, so digit groups after a country code stay as written. |
 | `4 712,395 8` | stays as written | A fraction in groups after the decimal comma would read its first group alone. |
-| `10%-20%` | stays as written | A range of percentages, amounts or measures stays as written. Basque marks a range with the endings `-tik` and `-ra`, and the file has no rule for them. |
-| `5 €-10 €` | stays as written | The same rule. |
+| `10 000-20 000 lagun` | stays as written | A range before a noun stays as written. The ending belongs on the noun, and no norm gives the reading. |
+| `% 2-% 5 igoko da` | stays as written | A range before a verb stays as written. It may give the size of the rise, or its start and its end. |
+| `1898-1900 artean` | stays as written | A range before any word other than `bitartean` stays as written. |
+| `10%–20%` | stays as written | An en dash stays as written. Araua 197, note 13, gives it to the minus sign. |
+| `15-20 000 bitartean` | stays as written | A first number that is less than the first group of the second may stand for thousands. |
+| `20 000-30 000 €` | stays as written | A range with one symbol, after the second number only, stays as written. |
 | `€5eko` | stays as written | An amount with the currency symbol first and a case ending stays as written. |
 | `COVID-19` | stays as written | A code of letters, a hyphen and digits stays as written. |
 | `A-8 errepidea` | A zortzi errepidea | One capital letter before the hyphen reads as a sigla and a number. |
