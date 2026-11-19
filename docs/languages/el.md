@@ -28,13 +28,14 @@ The file reads cardinals, with a minus, percentages, common fractions, numeric d
 | `Μέτρησα ως το 4.` | `el-GR` | Μέτρησα ως το τέσσερα. |
 | `Η θερμοκρασία ήταν -5 σήμερα.` | `el-GR` | Η θερμοκρασία ήταν μείον πέντε σήμερα. |
 | `Αυξήθηκε κατά 20%.` | `el-GR` | Αυξήθηκε κατά είκοσι τοις εκατό. |
+| `Αύξηση 2,5%.` | `el-GR` | Αύξηση δύο κόμμα πέντε τοις εκατό. |
 | `Περίμενα 1/2 ώρα.` | `el-GR` | Περίμενα μισή ώρα. |
 | `Έφαγε τα 3/4 της πίτας.` | `el-GR` | Έφαγε τα τρία τέταρτα της πίτας. |
 | `Η συνάντηση είναι στις 12/03/2024.` | `el-GR` | Η συνάντηση είναι στις δώδεκα Μαρτίου δύο χιλιάδες είκοσι τέσσερα. |
 
 The file finds the noun in the words after the number. It skips up to two adjectives, the forms of the pronoun άλλος, the adverb ακόμη or ακόμα, and a second number after `ή`, `και`, `έως`, `ως`, `μέχρι` or `με`, as in `3 ή 4 γυναίκες` and `3 ως 1.000 άντρες`. A word that is a noun and an adjective, as νέα, counts as the adjective when the next word agrees with it. A word in capitals, or a word typed with no accent, finds its accented form. A number before `η ώρα`, `και μισή` or `και 5 λεπτά` is an hour, and takes the feminine of ώρα. A number after a weekday name, with no noun after it, is a day of the month, and takes the feminine of ημέρα. An article right before the number, as `τα`, `τις` or `στους`, gives the gender when no noun follows, and it decides when it and the noun disagree. A form that is only accusative or only genitive gives its case, as `σκύλους` and `βιβλίων`. A number above 1 takes the genitive only from a genitive plural, which ends in -ων. A genitive singular after it, as in `η τάξη 3 Γυμνασίου`, names a class and not a counted noun, so the number takes the neuter. A day before a month name takes the feminine of ημέρα, and day 1 reads πρώτη.
 
-A percentage reads its number in the neuter, the gender that CLDR gives "τοις εκατό". A half agrees with the noun after it, as μισό κιλό and μισή ώρα. Any other fraction reads its numerator in the neuter and the name of its denominator, a neuter noun: "ένα τρίτο", "τρία τέταρτα". The names are the one-word fraction names of the English Wiktionary appendix "Greek numerals", for the denominators 2 to 12, 20 and 100. A numeric date reads day, month and year, with the month name of CLDR in the genitive and no weekday. When both of the first two fields are 12 or below, the day comes first, as in the CLDR date formats of `el`.
+A percentage reads its number in the neuter, the gender that CLDR gives "τοις εκατό". A decimal before a percent sign reads the integer, "κόμμα" and each written digit, as the CLDR 49 RBNF rule `x.x: << κόμμα >>` reads it. The example table shows `2,5%`. A half agrees with the noun after it, as μισό κιλό and μισή ώρα. Any other fraction reads its numerator in the neuter and the name of its denominator, a neuter noun: "ένα τρίτο", "τρία τέταρτα". The names are the one-word fraction names of the English Wiktionary appendix "Greek numerals", for the denominators 2 to 12, 20 and 100. A numeric date reads day, month and year, with the month name of CLDR in the genitive and no weekday. When both of the first two fields are 12 or below, the day comes first, as in the CLDR date formats of `el`.
 
 ## Varieties
 
@@ -69,7 +70,7 @@ The number words come from the CLDR RBNF rule sets of `el`. The case words come 
 
 Six rules cite the Λεξικό της κοινής νεοελληνικής of the Triantafyllidis Foundation, on the Portal for the Greek Language. They are the rules of `και`, άλλος, ακόμη, the hour, the day after a weekday name and the genitive singular. The rule of a word in capitals cites Wikipedia, "Greek diacritics".
 
-Each of the 108 test rows in `tests/data/el.tsv` names a source for its reading. No native speaker has checked any row.
+Each of the 113 test rows in `tests/data/el.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 
@@ -78,10 +79,10 @@ Greek leaves these forms as written, or reads them as shown:
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
 | `Κοστίζει 5 €.` | `el-GR` | stays as written | Money and measures stay as written, as in a language with no file. |
-| `Ο πληθωρισμός ήταν 3,5%.` | `el-GR` | stays as written | A percentage with a decimal, a per mille sign, two percentages that a dash joins, and a percentage that a symbol touches, as in `100 €-5%`, stay as written. |
+| `Η τιμή είναι 100 €-5%.` | `el-GR` | stays as written | A per mille sign, two percentages that a dash joins, and a percentage that a symbol touches, as in `100 €-5%`, stay as written. |
 | `Ένα κομμάτι 1/16 της ίντσας.` | `el-GR` | stays as written | A fraction whose denominator has no one-word name stays as written. |
 | `Το υπόλοιπο είναι -50 €.` | `el-GR` | stays as written | An amount with a minus stays as written too. |
-| `Πήρε 3,5 κιλά.` | `el-GR` | stays as written | The file reads no decimal. |
+| `Πήρε 3,5 κιλά.` | `el-GR` | stays as written | The file reads a decimal only before a percent sign. |
 | `Μένω στον 2ο όροφο.` | `el-GR` | stays as written | The file reads no ordinal. |
 | `Ήρθαν 200 γιατροί.` | `el-GR` | Ήρθαν διακόσιοι γιατροί. | A noun of two genders, as γιατροί, reads the masculine. When all the doctors are women, the feminine διακόσιες is right. |
 | `Ήρθαν 200 φοιτητές.` | `el-GR` | Ήρθαν διακόσιοι φοιτητές. | A form that is nominative and accusative reads the nominative. After a verb that takes an object, as in `Είδα 200 φοιτητές`, the accusative διακόσιους is right. |
