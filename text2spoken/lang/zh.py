@@ -145,9 +145,13 @@ def is_han(char: str) -> bool:
     return unicodedata.name(char, "").startswith(("CJK UNIFIED IDEOGRAPH", "CJK COMPATIBILITY IDEOGRAPH"))
 
 
-def han_view(text: str) -> str:
-    """The text with each Han character as a space. The length and every offset stay the same."""
-    return "".join(" " if is_han(char) else char for char in text)
+def han_view(text: str, memo: dict) -> str:
+    """The text with each Han character as a space. The length and every offset stay the same. `memo`, the memo of
+    the request, keeps the view for the rest of the call."""
+    key = ("zh han view", text)
+    if key not in memo:
+        memo[key] = "".join(" " if is_han(char) else char for char in text)
+    return memo[key]
 
 
 class ZhSpeller:
@@ -189,11 +193,6 @@ class ZhSpeller:
 SPELLER = ZhSpeller()
 
 
-def _number_word(text: str, data) -> str:
-    """The longest word of `number_words` that starts the text, or ""."""
-    return max((word for word in data["number_words"] if text.startswith(word)), key=len, default="")
-
-
 def _year(written: str, digits: str, before: str, after: str, data) -> str | None:
     """`year`, `kept` or None (no year) for a number before 年: the rules of the module docstring."""
     if any(before.endswith(word) for word in data["year_words"]) and len(digits) <= 4:
@@ -225,7 +224,8 @@ def _role(text: str, span: Span, request: Request) -> tuple[Span, str]:
     rest = text[span.end:]
     gap = len(rest) - len(rest.lstrip(SPACES))
     after = rest[gap:]
-    kind = data["number_words"].get(_number_word(after, data))
+    kind = data["number_words"].get(max((word for word in data["number_words"] if after.startswith(word)), key=len,
+                                        default=""))
     year = None if sign or not after.startswith("年") else _year(text[span.start:span.end], digits, before, after,
                                                                   data)
     if not sign and before.endswith(data["ordinal_marker"]):
@@ -249,7 +249,7 @@ def numbers(text: str, tokens: Sequence[Token], request: Request) -> tuple[tuple
     """Each whole number of the text that the shared `cardinal` recognizer finds in `han_view`, with its role."""
     key = ("zh numbers", text)
     if key not in request.memo:
-        found = SHARED["cardinal"].find(han_view(text), tokens, request)
+        found = SHARED["cardinal"].find(han_view(text, request.memo), tokens, request)
         request.memo[key] = tuple(_role(text, span, request) for span in found)
     return request.memo[key]
 
@@ -293,38 +293,38 @@ class ZhOrdinal:
 
 class ZhDecimal(Decimal):
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return super().find(han_view(text), tokens, request)
+        return super().find(han_view(text, request.memo), tokens, request)
 
 
 class ZhPercent(Percent):
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return super().find(han_view(text), tokens, request)
+        return super().find(han_view(text, request.memo), tokens, request)
 
 
 class ZhFraction(Fraction):
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return super().find(han_view(text), tokens, request)
+        return super().find(han_view(text, request.memo), tokens, request)
 
 
 class ZhDate(DateNumeric):
     """A numeric date with the year first. Any other order stays as written."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for span in super().find(han_view(text), tokens, request):
+        for span in super().find(han_view(text, request.memo), tokens, request):
             if span.fields["written_order"] == "YMD":
                 yield span
 
 
 class ZhMeasure(Measure):
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        return super().find(han_view(text), tokens, request)
+        return super().find(han_view(text, request.memo), tokens, request)
 
 
 class ZhMoney(Money):
     """An amount with a numeral after it, as `¥3亿`, stays as written: the numeral belongs to the number."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for span in super().find(han_view(text), tokens, request):
+        for span in super().find(han_view(text, request.memo), tokens, request):
             yield replace(span, keep=True) if text[span.end:span.end + 1] in NUMERALS else span
 
 
@@ -400,16 +400,18 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     return pattern.replace("{0}", _amount(fields["amount"], SPELLER.counted, request))
 
 
+DATE_FIELDS = {"year": SPELLER.year, "month": SPELLER.cardinal, "day": SPELLER.cardinal}
+"""The reading of each field of the long date pattern."""
+
+
 def speak_date(span: Span, context: SpanContext) -> str:
     """A date in the parts of the CLDR long date pattern."""
     request, fields = context.request, span.fields
     parts, _ = long_date(cldr_locale(request.tag, date_locales(), request.language))
-    readings = {"year": lambda: SPELLER.year(str(fields["year"]), Features(), request),
-                "month": lambda: SPELLER.cardinal(str(fields["month"]), Features(), request),
-                "day": lambda: SPELLER.cardinal(str(fields["day"]), Features(), request)}
-    if any(name not in readings and name != "text" for name, _ in parts):
+    if any(name not in DATE_FIELDS and name != "text" for name, _ in parts):
         raise DeclinedReading("the long date pattern holds a field that the file does not read")
-    return "".join(literal if name == "text" else readings[name]() for name, literal in parts)
+    return "".join(literal if name == "text" else DATE_FIELDS[name](str(fields[name]), Features(), request)
+                   for name, literal in parts)
 
 
 LANGUAGE = LanguageSpec(
