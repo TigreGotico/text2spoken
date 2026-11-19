@@ -11,7 +11,7 @@ from dataclasses import KW_ONLY, dataclass, replace
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
-from text2spoken.core.numbers import GROUP_SPACES, SPACE_GROUPS
+from text2spoken.core.numbers import GROUP_SPACES, SPACE_GROUPS, WHOLE_GROUPS, number_marks
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_digit, is_letter, is_mark,
                                      is_punctuation, next_visible)
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
@@ -156,23 +156,32 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
     return (left, left - 1), (span.end, after.get(span.end, span.end + 1))
 
 
-_GROUP_RUNS = re.compile(f"(?:{SPACE_GROUPS.pattern})"
-                         "(?:[^0-9\t-\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000][0-9]+"
-                         f"(?:[{GROUP_SPACES}][0-9]{{3}})*)*")
-"""A run of `SPACE_GROUPS` with each mark and digit group after it: the fraction of `1 250.5`, the high end of the
-ranges `081-95` and `1 000 000-2 000 000`, or the rest of a number such as `34 481.312`. A mark is one character
-that is no digit and no space (`str.isspace`)."""
+_DIGITS = re.compile("[0-9]+")
+_MARKED_GROUPS = ("(?:[^0-9\t-\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000][0-9]+"
+                  f"(?:[{GROUP_SPACES}][0-9]{{3}})*)*")
+_GROUP_RUNS = re.compile(f"(?:{SPACE_GROUPS.pattern}){_MARKED_GROUPS}")
+_WHOLE_GROUP_RUNS = re.compile(f"(?:{WHOLE_GROUPS.pattern}){_MARKED_GROUPS}")
+"""A run of `SPACE_GROUPS`, or of `WHOLE_GROUPS` where the decimal mark is no comma, with each mark and digit group
+after it: the fraction of `1 250.5`, the high end of the ranges `081-95` and `1 000 000-2 000 000`, or the rest of
+a number such as `34 481.312`. A mark is one character that is no digit and no space (`str.isspace`)."""
 
 
-def _group_spaces(text: str) -> bytearray:
-    """The spaces between the groups of a number written in groups of three digits, as in `12 000` and `0,264 7`.
-    A run of `_GROUP_RUNS` with a digit next to it, or one character away, is no such number. After the run, the
-    digit continues it, as in `123 456 78` and `+34 481.312 50`, so a second pass reads the run with the digit.
-    Before the run, the first group belongs to the number before, as in `0800 123 456`, `HTTP/1.1 404` and
-    `470-2 487`. Nor is a run after a letter, as in the code `K1 500`."""
+def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
+    """The spaces between the groups of a number written in groups of three digits, as in `12 000` and, where the
+    decimal mark is the comma, `0,264 7`. A run of `_GROUP_RUNS` with a digit next to it, or one character away, is
+    no such number. After the run, the digit continues it, as in `123 456 78` and `+34 481.312 50`, so a second pass
+    reads the run with the digit. Before the run, the first group belongs to the number before, as in
+    `0800 123 456`, `HTTP/1.1 404` and `470-2 487`. Nor is a run after a letter, as in the code `K1 500`.
+
+    A run that starts inside a digit run has a digit next to it, so only the start of each digit run is tried, past
+    the end of the last run. The scan then takes linear time, also for `[0-9]+,` before a long digit run."""
     folded = fold_digits(text)
     marked = bytearray(len(text))
-    for match in _GROUP_RUNS.finditer(folded):
+    runs = _GROUP_RUNS if decimal_comma else _WHOLE_GROUP_RUNS
+    end = 0
+    for digits in _DIGITS.finditer(folded):
+        if digits.start() < end or (match := runs.match(folded, digits.start())) is None:
+            continue
         start, end = match.span()
         near = folded[max(start - 2, 0):start] + folded[end:end + 2]
         if any("0" <= char <= "9" for char in near) or (start and is_letter(folded[start - 1])):
@@ -275,7 +284,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
                 if not (_inside(span, blocks)
                         or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
 
-    grouped = _group_spaces(view)
+    grouped = _group_spaces(view, any(decimal[:1] == "," for _, decimal, _ in
+                                      number_marks(request.data, request.params.decimal_mark)))
     first, others = [], request
     if say_as is not None:
         others = replace(request, params=say_as.plain, memo={("written", view): text}, say_as=None)
@@ -285,7 +295,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         unit_at: list[Span | None] = [None] * len(text)
         for unit in units:
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
-        evidence = _evidence_words(text, tokens, held, grouped)
+        evidence = _evidence_words(text, tokens, held)
         telephone = say_as.value == "telephone"
         fitting = []
         for span in first:
@@ -353,21 +363,17 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
     return tuple(sorted(claimed, key=lambda s: s.start)), (*claimed, *held), held
 
 
-def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span],
-                    grouped: bytearray) -> list[tuple[Span, ...]]:
+def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span]) -> list[tuple[Span, ...]]:
     """For each character, the spans that stay as written next to the word that holds it: a recognizer reads that
     word as the evidence that keeps the span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4`
-    in `3/4 kg`. A group of digits that a group space joins to the span is no such word: it is part of the same
-    number, as `351` is in `+351 912`."""
+    in `3/4 kg`."""
     marked: list[tuple[Span, ...]] = [()] * len(text)
     words = [token for token in tokens if context_word(token.text) is not None]
     starts = [token.start for token in words]
     for span in held:
         before, after = bisect_left(starts, span.start) - 1, bisect_left(starts, span.end)
         for word in (words[before] if before >= 0 else None, words[after] if after < len(words) else None):
-            if word is not None and (word.end <= span.start or word.start >= span.end) \
-                    and not (word.end + 1 == span.start and grouped[word.end]) \
-                    and not (span.end + 1 == word.start and grouped[span.end]):
+            if word is not None and (word.end <= span.start or word.start >= span.end):
                 for position in range(word.start, word.end):
                     marked[position] += (span,)
     return marked

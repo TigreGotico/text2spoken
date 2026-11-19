@@ -378,8 +378,8 @@ _DIGIT_RUN = re.compile("[0-9]+")
 @lru_cache(maxsize=8)
 def _phone_pattern(spaces: str) -> re.Pattern:
     """A run of digit groups that a space of `spaces`, a full stop or a hyphen parts, with an optional `+` and an
-    area code in brackets."""
-    return re.compile(f"[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[{re.escape(spaces)}.-][0-9]+)*")
+    area code in brackets, which is group 1."""
+    return re.compile(f"[+]?([(][0-9]+[)] ?)?[0-9]+(?:[{re.escape(spaces)}.-][0-9]+)*")
 
 
 def _cluster_edge(text: str, start: int, end: int) -> bool:
@@ -987,7 +987,10 @@ class Telephone:
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
     `phone_kept_shapes` matches whole stays as written when it has no phone reading, as `1 000 000` in
     `1 000 000 2nd`, where the last group drops. A run that a shape of `no_phone_shapes` matches whole has no phone
-    shape.
+    shape. When a run with an area code in brackets and a space after them gives no span, the run after the space is
+    tried alone, as a second pass sees it once the number in brackets reads: `(1) 0 437 593` reads "(one) zero four
+    three seven five nine three" in en. With no space, as in `(0)08 717 80`, the bracket joins its number to the run,
+    so the number stays as written and a second pass sees the same run.
 
     `spaces` holds the spaces that may part two groups of a run, and `plans` the numbering plans that the recognizer
     reads, by region. A language whose `phone_regions` option offers a region that `PHONE_PLANS` lacks passes the
@@ -1058,10 +1061,13 @@ class Telephone:
         operand = re.compile(f"[{re.escape(operators)}][0-9]") if operators else None
         named_end = None
         folded = fold_digits(text)
-        kept_end = 0
-        for match in _phone_pattern(self.spaces).finditer(folded):
+        kept_end = position = 0
+        pattern = _phone_pattern(self.spaces)
+        while (match := pattern.search(folded, position)) is not None:
+            position = match.end()
             if match.start() < kept_end:
                 continue
+            unread = match.end(1) if (match.group(1) or "").endswith(" ") else position
             start = match.start()
             written = self.trimmed(text, start, match.group(), request)
             end = start + len(written)
@@ -1100,6 +1106,7 @@ class Telephone:
             unknown_code = written.startswith("+") and not country_code
             if glued:
                 if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
+                    position = unread
                     continue
                 chained = _GLUED.match(folded, end).group()
                 if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
@@ -1128,6 +1135,8 @@ class Telephone:
                                       "suffix": suffix}), recognizer=self.name)
             elif any(shape.fullmatch(written) for shape in kept_shapes):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
+            else:
+                position = unread
 
 
 def speak_lexicon(span: Span, context: SpanContext) -> str:
