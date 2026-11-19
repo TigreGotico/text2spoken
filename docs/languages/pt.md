@@ -55,6 +55,13 @@ The words of a date, a clock time and a year come from `ovos-date-parser`. A clo
 | --- | --- |
 | `Chega às 0:00.` | Chega às zero horas. |
 
+A length unit with `2` or `3` right after it writes its exponent on the line, so `80 m2` reads as `80 m²`.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `A casa tem 80m2.` | `pt-PT` | A casa tem oitenta metros quadrados. |
+| `Tomar 500 mg por dia.` | `pt-PT` | Tomar quinhentos miligramas por dia. |
+
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the emoji.
 
 ## Varieties
@@ -83,7 +90,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 567 rows in `tests/data/pt.tsv`, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 574 rows in `tests/data/pt.tsv`, 14 are marked silver.
 
 ## Roman numerals
 
