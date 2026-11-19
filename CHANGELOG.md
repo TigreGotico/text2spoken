@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.2a90](https://github.com/TigreGotico/text2spoken/tree/0.0.2a90) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a89...0.0.2a90)
+
+**Merged pull requests:**
+
+- fix\(core\): read the CLDR marks and grouping of a language with no file [\#342](https://github.com/TigreGotico/text2spoken/pull/342) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ja\): a decimal reads 点 for its mark, as in 三点五 [\#322](https://github.com/TigreGotico/text2spoken/pull/322) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): a phone word is also the last part of a hyphenated word [\#319](https://github.com/TigreGotico/text2spoken/pull/319) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a89](https://github.com/TigreGotico/text2spoken/tree/0.0.2a89) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a88...0.0.2a89)
@@ -9,8 +19,6 @@
 - docs\(el\): cite CLDR 49 for the case rule sets [\#361](https://github.com/TigreGotico/text2spoken/pull/361) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(el\): a day and a month stay as written, 2 1/2 reads δυόμισι, 1/60 to 1/80 read [\#359](https://github.com/TigreGotico/text2spoken/pull/359) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(pt\): read a decimal written with a full stop before a unit, and the zeros after vírgula [\#352](https://github.com/TigreGotico/text2spoken/pull/352) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): read the CLDR marks and grouping of a language with no file [\#342](https://github.com/TigreGotico/text2spoken/pull/342) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): a phone word is also the last part of a hyphenated word [\#319](https://github.com/TigreGotico/text2spoken/pull/319) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): a say-as date of a language with no file reads its day and year in the cited form [\#315](https://github.com/TigreGotico/text2spoken/pull/315) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a88](https://github.com/TigreGotico/text2spoken/tree/0.0.2a88) (2026-11-19)
@@ -299,10 +307,6 @@
 ## [0.0.2a55](https://github.com/TigreGotico/text2spoken/tree/0.0.2a55) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a54...0.0.2a55)
-
-**Merged pull requests:**
-
-- fix: read titles and forms the old dialog normaliser read [\#113](https://github.com/TigreGotico/text2spoken/pull/113) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a54](https://github.com/TigreGotico/text2spoken/tree/0.0.2a54) (2026-11-16)
 
