@@ -17,7 +17,7 @@ authors = [{name = "JarbasAI", email = "jarbasai@mailfence.com"}]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "linguatag[langcodes]>=0.1.5a1",
+    "linguatag[langcodes]>=0.3.1a1",
     "unicode-rbnf>=2.4.1",
     "quebra-frases>=0.3.7",
     "ovos-number-parser>=0.30.0a1",

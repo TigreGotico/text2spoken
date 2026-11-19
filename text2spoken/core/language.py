@@ -213,9 +213,20 @@ def subtags(tag: str) -> tuple[str, str | None, str | None]:
     return parts[0].lower(), script, region
 
 
+@cache
+def _likely_script(tag: str) -> str | None:
+    import linguatag
+
+    return linguatag.likely_script(tag)
+
+
 def cldr_locale(tag: str, available: Collection[str], language: LanguageSpec) -> str | None:
-    """The first CLDR locale id that `available` holds: from the tag, then the file code, then its aliases."""
+    """The first CLDR locale id that `available` holds: from the tag, then the file code, then its aliases.
+
+    A tag with no script takes the script of `linguatag.likely_script`, which reads the CLDR 49 likely-subtags
+    table that linguatag ships: `zh-TW` is `zh_Hant_TW`, so it reads the `zh_Hant` number words."""
     lang, script, region = subtags(tag)
+    script = script or _likely_script(tag)
     candidates = []
     if script and region:
         candidates.append(f"{lang}_{script}_{region}")

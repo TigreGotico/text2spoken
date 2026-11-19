@@ -42,7 +42,7 @@ A percentage reads 百分之 and the number, and a fraction reads the denominato
 | Tag | Notes |
 | --- | --- |
 | `zh-CN` | Simplified characters. The default variety, for `zh` and `cmn`. |
-| `zh-TW` | Traditional characters. Currency names, unit names and the round thousands of years follow CLDR `zh_Hant`. |
+| `zh-TW` | Traditional characters. Number words, currency names, unit names and the round thousands of years follow CLDR `zh_Hant`. |
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ A percentage reads 百分之 and the number, and a fraction reads the denominato
 | `我有2個蘋果。` | `zh-Hant-TW` | 我有兩個蘋果。 |
 | `圓周率約是3.14。` | `zh-Hant-TW` | 圓周率約是三點一四。 |
 
-The number words of a tag come from the CLDR locale of its script. A tag that names the script, such as `zh-Hant-TW`, takes the words of `zh_Hant`: 兩, 點, 萬, 億 and 負. The tag `zh-TW` names no script, so it takes the number words of `zh`, as the limits below show.
+The number words of a tag come from the CLDR locale of its script. A tag that names no script takes the script that CLDR 49 likely subtags give for its language and region. So `zh-TW`, `zh-HK` and `zh-MO` take the words of `zh_Hant`, as `zh-Hant-TW` does: 兩, 點, 萬, 億 and 負. `我有2個蘋果。` reads 我有兩個蘋果。 for both `zh-TW` and `zh-Hant-TW`. A bare `yue` takes its motherland region, CN, so it reads Simplified number words, and `yue-HK` reads Traditional number words.
 
 ## Options
 
@@ -90,7 +90,6 @@ The file reads no times, ranges, telephone numbers, Roman numerals, symbols, emo
 | `价格是¥3.50。` | `zh-CN` | stays as written | An amount with decimals stays as written. |
 | `这袋米5kg。` | `zh-TW` | stays as written | CLDR `zh_Hant` writes the kilogram 公斤, so `kg` is no unit of `zh-TW`. |
 | `屏幕比例是16:9。` | `zh-CN` | stays as written | A colon between two numbers can be a ratio, a verse or a time. |
-| `我有2個蘋果。` | `zh-TW` | 我有两個蘋果。 | `zh-TW` takes the number words of `zh`, in Simplified characters. `zh-Hant-TW` takes those of `zh_Hant`. |
 
 ---
 [← Russian](ru.md) · [Home](../index.md) · [Adding a language →](../adding-a-language.md)
