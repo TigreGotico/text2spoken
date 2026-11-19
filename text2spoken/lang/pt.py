@@ -1237,13 +1237,11 @@ class PointDecimal(CoreDecimal):
     `10.4 graus`, or with a symbol that `PointMeasure`, `Percent` or `Money` reads."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        canonical = number_marks(request.data, request.params.decimal_mark)[0][1][:1]
+        points = _point_starts(text, request)
         words = context_words(tokens)
         names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
         for span in super().find(text, tokens, request):
-            fraction = span.fields["fraction"]
-            mark = text[span.end - len(span.fields["suffix"]) - len(fraction) - 1]
-            if mark == canonical:
+            if span.start + len(span.fields["prefix"]) not in points:
                 yield span
                 continue
             index = bisect_left(words, span.end, key=lambda word: word.start)
@@ -1258,14 +1256,19 @@ class PointMeasure(Measure):
     `_unit_names`, so `1.30 h` and `9.30h` stay as written."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        canonical = number_marks(request.data, request.params.decimal_mark)[0][1][:1]
+        points = _point_starts(text, request)
         names = _unit_names(request.variety.tag, unit_table(request), joined_table(request))
-        points = [number.start for number in numbers_in(text, request)
-                  if number.fraction and text[number.end - len(number.fraction) - 1] != canonical]
         for span in super().find(text, tokens, request):
             if not any(span.start <= start < span.end for start in points) \
                     or unit_reading(request, span.fields["unit"], "other")[0].replace("{0}", "").split()[0] in names:
                 yield span
+
+
+def _point_starts(text: str, request: Request) -> set[int]:
+    """The start of each number of the text with a full stop, not the canonical comma, before its decimal part."""
+    canonical = number_marks(request.data, request.params.decimal_mark)[0][1][:1]
+    return {number.start for number in numbers_in(text, request)
+            if number.fraction and text[number.end - len(number.fraction) - 1] != canonical}
 
 
 @cache
