@@ -468,7 +468,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         raise DeclinedReading("a number with a leading zero has no cited reading")
     if (not (fields["sign"] or fields["lead"]) and before and before[-1] in request.data["time_words"]
             and int(digits) <= 23):
-        hour = clock(int(digits), 0, None, request)
+        hour = clock(int(digits), 0, None, request)  # declines 0, 1 and 13, so they stay as written here
         if hour_after(before, digits, after, request.data):
             return hour
     if (len(after) > 2 and after[0] == request.data["range_word"] and not (fields["sign"] or fields["lead"])

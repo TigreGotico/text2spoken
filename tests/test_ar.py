@@ -158,6 +158,11 @@ SPEEDS_BEFORE_A_KEPT_NUMBER = [
     "السرعة مئة وعشرون كيلومترا في الساعة 2 إلى 3"]
 
 
+def test_one_or_two_after_a_joined_fi_al_saaca_stays_as_written():
+    """في with the joined و still makes 1 and 2 before a counted word stay as written."""
+    assert normalize("وفي الساعة 2 م", "ar") == "وفي الساعة 2 م"
+
+
 @pytest.mark.parametrize("text", SPEEDS_BEFORE_A_KEPT_NUMBER)
 def test_a_number_kept_after_a_speed_stays_on_a_second_pass(text):
     """Design section 11. A speed reads في الساعة after its unit. A number that the first pass keeps as written,
