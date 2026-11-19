@@ -789,6 +789,15 @@ def test_a_last_hour_group_after_a_no_break_space_reads_as_after_a_space(text, l
 
 
 @pytest.mark.parametrize(("text", "lang"), [
+    ("Uso Potencial, Agricultura, 1:1 000 000.", "es-ES"), ("ÖNORM ISO 10007:2005 06 01", "de-DE"),
+])
+def test_a_phone_run_after_a_joined_number_that_stays_stays_too(text, lang):
+    """A run after a group that a mark joins to the digits before it waits until a span reads that mark. Here no
+    span reads `1:1` or `10007:2005`, so a second pass sees the same digits, and the run stays as written."""
+    assert normalize(text, lang) == text
+
+
+@pytest.mark.parametrize(("text", "lang"), [
     ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
     ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
     ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),

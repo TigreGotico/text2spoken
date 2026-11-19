@@ -195,7 +195,9 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
     before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
-    reads the number after it, finds no key there and reads the `5` before it.
+    reads the number after it, finds no key there and reads the `5` before it. A `TELEPHONE` span with a `joiner`
+    waits on that mark in place of the character before it, and holds no character while it waits, so the digits read
+    as they do with no phone span (`Telephone`).
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
@@ -271,6 +273,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
             continue
         sides = _sides(span, before, after)
+        headed = span.form is Form.TELEPHONE and "joiner" in span.fields
         if span.form is Form.LEXICON:
             last = span.end - 1
             while last > span.start and is_mark(view[last]):
@@ -279,8 +282,10 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
                 and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
             sides = ()
+        elif headed:
+            sides = ((span.fields["joiner"], span.fields["joiner"] - 1), sides[1])
         if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
-            if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
+            if span.form not in (Form.SYMBOL, Form.EMOJI) and not headed and not (released and index < say_as_count):
                 for position in range(span.start, span.end):
                     holder[position] = span
             for position in (position for side in sides for position in side):

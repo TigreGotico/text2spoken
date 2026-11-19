@@ -968,6 +968,12 @@ class Telephone:
     sees the words of the time, finds the same run. A mark after the group keeps it in the run, as in
     `02 08/85 98-0`, because the group and the digits after the mark may be one number.
 
+    A run that gives no span tries again after its first space, when a mark joins its first group to the digits
+    before it or a full stop parts the group, as `5` in `3,5 0 180 030 068` and `1.6` in `1.6 0 800 757 652`. That
+    group may be a number of its own. The span of the shorter run has the field `joiner`, the offset of the mark, and
+    waits until another span reads the mark, as on a second pass, which sees words there. So `3,5 0 180 030 068`
+    reads `0 180 030 068`, and `1:1 000 000` stays as written.
+
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
     methods `trimmed`, `continued`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone`
     replaces only `continued` and `hour_after`."""
@@ -1042,11 +1048,18 @@ class Telephone:
         named_end = None
         folded = fold_digits(text)
         kept_end = 0
-        for match in _phone_pattern(self.spaces).finditer(folded):
-            if match.start() < kept_end:
+        head_group = re.compile(f"[0-9]+(?:[.][0-9]+)?[{re.escape(self.spaces)}]")
+        runs = [(match.start(), match.group(), {}) for match in _phone_pattern(self.spaces).finditer(folded)][::-1]
+        while runs:
+            start, run, waits = runs.pop()
+            if start < kept_end:
                 continue
-            start = match.start()
-            written = self.trimmed(text, start, match.group(), request)
+            after_head = []
+            if not waits and (head := head_group.match(run)) and ("." in head.group() or (
+                    start > 1 and text[start - 1] in _JOINERS and is_digit(text[start - 2]))):
+                joiner = start + head.group().find(".") if "." in head.group() else start - 1
+                after_head = [(start + head.end(), run[head.end():], {"joiner": joiner})]
+            written = self.trimmed(text, start, run, request)
             end = start + len(written)
             glued = not _edge(text, start, end) or (operand is not None and operand.match(folded, end) is not None)
             prefix = suffix = ""
@@ -1083,13 +1096,15 @@ class Telephone:
             unknown_code = written.startswith("+") and not country_code
             if glued:
                 if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
+                    runs.extend(after_head)
                     continue
                 chained = _GLUED.match(folded, end).group()
                 if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
                     chained = re.sub("[ /:.,–-]?[0-9]+$", "", chained)
                 end = kept_end = named_end = end + len(chained)
             first, last = start - len(prefix), end + len(suffix)
-            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
+            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix,
+                                      **waits})
             if glued or not one_digit_set(text[start:end]) or (keeps and (len(digits) > 15 or unknown_code)):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
                 continue
@@ -1108,9 +1123,11 @@ class Telephone:
             if reads:
                 yield Span(first, last, Form.TELEPHONE,
                            FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
-                                      "suffix": suffix}), recognizer=self.name)
+                                      "suffix": suffix, **waits}), recognizer=self.name)
             elif any(shape.fullmatch(written) for shape in kept_shapes):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
+            else:
+                runs.extend(after_head)
 
 
 def speak_lexicon(span: Span, context: SpanContext) -> str:
