@@ -376,7 +376,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `lexicon` | `LEXICON` | none | none |
 | `cardinal` | `CARDINAL` | `leads`, `number_marks`, `sign_words`, `symbols` | `case_suffixes`, `proclitics` |
 | `decimal` | `DECIMAL` | `number_marks`, `symbols` | `case_suffixes`, `proclitics` |
-| `fraction` | `FRACTION` | `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `number_gaps`, `proclitics` |
+| `fraction` | `FRACTION` | `currencies`, `currency_symbols`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `number_gaps`, `proclitics` |
 | `idiom` | `IDIOM` | `idioms` | `case_suffixes`, `proclitics` |
 | `range` | `RANGE` | `number_marks`, `symbols` | `case_suffixes`, `proclitics`, `range_marks` |
 | `date_numeric` | `DATE` | `symbols` | `case_suffixes`, `proclitics` |

@@ -760,6 +760,18 @@ def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(t
     assert "unread written form" in caplog.text
 
 
+@pytest.mark.parametrize("text", ["50% 1 000, 1️⃣", "Een groei van 5 % 1 000 keer."])
+def test_groups_after_a_percentage_read_the_same_on_a_second_pass(text):
+    """Section 11. The percentage reads its sign, so the groups after it read on the first pass."""
+    once = normalize(text, "nl-BE")
+    assert normalize(once, "nl-BE") == once
+
+
+def test_groups_at_the_start_of_the_text_read_as_a_cardinal():
+    """Taaladvies.net, 10.000.000 / 10 000 000: the space groups the digits, so `12 000` reads "twaalfduizend"."""
+    assert normalize("12 000 mensen wonen hier.", "nl-NL") == "twaalfduizend mensen wonen hier."
+
+
 @pytest.mark.parametrize("lang", ["eu-x-nafarra-beherea", "eu-ES"])
 def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang):
     """Section 11. `sei` is a word, not the unit `s` and the ending `ei`, so a second pass reads no measure."""

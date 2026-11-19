@@ -18,11 +18,12 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ko": {"leads", "months"}, "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes",
                                   "no_phone_shapes"}, "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
-phrase style of French, which tests/test_french.py checks)."""
+phrase style of French, which tests/test_french.py checks). The Korean month names read only in a say-as date, which
+tests/data/say_as/rows.tsv checks."""
 
 # One entry of each table of a language file; DELETE removes a table that holds one value.
 EN_ENTRIES = {
@@ -95,6 +96,7 @@ PT_ENTRIES = {
     "currency_noun_gender": "córdobas", "two_gender_feminine": "caixas",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "h",
     "time_contractions": "às", "time_article_prepositions": "as",
+    "plural_time_verbs": "são",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
     "letter_free_consonants": "b", "roman_nouns": "capítulo", "roman_words": "MC", "letter_words": "DA",

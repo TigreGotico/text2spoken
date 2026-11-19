@@ -125,7 +125,7 @@ UNSUPPORTED = [
     ("10 Downing Street", "en-GB", "address"),
     ("Wow", "en-US", "interjection"),
     ("2024-01-02", "en-US", "vxml:date"),
-    ("3", "ko-KR", "ordinal"),
+    ("3", "cy-GB", "ordinal"),
     ("3", "yo-NG", "digits"),
     ("W3C", "bn-IN", "characters"),
 ]
