@@ -110,11 +110,15 @@ SSML `say-as` markup reads more forms in a language with no file, because the ma
 'trzecia'
 ```
 
-A `date` reads by the CLDR `long` date pattern of the language, with the month name of CLDR and the numbers of the same owner. In Danish, Finnish, Czech and Slovak the pattern writes the day as `d.`, an ordinal, so the day reads as an ordinal. A pattern with a field or an abbreviation that has no words, as the Ukrainian `р.` after the year, gives the plain reading:
+A `date` reads by the CLDR `long` date pattern of the language, with the month name of CLDR and the numbers of the same owner. In Danish, Finnish, Czech and Slovak the pattern writes the day as `d.`, an ordinal, so the day reads as an ordinal. Where the grammar of the language gives a form that the pattern does not show, `data/date_readings.json` gives it, with its source. The Polish day is an ordinal, the Czech day takes the genitive, and the Ukrainian day is a neuter ordinal, with the year as a genitive ordinal and `р.` read as `року`. Hungarian reads its year and day as cardinals, and Occitan puts the day first. A pattern with a field or an abbreviation that has no words and no entry in that file gives the plain reading:
 
 ```python
 >>> normalize("2026-11-09", "pl", say_as=SayAs(interpret_as="date"))
-'dziewięć listopada dwa tysiące dwadzieścia sześć'
+'dziewiąty listopada dwa tysiące dwadzieścia sześć'
+>>> normalize("2026-11-09", "cs", say_as=SayAs(interpret_as="date"))
+'devátého listopadu dva tisíce dvacet šest'
+>>> normalize("2026-11-09", "uk", say_as=SayAs(interpret_as="date"))
+"дев'яте листопада дві тисячі двадцять шостого року"
 >>> normalize("09/11/2026", "da", say_as=SayAs(interpret_as="date", format="dmy"))
 'niende november to tusind og seksogtyve'
 ```

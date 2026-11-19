@@ -1202,23 +1202,38 @@ def speak_spoken_date(span: Span, context: SpanContext) -> str:
 def speak_cldr_date(span: Span, context: SpanContext) -> str:
     """A date of a language with no file, by the parts of its CLDR `long` date pattern (`long_date`): the literal
     text as CLDR writes it, the month name of CLDR with each number in it read as a cardinal, as `11월` in
-    Korean, an ordinal day through the ordinal speller, and the day, a month number and the year through the cardinal
-    speller (section 17.5). The year reads as a cardinal: unicode_rbnf drops the zeros of the RBNF `zh` and `ja`
-    rule set `spellout-numbering-year`, which reads 2026 "二二六"."""
+    Korean, an ordinal day or year through the ordinal speller with the endings of its form, and the day, a month
+    number and the year through the cardinal speller (section 17.5). The year reads as a cardinal where no form makes
+    it an ordinal: unicode_rbnf drops the zeros of the RBNF `zh` and `ja` rule set `spellout-numbering-year`, which
+    reads 2026 "二二六"."""
     fields, request = span.fields, context.request
     spellers = request.language.spellers
-    parts, months = long_date(cldr_locale(request.tag, date_locales(), request.language))
+    parts, months, forms = long_date(cldr_locale(request.tag, date_locales(), request.language))
 
     def cardinal(number: object) -> str:
         return spellers[Form.CARDINAL].cardinal(str(number), Features(), request)
 
+    def ordinal(field: str) -> str:
+        words = spellers[Form.ORDINAL].ordinal(str(fields[field]), Features(), request).split()
+        form = forms.get(field, {})
+        for index in range(len(words)) if form.get("declines") == "every" else (len(words) - 1,):
+            for ending, replacement in form.get("endings", ()):
+                if words[index].endswith(ending):
+                    words[index] = words[index].removesuffix(ending) + replacement
+                    break
+            else:
+                if form.get("endings"):
+                    raise DeclinedReading(f"no date form of the ordinal {' '.join(words)!r}")
+        return " ".join(words)
+
     readings = {
         "day": lambda: cardinal(fields["day"]),
-        "ordinal_day": lambda: spellers[Form.ORDINAL].ordinal(str(fields["day"]), Features(), request),
+        "ordinal_day": lambda: ordinal("day"),
         "month": lambda: cardinal(fields["month"]),
         "month_name": lambda: re.sub("[0-9]+", lambda number: cardinal(number.group()),
                                      months[fields["month"] - 1]),
         "year": lambda: cardinal(fields["year"]),
+        "ordinal_year": lambda: ordinal("year"),
     }
     return "".join(literal if name == "text" else readings[name]() for name, literal in parts)
 
