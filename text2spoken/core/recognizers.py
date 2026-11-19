@@ -257,8 +257,8 @@ class Cardinal:
 _DASHES = "-\u2010\u2011\u2012\u2013\u2014\u2212"
 """The hyphen, the dashes and the minus sign."""
 
-_MINUS_DIGITS = re.compile("[ \t\u00a0\u202f]+[-\u2212]\\d")
-"""A space or a tab, then a minus and a digit, as after `5` in `5 -3.5`."""
+_SPACED_MINUS = re.compile("[ \t\u00a0\u202f]+[-\u2212]")
+"""A space or a tab, then a minus, as after `5` in `5 -3.5`."""
 
 _GROUP_SPACES = " \u00a0\u202f"
 """The space, the no-break space and the narrow no-break space, which group the digits of a number."""
@@ -290,7 +290,8 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
                     *Decimal.find(RBNF_DECIMAL, text, tokens, request)), key=lambda span: span.start)
     kept = set()
     for index, span in enumerate(spans):
-        if _MINUS_DIGITS.match(text, span.end):
+        minus = _SPACED_MINUS.match(text, span.end)
+        if minus and minus.end() < len(text) and is_digit(text[minus.end()]):
             kept.add(index)
         if not span.fields["sign"]:
             continue
