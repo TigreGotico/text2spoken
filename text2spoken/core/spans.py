@@ -180,9 +180,10 @@ def _in_clause(span: Span, other: bytearray) -> bool:
 SAY_AS_SPANS = "say_as_spans"
 """The `Request.memo` key of the offsets of the spans that the recognizers of the say-as claim."""
 PHONE_WAITS = "phone_waits"
-"""With the text, the `Request.memo` key that maps the start of a `TELEPHONE` span to the offset of a character that
-another span must read before the span claims, and whether no other span may read a character of the span
-(`Telephone`)."""
+"""With the text, the `Request.memo` key that maps the start and the end of a `TELEPHONE` span to the conditions under
+which it claims (`Telephone`). One condition holds the offset of a character that a span ending before the span must
+read, or None, the offset of a character that a span must read, or None, and whether no other span may read a
+character of the span."""
 
 
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
@@ -200,10 +201,11 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
     before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
     reads the number after it, finds no key there and reads the `5` before it. A `TELEPHONE` span that
-    `PHONE_WAITS` names claims only in a second run of the loop. The first run leaves the span out, and must read the
-    character that `PHONE_WAITS` names with a span that ends before the span, and, when `PHONE_WAITS` says so, read
-    no character of the span. A span kept as written never claims this way. So the digits read as they do with no
-    phone span until a second pass sees words there (`Telephone`).
+    `PHONE_WAITS` names claims only in a second run of the loop, and only when the first run, which leaves the span
+    out, meets one of its conditions: it reads the character before with a span that ends before the span, reads the
+    character after, and, when the condition says so, reads no character of the span. A span kept as written never
+    claims this way. So the digits read as they do with no phone span until a second pass sees words there
+    (`Telephone`).
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
@@ -269,9 +271,9 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         first = fitting
     say_as_count = len(first)
     candidates = [*first, *found(recognizers, others)]
-    waits = request.memo.get((PHONE_WAITS, view), {}), others.memo.get((PHONE_WAITS, view), {})
-    phones = {index: waits[index >= say_as_count][span.start] for index, span in enumerate(candidates)
-              if span.form is Form.TELEPHONE and span.start in waits[index >= say_as_count]}
+    said_waits, waits = request.memo.get((PHONE_WAITS, view), {}), others.memo.get((PHONE_WAITS, view), {})
+    phones = {index: conditions for index, span in enumerate(candidates) if span.form is Form.TELEPHONE
+              and (conditions := (said_waits if index < say_as_count else waits).get((span.start, span.end)))}
     before = {end: start for start, end in sequences}
     after = dict(sequences)
     skipped = frozenset(phones)
@@ -329,10 +331,10 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         ends = [0] * len(text)
         for span in claimed:
             ends[span.start:span.end] = [span.end] * (span.end - span.start)
-        if (skipped := frozenset(index for index, (offset, alone) in phones.items()
-                                 if candidates[index].keep or not 0 < ends[offset] <= candidates[index].start
-                                 or (alone and any(ends[candidates[index].start:candidates[index].end])))) \
-                == frozenset(phones):
+        if (skipped := frozenset(index for index, conditions in phones.items() if candidates[index].keep or not any(
+                (left is None or 0 < ends[left] <= candidates[index].start) and (right is None or ends[right])
+                and not (alone and any(ends[candidates[index].start:candidates[index].end]))
+                for left, right, alone in conditions))) == frozenset(phones):
             break
     if say_as is not None:
         request.memo[SAY_AS_SPANS] = frozenset(said)
