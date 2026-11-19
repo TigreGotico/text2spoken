@@ -19,7 +19,7 @@ from text2spoken.core.color import COLOR
 from text2spoken.core.currencies import cldr_part, currency_signs, currency_symbols, words_only
 from text2spoken.core.dates import date_locales, long_date
 from text2spoken.core.dates import resolve as resolve_date
-from text2spoken.core.electronic import ELECTRONIC
+from text2spoken.core.electronic import ELECTRONIC, tld_after
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
 from text2spoken.core.letters import LETTERS
@@ -1427,7 +1427,9 @@ class Abbreviation:
     """A title before a capitalised name, a number abbreviation before a number, and the abbreviations of the
     table, as in `Dr. Smith`, `No. 5` and `etc.` A key of `sentence_final` that ends the sentence, before a capital
     letter or at the end of the text, keeps its full stop as the trail of the span. A title before a capital
-    letter comes before a name, so it keeps no full stop.
+    letter comes before a name, so it keeps no full stop. A key that ends in a full stop stays as written before a
+    second full stop and a label of `electronic_tlds`, as in `etc..com`, because "et cetera.com" reads as an address
+    on a second pass.
 
     A language file that reads other tables replaces `tables`, and one that refuses a key in some places replaces
     `refuses`."""
@@ -1451,6 +1453,7 @@ class Abbreviation:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
         final = frozenset(data["sentence_final"])
+        tlds = data.get("electronic_tlds", ())
         for table, keys, follows in self.tables(data):
             for key in sorted(keys, key=len, reverse=True):
                 position = text.find(key)
@@ -1458,7 +1461,8 @@ class Abbreviation:
                     end = position + len(key)
                     following = next_visible(text, end)
                     if is_bounded(text, position, end) and follows(following) \
-                            and not self.refuses(text, position, table, data):
+                            and not self.refuses(text, position, table, data) \
+                            and not (text.startswith("..", end - 1) and tld_after(text, end, len(text), tlds)):
                         sentence_end = table != "titles" and key in final \
                             and (following == "" or following.isupper())
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
