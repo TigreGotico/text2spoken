@@ -486,18 +486,18 @@ def proper_fraction(top: int | None, bottom: int | None) -> bool:
 
 
 @lru_cache(maxsize=64)
-def _free_currency(pairs: tuple[tuple[str, str], ...], gaps: tuple[str, ...]) -> tuple[re.Pattern, re.Pattern, int]:
-    """A pattern of a currency symbol and a gap that ends where it is searched, and a pattern of a gap and a currency
-    symbol, each with no number on the other side of the symbol, and the length of the longest symbol and gap. A
-    symbol with a number on its other side is the symbol of that number, as `€` in `5€ 2 1/2`."""
-    symbols = [symbol for symbol, _ in pairs]
-    if not symbols:
-        return re.compile("(?!)"), re.compile("(?!)"), 0
-    symbol = "|".join(map(re.escape, symbols))
+def _currency_beside(pairs: tuple[tuple[str, str], ...],
+                     gaps: tuple[str, ...]) -> tuple[re.Pattern, re.Pattern, int] | None:
+    """A pattern of a currency symbol and a gap before a number, a pattern of a gap and a currency symbol after a
+    number, and the most characters that the first one matches, or None with no symbol. Group 1 holds a digit and a
+    gap on the other side of the symbol, which make the symbol the symbol of that number, as `€` in `5€ 2 1/2`."""
+    if not pairs:
+        return None
+    symbol = "|".join(re.escape(symbol) for symbol, _ in pairs)
     gap = "|".join(map(re.escape, sorted(gaps, key=len, reverse=True)))
-    no_number = "".join(f"(?<!\\d{re.escape(g)})" for g in gaps)
-    return (re.compile(f"{no_number}(?:{symbol})(?:{gap})\\Z"), re.compile(f"(?:{gap})(?:{symbol})(?!(?:{gap})\\d)"),
-            max(map(len, symbols)) + max(map(len, gaps), default=0))
+    width = 1 + 2 * max(map(len, gaps), default=0) + max(len(symbol) for symbol, _ in pairs)
+    before = re.compile(f"([0-9](?:{gap}))?(?:{symbol})(?:{gap})")
+    return before, re.compile(f"(?:{gap})(?:{symbol})((?:{gap})[0-9])?"), width
 
 
 MIXED_GAPS = (" ", "\u00a0")
@@ -551,11 +551,17 @@ class Fraction:
             top, bottom = bounded_integer(numerator), bounded_integer(denominator)
             begin = None if sign or prefix or not proper_fraction(top, bottom) else whole_part(text, start, end)
             if begin is not None:
-                before, after, width = _free_currency(currency_symbols(request), number_gaps(request.data))
+                patterns = _currency_beside(currency_symbols(request), number_gaps(request.data))
+                currency = False
+                if patterns is not None:
+                    before, after, width = patterns
+                    matches = (next((match for match in before.finditer(text, max(0, begin - width), begin)
+                                     if match.end() == begin), None), after.match(text, end))
+                    currency = any(match is not None and match.group(1) is None for match in matches)
                 signed_whole = begin and text[begin - 1] in SIGNS and not (begin > 1 and is_digit(text[begin - 2]))
                 keep = ("0" in (fold_digits(text[begin]), numerator[0], denominator[0]) or signed_whole or unit
                         or not (_free_before(text, begin, symbols) and _free_after(text, end, symbols))
-                        or before.search(text, max(0, begin - width), begin) or after.match(text, end)
+                        or currency
                         or not one_digit_set(text[begin:start - 1] + text[matched_start:matched_end]))
                 yield Span(begin - 1 if signed_whole else begin, end, Form.FRACTION,
                            FrozenMap({"whole": fold_digits(text[begin:start - 1]), "numerator": numerator,
