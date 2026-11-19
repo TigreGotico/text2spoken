@@ -7,8 +7,9 @@ import warnings
 import pytest
 
 from tests.conftest import DATA, row_params, rows
-from text2spoken import (ArgumentTypeError, Form, NormalizationParams, ParameterNotHonouredWarning, SayAs,
-                         UnreadFormError, UnsupportedParameterError, analyze, normalize)
+from text2spoken import (ArgumentTypeError, Form, FrozenMap, GrammaticalGender, NormalizationParams,
+                         ParameterNotHonouredWarning, SayAs, UnreadFormError, UnsupportedParameterError, analyze,
+                         normalize)
 from text2spoken.core import say_as as module
 
 with open(DATA / "say_as" / "rows.tsv", encoding="utf-8") as f:
@@ -201,10 +202,18 @@ def test_the_analysis_shows_the_say_as_that_the_call_read():
 
 
 def test_a_bare_ordinal_takes_the_default_gender_of_the_params():
-    from text2spoken import FrozenMap, GrammaticalGender
-
     params = NormalizationParams(default_gender=FrozenMap({"pt": GrammaticalGender.FEMININE}))
     assert normalize("3", "pt-PT", params, say_as=SayAs(interpret_as="ordinal")) == "terceira"
+
+
+@pytest.mark.parametrize(("text", "gender", "expected"), [
+    ("5", "feminine", "पाँचवीं"), ("21", "feminine", "इक्कीसवीं"), ("21", "masculine", "इक्कीसवाँ")])
+def test_a_hindi_ordinal_ends_in_the_nasal_vowel_of_its_gender(text, gender, expected):
+    """English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं."""
+    params = NormalizationParams(default_gender=FrozenMap({"hi": GrammaticalGender(gender)}))
+    once = normalize(text, "hi-IN", params, say_as=SayAs(interpret_as="ordinal"))
+    assert once == expected
+    assert normalize(once, "hi-IN", params) == once
 
 
 @pytest.mark.parametrize("ids,mutate", [

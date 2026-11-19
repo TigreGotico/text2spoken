@@ -1,0 +1,73 @@
+id	tag	form	text	expected	source	checked_by
+zh-001	zh-CN	cardinal	我有23个苹果。	我有二十三个苹果。	Wiktionary 個 (Simplified 个): classifier for people or for things lacking specific classifiers; CLDR 49 RBNF zh, spellout-cardinal-alternate2: 20: =%spellout-numbering=, so 23 reads 二十三	unchecked
+zh-002	zh-CN	cardinal	我有2个苹果。	我有两个苹果。	Wiktionary 兩, usage notes: 兩 is used when counting things with a measure word, 兩 個 人, But not *二個人; CLDR 49 RBNF zh, spellout-cardinal-alternate2: 2: 两	unchecked
+zh-003	zh-CN	cardinal	他在这里住了2年。	他在这里住了两年。	Wiktionary 兩, usage notes: 兩 年, two years; Wiktionary 年: classifier for years	unchecked
+zh-004	zh-CN	cardinal	我们班有22个学生。	我们班有二十二个学生。	Wiktionary 兩, usage notes table: 三十兩, thirty-two, Mandarin -; CLDR 49 RBNF zh, spellout-cardinal-alternate2: 20: =%spellout-numbering=, 2: 二 in spellout-numbering	unchecked
+zh-005	zh-CN	cardinal	我们走了200公里。	我们走了两百公里。	Wiktionary 兩, usage notes: 兩 百, two hundred; Wiktionary 公里: classifier for kilometres; CLDR 49 RBNF zh, spellout-cardinal-alternate2: 100: <<百	unchecked
+zh-006	zh-CN	cardinal	他赢了2万元。	他赢了两万元。	Wiktionary 萬 (Simplified 万): 兩 萬 元, twenty thousand dollars; CLDR 49 RBNF zh, spellout-cardinal-alternate2: 10000: <<万	unchecked
+zh-007	zh-CN	cardinal	房间号是102。	房间号是一百零二。	CLDR 49 RBNF zh, spellout-cardinal: 100: <<百[>%%cardinal2>], %%cardinal2 1: 零=%spellout-numbering=; Wiktionary 零: 七 百 零 三, seven hundred and three	unchecked
+zh-008	zh-CN	cardinal	气温是-5度。	气温是负五度。	CLDR 49 RBNF zh, spellout-cardinal: -x: 负>>; 5 reads 五 in spellout-cardinal and in spellout-cardinal-alternate2, so the reading does not hang on whether 度 is a measure word	unchecked
+zh-009	zh-CN	cardinal	我们3人一起去。	我们三人一起去。	CLDR 49 RBNF zh: 3 reads 三 in spellout-cardinal and in spellout-cardinal-alternate2, so the reading does not hang on whether 人 is a measure word	unchecked
+zh-010	zh-CN	cardinal	我今年18岁。	我今年十八岁。	Wiktionary 歲 (Simplified 岁): 我 十八 歲, I am 18 years old	unchecked
+zh-011	zh-CN	cardinal	会议在3月4日举行。	会议在三月四日举行。	Wiktionary 日: 三.月 四 日, March 4, day of the month; Wiktionary 月: month	unchecked
+zh-012	zh-CN	cardinal	我今天6点去看他。	我今天六点去看他。	Wiktionary 點 (Simplified 点): 我 今天 6 點 去 看 他, I am going to see him today at six o'clock	unchecked
+zh-013	zh-CN	cardinal	现在2点。	现在两点。	Wiktionary 兩點: two o'clock; Wiktionary 點, usage notes: o'clock, following the numbered hour	unchecked
+zh-014	zh-CN	cardinal	火车3点30分开。	火车三点三十分开。	Wiktionary 點, usage notes: 十二點三十分; Wiktionary 分: minute (unit of time)	unchecked
+zh-015	zh-CN	cardinal	他学了5年3个月。	他学了五年三个月。	Wiktionary 年: classifier for years; Wiktionary 個: classifier; Wiktionary 月: counted with the measure word 個	unchecked
+zh-016	zh-CN	cardinal	我有 23 个苹果。	我有 二十三 个苹果。	CLDR 49 RBNF zh, spellout-cardinal-alternate2: 20: =%spellout-numbering=; the spaces of the text stay	unchecked
+zh-017	zh-CN	cardinal	一共1,000个。	一共一千个。	CLDR 49 zh number symbols: group mark ,; CLDR 49 RBNF zh, spellout-cardinal-alternate2: 1000: <<千, 1: 一	unchecked
+zh-018	zh-CN	cardinal	这是80年代的歌。	这是八十年代的歌。	Wiktionary 年代: a decade of a century; CLDR 49 RBNF zh, spellout-cardinal: 20: <<十[>>] in spellout-numbering, so 80 reads 八十	unchecked
+zh-019	zh-CN	cardinal	他上8年级。	他上八年级。	Wiktionary 年級 (Simplified 年级): grade, year; 8 reads 八 in spellout-cardinal and in spellout-cardinal-alternate2	unchecked
+zh-020	zh-CN	cardinal	今天是10号。	今天是十号。	Wiktionary 號 (Simplified 号): day of the month, number; CLDR 49 RBNF zh, spellout-numbering: 10: 十[>>]	unchecked
+zh-021	zh-CN	ordinal	他是第3名。	他是第三名。	Wiktionary 第: Ordinal number marker, used before a number to make the number ordinal; CLDR 49 RBNF zh, spellout-ordinal: 0: 第=%spellout-numbering=	unchecked
+zh-022	zh-CN	ordinal	这是第2次。	这是第二次。	Wiktionary 兩, usage notes: Examples with 二, 第二, second	unchecked
+zh-023	zh-TW	ordinal	請讀第3章。	請讀第三章。	Wiktionary 第: Ordinal number marker; 3 reads 三 in CLDR 49 RBNF zh and zh_Hant	unchecked
+zh-024	zh-CN	year	我2023年毕业。	我二〇二三年毕业。	CLDR 49 RBNF zh, spellout-numbering-year: 1000: =%%spellout-numbering-year-digits=, digits 10: <<>>>, 100: <<>>>, 1000: <<>>>; spellout-numbering 0: 〇; Wiktionary 〇: Used to express a zero digit in a number	unchecked
+zh-025	zh-CN	year	他生于1999年。	他生于一九九九年。	CLDR 49 RBNF zh, spellout-numbering-year: 1000: =%%spellout-numbering-year-digits=, each digit through spellout-numbering	unchecked
+zh-026	zh-CN	year	汉朝建于公元前202年。	汉朝建于公元前二百〇二年。	Wiktionary 公元: anno Domini (AD); CLDR 49 RBNF zh, spellout-numbering-year: 0: =%spellout-numbering=; spellout-numbering 100: <<百[>%%number2>], %%number2 1: 〇=%spellout-numbering=, 2: 二	unchecked
+zh-027	zh-CN	year	他2000年5月出生。	他二〇〇〇年五月出生。	CLDR 49 RBNF zh, spellout-numbering-year: 1000: =%%spellout-numbering-year-digits=; spellout-numbering 0: 〇; Wiktionary 月: month	unchecked
+zh-028	zh-CN	year	这是1990年代的音乐。	这是一九九〇年代的音乐。	Wiktionary 年代: a decade of a century; CLDR 49 RBNF zh, spellout-numbering-year: 1000: =%%spellout-numbering-year-digits=	unchecked
+zh-029	zh-CN	year	我们2023年5月1日见。	我们二〇二三年五月一日见。	CLDR 49 zh gregorian dateFormats long: y年M月d日; CLDR 49 RBNF zh, spellout-numbering-year and spellout-numbering 0: 〇; Wiktionary 日: day of the month	unchecked
+zh-030	zh-TW	year	我2023年畢業。	我二〇二三年畢業。	CLDR 49 RBNF zh_Hant, spellout-numbering-year: 2001: =%%spellout-numbering-year-digits=; spellout-numbering 0: 〇	unchecked
+zh-031	zh-TW	year	他2000年5月出生。	他二千年五月出生。	CLDR 49 RBNF zh_Hant, spellout-numbering-year: 2000: =%spellout-numbering=; spellout-numbering 1000: <%spellout-cardinal<千, 2: 二	unchecked
+zh-032	zh-TW	year	這是民國38年的事。	這是民國三十八年的事。	Wiktionary 民國: the Republic of China era; CLDR 49 RBNF zh_Hant, spellout-numbering-year: 0: =%spellout-numbering=	unchecked
+zh-033	zh-CN	date	日期是2023-05-01。	日期是二〇二三年五月一日。	CLDR 49 zh gregorian dateFormats long: y年M月d日; CLDR 49 RBNF zh, spellout-numbering-year and spellout-numbering 0: 〇	unchecked
+zh-034	zh-TW	date	日期是2023-05-01。	日期是二〇二三年五月一日。	CLDR 49 zh_Hant gregorian dateFormats long: y年M月d日; CLDR 49 RBNF zh_Hant, spellout-numbering-year: 2001: =%%spellout-numbering-year-digits=	unchecked
+zh-035	zh-CN	decimal	圆周率约是3.14。	圆周率约是三点一四。	CLDR 49 RBNF zh, spellout-cardinal: x.x: <<点>>>; Wiktionary 點: 三 點 二 四, three point two four	unchecked
+zh-036	zh-CN	decimal	他重3.5公斤。	他重三点五公斤。	CLDR 49 RBNF zh, spellout-cardinal: x.x: <<点>>>; Wiktionary 公斤: classifier for kilograms	unchecked
+zh-037	zh-CN	decimal	概率是0.5。	概率是零点五。	CLDR 49 RBNF zh, spellout-cardinal: 0: 零, x.x: <<点>>>	unchecked
+zh-038	zh-Hant-TW	decimal	圓周率約是3.14。	圓周率約是三點一四。	CLDR 49 RBNF zh_Hant, spellout-cardinal: x.x: <<點>>>; Wiktionary 點: 三 點 二 四	unchecked
+zh-039	zh-Hant-TW	cardinal	我有2個蘋果。	我有兩個蘋果。	Wiktionary 兩, usage notes: 兩 個 人, But not *二個人; CLDR 49 RBNF zh_Hant, spellout-cardinal-alternate2: 2: 兩	unchecked
+zh-040	zh-Hant-TW	cardinal	他贏了2萬元。	他贏了兩萬元。	Wiktionary 萬: 兩 萬 元, twenty thousand dollars; CLDR 49 RBNF zh_Hant, spellout-cardinal-alternate2: 10000: <<萬, 2: 兩	unchecked
+zh-041	zh-Hant-TW	cardinal	氣溫是-5度。	氣溫是負五度。	CLDR 49 RBNF zh_Hant, spellout-cardinal: -x: 負>>	unchecked
+zh-042	zh-CN	percent	价格上涨了50%。	价格上涨了百分之五十。	Wiktionary 百分之: percentages are written in the format 百分之 [number of hundredths], 百分.之 八, eight percent	unchecked
+zh-043	zh-CN	percent	收入增长了10.5%。	收入增长了百分之十点五。	Wiktionary 百分之: 百分之 [number of hundredths]; CLDR 49 RBNF zh, spellout-cardinal: x.x: <<点>>>	unchecked
+zh-044	zh-TW	percent	價格上漲了50%。	價格上漲了百分之五十。	Wiktionary 百分之: percentages are written in the format 百分之 [number of hundredths]	unchecked
+zh-045	zh-CN	fraction	只有1/3的人来了。	只有三分之一的人来了。	Wiktionary 分之: fractions are written in the format denominator 分之 numerator, 三 分.之 一, a third	unchecked
+zh-046	zh-CN	fraction	2/3的学生同意。	三分之二的学生同意。	Wiktionary 分之: 三 分.之 二, two thirds	unchecked
+zh-047	zh-TW	fraction	只有1/4的人來了。	只有四分之一的人來了。	Wiktionary 分之: 四 分.之 一, a quarter	unchecked
+zh-048	zh-CN	money	这本书¥100。	这本书一百元。	CLDR 49 zh currencies: CNY symbol ¥; Wiktionary 元: classifier for yuan or dollars	unchecked
+zh-049	zh-CN	money	一杯茶¥2。	一杯茶两元。	CLDR 49 zh currencies: CNY symbol ¥; Wiktionary 萬: 兩 萬 元; Wiktionary 兩, usage notes: 兩 is used when counting things with a measure word	unchecked
+zh-050	zh-CN	money	价格：US$5。	价格：五美元。	CLDR 49 zh currencies: USD symbol US$, displayName 美元	unchecked
+zh-051	zh-TW	money	門票$300。	門票三百元。	CLDR 49 zh_Hant currencies: TWD symbol $; Wiktionary 元: classifier for yuan or dollars	unchecked
+zh-052	zh-TW	money	這個¥100。	這個一百日圓。	CLDR 49 zh_Hant currencies: JPY symbol ¥, displayName 日圓	unchecked
+zh-053	zh-CN	measure	这袋米5kg。	这袋米五千克。	CLDR 49 zh units, mass-kilogram long: {0}千克	unchecked
+zh-054	zh-CN	measure	这袋米2kg。	这袋米两千克。	CLDR 49 zh units, mass-kilogram long: {0}千克; Wiktionary 千克: classifier for kilograms; Wiktionary 兩, usage notes	unchecked
+zh-055	zh-CN	measure	今天气温25°C。	今天气温二十五摄氏度。	CLDR 49 zh units, temperature-celsius long: {0}摄氏度	unchecked
+zh-056	zh-TW	measure	今天氣溫25°C。	今天氣溫攝氏 二十五 度。	CLDR 49 zh_Hant units, temperature-celsius long: 攝氏 {0} 度	unchecked
+zh-057	zh-CN	none	屏幕比例是16:9。	屏幕比例是16:9。	a colon between two numbers may write a ratio or a time, and ovos-date-parser 0.41.0a1 has no zh module, so it stays as written, design section 10	unchecked
+zh-058	zh-CN	none	请读约翰福音3:16。	请读约翰福音3:16。	a colon between two numbers may write a verse or a time, and ovos-date-parser 0.41.0a1 has no zh module, so it stays as written, design section 10	unchecked
+zh-059	zh-CN	none	标签#decade。	标签#decade。	a hashtag is no number, design section 4.2	unchecked
+zh-060	zh-CN	none	日期13/13/2024。	日期13/13/2024。	CLDR 49 zh gregorian dateFormats short: y/M/d; month 13 does not exist, so the text stays as written, design section 10	unchecked
+zh-061	zh-CN	none	会议12:30开始。	会议12:30开始。	a time has no source for its reading in this file: ovos-date-parser 0.41.0a1 has no zh module, design section 10	unchecked
+zh-062	zh-CN	none	我们2人一起去。	我们2人一起去。	2 reads 二 in CLDR 49 RBNF zh spellout-cardinal and 两 in spellout-cardinal-alternate2, and Wiktionary 人 gives no classifier sense, so the reading is not clear, design section 10	unchecked
+zh-063	zh-CN	none	这座城有2000年的历史。	这座城有2000年的历史。	Wiktionary 年: classifier for years; a round hundred before 年 may be a year or a count of years, so it stays as written, design section 10	unchecked
+zh-064	zh-CN	none	公司市值¥3亿。	公司市值¥3亿。	a numeral after an amount belongs to the number, and the file has no source for the order of the currency word, design section 10	unchecked
+zh-065	zh-CN	none	他用5G网络。	他用5G网络。	a Latin letter next to a number keeps it as written, design section 4.2	unchecked
+zh-066	zh-TW	none	這袋米5kg。	這袋米5kg。	CLDR 49 zh_Hant units, mass-kilogram: symbol 公斤, so kg is no unit of zh-TW, and a Latin letter next to a number keeps it as written	unchecked
+zh-067	zh-TW	none	我們2人一起去。	我們2人一起去。	2 reads 二 in CLDR 49 RBNF zh_Hant spellout-cardinal and 兩 in spellout-cardinal-alternate2, and Wiktionary 人 gives no classifier sense, design section 10	unchecked
+zh-068	zh-TW	cardinal	我有23個蘋果。	我有二十三個蘋果。	Wiktionary 個: classifier for people or for things lacking specific classifiers; CLDR 49 RBNF zh_Hant, spellout-cardinal-alternate2: 20: =%spellout-numbering=	unchecked
+zh-069	zh-TW	cardinal	他在這裡住了3年。	他在這裡住了三年。	Wiktionary 年: classifier for years; 3 reads 三 in CLDR 49 RBNF zh and zh_Hant	unchecked
+zh-070	zh-CN	none	日期是01/02/2000。	日期是01/02/2000。	CLDR 49 zh gregorian dateFormats: long y年M月d日, short y/M/d, both with the year first; a date with the year last may be day-month or month-day, so it stays as written, design section 10	unchecked
+zh-071	zh-CN	none	它兼容802.11g。	它兼容802.11g。	a Latin letter next to a number keeps it as written: g ends the name of the standard 802.11g, design section 4.2	unchecked
+zh-072	zh-CN	cardinal	我们2月见。	我们二月见。	Wiktionary 二月: February; Wiktionary 兩, usage notes: 二 is used in numbers; Wiktionary 月: month, counted with the measure word 個	unchecked
