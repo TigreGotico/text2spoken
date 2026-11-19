@@ -179,6 +179,10 @@ def _in_clause(span: Span, other: bytearray) -> bool:
 
 SAY_AS_SPANS = "say_as_spans"
 """The `Request.memo` key of the offsets of the spans that the recognizers of the say-as claim."""
+PHONE_WAITS = "phone_waits"
+"""With the text, the `Request.memo` key that maps the start of a `TELEPHONE` span to the offset of a character that
+another span must read before the span claims, and whether no other span may read a character of the span
+(`Telephone`)."""
 
 
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
@@ -195,9 +199,11 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
     before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
-    reads the number after it, finds no key there and reads the `5` before it. A `TELEPHONE` span with a `joiner`
-    waits on that mark in place of the character before it, and holds no character while it waits, so the digits read
-    as they do with no phone span (`Telephone`).
+    reads the number after it, finds no key there and reads the `5` before it. A `TELEPHONE` span that
+    `PHONE_WAITS` names claims only in a second run of the loop. The first run leaves the span out, and must read the
+    character that `PHONE_WAITS` names with a span that ends before the span, and, when `PHONE_WAITS` says so, read
+    no character of the span. A span kept as written never claims this way. So the digits read as they do with no
+    phone span until a second pass sees words there (`Telephone`).
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
@@ -263,58 +269,71 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         first = fitting
     say_as_count = len(first)
     candidates = [*first, *found(recognizers, others)]
+    waits = request.memo.get((PHONE_WAITS, view), {}), others.memo.get((PHONE_WAITS, view), {})
+    phones = {index: waits[index >= say_as_count][span.start] for index, span in enumerate(candidates)
+              if span.form is Form.TELEPHONE and span.start in waits[index >= say_as_count]}
     before = {end: start for start, end in sequences}
     after = dict(sequences)
-    read = bytearray(len(text))
-    other = bytearray(len(text))
-    holder: list[Span | None] = [None] * len(text)
-    neighbours: dict[int, list[int]] = {}
-    claimed: list[Span] = []
-    kept: list[Span] = []
-    said: set[tuple[int, int]] = set()
-    queue = list(range(len(candidates)))
-    released = False
-    while queue:
-        index = heapq.heappop(queue)
-        if index >= say_as_count and not released:
-            holder = [None] * len(text)
-            released = True
-        span = candidates[index]
-        if any(read[span.start:span.end]) or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
-            continue
-        sides = _sides(span, before, after)
-        headed = span.form is Form.TELEPHONE and "joiner" in span.fields
-        if span.form is Form.LEXICON:
-            last = span.end - 1
-            while last > span.start and is_mark(view[last]):
-                last -= 1
-            sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
-        elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
-                and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
-            sides = ()
-        elif headed:
-            sides = ((span.fields["joiner"], span.fields["joiner"] - 1), sides[1])
-        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
-            if span.form not in (Form.SYMBOL, Form.EMOJI) and not headed and not (released and index < say_as_count):
-                for position in range(span.start, span.end):
-                    holder[position] = span
-            for position in (position for side in sides for position in side):
-                neighbours.setdefault(position, []).append(index)
-            continue
-        if span.form is Form.LETTERS and span.fields["clause"] and not _in_clause(span, other):
-            span = replace(span, fields=FrozenMap({**span.fields, "reading": "lower"}), keep=False)
-        read[span.start:span.end] = b"\x01" * (span.end - span.start)
-        if span.keep:
-            kept.append(span)
-        else:
-            claimed.append(span)
-            if index < say_as_count:
-                said.add((span.start, span.end))
-            if span.form is not Form.LETTERS:
-                other[span.start:span.end] = b"\x01" * (span.end - span.start)
-        for position in range(span.start, span.end):
-            for waiting in neighbours.pop(position, ()):
-                heapq.heappush(queue, waiting)
+    skipped = frozenset(phones)
+    # A first run leaves out each phone span that waits on a number. A second run adds the ones whose number the
+    # first run reads, as they claim on a second pass, which sees words there.
+    for _ in range(2):
+        read = bytearray(len(text))
+        other = bytearray(len(text))
+        holder: list[Span | None] = [None] * len(text)
+        neighbours: dict[int, list[int]] = {}
+        claimed: list[Span] = []
+        kept: list[Span] = []
+        said: set[tuple[int, int]] = set()
+        queue = [index for index in range(len(candidates)) if index not in skipped]
+        released = False
+        while queue:
+            index = heapq.heappop(queue)
+            if index >= say_as_count and not released:
+                holder = [None] * len(text)
+                released = True
+            span = candidates[index]
+            if any(read[span.start:span.end]) \
+                    or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
+                continue
+            sides = _sides(span, before, after)
+            if span.form is Form.LEXICON:
+                last = span.end - 1
+                while last > span.start and is_mark(view[last]):
+                    last -= 1
+                sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
+            elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
+                    and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
+                sides = ()
+            if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
+                if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
+                    for position in range(span.start, span.end):
+                        holder[position] = span
+                for position in (position for side in sides for position in side):
+                    neighbours.setdefault(position, []).append(index)
+                continue
+            if span.form is Form.LETTERS and span.fields["clause"] and not _in_clause(span, other):
+                span = replace(span, fields=FrozenMap({**span.fields, "reading": "lower"}), keep=False)
+            read[span.start:span.end] = b"\x01" * (span.end - span.start)
+            if span.keep:
+                kept.append(span)
+            else:
+                claimed.append(span)
+                if index < say_as_count:
+                    said.add((span.start, span.end))
+                if span.form is not Form.LETTERS:
+                    other[span.start:span.end] = b"\x01" * (span.end - span.start)
+            for position in range(span.start, span.end):
+                for waiting in neighbours.pop(position, ()):
+                    heapq.heappush(queue, waiting)
+        ends = [0] * len(text)
+        for span in claimed:
+            ends[span.start:span.end] = [span.end] * (span.end - span.start)
+        if (skipped := frozenset(index for index, (offset, alone) in phones.items()
+                                 if candidates[index].keep or not 0 < ends[offset] <= candidates[index].start
+                                 or (alone and any(ends[candidates[index].start:candidates[index].end])))) \
+                == frozenset(phones):
+            break
     if say_as is not None:
         request.memo[SAY_AS_SPANS] = frozenset(said)
     waiting = {id(span): span for span in holder if span is not None and not any(read[span.start:span.end])}

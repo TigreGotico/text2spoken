@@ -24,8 +24,8 @@ from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
-from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
-                                    context_words)
+from text2spoken.core.spans import (PHONE_WAITS, Features, Recognizer, SpanContext, Span, Word, clause_breaks,
+                                    clause_window, context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
 from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces, reads_symbol
 from text2spoken.core.times import clock_fields
@@ -1014,16 +1014,22 @@ class Telephone:
     police on 999 now.`, and not the count in `The phone rang 101 times.`
 
     A last group of one or two digits after a space is the hour of a time, not a phone group, when a letter
-    continues the run, when a full stop and two digits complete it, or when a space and a day period of
-    `day_periods` follow it. So `Call 1-800-555-0199 8 a.m.` reads the number and the time: a second pass, which
-    sees the words of the time, finds the same run. A mark after the group keeps it in the run, as in
+    continues the run, when a full stop and two digits complete it in a language whose `clock_marks` hold a full
+    stop, or when a space and a day period of `day_periods` follow it. So `Call 1-800-555-0199 8 a.m.` reads the
+    number and the time: a second pass, which sees the words of the time, finds the same run. The rule applies
+    again to the group before, so `67.18 2e` loses both groups. A mark after the group keeps it in the run, as in
     `02 08/85 98-0`, because the group and the digits after the mark may be one number.
 
-    A run that gives no span tries again after its first space, when a mark joins its first group to the digits
-    before it or a full stop parts the group, as `5` in `3,5 0 180 030 068` and `1.6` in `1.6 0 800 757 652`. That
-    group may be a number of its own. The span of the shorter run has the field `joiner`, the offset of the mark, and
-    waits until another span reads the mark, as on a second pass, which sees words there. So `3,5 0 180 030 068`
-    reads `0 180 030 068`, and `1:1 000 000` stays as written.
+    A run that gives no span tries again after its first group when a mark joins that group to the digits before
+    it, as `5` in `3,5 0 180 030 068`, or a full stop or a hyphen parts the group, as `1.6` in `1.6 0 800 757 652`
+    and `1-2` in `1-2 0 800 123 456`. The group may be a number of its own. A run that the rule above cuts, or that
+    starts inside a span kept as written, also tries again after each of its later spaces, as `08 08` in
+    `45 08 08 2x.` The span of a shorter run claims only when a span reads the two characters before it, as on a
+    second pass, which sees words there. The span of a shorter run after a later space also claims only when no
+    other span reads a character of it. `Request.memo` holds these conditions under `PHONE_WAITS`, so the span
+    fields keep their schema. So `3,5 0 180 030 068` reads `0 180 030 068`, and `1:1 000 000` and
+    `405–01 03 02` stay as written: no span reads `1`, and a span keeps `405–01` as written. A phone number holds
+    at most 15 digits (ITU-T E.164), so a shorter run after a later space with more digits does not try.
 
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
     methods `trimmed`, `continued`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone`
@@ -1038,11 +1044,13 @@ class Telephone:
     plans: FrozenMap = PHONE_PLANS
 
     def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
-        """The run of digit groups that starts at `start`, less a last group that is the hour of a time."""
-        cut, after = max(written.rfind(space) for space in self.spaces), start + len(written)
-        if cut != -1 and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
-                "." in written[cut:] or self.continued(text, start, after) or self.hour_after(text, after, request)):
-            return written[:cut]
+        """The run of digit groups that starts at `start`, less the last groups that are the hour of a time."""
+        dotted = any(clock["mark"] == "." for clock in request.data.get("clock_marks", ()))
+        while (cut := max(written.rfind(space) for space in self.spaces)) != -1 \
+                and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
+                    (dotted and "." in written[cut:]) or self.continued(text, start, start + len(written))
+                    or self.hour_after(text, start + len(written), request)):
+            written = written[:cut]
         return written
 
     def continued(self, text: str, start: int, end: int) -> bool:
@@ -1099,18 +1107,31 @@ class Telephone:
         named_end = None
         folded = fold_digits(text)
         kept_end = 0
-        head_group = re.compile(f"[0-9]+(?:[.][0-9]+)?[{re.escape(self.spaces)}]")
-        runs = [(match.start(), match.group(), {}) for match in _phone_pattern(self.spaces).finditer(folded)][::-1]
+        head_group = re.compile(f"[0-9]+([.-][0-9]+)?[{re.escape(self.spaces)}]")
+        waits = request.memo.setdefault((PHONE_WAITS, text), {})
+        runs: list[tuple[int, str, tuple[int, bool] | None]] = [
+            (match.start(), match.group(), None) for match in _phone_pattern(self.spaces).finditer(folded)][::-1]
         while runs:
-            start, run, waits = runs.pop()
-            if start < kept_end:
-                continue
-            after_head = []
-            if not waits and (head := head_group.match(run)) and ("." in head.group() or (
-                    start > 1 and text[start - 1] in _JOINERS and is_digit(text[start - 2]))):
-                joiner = start + head.group().find(".") if "." in head.group() else start - 1
-                after_head = [(start + head.end(), run[head.end():], {"joiner": joiner})]
+            start, run, wait = runs.pop()
             written = self.trimmed(text, start, run, request)
+            retries = []
+            if wait is None:
+                head = head_group.match(run)
+                joined = head and (head[1] or (start > 1 and text[start - 1] in _JOINERS and is_digit(text[start - 2])))
+                if start < kept_end or written != run:
+                    count = 0
+                    # A phone number holds at most 15 digits (ITU-T E.164), so no longer run after a space reads.
+                    for space in range(len(run) - 1, head.end() - 1 if joined else -1, -1):
+                        count += run[space].isdigit()
+                        if count > 15:
+                            break
+                        if run[space] in self.spaces:
+                            retries.append((start + space + 1, run[space + 1:], (start + space - 1, True)))
+                if joined:
+                    retries.append((start + head.end(), run[head.end():], (start + head.end() - 2, False)))
+            if start < kept_end:
+                runs.extend(retry for retry in retries if retry[0] >= kept_end)
+                continue
             end = start + len(written)
             glued = not _edge(text, start, end) or (operand is not None and operand.match(folded, end) is not None)
             prefix = suffix = ""
@@ -1147,15 +1168,16 @@ class Telephone:
             unknown_code = written.startswith("+") and not country_code
             if glued:
                 if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
-                    runs.extend(after_head)
+                    runs.extend(retries)
                     continue
                 chained = _GLUED.match(folded, end).group()
                 if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
                     chained = re.sub("[ /:.,–-]?[0-9]+$", "", chained)
                 end = kept_end = named_end = end + len(chained)
             first, last = start - len(prefix), end + len(suffix)
-            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix,
-                                      **waits})
+            if wait is not None:
+                waits[first] = wait
+            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
             if glued or not one_digit_set(text[start:end]) or (keeps and (len(digits) > 15 or unknown_code)):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
                 continue
@@ -1174,11 +1196,11 @@ class Telephone:
             if reads:
                 yield Span(first, last, Form.TELEPHONE,
                            FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
-                                      "suffix": suffix, **waits}), recognizer=self.name)
+                                      "suffix": suffix}), recognizer=self.name)
             elif any(shape.fullmatch(written) for shape in kept_shapes):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
             else:
-                runs.extend(after_head)
+                runs.extend(retries)
 
 
 def speak_lexicon(span: Span, context: SpanContext) -> str:
