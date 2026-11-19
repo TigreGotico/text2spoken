@@ -111,6 +111,12 @@ def test_a_lect_in_the_formal_register_reads_the_literary_words():
     assert normalize("الطقس 13 جميل 250 جدا", "arz", params) == "الطقس ثلاثة عشر جميل مئتان وخمسون جدا"
 
 
+@pytest.mark.parametrize("tag", ["ar-FR", "ar-TR", "ar-145"])
+def test_a_region_with_no_cldr_locale_reads_as_ar_001(tag):
+    # Under the CLDR 49 distance, these tags are as close to ar-IQ as to ar-AE, and a tie goes to the first variety.
+    assert normalize("15/03/2024", tag) == normalize("15/03/2024", "ar-001") == "الخامس عشر من مارس ألفين وأربعة وعشرين"
+
+
 def test_a_lect_tag_with_its_region_reads_as_the_bare_lect():
     for code, region in LECT_REGIONS.items():
         assert normalize("الطقس 13 جميل 250 جدا 25/7/1930", f"{code}-{region}") == \
@@ -138,6 +144,44 @@ def test_random_arabic_text_never_raises_and_reads_the_same_on_a_second_pass(see
         text = "".join(rng.choice(ATOMS) + rng.choice(["", " "]) for _ in range(rng.randint(1, 25)))
         once = normalize(text, tag)
         assert normalize(once, tag) == once, (tag, text, once)
+
+
+SPEEDS_BEFORE_A_KEPT_NUMBER = [
+    "السرعة القصوى 250 كم/س 2 باب", "السرعة القصوى 250 كم/س، 2 باب", "السرعة القصوى 250 كم/س - 2 باب",
+    "تسير بسرعة 60 km/h 2 ساعة يوميا", "السرعة 120 km/h 2 سيارة", "السرعة 5 km/h 2 مرة", "السرعة 120 km/h 2 م",
+    "السرعة 120 km/h 2 ليلا", "السرعة 120 km/h 2 والسرعة الدنيا 60", "السرعة 120 km/h 2 و 3",
+    "السرعة 120 km/h 2 إلى 3", "السرعة 120 km/h 2، والوزن 5 kg", "المشي بسرعة 5 كم/س 2 إلى 3 مرات في الأسبوع",
+    "امش بسرعة 6 km/h 2 إلى 3 ساعات يوميا", "سرعة الرياح 40 كم/س 2 ليلا", "السرعة القصوى 250 كم/س، 2 والوزن 1500 كغم",
+    "السرعة 120 كم/س 2 ظهرا", "السرعة 120 كم/س 2 والنصف", "تسارع من 0 إلى 100 كم/س 2 إلى 3 ثوان أقل",
+    "السرعة 120 km/h 2 بعد الظهر", "السرعة 120 km/h ٢ ليلا", "السرعة 120 km/h 02 م", "السرعة 120 km/h 1 ليلا",
+    "السرعة القصوى مئتان وخمسون كيلومترا في الساعة، 2 باب", "سرعة الرياح أربعون كيلومترا في الساعة 2 ليلا",
+    "السرعة مئة وعشرون كيلومترا في الساعة 2 إلى 3"]
+
+
+def test_one_or_two_after_a_joined_fi_al_saaca_stays_as_written():
+    """في with the joined و still makes 1 and 2 before a counted word stay as written."""
+    assert normalize("وفي الساعة 2 م", "ar") == "وفي الساعة 2 م"
+
+
+@pytest.mark.parametrize("text", SPEEDS_BEFORE_A_KEPT_NUMBER)
+def test_a_number_kept_after_a_speed_stays_on_a_second_pass(text):
+    """Design section 11. A speed reads في الساعة after its unit. A number that the first pass keeps as written,
+    such as 2 before a word (Ryding 2005, p. 333), must not read as an hour on a second pass."""
+    once = normalize(text, "ar")
+    assert "الثانية" not in once
+    assert normalize(once, "ar") == once
+
+
+@pytest.mark.parametrize(("text", "spoken"), [
+    ("الساعة 13 11", "الساعة 13 أحد عشر"), ("في الساعة 0 3", "في الساعة 0 ثلاثة"),
+    ("الساعة 0 11 الصباح", "الساعة 0 أحد عشر الصباح"), ("وفي الساعة 13 2-3", "وفي الساعة 13 اثنان إلى ثلاثة"),
+    ("الساعة 13 و3", "الساعة 13 وثلاثة"), ("حتى الساعة 13 قتيلا", "حتى الساعة 13 قتيلا"),
+    ("الساعة 1 و30 دقيقة", "الساعة 1 وثلاثون دقيقة"), ("الساعة 2 و3 دقائق", "الساعة الثانية وثلاث دقائق")])
+def test_an_hour_with_no_clock_reading_stays_as_written_whatever_follows(text, spoken):
+    """Design section 11. 0, 1 and 13 have no clock reading here. A second pass reads the number after them as a
+    word, so they stay as written before a number and before a word alike."""
+    assert normalize(text, "ar") == spoken
+    assert normalize(spoken, "ar") == spoken
 
 
 def test_the_base_install_holds_the_speller_that_writes_the_construct_dual():

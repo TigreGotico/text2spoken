@@ -4,7 +4,7 @@ The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, money, measures, percentages, telephone numbers, abbreviations, Roman numerals, colours, symbols and lexicon entries. With the form on, it also reads runs of capital letters and emoji. It has no address form.
+The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, money, measures, percentages, telephone numbers, abbreviations, Roman numerals, colours, e-mail and web addresses, symbols and lexicon entries. With the form on, it also reads runs of capital letters and emoji.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -39,13 +39,46 @@ A number right after a noun that names one item of a series, such as `sala`, `p�
 | `O bilhete custa 12,5 €.` | `pt-PT` | O bilhete custa doze euros e cinquenta cêntimos. |
 | `Tome a vitamina D. Boa noite.` | `pt-PT` | stays as written |
 
+The comma is the decimal mark. The full stop is the decimal mark of the English convention (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A decimal with a full stop reads with a unit symbol, a percent sign or a currency, and before the name of a unit. A unit of duration is no evidence, because `1.30 h` may write one hour and thirty minutes. Elsewhere the decimal stays as written, because such digits are mostly a version, an engine size or a section number. Digits with a leading zero after `vírgula` read as the digits of a decimal part.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `A temperatura é de 10.4 graus.` | `pt-PT` | A temperatura é de dez vírgula quatro graus. |
+| `Corri 1.5 km.` | `pt-PT` | Corri um vírgula cinco quilómetros. |
+| `A versão 14.2 está pronta.` | `pt-PT` | stays as written |
+| `Durou 1.30 h.` | `pt-PT` | stays as written |
+| `A taxa é 0 vírgula 02.` | `pt-PT` | A taxa é zero vírgula zero dois. |
+
 The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
 
 | Written | Spoken (`pt-PT`, `lexicon=FrozenMap({"pt": FrozenMap({"às": "às"})})`) |
 | --- | --- |
 | `Chega às 0:00.` | Chega às zero horas. |
 
-[Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the emoji.
+A clock with a colon reads after a time word, such as `às`, `das` or the verb `são` (Priberam, "ser": "são 18h00"). A clock with no time word before it stays as written, because `16:10` may also be a ratio. `24:00` is the end of the day, and it reads as midnight.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `São 16:30.` | `pt-PT` | São dezasseis e trinta. |
+| `Já são 12:00!` | `pt-PT` | Já são doze horas! |
+| `Fecha às 24:00.` | `pt-PT` | Fecha à meia-noite. |
+
+A length unit with `2` or `3` right after it writes its exponent on the line, so `80 m2` reads as `80 m²`.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `A casa tem 80m2.` | `pt-PT` | A casa tem oitenta metros quadrados. |
+| `Tomar 500 mg por dia.` | `pt-PT` | Tomar quinhentos miligramas por dia. |
+
+In `pt-PT`, the space is the group mark (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A run of spaced groups is also a code, such as a tax number or a Multibanco reference, so a spaced number reads only when its last group is `000` or when it has a decimal part. Any other spaced run stays as written. In `pt-BR`, the group mark is the full stop.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Tem 100 000 habitantes.` | `pt-PT` | Tem cem mil habitantes. |
+| `Custa 1 250 000,50.` | `pt-PT` | Custa um milhão duzentos e cinquenta mil vírgula cinquenta. |
+| `O NIF é 509 876 543.` | `pt-PT` | stays as written |
+
+[Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
 ## Varieties
 
@@ -73,11 +106,11 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` and `tests/data/electronic/pt.tsv` name their source, and no native speaker has checked them. Of the 547 rows in `tests/data/pt.tsv`, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` name their source, and no native speaker has checked them. Of the 637 rows, 14 are marked silver.
 
 ## Roman numerals
 
-A Roman numeral reads after a century word, after a noun of a part, a class or a series, after a capitalised word, and after a title and its full stop. It reads as an ordinal up to ten and as a cardinal from eleven. Ciberdúvidas 9067 gives the pt-BR limit: "os numerais se pronunciarem em Portugal como ordinais até ao décimo, inclusive (no Brasil até ao nono)". The noun or the title before the numeral gives the gender. After a name, the gender comes from the title before it, then from a common noun that tugalex knows, then from the given-name list of tugalex, and a name that no list holds takes the masculine. After a capitalised word that is no noun of a series, the value is at most 30, and the word reads the numeral only when spaces alone part them. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as a cardinal, and a smaller one stays as written. After an article, as in `O XV de Portugal`, a numeral from 11 to 30 reads as a cardinal. A numeral of one letter, `I`, `V` or `X`, reads only after a noun of the `roman_letter_nouns` table: the parts of a work, such as `capítulo`, `livro`, `parte`, `cena`, `secção`, `canto`, `cláusula` and `artigo`. Ciberdúvidas 11716 applies the ordinal rule "a todas as partes em que se divide uma obra". A group, a class or a phase is labelled with letters too, so `Grupo I` stays as written. A numeral of the `roman_words` table, such as `XL`, `CL` or `MC`, is also a word or an initialism. It reads only after a noun of `roman_letter_nouns`, and only when no word in lowercase follows it, so after `classe` or `grupo` it stays as written. No numeral reads after a word of the `letter_words` table, such as the pronoun `EU`. In a clause in capitals, a numeral is a word only when `letter_words` holds it or tugalex knows it, as `VI` in `EU VI`. A list after a century word or a noun of a series reads with that noun: a comma and a space part its numerals, and `e` or `ou`, in any case, comes before the last one. Each numeral of the list passes the same checks as the first and holds a larger value than the numeral before it, and the list ends at the first numeral that fails. A numeral after a comma with no closing link word is no member, and it reads as a numeral after a comma reads. A letter that a full stop and a capitalised word follow is an initial, as `V.` in `V. Silva`. Without the `pt` extra, a Roman numeral stays as written, and one log warning names the extra.
+A Roman numeral reads after a century word, after a noun of a part, a class or a series, after a capitalised word, and after a title and its full stop. It reads as an ordinal up to ten and as a cardinal from eleven. In pt-BR, a numeral after `artigo` reads as an ordinal only up to nine. Celso Cunha, quoted in Migalhas, Gramatigalhas, "Numeral", gives the rule: "na numeração dos artigos de leis, decretos e portarias, usa-se o ordinal até nove, e o cardinal de dez em diante". The noun or the title before the numeral gives the gender. After a name, the gender comes from the title before it, then from a common noun that tugalex knows, then from the given-name list of tugalex, and a name that no list holds takes the masculine. After a capitalised word that is no noun of a series, the value is at most 30, and the word reads the numeral only when spaces alone part them. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as a cardinal, and a smaller one stays as written. After an article, as in `O XV de Portugal`, a numeral from 11 to 30 reads as a cardinal. A numeral of one letter, `I`, `V` or `X`, reads only after a noun of the `roman_letter_nouns` table: the parts of a work, such as `capítulo`, `livro`, `parte`, `cena`, `secção`, `canto`, `cláusula` and `artigo`. Ciberdúvidas 11716 applies the ordinal rule "a todas as partes em que se divide uma obra". A group, a class or a phase is labelled with letters too, so `Grupo I` stays as written. A numeral of the `roman_words` table, such as `XL`, `CL` or `MC`, is also a word or an initialism. It reads only after a noun of `roman_letter_nouns`, and only when no word in lowercase follows it, so after `classe` or `grupo` it stays as written. No numeral reads after a word of the `letter_words` table, such as the pronoun `EU`. In a clause in capitals, a numeral is a word only when `letter_words` holds it or tugalex knows it, as `VI` in `EU VI`. A list after a century word or a noun of a series reads with that noun: a comma and a space part its numerals, and `e` or `ou`, in any case, comes before the last one. Each numeral of the list passes the same checks as the first and holds a larger value than the numeral before it, and the list ends at the first numeral that fails. A numeral after a comma with no closing link word is no member, and it reads as a numeral after a comma reads. A letter that a full stop and a capitalised word follow is an initial, as `V.` in `V. Silva`. Without the `pt` extra, a Roman numeral stays as written, and one log warning names the extra.
 
 | Written | Tag | Spoken | Note |
 | --- | --- | --- | --- |
@@ -105,6 +138,28 @@ A Roman numeral reads after a century word, after a noun of a part, a class or a
 | `Vi o Godzilla II no cinema.` | `pt-PT` | Vi o Godzilla Segundo no cinema. | A name that no list holds takes the masculine. |
 | `EU LI O LIVRO` | `pt-PT` | stays as written | `LI` follows the pronoun `EU`, and `letter_words` holds it, the verb form of "ler". |
 
+## E-mail and web addresses
+
+An address reads piece by piece. Each symbol reads by the name that Priberam or Ciberdúvidas gives it, such as "arroba" for `@` and "ponto" for `.`. A label of three or more letters with a vowel reads as a word. Any other label reads each letter by its name in AO1990, Base I. So `com` reads as a word and `pt` reads letter by letter, as Ciberdúvidas 19059 advises. A digit reads by its digit word. Three names differ by variety:
+
+| Sign | `pt-PT` | `pt-BR` |
+| --- | --- | --- |
+| `_` | traço inferior | sublinha |
+| `#` | cardinal | cerquilha |
+| `w` | dâblio | dáblio |
+
+A full stop, a comma or another mark at the end of an address stays with the sentence. The docstring of [`_pt_electronic.py`](../../text2spoken/lang/_pt_electronic.py) quotes each source.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Escreva para joao.silva@exemplo.pt hoje.` | `pt-PT` | Escreva para joao ponto silva arroba exemplo ponto pê tê hoje. |
+| `Escreva a maria_santos@exemplo.pt.` | `pt-PT` | Escreva a maria traço inferior santos arroba exemplo ponto pê tê. |
+| `Escreva a maria_santos@exemplo.pt.` | `pt-BR` | Escreva a maria sublinha santos arroba exemplo ponto pê tê. |
+| `Acesse www.gov.br hoje.` | `pt-BR` | Acesse dáblio dáblio dáblio ponto gov ponto bê érre hoje. |
+| `O Sr. Silva escreveu a silva@exemplo.pt.` | `pt-PT` | O Senhor Silva escreveu a silva arroba exemplo ponto pê tê. |
+
+To keep an address as written, pass `NormalizationParams().without(Form.ELECTRONIC)`.
+
 ## Runs of capital letters
 
 A run that splits into Portuguese syllables stays as written, and any other run reads each letter by its name. In Portuguese, a consonant can also stand where a reader adds a vowel. A table in the language file holds the runs that the rule reads wrong: `EUA`, `APPO`, `OCDE`, `ANS` and `ONS` read letter by letter. A syllable can close with `ns`, as AO1990 Base XX divides "ins- crição" and "trans- gredir".
@@ -119,7 +174,7 @@ A run of three letters or more that tugalex knows reads as a word anywhere. A cl
 | `O IBGE.` | stays as written | Limit: no source in the language file names it, so the rule reads it as a word. |
 | `O DIV, o CIV e o LIV.` | O dê i vê, o cê i vê e o éle i vê. | Limit: a well-formed Roman numeral that the `ROMAN` form does not read is spelled. |
 | `A WEB.` | A dâblio é bê. | Limit: Portuguese has no onset or coda with `k`, `w` or `y`, which AO1990 keeps for foreign names. |
-| `geral@RTP.pt` | geral@érre tê pê.pt | Limit: Portuguese has no address form, so the form spells only the run in an address. |
+| `geral@RTP.pt` | geral arroba érre tê pê ponto pê tê | The address form reads the whole address. `RTP` has no vowel, so it reads letter by letter. |
 | `EU VI O FILME` | stays as written | A clause in capitals: `letter_words` holds `VI`, the verb form of "ver". |
 | `AR CONDICIONADO` | stays as written | A clause in capitals: tugalex knows "ar". |
 | `INSTITUTO DE ESTUDOS` | stays as written | The run splits into ins-ti-tu-to. |
@@ -163,8 +218,8 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 
 | Written | Spoken (`pt-PT`) | Why |
 | --- | --- | --- |
-| `Veja www.x.pt/5µm` | Veja www.x.pt/cinco micrómetros | Portuguese has no address form, so a unit inside a Portuguese address reads as a measure. |
-| `x@a©b.pt` | x@a direitos de autor b.pt | For the same reason, a symbol inside a Portuguese address reads by its name. |
+| `Veja www.x.pt/5µm` | Veja dâblio dâblio dâblio ponto xis ponto pê tê barra cinco µm | No unit reads inside an address. `µ` has no name in the address tables, so it stays as written. |
+| `x@a©b.pt` | xis arroba á direitos de autor bê ponto pê tê | A symbol of CLDR inside an address reads by its CLDR name. |
 
 The edge cases that Portuguese shares with English are on the [Money, units and symbols](../money-units-and-symbols.md#limits) and [Addresses, letters and emoji](../addresses-letters-and-emoji.md#edge-cases) pages.
 

@@ -54,9 +54,12 @@ A tag with no language file reads cardinal numbers, decimals and a minus from th
 | [Basque](docs/languages/eu.md) | `eu-ES` | `eu` |
 | [French](docs/languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`. Every other `fr-*` tag reads as `fr-FR` | `fr` |
 | [Italian](docs/languages/it.md) | `it-IT`, `it-CH`, `it-SM` | `it` |
+| [Japanese](docs/languages/ja.md) | `ja-JP` | none |
+| [Korean](docs/languages/ko.md) | `ko-KR` | none |
 | [Dutch](docs/languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` | `nl` |
 | [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` | `pt` |
 | [Russian](docs/languages/ru.md) | `ru-RU` | `ru` |
+| [Chinese](docs/languages/zh.md) | `zh-CN`, `zh-TW`, and `cmn` | none |
 
 ## Where this fits
 

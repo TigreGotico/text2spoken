@@ -14,30 +14,29 @@ def speak_date(span: Span, context: SpanContext) -> str:
     `primero` in America (DPD «primero», 3)."""
 ```
 
-A wrong reading is worse than none. If the file cannot read a form for sure, the form stays as written.
+A wrong reading is worse than none. If the file cannot read a form for sure, the form stays as written. A form is unsure when it has two readings that the context does not choose between. A form with one reading that a speaker reads with ease must read, and the file quotes a source for that reading. To leave such a form as written is a bug, and it gets an issue.
 
 Set up a checkout with the test extra, as [Development](development.md#set-up-and-run-the-tests) shows. The commands on this page run from the root of the checkout.
 
 ## Step 1: see what your language reads now
 
-A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`. A full stop with three digits after it can also be a decimal mark, as the CLDR root locale writes it, so `1.250` stays as written. So does the date:
+A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`, so `1.250` reads. The date stays as written:
 
 ```python
 >>> from text2spoken import normalize, supports
 >>> normalize("Saya punya 3 kucing dan 1.250 buku pada 12/03/2024.", "id")
-'Saya punya tiga kucing dan 1.250 buku pada 12/03/2024.'
+'Saya punya tiga kucing dan seribu dua ratus lima puluh buku pada 12/03/2024.'
 >>> sorted(form.name for form in supports("id").forms)
 ['CARDINAL', 'DECIMAL', 'LEXICON']
 ```
 
-The library also logs a WARNING for each written form that stays as written. In a Python session, these lines appear on stderr:
+The library also logs a WARNING for each written form that stays as written. In a Python session, this line appears on stderr:
 
 ```text stderr
-unread written form '1.250' for id-ID
 unread written form '12/03/2024.' for id-ID
 ```
 
-Each line names a form that a file for the language could read. [Errors and warnings](errors.md#when-a-reading-stays-as-written) explains the log.
+Each such line names a form that a file for the language could read. [Errors and warnings](errors.md#when-a-reading-stays-as-written) explains the log.
 
 ## Step 2: write the smallest file
 
@@ -80,7 +79,7 @@ Each part has one job:
 - `verbalizers` gives one verbalizer for each form that a recognizer claims, and `spellers` one speller for each form that speaks a number.
 - Indonesian has no grammatical gender, so `genders` is empty and `default_gender` is `None`. The file offers no option yet, so every option is in `not_applicable`.
 
-Run it. `1.250` now reads, because the file gives the group mark:
+Run it. The file reads the same numbers, with the group mark of its own table:
 
 ```python
 >>> normalize("Saya punya 3 kucing dan 1.250 buku pada 12/03/2024.", "id")
@@ -376,7 +375,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `lexicon` | `LEXICON` | none | none |
 | `cardinal` | `CARDINAL` | `leads`, `number_marks`, `sign_words`, `symbols` | `case_suffixes`, `proclitics` |
 | `decimal` | `DECIMAL` | `number_marks`, `symbols` | `case_suffixes`, `proclitics` |
-| `fraction` | `FRACTION` | `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `number_gaps`, `proclitics` |
+| `fraction` | `FRACTION` | `currencies`, `currency_symbols`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `number_gaps`, `proclitics` |
 | `idiom` | `IDIOM` | `idioms` | `case_suffixes`, `proclitics` |
 | `range` | `RANGE` | `number_marks`, `symbols` | `case_suffixes`, `proclitics`, `range_marks` |
 | `date_numeric` | `DATE` | `symbols` | `case_suffixes`, `proclitics` |
@@ -440,4 +439,4 @@ The shared verbalizers read these keys:
 | 12 | Importing the file reads no file, opens no network connection and changes no state outside the module. It imports only the core, its own private modules such as `_pt_electronic`, the standard library and the declared dependencies. It never imports another language file. An optional dependency is imported inside a function, behind the extra of the language. | The loader imports every language file, so one file that needs a missing package or the network would break every language. |
 
 ---
-[← Russian](languages/ru.md) · [Home](index.md) · [Development →](development.md)
+[← Chinese](languages/zh.md) · [Home](index.md) · [Development →](development.md)

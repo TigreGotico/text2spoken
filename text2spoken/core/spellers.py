@@ -125,9 +125,9 @@ class OvosNumberSpeller:
         return spoken
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """The ordinal of the number. Two more refusals of the writer decline: a `ValueError`, which several writers
-        raise for the ordinal of zero, as "Greek ordinals start at 1", and a reading that holds a digit, which some
-        writers return past a number of digits."""
+        """The ordinal of the number. Three more refusals of the writer decline: a `ValueError`, which several writers
+        raise for the ordinal of zero, as "Greek ordinals start at 1", a reading that holds a digit, which some
+        writers return past a number of digits, and the cardinal of the number, as Turkish "iki yüz" for 200."""
         number, kwargs = _integer(digits), self._kwargs(features, request)
         try:
             spoken = self._read("ordinal", f"{len(digits)} digits", request,
@@ -139,6 +139,9 @@ class OvosNumberSpeller:
                                   f"{error}") from error
         if any(char.isdigit() for char in spoken):
             raise DeclinedReading(f"ovos-number-parser gives digits for the ordinal of {len(digits)} digits in "
+                                  f"{request.tag}")
+        if spoken == self.cardinal(digits, features, request):
+            raise DeclinedReading(f"ovos-number-parser gives the cardinal for the ordinal of {len(digits)} digits in "
                                   f"{request.tag}")
         return spoken
 
@@ -192,6 +195,15 @@ leaves the set when text2spoken takes the floor of the parser release that fixes
 wrong too, the side with the narrower class wins: sl reads through the writer, which misreads 2000 to 2999, because
 RBNF misreads every number from 21 to 99."""
 
+RBNF_HELD_DECIMALS = frozenset({
+    "ast",  # "un punto cinco"; Wiktionary, puntu (Asturian): "dot; full stop, period"; no ast RBNF, kept as written
+    "az",  # "bir nöqtə beş"; Wiktionary, nöqtə: "period", "dot", "full stop"; az.xml x.x: ←← tam →→
+    "cs",  # "jedna tečka pět"; Wiktionary, tečka: "period, full stop"; cs.xml x.x: ←← čárka →→
+    "uk",  # "один крапка п'ять"; Wiktionary, крапка: "full stop, period"; uk.xml x.x: ←← кома →→
+})
+"""Writer languages whose writer says the decimal comma of CLDR 49 with the word for a full stop. Their decimals read
+through the RBNF `x.x` rule, or stay as written with no RBNF locale, until the parser writes the comma word."""
+
 
 def _rbnf_key(features: Features) -> Features:
     return Features(gender=features.gender, animacy=features.animacy, case=features.case,
@@ -207,6 +219,23 @@ def rbnf_engine(locale: str) -> RbnfEngine:
     if not engine.rulesets:
         raise LookupError(f"the RBNF locale {locale!r} has no rule sets")
     return engine
+
+
+@cache
+def rbnf_bound(locale: str, name: str) -> int | None:
+    """The first number whose magnitude a rule set has no rule for, or None. RBNF reads past the last rule through
+    that rule, and a quotient there reaches the radix: sr spellout-ordinal ends at 400 and reads 2000 двадесетстоти."""
+    from unicode_rbnf.engine import SubRulePart, SubType
+
+    rules = rbnf_engine(locale).rulesets[name].numeric_rules
+    value = max(rules)
+    last = rules[value]
+    if not any(isinstance(part, SubRulePart) and part.type == SubType.QUOTIENT for part in last.parts):
+        return None
+    divisor = 1
+    while divisor * last.radix <= value:
+        divisor *= last.radix
+    return divisor * last.radix
 
 
 _WORD_BREAK = re.compile("([ \u00a0\u200b]+)")
@@ -273,11 +302,17 @@ class RbnfSpeller:
         from unicode_rbnf.engine import NoRuleForNumberError
 
         locale = self.locale(request)
+        bound = rbnf_bound(locale, name)
+        if bound is not None and abs(number) >= bound:
+            raise DeclinedReading(f"{name} of {locale} has no rule for a number of {size}")
         try:
             result = rbnf_engine(locale).format_number(number, ruleset_names=[name])
-        except (NoRuleForNumberError, OverflowError) as error:
+        except (NoRuleForNumberError, ArithmeticError) as error:  # 2.5.1 raises decimal.InvalidOperation on a 30-digit ordinal
             raise DeclinedReading(f"no rule of {name} reads a number of {size}") from error
-        return words(corrected(result.text_by_ruleset[name], locale))
+        text = result.text_by_ruleset[name]
+        if any(char.isdigit() for char in text):  # unicode-rbnf 2.5.1 writes digits where no rule reads the number
+            raise DeclinedReading(f"no rule of {name} reads a number of {size}")
+        return words(corrected(text, locale))
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._format(digits, self.rule_set(self.cardinal_sets, features), request)

@@ -758,3 +758,41 @@ def test_a_signed_fraction_after_a_mark_reads_once_the_number_before_the_mark_re
 def test_a_signed_fraction_that_a_mark_joins_to_a_bare_number_stays_as_written(text, caplog):
     assert normalize(text, "en-GB") == text
     assert "unread written form" in caplog.text
+
+
+@pytest.mark.parametrize("text", ["50% 1 000, 1️⃣", "Een groei van 5 % 1 000 keer."])
+def test_groups_after_a_percentage_read_the_same_on_a_second_pass(text):
+    """Section 11. The percentage reads its sign, so the groups after it read on the first pass."""
+    once = normalize(text, "nl-BE")
+    assert normalize(once, "nl-BE") == once
+
+
+def test_groups_at_the_start_of_the_text_read_as_a_cardinal():
+    """Taaladvies.net, 10.000.000 / 10 000 000: the space groups the digits, so `12 000` reads "twaalfduizend"."""
+    assert normalize("12 000 mensen wonen hier.", "nl-NL") == "twaalfduizend mensen wonen hier."
+
+
+@pytest.mark.parametrize("lang", ["es-CR", "es-ES"])
+def test_a_phone_word_after_a_hyphen_keeps_its_run_on_a_second_pass(lang):
+    """Section 11. A hyphen joins the reading of the amount to `Tel` on a second pass, and `Tel` still names the run."""
+    once = normalize("Dr. 12,50 €-Tel.. 1.000,5-", lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize("lang", ["eu-x-nafarra-beherea", "eu-ES"])
+def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang):
+    """Section 11. `sei` is a word, not the unit `s` and the ending `ei`, so a second pass reads no measure."""
+    once = normalize("Appelez le 0033 6 12 34 56 78 ici.", lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
+    ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
+    ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),
+])
+def test_a_number_that_a_mark_joins_to_a_number_abbreviation_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A number abbreviation is a key only before a digit, and a second pass sees the reading of that
+    digit, so the abbreviation does not wait on the number before it."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once

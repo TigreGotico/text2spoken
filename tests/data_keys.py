@@ -185,7 +185,7 @@ READERS: dict[str, frozenset[str]] = {
     "cardinal": frozenset({"number_marks", "leads", "sign_words", "symbols", "proclitics", "case_suffixes"}),
     "decimal": frozenset({"number_marks", "symbols", "proclitics", "case_suffixes"}),
     "fraction": frozenset({"number_marks", "symbols", "units", "unit_symbols", "number_gaps", "proclitics",
-                            "case_suffixes"}),
+                            "case_suffixes", "currencies", "currency_symbols"}),
     "idiom": frozenset({"idioms", "proclitics", "case_suffixes"}),
     "range": frozenset({"number_marks", "range_marks", "symbols", "proclitics", "case_suffixes"}),
     "date_numeric": frozenset({"symbols", "proclitics", "case_suffixes"}),
@@ -235,6 +235,10 @@ reads, by its name in the core, and the keys of the unread check of `render` and
 `names_short_codes` field is set. `speak_electronic` also reads the keys of the `symbol`
 reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
 them to find a character that `SYMBOL` reads between a phone word and the digits."""
+
+THROUGH_SYMBOL = dict.fromkeys(("cardinal", "decimal", "fraction"), SYMBOL_KEYS - {"leads"})
+"""The keys that `reads_symbol` reads for these shared recognizers, in a file that uses `SYMBOL`, to find whether
+`SYMBOL` reads a currency sign next to a number. A file with no `SYMBOL` needs none of these keys for them."""
 
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""

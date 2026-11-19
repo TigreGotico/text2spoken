@@ -150,7 +150,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second", and the Dictionnaire, "unième"), the Office québécois de la langue française for the plural, the aspirated h and the imperative, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
-Of the 570 test rows in `tests/data/fr.tsv`, 167 quote a source that was fetched. 368 say that a rule comes from memory, and 6 more say that no source was fetched for a guard row. No native speaker has checked any row. The cited rows are the check for numbers. No other number engine checks them.
+Of the 573 test rows in `tests/data/fr.tsv`, 168 quote a source that was fetched. 369 say that a rule comes from memory, and 6 more say that no source was fetched for a guard row. No native speaker has checked any row. The cited rows are the check for numbers. No other number engine checks them.
 
 ## Limits
 
