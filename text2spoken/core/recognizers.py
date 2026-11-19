@@ -1028,12 +1028,13 @@ class Telephone:
     `45 08 08 2x.`, `032 088 30.22` in `032 088 30.22 184 2e` and `062` in `2 062 6 9.30`. A second pass sees a
     stretch as a run when the first pass reads the groups around it. So the span of a shorter run claims only when
     a span that ends before it reads the last digit of the group before it, as on a second pass, which sees words
-    there. The span of a stretch also claims only when a span reads the first digit of the group after the stretch,
-    and no other span reads a character of the span. `Request.memo` holds these conditions under `PHONE_WAITS`,
-    so the span fields keep their schema. So `3,5 0 180 030 068` reads `0 180 030 068`, `032 088 30.22 184 2e`
-    reads `032 088` digit by digit, and `1:1 000 000` and `405–01 03 02` stay as written: no span reads `1`, and a
-    span keeps `405–01` as written. A phone number holds at most 15 digits (ITU-T E.164), and the rule above may
-    drop the last group of a stretch, so a stretch with more digits before its last group does not try.
+    there. That digit stands before the bracket of an area code, as `0` in `(0) 001-186-13 8am`. The span of a
+    stretch also claims only when a span reads the first digit of the group after the stretch, and no other span
+    reads a character of the span. `Request.memo` holds these conditions under `PHONE_WAITS`, so the span fields
+    keep their schema. So `3,5 0 180 030 068` reads `0 180 030 068`, `032 088 30.22 184 2e` reads `032 088` digit
+    by digit, and `1:1 000 000` and `405–01 03 02` stay as written: no span reads `1`, and a span keeps `405–01` as
+    written. A phone number holds at most 15 digits (ITU-T E.164), and the rule above may drop the last group of a
+    stretch, so a stretch with more digits before its last group does not try.
 
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
     methods `trimmed`, `continued`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone`
@@ -1126,14 +1127,15 @@ class Telephone:
                     bounds = [-1, *(index for index, char in enumerate(run) if char in self.spaces), len(run)]
                     counts = list(accumulate((char.isdigit() for char in run), initial=0))
                     for i in range(len(bounds) - 2, 0 if joined else -1, -1):
+                        # The last digit of the group before; an area code in brackets ends in `)`, as `(0)`.
+                        left = start + bounds[i] - 1 - (run[bounds[i] - 1] == ")") if i else None
                         for j in range(i + 1, len(bounds) - (i == 0)):
                             # A phone number holds at most 15 digits (ITU-T E.164), and the cut may drop the last
                             # group, so no stretch with more digits before its last group reads.
                             if counts[bounds[j - 1] + 1] - counts[bounds[i] + 1] > 15:
                                 break
                             retries.append((start + bounds[i] + 1, run[bounds[i] + 1:bounds[j]],
-                                            (start + bounds[i] - 1 if i else None,
-                                             start + bounds[j] + 1 if j < len(bounds) - 1 else None, True)))
+                                            (left, start + bounds[j] + 1 if j < len(bounds) - 1 else None, True)))
                 if joined:
                     retries.append((start + head.end(), run[head.end():], (start + head.end() - 2, None, False)))
             if start < kept_end:

@@ -200,12 +200,12 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
     before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
-    reads the number after it, finds no key there and reads the `5` before it. A `TELEPHONE` span that
-    `PHONE_WAITS` names claims only in a second run of the loop, and only when the first run, which leaves the span
-    out, meets one of its conditions: it reads the character before with a span that ends before the span, reads the
-    character after, and, when the condition says so, reads no character of the span. A span kept as written never
-    claims this way. So the digits read as they do with no phone span until a second pass sees words there
-    (`Telephone`).
+    reads the number after it, finds no key there and reads the `5` before it. A `TELEPHONE` span that `PHONE_WAITS`
+    names claims only in a second run of the loop, and only when the first run, which leaves the span out, meets one
+    of its conditions: a span that ends before the span reads the digit that the condition names before it, a span
+    reads the digit that it names after it, and, when the condition says so, no span reads a character of the span.
+    A span kept as written never claims this way. So the digits read as they do with no phone span until a second
+    pass sees words there (`Telephone`).
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
