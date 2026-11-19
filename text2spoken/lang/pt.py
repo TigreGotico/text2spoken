@@ -76,12 +76,19 @@ feminino"; sense 16, the employee: "Empregado que tem a caixa a seu cargo", "nom
 caixas.` reads "Comprei duas caixas.", and `os 2 caixas` still reads "os dois caixas".
 
 Unit words and the gender of each unit come from CLDR 49 (`cldr-units-full`, the `long` patterns of pt-PT and pt):
-`5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because
-CLDR gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`,
-reads with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`,
-`g`, `km`, `m`, `cm`, `mm`, `l` and `ml`, and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h
-e a abreviatura de minuto é min"). `unjoined_symbols` holds `ML`, the CLDR symbol of the megalitre, because CLDR
-also names `mL` the millilitre, so `ML` in capitals may be either unit, and `2ML` stays as written.
+`5 µm` reads `cinco micrómetros` in pt-PT and `cinco micrômetros` in pt-BR, and `2 h` reads `duas horas`, because CLDR
+gives `duration-hour` the feminine gender. A symbol that cannot be a plain word, such as `km/h`, `°C` or `µm`, reads
+with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`, `g`, `mg`,
+`km`, `m`, `cm`, `mm`, `l`, `ml`, `cl` and `dl` of CLDR 49 pt-PT (`mass-milligram` `mg`, `volume-centiliter` `cl`,
+`volume-deciliter` `dl`), and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h e a abreviatura
+de minuto é min"). The litre symbol `L` (Priberam, "litro": "Unidade de medida de capacidade (símbolo: l ou L)"), `cL`
+and `dL` stay as written, because each symbol of `unit_symbols` is a CLDR 49 symbol, and CLDR 49 writes `l`, `cl` and
+`dl`. `mL` stays as written, because CLDR also names `ML` the megalitre, and the case of the prefix alone tells the two
+apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it writes the exponent on the line, as
+a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros quadrados" (Priberam, "metro": "metro
+quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo: m²)"). `unjoined_symbols` holds `ML`,
+the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so `ML` in capitals may be either unit,
+and `2ML` stays as written.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of pt-PT and pt), and
 a symbol with a currency sign reads with no list: `20 CHF` reads "vinte francos suíços" and `₹50` "cinquenta rupias
@@ -367,6 +374,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affix
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
 from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
+from text2spoken.core.recognizers import Measure as CoreMeasure
 from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, signed,
                                           speak_decimal, speak_expression, speak_fraction, speak_lexicon,
@@ -436,7 +444,8 @@ DATA = freeze({
     "label_verbs": ["mostra", "apresenta", "indica", "mostram", "apresentam", "indicam"],
     "mixed_word": "e",
     "mixed_half": {"feminine": "meia", "other": "meio"},
-    "unit_symbols": ["kg", "g", "km", "m", "cm", "mm", "l", "ml", "h", "min", "s"],
+    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "l", "ml", "cl", "dl", "h", "min", "s"],
+    "line_power_symbols": ["km", "m", "cm", "mm"],
     "unjoined_symbols": ["ML"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
                     "contacto", "contato", "celular"],
@@ -1167,6 +1176,27 @@ class SpacedMoney(Money):
         return found
 
 
+_SUPERSCRIPTS = {"2": "²", "3": "³"}
+
+
+@dataclass(frozen=True)
+class Measure(CoreMeasure):
+    """The measures of the core, and a unit of `line_power_symbols` with its exponent on the line right after the
+    number, as `80 m2` and `5cm3`, which read as `80 m²` and `5cm³`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        lined = _line_powers(request.data["line_power_symbols"]).sub(
+            lambda match: match.group() if text[match.end():match.end() + 1].isalnum()
+            else match.group(1) + _SUPERSCRIPTS[match.group(2)], text)
+        return super().find(lined, tokens, request)
+
+
+@cache
+def _line_powers(symbols: tuple[str, ...]) -> re.Pattern[str]:
+    alternatives = "|".join(map(re.escape, sorted(symbols, key=len, reverse=True)))
+    return re.compile(f"([0-9](?: |\u00a0)?(?:{alternatives}))([23])")
+
+
 @dataclass(frozen=True)
 class Ordinal:
     """`1.º`, `2.ª`, `3º`: a whole number and the ordinal indicator, with or without the full stop."""
@@ -1494,7 +1524,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["color"], DateNamed(), SHARED["date_numeric"], Clock(),
-                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
+                 SpacedMoney(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], Measure(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), SHARED["decimal"],
                  SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
