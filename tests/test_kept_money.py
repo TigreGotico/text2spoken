@@ -57,6 +57,26 @@ def test_a_minus_next_to_the_sign_stays_with_the_kept_amount(text):
     assert normalize(text, "de-DE") == text
 
 
+# A currency sign after a letter is no amount, so the number next to the sign stays as written with it: a sign glued
+# to a number word is no reading (design section 10). A sign before a minus is no amount either, except in nl, whose
+# amount reads the minus after the sign ("min vijf euro").
+GLUED_TAGS = ("pt-PT", "pt-BR", "es-ES", "de-DE", "fr-FR", "eu-ES", "ru-RU", "ar-001", "it-IT", "nl-NL", "en-GB",
+              "sv-SE", "hi-IN")
+GLUED_AMOUNTS = [(tag, text) for tag in GLUED_TAGS for text in ("a¥5", "Laura£5", "x a€7 y")] + [
+    (tag, text) for tag in GLUED_TAGS if tag != "nl-NL" for text in ("¥-5", "€−5")]
+
+
+@pytest.mark.parametrize(("tag", "text"), GLUED_AMOUNTS)
+def test_a_number_that_a_currency_sign_touches_reads_only_as_an_amount(tag, text):
+    assert normalize(text, tag) == text
+
+
+@pytest.mark.parametrize(("tag", "text"), [("pt-PT", "a¥5,5"), ("es-ES", "a¥5,5"), ("en-GB", "a¥5.5"),
+                                           ("hi-IN", "a¥5.5"), ("pt-PT", "5,5¥b")])
+def test_a_decimal_that_a_currency_sign_touches_reads_only_as_an_amount(tag, text):
+    assert normalize(text, tag) == text
+
+
 @pytest.mark.parametrize(("tag", "expected"), [("en-GB", "bitcoin one"), ("pt-PT", "bitcoin um")])
 def test_a_sign_that_the_symbol_form_names_still_reads(tag, expected):
     # CLDR 49 annotations: ₿ is "bitcoin" in en and pt; the number reads as a cardinal after it.

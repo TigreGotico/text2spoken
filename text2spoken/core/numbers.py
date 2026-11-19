@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 
 from text2spoken.core.tokens import digit_script, fold_digits, is_digit, is_word_char, one_digit_set
@@ -72,7 +72,10 @@ def _separators(cluster: str, decimal: str | None, group: str | None) -> tuple[s
     return (None, group) if len(tail) == 3 and tail.isdigit() else (mark, group)
 
 
-def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, str | None] | None:
+def _parse(cluster: str, decimal: str | None, group: str | None,
+           secondary: int | None = None) -> tuple[str, str | None] | None:
+    """The integer and fraction digits of a cluster. Groups have three digits, or, with a secondary grouping size,
+    three digits last and groups of that size before them, as `12,34,567` (UTS #35, Part 3, "Number Patterns")."""
     separators = _separators(cluster, decimal, group)
     if separators is None:
         return None
@@ -82,7 +85,9 @@ def _parse(cluster: str, decimal: str | None, group: str | None) -> tuple[str, s
         return None
     if group and any(m in integer for m in group):
         head, *rest = integer.translate({ord(m): group[0] for m in group}).split(group[0])
-        if not (1 <= len(head) <= 3 and head.isdigit() and all(len(g) == 3 and g.isdigit() for g in rest)):
+        sizes = [len(g) for g in rest]
+        if head.startswith("0") or not ((1 <= len(head) <= 3 and set(sizes) == {3}) or (
+                secondary and 1 <= len(head) <= secondary and sizes[-1] == 3 and set(sizes[:-1]) <= {secondary})):
             return None
         integer = head + "".join(rest)
     if integer and not integer.isdigit():
@@ -158,12 +163,15 @@ def group_spaces(text: str, marks: Marks, declared: frozenset[str] = frozenset()
     return tuple(offset for _, _, grouping in _clusters(text, marks, declared) for offset in grouping)
 
 
-def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()) -> tuple[Number, ...]:
+def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset(),
+                 grouping: Mapping[str, int] = FrozenMap()) -> tuple[Number, ...]:
     """Every written number in the text that parses whole by `marks`.
 
     A cluster (`_clusters`) that does not parse whole by `marks`, such as `16:9`, `1.2.3` or `1,23` in a
     language whose group mark is the comma, gives no number. So in a variety that declares a second set of marks,
     such as de-CH, `,5` gives no number when the comma is not a mark of `marks`, as `0,5` gives none.
+
+    `grouping` gives the secondary grouping size of each script that has one, as 2 for `Latn` in `hi`.
     """
     folded = fold_digits(text)
     by_script = {script: (decimal, group) for script, decimal, group in marks}
@@ -174,7 +182,7 @@ def find_numbers(text: str, marks: Marks, declared: frozenset[str] = frozenset()
             continue
         decimal, group = by_script.get(script, (None, None))
         cluster = folded[start:end]
-        parsed = _parse(cluster, decimal, group)
+        parsed = _parse(cluster, decimal, group, grouping.get(script))
         if parsed is None:
             continue
         sign = ""

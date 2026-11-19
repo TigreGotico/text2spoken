@@ -789,6 +789,13 @@ def test_groups_at_the_start_of_the_text_read_as_a_cardinal():
     assert normalize("12 000 mensen wonen hier.", "nl-NL") == "twaalfduizend mensen wonen hier."
 
 
+@pytest.mark.parametrize("lang", ["es-CR", "es-ES"])
+def test_a_phone_word_after_a_hyphen_keeps_its_run_on_a_second_pass(lang):
+    """Section 11. A hyphen joins the reading of the amount to `Tel` on a second pass, and `Tel` still names the run."""
+    once = normalize("Dr. 12,50 €-Tel.. 1.000,5-", lang)
+    assert normalize(once, lang) == once
+
+
 @pytest.mark.parametrize("lang", ["eu-x-nafarra-beherea", "eu-ES"])
 def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang):
     """Section 11. `sei` is a word, not the unit `s` and the ending `ei`, so a second pass reads no measure."""
