@@ -2,8 +2,10 @@
 import logging
 import random
 import re
+import sys
 import time
 from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 
@@ -12,11 +14,13 @@ from text2spoken import (Animacy, Features, FrozenMap, InvalidLexiconError, Norm
                          ParameterNotHonouredWarning, Token, TokenizerError, UndefinedGrammaticalGender,
                          UnreadFormError, analyze, effective_params, normalize, render, supports)
 from text2spoken.core import language as loader
+from text2spoken.core import recognizers
 from text2spoken.core.language import cldr_locale
 from text2spoken.core.numbers import find_numbers
-from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_matches
+from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, SPACE_GROUPS, digit_run_matches
 from text2spoken.core.spans import Span, _group_spaces, _inside, _joined, _sides, check_features, splits_token
 from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words, protect_blocks
+from text2spoken.lang import nl
 from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form, freeze, thaw
 
@@ -436,13 +440,58 @@ def test_a_long_address_shape_takes_linear_time_in_the_address_recognizer(shape)
     assert large < 20 * small, (small, large)
 
 
+class CountedPattern:
+    """A pattern that counts the starts at which it tries a match. `finditer` tries each start in turn, as the
+    engine of `re` does."""
+    starts = 0
+
+    def __init__(self, pattern):
+        self.compiled = pattern.compiled if isinstance(pattern, CountedPattern) else re.compile(pattern)
+
+    def match(self, string, pos=0):
+        CountedPattern.starts += 1
+        return self.compiled.match(string, pos)
+
+    def finditer(self, string):
+        pos = 0
+        while pos <= len(string):
+            match = self.match(string, pos)
+            if match:
+                yield match
+            pos = max(match.end(), pos + 1) if match else pos + 1
+
+
+@pytest.mark.parametrize(("tag", "name"), [("pt-PT", "ordinal"), ("ru-RU", "hyphen_ordinal"),
+                                           ("ru-RU", "other_decimal_mark"), ("ru-RU", "expression_guard"),
+                                           ("eu", "law_number"), ("nl-NL", "kept_groups"), ("nl-NL", "money")])
+def test_a_long_digit_run_is_tried_at_a_few_starts(monkeypatch, tag, name):
+    """A try at a start inside a digit run can read to the end of the run. So the starts that a recognizer tries in
+    one run must not grow with the run, or a long run takes quadratic time."""
+    request = analyze("1", tag).request
+    recognizer = next(r for r in request.language.recognizers if r.name == name)
+    counted_re = SimpleNamespace(**{**vars(re), "compile": CountedPattern,
+                                    "finditer": lambda pattern, string: CountedPattern(pattern).finditer(string)})
+    for module in (recognizers, sys.modules[type(recognizer).__module__]):
+        monkeypatch.setattr(module, "re", counted_re)
+    monkeypatch.setattr(nl, "SPACE_GROUPS", CountedPattern(SPACE_GROUPS))
+
+    def starts(count: int) -> int:
+        CountedPattern.starts = 0
+        list(recognizer.find("1" * count, (), request))
+        return CountedPattern.starts
+
+    assert 0 < starts(8000) == starts(1000)
+
+
 @pytest.mark.parametrize("pattern", [_FRACTION, _DATE, EN.data["patterns"]["expression"],
                                      "[0-9]+(?:" + "|".join(map(re.escape, EN.data["range_marks"])) + ")[0-9]+",
-                                     "[-+]?[0-9]+/[0-9]", "[-+]?[0-9]+[-+]"])
+                                     "[-+]?[0-9]+/[0-9]", "[-+]?[0-9]+[-+]", SPACE_GROUPS,
+                                     "([0-9]{1,3}(?:[ \u00a0][0-9]{3})+|[0-9]+)-"])
 @pytest.mark.parametrize("seed", range(20))
 def test_matches_from_digit_runs_are_the_matches_of_finditer(pattern, seed):
     rng = random.Random(seed)
-    pieces = ["1", "12", "007", "1" * 30, "/", "-", "–", "+", "−", "=", " ", ".", "x", ":"]
+    pieces = ["1", "12", "007", "1234", " 000", "1" * 30, "/", "-", "–", "+", "−", "=", " ", "\u00a0", ".", ",", "x",
+              ":"]
     for _ in range(200):
         text = "".join(rng.choice(pieces) for _ in range(rng.randint(1, 12)))
         expected = [m.span() for m in re.finditer(pattern, text)]

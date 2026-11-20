@@ -16,7 +16,7 @@ from tests.fixtures import qac
 from text2spoken.core import language as loader
 from text2spoken.core import recognizers
 from text2spoken.core.language import Request, Variety, select
-from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, digit_run_matches
+from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, SPACE_GROUPS, digit_run_matches
 from text2spoken.core.spans import Features
 from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller
 from text2spoken.core.tokens import default_tokenizer
@@ -289,7 +289,7 @@ MISREAD = ["[0-9]{2}/[0-9]+", "[0-9][.,][0-9]+", "(?:minus )?[0-9]+/[0-9]+", "[-
            "(?: -)?[0-9]+/[0-9]+", "(?:[A-Z][A-Z][A-Z] )?[0-9]+(?: ?[+−×÷=] ?[0-9]+)+", "(?:[A-Z]{3} )?[0-9]+/[0-9]+",
            "(?:[a-z][a-z])?[0-9]+/[0-9]+", "(?:[a-z]+ )?[0-9]+/[0-9]+", "(?:[(] )?[0-9]+/[0-9]+",
            "[-−]?[0-9]+?(?:[.,][0-9]+)?", "[$€]?[0-9]+?", "[0-9]+?(?: ?[+−×÷=] ?[0-9]+)*", "[-+−]?[0-9]+?(?:/[0-9]+)?",
-           "[0-9]+0|[0-9]+", "[0-9]+[05]|[0-9]+", "[0-9]+0x?|[0-9]+"]
+           "[0-9]+0|[0-9]+", "[0-9]+[05]|[0-9]+", "[0-9]+0x?|[0-9]+", "[0-9]{1,3}[0-9a]", "[0-9]{1,3}(?: [0-9]{3})*"]
 """Patterns in the portable subset that `digit_run_matches` misreads."""
 
 
@@ -302,17 +302,18 @@ def test_clause_7_bites_on_a_pattern_that_digit_run_matches_misreads(en, pattern
 
 
 @pytest.mark.parametrize("pattern", ["[0-9-]?[0-9]+/[0-9]+", "[^a]?[0-9]+/[0-9]+", ".?[0-9]+/[0-9]+", "[0-9]*/[0-9]+",
-                                     "[0-9]+/[0-9]+|/[0-9]+", "[-−]?[0-9]+?/[0-9]+", "[-+]?[0-9]+/[0-9]"])
+                                     "[0-9]+/[0-9]+|/[0-9]+", "[-−]?[0-9]+?/[0-9]+"])
 def test_clause_7_holds_a_pattern_to_the_shape_that_the_helper_documents(pattern):
     """The helper reads these patterns right, but they start with something other than an optional character that
-    is no digit and then a greedy `[0-9]+`, or a match of theirs can end inside a digit run."""
+    is no digit and then a greedy `[0-9]+`."""
     with pytest.raises(AssertionError, match=re.escape(repr(pattern))):
         contract.check_digit_run_pattern(pattern)
 
 
 @pytest.mark.parametrize("pattern", ["[-+−]?[0-9]+/[0-9]+", "[$€]?[0-9]+(?:[.,][0-9]+)?",
                                      "(?:[-−])?[0-9]+", "[a-z]?[0-9]+", "x??[0-9]+", "[0-9]+x??",
-                                     "[0-9]+/[0-9]+|[0-9]+-[0-9]+", _DATE, _FRACTION])
+                                     "[0-9]+/[0-9]+|[0-9]+-[0-9]+", "[-+]?[0-9]+/[0-9]", "([0-9]+)/([0-9]+)",
+                                     "([0-9]{1,3}(?: [0-9]{3})+|[0-9]+)-", _DATE, _FRACTION, SPACE_GROUPS])
 def test_clause_7_admits_a_digit_run_pattern(pattern):
     contract.check_digit_run_pattern(pattern)
 
