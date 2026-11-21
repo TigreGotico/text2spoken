@@ -1007,8 +1007,10 @@ class Telephone:
     continues the run, when a full stop and two digits complete it in a language whose `clock_marks` hold a full
     stop, or when a space and a day period of `day_periods` follow it. So `Call 1-800-555-0199 8 a.m.` reads the
     number and the time: a second pass, which sees the words of the time, finds the same run. Only one group drops
-    (design section 4.3), so `777 67.18 2e` keeps the run `777 67.18`. A mark after the group keeps it in the run,
-    as in `02 08/85 98-0`, because the group and the digits after the mark may be one number.
+    (design section 4.3), so `777 67.18 2e` keeps the run `777 67.18`. A run that stays as written for its digits
+    keeps the group: more than 15 digits or an unknown country code after a phone word, or digits of two scripts. So
+    a time after it reads as with no cut. A mark after the group keeps it in the run, as in `02 08/85 98-0`, because
+    the group and the digits after the mark may be one number.
 
     A run that gives no span tries again after its first group when a mark joins that group to the digits before
     it, as `5` in `3,5 0 180 030 068`, or a full stop or a hyphen parts the group, as `1.6` in `1.6 0 800 757 652`
@@ -1177,6 +1179,10 @@ class Telephone:
                 waits.setdefault((first, last), set()).add(wait)
             written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
             if glued or not one_digit_set(text[start:end]) or (keeps and (len(digits) > 15 or unknown_code)):
+                # A run that stays as written keeps the group that the hour cut drops, so a time after it reads
+                # as with no cut, and a second pass sees no new last group.
+                if not glued and wait is None:
+                    last = start + len(run)
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
                 continue
             if any(shape.fullmatch(written) for shape in unit_shapes):
