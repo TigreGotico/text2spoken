@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a95](https://github.com/TigreGotico/text2spoken/tree/0.0.2a95) (2026-11-21)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a94...0.0.2a95)
+
+**Merged pull requests:**
+
+- docs: README, docs index, navigation and agent hints [\#391](https://github.com/TigreGotico/text2spoken/pull/391) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a94](https://github.com/TigreGotico/text2spoken/tree/0.0.2a94) (2026-11-21)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a93...0.0.2a94)
@@ -284,10 +292,6 @@
 ## [0.0.2a62](https://github.com/TigreGotico/text2spoken/tree/0.0.2a62) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a61...0.0.2a62)
-
-**Merged pull requests:**
-
-- feat: Greek language file [\#127](https://github.com/TigreGotico/text2spoken/pull/127) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a61](https://github.com/TigreGotico/text2spoken/tree/0.0.2a61) (2026-11-17)
 
