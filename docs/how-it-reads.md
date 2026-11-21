@@ -4,7 +4,7 @@
 covers: the rules that hold for every form, the list of forms, and the reading of a language with no file.
 source: text2spoken/core/recognizers.py, text2spoken/core/spellers.py, text2spoken/data/rbnf_corrections.json, text2spoken/data/date_readings.json
 generated: no
-verify: `pytest tests/test_docs_examples.py -k how-it-reads.md && python -c "import re;from text2spoken import Form,NormalizationParams;t=open('docs/how-it-reads.md').read();rows=dict(re.findall(r'^\| \x60([A-Z]+)\x60 \|.*\| (On|Off) \|$',t,re.M));d=NormalizationParams().forms;assert rows=={f.name:('On' if f in d else 'Off') for f in Form},rows"`
+verify: `python scripts/check_doc_page.py docs/how-it-reads.md`
 see: numbers.md, api.md
 -->
 

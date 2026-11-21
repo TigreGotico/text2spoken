@@ -13,7 +13,7 @@ text2spoken rewrites written forms, such as numbers, dates and sums of money, in
 | `text2spoken/data/` | JSON data. The CLDR files in `data/cldr/` come from `scripts/extract_cldr.py` |
 | `tests/data/<code>.tsv` | The test rows of each language file |
 | `tests/contract.py` | The checks of the language file contract |
-| `scripts/` | The scripts that write the data files |
+| `scripts/` | The scripts that write the data files, and `check_doc_page.py`, which checks a docs page against the code |
 | `docs/` | The user docs. `docs/index.md` lists every page in reading order |
 
 ## Set up and test
@@ -42,4 +42,5 @@ The `test` extra installs `tugalex`, so the suite runs every language file. CI r
 
 1. Run `pytest tests`.
 2. If you changed an output that a docs page shows, run the example again and paste the new output into the page.
-3. Give the commit a conventional title, because the release workflows read it.
+3. For each page that you changed, or whose code you changed, run `python scripts/check_doc_page.py <page>`.
+4. Give the commit a conventional title, because the release workflows read it.
