@@ -139,8 +139,8 @@ from dataclasses import dataclass, replace
 from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import SIGNS, Number, written_amount
-from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, numbers_in, signed,
-                                          speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
+from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, digit_run_matches, numbers_in,
+                                          signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_lexicon, speak_ordinal, speak_percent, speak_spoken_date)
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
@@ -281,7 +281,7 @@ def spaced_numbers(text: str, leading_zero: bool = False) -> tuple[Number, ...]:
     a run whose first group starts with 0, as in `012 000`, is a number too."""
     folded = fold_digits(text)
     found = []
-    for match in SPACE_GROUPS.finditer(folded):
+    for match in digit_run_matches(SPACE_GROUPS, folded):
         start, end = match.span()
         script = digit_script(text[start:end])
         integer, _, fraction = match.group().partition(",")
@@ -374,7 +374,7 @@ class KeptGroups:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         folded = fold_digits(text)
-        for match in SPACE_GROUPS.finditer(folded):
+        for match in digit_run_matches(SPACE_GROUPS, folded):
             start, end = match.span()
             script = digit_script(text[start:end])
             integer, comma, _ = match.group().partition(",")
@@ -480,7 +480,7 @@ class Money(CoreMoney):
         """The numbers of the text, where a number with a space between its groups replaces the numbers of its
         groups, also when its first group starts with 0, as in `€ 012 000`."""
         folded = fold_digits(text)
-        runs = [match.span() for match in SPACE_GROUPS.finditer(folded)
+        runs = [match.span() for match in digit_run_matches(SPACE_GROUPS, folded)
                 if is_group_run(folded, *match.span(), leading_zero=True)]
         return (*(number for number in numbers_in(text, request)
                   if not any(start < number.end and number.start < end for start, end in runs)),

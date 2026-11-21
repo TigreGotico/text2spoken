@@ -61,9 +61,9 @@ from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety
 from text2spoken.core.numbers import SIGNS, Number
 from text2spoken.core.recognizers import (SHARED, Range, SpaceGroups, _affixes, _cluster_edge, _free_before,
-                                          _per_unit, _period_after, _prefix, _sentence_period, _suffix, numbers_in,
-                                          signed, speak_cardinal, speak_decimal, speak_expression, speak_fraction,
-                                          speak_lexicon, speak_ordinal)
+                                          _per_unit, _period_after, _prefix, _sentence_period, _suffix,
+                                          digit_run_matches, numbers_in, signed, speak_cardinal, speak_decimal,
+                                          speak_expression, speak_fraction, speak_lexicon, speak_ordinal)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, _integer
 from text2spoken.core.times import clock_fields, day_hour, twelve_hour
@@ -513,7 +513,7 @@ class LawNumber:
     form: Form = Form.FRACTION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for match in re.finditer("([0-9]+)/([0-9]+)", fold_digits(text)):
+        for match in digit_run_matches("([0-9]+)/([0-9]+)", fold_digits(text)):
             start, end = match.span()
             if ((start and is_word_char(text[start - 1])) or not _cluster_edge(text, start, end)
                     or not _noun_after(text, end, request.data["code_nouns"], request.data)):

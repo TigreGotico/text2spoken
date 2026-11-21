@@ -406,17 +406,20 @@ def _edge(text: str, start: int, end: int) -> bool:
 
 def digit_run_matches(pattern: re.Pattern | str, folded: str) -> Iterator[re.Match]:
     """The matches of `pattern.finditer(folded)`, for a pattern that starts with an optional character that is no
-    digit and then `[0-9]+`, as `[-+−]?[0-9]+/[0-9]+`.
+    digit and then `[0-9]+`, as `[-+−]?[0-9]+/[0-9]+`, or with `[0-9]{1,3}` and a character that is no digit, as
+    `SPACE_GROUPS`.
 
     `finditer` tries each start inside a digit run, and each try reads to the end of the run, so one long run takes
-    quadratic time. A match that starts inside a run also starts one digit earlier, so the scan tries only the
-    character before each run and its first digit, and takes linear time."""
+    quadratic time. A `[0-9]+` match that starts inside a run also starts one digit earlier. A `[0-9]{1,3}` match
+    starts in the last three digits of a run, and it also starts at the first of them. So the scan tries only the
+    character before each run, its first digit and its third digit from the end, and takes linear time."""
     pattern = re.compile(pattern)
     end = 0
     for run in _DIGIT_RUN.finditer(folded):
         if run.end() <= end:
             continue
-        for start in (end,) if run.start() < end else (run.start() - 1, run.start()):
+        first = max(run.start(), end)
+        for start in (first - 1, first) if run.end() - first <= 3 else (first - 1, first, run.end() - 3):
             if start >= end and (match := pattern.match(folded, start)) is not None:
                 yield match
                 end = match.end()
