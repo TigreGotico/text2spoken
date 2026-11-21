@@ -1018,10 +1018,12 @@ class Telephone:
 
     A run that gives no span tries again after its first group when a mark joins that group to the digits before
     it, as `5` in `3,5 0 180 030 068`, or a full stop or a hyphen parts the group, as `1.6` in `1.6 0 800 757 652`
-    and `1-2` in `1-2 0 800 123 456`. The group may be a number of its own. A run that the rule above cuts, or that
-    starts inside a span kept as written, also tries each stretch of its groups between two spaces, as `08 08` in
-    `45 08 08 2x.`, `032 088 30.22` in `032 088 30.22 184 2e` and `062` in `2 062 6 9.30`. A second pass sees a
-    stretch as a run when the first pass reads the groups around it. So the span of a shorter run claims only when
+    and `1-2` in `1-2 0 800 123 456`. The group may be a number of its own. A run that the rule above cuts, that
+    starts inside a span kept as written, or that holds a group before its last that a full stop and two digits make
+    in a language whose `clock_marks` hold a full stop, also tries each stretch of its groups between two spaces, as
+    `08 08` in `45 08 08 2x.`, `032 088 30.22` in `032 088 30.22 184 2e`, `062` in `2 062 6 9.30` and `(01) 00 20.15`
+    in `(01) 00 20.15 8 h`. A second pass sees a stretch as a run when the first pass reads the groups around it.
+    So the span of a shorter run claims only when
     a span that ends before it reads the last digit of the group before it, as on a second pass, which sees words
     there. That digit stands before the bracket of an area code, as `0` in `(0) 001-186-13 8am`. The span of a
     stretch also claims only when a span reads the first digit of the group after the stretch, and no other span
@@ -1029,7 +1031,11 @@ class Telephone:
     keep their schema. So `3,5 0 180 030 068` reads `0 180 030 068`, `032 088 30.22 184 2e` reads `032 088` digit
     by digit, and `1:1 000 000` and `405–01 03 02` stay as written: no span reads `1`, and a span keeps `405–01` as
     written. A phone number holds at most 15 digits (ITU-T E.164), and the rule above may drop the last group of a
-    stretch, so a stretch with more digits before its last group does not try.
+    stretch, so a stretch with more digits before its last group does not try. A run whose last group does not drop
+    also tries itself with no last group when the rule above cuts that shorter run, under the conditions of a
+    stretch and with no bound on its digits, because a second pass sees it as a whole run. So
+    `(0161) 0316322125 0502 5.29 4 Uhr` reads `(0161) 0316322125 0502` digit by digit, `(01) 00 20.15 8 h` reads
+    `(01) 00` digit by digit, and `(030) 1234 20.15 8 h` reads `1234` as a number on both passes.
 
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
     methods `trimmed`, `continued`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone`
@@ -1109,6 +1115,8 @@ class Telephone:
         kept_end = 0
         head_group = re.compile(f"[0-9]+([.-][0-9]+)?[{re.escape(self.spaces)}]")
         waits = request.memo.setdefault((PHONE_WAITS, text), {})
+        dotted = any(clock["mark"] == "." for clock in request.data.get("clock_marks", ()))
+        dotted_group = re.compile(f"[{re.escape(self.spaces)}][0-9]{{1,2}}[.][0-9]{{2}}[{re.escape(self.spaces)}]")
         runs: list[tuple[int, str, tuple[int | None, int | None, bool] | None]] = [
             (match.start(), match.group(), None) for match in _phone_pattern(self.spaces).finditer(folded)][::-1]
         while runs:
@@ -1118,10 +1126,10 @@ class Telephone:
             if wait is None:
                 head = head_group.match(run)
                 joined = head and (head[1] or (start > 1 and text[start - 1] in _JOINERS and is_digit(text[start - 2])))
-                if start < kept_end or written != run:
+                if start < kept_end or written != run or (dotted and dotted_group.search(run)):
                     bounds = [-1, *(index for index, char in enumerate(run) if char in self.spaces), len(run)]
                     counts = list(accumulate((char.isdigit() for char in run), initial=0))
-                    for i in range(len(bounds) - 2, 0 if joined else -1, -1):
+                    for i in range(len(bounds) - 2, -1, -1):
                         # The last digit of the group before; an area code in brackets ends in `)`, as `(0)`.
                         left = start + bounds[i] - 1 - (run[bounds[i] - 1] == ")") if i else None
                         for j in range(i + 1, len(bounds) - (i == 0)):
@@ -1131,6 +1139,10 @@ class Telephone:
                                 break
                             retries.append((start + bounds[i] + 1, run[bounds[i] + 1:bounds[j]],
                                             (left, start + bounds[j] + 1 if j < len(bounds) - 1 else None, True)))
+                if written == run and (gap := max(run.rfind(space) for space in self.spaces)) != -1 \
+                        and self.trimmed(text, start, run[:gap], request) != run[:gap]:
+                    # A second pass sees words for the last group once a span reads it, and cuts the group before.
+                    retries.append((start, run[:gap], (None, start + gap + 1, True)))
                 if joined:
                     retries.append((start + head.end(), run[head.end():], (start + head.end() - 2, None, False)))
             if start < kept_end:
