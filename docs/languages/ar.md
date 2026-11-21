@@ -1,5 +1,13 @@
 # Arabic
 
+<!-- agent-hint
+covers: what the Arabic file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/ar.py, tests/data/ar.tsv
+generated: no
+verify: pytest tests/test_rows.py tests/test_docs_examples.py -k "ar- or ar.md"
+see: ca.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/ar.py` reads Modern Standard Arabic in Arabic script, with no diacritics. A diacritizer runs after it. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads

@@ -1,5 +1,13 @@
 # Addresses, letters and emoji
 
+<!-- agent-hint
+covers: how addresses, runs of capital letters, abbreviations and emoji read.
+source: text2spoken/core/electronic.py, text2spoken/core/letters.py, text2spoken/core/emoji.py
+generated: no
+verify: pytest tests/test_docs_examples.py -k addresses-letters-and-emoji.md
+see: api.md, languages/en.md, languages/pt.md
+-->
+
 This page shows how text2spoken reads e-mail and web addresses, runs of capital letters, abbreviations and emoji. Runs of capital letters and emoji are off by default.
 
 ## E-mail and web addresses
@@ -114,7 +122,7 @@ The `EMOJI` form reads an emoji by its CLDR name. It is off by default, because 
 
 The form reads a whole emoji sequence as one emoji: an emoji with its skin tone, its U+FE0F, and the emoji that zero width joiners add to it. A sequence with no name of its own reads by the name of its first emoji. A name whose reading would hold a character that is no word stays as written, because a second pass would read that character.
 
-Details for maintainers: the sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. A name drops its quote marks, and its colons, commas and brackets become spaces. The language reads the digits and abbreviations of a name as in a sentence, and U+2019 between two letters is an apostrophe. The spacing of a name follows the `SYMBOL` form. [Development](development.md#the-emoji-data) gives the names that stay as written in each tag.
+Details for maintainers: the sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. A name drops its quote marks, and its colons, commas and brackets become spaces. The language reads the digits and abbreviations of a name as in a sentence, and U+2019 between two letters is an apostrophe. The spacing of a name follows the `SYMBOL` form. [Development](development.md#the-emoji-data) gives the kinds of names that stay as written.
 
 | Written | Tag | Spoken, `EMOJI` on |
 | --- | --- | --- |

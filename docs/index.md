@@ -1,5 +1,13 @@
 # text2spoken documentation
 
+<!-- agent-hint
+covers: the list of every docs page in reading order.
+source: docs/, tests/test_docs_examples.py:MINIMUM
+generated: no
+verify: for f in docs/*.md docs/languages/*.md; do grep -qF "(${f#docs/})" docs/index.md || echo "not listed: $f"; done (prints only docs/index.md)
+see: quickstart.md
+-->
+
 text2spoken rewrites written forms, such as `12/03/2024`, `£3.50` or `Dr`, into the words that a speaker says. Find the page for your question below. The pages are in reading order, from a first call to the contract of a language file.
 
 | Question | Page |

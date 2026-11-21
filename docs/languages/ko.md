@@ -1,5 +1,13 @@
 # Korean
 
+<!-- agent-hint
+covers: what the Korean file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/ko.py, tests/data/ko.tsv
+generated: no
+verify: pytest tests/test_rows.py tests/test_docs_examples.py -k "ko- or ko.md"
+see: nl.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/ko.py` reads Korean. It needs no extra, because its number words come from the CLDR spell-out rules.
 
 ## What it reads

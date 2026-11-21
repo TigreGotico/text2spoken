@@ -1,6 +1,14 @@
 # Numbers
 
-This page shows how text2spoken reads numbers: cardinals, ordinals, decimals, fractions, ranges, expressions, Roman numerals, telephone numbers, identifiers and idioms. The tables of [How it reads text](how-it-reads.md#the-forms) give the languages that offer each form.
+<!-- agent-hint
+covers: how cardinals, ordinals, decimals, fractions, ranges, Roman numerals, telephone numbers and idioms read.
+source: text2spoken/core/recognizers.py, text2spoken/core/numbers.py, text2spoken/core/roman.py, text2spoken/lang/
+generated: no
+verify: pytest tests/test_docs_examples.py -k numbers.md
+see: dates-and-times.md, languages/en.md, languages/pt.md
+-->
+
+This page shows how text2spoken reads numbers: cardinals, ordinals, decimals, fractions, ranges, expressions, Roman numerals, telephone numbers, identifiers and idioms. The page [How it reads text](how-it-reads.md#the-forms) lists the forms, and `supports(lang).forms` gives the forms of one language.
 
 ## Cardinal numbers
 
@@ -78,7 +86,7 @@ English reads every proper fraction. German reads a half as one word. Portuguese
 
 ## Roman numerals
 
-English, Portuguese and Basque read a Roman numeral when the text around it shows that it is a number, such as a name, a century, or a noun of a series:
+A language that offers the `ROMAN` form, such as English, reads a Roman numeral when the text shows that it is a number. The evidence is a name, a century, or a noun of a series:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |

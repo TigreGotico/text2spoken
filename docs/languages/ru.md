@@ -1,5 +1,13 @@
 # Russian
 
+<!-- agent-hint
+covers: what the Russian file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/ru.py, tests/data/ru.tsv
+generated: no
+verify: pytest tests/test_rows.py tests/test_docs_examples.py -k "ru- or ru.md"
+see: zh.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/ru.py` reads Russian. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads

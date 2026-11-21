@@ -1,5 +1,13 @@
 # Catalan
 
+<!-- agent-hint
+covers: what the Catalan file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/ca.py, tests/data/ca.tsv
+generated: no
+verify: pytest tests/test_rows.py tests/test_docs_examples.py -k "ca- or ca.md"
+see: de.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/ca.py` reads Catalan. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads

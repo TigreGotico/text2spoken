@@ -1,6 +1,14 @@
 # Development
 
-This page is for maintainers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release.
+<!-- agent-hint
+covers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release.
+source: .github/workflows/, tests/test_rows.py, tests/test_docs_examples.py, scripts/extract_cldr.py
+generated: no
+verify: grep -n "python_versions\|install_extras\|branches" .github/workflows/*.yml && grep -n "^RELEASE\|^UNICODE" scripts/extract_cldr.py && pytest tests/test_docs_examples.py -k development.md
+see: ../AGENTS.md, adding-a-language.md
+-->
+
+This page is for maintainers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release. [AGENTS.md](../AGENTS.md) gives the short list of rules that a pull request must meet.
 
 ## Set up and run the tests
 
@@ -85,7 +93,7 @@ python scripts/extract_cldr.py --source ~/cldr-json  # read a checkout of that r
 
 ## The emoji data
 
-The emoji sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. Some names stay as written, because their reading holds a character that is no word. They hold `&` (en-GB 14, en-US 14), `!` (2 in each tag), `#` and `*` (the keycaps, 1 each in each tag), `/` (pt-PT 2), or a full stop that no abbreviation reads. The full stops are en-US 9, as in `flag: St. Lucia` and `flag: U.S. Virgin Islands`, and pt-PT 6, in `Sra. Natal`. `scripts/extract_cldr.py` prints each such name.
+The emoji sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. Some names stay as written, because their reading holds a character that is no word. Such a name holds `&`, `!`, `/`, the `#` or the `*` of a keycap, or a full stop that no abbreviation reads, as in `flag: St. Lucia`. `scripts/extract_cldr.py` prints each such name.
 
 ## CI
 

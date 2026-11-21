@@ -1,5 +1,13 @@
 # How it reads text
 
+<!-- agent-hint
+covers: the rules that hold for every form, the list of forms, and the reading of a language with no file.
+source: text2spoken/core/recognizers.py, text2spoken/core/spellers.py, text2spoken/data/rbnf_corrections.json, text2spoken/data/date_readings.json
+generated: no
+verify: pytest tests/test_docs_examples.py -k how-it-reads.md
+see: numbers.md, api.md
+-->
+
 text2spoken finds each written form that it can read, such as a number, a date or a sum of money, and replaces it with words. The rest of the text stays as it is, character for character.
 
 | Written | Spoken (`en-GB`) |
@@ -33,33 +41,35 @@ The output depends only on the text, the tag, the params and the tokenizer. A se
 
 ## The forms
 
-Each written form has a `Form` value. `NormalizationParams().forms` holds every form except `LETTERS` and `EMOJI`, which are off by default. A language reads only the forms that its file offers, and `supports(lang).forms` lists them. Each character of the text belongs to one form at most. When two forms find the same characters, the form whose recognizer comes first in the language file claims them, and the other form does not read them.
+<!-- agent-hint: the forms of one language come from its file, so read supports(lang).forms and not this table. -->
 
-| Form | What it reads | Default | Languages |
-| --- | --- | --- | --- |
-| `LEXICON` | An entry of the `lexicon` param | On | All |
-| `CARDINAL` | A whole number: `12`, `1.234`, `-5` | On | All |
-| `ORDINAL` | `1º`, `3.ª`, `1st` | On | de, en, es, eu, pt, ru |
-| `DECIMAL` | `3,5`, `0.5`, `.5` | On | All |
-| `FRACTION` | `1/2`, `3/4` | On | All |
-| `RANGE` | `18-25`, `10-20` | On | ar, de, en, es, pt |
-| `EXPRESSION` | `5+3`, `2 × 2` | On | de, en, es, eu, pt |
-| `DATE` | `12/03/2024`, `2024-03-12`, `15 de maio de 2025` | On | All |
-| `TIME` | `às 14:30`, `14h30`, `9am`, `10 p.m.` | On | All |
-| `YEAR` | A year that a word or a suffix marks: `in 1999`, `im Jahr 1999` | On | de, en, ru |
-| `MONEY` | `$5`, `2,50 €` | On | All |
-| `MEASURE` | `10kg`, `25°C`, `5 km/h` | On | All |
-| `PERCENT` | `20%`, `4,5 %` | On | All |
-| `TELEPHONE` | `+351 912 345 678`, read digit by digit | On | de, en, es, pt |
-| `IDENTIFIER` | A digit run after a word that names a code, read digit by digit | On | None |
-| `LETTERS` | A run of capital letters: `NATO`, `BMW`, `MP3` | Off | en, pt |
-| `ABBREVIATION` | `Dr.`, `n.º`, `etc.` | On | de, en, es, eu, pt, ru |
-| `IDIOM` | `24/7`, `50/50`, from a table of the language | On | de, en |
-| `ROMAN` | `Luís XIV`, `XX. mendea`, `século XIX`, `Henry VIII` | On | en, eu, pt |
-| `COLOR` | `#FF0000` | On | de, en, pt |
-| `ELECTRONIC` | An e-mail or web address: `ann@example.com`, `www.example.org` | On | en, pt |
-| `SYMBOL` | A character with a CLDR name, such as `©`, `§` or `→`, when no other form claims it | On | en, pt |
-| `EMOJI` | An emoji, by its CLDR name | Off | en, pt |
+Each written form has a `Form` value. `NormalizationParams().forms` holds every form except `LETTERS` and `EMOJI`, which are off by default. A language reads only the forms that its file offers. `supports(lang).forms` lists them, and each language page names them. Each character of the text belongs to one form at most. When two forms find the same characters, the form whose recognizer comes first in the language file claims them, and the other form does not read them.
+
+| Form | What it reads | Default |
+| --- | --- | --- |
+| `LEXICON` | An entry of the `lexicon` param | On |
+| `CARDINAL` | A whole number: `12`, `1.234`, `-5` | On |
+| `ORDINAL` | `1º`, `3.ª`, `1st` | On |
+| `DECIMAL` | `3,5`, `0.5`, `.5` | On |
+| `FRACTION` | `1/2`, `3/4` | On |
+| `RANGE` | `18-25`, `10-20` | On |
+| `EXPRESSION` | `5+3`, `2 × 2` | On |
+| `DATE` | `12/03/2024`, `2024-03-12`, `15 de maio de 2025` | On |
+| `TIME` | `às 14:30`, `14h30`, `9am`, `10 p.m.` | On |
+| `YEAR` | A year that a word or a suffix marks: `in 1999`, `im Jahr 1999` | On |
+| `MONEY` | `$5`, `2,50 €` | On |
+| `MEASURE` | `10kg`, `25°C`, `5 km/h` | On |
+| `PERCENT` | `20%`, `4,5 %` | On |
+| `TELEPHONE` | `+351 912 345 678`, read digit by digit | On |
+| `IDENTIFIER` | A digit run after a word that names a code, read digit by digit. No language file reads it | On |
+| `LETTERS` | A run of capital letters: `NATO`, `BMW`, `MP3` | Off |
+| `ABBREVIATION` | `Dr.`, `n.º`, `etc.` | On |
+| `IDIOM` | `24/7`, `50/50`, from a table of the language | On |
+| `ROMAN` | `Luís XIV`, `XX. mendea`, `século XIX`, `Henry VIII` | On |
+| `COLOR` | `#FF0000` | On |
+| `ELECTRONIC` | An e-mail or web address: `ann@example.com`, `www.example.org` | On |
+| `SYMBOL` | A character with a CLDR name, such as `©`, `§` or `→`, when no other form claims it | On |
+| `EMOJI` | An emoji, by its CLDR name | Off |
 
 ## A language with no file
 

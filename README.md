@@ -1,16 +1,20 @@
 # text2spoken
 
-text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours, abbreviations, and e-mail and web addresses. The rest of the text stays as it is, character for character.
+<!-- agent-hint
+covers: what text2spoken does, how to install and call it, and where it sits in the speech stack.
+source: text2spoken/__init__.py, pyproject.toml, text2spoken/lang/
+generated: no
+verify: pytest tests/test_docs_examples.py -k README.md
+see: docs/index.md, docs/quickstart.md, AGENTS.md
+-->
 
-## Install
+text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours, abbreviations, and e-mail and web addresses. The rest of the text stays as it is, character for character. It uses no network and no model.
+
+## Quickstart
 
 ```bash
 uv pip install --prerelease=allow text2spoken
 ```
-
-It needs Python 3.11 or later, and uses no network and no model. Every language reads with the base install. Portuguese takes the `pt` extra for the gender of nouns and names, from `tugalex`.
-
-## Example
 
 ```python
 >>> from text2spoken import normalize
@@ -22,7 +26,13 @@ It needs Python 3.11 or later, and uses no network and no model. Every language 
 'O Doutor Silva pagou dois euros e cinquenta cêntimos às catorze e trinta.'
 ```
 
-The second argument is a BCP 47 tag. It selects the language and the variety.
+The second argument is a BCP 47 tag. It selects the language file and the variety. The library needs Python 3.11 or later. Every language reads with the base install. Portuguese takes the `pt` extra for the gender of nouns and names, from `tugalex`.
+
+## Where this fits
+
+Alone: rewrite one string for one language tag with `from text2spoken import normalize`.
+In the stack: the normalisation stage before a phonemizer or a voice. The phonemizers tugaphone and euskaphone, the voice library phoonnx and the scriptconv `TextFrontend` call `normalize(text, lang)`. It calls ovos-number-parser, ovos-date-parser, unicode-rbnf, linguatag and quebra-frases.
+Through scriptconv: `uv pip install --prerelease=allow "scriptconv[normalize]"`.
 
 ## Find your answer
 
@@ -37,33 +47,31 @@ The second argument is a BCP 47 tag. It selects the language and the variety.
 | Know when the output of a language can change | [API, revision](docs/api.md#revision) |
 | Run the tests | [Development](docs/development.md) |
 
-The [docs index](docs/index.md) lists every page.
+The [docs index](docs/index.md) lists every page in reading order. A contributor reads [AGENTS.md](AGENTS.md) for the map of the repository and the rules that a pull request must meet.
 
 ## Languages
 
-A tag with no language file reads cardinal numbers, decimals and a minus from the CLDR spell-out rules, in the decimal and group marks of CLDR for the locale.
+Each language page gives what the language reads, its varieties, its options, its sources and its limits. `supports(lang)` gives the same facts from code.
 
-| Language | Varieties | Extra |
-| --- | --- | --- |
-| [Arabic](docs/languages/ar.md) | `ar-001`, ten regional tags, and 25 ISO 639-3 varieties such as `arz` | `ar` |
-| [Catalan](docs/languages/ca.md) | `ca-ES`, `ca-AD`, `ca-ES-valencia` | `ca` |
-| [German](docs/languages/de.md) | `de-DE`, `de-AT`, `de-CH` | none |
-| [Greek](docs/languages/el.md) | `el-GR` | none |
-| [English](docs/languages/en.md) | `en-GB`, `en-US` | none |
-| [Spanish](docs/languages/es.md) | `es-ES`, `es-419` and eleven American varieties | `es` |
-| [Basque](docs/languages/eu.md) | `eu-ES` | `eu` |
-| [French](docs/languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`. Every other `fr-*` tag reads as `fr-FR` | `fr` |
-| [Italian](docs/languages/it.md) | `it-IT`, `it-CH`, `it-SM` | `it` |
-| [Japanese](docs/languages/ja.md) | `ja-JP` | none |
-| [Korean](docs/languages/ko.md) | `ko-KR` | none |
-| [Dutch](docs/languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` | `nl` |
-| [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` | `pt` |
-| [Russian](docs/languages/ru.md) | `ru-RU` | `ru` |
-| [Chinese](docs/languages/zh.md) | `zh-CN`, `zh-TW`, and `cmn` | none |
+| Language | Varieties |
+| --- | --- |
+| [Arabic](docs/languages/ar.md) | `ar-001`, the regional `ar-*` tags, and the spoken lects of ISO 639-3, such as `arz` |
+| [Catalan](docs/languages/ca.md) | `ca-ES`, `ca-AD`, `ca-ES-valencia` |
+| [German](docs/languages/de.md) | `de-DE`, `de-AT`, `de-CH` |
+| [Greek](docs/languages/el.md) | `el-GR` |
+| [English](docs/languages/en.md) | `en-GB`, `en-US` |
+| [Spanish](docs/languages/es.md) | `es-ES`, `es-419` and the American varieties, such as `es-MX` |
+| [Basque](docs/languages/eu.md) | `eu-ES` |
+| [French](docs/languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`, and each other `fr-*` tag with the number words of its CLDR locale |
+| [Italian](docs/languages/it.md) | `it-IT`, `it-CH`, `it-SM` |
+| [Japanese](docs/languages/ja.md) | `ja-JP` |
+| [Korean](docs/languages/ko.md) | `ko-KR` |
+| [Dutch](docs/languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` |
+| [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` |
+| [Russian](docs/languages/ru.md) | `ru-RU` |
+| [Chinese](docs/languages/zh.md) | `zh-CN`, `zh-TW`, and `cmn` |
 
-## Where this fits
-
-text2spoken is the normalisation stage: a voice, a phonemizer or a word error rate score calls `normalize` first. scriptconv uses it through an extra: `uv pip install --prerelease=allow "scriptconv[normalize]"`.
+A tag with no language file reads cardinal numbers, decimals and a minus from the CLDR spell-out rules, in the decimal and group marks of CLDR for the locale. The page [How it reads text](docs/how-it-reads.md#a-language-with-no-file) gives the rules.
 
 ## Licence
 
