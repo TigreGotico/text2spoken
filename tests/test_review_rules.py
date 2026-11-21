@@ -11,7 +11,7 @@ import pytest
 
 from tests.known_limits import known_limit
 from text2spoken import (Animacy, Features, FrozenMap, InvalidLexiconError, NormalizationParams,
-                         ParameterNotHonouredWarning, Token, TokenizerError, UndefinedGrammaticalGender,
+                         ParameterNotHonouredWarning, SayAs, Token, TokenizerError, UndefinedGrammaticalGender,
                          UnreadFormError, analyze, effective_params, normalize, render, supports)
 from text2spoken.core import language as loader
 from text2spoken.core import recognizers
@@ -884,6 +884,8 @@ def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang)
     ("+1 633-427 864 3D", "de-AT"), ("Fax: 83:044 5226 470-2 487", "de-DE"), ("174 01-426 534 589", "en-GB"),
     ("Fax: (491:62 7 6-8181-7 964)", "es-MX"), ("+43 (0)08 717 80 1st", "en-GB"),
     ("Tel. 665.037 (0)74 513 77 8 101 36 12 h", "es-MX"), ("Ligue 84-607 (0)0902 2 89 373 3204-4 und", "pt-PT"),
+    ("+43 (1)08 717 80 1st", "en-GB"), ("Tel. 665.037 (1)74 513 77 8 101 36 12 h", "es-MX"),
+    ("Ligue 84-607 (2)0902 2 89 373 3204-4 und", "pt-PT"),
 ])
 def test_a_number_grouped_with_spaces_reads_the_same_on_a_second_pass(text, lang):
     """Section 11. No span reads one group of a number grouped with spaces, so no group is left for a second pass.
@@ -907,6 +909,34 @@ def test_a_run_after_a_number_in_brackets_reads_as_on_a_second_pass(text, lang, 
     once = normalize(text, lang)
     assert once == expected
     assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "say_as"), [
+    ("(09) 0919321487 0", "fr-FR", None),
+    ("(01) 0612345678 8 h", "fr-FR", None),
+    ("(09) 0612345678 24 h/24", "fr-FR", None),
+    ("(09) 0919321487 0", "fr-CA", None),
+    ("(09) 0612345678 0", "pt-BR", SayAs(interpret_as="telephone")),
+])
+def test_a_run_after_a_number_in_brackets_with_a_leading_0_reads_as_on_a_second_pass(text, lang, say_as):
+    """Section 11. A number in brackets such as `(09)` reads as no cardinal, so a second pass sees the same
+    bracketed run, and the run after it is not tried alone on the first pass either."""
+    once = normalize(text, lang, say_as=say_as)
+    assert normalize(once, lang, say_as=say_as) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "expected"), [
+    ("Il a payé 12,500 3 fois.", "fr-FR", "Il a payé 12,500 3 fois."),
+    ("Der Wert 0,125 3 mal.", "de-DE", "Der Wert 0,125 3 mal."),
+    ("Custou 2,500 3 vezes.", "pt-BR", "Custou 2,500 3 vezes."),
+    ("Il pèse 1 250,50 2 fois plus.", "fr-FR", "Il pèse mille deux cent cinquante virgule cinquante deux fois plus."),
+])
+def test_a_fraction_after_a_decimal_comma_may_hold_groups(text, lang, expected):
+    """BIPM, SI Brochure, 9th edition, section 5.4.4: digits after the decimal mark may be grouped by three with a
+    space, as in `43 279.168 29`. Where the decimal mark of the request is the comma, `12,500 3` is one number,
+    which no span reads whole, so it stays as written. `1 250,50 2` is two numbers: a fraction group that another
+    group follows has three digits."""
+    assert normalize(text, lang) == expected
 
 
 @pytest.mark.parametrize(("text", "lang"), [

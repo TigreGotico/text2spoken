@@ -992,8 +992,9 @@ class Telephone:
     `1 000 000 2nd`, where the last group drops. A run that a shape of `no_phone_shapes` matches whole has no phone
     shape. When a run with an area code in brackets and a space after them gives no span, the run after the space is
     tried alone, as a second pass sees it once the number in brackets reads: `(1) 0 437 593` reads "(one) zero four
-    three seven five nine three" in en. With no space, as in `(0)08 717 80`, the bracket joins its number to the run,
-    so the number stays as written and a second pass sees the same run.
+    three seven five nine three" in en. A number in brackets with a leading 0 starts no such try: `(09)` reads as no
+    cardinal and stays as written, so a second pass sees the same bracketed run. With no space, as in
+    `(0)08 717 80`, the bracket joins its number to the run, so the number stays as written too.
 
     `spaces` holds the spaces that may part two groups of a run, and `plans` the numbering plans that the recognizer
     reads, by region. A language whose `phone_regions` option offers a region that `PHONE_PLANS` lacks passes the
@@ -1070,7 +1071,8 @@ class Telephone:
             position = match.end()
             if match.start() < kept_end:
                 continue
-            unread = match.end(1) if (match.group(1) or "").endswith(" ") else position
+            area = match.group(1) or ""
+            unread = match.end(1) if area.endswith(" ") and area[1] != "0" else position
             start = match.start()
             written = self.trimmed(text, start, match.group(), request)
             end = start + len(written)
