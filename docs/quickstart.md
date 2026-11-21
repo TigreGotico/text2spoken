@@ -2,9 +2,9 @@
 
 <!-- agent-hint
 covers: how to install text2spoken, make the first call and see what a tag reads.
-source: pyproject.toml, text2spoken/__init__.py:supports
+source: pyproject.toml, text2spoken/core/language.py:supports
 generated: no
-verify: pytest tests/test_docs_examples.py -k quickstart.md
+verify: `pytest tests/test_docs_examples.py -k quickstart.md && python -c "import tomllib;p=tomllib.load(open('pyproject.toml','rb'))['project'];e=sorted(k for k,v in p['optional-dependencies'].items() if not v);q=chr(96);s=', '.join(q+k+q for k in e[:-1])+' and '+q+e[-1]+q;t=open('docs/quickstart.md').read();assert f'The extras {s} add nothing' in t,s;assert 'Python '+p['requires-python'][2:]+' or later' in t"`
 see: usage.md, api.md
 -->
 

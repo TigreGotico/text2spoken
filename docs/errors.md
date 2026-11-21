@@ -4,7 +4,7 @@
 covers: each error and warning, in the default mode and in strict mode.
 source: text2spoken/errors.py
 generated: no
-verify: pytest tests/test_docs_examples.py -k errors.md
+verify: `pytest tests/test_docs_examples.py -k errors.md && python -c "import builtins,re,text2spoken;n=set(re.findall(r'\x60(\w+(?:Error|Warning|Gender))\x60',open('docs/errors.md').read()));k=set(dir(text2spoken))|set(dir(builtins));assert n<=k,n-k"`
 see: api.md, languages/ar.md
 -->
 

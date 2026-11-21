@@ -4,7 +4,7 @@
 covers: how cardinals, ordinals, decimals, fractions, ranges, Roman numerals, telephone numbers and idioms read.
 source: text2spoken/core/recognizers.py, text2spoken/core/numbers.py, text2spoken/core/roman.py, text2spoken/lang/
 generated: no
-verify: pytest tests/test_docs_examples.py -k numbers.md
+verify: `pytest tests/test_docs_examples.py -k numbers.md && python -c "from text2spoken import Form,supports;from text2spoken.core.language import _registry;assert all(Form.ROMAN in supports(c).forms for c in ['en','pt']);assert not [c for c in _registry() if Form.IDENTIFIER in supports(c).forms]"`
 see: dates-and-times.md, languages/en.md, languages/pt.md
 -->
 

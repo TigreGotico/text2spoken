@@ -4,7 +4,7 @@
 covers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release.
 source: .github/workflows/, tests/test_rows.py, tests/test_docs_examples.py, scripts/extract_cldr.py
 generated: no
-verify: grep -n "python_versions\|install_extras\|branches" .github/workflows/*.yml && grep -n "^RELEASE\|^UNICODE" scripts/extract_cldr.py && pytest tests/test_docs_examples.py -k development.md
+verify: `python -c "import json,os,re,tomllib;t=open('docs/development.md').read();v=json.loads(re.search(r\"python_versions: '(.*)'\",open('.github/workflows/build-tests.yml').read()).group(1));p=tomllib.load(open('pyproject.toml','rb'))['project'];assert p['requires-python']=='>='+v[0],v;assert 'on Python '+', '.join(v[:-1])+' and '+v[-1] in t,v;s=open('scripts/extract_cldr.py').read();assert all(w+' '+re.search(n+r' = \"(.*)\"',s).group(1) in t for n,w in [('RELEASE','release'),('UNICODE','Unicode')]);assert all(os.path.exists(f) for f in re.findall(r'(?:scripts|tests)/[\w/]+\.(?:py|tsv)',t) if '/id.' not in f);assert 'test' in p['optional-dependencies']" && pytest tests/test_docs_examples.py -k development.md`
 see: ../AGENTS.md, adding-a-language.md
 -->
 

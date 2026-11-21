@@ -4,7 +4,7 @@
 covers: how to turn forms off and on, pick a variety, add lexicon entries and keep text as written.
 source: text2spoken/params.py:NormalizationParams, text2spoken/core/language.py:lexicon_entries, text2spoken/core/tokens.py:protect_blocks
 generated: no
-verify: pytest tests/test_docs_examples.py -k usage.md
+verify: `pytest tests/test_docs_examples.py -k usage.md`
 see: how-it-reads.md, api.md
 -->
 

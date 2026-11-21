@@ -4,7 +4,7 @@
 covers: how money, measures, percentages, symbols and colours read, and where their words come from.
 source: text2spoken/core/currencies.py, text2spoken/core/units.py, text2spoken/core/symbols.py, text2spoken/core/color.py, text2spoken/data/cldr/
 generated: no
-verify: pytest tests/test_docs_examples.py -k money-units-and-symbols.md
+verify: `pytest tests/test_docs_examples.py -k money-units-and-symbols.md && python -c "import os;from text2spoken import Form,supports;assert all(Form.COLOR in supports(c).forms for c in ['de','en','fr','pt']);assert all(os.path.exists(f'text2spoken/data/cldr/{t}.json') for t in ['en-GB','en-US','pt-PT','pt-BR'])"`
 see: addresses-letters-and-emoji.md, development.md
 -->
 

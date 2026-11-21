@@ -4,7 +4,7 @@
 covers: what the Korean file reads, its varieties, options, sources and limits.
 source: text2spoken/lang/ko.py, tests/data/ko.tsv
 generated: no
-verify: pytest tests/test_rows.py tests/test_docs_examples.py -k "ko- or ko.md"
+verify: `pytest tests/test_rows.py tests/test_docs_examples.py -k "ko- or ko.md" && python -c "import re,sys;from text2spoken import supports;c=sys.argv[1];s=re.search(r'^The file reads (.*?)\.( |$)',open(f'docs/languages/{c}.md').read(),re.M).group(1);k=dict(cardinal='CARDINAL',ordinal='ORDINAL',decimal='DECIMAL',fraction='FRACTION',range='RANGE',expression='EXPRESSION',date='DATE',time='TIME',year='YEAR',money='MONEY',measure='MEASURE',percentage='PERCENT',abbreviation='ABBREVIATION',Roman='ROMAN',symbol='SYMBOL',emoji='EMOJI',lexicon='LEXICON');f={x.name for x in supports(c).forms};assert f<=set(k.values()),f;bad=[w for w,n in k.items() if (w in s)!=(n in f)];assert not bad,bad" ko`
 see: nl.md, ../how-it-reads.md
 -->
 

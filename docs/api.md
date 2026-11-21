@@ -4,7 +4,7 @@
 covers: each public function, param and record, with say_as, hints, revision and a custom tokenizer.
 source: text2spoken/__init__.py, text2spoken/params.py, text2spoken/core/say_as.py, text2spoken/core/spans.py, text2spoken/core/revision.py, text2spoken/core/tokens.py
 generated: no
-verify: pytest tests/test_docs_examples.py -k api.md
+verify: `pytest tests/test_docs_examples.py -k api.md && python -c "from text2spoken.core.revision import PROBE_TIMEOUT;assert f'longer than {PROBE_TIMEOUT} seconds' in open('docs/api.md').read()"`
 see: errors.md
 -->
 

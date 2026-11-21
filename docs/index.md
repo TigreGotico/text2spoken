@@ -4,7 +4,7 @@
 covers: the list of every docs page in reading order.
 source: docs/, tests/test_docs_examples.py:MINIMUM
 generated: no
-verify: for f in docs/*.md docs/languages/*.md; do grep -qF "(${f#docs/})" docs/index.md || echo "not listed: $f"; done (prints only docs/index.md)
+verify: `pytest tests/test_docs_examples.py -k index.md && for f in docs/*.md docs/languages/*.md; do [ "$f" = docs/index.md ] || grep -qF "(${f#docs/})" docs/index.md || { echo "not listed: $f"; exit 1; }; done`
 see: quickstart.md
 -->
 

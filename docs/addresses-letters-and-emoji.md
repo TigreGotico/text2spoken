@@ -4,7 +4,7 @@
 covers: how addresses, runs of capital letters, abbreviations and emoji read.
 source: text2spoken/core/electronic.py, text2spoken/core/letters.py, text2spoken/core/emoji.py
 generated: no
-verify: pytest tests/test_docs_examples.py -k addresses-letters-and-emoji.md
+verify: `pytest tests/test_docs_examples.py -k addresses-letters-and-emoji.md && python -c "from text2spoken import Form,supports;from text2spoken.core.language import _registry;assert all({c for c in _registry() if f in supports(c).forms}=={'en','pt'} for f in [Form.ELECTRONIC,Form.LETTERS])"`
 see: api.md, languages/en.md, languages/pt.md
 -->
 

@@ -4,7 +4,7 @@
 covers: what text2spoken does, how to install and call it, and where it sits in the speech stack.
 source: text2spoken/__init__.py, pyproject.toml, text2spoken/lang/
 generated: no
-verify: pytest tests/test_docs_examples.py -k README.md
+verify: `pytest tests/test_docs_examples.py -k README.md && python -c "import re;from text2spoken.core.language import _registry;r=_registry();t=open('README.md').read();bad=[(c,g) for c,v in re.findall(r'languages/(\w+)\.md\) \| (.*) \|',t) for g in re.findall(r'\x60([a-z]{2,3}(?:-[\w-]+)?)\x60',v) if g not in {x.tag for x in r[c].varieties} and g not in r];assert not bad,bad"`
 see: docs/index.md, docs/quickstart.md, AGENTS.md
 -->
 
@@ -71,7 +71,7 @@ Each language page gives what the language reads, its varieties, its options, it
 | [Russian](docs/languages/ru.md) | `ru-RU` |
 | [Chinese](docs/languages/zh.md) | `zh-CN`, `zh-TW`, and `cmn` |
 
-A tag with no language file reads cardinal numbers, decimals and a minus from the CLDR spell-out rules, in the decimal and group marks of CLDR for the locale. The page [How it reads text](docs/how-it-reads.md#a-language-with-no-file) gives the rules.
+A tag with no language file reads cardinal numbers, decimals and a minus, with the words of ovos-number-parser or of the CLDR spell-out rules, in the decimal and group marks of CLDR for the locale. The page [How it reads text](docs/how-it-reads.md#a-language-with-no-file) gives the rules.
 
 ## Licence
 
