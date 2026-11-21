@@ -616,8 +616,8 @@ class EnglishTelephone(Telephone):
 
     The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
     brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
-    `phone_kept_shapes` keep thousands that spaces group, as in `10 000`, as written, and its `no_phone_shapes`
-    take the phone shape from two years that a dash joins.
+    `phone_kept_shapes` keep thousands that spaces group, as in `10 000` and `1 000 000 2nd-generation`, as
+    written, and its `no_phone_shapes` take the phone shape from two years that a dash joins.
 
     A last group of one or two digits is the hour or a count, not a phone group, when the run ends inside a word,
     when a full stop and two digits complete it, or when a space and a day period or a lowercase word that is no

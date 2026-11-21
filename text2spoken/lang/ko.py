@@ -82,7 +82,8 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import long_date
 from text2spoken.core.language import LanguageSpec, Request, Variety
-from text2spoken.core.recognizers import (_GROUP_SPACES, RBNF_DECIMAL, SHARED, OrdinalStop, RbnfCardinal, _rbnf_spans,
+from text2spoken.core.numbers import GROUP_SPACES
+from text2spoken.core.recognizers import (RBNF_DECIMAL, SHARED, OrdinalStop, RbnfCardinal, _rbnf_spans,
                                           signed, speak_decimal, speak_lexicon, written_shapes)
 from text2spoken.core.spans import FIELDS, Features, Recognizer, Span, SpanContext
 from text2spoken.core.tokens import Token
@@ -159,7 +160,7 @@ class KoCardinal(RbnfCardinal):
         if hidden:
             taken = {position for span in spans for position in range(span.start, span.end)}
             grouped = {span.end + 1 for span in _rbnf_spans(text, tokens, request)
-                       if span.fields["sign"] and text[span.end:span.end + 1] in _GROUP_SPACES}
+                       if span.fields["sign"] and text[span.end:span.end + 1] in GROUP_SPACES}
             for span in super().find(spaced, tokens, request):
                 if not taken.isdisjoint(range(span.start, span.end)):
                     continue

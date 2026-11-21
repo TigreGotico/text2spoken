@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import heapq
 import logging
+import re
 import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -10,8 +11,9 @@ from dataclasses import KW_ONLY, dataclass, replace
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
-from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, is_digit, is_letter, is_mark, is_punctuation,
-                                     next_visible)
+from text2spoken.core.numbers import GROUP_SPACES, SPACE_GROUPS, WHOLE_GROUPS, number_marks
+from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_digit, is_letter, is_mark,
+                                     is_punctuation, next_visible)
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
                                 UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
@@ -154,13 +156,50 @@ def _sides(span: Span, before: Mapping[int, int], after: Mapping[int, int]) -> t
     return (left, left - 1), (span.end, after.get(span.end, span.end + 1))
 
 
+_DIGITS = re.compile("[0-9]+")
+_MARKED_GROUPS = ("(?:[^0-9\t-\r\x1c-\x20\x85\xa0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000][0-9]+"
+                  f"(?:[{GROUP_SPACES}][0-9]{{3}})*)*")
+_GROUP_RUNS = re.compile(f"(?:{SPACE_GROUPS.pattern}){_MARKED_GROUPS}")
+_WHOLE_GROUP_RUNS = re.compile(f"(?:{WHOLE_GROUPS.pattern}){_MARKED_GROUPS}")
+"""A run of `SPACE_GROUPS`, or of `WHOLE_GROUPS` where the decimal mark is no comma, with each mark and digit group
+after it: the fraction of `1 250.5`, the high end of the ranges `081-95` and `1 000 000-2 000 000`, or the rest of
+a number such as `34 481.312`. A mark is one character that is no digit and no space (`str.isspace`)."""
+
+
+def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
+    """The spaces between the groups of a number written in groups of three digits, as in `12 000` and, where the
+    decimal mark is the comma, `0,264 7`. A run of `_GROUP_RUNS` with a digit next to it, or one character away, is
+    no such number. After the run, the digit continues it, as in `123 456 78` and `+34 481.312 50`, so a second pass
+    reads the run with the digit. Before the run, the first group belongs to the number before, as in
+    `0800 123 456`, `HTTP/1.1 404` and `470-2 487`. Nor is a run after a letter, as in the code `K1 500`.
+
+    A run that starts inside a digit run has a digit next to it, so only the start of each digit run is tried, past
+    the end of the last run. The scan then takes linear time, also for `[0-9]+,` before a long digit run."""
+    folded = fold_digits(text)
+    marked = bytearray(len(text))
+    runs = _GROUP_RUNS if decimal_comma else _WHOLE_GROUP_RUNS
+    end = 0
+    for digits in _DIGITS.finditer(folded):
+        if digits.start() < end or (match := runs.match(folded, digits.start())) is None:
+            continue
+        start, end = match.span()
+        near = folded[max(start - 2, 0):start] + folded[end:end + 2]
+        if any("0" <= char <= "9" for char in near) or (start and is_letter(folded[start - 1])):
+            continue
+        for position in range(start, end):
+            if folded[position] in GROUP_SPACES:
+                marked[position] = 1
+    return marked
+
+
 def _joined(text: str, span: Span, read: bytearray, holder: list[Span | None],
-            sides: Sequence[tuple[int, int]]) -> bool:
-    """Whether one character that is not a digit or a space joins the span, on either side, to a digit that no
-    span reads, or to a character of a waiting span of another form. A joiner that a waiting span of the same
-    form holds is no joiner: the two spans are one range, as in `$5-$10`."""
+            sides: Sequence[tuple[int, int]], grouped: bytearray) -> bool:
+    """Whether one character that is not a digit or a space, or a space between two groups of digits, joins the
+    span, on either side, to a digit that no span reads, or to a character of a waiting span of another form. A
+    joiner that a waiting span of the same form holds is no joiner: the two spans are one range, as in `$5-$10`."""
     def side(joiner: int, beyond: int) -> bool:
-        if not (0 <= beyond < len(text) and _joiner(text[joiner]) and not read[joiner] and not read[beyond]):
+        if not (0 <= beyond < len(text) and (_joiner(text[joiner]) or grouped[joiner])
+                and not read[joiner] and not read[beyond]):
             return False
         partner = holder[joiner]
         if partner is not None and partner.form is span.form:
@@ -196,6 +235,11 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
     before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
     reads the number after it, finds no key there and reads the `5` before it.
+
+    A space between groups of three digits joins them as a mark does, because the groups are one number (BIPM, SI
+    Brochure, 9th edition, section 5.4.4: the digits "may be divided into groups of three by a space"). So a span
+    that reads one group of `12 000` waits, as `€ 12` does in `€ 12 000`, and the run stays as written unless a span
+    reads it whole. A second pass, which finds the same groups, keeps it as written too.
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
@@ -240,6 +284,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
                 if not (_inside(span, blocks)
                         or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
 
+    grouped = _group_spaces(view, any(decimal[:1] == "," for _, decimal, _ in
+                                      number_marks(request.data, request.params.decimal_mark)))
     first, others = [], request
     if say_as is not None:
         others = replace(request, params=say_as.plain, memo={("written", view): text}, say_as=None)
@@ -289,7 +335,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
                 and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
             sides = ()
-        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
+        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides, grouped):
             if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
                 for position in range(span.start, span.end):
                     holder[position] = span

@@ -1,6 +1,14 @@
-"""Number parsing by the marks that a language declares for each digit script (design section 5.3)."""
+"""Number parsing by the marks that a language declares for each digit script (design section 5.3).
+
+A space groups the digits on both sides of the decimal mark. BIPM, SI Brochure, 9th edition, section 5.4.4: "for
+numbers with many digits the digits may be divided into groups of three by a space, in order to facilitate reading.
+Neither dots nor commas are ever inserted in the spaces between groups. For example, 43 279.168 29 but not
+43,279.168,29." So a group of the fraction that another group follows has three digits. The same section says that
+the decimal marker "shall be either the point on the line or the comma on the line". Where the full stop is the
+decimal mark of a language, the comma groups thousands and starts no fraction."""
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 
@@ -9,6 +17,19 @@ from text2spoken.params import FrozenMap
 
 SIGNS = {"-": "-", "−": "-", "+": "+"}
 _CLUSTER_JOINERS = frozenset(":/")
+
+GROUP_SPACES = " \u00a0\u202f"
+"""The space, the no-break space and the narrow no-break space, which group the digits of a number."""
+
+WHOLE_GROUPS = re.compile(f"[0-9]{{1,3}}(?:[{GROUP_SPACES}][0-9]{{3}})+")
+"""Digits in groups of three with a space, a no-break space or a narrow no-break space between them, after a first
+group of one to three digits: `36 524`."""
+
+SPACE_GROUPS = re.compile(f"{WHOLE_GROUPS.pattern}(?:,(?:[0-9]{{3}}[{GROUP_SPACES}])*[0-9]{{1,3}})?"
+                          f"|[0-9]+,(?:[0-9]{{3}}[{GROUP_SPACES}])+[0-9]{{1,3}}")
+"""`WHOLE_GROUPS`, or digits grouped the same way in the fraction after a decimal comma, where each group but the
+last has three digits: `123 456 789,987 546`, `0,264 7` (Araua 203, section 3.2.1.1, page 12). It fits only a
+language whose decimal mark is the comma: where the comma groups thousands, `1,000 18` is two numbers."""
 
 
 @dataclass(frozen=True)

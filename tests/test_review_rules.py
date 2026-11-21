@@ -18,7 +18,7 @@ from text2spoken.core import recognizers
 from text2spoken.core.language import cldr_locale
 from text2spoken.core.numbers import find_numbers
 from text2spoken.core.recognizers import _DATE, _FRACTION, SHARED, SPACE_GROUPS, digit_run_matches
-from text2spoken.core.spans import Span, _inside, _joined, _sides, check_features, splits_token
+from text2spoken.core.spans import Span, _group_spaces, _inside, _joined, _sides, check_features, splits_token
 from text2spoken.core.tokens import check_tokens, context_word, fold_digits, join_split_words, protect_blocks
 from text2spoken.lang import nl
 from text2spoken.lang.en import LANGUAGE as EN
@@ -510,8 +510,47 @@ def test_a_digit_next_to_a_span_is_no_joiner():
     span = Span(0, 2, Form.CARDINAL, FrozenMap())
     text = "ab12"
     sides = _sides(span, {}, {})
-    assert not _joined(text, span, bytearray(len(text)), [None] * len(text), sides)
-    assert _joined("ab/2", span, bytearray(4), [None] * 4, sides)
+    assert not _joined(text, span, bytearray(len(text)), [None] * len(text), sides, bytearray(len(text)))
+    assert _joined("ab/2", span, bytearray(4), [None] * 4, sides, bytearray(4))
+
+
+def test_a_space_between_groups_of_three_digits_joins_them():
+    """Section 2.1 and BIPM, SI Brochure, 9th edition, section 5.4.4: digits "may be divided into groups of three by
+    a space", so the space joins the groups as a mark does. A mark and digits after the run belong to it, as in
+    `1 250.5`. A space joins nothing when a digit is next to the run or one character away, as in `123 456 78`,
+    `1.6 125`, `+34 481.312 50` and `470-2 487`, and nor does a space after a code, as in `K1 500`. A fraction after a
+    decimal comma takes groups too, as in `0,264 7`, where each group but the last has three digits, so `1 250,50 2`
+    is no such run. Where the comma groups thousands, `1,000 18` is two numbers."""
+    span = Span(0, 2, Form.CARDINAL, FrozenMap())
+    sides = _sides(span, {}, {})
+    assert _joined("12 000", span, bytearray(6), [None] * 6, sides, _group_spaces("12 000", True))
+    assert not _joined("12 00", span, bytearray(5), [None] * 5, sides, _group_spaces("12 00", True))
+    assert list(_group_spaces("12 000 0001", True)) == [0] * 11
+    assert list(_group_spaces("0800 123 456", True)) == [0] * 12
+    assert list(_group_spaces("1 000 000-2", True)) == [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+    assert list(_group_spaces("1.6 125", True)) == [0] * 7
+    assert list(_group_spaces("K1 500", True)) == [0] * 6
+    assert list(_group_spaces("3.537,03 176.851", True)) == [0] * 16
+    assert list(_group_spaces("1 250.5 kg", True)) == [0, 1] + [0] * 8
+    assert list(_group_spaces("+34 481.312 50", True)) == [0] * 14
+    assert list(_group_spaces("091 081-95 3", True)) == [0] * 12
+    assert list(_group_spaces("470-2 487", True)) == [0] * 9
+    assert list(_group_spaces("0,264 7", True)) == [0, 0, 0, 0, 0, 1, 0]
+    assert list(_group_spaces("0,264 7 12", True)) == [0] * 10
+    assert list(_group_spaces("1 250,50 2", True)) == [0] * 10
+    assert list(_group_spaces("0,264 7", False)) == [0] * 7
+    assert list(_group_spaces("1,000 18", False)) == [0] * 8
+    assert list(_group_spaces("12 000", False)) == [0, 0, 1, 0, 0, 0]
+
+
+def test_a_long_digit_run_before_a_comma_takes_linear_time():
+    def seconds(count: int) -> float:
+        start = time.perf_counter()
+        _group_spaces("1" * count + ",x", True)
+        return time.perf_counter() - start
+
+    small, large = min(seconds(4000) for _ in range(3)), min(seconds(32000) for _ in range(3))
+    assert large < 20 * small, (small, large)
 
 
 def test_digits_from_two_digit_sets_stay_as_written_in_a_language_with_no_file():
@@ -832,6 +871,54 @@ def test_a_phone_word_after_a_hyphen_keeps_its_run_on_a_second_pass(lang):
 def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang):
     """Section 11. `sei` is a word, not the unit `s` and the ending `ei`, so a second pass reads no measure."""
     once = normalize("Appelez le 0033 6 12 34 56 78 ici.", lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Il faut 1 000 000-2 000 000 personnes.", "de-DE"), ("Il faut 1 000 000-2 000 000 personnes.", "es-BO"),
+    ("Il faut 1 000 000-2 000 000 personnes.", "es-ES"), ("Il faut 1 000 000-2 000 000 personnes.", "es-US"),
+    ("Il faut 1 000 000-2 000 000 personnes.", "es-UY"), ("Het kost € 12 000 000,00.", "it-IT"),
+    ("Het kost € 12 000", "it-IT"), ("Het kost € 12 000.", "it-IT"), ("Het kost € 12 000.", "it-SM"),
+    ("+34 481.312 50 2x.", "de-DE"), ("+34 481.312 50 2x.", "es-ES"), ("+34 481.312 50 2x.", "pt-PT"),
+    ("091 081-95 3/7", "de-DE"), ("+49 914-622 56 329:47", "en-GB"), ("+351 514 579.16 091 36", "en-GB"),
+    ("+1 633-427 864 3D", "de-AT"), ("Fax: 83:044 5226 470-2 487", "de-DE"), ("174 01-426 534 589", "en-GB"),
+    ("Fax: (491:62 7 6-8181-7 964)", "es-MX"), ("+43 (0)08 717 80 1st", "en-GB"),
+    ("Tel. 665.037 (0)74 513 77 8 101 36 12 h", "es-MX"), ("Ligue 84-607 (0)0902 2 89 373 3204-4 und", "pt-PT"),
+])
+def test_a_number_grouped_with_spaces_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. No span reads one group of a number grouped with spaces, so no group is left for a second pass.
+    A run that a digit continues or starts is no such number, so it reads on the first pass, as `+34 481.312 50 2x.`
+    does: a second pass that finds the run kept as written before a number word reads it as a telephone number."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "expected"), [
+    ("(1) 0 437 593", "en-GB", "(one) zero four three seven five nine three"),
+    ("(12) 0 437 593", "en-US", "(twelve) zero four three seven five nine three"),
+    ("Step (3) 0 800 123 456", "en-GB", "Step (three) zero eight zero zero one two three four five six"),
+    ("(1) 0 437 593", "de-DE", "(eins) null vier drei sieben fünf neun drei"),
+    ("x(12) 0 437 593", "de-DE", "x(zwölf) null vier drei sieben fünf neun drei"),
+])
+def test_a_run_after_a_number_in_brackets_reads_as_on_a_second_pass(text, lang, expected):
+    """Section 11. A number in brackets that no telephone reading takes as an area code leaves the run after it, so
+    the run reads digit by digit on the first pass, as it does after `[1]` and as a second pass reads it after
+    `(one)`."""
+    once = normalize(text, lang)
+    assert once == expected
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Between 10 000–20 000 people.", "en-GB"), ("Het kost 10 000/20 000 euro.", "nl-NL"),
+    ("Es kostet 10 000:20 000 Euro.", "de-DE"), ("Mide 10 000x20 metros.", "es-ES"),
+    ("Il faut 1 000 000–2 000 000 personnes.", "de-DE"),
+])
+def test_any_mark_after_a_group_run_keeps_the_run_as_written(text, lang):
+    """Section 4.2: a wrong reading is worse than none. Any character that is no digit and no space joins the digits
+    after it to a number grouped with spaces, as the dash of a range does, so no group reads alone."""
+    once = normalize(text, lang)
+    assert once == text
     assert normalize(once, lang) == once
 
 
