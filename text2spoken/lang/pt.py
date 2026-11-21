@@ -223,6 +223,14 @@ clocks are lot numbers. A clock `24:00` is midnight, the end of the day: Pribera
 hora do dia civil que acaba às 24h00 (ou 00h00, o mesmo momento em que começa a primeira hora do dia seguinte)". So it
 reads as `0:00` does, with the ruling above: `Fecha às 24:00` reads "Fecha à meia-noite".
 
+A time that `h`, `hora` or `horas` follows reads that word once. The word is the unit that `h` stands for (Ciberdúvidas
+14648: "17:30 h"; "escrita por extenso da unidade"), and the reading of a whole hour or of a time with `h` already
+holds the unit once: "às onze horas e trinta minutos" (Ciberdúvidas, O nosso idioma, article 3267). So the time claims
+the written word: `Fecha às 16:00 horas` reads "Fecha às dezasseis horas", and `Fecha às 24:00 horas` reads "Fecha à
+meia-noite", because "meia-noite" and "meio-dia" name the hour with no unit (Priberam, "meia-noite"). A time with
+minutes and no `h`, as `10:30`, reads "dez e trinta" with no unit, so a written `horas` after it stays: "dez e trinta
+horas". No source rules on the doubled word itself; the rule follows from the readings cited above.
+
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
@@ -1062,7 +1070,9 @@ class Clock(TimeClock):
     character between the word and the time, such as the `§` of `às § 0:00`, so that the span claims no character
     that another form reads. So does a word of `time_article_prepositions` with no preposition of its list right
     before it, as in `Almoçamos as 12:00`. In a range, the range word of the first time takes the article: `das
-    9:00-12:00` reads `das nove horas ao meio-dia`."""
+    9:00-12:00` reads `das nove horas ao meio-dia`. A time that reads its own hour unit, a whole hour or a time with
+    `h`, claims a `h`, `hora` or `horas` right after it, so that the word is read once: `16:00 horas` reads `dezasseis
+    horas`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = list(self._ranges(text, tokens, request))
@@ -1099,6 +1109,8 @@ class Clock(TimeClock):
                 and words[after].text.lower() in ("h", "hora", "horas")
             if verb and (not plural or hour_word):
                 continue
+            if hour_word and (span.fields["suffix"] or span.fields["minute"] == 0 and not span.fields["second"]):
+                span = replace(span, end=words[after].end)
             hour = _day_point(span.fields)
             if hour is None:
                 out.append(span)
