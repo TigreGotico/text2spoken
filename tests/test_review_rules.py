@@ -925,6 +925,19 @@ def test_a_run_after_a_number_in_brackets_with_a_leading_0_reads_as_on_a_second_
     assert normalize(once, lang, say_as=say_as) == once
 
 
+@pytest.mark.parametrize(("text", "lang"), [
+    ("(0) 0 437 593-9085", "en-GB"),
+    ("Note (84/34-8 (0) 0 437 593-9085), Tel. 360/259-23 00 62-839-4799 956 895 12 h Call [0347 899 867 443 (81)] 1st",
+     "en-GB"),
+    ("Nota (112-388 2097 630)/2 telefone 08.43 (0) 320 294 211-917 413 und", "pt-BR"),
+])
+def test_a_run_after_a_lone_0_in_brackets_reads_as_on_a_second_pass(text, lang):
+    """Section 11. A lone `(0)` reads as the cardinal zero, so a second pass sees the run after it alone, and the
+    first pass tries that run alone too."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
+
+
 @pytest.mark.parametrize(("text", "lang", "expected"), [
     ("Il a payé 12,500 3 fois.", "fr-FR", "Il a payé 12,500 3 fois."),
     ("Der Wert 0,125 3 mal.", "de-DE", "Der Wert 0,125 3 mal."),
