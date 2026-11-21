@@ -68,7 +68,10 @@ def language_modules() -> list[str]:
 
 
 def request_for(spec: LanguageSpec, variety_index: int = 0) -> Request:
-    return Request(spec.varieties[variety_index].tag, spec.varieties[variety_index], spec, NormalizationParams())
+    """The request that `analyze` builds for the variety with no params, so the effective params of section 2.3, as
+    the `phone_regions` of the tag, which the telephone recognizers read."""
+    variety = spec.varieties[variety_index]
+    return Request(variety.tag, variety, spec, loader._effective(variety.tag, spec, variety, NormalizationParams()))
 
 
 def clause_1(name: str, spec: LanguageSpec) -> None:

@@ -836,6 +836,74 @@ def test_a_word_after_a_number_is_no_unit_and_case_ending_on_a_second_pass(lang)
 
 
 @pytest.mark.parametrize(("text", "lang"), [
+    ("Call 1-800-555-0199 8 a.m. to 5 p.m.", "es-US"), ("Llame al 1-800-555-0199 8 a.m. a 5 p.m.", "es-US"),
+    ("23.59 +1 800 555 1234 2.5 2ª", "fr-CH"),
+])
+def test_an_hour_after_a_phone_number_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A last group of one or two digits that a day period follows, or that a word continues, is no
+    phone group, so the run is the one that a second pass finds."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Composez le 1\u00a0800\u00a0555\u00a01234\u00a08 a.m.", "fr-CA"),
+    ("Appelez le 01\u00a023\u00a045\u00a067\u00a089\u00a08h", "fr-FR"),
+])
+def test_a_last_hour_group_after_a_no_break_space_reads_as_after_a_space(text, lang):
+    """A no-break space parts two groups of a phone run as a space does, so a last hour group after it leaves the
+    run as it does after a space."""
+    assert normalize(text, lang).replace("\u00a0", " ") == normalize(text.replace("\u00a0", " "), lang)
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Uso Potencial, Agricultura, 1:1 000 000.", "es-ES"), ("ÖNORM ISO 10007:2005 06 01", "de-DE"),
+])
+def test_a_phone_run_after_a_joined_number_that_stays_stays_too(text, lang):
+    """A run after a group that a mark joins to the digits before it waits until a span reads that mark. Here no
+    span reads `1:1` or `10007:2005`, so a second pass sees the same digits, and the run stays as written."""
+    assert normalize(text, lang) == text
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("45 08 08 2x.", "de-AT"),
+    ("[52 734 569 (695)]/2 Seite (586:424 07.6 88 038) 2. 1468/094-6321 266 55 6 08 00 3D", "de-AT"),
+    ("Nr. 19–66 +34 289 7248 219 014 733-488 3D Tel. 3,8 025/0.93 et", "de-DE"),
+    ("n.º 88/82–376 5632-974/7766-9462 155 5 % n.º 251 9594-03 10 066 099 8am unos 331 015-3721 465.5", "es-MX"),
+    ("567/1 06 2 1 036 03 1st", "es-US"),
+    ("Note [: 3.14 324-367 804 694 (252)] 1st Tél. : 3288.824.728 777 67.18 2e", "fr-CA"),
+    ("Appelez le 1.38 260 325 1266.093 192 6 2e 21.29 711 054 0687 811 0191 808 und (0) 79 31 0012.594"
+     " 0489 1st", "fr-FR"),
+    ("Fax : 3867.306:03\u202f2667.0908\u202f019\u202f529-6523 2x. Tél. 42,018\u202f40\u202f40 und", "fr-FR"),
+    ("ISO 0 09 0 151-4-776 2x.", "fr-FR"),
+    ("873:155 204 022.9 304.58-264 9.30 telefone 08 25 48 7149.272 417 1st telefone 169.730 aqui.", "pt-BR"),
+    ("Fax: 2-330 12.05 +34 035 01 857 220/986 et", "pt-BR"),
+    ("ISO . 12.05 0 88 4791 20 2ª Tel. 443.80 12.05 +351 784-749 740 772.5", "pt-BR"),
+    ("Tel. 316–146 12.05 026 987-3197 97 78-566/2 Hinweis 9/290 4-30 31 504 037 82 und etwa 746:136 480 7 0.", "de-AT"),
+    ("Telefon 702–77 3.14 521-93 928.31 08 70 2ª", "de-DE"),
+    ("etwa 60-15/91 33 791 e 405–01 03 02 463 162 5 %", "de-DE"),
+    ("86–85 035 097 927 06 722/51 %", "es-MX"),
+    ("Note [621–82 0033 018.804 74 54/59/59 (67)] 2e 663/321,96 0576 415.96 79 9939-99 ici.", "fr-CH"),
+    ("environ 087:772 1.6.0 082 116.14/1 3D page 257-567.16 2713.5 Tél. : 179–02 0602 078 931 13-309 e", "fr-CH"),
+    ("page 6543–593\u202f06.438-66\u202f637\u202f61 8am", "fr-CH"),
+    ("cerca de 431–034 0033 072 083 000 5 %", "pt-BR"),
+])
+def test_a_phone_run_after_an_en_dash_or_an_hour_reads_the_same_on_a_second_pass(text, lang):
+    """Section 11. A shorter run after a group that an en dash joins, or after an hour that leaves the run, reads
+    on the first pass only when a second pass reads it too."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [("47:892 06 3 74 12 h", "en-GB"), ("884/6 032 320 6 7 aquí.", "en-GB")])
+def test_a_waiting_phone_span_holds_no_character(text, lang):
+    """A phone span that waits until a span reads the group before it holds no character while it waits, so the
+    digits of the run read as a second pass reads them."""
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
     ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
     ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
     ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),
