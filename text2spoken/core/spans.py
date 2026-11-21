@@ -8,6 +8,7 @@ import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import KW_ONLY, dataclass, replace
+from itertools import accumulate
 from typing import TYPE_CHECKING, Literal, Protocol
 
 from text2spoken.core.emoji import emoji_view, sequences_in
@@ -297,11 +298,17 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
         evidence = _evidence_words(text, tokens, held)
         telephone = say_as.value == "telephone"
+        # The farthest end of a say-as span that starts at or before each position.
+        reach = [0] * len(text)
+        for span in first:
+            reach[span.start] = max(reach[span.start], span.end)
+        reach = list(accumulate(reach, max))
         fitting = []
         for span in first:
-            # The spans kept as written whose evidence word the span holds. A telephone number holds its own groups.
+            # The spans kept as written whose evidence word the span holds. A telephone number reads the groups that
+            # it holds, its own or those of another telephone number of the say-as, so they keep nothing.
             keeps = [written for spans in evidence[span.start:span.end] for written in spans
-                     if not (telephone and span.start <= written.start and written.end <= span.end)]
+                     if not (telephone and reach[written.start] >= written.end)]
             if not (_cuts(span, unit_at) or keeps):
                 fitting.append(span)
         first = fitting

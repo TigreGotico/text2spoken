@@ -938,6 +938,32 @@ def test_a_run_after_a_lone_0_in_brackets_reads_as_on_a_second_pass(text, lang):
     assert normalize(once, lang) == once
 
 
+@pytest.mark.parametrize(("text", "lang"), [
+    ("0 437 593 (0) 0 437 593", "it-IT"), ("0 437 593 (0) 0 437 593", "pt-PT"), ("0 437 593 (0) 0 437 593", "ar"),
+    ("(0) 0 437 593 (0) 0 437 593", "nl-NL"), ("(09) 0 437 593 (09) 0 437 593", "it-IT"),
+    ("0 437 593 (020) 437 593", "ja-JP"), ("12 000 (1) 437 593", "en-GB"), ("12 000 (1) 437 593", "en-US"),
+    ("12 000 (1) 437 593", "de-DE"), ("12 000 (1) 437 593", "es-ES"),
+])
+def test_a_second_telephone_number_reads_on_the_first_pass(text, lang):
+    """Section 11. With say-as `telephone`, the number in brackets of the second run is the word after the first
+    run, so it counts as the evidence that keeps the first run as written. The say-as reads the first run, so that
+    run keeps nothing, and the say-as reads the second run on the first pass, as a second pass does."""
+    say_as = SayAs(interpret_as="telephone")
+    once = normalize(text, lang, say_as=say_as)
+    assert normalize(once, lang, say_as=say_as) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "value", "expected"), [
+    ("(0)-12 000,5", "fr-FR", "telephone", "(0)-12 000,5"),
+    ("+44 (0)20 7946 0958", "en-US", "digits",
+     "plus forty-four (0)20 seven thousand nine hundred forty-six zero nine five eight"),
+])
+def test_a_kept_run_that_no_telephone_number_holds_keeps_its_evidence_word(text, lang, value, expected):
+    """A kept run keeps the word after it as its evidence unless a telephone number of the say-as holds the run, so
+    these texts read as on dev: no telephone number holds `12 000,5`, and the rule is for say-as `telephone` only."""
+    assert normalize(text, lang, say_as=SayAs(interpret_as=value)) == expected
+
+
 @pytest.mark.parametrize(("text", "lang", "expected"), [
     ("Il a payé 12,500 3 fois.", "fr-FR", "Il a payé 12,500 3 fois."),
     ("Der Wert 0,125 3 mal.", "de-DE", "Der Wert 0,125 3 mal."),
