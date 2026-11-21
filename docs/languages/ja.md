@@ -1,5 +1,13 @@
 # Japanese
 
+<!-- agent-hint
+covers: what the Japanese file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/ja.py, tests/data/ja.tsv
+generated: no
+verify: `pytest tests/test_rows.py tests/test_docs_examples.py -k "ja- or ja.md" && python -c "import re,sys;from text2spoken import Form,supports;c=sys.argv[1];s=re.search(r'^The file reads (.*?)\.( |$)',open(f'docs/languages/{c}.md').read(),re.M).group(1);k=dict(CARDINAL='cardinal',ORDINAL='ordinal',DECIMAL='decimal',FRACTION='fraction',RANGE='range',EXPRESSION='expression',DATE='date',TIME='time',YEAR='year',MONEY='money',MEASURE='measure',PERCENT='percentage',TELEPHONE='telephone|phone number',IDENTIFIER='identifier',LETTERS='capital|letter',ABBREVIATION='abbreviation',IDIOM='idiom',ROMAN='Roman',COLOR='colou?r',ELECTRONIC='address|e-mail',SYMBOL='symbol',EMOJI='emoji',LEXICON='lexicon');assert set(k)=={x.name for x in Form},set(k)^{x.name for x in Form};f={x.name for x in supports(c).forms};bad=[n for n,w in k.items() if bool(re.search(w,s))!=(n in f)];assert not bad,bad" ja`
+see: ko.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/ja.py` reads Japanese. It needs no extra, because its number words come from the CLDR spell-out rules.
 
 ## What it reads

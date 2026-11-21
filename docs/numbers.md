@@ -1,6 +1,14 @@
 # Numbers
 
-This page shows how text2spoken reads numbers: cardinals, ordinals, decimals, fractions, ranges, expressions, Roman numerals, telephone numbers, identifiers and idioms. The tables of [How it reads text](how-it-reads.md#the-forms) give the languages that offer each form.
+<!-- agent-hint
+covers: how cardinals, ordinals, decimals, fractions, ranges, Roman numerals, telephone numbers and idioms read.
+source: text2spoken/core/recognizers.py, text2spoken/core/numbers.py, text2spoken/core/roman.py, text2spoken/lang/
+generated: no
+verify: `pytest tests/test_docs_examples.py -k numbers.md && python -c "import re;from text2spoken import Form,supports;from text2spoken.core.language import _registry;t=open('docs/numbers.md').read();m=dict(re.findall(r'\[(\w+)\]\(docs/languages/(\w+)\.md\)',open('README.md').read()));p=re.findall(r'the \x60(\w+)\x60 form, such as (.+?), reads',t);bad=[(f,n) for f,s in p for n in re.split(r', | or | and ',s) if Form[f] not in supports(m[n]).forms];assert p and not bad,bad;assert re.search(r'^The \x60IDENTIFIER\x60 form .* No language file has a recognizer for it',t,re.M) and not [c for c in _registry() if Form.IDENTIFIER in supports(c).forms]"`
+see: dates-and-times.md, languages/en.md, languages/pt.md
+-->
+
+This page shows how text2spoken reads numbers: cardinals, ordinals, decimals, fractions, ranges, expressions, Roman numerals, telephone numbers, identifiers and idioms. The page [How it reads text](how-it-reads.md#the-forms) lists the forms, and `supports(lang).forms` gives the forms of one language.
 
 ## Cardinal numbers
 
@@ -78,7 +86,7 @@ English reads every proper fraction. German reads a half as one word. Portuguese
 
 ## Roman numerals
 
-English, Portuguese and Basque read a Roman numeral when the text around it shows that it is a number, such as a name, a century, or a noun of a series:
+A language that offers the `ROMAN` form, such as English, reads a Roman numeral when the text shows that it is a number. The evidence is a name, a century, or a noun of a series:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |

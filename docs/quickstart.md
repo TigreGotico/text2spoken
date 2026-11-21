@@ -1,5 +1,13 @@
 # Quickstart
 
+<!-- agent-hint
+covers: how to install text2spoken, make the first call and see what a tag reads.
+source: pyproject.toml, text2spoken/core/language.py:supports
+generated: no
+verify: `pytest tests/test_docs_examples.py -k quickstart.md && python -c "import tomllib;p=tomllib.load(open('pyproject.toml','rb'))['project'];e=sorted(k for k,v in p['optional-dependencies'].items() if not v);q=chr(96);s=', '.join(q+k+q for k in e[:-1])+' and '+q+e[-1]+q;t=open('docs/quickstart.md').read();assert f'The extras {s} add nothing' in t,s;assert 'Python '+p['requires-python'][2:]+' or later' in t"`
+see: usage.md, api.md
+-->
+
 This page installs text2spoken, makes the first call, and shows how to see what a language tag reads.
 
 ## Install
@@ -14,7 +22,7 @@ The library needs Python 3.11 or later. It uses no network and loads no model. E
 uv pip install --prerelease=allow "text2spoken[pt]"
 ```
 
-The extras `ar`, `es`, `eu`, `fr`, `it`, `nl` and `ru` add nothing, and an install that names one still works.
+The extras `ar`, `ca`, `es`, `eu`, `fr`, `it`, `nl` and `ru` add nothing, and an install that names one still works.
 
 ## The first call
 

@@ -1,6 +1,14 @@
 # Money, units and symbols
 
-This page shows how text2spoken reads sums of money, measures, percentages, symbols and colours. English and Portuguese take the words for units, currencies and symbols from the Unicode CLDR, release 49. The other languages give their own tables.
+<!-- agent-hint
+covers: how money, measures, percentages, symbols and colours read, and where their words come from.
+source: text2spoken/core/currencies.py, text2spoken/core/units.py, text2spoken/core/symbols.py, text2spoken/core/color.py, text2spoken/data/cldr/
+generated: no
+verify: `pytest tests/test_docs_examples.py -k money-units-and-symbols.md && python -c "import os,re;from text2spoken import Form,supports;from text2spoken.core.language import _registry;t=open('docs/money-units-and-symbols.md').read();m=dict(re.findall(r'\[(\w+)\]\(docs/languages/(\w+)\.md\)',open('README.md').read()));p=re.findall(r'the \x60(\w+)\x60 form, such as (.+?), reads',t);bad=[(f,n) for f,s in p for n in re.split(r', | or | and ',s) if Form[f] not in supports(m[n]).forms];assert p and not bad,bad;g=re.search(r'Some language files, such as (.+?), take the words for units, currencies and symbols from the Unicode CLDR, release (\d+)\.',t);assert re.search(rf'^RELEASE = .{g[2]}\.',open('scripts/extract_cldr.py').read(),re.M),g[2];miss=[v.tag+x for n in re.split(r', | or | and ',g[1]) for v in _registry()[m[n]].varieties for x in ('','.currencies','.symbols') if not os.path.exists(f'text2spoken/data/cldr/{v.tag}{x}.json')];assert not miss,miss"`
+see: addresses-letters-and-emoji.md, development.md
+-->
+
+This page shows how text2spoken reads sums of money, measures, percentages, symbols and colours. Some language files, such as English and Portuguese, take the words for units, currencies and symbols from the Unicode CLDR, release 49. Their data is in `text2spoken/data/cldr/`. The other language files give their own tables.
 
 ## Money
 
@@ -100,7 +108,7 @@ A character that a table of the language gives to another form, such as `°`, `�
 
 ## Colours
 
-German, English and Portuguese read a hex colour code by the name of its colour:
+A language that offers the `COLOR` form, such as German, English, French or Portuguese, reads a hex colour code by the name of its colour:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -141,6 +149,8 @@ A currency sign between a range and another sign can keep the range as written, 
 | `0–2$₽0` | `en-GB` | `0–2$zero Russian roubles` | `zero to two$zero Russian roubles` |
 
 ## The CLDR data
+
+<!-- agent-hint: scripts/extract_cldr.py writes text2spoken/data/cldr/, so change the script and run it, and never edit the JSON by hand. -->
 
 The data ships in `text2spoken/data/cldr/` under the Unicode License v3. `scripts/extract_cldr.py` writes it, and [Development](development.md#the-cldr-data) shows how to run it.
 
