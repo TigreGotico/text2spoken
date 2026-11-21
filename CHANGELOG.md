@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.0.2a94](https://github.com/TigreGotico/text2spoken/tree/0.0.2a94) (2026-11-21)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a93...0.0.2a94)
+
+**Merged pull requests:**
+
+- fix\(pt\): a clock reads the hour word that follows it once [\#390](https://github.com/TigreGotico/text2spoken/pull/390) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(core\): read a long digit run in linear time in pt, ru, eu and nl [\#389](https://github.com/TigreGotico/text2spoken/pull/389) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix: a tag with no script reads the CLDR locale of its likely script [\#308](https://github.com/TigreGotico/text2spoken/pull/308) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a93](https://github.com/TigreGotico/text2spoken/tree/0.0.2a93) (2026-11-19)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a92...0.0.2a93)
+
+**Merged pull requests:**
+
+- fix\(core\): decline a number that unicode-rbnf 2.5.1 writes in digits [\#387](https://github.com/TigreGotico/text2spoken/pull/387) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- test\(en\): tag the two rows with a UK date source as en-GB [\#362](https://github.com/TigreGotico/text2spoken/pull/362) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(electronic\): a full stop after a full stop or … is no address marker [\#356](https://github.com/TigreGotico/text2spoken/pull/356) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a92](https://github.com/TigreGotico/text2spoken/tree/0.0.2a92) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a91...0.0.2a92)
@@ -261,10 +281,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a62...0.0.2a63)
 
-**Merged pull requests:**
-
-- fix\(core\): read the minus in languages with no file [\#124](https://github.com/TigreGotico/text2spoken/pull/124) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a62](https://github.com/TigreGotico/text2spoken/tree/0.0.2a62) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a61...0.0.2a62)
@@ -277,33 +293,17 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a60...0.0.2a61)
 
-**Merged pull requests:**
-
-- fix\(en\): no doubled article before a date [\#123](https://github.com/TigreGotico/text2spoken/pull/123) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a60](https://github.com/TigreGotico/text2spoken/tree/0.0.2a60) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a59...0.0.2a60)
-
-**Merged pull requests:**
-
-- fix\(nl\): keep leading-zero spaced numbers with a decimal comma [\#126](https://github.com/TigreGotico/text2spoken/pull/126) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a59](https://github.com/TigreGotico/text2spoken/tree/0.0.2a59) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a58...0.0.2a59)
 
-**Merged pull requests:**
-
-- feat: Dutch language file [\#119](https://github.com/TigreGotico/text2spoken/pull/119) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a58](https://github.com/TigreGotico/text2spoken/tree/0.0.2a58) (2026-11-16)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a57...0.0.2a58)
-
-**Merged pull requests:**
-
-- fix: read titles parted by a single quote or guillemets [\#120](https://github.com/TigreGotico/text2spoken/pull/120) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a57](https://github.com/TigreGotico/text2spoken/tree/0.0.2a57) (2026-11-16)
 
