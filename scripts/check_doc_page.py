@@ -2,9 +2,29 @@
 
 Usage: python scripts/check_doc_page.py PAGE
 
-PAGE is a path from the checkout root, such as `docs/numbers.md`. The script runs the docs test of the page, then
-reads each value that the page states in prose and compares it with the code. It exits 0 when the page is true,
-and 1 with the first mismatch. The `verify` line of each agent hint calls it.
+PAGE is a path from the checkout root, such as `docs/numbers.md`. The script runs the docs test of the page. Then
+the check of the page compares the values of the sentences and tables below with the code. It exits 0 when they
+are true, and 1 with the first mismatch. The `verify` line of each agent hint calls it.
+
+- README.md: the variety tags of the Languages table, and the sentence "A tag with no language file reads ...".
+- docs/index.md: the page links, the sentence that places the language pages, and the footer of each page.
+- docs/quickstart.md: the empty extras and the Python floor.
+- docs/how-it-reads.md: the Default column of the forms table.
+- docs/numbers.md, docs/dates-and-times.md: each "the `FORM` form, such as ..., reads" sentence, and in
+  numbers.md the `IDENTIFIER` sentence.
+- docs/money-units-and-symbols.md: the "such as" sentence of `COLOR`, and the languages and release of the CLDR
+  sentence.
+- docs/addresses-letters-and-emoji.md: the "... offer the form" sentences of `ELECTRONIC` and `LETTERS`.
+- docs/api.md: `PROBE_TIMEOUT`.
+- docs/errors.md: each class name in backticks, and each sentence that names a subclass.
+- docs/development.md: the CI Python versions, the CLDR and Unicode pins, the scripts/ and tests/ paths, and the
+  test extra.
+- docs/languages/<code>.md: the forms of the sentence "The file reads ...", and the forms that each sentence
+  "The file reads no ..." names. Such a sentence is no full list, so a form that it leaves out is not checked.
+
+The script reads no other prose. The docs test runs the examples of every page, and nothing checks the rest:
+for example the signature table of docs/api.md, the rows of the case table of docs/errors.md, and docs/usage.md,
+which has no check of its own.
 """
 import builtins
 import json
@@ -24,7 +44,8 @@ from text2spoken.core.revision import PROBE_TIMEOUT
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# The word that a "The file reads" sentence of a language page uses for each form, as a regex.
+# The word that a "The file reads" sentence of a language page uses for each form, as a regex. `mentions` adds the
+# word boundaries and a plural ending.
 FORM_WORDS = {
     Form.CARDINAL: "cardinal", Form.ORDINAL: "ordinal", Form.DECIMAL: "decimal", Form.FRACTION: "fraction",
     Form.RANGE: "range", Form.EXPRESSION: "expression", Form.DATE: "date", Form.TIME: "time", Form.YEAR: "year",
@@ -57,6 +78,10 @@ def names(listed: str) -> list[str]:
 
 def offers(code: str, form: Form) -> bool:
     return form in supports(code).forms
+
+
+def mentions(sentence: str, form: Form) -> bool:
+    return bool(re.search(rf"\b(?:{FORM_WORDS[form]})(?:s|es)?\b", sentence))
 
 
 def check_such_as(page: str, text: str):
@@ -233,11 +258,15 @@ def check_language(page: str, text: str):
         fail(page, f"FORM_WORDS has no word for {set(Form) - set(FORM_WORDS)}")
     forms = supports(code).forms
     for form in Form:
-        named = bool(re.search(FORM_WORDS[form], match[1]))
+        named = mentions(match[1], form)
         if named and form not in forms:
             fail(page, f"the sentence names {form.name}, which the file does not offer")
         if form in forms and not named:
             fail(page, f"the file offers {form.name}, which the sentence does not name")
+    for sentence in re.findall(r"^The file reads no (.*?)\.(?: |$)", text, re.M):
+        for form in forms:
+            if mentions(sentence, form):
+                fail(page, f"the file offers {form.name}, which a 'The file reads no' sentence names")
 
 
 CHECKS = {
