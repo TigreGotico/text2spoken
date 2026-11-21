@@ -4,7 +4,7 @@
 covers: what text2spoken does, how to install and call it, and where it sits in the speech stack.
 source: text2spoken/__init__.py, pyproject.toml, text2spoken/lang/
 generated: no
-verify: `pytest tests/test_docs_examples.py -k README.md && python -c "import re;from text2spoken.core.language import _registry;r=_registry();t=open('README.md').read();bad=[(c,g) for c,v in re.findall(r'languages/(\w+)\.md\) \| (.*) \|',t) for g in re.findall(r'\x60([a-z]{2,3}(?:-[\w-]+)?)\x60',v) if g not in {x.tag for x in r[c].varieties} and g not in r];assert not bad,bad"`
+verify: `pytest tests/test_docs_examples.py -k README.md && python -c "import re;from text2spoken.core.language import _registry;r=_registry();t=open('README.md').read();bad=[(c,g) for c,v in re.findall(r'languages/(\w+)\.md\) \| (.*) \|',t) for g in re.findall(r'\x60([a-z]{2,3}(?:-[\w-]+)?)\x60',v) if g not in {x.tag for x in r[c].varieties} and g not in r];assert not bad,bad;from text2spoken import Form,supports;from text2spoken.core.language import core_language,rbnf_locales;from text2spoken.core import parsers;o=({re.split('[-_]',l)[0] for l in rbnf_locales()}|set(parsers.number_writer_languages()))-set(r);s=re.search(r'^A tag with no language file reads (.+?)\. ',t,re.M)[1];w=dict(OvosNumberSpeller='ovos-number-parser',RbnfSpeller='CLDR spell-out');miss=[w[x] for x in {type(core_language(c).spellers.get(Form.CARDINAL)).__name__ for c in o} if w[x] not in s];assert not miss,miss;u=set().union(*(supports(c).forms for c in o));assert all(dict(CARDINAL='cardinal numbers',DECIMAL='decimals',LEXICON='')[x.name] in s for x in u),u"`
 see: docs/index.md, docs/quickstart.md, AGENTS.md
 -->
 

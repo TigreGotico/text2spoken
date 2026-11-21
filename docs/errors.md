@@ -4,7 +4,7 @@
 covers: each error and warning, in the default mode and in strict mode.
 source: text2spoken/errors.py
 generated: no
-verify: `pytest tests/test_docs_examples.py -k errors.md && python -c "import builtins,re,text2spoken;n=set(re.findall(r'\x60(\w+(?:Error|Warning|Gender))\x60',open('docs/errors.md').read()));k=set(dir(text2spoken))|set(dir(builtins));assert n<=k,n-k"`
+verify: `pytest tests/test_docs_examples.py -k errors.md && python -c "import builtins,re,text2spoken as T;t=open('docs/errors.md').read();n=set(re.findall(r'\x60(\w+(?:Error|Warning|Gender))\x60',t));k=set(dir(T))|set(dir(builtins));assert n<=k,n-k;g=lambda x:getattr(T,x,None) or getattr(builtins,x);e,v=re.search(r'Every error in this page is a subclass of \x60(\w+)\x60, and so of \x60(\w+)\x60',t).groups();w,u=re.search(r'Every warning is a subclass of \x60(\w+)\x60, which is a \x60(\w+)\x60',t).groups();o=[x for x in n if hasattr(T,x)];p=re.findall(r'\x60(\w+)\x60 is (?:also )?a subclass of \x60(\w+)\x60',t)+[(e,v),(w,u)]+[(x,e) for x in o if not x.endswith('Warning')]+[(x,w) for x in o if x.endswith('Warning')];bad=[q for q in p if not issubclass(g(q[0]),g(q[1]))];assert not bad,bad"`
 see: api.md, languages/ar.md
 -->
 

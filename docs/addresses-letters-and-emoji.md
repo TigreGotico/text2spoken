@@ -4,7 +4,7 @@
 covers: how addresses, runs of capital letters, abbreviations and emoji read.
 source: text2spoken/core/electronic.py, text2spoken/core/letters.py, text2spoken/core/emoji.py
 generated: no
-verify: `pytest tests/test_docs_examples.py -k addresses-letters-and-emoji.md && python -c "from text2spoken import Form,supports;from text2spoken.core.language import _registry;assert all({c for c in _registry() if f in supports(c).forms}=={'en','pt'} for f in [Form.ELECTRONIC,Form.LETTERS])"`
+verify: `pytest tests/test_docs_examples.py -k addresses-letters-and-emoji.md && python -c "import re;from text2spoken import Form,supports;from text2spoken.core.language import _registry;t=open('docs/addresses-letters-and-emoji.md').read();m=dict(re.findall(r'\[(\w+)\]\(docs/languages/(\w+)\.md\)',open('README.md').read()));sec={x.split(chr(10),1)[0]:x for x in t.split(chr(10)+'## ')[1:]};got={f:re.split(r', | and ',re.search(r'([A-Z]\w+(?:, [A-Z]\w+)*(?: and [A-Z]\w+)?) offers? (?:the|this) form',sec[h])[1]) for h,f in [('E-mail and web addresses','ELECTRONIC'),('Runs of capital letters','LETTERS')]};bad={f:v for f,v in got.items() if {m[n] for n in v}!={c for c in _registry() if Form[f] in supports(c).forms}};assert not bad,bad"`
 see: api.md, languages/en.md, languages/pt.md
 -->
 

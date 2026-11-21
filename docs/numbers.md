@@ -4,7 +4,7 @@
 covers: how cardinals, ordinals, decimals, fractions, ranges, Roman numerals, telephone numbers and idioms read.
 source: text2spoken/core/recognizers.py, text2spoken/core/numbers.py, text2spoken/core/roman.py, text2spoken/lang/
 generated: no
-verify: `pytest tests/test_docs_examples.py -k numbers.md && python -c "from text2spoken import Form,supports;from text2spoken.core.language import _registry;assert all(Form.ROMAN in supports(c).forms for c in ['en','pt']);assert not [c for c in _registry() if Form.IDENTIFIER in supports(c).forms]"`
+verify: `pytest tests/test_docs_examples.py -k numbers.md && python -c "import re;from text2spoken import Form,supports;from text2spoken.core.language import _registry;t=open('docs/numbers.md').read();m=dict(re.findall(r'\[(\w+)\]\(docs/languages/(\w+)\.md\)',open('README.md').read()));p=re.findall(r'the \x60(\w+)\x60 form, such as (.+?), reads',t);bad=[(f,n) for f,s in p for n in re.split(r', | or | and ',s) if Form[f] not in supports(m[n]).forms];assert p and not bad,bad;assert re.search(r'^The \x60IDENTIFIER\x60 form .* No language file has a recognizer for it',t,re.M) and not [c for c in _registry() if Form.IDENTIFIER in supports(c).forms]"`
 see: dates-and-times.md, languages/en.md, languages/pt.md
 -->
 

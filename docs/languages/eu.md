@@ -4,7 +4,7 @@
 covers: what the Basque file reads, its varieties, options, sources and limits.
 source: text2spoken/lang/eu.py, tests/data/eu.tsv
 generated: no
-verify: `pytest tests/test_rows.py tests/test_docs_examples.py -k "eu- or eu.md" && python -c "import re,sys;from text2spoken import supports;c=sys.argv[1];s=re.search(r'^The file reads (.*?)\.( |$)',open(f'docs/languages/{c}.md').read(),re.M).group(1);k=dict(cardinal='CARDINAL',ordinal='ORDINAL',decimal='DECIMAL',fraction='FRACTION',range='RANGE',expression='EXPRESSION',date='DATE',time='TIME',year='YEAR',money='MONEY',measure='MEASURE',percentage='PERCENT',abbreviation='ABBREVIATION',Roman='ROMAN',symbol='SYMBOL',emoji='EMOJI',lexicon='LEXICON');f={x.name for x in supports(c).forms};assert f<=set(k.values()),f;bad=[w for w,n in k.items() if (w in s)!=(n in f)];assert not bad,bad" eu`
+verify: `pytest tests/test_rows.py tests/test_docs_examples.py -k "eu- or eu.md" && python -c "import re,sys;from text2spoken import Form,supports;c=sys.argv[1];s=re.search(r'^The file reads (.*?)\.( |$)',open(f'docs/languages/{c}.md').read(),re.M).group(1);k=dict(CARDINAL='cardinal',ORDINAL='ordinal',DECIMAL='decimal',FRACTION='fraction',RANGE='range',EXPRESSION='expression',DATE='date',TIME='time',YEAR='year',MONEY='money',MEASURE='measure',PERCENT='percentage',TELEPHONE='telephone|phone number',IDENTIFIER='identifier',LETTERS='capital|letter',ABBREVIATION='abbreviation',IDIOM='idiom',ROMAN='Roman',COLOR='colou?r',ELECTRONIC='address|e-mail',SYMBOL='symbol',EMOJI='emoji',LEXICON='lexicon');assert set(k)=={x.name for x in Form},set(k)^{x.name for x in Form};f={x.name for x in supports(c).forms};bad=[n for n,w in k.items() if bool(re.search(w,s))!=(n in f)];assert not bad,bad" eu`
 see: fr.md, ../how-it-reads.md
 -->
 

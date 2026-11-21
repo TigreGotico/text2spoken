@@ -4,7 +4,7 @@
 covers: how dates, clock times and years read, and the date_order, clock and minute_style options.
 source: text2spoken/core/dates.py, text2spoken/core/times.py, text2spoken/lang/
 generated: no
-verify: `pytest tests/test_docs_examples.py -k dates-and-times.md && python -c "from text2spoken import Form,supports;assert all(Form.YEAR in supports(c).forms for c in ['de','en','ru'])"`
+verify: `pytest tests/test_docs_examples.py -k dates-and-times.md && python -c "import re;from text2spoken import Form,supports;t=open('docs/dates-and-times.md').read();m=dict(re.findall(r'\[(\w+)\]\(docs/languages/(\w+)\.md\)',open('README.md').read()));p=re.findall(r'the \x60(\w+)\x60 form, such as (.+?), reads',t);bad=[(f,n) for f,s in p for n in re.split(r', | or | and ',s) if Form[f] not in supports(m[n]).forms];assert p and not bad,bad"`
 see: money-units-and-symbols.md, errors.md
 -->
 
