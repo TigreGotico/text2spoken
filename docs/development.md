@@ -4,7 +4,7 @@
 covers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release.
 source: .github/workflows/, tests/test_rows.py, tests/test_docs_examples.py, scripts/extract_cldr.py
 generated: no
-verify: `python -c "import json,os,re,tomllib;t=open('docs/development.md').read();v=json.loads(re.search(r\"python_versions: '(.*)'\",open('.github/workflows/build-tests.yml').read()).group(1));p=tomllib.load(open('pyproject.toml','rb'))['project'];assert p['requires-python']=='>='+v[0],v;assert 'on Python '+', '.join(v[:-1])+' and '+v[-1] in t,v;s=open('scripts/extract_cldr.py').read();assert all(w+' '+re.search(n+r' = \"(.*)\"',s).group(1) in t for n,w in [('RELEASE','release'),('UNICODE','Unicode')]);assert all(os.path.exists(f) for f in re.findall(r'(?:scripts|tests)/[\w/]+\.(?:py|tsv)',t) if '/id.' not in f);assert 'test' in p['optional-dependencies']" && pytest tests/test_docs_examples.py -k development.md`
+verify: `python scripts/check_doc_page.py docs/development.md`
 see: ../AGENTS.md, adding-a-language.md
 -->
 
@@ -70,6 +70,12 @@ The test also holds the docs to these rules:
 - An output claim in prose fails: a written form in backticks, the word `reads`, and then words in quotes or guillemets. Put the example in a table instead.
 - Each page holds at least the number of examples that `MINIMUM` gives for it, so a page that loses its examples fails. A new page in `docs/` needs an entry in `MINIMUM`. A language page that `MINIMUM` does not list needs at least `LANGUAGE_MINIMUM` examples: one row of what the file reads, the values of the eight options and one limit.
 - Each relative link names a file that exists, and each anchor a heading of that file.
+
+`scripts/check_doc_page.py` checks the values that a page states in prose against the code, such as the languages that offer a form, the empty extras or the CLDR release. It runs the docs test of the page first, and it exits 1 with the first value that is not true. The `verify` line of the agent hint of each page calls it, and `tests/test_doc_pages.py` runs it on each such page:
+
+```bash
+python scripts/check_doc_page.py docs/numbers.md
+```
 
 `docs/adding-a-language.md` builds the example language `id`. The test follows the page on a copy of the checkout:
 
