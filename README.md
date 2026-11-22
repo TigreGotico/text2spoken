@@ -69,6 +69,7 @@ Each language page gives what the language reads, its varieties, its options, it
 | [Dutch](docs/languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` |
 | [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` |
 | [Russian](docs/languages/ru.md) | `ru-RU` |
+| [Tetun Dili](docs/languages/tdt.md) | `tdt-TL` |
 | [Chinese](docs/languages/zh.md) | `zh-CN`, `zh-TW`, and `cmn` |
 
 A tag with no language file reads cardinal numbers, decimals and a minus, with the words of ovos-number-parser or of the CLDR spell-out rules, in the decimal and group marks of CLDR for the locale. The page [How it reads text](docs/how-it-reads.md#a-language-with-no-file) gives the rules.
