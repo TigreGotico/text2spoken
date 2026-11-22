@@ -960,8 +960,46 @@ def test_a_second_telephone_number_reads_on_the_first_pass(text, lang):
 ])
 def test_a_kept_run_that_no_telephone_number_holds_keeps_its_evidence_word(text, lang, value, expected):
     """A kept run keeps the word after it as its evidence unless a telephone number of the say-as holds the run, so
-    these texts read as on dev: no telephone number holds `12 000,5`, and the rule is for say-as `telephone` only."""
+    these texts keep that word as written: no telephone number holds `12 000,5`, and the rule is for say-as
+    `telephone` only."""
     assert normalize(text, lang, say_as=SayAs(interpret_as=value)) == expected
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("(503 104) 8 000 000 2nd.", "en-GB"), ("482 985.41 +49\xa0200\xa0420\xa0471 7 000 000", "ru-RU"),
+    ("( 00)217 670\xa00\xa0107", "sv-SE"), ("0601979583/+44 (0)62 3427 9129 €.", "nl-NL"),
+    ("(6 000 000) 0925054722/(1)123 264,68", "pt-BR"), ("(09)7 000 000 0993133993 €.", "ca-ES"),
+    ("2,2 0145900045/+39 100 438 905 0753995967", "eu-ES"),
+])
+def test_a_telephone_number_relies_only_on_a_kept_telephone_number_that_the_say_as_reads(text, lang):
+    """Sections 11 and 17.7. With say-as `telephone`, a telephone number that holds the evidence word of a run kept
+    as written reads only when the plain analysis keeps that run as a telephone number and a telephone number of the
+    say-as that reads holds it. Else the run and its evidence word stay as written on the first pass, and on a
+    second pass with the same say-as or with none."""
+    say_as = SayAs(interpret_as="telephone")
+    once = normalize(text, lang, say_as=say_as)
+    assert normalize(once, lang, say_as=say_as) == once
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "value", "expected"), [
+    ("912\xa0345\xa0678", "pt-PT", "telephone", "nove um dois\xa0três quatro cinco\xa0seis sete oito"),
+    ("912 345 678", "pt-PT", "telephone", "nove um dois três quatro cinco seis sete oito"),
+    ("0\xa0437\xa0593", "en-GB", "telephone", "zero\xa0four three seven\xa0five nine three"),
+    ("0 437 593", "en-GB", "telephone", "zero four three seven five nine three"),
+    ("12\xa0000", "en-GB", "telephone", "one two\xa0zero zero zero"),
+    ("12\xa0000", "en-GB", "digits", "one two\xa0zero zero zero"),
+    ("12 000", "en-GB", "digits", "one two zero zero zero"),
+])
+def test_say_as_telephone_and_digits_read_a_run_that_group_spaces_join(text, lang, value, expected):
+    """Design section 17.4 step 3: the markup reads `912 345 678`. Say-as `telephone` and `digits` ask for every
+    digit, so no space joins the groups of a run under them, and the run reads group by group as it does when no
+    space joins groups."""
+    say_as = SayAs(interpret_as=value)
+    once = normalize(text, lang, say_as=say_as)
+    assert once == expected
+    assert normalize(once, lang, say_as=say_as) == once
+    assert normalize(once, lang) == once
 
 
 @pytest.mark.parametrize(("text", "lang", "expected"), [
