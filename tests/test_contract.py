@@ -285,7 +285,8 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
     for name, keys in read.items():
         declared = READERS[name] | THROUGH_SYMBOL.get(name, frozenset()) | THROUGH_ABBREVIATION.get(name, frozenset())
         assert keys <= declared, f"{name} reads {sorted(keys - declared)}, which it does not declare"
-    assert set().union(*read.values()) == set().union(*(READERS[name] for name in used))
+    assert set().union(*read.values()) == set().union(*(READERS[name] | THROUGH_ABBREVIATION.get(name, frozenset())
+                                                        for name in used))
 
 
 @pytest.mark.parametrize("pattern", [r"\d+", r"[0-9]\b", r"\w", r"\s", r"(a)\1", "(?i)ab", "(?=a)", "(?<=a)b",

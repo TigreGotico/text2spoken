@@ -918,6 +918,21 @@ def test_a_phone_span_that_a_mark_joins_to_a_number_claims_once_the_number_reads
     assert normalize(once, lang) == once
 
 
+@pytest.mark.parametrize(("text", "expected"), [
+    ("Tel. USD20 444-2428.22.31 2x.", "Tel. zwanzig Dollar vier vier vier zwei vier zwei acht zwei zwei drei eins 2x."),
+    ("Telefon z. B. 260-9726.98.61 8am",
+     "Telefon z. B. zwei sechs null neun sieben zwei sechs neun acht sechs eins 8am"),
+])
+def test_the_full_stops_of_an_abbreviation_end_no_clause_for_a_phone_word_with_the_form_off(text, expected):
+    """With `ABBREVIATION` off, `Tel.` and `z. B.` stay as written on both passes, and their full stops end no
+    clause for the window of the phone word, as with the form on. So the phone word names the run on the first pass,
+    the cut drops the last group, which a letter continues, and a second pass sees the same text."""
+    params = NormalizationParams().without(Form.ABBREVIATION)
+    once = normalize(text, "de-AT", params)
+    assert once == expected
+    assert normalize(once, "de-AT", params) == once
+
+
 @pytest.mark.parametrize(("text", "lang"), [
     ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
     ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),

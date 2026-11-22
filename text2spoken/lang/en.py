@@ -596,7 +596,8 @@ class EnglishTelephone(Telephone):
     A phone word also names a run up to three words back, where a function word does not count, when the run has
     the shape of a phone number, as in `Call us on 0800 123 456.` The same window names a short code of
     `short_codes` that ends its clause or that a function word follows, as in `Call the police on 999 now.`, and
-    not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer.
+    not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer,
+    and turns `keeps_hour_after_stop` off.
 
     The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
     brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
@@ -884,7 +885,8 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
                  EnglishDateNumeric(), SHARED["time_clock"],
-                 EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
+                 EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True,
+                                  keeps_hour_after_stop=False),
                  SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"], Year(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"],
                  SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),

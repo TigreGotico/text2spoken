@@ -989,9 +989,11 @@ class Telephone:
     `☎3 91P` reads the number, and `Ligue → 1.234,56` reads the number. A list link does not count those
     characters, so `Call ⇒ 999 or → 112.` reads both runs digit by digit. For the same reason, a lexicon key as
     that last word counts by its spoken words: with a key `call` for "kall", `call+351` reads the number. A
-    full stop right after a phone word that `abbreviations` reads as a word, as in de-AT `Tel. USD20 444-2428`,
-    ends no clause for the window, because the phone word reads with no full stop. A number abbreviation that the
-    tokens part, as `n.º`, fills one slot, as its reading `número` does.
+    full stop of an abbreviation that the abbreviation recognizer of the language reads with no full stop, as `Tel.`
+    in de-AT `Tel. USD20 444-2428` and `z. B.` in `Telefon z. B. 260-9726.98.61 8am`, ends no clause for the window,
+    because a second pass sees the reading there. A number abbreviation or a dotted ordinal that the tokens part, as
+    `n.º` and `2.º`, fills one slot, as its reading `número` or `segundo` does. A dotted ordinal has a suffix of one
+    or two letters, so `Call` in `7.Call` and `tel` in `3.tel` stay words.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -1013,7 +1015,14 @@ class Telephone:
     continues the run, when a full stop and two digits complete it in a language whose `clock_marks` hold a full
     stop, or when a space and a day period of `day_periods` follow it. So `Call 1-800-555-0199 8 a.m.` reads the
     number and the time: a second pass, which sees the words of the time, finds the same run. Only one group drops
-    (design section 4.3), so `777 67.18 2e` keeps the run `777 67.18`. A shorter run that stays as written keeps the
+    (design section 4.3), so `777 67.18 2e` keeps the run `777 67.18`. No group drops when the last phone word before
+    the run, in a clause that only `;`, `!` and `?` end, has a full stop right after it and a word between it and
+    the run, as in de-DE `Fax. EUR5 0733.16.45 1st`. That full stop ends the clause only before a capital, and
+    the reading of the word after it may start in lower case, as `fünf Euro` does, so a second pass may see the
+    phone word name the run. A reading may also hold more words than its written form and move the phone word out
+    of the window. The run then reads as with no cut, on both passes. With `keeps_hour_after_stop` off, as in
+    English, the group drops there too, as it does with no full stop: there a run that kept the group reads
+    otherwise on a second pass, as `7` in en-GB `Phone. 7:US$5 023 8am`. A shorter run that stays as written keeps the
     dropped group when the cut would drop its new last group too, as a second pass does once the dropped group
     reads, and the run tries again whole. So `teléfono 151 954 383 780 20.15 8 a.m.` reads the time and the groups
     as with no cut, and en-US `30-9813 1419 4.37 10.39.` reads `1419 4.37 10.39` digit by digit. A shorter run that
@@ -1058,6 +1067,7 @@ class Telephone:
     content_words: bool = False
     names_shaped: bool = False
     names_short_codes: bool = False
+    keeps_hour_after_stop: bool = True
     spaces: str = " "
     plans: FrozenMap = PHONE_PLANS
 
@@ -1105,27 +1115,49 @@ class Telephone:
         return all(word.lower() in function_words for word in following)
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        folded = fold_digits(text)
+        runs: list[tuple[int, str, tuple[int | None, int | None, bool] | None]] = [
+            (match.start(), match.group(), None) for match in _phone_pattern(self.spaces).finditer(folded)][::-1]
+        if not runs:
+            return
         phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
         words = list(_spoken_words(text, tokens, request))
-        abbreviation = Form.ABBREVIATION in request.params.forms
-        # A number abbreviation that the tokens part, as `n.º` in es-ES `teléfono n.º 5 01.5951193286 18.48 84031`,
-        # is one word to the window, as its reading `número` is on a second pass.
-        numbered = request.data.get("number_abbreviations", {}) if abbreviation else {}
-        for index in range(len(words) - 1, 0, -1):
-            if text[words[index - 1].start:words[index].end] in numbered:
-                words[index - 1:index + 1] = [replace(words[index], start=words[index - 1].start,
-                                                      text=text[words[index - 1].start:words[index].end])]
-        # A phone word written short that the abbreviation table reads as a word, as `Tel.` in de-AT
-        # `Tel. USD20 444-2428`, loses its full stop, so the full stop ends no clause for the window, as on a second
-        # pass.
-        abbreviations = request.data.get("abbreviations", {}) if abbreviation else {}
-        stops = frozenset(word.end for word in words
-                          if text[word.end:word.end + 1] == "." and phone_words.intersection(_last_parts(word.text))
-                          and not (abbreviations.get(text[word.start:word.end + 1]) or ".").endswith("."))
+        # A number abbreviation or a dotted ordinal that the tokens part, as `n.º` in es-ES
+        # `teléfono n.º 5 01.5951193286 18.48 84031` and `2.º` in es-MX `teléfono y 2.º 0025.52.40 8am`, is one word to
+        # the window, as its reading `número` or `segundo` is on a second pass.
+        numbered = request.data.get("number_abbreviations", {})
+        merged: list[Word] = []
+        for word in words:
+            pair = text[merged[-1].start:word.end] if merged else ""
+            number, _, suffix = pair.partition(".")
+            if pair in numbered or (number.isdigit() and suffix.isalpha() and len(suffix) <= 2):
+                merged[-1] = replace(word, start=merged[-1].start, text=pair)
+            else:
+                merged.append(word)
+        words = merged
+        # An abbreviation that reads as words loses its full stops, as `Tel.` in de-AT `Tel. USD20 444-2428` and
+        # `z. B.` in `Telefon z. B. 260-9726.98.61 8am`, so they end no clause for the window, as on a second pass. A
+        # key that ends the sentence keeps its full stop as the trail of its span.
+        stops = frozenset(index for recognizer in request.language.recognizers if recognizer.form is Form.ABBREVIATION
+                          for span in recognizer.find(text, tokens, request) if not span.trail
+                          for index in range(span.start, span.end) if text[index] == ".")
         lexicon = {span.end: span.fields["spoken"] for span in Lexicon().find(text, tokens, request)} \
             if Form.LEXICON in request.params.forms else {}
         covered = frozenset(index for start, end, _ in named_pieces(text, request) for index in range(start, end))
         breaks = tuple(index for index in clause_breaks(text) if index not in stops)
+        loose = tuple(index for index in breaks if text[index] != ".")
+        # The last phone word at or before each word, in a clause that only `;`, `!` and `?` end.
+        callers: list[int | None] = []
+        if self.keeps_hour_after_stop:
+            caller = None
+            for index, word in enumerate(words):
+                if index and bisect_left(loose, words[index - 1].end) < bisect_left(loose, word.start):
+                    caller = None
+                if word.clause_end:
+                    caller = None
+                elif phone_words.intersection(_last_parts(word.text)):
+                    caller = index
+                callers.append(caller)
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
         unit_shapes = [re.compile(shape) for shape in request.data.get("phone_unit_shapes", ())]
         kept_shapes = [re.compile(shape) for shape in request.data.get("phone_kept_shapes", ())]
@@ -1138,17 +1170,23 @@ class Telephone:
         operators = "".join(request.data.get("operators", ()))
         operand = re.compile(f"[{re.escape(operators)}][0-9]") if operators else None
         named_end = None
-        folded = fold_digits(text)
         kept_end = 0
         read_spans: set[tuple[int, int]] = set()
         uncut: set[tuple[int, str]] = set()
         head_group = re.compile(f"[0-9]+([.-][0-9]+)?[{re.escape(self.spaces)}]")
         waits = request.memo.setdefault((PHONE_WAITS, text), {})
-        runs: list[tuple[int, str, tuple[int | None, int | None, bool] | None]] = [
-            (match.start(), match.group(), None) for match in _phone_pattern(self.spaces).finditer(folded)][::-1]
         while runs:
             start, run, wait = runs.pop()
             written = run if (start, run) in uncut else self.trimmed(text, start, run, request)
+            if written != run and self.keeps_hour_after_stop:
+                # A full stop right after the last phone word before the run, and a word between, as in de-DE
+                # `Fax. EUR5 0733.16.45 1st`: a second pass may see no clause end there, so no group drops.
+                index = bisect_right(words, start, key=lambda word: word.end)
+                caller = callers[index - 1] if index and bisect_left(loose, words[index - 1].end) == bisect_left(
+                    loose, start) else None
+                stop = -1 if caller is None else words[caller].end
+                if caller is not None and caller < index - 1 and stop not in stops and text.startswith(".", stop):
+                    written = run
             retries = []
             if wait is None:
                 head = head_group.match(run)
@@ -1232,7 +1270,10 @@ class Telephone:
                 uncut.add((start, run))
                 runs.append((start, run, wait))
                 continue
-            named_end = end + len(suffix) if named else None
+            # A retry, as a stretch of a run that reads, keeps the end of the named run before it, so a list link
+            # after that run still names the next run, as `955 062 627` in es-ES `teléfonos 902 505 505 y 955 062 627`.
+            if wait is None:
+                named_end = end + len(suffix) if named else None
             if glued:
                 if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
                     runs.extend(retries)

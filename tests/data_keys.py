@@ -239,10 +239,11 @@ them to find a character that `SYMBOL` reads between a phone word and the digits
 THROUGH_SYMBOL = dict.fromkeys(("cardinal", "decimal", "fraction"), SYMBOL_KEYS - {"leads"})
 """The keys that `reads_symbol` reads for these shared recognizers, in a file that uses `SYMBOL`, to find whether
 `SYMBOL` reads a currency sign next to a number. A file with no `SYMBOL` needs none of these keys for them."""
-THROUGH_ABBREVIATION = {"telephone": frozenset({"abbreviations", "number_abbreviations"})}
-"""The keys that the telephone reader reads with the `ABBREVIATION` form on: to find whether a phone word that the
-abbreviation table reads keeps its full stop, and to count a number abbreviation that the tokens part, as `n.º`, as
-one word. A file with no `ABBREVIATION` needs none of them for it."""
+THROUGH_ABBREVIATION = {"telephone": READERS["abbreviation"]
+                        | frozenset({"abbreviations_any_case", "honorific_before_name", "letter_label_nouns"})}
+"""The keys that the telephone reader reads through the abbreviation recognizer of the language file, the shared one
+or the one of pt.py, to find the full stops that an abbreviation reads away, and to count a number abbreviation that
+the tokens part, as `n.º`, as one word. A file with no abbreviation recognizer needs none of them for it."""
 
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
