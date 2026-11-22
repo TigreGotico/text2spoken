@@ -1,5 +1,13 @@
 # Dates and times
 
+<!-- agent-hint
+covers: how dates, clock times and years read, and the date_order, clock and minute_style options.
+source: text2spoken/core/dates.py, text2spoken/core/times.py, text2spoken/lang/
+generated: no
+verify: `python scripts/check_doc_page.py docs/dates-and-times.md`
+see: money-units-and-symbols.md, errors.md
+-->
+
 This page shows how text2spoken reads dates, clock times and years, and the options that change the reading.
 
 ## Dates
@@ -61,7 +69,7 @@ A language reads only the values that it can produce. A value that it cannot pro
 
 ## Years
 
-German, English and Russian read a year when a word or a suffix marks it. A number with no such mark reads as a cardinal:
+A language that offers the `YEAR` form, such as German, English or Russian, reads a year when a word or a suffix marks it. A number with no such mark reads as a cardinal:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |

@@ -1,5 +1,13 @@
 # Japanese
 
+<!-- agent-hint
+covers: what the Japanese file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/ja.py, tests/data/ja.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/ja.md`
+see: ko.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/ja.py` reads Japanese. It needs no extra, because its number words come from the CLDR spell-out rules.
 
 ## What it reads

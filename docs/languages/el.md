@@ -1,5 +1,13 @@
 # Greek
 
+<!-- agent-hint
+covers: what the Greek file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/el.py, tests/data/el.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/el.md`
+see: en.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/el.py` reads Greek. It needs no extra, because its number words come from the CLDR spell-out rules.
 
 ## What it reads

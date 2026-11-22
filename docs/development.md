@@ -1,6 +1,14 @@
 # Development
 
-This page is for maintainers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release.
+<!-- agent-hint
+covers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release.
+source: .github/workflows/, tests/test_rows.py, tests/test_docs_examples.py, scripts/extract_cldr.py
+generated: no
+verify: `python scripts/check_doc_page.py docs/development.md`
+see: ../AGENTS.md, adding-a-language.md
+-->
+
+This page is for maintainers: how to run the tests, write the row files, keep the docs true, refresh the CLDR data and release. [AGENTS.md](../AGENTS.md) gives the short list of rules that a pull request must meet.
 
 ## Set up and run the tests
 
@@ -45,6 +53,7 @@ Each expected value comes from a cited rule, from arithmetic done by hand, or fr
 | `tests/test_errors.py`, `tests/test_effective_params.py`, `tests/test_gender.py` | The errors and warnings of [Errors and warnings](errors.md): the failure policy and the lexicon, a param value that a language cannot produce, and the genders |
 | `tests/test_round_trip.py` | That `ovos-number-parser` parses each English cardinal back to its number. This proves self-consistency only, and never replaces a cited row |
 | `tests/test_docs_examples.py` | That each example in `README.md` and `docs/` is the output of a real run, and that each link resolves |
+| `tests/test_doc_pages.py` | That each page with an agent hint calls `scripts/check_doc_page.py` from its `verify` line, and that the script passes on the page |
 
 ## Keep the docs true
 
@@ -62,6 +71,12 @@ The test also holds the docs to these rules:
 - An output claim in prose fails: a written form in backticks, the word `reads`, and then words in quotes or guillemets. Put the example in a table instead.
 - Each page holds at least the number of examples that `MINIMUM` gives for it, so a page that loses its examples fails. A new page in `docs/` needs an entry in `MINIMUM`. A language page that `MINIMUM` does not list needs at least `LANGUAGE_MINIMUM` examples: one row of what the file reads, the values of the eight options and one limit.
 - Each relative link names a file that exists, and each anchor a heading of that file.
+
+`scripts/check_doc_page.py` checks named prose values of a page against the code, such as the languages that offer a form, the empty extras or the CLDR release. Its docstring lists the sentences and tables that it reads for each page. It reads no other prose, so the docs test is the only check of the rest, and some prose has no check: the signature table of `docs/api.md` and the case table of `docs/errors.md`. The script runs the docs test of the page first, and it exits 1 with the first value that is not true. The `verify` line of the agent hint of each page calls it, and `tests/test_doc_pages.py` runs it on each such page:
+
+```bash
+python scripts/check_doc_page.py docs/numbers.md
+```
 
 `docs/adding-a-language.md` builds the example language `id`. The test follows the page on a copy of the checkout:
 
@@ -85,7 +100,7 @@ python scripts/extract_cldr.py --source ~/cldr-json  # read a checkout of that r
 
 ## The emoji data
 
-The emoji sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. Some names stay as written, because their reading holds a character that is no word. They hold `&` (en-GB 14, en-US 14), `!` (2 in each tag), `#` and `*` (the keycaps, 1 each in each tag), `/` (pt-PT 2), or a full stop that no abbreviation reads. The full stops are en-US 9, as in `flag: St. Lucia` and `flag: U.S. Virgin Islands`, and pt-PT 6, in `Sra. Natal`. `scripts/extract_cldr.py` prints each such name.
+The emoji sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. Some names stay as written, because their reading holds a character that is no word. Such a name holds `&`, `!`, `/`, the `#` or the `*` of a keycap, or a full stop that no abbreviation reads, as in `flag: St. Lucia`. `scripts/extract_cldr.py` prints each such name.
 
 ## CI
 

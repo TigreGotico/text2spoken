@@ -1,5 +1,13 @@
 # API
 
+<!-- agent-hint
+covers: each public function, param and record, with say_as, hints, revision and a custom tokenizer.
+source: text2spoken/__init__.py, text2spoken/params.py, text2spoken/core/say_as.py, text2spoken/core/spans.py, text2spoken/core/revision.py, text2spoken/core/tokens.py
+generated: no
+verify: `python scripts/check_doc_page.py docs/api.md`
+see: errors.md
+-->
+
 This page gives each function, param and record of text2spoken. Every name on this page imports from `text2spoken`.
 
 | Function | Returns |

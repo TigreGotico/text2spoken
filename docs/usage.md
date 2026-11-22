@@ -1,5 +1,13 @@
 # Usage
 
+<!-- agent-hint
+covers: how to turn forms off and on, pick a variety, add lexicon entries and keep text as written.
+source: text2spoken/params.py:NormalizationParams, text2spoken/core/language.py:lexicon_entries, text2spoken/core/tokens.py:protect_blocks
+generated: no
+verify: `python scripts/check_doc_page.py docs/usage.md`
+see: how-it-reads.md, api.md
+-->
+
 This page shows how to tune the reading: turn a form off or on, pick a variety, add your own words, and keep text as written. It then shows the reading for a voice, a phonemizer and a word error rate score.
 
 ## Turn a form off or on

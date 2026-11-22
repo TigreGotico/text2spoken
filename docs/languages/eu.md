@@ -1,10 +1,18 @@
 # Basque
 
+<!-- agent-hint
+covers: what the Basque file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/eu.py, tests/data/eu.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/eu.md`
+see: fr.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/eu.py` reads Basque: the standard language (batua) of the Euskaltzaindia norms. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, expressions, dates, times, money, measures, percentages, Roman numerals, abbreviations and lexicon entries. Basque has no grammatical gender.
+The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, money, measures, percentages, Roman numerals, abbreviations and lexicon entries. Basque has no grammatical gender.
 
 A Basque case ending joins the digits, as in `2024ko`, `25ean` and `15:00etan`, and the file joins it to the last spoken word. A Roman numeral and a full stop read as an ordinal only on evidence, such as a noun of the `roman_nouns` table after it.
 

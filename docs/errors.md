@@ -1,5 +1,13 @@
 # Errors and warnings
 
+<!-- agent-hint
+covers: each error and warning, in the default mode and in strict mode.
+source: text2spoken/errors.py
+generated: no
+verify: `python scripts/check_doc_page.py docs/errors.md`
+see: api.md, languages/ar.md
+-->
+
 text2spoken has two modes. The default mode keeps a form that it cannot read as written and logs a warning, so a voice still speaks the sentence. Strict mode, `NormalizationParams(strict=True)`, raises an error instead, so a training pipeline finds each gap.
 
 ## Each case
