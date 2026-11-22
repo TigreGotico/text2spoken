@@ -171,6 +171,13 @@ DIGIT_BEFORE = re.compile("[0-9][ \u00a0\u202f/:.,–-]?$")
 DIGIT_AFTER = re.compile("[ \u00a0\u202f/:.,–-]?[0-9]")
 """A digit run that continues a number of groups after one space or one mark, as in a phone number."""
 
+KEPT_GROUPS = re.compile(f"[0-9]{{1,3}}(?:[{GROUP_SPACES}][0-9]{{3}})+"
+                         f"(?:,[0-9]{{1,3}}(?:[{GROUP_SPACES}][0-9]{{1,3}})*)?"
+                         f"|[0-9]+,[0-9]{{3}}(?:[{GROUP_SPACES}][0-9]{{1,3}})+")
+"""`SPACE_GROUPS` with groups of one to three digits after the decimal comma, as in `830 333,66 4 000 000`. Such a
+run is one number or two, so `KeptGroups` keeps it whole: a part read alone, as `4` of `4 000 000`, leaves the other
+groups as written, and a say-as `telephone` reads them on a second pass."""
+
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
     "sign_words": {"-": "min", "+": "plus"},
@@ -372,7 +379,7 @@ class KeptGroups:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         folded = fold_digits(text)
-        for match in digit_run_matches(SPACE_GROUPS, folded):
+        for match in digit_run_matches(KEPT_GROUPS, folded):
             start, end = match.span()
             script = digit_script(text[start:end])
             integer, comma, _ = match.group().partition(",")

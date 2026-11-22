@@ -272,10 +272,10 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
            groups: bool = True, refused: frozenset[tuple[int, int]] = frozenset()
            ) -> tuple[tuple[Span, ...], tuple[Span, ...], tuple[Span, ...]]:
     """The claimed spans, every span that holds characters (claimed, kept as written, or waiting), and the spans
-    that hold characters as written. With `groups` false, no space joins groups of digits: say-as `telephone` and
-    `digits` ask for every digit, so the say-as and the plain analysis under it read a run group by group, as in
-    `912 345 678` with no-break spaces (design section 17.4 step 3). `refused` holds the say-as spans that read on
-    an earlier claim while no say-as span read the kept span they rely on (see `_supported`)."""
+    that hold characters as written. With `groups` false, no space joins groups of digits: say-as `telephone`,
+    `digits` and `characters` ask for every digit, so the say-as and the plain analysis under it read a run group by
+    group, as in `912 345 678` with no-break spaces (design section 17.4 step 3). `refused` holds the say-as spans
+    that read on an earlier claim while no say-as span read the kept span they rely on (see `_supported`)."""
     emoji = Form.EMOJI in request.params.forms
     sequences = [(start, end) for start, end in sequences_in(text, request.memo)
                  if emoji or any(char in EMOJI_MARKS for char in text[start:end])]
@@ -289,7 +289,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
                 if not (_inside(span, blocks)
                         or (span.form is not Form.ELECTRONIC and splits_token(span, tokens, text)))]
 
-    groups = groups and not (say_as is not None and say_as.value in ("telephone", "digits"))
+    groups = groups and not (say_as is not None and say_as.value in ("telephone", "digits", "characters"))
     grouped = _group_spaces(view, any(decimal[:1] == "," for _, decimal, _ in
                                       number_marks(request.data, request.params.decimal_mark))) \
         if groups else bytearray(len(view))
@@ -297,6 +297,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
     if say_as is not None:
         others = replace(request, params=say_as.plain, memo={("written", view): text}, say_as=None)
         first = [span for span in found(say_as.recognizers(request.language), request) if say_as.fits(span)]
+    before = {end: start for start, end in sequences}
+    after = dict(sequences)
     if first:
         _, units, held = _claim(text, tokens, blocks, others, groups)
         unit_at: list[Span | None] = [None] * len(text)
@@ -304,6 +306,13 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
         evidence = _evidence_words(text, tokens, held)
         telephone = say_as.value == "telephone"
+        if telephone:
+            # A run that the plain analysis keeps as a telephone number is a candidate too, as a second pass sees it
+            # once the number in brackets before it reads: `152 397` in `(1) 152 397`.
+            extents = {(span.start, span.end) for span in first}
+            first += [span for span in (replace(kept_span, keep=False) for kept_span in held
+                                        if kept_span.keep and kept_span.form is Form.TELEPHONE
+                                        and (kept_span.start, kept_span.end) not in extents) if say_as.fits(span)]
         first = [span for span in first if (span.start, span.end) not in refused and not _cuts(span, unit_at)]
         # The spans kept as written whose evidence word each span holds. A telephone number holds its own groups, and
         # it relies on the other kept spans: it reads only if a say-as span reads each of them (see `_supported`).
@@ -311,12 +320,14 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
                   if not (telephone and span.start <= written.start and written.end <= span.end)}.values()
                  for span in first]
         relies = {(span.start, span.end): kept_spans for span, kept_spans in zip(first, keeps) if kept_spans}
-        first = _supported(first, keeps, held) if telephone else [span for span in first
-                                                                   if (span.start, span.end) not in relies]
+        # A span that a mark joins to a digit reads only with that digit, so it supports no other span.
+        alone = [not any(0 <= joiner < len(view) and 0 <= beyond < len(view) and _joiner(view[joiner])
+                         and is_digit(view[beyond]) for joiner, beyond in _sides(span, before, after))
+                 for span in first]
+        first = _supported(first, keeps, held, alone) if telephone else [span for span in first
+                                                                          if (span.start, span.end) not in relies]
     say_as_count = len(first)
     candidates = [*first, *found(recognizers, others)]
-    before = {end: start for start, end in sequences}
-    after = dict(sequences)
     read = bytearray(len(text))
     other = bytearray(len(text))
     holder: list[Span | None] = [None] * len(text)
@@ -383,14 +394,16 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
     return tuple(sorted(claimed, key=lambda s: s.start)), (*claimed, *held), held
 
 
-def _supported(spans: Sequence[Span], keeps: Sequence[Iterable[Span]], held: Sequence[Span]) -> list[Span]:
+def _supported(spans: Sequence[Span], keeps: Sequence[Iterable[Span]], held: Sequence[Span],
+               alone: Sequence[bool]) -> list[Span]:
     """The telephone spans of the say-as that fit: a span fits when, for each kept span whose evidence word it holds,
     the plain analysis keeps that span as a telephone number and a fitting span holds it, so that it reads too, as
     `12 000` reads in `12 000 (1) 437 593`. Another kept span, as `7` in `(09)7 000`, keeps its evidence word: a
     second pass finds the same kept span with no telephone number to read it. A fitting span holds nothing at first,
     so two spans that each hold the evidence word of a kept span of the other do not fit, as `(503 104) 8 000 000
-    second.` reads on a second pass the way `(503 104) 8 000 000 2nd.` reads on the first. Each span and each kept
-    span is taken once."""
+    second.` reads on a second pass the way `(503 104) 8 000 000 2nd.` reads on the first. A span that is not `alone`,
+    because a mark joins it to a digit, holds no kept span for another span: in `154.98/(00) 201 193` the run
+    `(00) 201 193` reads only when `154.98` reads. Each span and each kept span is taken once."""
     by_start = sorted(held, key=lambda kept_span: kept_span.start)
     starts = [kept_span.start for kept_span in by_start]
     waits = [len(kept_spans) for kept_spans in map(list, keeps)]
@@ -402,15 +415,18 @@ def _supported(spans: Sequence[Span], keeps: Sequence[Iterable[Span]], held: Seq
     read: set[int] = set()
     fitting = set(ready)
     while ready:
-        span = spans[ready.pop()]
+        index = ready.pop()
+        span = spans[index]
+        if not alone[index]:
+            continue
         for kept_span in by_start[bisect_left(starts, span.start):bisect_left(starts, span.end)]:
             if kept_span.form is Form.TELEPHONE and kept_span.end <= span.end and id(kept_span) not in read:
                 read.add(id(kept_span))
-                for index in keeps_of.get(id(kept_span), ()):
-                    waits[index] -= 1
-                    if not waits[index]:
-                        fitting.add(index)
-                        ready.append(index)
+                for waiting in keeps_of.get(id(kept_span), ()):
+                    waits[waiting] -= 1
+                    if not waits[waiting]:
+                        fitting.add(waiting)
+                        ready.append(waiting)
     return [span for index, span in enumerate(spans) if index in fitting]
 
 

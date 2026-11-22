@@ -4,6 +4,7 @@ import random
 import re
 import sys
 import time
+import warnings
 from dataclasses import replace
 from types import SimpleNamespace
 
@@ -968,8 +969,8 @@ def test_a_kept_run_that_no_telephone_number_holds_keeps_its_evidence_word(text,
 @pytest.mark.parametrize(("text", "lang"), [
     ("(503 104) 8 000 000 2nd.", "en-GB"), ("482 985.41 +49\xa0200\xa0420\xa0471 7 000 000", "ru-RU"),
     ("( 00)217 670\xa00\xa0107", "sv-SE"), ("0601979583/+44 (0)62 3427 9129 €.", "nl-NL"),
-    ("(6 000 000) 0925054722/(1)123 264,68", "pt-BR"), ("(09)7 000 000 0993133993 €.", "ca-ES"),
-    ("2,2 0145900045/+39 100 438 905 0753995967", "eu-ES"),
+    ("(6 000 000) 0925054722/(1)123 264,68", "pt-BR"), ("(09)7\u202f000\u202f000 0993133993 €.", "ca-ES"),
+    ("2,2 0145900045/+39 100 438 905\u202f0753995967", "eu-ES"),
 ])
 def test_a_telephone_number_relies_only_on_a_kept_telephone_number_that_the_say_as_reads(text, lang):
     """Sections 11 and 17.7. With say-as `telephone`, a telephone number that holds the evidence word of a run kept
@@ -982,14 +983,38 @@ def test_a_telephone_number_relies_only_on_a_kept_telephone_number_that_the_say_
     assert normalize(once, lang) == once
 
 
+@pytest.mark.parametrize(("text", "lang", "value", "same"), [
+    ("[09]284 884\xa0230 154.98/(00) 201 193 / 23:58 €.", "de-DE", "telephone", True),
+    ("(00)17/10/2018; (1) 152 397 / (1) 934 029.53", "de-DE", "telephone", True),
+    ("3 km 830\xa0333,66 4 000 000", "nl-NL", "telephone", True),
+    ("383 470.21 people 437 007,33 7 000 000", "nl-NL", "telephone", True),
+    ("0498124205, 513 588,48 322\xa0394", "nl-NL", "characters", True),
+    ("Call 370 227 Tel. 17 - 9.8  [1]-292 262.79", "pt-PT", "characters", False),
+])
+def test_a_second_pass_reads_no_digit_that_the_say_as_left(text, lang, value, same):
+    """Sections 11 and 17.7. A telephone number that a mark joins to the number it supports reads only with it. A run
+    that the plain analysis keeps as a telephone number is a say-as candidate, as a second pass sees it once the
+    number in brackets before it reads. nl keeps a run with short groups after its decimal comma whole. Say-as
+    `characters` asks for every digit, as `telephone` does. So no digit that the first pass leaves reads on a second
+    pass with no say-as, nor with the same say-as where `same` is true. A second pass with say-as `characters` spells
+    the words of the first."""
+    say_as = SayAs(interpret_as=value)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ParameterNotHonouredWarning)
+        once = normalize(text, lang, say_as=say_as)
+        assert normalize(once, lang) == once
+        if same:
+            assert normalize(once, lang, say_as=say_as) == once
+
+
 @pytest.mark.parametrize(("text", "lang", "value", "expected"), [
     ("912\xa0345\xa0678", "pt-PT", "telephone", "nove um dois\xa0três quatro cinco\xa0seis sete oito"),
-    ("912 345 678", "pt-PT", "telephone", "nove um dois três quatro cinco seis sete oito"),
+    ("912\u202f345\u202f678", "pt-PT", "telephone", "nove um dois\u202ftrês quatro cinco\u202fseis sete oito"),
     ("0\xa0437\xa0593", "en-GB", "telephone", "zero\xa0four three seven\xa0five nine three"),
-    ("0 437 593", "en-GB", "telephone", "zero four three seven five nine three"),
+    ("0\u202f437\u202f593", "en-GB", "telephone", "zero\u202ffour three seven\u202ffive nine three"),
     ("12\xa0000", "en-GB", "telephone", "one two\xa0zero zero zero"),
     ("12\xa0000", "en-GB", "digits", "one two\xa0zero zero zero"),
-    ("12 000", "en-GB", "digits", "one two zero zero zero"),
+    ("12\u202f000", "en-GB", "digits", "one two\u202fzero zero zero"),
 ])
 def test_say_as_telephone_and_digits_read_a_run_that_group_spaces_join(text, lang, value, expected):
     """Design section 17.4 step 3: the markup reads `912 345 678`. Say-as `telephone` and `digits` ask for every
