@@ -681,10 +681,8 @@ class SpanishTelephone(Telephone):
 class Ordinal:
     """`1.º`, `2.ª`, `1.er`, `3.os`: a whole number and a marker of the `ordinal_marks` table (DPD «abreviatura»,
     5.b: `n.º`, letters written high). `1ª` and `3er` with no full stop read as the ordinal too. A marker of
-    `degree_marks` also writes a degree, so `1º` reads as the ordinal only in a context that a degree does not take:
-    a singular masculine determiner before it (`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a
-    legal division word before it (`artículo 6º`) (see the module docstring). A masculine marker after a word of
-    `feminine_determiners`, as in `la 12.º generación`, stays as written."""
+    `degree_marks` also writes a degree, so `1º` reads as the ordinal only in the contexts of `_ordinal_context`. A
+    masculine marker after a word of `feminine_determiners`, as in `la 12.º generación`, stays as written."""
     name: str = "ordinal"
     form: Form = Form.ORDINAL
 

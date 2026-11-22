@@ -25,8 +25,8 @@ groups of three with a space, a no-break space or a narrow no-break space betwee
 spaces, so `1 000 000 lagun` reads "milioi bat lagun", as `1.000.000 lagun` does. Two forms stay as written through
 `KEPT_SPACE_GROUPS`. A run of three groups of three digits, as `943 123 456`, is also the shape of a telephone
 number: Araua 203, footnote 12, page 14, "zenbakiak binaka edo hirunaka ere zatitu daitezke: Telefonoa: +34 944 15
-81 55 / +34 944 158 155", and this file has no telephone reading. The run stays as written also after one two-digit group,
-which may be a country code with no plus sign, and with the first group in brackets. Digit groups after a country
+81 55 / +34 944 158 155", and this file has no telephone reading. The run stays as written also after one two-digit
+group, which may be a country code with no plus sign, and with the first group in brackets. Digit groups after a country
 code, `+34` or `0034`, stay as written, in threes or in pairs. A fraction in groups after the decimal comma, as
 `4 712,395 8`, which section 3.2.1.1 marks as unusual (ezohikoa), would read its first group alone, and so would a
 fraction in groups after a decimal point, as `3.141 592 6` (page 14), where the point would read as a group mark.
@@ -83,6 +83,10 @@ ROMAN_NUMERAL = re.compile("[IVXLCDM]+[.]")
 
 COORDINATION = re.compile(" (?:eta|edo) ")
 """The conjunctions that join two ordinals (Araua 203, section 5, page 27)."""
+
+_HYPHEN_DIGITS = re.compile("-[0-9]+")
+_CLOCK = re.compile("[0-9][0-9]?:[0-9][0-9]")
+_ROMAN_MONTH_DATE = re.compile("([0-9]{4})(?:/([IVX]+)/|-([IVX]+)-)([0-9]{1,2})")
 
 REGNAL_LETTERS = frozenset("IVX")
 """The one-letter Roman numerals that follow a name as a regnal or series number, as in `Elisabet I.a` (Araua 203,
@@ -324,7 +328,7 @@ def _symbol_suffix(text: str, end: int, symbol: str, data) -> tuple[int, str] | 
         while stop < len(text) and (is_letter(text[stop]) or is_mark(text[stop])):
             stop += 1
         ending = text[end + 1:stop]
-        if ending in data.get("case_suffixes", ()) and not (stop < len(text) and is_word_char(text[stop])):
+        if ending in data["case_suffixes"] and not (stop < len(text) and is_word_char(text[stop])):
             return stop, ending
     after = _suffix(text, end, data, ())
     if after is not None and after[1] and len(symbol) == 1 and is_letter(symbol):
@@ -340,13 +344,12 @@ def _ordinal_follower(text: str, stop: int, data) -> tuple[int, str] | None:
     while end < len(text) and (is_letter(text[end]) or is_mark(text[end])):
         end += 1
     if end > stop:
-        if text[stop:end] in data.get("case_suffixes", ()) and not (end < len(text) and is_word_char(text[end])):
+        if text[stop:end] in data["case_suffixes"] and not (end < len(text) and is_word_char(text[end])):
             return end, text[stop:end]
         return None
     if text[stop:stop + 1] == "," or (text[stop:stop + 1] == " " and next_visible(text, stop).islower()):
         return stop, ""
     return None
-
 
 
 _GAP = "[ \u00a0\u202f]"
@@ -360,6 +363,7 @@ KEPT_SPACE_GROUPS = SpaceGroups(pattern=re.compile(
 shape of a Spanish telephone number, with a two-digit group or brackets before it, a fraction in groups after the
 decimal comma, with a whole part in groups or not, and a fraction in groups after a decimal point whose last group is
 short (module docstring)."""
+
 
 @dataclass(frozen=True)
 class BasqueOrdinal:
@@ -488,7 +492,7 @@ class LetterCode:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         folded = fold_digits(text)
-        for match in re.finditer("-[0-9]+", folded):
+        for match in _HYPHEN_DIGITS.finditer(folded):
             hyphen, end = match.span()
             start = hyphen
             while start > 0 and is_letter(text[start - 1]):
@@ -533,7 +537,7 @@ class RomanMonthDate:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         from text2spoken.core.roman import value as roman_value
 
-        for match in re.finditer("([0-9]{4})(?:/([IVX]+)/|-([IVX]+)-)([0-9]{1,2})", fold_digits(text)):
+        for match in _ROMAN_MONTH_DATE.finditer(fold_digits(text)):
             start, end = match.span()
             year, month, day = int(match.group(1)), roman_value(match.group(2) or match.group(3)), int(match.group(4))
             if (month is None or not is_valid(year, month, day) or (start and is_word_char(text[start - 1]))
@@ -561,7 +565,7 @@ class BasqueTime:
         words = context_words(tokens)
         breaks = clause_breaks(text)
         time_words = frozenset(data["time_words"])
-        for match in re.finditer("[0-9][0-9]?:[0-9][0-9]", fold_digits(text)):
+        for match in _CLOCK.finditer(fold_digits(text)):
             start, end = match.span()
             if (start and is_word_char(text[start - 1])) or not _cluster_edge(text, start, end):
                 continue
