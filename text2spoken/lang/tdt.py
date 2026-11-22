@@ -37,10 +37,13 @@ These forms stay as written, because the written text does not choose one readin
   Alternatively, if the number quantifies a following head noun, it must be read in the language of that noun."
   A number after a noun can also label it with a borrowed numeral. Section 6.2: "This is the use of a borrowed
   cardinal numeral following a head noun of the same language, to function as an ordinal, e.g., Portuguese tópiku
-  ún ‘topic one’". So `kaixa 7` reads "kaixa hitu" when it counts, and in Portuguese when it labels.
-- A price and a telephone number. Section 10.1 (iv) gives Portuguese for a voiceover, and sections 7.4.3 and 7.4.4
-  give Indonesian for everyday speech. A Portuguese reading needs the currency and telephone tables of the
-  Portuguese file, which a language file does not import.
+  ún ‘topic one’". Its example (9) contrasts "rejiaun ida" ‘a region’ with "rejiaun ún" ‘region one’. So a number
+  after a noun reads in Tetun when it counts, and in a borrowed numeral when it labels.
+
+The file does not read a price, a telephone number or a date with a written month, such as `10 Abril 1973`, yet. For
+a voice that reads written text, section 10.1 (iv) gives each of them one reading, in Portuguese: "telephone
+numbers, dates and prices". A Portuguese reading needs the currency, telephone and month tables of the Portuguese
+file, which a language file does not import.
 """
 from __future__ import annotations
 

@@ -30,7 +30,7 @@ The words have the Portuguese spelling, which the espeak `pt` voice of the speec
 | --- | --- |
 | `tdt-TL` (the default variety) | Day, month, year |
 
-`tdt` serves every Tetun Dili tag. It does not serve `tet`, Tetun Terik, a separate language.
+`tdt` serves every Tetun Dili tag. `tet` (Tetum, ISO 639-3) does not route to this file. The SIL ISO 639-3 code table names [`tdt`](https://iso639-3.sil.org/code/tdt) "Tetun Dili" and [`tet`](https://iso639-3.sil.org/code/tet) "Tetum", two individual languages.
 
 ## Options
 
@@ -49,20 +49,20 @@ The words have the Portuguese spelling, which the espeak `pt` voice of the speec
 
 The rules come from Catharina Williams-van Klinken and John Hajek, "Mixing numeral systems in Timor-Leste", NUSA 64 (2018), [doi:10.5281/zenodo.1450774](https://doi.org/10.5281/zenodo.1450774). Section 10.1 gives the numerals for a text that a voice reads aloud: "the voiceover for written announcements on television make overwhelming use of Portuguese for items such as telephone numbers, dates and prices." CLDR 48 gives the date order of Timor-Leste: the `pt-TL` date `dd/MM/y`. The docstring of [`tdt.py`](../../text2spoken/lang/tdt.py) quotes each source.
 
-Each of the 16 rows in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
+Each of the 15 rows in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
 
 ## Limits
 
-The file reads no cardinals, times, percentages, money or telephone numbers. The source gives each of them more than one reading, and the written text does not choose one. A cardinal after a noun reads in Tetun when it counts, as `kaixa 7` "kaixa hitu" (seven boxes), and in Portuguese or Indonesian when it labels, as "rejiaun ún" (region one). A time reads in any of the three numeral sets, and Indonesian is the most common. A price and a telephone number read in Portuguese in a voiceover and in Indonesian in everyday speech.
+The file reads no cardinals, times or percentages. The source gives each of them more than one reading, and the written text does not choose one. A cardinal after a noun reads in Tetun when it counts, as `kaixa 7` "kaixa hitu" (seven boxes), and in Portuguese or Indonesian when it labels, as "rejiaun ún" (region one). A time reads in any of the three numeral sets, and Indonesian is the most common.
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
 | `Ami tama 8:00, sai 12:30.` | `tdt-TL` | stays as written | A time reads in Tetun, Portuguese or Indonesian. |
-| `Iha kaixa 7.` | `tdt-TL` | stays as written | A cardinal reads in Tetun when it counts and in Portuguese when it labels. |
+| `Iha kaixa 7.` | `tdt-TL` | stays as written | A cardinal after a noun reads in Tetun when it counts and in a borrowed numeral when it labels. |
 | `Sae ba 90%.` | `tdt-TL` | stays as written | A percentage reads in any of the three numeral sets. |
-| `Mina nee, litru ida $1.` | `tdt-TL` | stays as written | Money stays as written. |
-| `Hau nia númeru telefone 7731 2345.` | `tdt-TL` | stays as written | A telephone number stays as written. |
 | `Data 13/13/2024 la iha.` | `tdt-TL` | stays as written | Month 13 is no date. |
+
+The file does not read prices, telephone numbers or dates with a written month, such as `10 Abril 1973`, yet. For a voice that reads written text, the source gives each of them one reading, in Portuguese: "the voiceover for written announcements on television make overwhelming use of Portuguese for items such as telephone numbers, dates and prices." A Portuguese reading needs the currency, telephone and month tables of `pt.py`, and a language file does not import another language file.
 
 ---
 [← Russian](ru.md) · [Home](../index.md) · [Chinese →](zh.md)
