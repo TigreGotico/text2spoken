@@ -1,7 +1,8 @@
 """The one module that imports ovos-number-parser and ovos-date-parser (design section 5.4).
 
 Each name of `WRITERS` imports its library on its first use, so `import text2spoken` imports neither library, and a
-language pays for the import at its first number or date.
+language pays for the import at its first number or date. When the writers move to another package, `WRITERS` and
+`number_writer_languages` are the one place to change.
 """
 from __future__ import annotations
 

@@ -74,7 +74,7 @@ def long_date(locale: str) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]
     one ASCII letter is a field. In Czech, Danish, Finnish, Icelandic, Norwegian and other languages, "a period or
     full stop is written after the numeral" of an ordinal (Wikipedia, "Ordinal indicator"), so `d.` is
     `("ordinal_day", "")`. Any other full stop, a field outside `DATE_FIELDS` and the year of two digits `yy` give
-    None."""
+    None, unless an entry of `date_readings` gives the words."""
     stored = json.loads((files("text2spoken") / "data" / "cldr" / f"{locale}.dates.json").read_text(encoding="utf-8"))
     reading = date_readings().get(locale)
     if reading is None or reading["written"] != stored["long"]:
