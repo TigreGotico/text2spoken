@@ -4,6 +4,7 @@ from __future__ import annotations
 import heapq
 import logging
 import re
+import unicodedata
 import warnings
 from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -173,8 +174,9 @@ def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
     no such number. After the run, the digit continues it, as in `123 456 78` and `+34 481.312 50`, so a second pass
     reads the run with the digit. Before the run, the first group belongs to the number before, as in
     `0800 123 456`, `HTTP/1.1 404` and `470-2 487`, or to the word that holds it, as `351` in `5@+351 000.7`: a digit
-    anywhere in the characters before the run up to a space refuses it too. Nor is a run after a letter, as in the
-    code `K1 500`.
+    anywhere in the characters before the run up to a space refuses it too. Nor is a run after any character other
+    than a space, a currency sign or an opening bracket, as the letter of the code `K1 500` and the `@` of
+    `x@12 000 000`, which hold the first group: an address reads it, and a second pass would read the other groups.
 
     A run that starts inside a digit run has a digit next to it, so only the start of each digit run is tried, past
     the end of the last run. Each run holds a space, so the scan back to a space stops at or after the last space of
@@ -191,7 +193,8 @@ def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
         while word and not folded[word - 1].isspace():
             word -= 1
         near = folded[min(word, max(start - 2, 0)):start] + folded[end:end + 2]
-        if any("0" <= char <= "9" for char in near) or (start and is_letter(folded[start - 1])):
+        glued = start and not (folded[start - 1].isspace() or unicodedata.category(folded[start - 1]) in ("Sc", "Ps"))
+        if glued or any("0" <= char <= "9" for char in near):
             continue
         for position in range(start, end):
             if folded[position] in GROUP_SPACES:

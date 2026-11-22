@@ -1022,6 +1022,22 @@ def test_a_digit_in_the_word_before_a_run_refuses_its_group_spaces(text, lang, e
     assert normalize(once, lang) == once
 
 
+@pytest.mark.parametrize(("text", "lang", "expected"), [
+    ("x@12 000 000 €", "en-GB", "ex at one two 000 zero euros"),
+    ("x €#@205 530 332 €", "pt-PT",
+     "x € cardinal arroba dois zero cinco quinhentos e trinta trezentos e trinta e dois euros"),
+    ("mail me@205 530 332 people", "en-GB",
+     "mail em e at two zero five five hundred and thirty three hundred and thirty-two people"),
+])
+def test_a_character_glued_to_a_run_refuses_its_group_spaces(text, lang, expected):
+    """Section 11. A character before a run that is not a space, a currency sign or an opening bracket holds its
+    first group, so the run is no number in groups, and its groups read alone, as dev reads them. If the run were one
+    number, the address would read `12` and leave `000 000` waiting, and a second pass would read it."""
+    once = normalize(text, lang)
+    assert once == expected
+    assert normalize(once, lang) == once
+
+
 _DROP_WORDS = {"en-US": "Dial", "en-GB": "Tel.", "de-DE": "Fax:", "es-ES": "Tel.", "fr-CH": "téléphone",
                "pt-PT": "telefone"}
 _DROP_RUNS = ("130\xa0509,30 118", "281 039,0 % 84", "020 18:30", "916 047 319,233", "0990 3617 18:30 436",
