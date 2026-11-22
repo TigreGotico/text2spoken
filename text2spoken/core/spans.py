@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Literal, Protocol
 from text2spoken.core.emoji import emoji_view, sequences_in
 from text2spoken.core.numbers import GROUP_SPACES, SPACE_GROUPS, WHOLE_GROUPS, number_marks
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, fold_digits, is_digit, is_letter, is_mark,
-                                     is_punctuation, next_visible)
+                                     is_punctuation, is_word_char, next_visible)
 from text2spoken.errors import (ArgumentTypeError, DeclinedReading, HintWarning, InvalidHintError, Text2SpokenError,
                                 UndefinedGrammaticalGender, UnreadFormError, require_type)
 from text2spoken.params import Animacy, FrozenMap, Form, GrammaticalGender
@@ -316,12 +316,16 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
             # A run that the plain analysis keeps as a telephone number is a candidate too, as a second pass sees it
             # once the number in brackets before it reads: `152 397` in `(1) 152 397`. Only a run whose groups hold
             # every digit of the span and no `+` reads: a kept span can hold more text than its groups, as the `+44`
-            # of `Dial+44 164` or the `,30 118` of `130 509,30 118`, and its reading would drop that text.
+            # of `Dial+44 164` or the `,30 118` of `130 509,30 118`, and its reading would drop that text. A run that
+            # a letter or a digit touches is kept for the word it is glued to, not for want of evidence, so the
+            # markup does not read it (design section 17.4 step 3), as `76 50` in `76 50h 087`.
             extents = {(span.start, span.end) for span in first}
             for kept_span in held:
                 run = fold_digits(text[kept_span.start:kept_span.end])
+                touching = text[kept_span.start - 1:kept_span.start] + text[kept_span.end:kept_span.end + 1]
                 if (kept_span.keep and kept_span.form is Form.TELEPHONE
                         and (kept_span.start, kept_span.end) not in extents and "+" not in run
+                        and not any(is_word_char(char) for char in touching)
                         and fold_digits("".join(kept_span.fields["groups"])) == "".join(filter(str.isdigit, run))):
                     span = replace(kept_span, keep=False)
                     if say_as.fits(span):

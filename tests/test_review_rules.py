@@ -1074,6 +1074,24 @@ def test_a_reading_speaks_every_digit_of_its_text(value):
     assert dropped == []
 
 
+@pytest.mark.parametrize(("text", "lang", "expected"), [
+    ("Tél.\xa076 50h 087 5778 53 6370 % 36", "fr-CH",
+     "Tél.\xa076 50h 087 cinq mille sept cent septante-huit cinquante-trois six mille trois cent septante pour cent "
+     "trente-six"),
+    ("Tel. 0171 23x 4567", "de-DE", "Telefon 0171 23x viertausendfünfhundertsiebenundsechzig"),
+    ("telefone 912 34a 678", "pt-PT", "telefone 912 34a seiscentos e setenta e oito"),
+])
+def test_say_as_telephone_reads_no_kept_run_glued_to_a_word(text, lang, expected):
+    """Section 17.4 step 3. A run that a letter or a digit touches is kept as written for the word it is glued to,
+    not for want of evidence, so say-as `telephone` does not read it, and the text reads as dev reads it on the first
+    pass and on both second passes. Read as a telephone number, `23x` would give "dreix"."""
+    say_as = SayAs(interpret_as="telephone")
+    once = normalize(text, lang, say_as=say_as)
+    assert once == expected
+    assert normalize(once, lang, say_as=say_as) == once
+    assert normalize(once, lang) == once
+
+
 @pytest.mark.parametrize(("text", "lang", "value", "expected"), [
     ("28\xa0944 856", "ko-KR", "characters", "이 팔\xa0구 사 사 팔 오 육"),
     ("(1) 685 666; 94, 64", "de-DE", "telephone", "eins sechs acht fünf sechs sechs sechs; neun vier, sechs vier"),
