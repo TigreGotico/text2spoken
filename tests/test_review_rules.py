@@ -1007,6 +1007,21 @@ def test_a_second_pass_reads_no_digit_that_the_say_as_left(text, lang, value, sa
             assert normalize(once, lang, say_as=say_as) == once
 
 
+@pytest.mark.parametrize(("text", "lang", "expected"), [
+    ("5@+351 000.7-4171 508 524", "en-GB",
+     "five at plus three five one 000.7-4171 five hundred and eight five hundred and twenty-four"),
+    ("Tel. 5@+351 000.7-4171 508 524", "en-US",
+     "Tel. five at plus three five one 000.7-4171 five hundred eight five hundred twenty-four"),
+])
+def test_a_digit_in_the_word_before_a_run_refuses_its_group_spaces(text, lang, expected):
+    """Section 11. A digit in the characters before a run up to a space joins the first group to the word
+    that holds it, so the run is no number in groups, and the groups read alone, as dev reads them. If the run were
+    one number, `351` would read with `5@+` and leave `508 524` waiting, and a second pass would read it."""
+    once = normalize(text, lang)
+    assert once == expected
+    assert normalize(once, lang) == once
+
+
 @pytest.mark.parametrize(("text", "lang", "value", "expected"), [
     ("912\xa0345\xa0678", "pt-PT", "telephone", "nove um dois\xa0três quatro cinco\xa0seis sete oito"),
     ("912\u202f345\u202f678", "pt-PT", "telephone", "nove um dois\u202ftrês quatro cinco\u202fseis sete oito"),

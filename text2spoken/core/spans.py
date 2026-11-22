@@ -172,10 +172,13 @@ def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
     decimal mark is the comma, `0,264 7`. A run of `_GROUP_RUNS` with a digit next to it, or one character away, is
     no such number. After the run, the digit continues it, as in `123 456 78` and `+34 481.312 50`, so a second pass
     reads the run with the digit. Before the run, the first group belongs to the number before, as in
-    `0800 123 456`, `HTTP/1.1 404` and `470-2 487`. Nor is a run after a letter, as in the code `K1 500`.
+    `0800 123 456`, `HTTP/1.1 404` and `470-2 487`, or to the word that holds it, as `351` in `5@+351 000.7`: a digit
+    anywhere in the characters before the run up to a space refuses it too. Nor is a run after a letter, as in the
+    code `K1 500`.
 
     A run that starts inside a digit run has a digit next to it, so only the start of each digit run is tried, past
-    the end of the last run. The scan then takes linear time, also for `[0-9]+,` before a long digit run."""
+    the end of the last run. Each run holds a space, so the scan back to a space stops at or after the last space of
+    the run before. The scan then takes linear time, also for `[0-9]+,` before a long digit run."""
     folded = fold_digits(text)
     marked = bytearray(len(text))
     runs = _GROUP_RUNS if decimal_comma else _WHOLE_GROUP_RUNS
@@ -184,7 +187,10 @@ def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
         if digits.start() < end or (match := runs.match(folded, digits.start())) is None:
             continue
         start, end = match.span()
-        near = folded[max(start - 2, 0):start] + folded[end:end + 2]
+        word = start
+        while word and not folded[word - 1].isspace():
+            word -= 1
+        near = folded[min(word, max(start - 2, 0)):start] + folded[end:end + 2]
         if any("0" <= char <= "9" for char in near) or (start and is_letter(folded[start - 1])):
             continue
         for position in range(start, end):
