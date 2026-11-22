@@ -1023,6 +1023,28 @@ def test_a_digit_in_the_word_before_a_run_refuses_its_group_spaces(text, lang, e
 
 
 @pytest.mark.parametrize(("text", "lang", "value", "expected"), [
+    ("28\xa0944 856", "ko-KR", "characters", "이 팔\xa0구 사 사 팔 오 육"),
+    ("(1) 685 666; 94, 64", "de-DE", "telephone", "eins sechs acht fünf sechs sechs sechs; neun vier, sechs vier"),
+    ("351 912", "de-DE", "digits", "351 912"),
+    ("11/2/2010 (12) 81 559\u202f599", "es-ES", "telephone",
+     "once de febrero de dos mil diez uno dos ocho uno cinco cinco nueve\u202fcinco nueve nueve"),
+    ("3.5 (1) 12 000 (1) 437 593", "en-GB", "telephone",
+     "three five one one two zero zero zero one four three seven five nine three"),
+])
+def test_a_say_as_reads_as_dev_where_the_round_ten_rules_decide(text, lang, value, expected):
+    """Sections 11 and 17.7. Say-as `characters` joins no groups, a kept run is a candidate only under `telephone`,
+    a span is `alone` only when no mark joins it to a digit, and a kept run is read only where a reading span starts
+    at or before it. Each text reads as dev reads it, on the first pass and on both second passes."""
+    say_as = SayAs(interpret_as=value)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ParameterNotHonouredWarning)
+        once = normalize(text, lang, say_as=say_as)
+        assert once == expected
+        assert normalize(once, lang, say_as=say_as) == once
+        assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "value", "expected"), [
     ("912\xa0345\xa0678", "pt-PT", "telephone", "nove um dois\xa0três quatro cinco\xa0seis sete oito"),
     ("912\u202f345\u202f678", "pt-PT", "telephone", "nove um dois\u202ftrês quatro cinco\u202fseis sete oito"),
     ("0\xa0437\xa0593", "en-GB", "telephone", "zero\xa0four three seven\xa0five nine three"),
