@@ -314,11 +314,18 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         telephone = say_as.value == "telephone"
         if telephone:
             # A run that the plain analysis keeps as a telephone number is a candidate too, as a second pass sees it
-            # once the number in brackets before it reads: `152 397` in `(1) 152 397`.
+            # once the number in brackets before it reads: `152 397` in `(1) 152 397`. Only a run whose groups hold
+            # every digit of the span and no `+` reads: a kept span can hold more text than its groups, as the `+44`
+            # of `Dial+44 164` or the `,30 118` of `130 509,30 118`, and its reading would drop that text.
             extents = {(span.start, span.end) for span in first}
-            first += [span for span in (replace(kept_span, keep=False) for kept_span in held
-                                        if kept_span.keep and kept_span.form is Form.TELEPHONE
-                                        and (kept_span.start, kept_span.end) not in extents) if say_as.fits(span)]
+            for kept_span in held:
+                run = fold_digits(text[kept_span.start:kept_span.end])
+                if (kept_span.keep and kept_span.form is Form.TELEPHONE
+                        and (kept_span.start, kept_span.end) not in extents and "+" not in run
+                        and fold_digits("".join(kept_span.fields["groups"])) == "".join(filter(str.isdigit, run))):
+                    span = replace(kept_span, keep=False)
+                    if say_as.fits(span):
+                        first.append(span)
         first = [span for span in first if (span.start, span.end) not in refused and not _cuts(span, unit_at)]
         # The spans kept as written whose evidence word each span holds. A telephone number holds its own groups, and
         # it relies on the other kept spans: it reads only if a say-as span reads each of them (see `_supported`).

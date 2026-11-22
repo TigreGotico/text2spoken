@@ -1022,6 +1022,42 @@ def test_a_digit_in_the_word_before_a_run_refuses_its_group_spaces(text, lang, e
     assert normalize(once, lang) == once
 
 
+_DROP_WORDS = {"en-US": "Dial", "en-GB": "Tel.", "de-DE": "Fax:", "es-ES": "Tel.", "fr-CH": "téléphone",
+               "pt-PT": "telefone"}
+_DROP_RUNS = ("130\xa0509,30 118", "281 039,0 % 84", "020 18:30", "916 047 319,233", "0990 3617 18:30 436",
+              "164\xa0752,806")
+_DROP_TEXTS = [(lang, word + join + run + tail) for lang, word in _DROP_WORDS.items() for join in ("", " ", "+44 ")
+               for run in _DROP_RUNS for tail in ("", " (020)")] + [
+    ("en-US", "Dial+44 164\xa0752,806\xa0- (3)"), ("en-GB", "Tel. 281 039,0 % 84\u202f585\u202f976"),
+    ("de-DE", "Fax:\u202f916 047 319,233\u202f7.7509 €"), ("es-ES", "Tel.\xa020 18:30 (020)"),
+    ("fr-CH", "téléphone 130\xa0509,30 118\u202f005\u202f905 1st"),
+    ("fr-CA", "Tél.0990 3617 18:30 436\u202f292,88\xa0+ 78 , (12)")]
+_SPOKEN_FIELDS = {Form.TELEPHONE: ("country_code", "groups", "prefix", "suffix"), Form.IDENTIFIER: ("head", "digits"),
+                  Form.LETTERS: ("letters",)}
+
+
+@pytest.mark.parametrize("value", ["telephone", "digits", "characters", "cardinal", None])
+def test_a_reading_speaks_every_digit_of_its_text(value):
+    """Sections 17.2 and 17.5. A span that reads digit by digit speaks each digit of its text, in the order the text
+    writes them: the digits of its fields equal the digits of its text. A kept telephone run can hold more text than
+    its groups, as the `+44` of `Dial+44 164` and the `,30 118` of `130 509,30 118`, so it reads under `telephone`
+    only when its groups hold every digit and no `+`. A second pass cannot find the text a reading drops, because the
+    output is stable. The texts put a phone word, glued or not, before runs that end in a decimal, a time or a sign."""
+    say_as = None if value is None else SayAs(interpret_as=value)
+    dropped = []
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ParameterNotHonouredWarning)
+        for lang, text in _DROP_TEXTS:
+            for span in analyze(text, lang, say_as=say_as).spans:
+                if span.form in _SPOKEN_FIELDS and not span.keep:
+                    spoken = "".join("".join(span.fields[field]) for field in _SPOKEN_FIELDS[span.form])
+                    written = text[span.start:span.end]
+                    if "".join(filter(str.isdigit, fold_digits(spoken))) \
+                            != "".join(filter(str.isdigit, fold_digits(written))):
+                        dropped.append((lang, text, written))
+    assert dropped == []
+
+
 @pytest.mark.parametrize(("text", "lang", "value", "expected"), [
     ("28\xa0944 856", "ko-KR", "characters", "이 팔\xa0구 사 사 팔 오 육"),
     ("(1) 685 666; 94, 64", "de-DE", "telephone", "eins sechs acht fünf sechs sechs sechs; neun vier, sechs vier"),
