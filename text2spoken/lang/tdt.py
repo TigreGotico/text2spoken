@@ -53,14 +53,27 @@ A scale word after an amount: section 5.2, p. 73: "(ii) milhaun is from Portugue
 numeral expressed solely with Portuguese elements, the plural milhoens is used for more than one unit of millions,
 e.g. déz milhoens ‘ten million’." Example (11), p. 78, reads an amount with it: "korenta milhoens de dolar-es" ("forty
 million dollars"). The Tetun Wikipedia article "Timor-Leste" writes the plural `milloens`, as in "$ 48 milloens". So
-`US$ 10 milhoens` reads "dez milhões de dólares". The Tetun and Indonesian scale words of Table 3, p. 71 (`atus`,
-`ratus` ‘hundred’, `rihun`, `ribu` ‘thousand’) and of section 5.2 (`tokon`, `juta` ‘million’) take a Tetun or
-Indonesian numeral, so an amount before one of them stays as written: `$5 rihun`. So does an amount before a word
-for ‘billion’, which `pt-PT` does not read as "mil milhões". Section 5.2, p. 73: "For ‘billion’ (thousand million),
-people use either Portuguese bilhaun (plural bilhoens) or Indonesian milyar." So does an amount before `míl`, the
-Portuguese ‘thousand’ of Table 3, and before the spellings that the Tetun Wikipedia writes: `biliaun`, `billaun`,
-`miliar`, `millaun` and `milhoes`. These words match in any case, and a scale word in capitals that `pt-PT` does not
-list, as `Milhoens`, also keeps the amount as written.
+`US$ 10 milhoens` reads "dez milhões de dólares", through `TIMOR`. So do the scale words that `pt-PT` reads, as
+`$5 mil`, "cinco mil dólares".
+
+An amount before any other scale word stays as written. Section 5.2, p. 73, says that the words for ‘thousand’,
+‘million’ and ‘billion’ are easy to confuse: "When first used, some people considered it easily confused with
+Indonesian milyar ‘1,000,000,000’ and Portuguese míl ‘thousand’." It adds a word for ‘billion’, which `pt-PT` does not
+read as "mil milhões": "For ‘billion’ (thousand million), people use either Portuguese bilhaun (plural bilhoens) or
+Indonesian milyar." The Indonesian `triliun` has two values, Wiktionary "triliun": "''Biliun'' and ''triliun'' each
+have two definitions (long and short scales)". The Tetun Wikipedia and FineWeb-2 `tet_Latn` write these words in
+many spellings and cases, such as `millaun`, `milloes`, `mill`, `Milioens`, `biliaun` and `billioens`. So an amount
+before a word that starts with `mil`, `míl`, `bil` or `tril` stays as written, in any case and in composed or
+decomposed form. The Tetun and Indonesian scale words of Table 3, p. 71 (`atus`, `ratus` ‘hundred’, `rihun`, `ribu`
+‘thousand’) and of section 5.2 (`tokon`, `juta` ‘million’) take a Tetun or Indonesian numeral, so an amount before
+one of them also stays as written: `$5 rihun`. A space, a tab, a line feed, a no-break space, a thin space or a
+narrow no-break space can stand between the amount and the word.
+
+An amount after a scale word stays as written too. Section 5.2, p. 73: "All three of these options show signs of
+nativization in that they can be used with postposed Tetun numeral modifiers, e.g. tokon tolu, milhaun tolu or juta
+tolu, all of which mean ‘three million’". So a number after a scale word counts it: `tokon $20` is 20 million
+dollars, and a Portuguese reading of the number alone loses the scale. These two rules hold for an amount of money
+only. A time, a percentage or a measure next to such a word still reads, as `9h30 militár` ‘9:30 military’.
 
 The Portuguese words come from the `pt-PT` recognizers and verbalizers of the Portuguese file, which the file takes
 from the loader when it reads a text, and from `spoken_date` of ovos-date-parser for `pt-PT`. So this file holds no
@@ -86,7 +99,7 @@ reading, in Portuguese, and the reading needs a table of the Tetun month names, 
 """
 from __future__ import annotations
 
-import re
+import unicodedata
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
@@ -114,15 +127,24 @@ TIMOR = freeze({
 """The Timor-Leste data over the `pt-PT` data: the Tetun time word, the centavo of the Banco Central and the Tetun
 spellings of `milhão`."""
 
-KEPT_SCALES = ("atus", "ratus", "rihun", "ribu", "míl", "tokon", "juta", "milhaun", "milhoens", "milloens", "millaun",
-               "milhoes", "bilhaun", "bilhoens", "biliaun", "billaun", "milyar", "miliar")
-"""The scale words before which an amount stays as written. A lower-case `milhaun`, `milhoens` or `milloens` reads
-through `TIMOR` first, so only another case of them reaches this list."""
+SCALE_PREFIXES = ("mil", "míl", "bil", "tril")
+"""The start of each spelling of a word for ‘thousand’, ‘million’, ‘billion’ or ‘trillion’. A scale word that the
+`pt-PT` reading takes into the amount, as `mil`, `milhões` or a lower-case `milhaun` of `TIMOR`, is not after the
+span, so the keep check does not see it."""
 
-TETUN_SCALE = re.compile("[ \u00a0]*(?:" + "|".join("".join(f"[{char}{char.upper()}]" for char in word)
-                                                    for word in KEPT_SCALES) + ")")
-"""A scale word of `KEPT_SCALES`, in any case, right after a number: a Portuguese reading of the number stops
-before it."""
+TETUN_SCALES = frozenset({"atus", "ratus", "rihun", "ribu", "tokon", "juta"})
+"""The Tetun and Indonesian scale words that keep an amount next to them as written."""
+
+SEPARATORS = " \t\n\u00a0\u2009\u202f"
+"""The characters that can stand between an amount and its scale word: the space, the tab, the line feed, the
+no-break space, the thin space and the narrow no-break space."""
+
+
+def is_scale_word(word: str) -> bool:
+    """Whether `word`, in any case and in composed or decomposed form, is a scale word that keeps an amount next to it
+    as written."""
+    word = unicodedata.normalize("NFC", word).lower()
+    return word.startswith(SCALE_PREFIXES) or word in TETUN_SCALES
 
 
 def portuguese(request: Request) -> Request:
@@ -147,9 +169,19 @@ class Portuguese:
         for recognizer in pt.language.recognizers:
             if recognizer.form is self.form:
                 for span in recognizer.find(text, tokens, pt):
-                    scale = TETUN_SCALE.match(text, span.end)
-                    if scale and (scale.end() == len(text) or not is_word_char(text[scale.end()])):
-                        span = replace(span, keep=True)
+                    if self.form is Form.MONEY:
+                        start, end = span.start, span.end
+                        while start and text[start - 1] in SEPARATORS:
+                            start -= 1
+                        while end < len(text) and text[end] in SEPARATORS:
+                            end += 1
+                        before, after = start, end
+                        while before and is_word_char(text[before - 1]):
+                            before -= 1
+                        while after < len(text) and is_word_char(text[after]):
+                            after += 1
+                        if is_scale_word(text[before:start]) or is_scale_word(text[end:after]):
+                            span = replace(span, keep=True)
                     yield span
 
 
