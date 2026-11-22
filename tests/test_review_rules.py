@@ -1085,8 +1085,8 @@ def test_a_reading_speaks_every_digit_of_its_text(value):
 ])
 def test_a_say_as_reads_as_dev_where_the_round_ten_rules_decide(text, lang, value, expected):
     """Sections 11 and 17.7. Say-as `characters` joins no groups, a kept run is a candidate only under `telephone`,
-    a span is `alone` only when no mark joins it to a digit, and a kept run is read only where a reading span starts
-    at or before it. Each text reads as dev reads it, on the first pass and on both second passes."""
+    and a span is `alone` only when no mark joins it to a digit. Each text reads as dev reads it, on the first pass
+    and on both second passes."""
     say_as = SayAs(interpret_as=value)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", ParameterNotHonouredWarning)
