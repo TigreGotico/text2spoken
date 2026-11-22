@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.2a99](https://github.com/TigreGotico/text2spoken/tree/0.0.2a99) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a98...0.0.2a99)
+
+**Merged pull requests:**
+
+- refactor\(lang\): simpler code in it and ru, docstring wraps in it, pt, ru and zh [\#418](https://github.com/TigreGotico/text2spoken/pull/418) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- perf\(core\): cache the variety match of select, test characters with str methods [\#416](https://github.com/TigreGotico/text2spoken/pull/416) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- refactor\(lang\): simpler code and shorter docstrings in ca, de, es and eu [\#414](https://github.com/TigreGotico/text2spoken/pull/414) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a98](https://github.com/TigreGotico/text2spoken/tree/0.0.2a98) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a97...0.0.2a98)
@@ -280,10 +290,6 @@
 ## [0.0.2a67](https://github.com/TigreGotico/text2spoken/tree/0.0.2a67) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a66...0.0.2a67)
-
-**Merged pull requests:**
-
-- feat\(ar\): read each Arabic lect with its region and the writer's dialect words [\#195](https://github.com/TigreGotico/text2spoken/pull/195) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a66](https://github.com/TigreGotico/text2spoken/tree/0.0.2a66) (2026-11-17)
 
