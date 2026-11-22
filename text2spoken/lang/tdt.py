@@ -55,7 +55,12 @@ e.g. déz milhoens ‘ten million’." Example (11), p. 78, reads an amount with
 million dollars"). The Tetun Wikipedia article "Timor-Leste" writes the plural `milloens`, as in "$ 48 milloens". So
 `US$ 10 milhoens` reads "dez milhões de dólares". The Tetun and Indonesian scale words of Table 3, p. 71 (`atus`,
 `ratus` ‘hundred’, `rihun`, `ribu` ‘thousand’) and of section 5.2 (`tokon`, `juta` ‘million’) take a Tetun or
-Indonesian numeral, so an amount before one of them stays as written: `$5 rihun`.
+Indonesian numeral, so an amount before one of them stays as written: `$5 rihun`. So does an amount before a word
+for ‘billion’, which `pt-PT` does not read as "mil milhões". Section 5.2, p. 73: "For ‘billion’ (thousand million),
+people use either Portuguese bilhaun (plural bilhoens) or Indonesian milyar." So does an amount before `míl`, the
+Portuguese ‘thousand’ of Table 3, and before the spellings that the Tetun Wikipedia writes: `biliaun`, `billaun`,
+`miliar`, `millaun` and `milhoes`. These words match in any case, and a scale word in capitals that `pt-PT` does not
+list, as `Milhoens`, also keeps the amount as written.
 
 The Portuguese words come from the `pt-PT` recognizers and verbalizers of the Portuguese file, which the file takes
 from the loader when it reads a text, and from `spoken_date` of ovos-date-parser for `pt-PT`. So this file holds no
@@ -109,8 +114,15 @@ TIMOR = freeze({
 """The Timor-Leste data over the `pt-PT` data: the Tetun time word, the centavo of the Banco Central and the Tetun
 spellings of `milhão`."""
 
-TETUN_SCALE = re.compile("[ \u00a0]*(?:[Aa]tus|[Rr]atus|[Rr]ihun|[Rr]ibu|[Tt]okon|[Jj]uta)")
-"""A Tetun or Indonesian scale word right after a number: a Portuguese reading of the number stops before it."""
+KEPT_SCALES = ("atus", "ratus", "rihun", "ribu", "míl", "tokon", "juta", "milhaun", "milhoens", "milloens", "millaun",
+               "milhoes", "bilhaun", "bilhoens", "biliaun", "billaun", "milyar", "miliar")
+"""The scale words before which an amount stays as written. A lower-case `milhaun`, `milhoens` or `milloens` reads
+through `TIMOR` first, so only another case of them reaches this list."""
+
+TETUN_SCALE = re.compile("[ \u00a0]*(?:" + "|".join("".join(f"[{char}{char.upper()}]" for char in word)
+                                                    for word in KEPT_SCALES) + ")")
+"""A scale word of `KEPT_SCALES`, in any case, right after a number: a Portuguese reading of the number stops
+before it."""
 
 
 def portuguese(request: Request) -> Request:

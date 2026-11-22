@@ -32,7 +32,7 @@ The file reads numeric dates, times, money amounts, telephone numbers, percentag
 
 The words have the Portuguese spelling, which the espeak `pt` voice of the speech stack reads. Written Tetun spells a Portuguese numeral in Tetun spelling, as "déz de Abril".
 
-Timor-Leste uses the US dollar, so `$` and `US$` read "dólares". The minor unit is the centavo of the Banco Central de Timor-Leste, where `pt-PT` says "cêntimos". A time with a colon reads after the Tetun time word `tuku`. Without a time word, `16:9` could be a ratio and `3:16` a verse. A time with `h`, as `9h30`, needs no time word. The Tetun spellings of the Portuguese scale word, `milhaun`, `milhoens` and `milloens`, read as `milhão` and `milhões`.
+Timor-Leste uses the US dollar, so `$` and `US$` read "dólares". The minor unit is the centavo of the Banco Central de Timor-Leste, where `pt-PT` says "cêntimos". A time with a colon reads after the Tetun time word `tuku`. Without a time word, `16:9` could be a ratio and `3:16` a verse. A time with `h`, as `9h30`, needs no time word. The Tetun spellings of the Portuguese scale word, `milhaun`, `milhoens` and `milloens`, read as `milhão` and `milhões`. An amount before any other scale word stays as written: the Tetun and Indonesian words, as `rihun` and `juta`, the words for ‘billion’, as `bilhoens` and `milyar`, the Portuguese `míl`, and the spellings `biliaun`, `billaun`, `miliar`, `millaun` and `milhoes`.
 
 ## Varieties
 
@@ -59,11 +59,11 @@ Timor-Leste uses the US dollar, so `$` and `US$` read "dólares". The minor unit
 
 The rules come from Catharina Williams-van Klinken and John Hajek, "Mixing numeral systems in Timor-Leste", NUSA 64 (2018), [doi:10.5281/zenodo.1450774](https://doi.org/10.5281/zenodo.1450774). Section 10.1 gives the numerals for a text that a voice reads aloud: "the voiceover for written announcements on television make overwhelming use of Portuguese for items such as telephone numbers, dates and prices." The same section says: "In formal contexts, Indonesian numerals are normally avoided". The date, price and telephone rows cite these quotes.
 
-The time, percentage and measure rows are the reading of the project, and no quote gives it. Section 7.1 names the forms that take a borrowed numeral: "Indonesian and Portuguese are used for prices, time and date, phone numbers, measurements, sequence, mathematics and sports scores [...]." The formal register avoids Indonesian, which leaves Portuguese. The paper also gives Tetun for these forms: in formal speech, a percentage takes a Tetun numeral as often as a Portuguese one (section 7.6.4).
+The time, percentage and measure rows are the reading of the project, and no quote gives it. Section 7.1 names the forms that take a borrowed numeral: "Indonesian and Portuguese are used for prices, time and date, phone numbers, measurements, sequence, mathematics and sports scores [...]." The formal register avoids Indonesian, which leaves Portuguese. The paper also gives Tetun for these forms: in formal speech, a percentage takes a Tetun numeral as often as a Portuguese one (section 7.6.4). Weights and measures in oral texts take Tetun most often: "50% are in Tetun, and the rest spread between Portuguese and Indonesian" (section 7.7.4).
 
 CLDR 48 gives the date order of Timor-Leste: the `pt-TL` date `dd/MM/y`. CLDR 49 `currencyData.json` gives Timor-Leste the US dollar. The Banco Central de Timor-Leste names its coins "centavos". The docstring of [`tdt.py`](../../text2spoken/lang/tdt.py) quotes each source.
 
-Each of the 28 rows in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
+Each of the 40 rows in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
 
 ## Gaps
 
@@ -86,6 +86,8 @@ The file reads no cardinals. The source gives a cardinal more than one reading, 
 | `Iha ema 150.` | `tdt-TL` | stays as written | A cardinal reads in any of the three numeral sets. |
 | `Ami tama 8:00, sai 12:30.` | `tdt-TL` | stays as written | No time word stands before the times. |
 | `Folin $5 rihun.` | `tdt-TL` | stays as written | A Tetun scale word, as `rihun` (thousand), takes a Tetun numeral. |
+| `Orsamentu US$ 2 bilhoens.` | `tdt-TL` | stays as written | `pt-PT` reads no word for ‘billion’ after an amount. |
+| `Folin $ 3 Milhoens.` | `tdt-TL` | stays as written | A scale word in capitals that `pt-PT` does not list keeps the amount as written. |
 | `Data 13/13/2024 la iha.` | `tdt-TL` | stays as written | Month 13 is no date. |
 
 ---
