@@ -4,7 +4,7 @@ The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, money, measures, percentages, telephone numbers, abbreviations, Roman numerals, colours, e-mail and web addresses, symbols and lexicon entries. With the form on, it also reads runs of capital letters and emoji.
+The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, money, measures, percentages, telephone numbers, abbreviations, Roman numerals, colours, e-mail and web addresses, symbols and lexicon entries, and with the form on, runs of capital letters and emoji.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -39,13 +39,14 @@ A number right after a noun that names one item of a series, such as `sala`, `p�
 | `O bilhete custa 12,5 €.` | `pt-PT` | O bilhete custa doze euros e cinquenta cêntimos. |
 | `Tome a vitamina D. Boa noite.` | `pt-PT` | stays as written |
 
-The comma is the decimal mark. The full stop is the decimal mark of the English convention (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A decimal with a full stop reads with a unit symbol, a percent sign or a currency, and before the name of a unit. A unit of duration is no evidence, because `1.30 h` may write one hour and thirty minutes. Elsewhere the decimal stays as written, because such digits are mostly a version, an engine size or a section number. Digits with a leading zero after `vírgula` read as the digits of a decimal part.
+The comma is the decimal mark. The full stop is the decimal mark of the English convention (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A group after a thousands mark has three digits, so a number with one or two digits after the full stop is a decimal, and it reads with or without a unit after it. A number with four or more digits after the full stop reads only with a unit symbol, a percent sign or a currency, or before the name of a unit. After a word that names a version or a section, such as `versão`, `artigo`, `secção` or `item`, with or without a colon after it, the full stop separates the levels and reads "ponto", and each part reads as a cardinal. No source gives that reading, so its rows are silver. A number that may write a clock stays as written after a time word such as `às` and before a unit of the hour, the minute or the second, because `1.30 h` may write one hour and thirty minutes. A section number that starts a line before a capital also stays as written. So does a number whose whole part starts with a zero, such as `01.02`, because it may write a day and a month. Digits with a leading zero after `vírgula` read as the digits of a decimal part.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `A temperatura é de 10.4 graus.` | `pt-PT` | A temperatura é de dez vírgula quatro graus. |
 | `Corri 1.5 km.` | `pt-PT` | Corri um vírgula cinco quilómetros. |
-| `A versão 14.2 está pronta.` | `pt-PT` | stays as written |
+| `O valor é 10.4.` | `pt-PT` | O valor é dez vírgula quatro. |
+| `A versão 14.2 está pronta.` | `pt-PT` | A versão catorze ponto dois está pronta. |
 | `Durou 1.30 h.` | `pt-PT` | stays as written |
 | `A taxa é 0 vírgula 02.` | `pt-PT` | A taxa é zero vírgula zero dois. |
 
@@ -106,7 +107,7 @@ Every other `pt-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 The rules cite the Acordo Ortográfico de 1990, Priberam, Ciberdúvidas, Dicio, the Gramática do Português, Correia and San Payo de Lemos, Mendes, Oliveira and Teixeira, Viana et al., Cristófaro Silva, and the CLDR 49 data of `pt-PT` and `pt`. The docstring of [`pt.py`](../../text2spoken/lang/pt.py) quotes each source.
 
-The test rows in `tests/data/pt.tsv` name their source, and no native speaker has checked them. Of the 661 rows, 14 are marked silver.
+The test rows in `tests/data/pt.tsv` name their source, and no native speaker has checked them. Of the 693 rows, 28 are marked silver.
 
 ## Roman numerals
 

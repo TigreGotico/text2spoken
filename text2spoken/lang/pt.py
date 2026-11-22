@@ -70,12 +70,15 @@ The comma is the decimal mark, and the full stop is the decimal mark of the Engl
 (IPQ, 2006), quoted in Ciberdúvidas 12873: "Esses sinais são o ponto e a vírgula, sendo o primeiro empregado nos
 países de língua inglesa, e o segundo, nos restantes." So a full stop with one, two, or four or more digits after
 it, which no group of three explains, is a decimal mark, and `1.500` still reads as a number grouped with the full
-stop. Such a decimal reads with a percent sign, a currency or the symbol of a unit that `Measure` reads, as in
-`1.5 km`, and before the CLDR 49 name of such a unit, as in `10.4 graus`. Anywhere else it stays as written: in the
-"meio milhão de frases" sentence set, digits that a full stop parts are mostly a version, an engine size or a section
-(`Versão 14.2`, mmf-487795; `motor 1.6`, mmf-431047; `Termo de Referência, 5.3`, mmf-462875), which a speaker does
-not read with "vírgula". A unit of duration, as a symbol or a name, is no evidence: `1.30 h` and `1.30 horas` may
-write one hour and thirty minutes, and `às 9.30h` writes a clock.
+stop. A decimal with one or two digits after the full stop reads anywhere, as `o valor é 10.4` and `pi é 3.14`.
+One with four or more digits reads with a percent sign, a currency or the symbol of a unit that `Measure` reads, and
+before the CLDR 49 name of such a unit, as in `3.1416 graus`. After a word of `point_label_words`, as `versão`,
+`artigo` and `secção`, the full stop parts the levels of a version or a section and reads "ponto" (Priberam, "ponto",
+sense 7: "Sinal gráfico (.)"): `versão 2.10` reads "versão dois ponto dez". No source states that reading of a
+version or a section number. An hour and its minutes may take the full stop, so a decimal that may write one stays
+as written after a word of `time_words` and before a unit of the hour, the minute or the second: `às 9.30` and
+`1.30 horas` may write a clock or one hour and thirty minutes. So does a section number: one that opens a line
+before a capital, as `2.1 Se cancelarmos`, and one that a full stop and a lowercase word close, as `10.10. licitação`.
 
 Two numbers that `a`, `e` or `ou` join, as in `de 1 a 3 semanas` and `entre 1 e 2 semanas`, stay as written when the
 noun after the second number gives the first number another reading. No source gives the gender of the first number
@@ -448,6 +451,10 @@ DATA = freeze({
     **_pt_electronic.ELECTRONIC,
     "number_marks": {"Latn": [{"decimal": ",.", "group": "."}, {"decimal": ".", "group": ","}]},
     "decimal_word": "vírgula",
+    "point_word": "ponto",
+    "point_label_words": ["versão", "atualização", "v", "artigo", "art.", "cláusula", "secção", "seção", "capítulo",
+                          "cap.", "alínea", "ponto", "figura", "fig.", "tabela", "quadro", "item", "itens", "subitem",
+                          "subitens", "n.º", "nº"],
     "sign_words": {"-": "menos", "+": "mais"},
     "digit_words": ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"],
     "leads": {"#": "número", "-": ""},
@@ -822,7 +829,7 @@ def _pair_digits(token: str, request: Request) -> str | None:
     if token.isdigit():
         return token
     for _, _, group in number_marks(request.data, request.params.decimal_mark):
-        if group and group in token and token.replace(group, "").isdigit():
+        if group and re.fullmatch(f"\\d{{1,3}}(?:{re.escape(group)}\\d{{3}})+", token):
             return token.replace(group, "")
     return None
 
@@ -1393,8 +1400,17 @@ class SpelledDecimal:
 
 @dataclass(frozen=True)
 class PointDecimal(CoreDecimal):
-    """The decimals of the core. A decimal with the full stop reads only before a word of `_unit_names`, as
-    `10.4 graus`, or with a symbol that `PointMeasure`, `Percent` or `Money` reads."""
+    """The decimals of the core. A decimal with the full stop and one or two digits after it reads anywhere, as `10.4`
+    and `pi é 3.14`, and one with more digits only before a word of `_unit_names`, as `10.4567 graus`. After a word of
+    `point_label_words`, the full stop parts the levels of a version or a section, so the span reads through
+    `speak_point_decimal`: `versão 2.10` reads "versão dois ponto dez", and so does each number of a list after the
+    word, as `itens 4.6 e 4.7`. These stay as written: a number that a full stop or a comma and a digit continue or
+    that a full stop or a comma comes right before, as `1.2.3` and `A.4.3`; a number with no whole part, as `.50`, or
+    whose whole part has a leading zero, which may write a day and a month, as `01.02`, as a fraction does; a
+    section number, which opens a line before a capital, as `2.1 Se cancelarmos`, `- 1.3. Objeto` and `7.4 – O
+    conformismo`, or which a full stop and a lowercase word close, as `10.10. licitação`; and a number that may write
+    an hour and minutes or a minute and seconds, after a word of `time_words` or before a unit of `_clock_units`, as
+    `às 9.30` and `1.30 horas`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         points = _point_starts(text, request)
@@ -1404,10 +1420,62 @@ class PointDecimal(CoreDecimal):
             if span.start + len(span.fields["prefix"]) not in points:
                 yield span
                 continue
+            before = text[:span.start]
+            integer = span.fields["integer"]
+            short = (integer == "0" or integer[:1] not in ("", "0")) and len(span.fields["fraction"]) <= 2 \
+                and not before.endswith((".", ",")) and not re.match("[.,][0-9]", text[span.end:span.end + 2])
+            links = (",", *request.data["list_links"], request.data["range_word"], "à")
+            if _after_word(before, request.data["point_label_words"], links):
+                if short and not span.fields["sign"]:
+                    yield replace(span, recognizer=POINT_LABEL)
+                continue
             index = bisect_left(words, span.end, key=lambda word: word.start)
-            if index < len(words) and text[span.end:words[index].start].isspace() \
-                    and words[index].text in names:
+            after = words[index].text if index < len(words) and text[span.end:words[index].start].isspace() else ""
+            heading = re.fullmatch("[-–•]?\\s*", before.rpartition("\n")[2]) \
+                and re.match("[.]?\\s*(?:[-–:]\\s*)?[\"“]?[A-ZÀ-Ý]", text[span.end:])
+            closed = re.match("[.]\\s+[a-zà-ý]", text[span.end:])
+            clock = _clock_like(span.fields) and (after in _clock_units(request.variety.tag)
+                                                  or _after_word(before, request.data["time_words"]))
+            if after in names or short and not heading and not closed and not clock:
                 yield span
+
+
+POINT_LABEL = f"{PointDecimal.name}:label"
+
+
+def _after_word(before: str, words: Sequence[str], links: Sequence[str] = ()) -> bool:
+    """Whether `before` ends in one of `words`, perhaps a colon, and white space, as `versão `, `Versão: ` and `art. `,
+    or also in a list of numbers with a full stop that `links` join, as `itens 4.6 e `."""
+    pattern = "|".join(map(re.escape, words))
+    chain = f"(?:[0-9]+[.][0-9]+\\s*(?:{'|'.join(map(re.escape, links))})\\s+)*" if links else ""
+    return re.search(f"(?<![\\w.])(?:{pattern}):?\\s*{chain}$", before, re.IGNORECASE) is not None
+
+
+def _clock_like(amount: FrozenMap) -> bool:
+    """Whether a `DECIMAL` record may write an hour and minutes, as `9.30`: two digits under 60 after a whole part
+    up to 24."""
+    return len(amount["fraction"]) == 2 and int(amount["integer"] or "0") <= 24 and int(amount["fraction"]) < 60
+
+
+@cache
+def _clock_units(tag: str) -> frozenset[str]:
+    """The first word of each CLDR name and each symbol of the hour, the minute and the second, as `horas` and
+    `min`."""
+    units = cldr_data(tag)["units"]
+    return frozenset(word for key in ("duration-hour", "duration-minute", "duration-second")
+                     for word in (*(name.replace("{0}", "").split()[0] for name in units[key]["names"].values()),
+                                  *units[key]["symbols"]))
+
+
+def speak_point_decimal(span: Span, context: SpanContext) -> str:
+    """A decimal, and a version or a section number of `PointDecimal`: the whole part, `point_word` and the part after
+    the full stop, each as a cardinal in the masculine, as a number after a noun of `label_nouns` reads. Priberam,
+    "ponto", sense 7, names the mark: "Sinal gráfico (.)"."""
+    if span.recognizer != POINT_LABEL:
+        return speak_decimal(span, context)
+    fields, request = span.fields, context.request
+    return " ".join([_cardinal(fields["integer"], request), request.data["point_word"],
+                     SPELLER.decimal_part(fields["fraction"], request)])
 
 
 @dataclass(frozen=True)
@@ -1778,7 +1846,7 @@ LANGUAGE = LanguageSpec(
         Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
         Form.RANGE: speak_range,
         Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman, Form.ABBREVIATION: speak_abbreviation,
-        Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
+        Form.DECIMAL: speak_point_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
         Form.ELECTRONIC: speak_electronic, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
