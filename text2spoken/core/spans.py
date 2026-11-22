@@ -205,7 +205,8 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     of its conditions: a span that ends before the span reads the digit that the condition names before it, a span
     reads the digit that it names after it, and, when the condition says so, no span reads a character of the span.
     A span kept as written never claims this way. So the digits read as they do with no phone span until a second
-    pass sees words there (`Telephone`).
+    pass sees words there (`Telephone`). Such a span holds no character while a mark joins it to an unread digit, so
+    the digit reads and wakes it, as `53` does in `53,(0161) 07 22.34 646`.
 
     A word of a clause in capitals (`LETTERS`, section 4.6) stays as written while every other part of the clause
     stays as written in capitals. When another form claims a part, a part holds digits, or a part reads letter by
@@ -308,7 +309,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
                     and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
                 sides = ()
             if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides):
-                if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
+                if span.form not in (Form.SYMBOL, Form.EMOJI) and index not in phones \
+                        and not (released and index < say_as_count):
                     for position in range(span.start, span.end):
                         holder[position] = span
                 for position in (position for side in sides for position in side):

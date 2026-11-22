@@ -904,6 +904,20 @@ def test_a_waiting_phone_span_holds_no_character(text, lang):
 
 
 @pytest.mark.parametrize(("text", "lang"), [
+    ("53,(0161) 07 22.34 646", "en-GB"), ("53/(0161) 07 22.34 646", "en-US"), ("53,(0161) 07 22.34 646", "de-DE"),
+    ("53:(0161) 07 22.34 646", "es-ES"),
+])
+def test_a_phone_span_that_waits_on_a_mark_before_it_holds_no_character(text, lang):
+    """A phone span that `PHONE_WAITS` names and that a mark joins to the digits before it holds no character
+    while it waits. So `53` reads, which wakes the span, and the span reads `(0161) 07`, as a second pass does."""
+    spans = {(span.start, span.end): span for span in analyze(text, lang).spans}
+    assert spans[0, 2].form is Form.CARDINAL
+    assert spans[3, 12].form is Form.TELEPHONE and spans[3, 12].fields["groups"] == ("0161", "07")
+    once = normalize(text, lang)
+    assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang"), [
     ("n.º 5-n.º 5", "es-US"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-CR"),
     ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-MX"), ("GPT-4/n.º 5+351 912 345 678/n.º 5", "es-PY"),
     ("3.º 2024. §1-n.º 5", "pt-PT"), ("0.000001/§1.", "fr-DZ"), ("Seite 5-Nr. 3", "de-DE"), ("No. 5-No. 5", "en-US"),

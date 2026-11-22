@@ -46,7 +46,7 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
-The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 654 rows.
+The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them. There are 659 rows.
 
 ## Roman numerals
 
@@ -150,8 +150,8 @@ A word of a spoken address can become the key or the context of another form on 
 | `x@€ 08` | `en-GB` | ex at € 08 | ex at eight euros | A currency sign at the start or the end of an address stays as written in the address, and a second pass reads it with the number next to it. |
 | `x@₦ 08` | `en-GB` | ex at ₦ 08 | ex at eight Nigerian nairas | The same holds for the signs of the CLDR currencies. |
 | `$0–0USD+2$` | `en-US` | `$0–0USD+two dollars` | zero dollars to zero dollars+two dollars | A money range whose last amount ends in a letter code, with a joiner and a digit after it, stays as written, and the amount after the joiner reads. |
-| `€2 07946001800` | `en-GB` | two euros 07946001800 | two euros zero seven nine four six zero zero one eight zero zero | An amount right before a run of digits that starts with `0` reads, and the run stays as written. |
-| `USD20 07946001800` | `en-GB` | twenty dollars 07946001800 | twenty dollars zero seven nine four six zero zero one eight zero zero | The same rule. |
+| `€2 07946001800` | `en-GB` | two euros zero seven nine four six zero zero one eight zero zero | two euros zero seven nine four six zero zero one eight zero zero | An amount right before a run of digits that starts with `0` reads, and the run reads digit by digit after it. |
+| `USD20 07946001800` | `en-GB` | twenty dollars zero seven nine four six zero zero one eight zero zero | twenty dollars zero seven nine four six zero zero one eight zero zero | The same rule. |
 
 With the `LETTERS` form on, an amount before a symbol and digits can stay as written while the symbol and the digits read:
 
