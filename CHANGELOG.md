@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a98](https://github.com/TigreGotico/text2spoken/tree/0.0.2a98) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a97...0.0.2a98)
+
+**Merged pull requests:**
+
+- feat\(tdt\): read prices, phone numbers, times, percentages and measures in Portuguese [\#408](https://github.com/TigreGotico/text2spoken/pull/408) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a97](https://github.com/TigreGotico/text2spoken/tree/0.0.2a97) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a96...0.0.2a97)
@@ -269,10 +277,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a67...0.0.2a68)
 
-**Merged pull requests:**
-
-- feat: say\_as argument names the form of a run of text [\#176](https://github.com/TigreGotico/text2spoken/pull/176) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a67](https://github.com/TigreGotico/text2spoken/tree/0.0.2a67) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a66...0.0.2a67)
@@ -284,10 +288,6 @@
 ## [0.0.2a66](https://github.com/TigreGotico/text2spoken/tree/0.0.2a66) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a65...0.0.2a66)
-
-**Merged pull requests:**
-
-- fix: a language with no file reads number words through ovos-number-parser [\#190](https://github.com/TigreGotico/text2spoken/pull/190) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a65](https://github.com/TigreGotico/text2spoken/tree/0.0.2a65) (2026-11-17)
 
