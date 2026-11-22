@@ -72,8 +72,9 @@ narrow no-break space can stand between the amount and the word.
 An amount after a scale word stays as written too. Section 5.2, p. 73: "All three of these options show signs of
 nativization in that they can be used with postposed Tetun numeral modifiers, e.g. tokon tolu, milhaun tolu or juta
 tolu, all of which mean ‘three million’". So a number after a scale word counts it: `tokon $20` is 20 million
-dollars, and a Portuguese reading of the number alone loses the scale. These two rules hold for an amount of money
-only. A time, a percentage or a measure next to such a word still reads, as `9h30 militár` ‘9:30 military’.
+dollars, and a Portuguese reading of the number alone loses the scale. A scale word right after a number counts
+that number and not the next one, so in `$ 5 milhaun $ 6` the second amount reads. These two rules hold for an amount
+of money only. A time, a percentage or a measure next to such a word still reads, as `9h30 militár` ‘9:30 military’.
 
 The Portuguese words come from the `pt-PT` recognizers and verbalizers of the Portuguese file, which the file takes
 from the loader when it reads a text, and from `spoken_date` of ovos-date-parser for `pt-PT`. So this file holds no
@@ -107,7 +108,7 @@ from text2spoken.core import parsers
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, merged_data, resolve
 from text2spoken.core.recognizers import LEXICON, SHARED, speak_lexicon, written_shapes
 from text2spoken.core.spans import Span, SpanContext
-from text2spoken.core.tokens import Token, is_word_char
+from text2spoken.core.tokens import Token, is_digit, is_word_char
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import OPTIONS, Form, NormalizationParams, freeze
 
@@ -180,7 +181,11 @@ class Portuguese:
                             before -= 1
                         while after < len(text) and is_word_char(text[after]):
                             after += 1
-                        if is_scale_word(text[before:start]) or is_scale_word(text[end:after]):
+                        lead = before
+                        while lead and text[lead - 1] in SEPARATORS:
+                            lead -= 1
+                        counts = is_scale_word(text[before:start]) and not (lead and is_digit(text[lead - 1]))
+                        if counts or is_scale_word(text[end:after]):
                             span = replace(span, keep=True)
                     yield span
 
