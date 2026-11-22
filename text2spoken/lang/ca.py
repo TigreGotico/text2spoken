@@ -52,8 +52,8 @@ Units come from CLDR 49 (`cldr-units-full`, the `long` patterns of the variety),
 "Abreviacions", Símbols, reads "15 m2" as "quinze metres quadrats", "1 cm" as "un centímetre" and "95 m" as
 "noranta-cinc metres". CLDR gives `duration-hour` the feminine, so `2 h` reads "dues hores". A unit with no CLDR
 gender, such as `mass-ton`, reads only an amount whose words are the same in both genders. `unit_symbols` names the
-symbols made only of letters that read as units. A measure with a dimension mark and no spaces, as `3x4 m`, stays as written.
-CLDR 49 `ca` gives `m` no unit, because the symbol is both the month and the metre, and it names the millimetre
+symbols made only of letters that read as units. A measure with a dimension mark and no spaces, as `3x4 m`, stays as
+written. CLDR 49 `ca` gives `m` no unit, because the symbol is both the month and the metre, and it names the millimetre
 "mil·límetres" and the millilitre "mil·lilitres", which the core does not read. So `m`, `mm` and `ml` are not in
 `unit_symbols`. `KeptMeasure` keeps a number before `mm` and `ml` as written, as `35 mm`: the number alone would read
 in the masculine before a unit that may be feminine. No shared unit shape holds `m`, so a number before it reads as a
@@ -341,7 +341,6 @@ def speak_measure(span: Span, context: SpanContext) -> str:
         raise DeclinedReading("no source gives the Catalan word for a dimension mark")
     amount = span.fields["amount"]
     pattern, gender = unit_reading(request, span.fields["unit"], plural_category(request, written_amount(amount)))
-    gender = gender.value if isinstance(gender, GrammaticalGender) else gender
     if amount["fraction"]:
         words = SPELLER.decimal(amount["integer"], amount["fraction"], Features(), request)
         if gender != M.value and gendered(words.split(f" {request.data['decimal_word']} ")[0]):
