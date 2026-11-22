@@ -100,4 +100,4 @@ The file reads no times, ranges, telephone numbers, Roman numerals, symbols, emo
 | `屏幕比例是16:9。` | `zh-CN` | stays as written | A colon between two numbers can be a ratio, a verse or a time. |
 
 ---
-[← Russian](ru.md) · [Home](../index.md) · [Adding a language →](../adding-a-language.md)
+[← Tetun Dili](tdt.md) · [Home](../index.md) · [Adding a language →](../adding-a-language.md)
