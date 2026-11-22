@@ -187,11 +187,10 @@ _RBNF_CASE = {"nominative": "", "genitive": "-genitive", "dative": "-dative", "a
 
 def standard(words: str) -> str:
     """A reading in the standard form. The number 1 is not said before "тысяча" or "миллион" at the start, as
-    Грамматика-80 § 1378 declines "тысяча двести восемьдесят семь" and Розенталь § 164, п. 2 writes "в тысяча
-    девятьсот шестьдесят пятом году". Inside a number "одна тысяча" keeps "одна": a number has one word for each
-    significant digit, and the words "тысяча" and "миллион" besides (Розенталь § 45, п. 2). So "один миллион" keeps
-    "один" after "миллиард". The number words take ё
-    (Грамматика-80 § 1374, Правила-2006 § 5)."""
+    Грамматика-80 § 1378 declines "тысяча двести восемьдесят семь" and Розенталь § 164, п. 2 writes "в тысяча девятьсот
+    шестьдесят пятом году". Inside a number "одна тысяча" keeps "одна": a number has one word for each significant
+    digit, and the words "тысяча" and "миллион" besides (Розенталь § 45, п. 2). So "один миллион" keeps "один" after
+    "миллиард". The number words take ё (Грамматика-80 § 1374, Правила-2006 § 5)."""
     first, _, rest = words.partition(" ")
     if first in _ONE_WORDS and _SCALE_WORD.match(rest):
         words = rest
@@ -306,13 +305,12 @@ SPELLER = RussianSpeller()
 
 
 def counted(noun: FrozenMap, written: str, case: str, request: Request) -> str:
-    """The form of a noun after a number (Грамматика-80 § 1371). In the nominative and the accusative it is the
-    singular after the category one, the genitive singular after few and the genitive plural after many; in the
-    other cases the noun agrees, singular after one and plural after the rest. After a decimal the noun takes the
-    genitive singular: "35,5 процента" (Розенталь § 164, п. 8; Грамматика-80 § 1367). After the dative of
-    "тысяча", "миллион" and "миллиард", which are nouns (Грамматика-80 § 1366; § 1373, примечание), the noun
-    takes the genitive plural:
-    "по тысяче книг, по миллиону жителей" (Розенталь § 164, п. 7 а))."""
+    """The form of a noun after a number (Грамматика-80 § 1371). In the nominative and the accusative it is the singular
+    after the category one, the genitive singular after few and the genitive plural after many; in the other cases the
+    noun agrees, singular after one and plural after the rest. After a decimal the noun takes the genitive singular:
+    "35,5 процента" (Розенталь § 164, п. 8; Грамматика-80 § 1367). After the dative of "тысяча", "миллион" and
+    "миллиард", which are nouns (Грамматика-80 § 1366; § 1373, примечание), the noun takes the genitive plural: "по
+    тысяче книг, по миллиону жителей" (Розенталь § 164, п. 7 а))."""
     category = plural_category(request, written)
     index = CASES.index(case)
     if category == "other":
@@ -327,13 +325,13 @@ def counted(noun: FrozenMap, written: str, case: str, request: Request) -> str:
 
 
 def governed_case(context: SpanContext, word_after: str = "", category: str = "many", digits: str = "") -> str:
-    """The case of a hint, else the case that the preposition before a number governs. A preposition of one case
-    gives it (Грамматика-80 § 1657, § 1658), also a preposition of two words such as `в течение`. A preposition
-    of two or three cases takes the one that the ending of
-    the noun after the number shows: a plural ending, or after the category one a singular ending of the
-    prepositional or the instrumental. With no such ending, the first case of `case_choices` applies. Distributive
-    `по` takes the dative of "один", "тысяча", "миллион" and "миллиард": "по одному рублю, по тысяче книг, по
-    миллиону жителей" (Розенталь § 164, п. 7 а)), and the accusative of the other numbers (п. 7 б))."""
+    """The case of a hint, else the case that the preposition before a number governs. A preposition of one case gives
+    it (Грамматика-80 § 1657, § 1658), also a preposition of two words such as `в течение`. A preposition of two or
+    three cases takes the one that the ending of the noun after the number shows: a plural ending, or after the category
+    one a singular ending of the prepositional or the instrumental. With no such ending, the first case of
+    `case_choices` applies. Distributive `по` takes the dative of "один", "тысяча", "миллион" and "миллиард": "по одному
+    рублю, по тысяче книг, по миллиону жителей" (Розенталь § 164, п. 7 а)), and the accusative of the other numbers
+    (п. 7 б))."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
@@ -465,10 +463,6 @@ def _counted_amount(span: Span, amount: FrozenMap, noun: FrozenMap, context: Spa
     return f"{words} {counted(noun, written_amount(amount), case, request)}"
 
 
-def _adjectival(word: str) -> bool:
-    return len(word) > 2 and word.endswith(("ых", "их"))
-
-
 _MODIFIER_ENDINGS = ("ого", "его", "ой", "ей", "ом", "ем", "ых", "их")
 """The endings of the oblique cases of an adjective in Грамматика-80 § 1216: "выходн-ого, рабоч-его, о выходн-ом,
 запят-ой, заведующ-ей, выходн-ых, рабоч-их"."""
@@ -499,7 +493,8 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     else:
         features = agreement(digits, context)
         data = request.data
-        noun = next((word.lower() for word in context.after if not _adjectival(word.lower())), "")
+        noun = next((word for word in map(str.lower, context.after)
+                     if len(word) <= 2 or not word.endswith(("ых", "их"))), "")
         collective = data["collective_numerals"].get(digits)
         nominative = features.case in (None, "nominative")
         persons = collective and noun in data["collective_persons"]
@@ -590,23 +585,23 @@ def speak_time(span: Span, context: SpanContext) -> str:
 
 def date_case(span: Span, context: SpanContext) -> str:
     """The case of the day of a date. After a preposition it is the case that the preposition governs. A date that
-    closes its clause reads in the nominative in two places. The first is after a label colon, which the span holds
-    as its lead, where the date names the day (Грамматика-80 § 1167: "называющая форма в заголовках, подписях").
-    The second is where the date is the subject of a form of `copulas` or of `onset_verbs`: "Было шесть часов вечера,
-    конец мая" (§ 2536), "Сегодня воскресенье" (§ 2539), "Наступила осень" (§ 2681). There the clause holds no word
-    before the date but those verbs and the words of `date_adverbs`: "Вот и наступило первое сентября", "Сегодня уже
-    первое мая", and a date alone in its clause, which is a nominative sentence (§ 2522, § 2524: "Двадцать первое.
-    Ночь. Понедельник."). A date closes its clause when only "года", closing quotes and a mark
-    of `_FINAL_MARKS` or the end of the clause follow it. A comma does not close it, because the clause often goes
-    on after the comma: "Первого мая, в субботу, мы поехали на дачу". Only the words after the last colon or opening
-    quote before the date count: "Он сказал: «Сегодня первое мая»". Every other date says when
-    something happens and reads in the genitive: "встреча пятого мая" (§ 1168), "Лето наступило первого июня",
-    "Было первого мая подписано соглашение". A pronoun "это" before the copula is the subject (Розенталь § 189,
-    п. 3: "это была хрестоматия"), so "Это было первого мая" says when something happened. The particle "ли" asks a
-    question and leaves the subject in the nominative: "Падают ли овцы?" (§ 1693, § 1949). The words of `date_particles`
-    alone give no nominative: "да" opens a reply and "а" a follow-up question, and such a reply as "Да, первого мая"
-    takes its form from the question (§ 1954), which the window does not see. Other particles and conjunctions keep
-    the nominative sentence: "но весна, весна" (§ 2524), so "Почему магазин закрыт? Ведь первое мая!"."""
+    closes its clause reads in the nominative in two places. The first is after a label colon, which the span holds as
+    its lead, where the date names the day (Грамматика-80 § 1167: "называющая форма в заголовках, подписях"). The second
+    is where the date is the subject of a form of `copulas` or of `onset_verbs`: "Было шесть часов вечера, конец мая"
+    (§ 2536), "Сегодня воскресенье" (§ 2539), "Наступила осень" (§ 2681). There the clause holds no word before the date
+    but those verbs and the words of `date_adverbs`: "Вот и наступило первое сентября", "Сегодня уже первое мая", and a
+    date alone in its clause, which is a nominative sentence (§ 2522, § 2524: "Двадцать первое. Ночь. Понедельник."). A
+    date closes its clause when only "года", closing quotes and a mark of `_FINAL_MARKS` or the end of the clause follow
+    it. A comma does not close it, because the clause often goes on after the comma: "Первого мая, в субботу, мы поехали
+    на дачу". Only the words after the last colon or opening quote before the date count: "Он сказал: «Сегодня первое
+    мая»". Every other date says when something happens and reads in the genitive: "встреча пятого мая" (§ 1168), "Лето
+    наступило первого июня", "Было первого мая подписано соглашение". A pronoun "это" before the copula is the subject
+    (Розенталь § 189, п. 3: "это была хрестоматия"), so "Это было первого мая" says when something happened. The
+    particle "ли" asks a question and leaves the subject in the nominative: "Падают ли овцы?" (§ 1693, § 1949). The
+    words of `date_particles` alone give no nominative: "да" opens a reply and "а" a follow-up question, and such a
+    reply as "Да, первого мая" takes its form from the question (§ 1954), which the window does not see. Other particles
+    and conjunctions keep the nominative sentence: "но весна, весна" (§ 2524), so "Почему магазин закрыт? Ведь первое
+    мая!"."""
     if context.hint is not None and context.hint.case is not None:
         return context.hint.case
     data = context.request.data
@@ -711,6 +706,7 @@ def attach(spoken: str, prefix: str, suffix: str) -> str:
     return prefix + spoken + ("" if suffix.lstrip() == "г." else suffix)
 
 
+_CLOCK = re.compile("([0-9][0-9]?):([0-9][0-9])(?::([0-9][0-9]))?")
 _FINAL_MARKS = (".", "!", "?", "…")
 _CLOSING_QUOTES = ("»", "”", '"', ")")
 """A date closes its clause before a mark of `_FINAL_MARKS`, and closing quotes may stand between them."""
@@ -776,7 +772,7 @@ class Clock:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         time_words = request.data["time_words"]
-        for match in re.finditer("([0-9][0-9]?):([0-9][0-9])(?::([0-9][0-9]))?", fold_digits(text)):
+        for match in _CLOCK.finditer(fold_digits(text)):
             start, end = match.span()
             before = text[:start].rstrip().rsplit(maxsplit=1)
             if not (is_bounded(text, start, end) and one_digit_set(text[start:end]) and before
@@ -841,7 +837,7 @@ class DateNamed:
             start, end = match.span()
             day, month = int(match.group(1)), months.index(match.group(2)) + 1
             year = int(match.group(3)) if match.group(3) else None
-            if not (is_bounded(text, start, end if match.group(4) else end) and one_digit_set(text[start:end])
+            if not (is_bounded(text, start, end) and one_digit_set(text[start:end])
                     and is_valid(year, month, day)) or (start and text[start - 1] in ".,/-"):
                 continue
             suffix = match.group(4) or ""
@@ -881,8 +877,7 @@ class HyphenOrdinal:
                 continue
             yield Span(start, end, Form.ORDINAL,
                        FrozenMap({"digits": re.sub("[ \u00a0]", "", match.group(1)), "marker": text[stop - 1:end],
-                                  "prefix": "", "suffix": "",
-                                  "script": "Latn"}),
+                                  "prefix": "", "suffix": "", "script": "Latn"}),
                        recognizer=self.name, keep=text[stop:end] not in request.data["ordinal_endings"])
 
 
@@ -950,9 +945,12 @@ class Abbreviation:
                 position = text.find(key)
                 while position != -1:
                     end = position + len(key)
-                    after_number = re.search("[0-9][  ]$", fold_digits(text[max(0, position - 2):position]))
-                    wanted = {"titles": next_visible(text, end).isupper(), "abbreviations": True,
-                              "scales": after_number is not None}[table]
+                    if table == "titles":
+                        wanted = next_visible(text, end).isupper()
+                    elif table == "scales":
+                        wanted = re.search("[0-9][  ]$", fold_digits(text[max(0, position - 2):position])) is not None
+                    else:
+                        wanted = True
                     if wanted and is_bounded(text, position, end):
                         stop = table == "scales" and text[end:end + 1] == "."
                         trail = "." if table != "titles" and (key.endswith(".") or stop) \

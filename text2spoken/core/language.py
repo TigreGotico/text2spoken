@@ -286,7 +286,7 @@ def plural_category(request: Request, written: str) -> str:
 def core_language(code: str) -> LanguageSpec:
     """The language of a code with no file: cardinals through ovos-number-parser where it has a writer of its own
     for the language, else through RBNF where RBNF has the locale (section 6.1). `RBNF_HELD` names the languages with
-    a writer that read through RBNF for now.
+    a writer that read through RBNF instead.
 
     A minus before a number reads when the speller reads it. The parser reads it when its reading of -1 has a word
     that its reading of 1 does not have. RBNF reads it when the cardinal rule set has a `-x` rule, in the rule set or
@@ -479,9 +479,15 @@ def select(tag: str) -> tuple[str, LanguageSpec, Variety]:
     tag = linguatag.with_default_region(check_tag(tag))
     code = primary_subtag(tag)
     language = language_file(code) or core_language(code)
+    return tag, language, _closest_variety(tag, language)
+
+
+@lru_cache(maxsize=256)
+def _closest_variety(tag: str, language: LanguageSpec) -> Variety:
+    import linguatag
+
     match = linguatag.closest_lang(tag, [v.tag for v in language.varieties], lects="dialect")
-    variety = next((v for v in language.varieties if v.tag == match), language.varieties[0])
-    return tag, language, variety
+    return next((v for v in language.varieties if v.tag == match), language.varieties[0])
 
 
 def _not_honoured(lang: str, option: str, asked, applied, strict: bool):

@@ -77,8 +77,8 @@ letter `g` alone is no unit, because it ends names such as `802.11g`. zh-Hant wr
 so zh-TW reads only the units whose symbol is no word, as `°C`, "攝氏 {0} 度".
 
 A numeric date with the year first, as `2023-05-01`, reads in the CLDR 49 `zh` long date pattern "y年M月d日", with the
-year read as a year. Any other order stays as written, unless say-as markup gives the order of the
-fields. A time, as `12:30`, stays as written.
+year read as a year. Any other order stays as written, unless say-as markup gives the order of the fields.
+A time, as `12:30`, stays as written.
 
 The number words come from the CLDR locale of the tag: `zh` for zh-CN, and `zh_Hant` for a tag with the script
 Hant, as zh-Hant-TW, which writes 兩, 點, 萬, 億 and 負. CLDR 49 likelySubtags gives "zh-TW": "zh-Hant-TW", and the

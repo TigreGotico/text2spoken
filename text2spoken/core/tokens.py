@@ -45,11 +45,11 @@ def is_mark(char: str) -> bool:
 
 
 def is_letter(char: str) -> bool:
-    return unicodedata.category(char).startswith("L")
+    return char.isalpha()
 
 
 def is_digit(char: str) -> bool:
-    return unicodedata.category(char) == "Nd"
+    return char.isdecimal()
 
 
 def is_punctuation(char: str) -> bool:
@@ -65,7 +65,7 @@ def next_visible(text: str, index: int) -> str:
 
 def is_word_char(char: str) -> bool:
     """A letter, a digit or a combining mark: the characters a word is made of."""
-    return is_letter(char) or is_digit(char) or is_mark(char)
+    return char.isalpha() or char.isdecimal() or is_mark(char)
 
 
 def is_bounded(text: str, start: int, end: int) -> bool:
@@ -154,7 +154,7 @@ def protect_blocks(text: str) -> tuple[tuple[int, int], ...]:
 
 def context_word(token_text: str) -> str | None:
     """The token text without the punctuation at its ends, or None for a token of punctuation or symbols only."""
-    if not any(is_letter(c) or is_digit(c) for c in token_text):
+    if not any(c.isalpha() or c.isdecimal() for c in token_text):
         return None
     start, end = 0, len(token_text)
     while not is_word_char(token_text[start]):
@@ -166,6 +166,8 @@ def context_word(token_text: str) -> str | None:
 
 def fold_digits(text: str) -> str:
     """The text with every decimal digit (category Nd) as its ASCII digit; the length does not change."""
+    if text.isascii():
+        return text
     return "".join(str(unicodedata.decimal(c)) if is_digit(c) else c for c in text)
 
 
