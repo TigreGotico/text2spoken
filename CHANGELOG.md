@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a97](https://github.com/TigreGotico/text2spoken/tree/0.0.2a97) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a96...0.0.2a97)
+
+**Merged pull requests:**
+
+- feat\(tdt\): Tetun Dili language file, a numeric date reads in Portuguese [\#401](https://github.com/TigreGotico/text2spoken/pull/401) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a96](https://github.com/TigreGotico/text2spoken/tree/0.0.2a96) (2026-11-21)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a95...0.0.2a96)
@@ -284,10 +292,6 @@
 ## [0.0.2a65](https://github.com/TigreGotico/text2spoken/tree/0.0.2a65) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a64...0.0.2a65)
-
-**Merged pull requests:**
-
-- fix: one dependency set for every language [\#175](https://github.com/TigreGotico/text2spoken/pull/175) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a64](https://github.com/TigreGotico/text2spoken/tree/0.0.2a64) (2026-11-17)
 
