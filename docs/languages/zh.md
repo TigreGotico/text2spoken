@@ -1,5 +1,13 @@
 # Chinese
 
+<!-- agent-hint
+covers: what the Chinese file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/zh.py, tests/data/zh.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/zh.md`
+see: ../adding-a-language.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/zh.py` reads Mandarin Chinese, in Simplified characters for `zh-CN` and in Traditional characters for `zh-TW`. Its number words come from the CLDR RBNF rule sets of `zh` and `zh_Hant`, which `unicode-rbnf` holds. The base install holds it.
 
 ## What it reads

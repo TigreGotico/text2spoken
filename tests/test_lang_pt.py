@@ -139,3 +139,13 @@ def test_a_title_keeps_the_full_stop_only_at_the_end_of_the_text(tag, text, expe
     final"). A title at the end of a line keeps no full stop, because its name can follow on the next line, and a
     title before a capital word comes before a name."""
     assert normalize(text, tag) == expected
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    ("Horário: abre às 9:00\nHoras extra pagas a dobro.", "Horário: abre às nove horas\nHoras extra pagas a dobro."),
+    ("Chega às 16h\n\nHora local: Lisboa.", "Chega às dezasseis horas\n\nHora local: Lisboa."),
+    ("Abre às 9:00\thoras.", "Abre às nove horas."),
+])
+def test_a_time_claims_an_hour_word_after_spaces_or_tabs_only(text, expected):
+    """A line break between the time and the word keeps the word, which starts the next line."""
+    assert normalize(text, "pt-PT") == expected
