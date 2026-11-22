@@ -49,8 +49,7 @@ class SayAs:
 
     def __post_init__(self):
         require_type(self.interpret_as, "interpret_as", str)
-        for name in ("format", "detail"):
-            value = getattr(self, name)
+        for name, value in (("format", self.format), ("detail", self.detail)):
             if value is not None and not isinstance(value, str):
                 raise ArgumentTypeError(f"{name} must be str or None, not {type(value).__name__}")
 
@@ -156,6 +155,11 @@ class BareYear:
                            recognizer=self.name)
 
 
+_CLOCKS = {":": re.compile("[0-9][0-9]?:[0-9][0-9](?::[0-9][0-9])?"),
+           ".": re.compile("[0-9][0-9]?[.][0-9][0-9](?:[.][0-9][0-9])?")}
+"""`H:MM` and `H:MM:SS`, by the mark between the fields."""
+
+
 @dataclass(frozen=True)
 class BareClock:
     """`H:MM` or `H:MM:SS`, with a colon or a full stop between the fields (Note 3.2), and the day period of
@@ -168,9 +172,7 @@ class BareClock:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         periods = request.data.get("day_periods", FrozenMap())
         folded = fold_digits(text)
-        for mark in (":", "."):
-            escaped = re.escape(mark)
-            pattern = re.compile(f"[0-9][0-9]?{escaped}[0-9][0-9](?:{escaped}[0-9][0-9])?")
+        for mark, pattern in _CLOCKS.items():
             for match in digit_run_matches(pattern, folded):
                 start, end = match.span()
                 if (not _cluster_edge(text, start, end) or (start and is_word_char(text[start - 1]))

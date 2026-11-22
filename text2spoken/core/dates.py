@@ -66,16 +66,15 @@ def date_readings() -> dict[str, dict]:
 @lru_cache(maxsize=128)
 def long_date(locale: str) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...], dict[str, dict]] | None:
     """The parts of the CLDR `long` date pattern of the locale, its twelve month names and the forms of its day and
-    year. A part is `("text", literal)`, or a field of `DATE_FIELDS` as `(name, "")`; a day followed by a full stop is
-    `("ordinal_day", "")`. An entry of `date_readings` whose `written` pattern is the pattern of the file gives the
-    pattern to read by and whether the day and the year read as ordinals (`ordinal_day`, `ordinal_year`).
+    year. A part is `("text", literal)`, or a field of `DATE_FIELDS` as `(name, "")`. An entry of `date_readings`
+    whose `written` pattern is the pattern of the file gives the pattern to read by and whether the day and the year
+    read as ordinals (`ordinal_day`, `ordinal_year`).
 
     UTS #35, Part 4, "Date Format Patterns": text in apostrophes is literal, two apostrophes are one, and a run of
     one ASCII letter is a field. In Czech, Danish, Finnish, Icelandic, Norwegian and other languages, "a period or
-    full stop is written after the numeral" of an ordinal (Wikipedia, "Ordinal indicator"), so `d.` is an ordinal
-    day: `d. MMMM y` reads the ordinal of the day. A full stop anywhere else gives None, unless an entry of
-    `date_readings` gives the words. So do a field outside
-    `DATE_FIELDS` and the year of two digits `yy`."""
+    full stop is written after the numeral" of an ordinal (Wikipedia, "Ordinal indicator"), so `d.` is
+    `("ordinal_day", "")`. Any other full stop, a field outside `DATE_FIELDS` and the year of two digits `yy` give
+    None."""
     stored = json.loads((files("text2spoken") / "data" / "cldr" / f"{locale}.dates.json").read_text(encoding="utf-8"))
     reading = date_readings().get(locale)
     if reading is None or reading["written"] != stored["long"]:

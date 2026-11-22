@@ -40,10 +40,6 @@ def _words_only(pattern: str) -> bool:
     return all(char.isalpha() or char.isspace() or char in "-'" for char in pattern.replace("{0}", ""))
 
 
-def _case_changes(symbol: str, other: str) -> int:
-    return sum(first != second for first, second in zip(symbol, other))
-
-
 @lru_cache(maxsize=64)
 def _cldr_table(tag: str, listed: tuple[str, ...]) -> FrozenMap:
     """A unit whose CLDR name holds a digit or a symbol, as `{0} litres per 100 kilometres` does, reads no symbol,
@@ -58,7 +54,8 @@ def _cldr_table(tag: str, listed: tuple[str, ...]) -> FrozenMap:
     for symbol in listed:
         if symbol in written:
             continue
-        ranked = sorted((_case_changes(symbol, other), other, unit) for unit in units for other in unit["symbols"]
+        ranked = sorted((sum(a != b for a, b in zip(symbol, other)), other, unit)
+                        for unit in units for other in unit["symbols"]
                         if len(other) == len(symbol) and other.lower() == symbol.lower())
         if ranked and (len(ranked) == 1 or ranked[0][0] < ranked[1][0]):
             table[symbol] = ranked[0][2]

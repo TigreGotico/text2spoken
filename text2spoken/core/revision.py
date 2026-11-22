@@ -19,7 +19,6 @@ import json
 import os
 import subprocess
 import sys
-import sysconfig
 import tokenize
 import unicodedata
 import uuid

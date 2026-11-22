@@ -205,11 +205,6 @@ RBNF_HELD_DECIMALS = frozenset({
 through the RBNF `x.x` rule, or stay as written with no RBNF locale, until the parser writes the comma word."""
 
 
-def _rbnf_key(features: Features) -> Features:
-    return Features(gender=features.gender, animacy=features.animacy, case=features.case,
-                    numeral_system=features.numeral_system)
-
-
 @lru_cache(maxsize=None)
 def rbnf_engine(locale: str) -> RbnfEngine:
     """The RBNF engine of a CLDR locale id; an engine with no rule sets is refused."""
@@ -281,7 +276,8 @@ class RbnfSpeller:
 
     @staticmethod
     def rule_set(table: Mapping[Features, str], features: Features) -> str:
-        key = _rbnf_key(features)
+        key = Features(gender=features.gender, animacy=features.animacy, case=features.case,
+                       numeral_system=features.numeral_system)
         for drop in ("case", "animacy", "numeral_system"):
             if key in table:
                 return table[key]
