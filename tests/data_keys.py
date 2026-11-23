@@ -198,9 +198,9 @@ READERS: dict[str, frozenset[str]] = {
                            "currencies", "currency_symbols"}),
     "measure": frozenset({"number_marks", "number_gaps", "elision_marks", "symbols", "units", "unit_symbols",
                         "unjoined_symbols", "dimension_marks", "range_marks", "proclitics", "case_suffixes"}),
-    "telephone": frozenset({"phone_words", "day_periods", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
-                          "no_phone_shapes", "short_codes", "list_links", "operators", "symbols", "proclitics",
-                          "case_suffixes", "function_words"}) | SYMBOL_KEYS,
+    "telephone": frozenset({"phone_words", "clock_marks", "day_periods", "phone_shapes", "phone_unit_shapes",
+                          "phone_kept_shapes", "no_phone_shapes", "short_codes", "list_links", "operators", "symbols",
+                          "proclitics", "case_suffixes", "function_words"}) | SYMBOL_KEYS,
     "expression": frozenset({"number_marks", "operators", "patterns", "symbols"}),
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
@@ -239,6 +239,11 @@ them to find a character that `SYMBOL` reads between a phone word and the digits
 THROUGH_SYMBOL = dict.fromkeys(("cardinal", "decimal", "fraction"), SYMBOL_KEYS - {"leads"})
 """The keys that `reads_symbol` reads for these shared recognizers, in a file that uses `SYMBOL`, to find whether
 `SYMBOL` reads a currency sign next to a number. A file with no `SYMBOL` needs none of these keys for them."""
+THROUGH_ABBREVIATION = {"telephone": READERS["abbreviation"]
+                        | frozenset({"abbreviations_any_case", "honorific_before_name", "letter_label_nouns"})}
+"""The keys that the telephone reader reads through the abbreviation recognizer of the language file, the shared one
+or the one of pt.py, to find the full stops that an abbreviation reads away, and to count a number abbreviation that
+the tokens part, as `n.º`, as one word. A file with no abbreviation recognizer needs none of them for it."""
 
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""

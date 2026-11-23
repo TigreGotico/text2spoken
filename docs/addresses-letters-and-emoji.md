@@ -182,12 +182,12 @@ The pairing of regional indicators follows rules GB12 and GB13 of UAX #29: "Do n
 | `5km/next1️⃣` | `five kilometres/next1️⃣` | `five kilometres/next1️⃣` | The measure reads. |
 | `5km/next😀` | stays as written | 5km/next grinning face | The text stays as written. |
 
-A digit that touches a name, such as the `1` of `1😀`, stays as written on the first pass, and a second pass reads it. The `EMOJI` form has this rule from `SYMBOL`, which does the same with the default params:
+A digit that touches a name, such as the `1` of `1😀`, reads as the last group of a phone run before it, and a second pass changes nothing. The `EMOJI` form has this rule from `SYMBOL`, which does the same with the default params:
 
 | Written | Spoken (`en-GB`, `EMOJI` on) | Second pass (`en-GB`, `EMOJI` on) |
 | --- | --- | --- |
-| `10½+44 20 7946 0958 1😀.` | 10½+44 20 7946 0958 1 grinning face. | 10½+44 20 7946 0958 one grinning face. |
-| `10½+44 20 7946 0958 1©.` | 10½+44 20 7946 0958 1 copyright. | 10½+44 20 7946 0958 one copyright. |
+| `10½+44 20 7946 0958 1😀.` | ten½plus four four two zero seven nine four six zero nine five eight one grinning face. | ten½plus four four two zero seven nine four six zero nine five eight one grinning face. |
+| `10½+44 20 7946 0958 1©.` | ten½plus four four two zero seven nine four six zero nine five eight one copyright. | ten½plus four four two zero seven nine four six zero nine five eight one copyright. |
 
 A caller lexicon matches the text as written, so a key `#️⃣` reads its value. No match starts or ends inside an emoji sequence or inside the word that it touches:
 

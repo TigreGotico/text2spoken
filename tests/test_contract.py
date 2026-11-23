@@ -11,8 +11,9 @@ import pytest
 from tests import contract
 from tests.conftest import rows
 from tests.contract import CLAUSES, language_files
-from tests.data_keys import OPTIONAL, READERS, SHAPES, THROUGH_SYMBOL
+from tests.data_keys import OPTIONAL, READERS, SHAPES, THROUGH_ABBREVIATION, THROUGH_SYMBOL
 from tests.fixtures import qac
+from text2spoken import analyze
 from text2spoken.core import language as loader
 from text2spoken.core import recognizers
 from text2spoken.core.language import Request, Variety, select
@@ -89,6 +90,28 @@ def test_clause_5_bites(en):
         contract.clause_5("en", replace(en, recognizers=(_DropsScript(),)), texts=["I have 3 cats."])
     with pytest.raises(AssertionError, match="no sample sentence"):
         contract.clause_5("en", en, texts=["no number here"])
+
+
+@pytest.mark.parametrize(("text", "lang"), [
+    ("Note 3,5 0 800 123 456 2x.", "fr-FR"), ("Note 3,5 0 800 123 456.", "fr-FR"),
+    ("Il a 1.6 0 800 757 652 ici.", "fr-FR"), ("Uso Potencial, Agricultura, 1:1 000 000.", "es-ES"),
+    ("ÖNORM ISO 10007:2005 06 01", "de-DE"),
+])
+def test_clause_5_reaches_a_phone_run_after_a_joined_group(text, lang):
+    """Section 4.4. Clause 5 runs the recognizers with the effective params of `analyze`, as `phone_regions`, so it
+    reaches the phone span of a run after a group that a mark joins, and that span has the fields of its form."""
+    analysis = analyze(text, lang)
+    for span in analysis.spans:
+        contract.check_span_fields(span)
+    spec = analysis.request.language
+    request = contract.request_for(spec, [variety.tag for variety in spec.varieties].index(lang))
+    assert request.params == analysis.request.params
+    tokens = default_tokenizer(text, lang)
+    assert any(span.form is Form.TELEPHONE for recognizer in spec.recognizers
+               for span in recognizer.find(text, tokens, request))
+    for recognizer in spec.recognizers:
+        for span in recognizer.find(text, tokens, request):
+            contract.check_span_fields(span)
 
 
 def test_clause_6_bites(en):
@@ -260,9 +283,10 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
                     request = Request(tag, variety, language, NormalizationParams(), memo={"recognizer": name})
                     list(recognizer.find(row["text"], tokens, request))
     for name, keys in read.items():
-        declared = READERS[name] | THROUGH_SYMBOL.get(name, frozenset())
+        declared = READERS[name] | THROUGH_SYMBOL.get(name, frozenset()) | THROUGH_ABBREVIATION.get(name, frozenset())
         assert keys <= declared, f"{name} reads {sorted(keys - declared)}, which it does not declare"
-    assert set().union(*read.values()) == set().union(*(READERS[name] for name in used))
+    assert set().union(*read.values()) == set().union(*(READERS[name] | THROUGH_ABBREVIATION.get(name, frozenset())
+                                                        for name in used))
 
 
 @pytest.mark.parametrize("pattern", [r"\d+", r"[0-9]\b", r"\w", r"\s", r"(a)\1", "(?i)ab", "(?=a)", "(?<=a)b",
