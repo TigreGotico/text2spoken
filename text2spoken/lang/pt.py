@@ -33,7 +33,11 @@ and "cada": "quantificador universal", join the words of `function_words`. So do
 contractions with `em` and `de`, which are no noun that a number counts: Priberam, "nesta": "Contracção da preposição em
 e do pronome ou determinante esta."; "desta": "Contracção da preposição de e do pronome demonstrativo esta."; "naquela":
 "Contracção da preposição em com o determinante ou pronome demonstrativo aquela." `ganhou 1 nesta terça-feira` reads
-"ganhou um nesta terça-feira". A plural contraction with `de` right after the number is a partitive, as `das` is, so `2
+"ganhou um nesta terça-feira". So do `à`, `às`, `pelas` and `numa`: Priberam, "à": "Contracção da preposição a com o
+artigo ou pronome a"; "às": "Contracção da preposição a com o artigo ou pronome as."; "pela", of which `pelas` is the
+plural: "Contracção da preposição per e do artigo la."; "numa": "Contracção da preposição em e do artigo uma."
+`domingo (2), às 16h` reads "domingo (dois), às dezasseis horas", and `em 2019 numa cela` reads "em dois mil e
+dezanove numa cela". A plural contraction with `de` right after the number is a partitive, as `das` is, so `2
 destas maçãs` reads "duas destas maçãs". Cunha and Cintra, Nova Gramática do Português Contemporâneo, p. 374, quoted in
 Ciberdúvidas 33468: "Na enumeração de páginas e de folhas de um livro, assim como na de casas, apartamentos, quartos de
 hotel, cabines de navio, poltronas de casas de diversões e equivalentes, empregam-se os CARDINAIS. Nestes casos sente-se
@@ -534,7 +538,7 @@ DATA = freeze({
                        "mas", "cada", "este", "esta", "estes", "estas", "esse", "essa", "esses", "essas", "aquele",
                        "aquela", "aqueles", "aquelas", "neste", "nesta", "nestes", "nestas", "nesse", "nessa", "nesses",
                        "nessas", "naquele", "naquela", "naqueles", "naquelas", "deste", "desta", "desse", "dessa",
-                       "daquele", "daquela"],
+                       "daquele", "daquela", "à", "às", "pelas", "numa"],
     "color_words": ["cor", "cores"],
     "colors": {"000000": "preto", "0000ff": "azul", "008000": "verde", "ff0000": "vermelho", "ffff00": "amarelo",
                "ffffff": "branco"},
