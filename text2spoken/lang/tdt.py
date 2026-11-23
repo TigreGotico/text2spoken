@@ -56,6 +56,12 @@ million dollars"). The Tetun Wikipedia article "Timor-Leste" writes the plural `
 `US$ 10 milhoens` reads "dez milhões de dólares", through `TIMOR`. So do the scale words that `pt-PT` reads, as
 `$5 mil`, "cinco mil dólares".
 
+The Portuguese reading of a Tetun spelling agrees with the amount, as Portuguese does (Priberam, "milhões": "masculino
+plural de milhão"). The plural category of the amount in `pt-PT` decides, as for the currency name. The CLDR
+`plurals.xml` of unicode_rbnf gives `pt_PT` the rule `one: i = 1 and v = 0`, an integer 1 with no fraction digits.
+So `$ 1 milhoens` reads "um milhão de dólares", and `$ 2 milhaun` and `$ 1,5 milhaun` read "dois milhões de dólares"
+and "um vírgula cinco milhões de dólares".
+
 An amount before any other scale word stays as written. Section 5.2, p. 73, says that the words for ‘thousand’,
 ‘million’ and ‘billion’ are easy to confuse: "When first used, some people considered it easily confused with
 Indonesian milyar ‘1,000,000,000’ and Portuguese míl ‘thousand’." It adds a word for ‘billion’, which `pt-PT` does not
@@ -123,10 +129,10 @@ DATA = freeze({
 TIMOR = freeze({
     "time_words": ["tuku"],
     "currencies": {"USD": {"minor": {"one": "centavo", "other": "centavos"}}},
-    "scales": {"milhaun": "milhão de", "milhoens": "milhões de", "milloens": "milhões de"},
+    "scales": dict.fromkeys(("milhaun", "milhoens", "milloens"), {"one": "milhão de", "other": "milhões de"}),
 })
 """The Timor-Leste data over the `pt-PT` data: the Tetun time word, the centavo of the Banco Central and the Tetun
-spellings of `milhão`."""
+spellings of `milhão`, which agree with the amount."""
 
 SCALE_PREFIXES = ("mil", "míl", "bil", "tril")
 """The start of each spelling of a word for ‘thousand’, ‘million’, ‘billion’ or ‘trillion’. A scale word that the
