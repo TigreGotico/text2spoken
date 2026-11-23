@@ -262,13 +262,9 @@ def capital_clauses(text: str, request: Request) -> list[tuple[int, int]]:
 
 def _runs_in_context(text: str, request: Request) -> list[tuple[tuple[int, int], bool, Clause]]:
     """Each maximal run of letters, digits and combining marks, whether the words of the language make it read as a
-    word, and the clause in capitals that its word reading needs, or an empty tuple.
-
-    A run of three letters or more that the word check of the language knows reads as a word anywhere. A run of
-    `letter_words`, or a run of two letters that the word check knows, reads as a word in a clause in capitals, which
-    `_capital_stretches` finds. Every run of the clause is a part of it, however it reads. Each part is its start,
-    its end and its kind: `digits` for a run with no letter, which a number form reads, `spelled` for a run that
-    reads letter by letter, and `stays` for any other run."""
+    word, and the clause in capitals that its word reading needs, or an empty tuple. Every run of the clause is a
+    part of it: its start, its end and its kind, `digits` for a run with no letter, `spelled` for a run that reads
+    letter by letter, and `stays` for any other run."""
     data = request.data
     runs, words, anywhere, needs, reads, titles = _run_words(text, request)
     clauses: list[Clause] = [()] * len(runs)

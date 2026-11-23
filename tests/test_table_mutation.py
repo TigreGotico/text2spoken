@@ -16,12 +16,13 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": {"leads"},
+NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": {"leads"}, "tdt": {"defaults"},
           "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes", "no_phone_shapes"},
           "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
-phrase style of French, which tests/test_french.py checks)."""
+phrase style of French, which tests/test_french.py checks), or a default that equals the order which
+`dates.resolve` takes with no order (the `DMY` date order of Tetun Dili)."""
 
 # One entry of each table of a language file; DELETE removes a table that holds one value.
 EN_ENTRIES = {
@@ -79,7 +80,8 @@ FR_ENTRIES = {
 }
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
-    "decimal_word": DELETE,
+    "decimal_word": DELETE, "point_word": DELETE, "point_version_words": "versão",
+    "point_section_words": "rcl", "bible_books": "gênesis",
     "range_marks": "-", "clock_marks": freeze({"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}),
     "time_words": "às", "time_suffixes": "h", "day_periods": "pm", "dimension_marks": "x", "dimension_word": DELETE,
     "operators": "+", "months": "março", "currencies": "EUR", "currency_symbols": "CHF", "symbol_names": DELETE,

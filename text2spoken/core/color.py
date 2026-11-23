@@ -13,7 +13,7 @@ from text2spoken.core.spellers import spell_digits
 from text2spoken.core.tokens import Token, is_word_char
 from text2spoken.params import FrozenMap, Form
 
-_HEX = re.compile("#(?:[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])(?:[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])?(?:[0-9A-Fa-f][0-9A-Fa-f])?")
+_HEX = re.compile("#[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{3})?(?:[0-9A-Fa-f]{2})?")
 _DIGITS = frozenset("0123456789")
 LOG = logging.getLogger("text2spoken")
 
