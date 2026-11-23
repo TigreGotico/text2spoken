@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a103](https://github.com/TigreGotico/text2spoken/tree/0.0.2a103) (2026-11-23)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a102...0.0.2a103)
+
+**Merged pull requests:**
+
+- fix\(core\): a phone run drops a last hour group in every language [\#321](https://github.com/TigreGotico/text2spoken/pull/321) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a102](https://github.com/TigreGotico/text2spoken/tree/0.0.2a102) (2026-11-23)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a101...0.0.2a102)
@@ -243,10 +251,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a75...0.0.2a76)
 
-**Merged pull requests:**
-
-- fix: keep an amount whole next to a currency sign that the language does not read [\#220](https://github.com/TigreGotico/text2spoken/pull/220) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a75](https://github.com/TigreGotico/text2spoken/tree/0.0.2a75) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a74...0.0.2a75)
@@ -258,10 +262,6 @@
 ## [0.0.2a74](https://github.com/TigreGotico/text2spoken/tree/0.0.2a74) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a73...0.0.2a74)
-
-**Merged pull requests:**
-
-- fix: read a mixed number as one number, or keep it as written [\#221](https://github.com/TigreGotico/text2spoken/pull/221) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a73](https://github.com/TigreGotico/text2spoken/tree/0.0.2a73) (2026-11-18)
 
