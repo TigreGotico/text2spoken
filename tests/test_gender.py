@@ -126,8 +126,8 @@ SUFFIX_READINGS = {
     "pt-535": "Deste III Congresso.",
     "pt-760": "Na Sexta dez ponto zero dois abre a loja.",
     "pt-765": "A Indústria quatro ponto zero chegou.",
-    "pt-783": "Paguei trezentas ainda ontem.",
-    "pt-787": "Comprei duas pra você.",
+    "pt-789": "Paguei trezentas ainda ontem.",
+    "pt-793": "Comprei duas pra você.",
 }
 """The Portuguese rows that need tugalex, read without it. The `gender_suffixes` of pt.py alone give the gender: a
 noun that no ending matches takes the masculine default, and `-as` reads feminine. Only `letter_words` makes a run of
@@ -139,7 +139,7 @@ takes its gender from a list, never from an ending, and the `noun_gender` table 
 contraction. The table names none of the nouns of pt-532 to pt-535, so they keep the reading that they have with no
 noun. Only tugalex shows that `Sexta` and `Indústria` are words and no names of a product, so the version after them
 in pt-760 and pt-765 reads with "ponto". Only tugalex shows that `ainda` and `pra` have no gender, so without it the
-ending `-a` makes the number before them feminine in pt-783 and pt-787."""
+ending `-a` makes the number before them feminine in pt-789 and pt-793."""
 
 
 @pytest.mark.parametrize("row", rows("pt"), ids=lambda row: row["id"])
