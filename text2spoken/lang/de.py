@@ -501,9 +501,9 @@ def speak_measure(span: Span, context: SpanContext) -> str:
 
 
 def speak_fraction(span: Span, context: SpanContext) -> str:
-    """A mixed number of a half is one word of the whole part and "einhalb", with no ending before a noun. A whole
-    part whose cardinal ends in "eins" past 1 or holds more than one word, as "zwei Millionen", and a mixed number of
-    another fraction have no cited form and stay as written."""
+    """A fraction; a mixed number of a half is one word of the whole part and "einhalb", with no ending before a noun.
+    A whole part whose cardinal ends in "eins" past 1 or holds more than one word, as "zwei Millionen", and a mixed
+    number of another fraction have no cited form and stay as written."""
     fields, request = span.fields, context.request
     if not fields["whole"]:
         return core_speak_fraction(span, context)

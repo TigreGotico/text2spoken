@@ -44,6 +44,7 @@ def is_mark(char: str) -> bool:
     return unicodedata.category(char).startswith("M") and char not in EMOJI_MARKS
 
 
+# is_word_char and context_word call str.isalpha and str.isdecimal directly, to save a call on every character.
 def is_letter(char: str) -> bool:
     return char.isalpha()
 
