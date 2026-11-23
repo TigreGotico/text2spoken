@@ -416,6 +416,7 @@ from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
+from importlib.util import find_spec
 
 from text2spoken.core import parsers
 from text2spoken.core.color import speak_color
@@ -735,14 +736,17 @@ def _listed_gender(word: str, data: FrozenMap) -> str | None:
         or data["noun_gender"].get(word.lower())
 
 
-def _gender_of(word: str, request: Request) -> GrammaticalGender | None:
-    """The gender of a noun or a given name: the tables of `_listed_gender`, then the endings of `gender_suffixes`."""
+def _gender_of(word: str, request: Request, endings: bool = True) -> GrammaticalGender | None:
+    """The gender of a noun or a given name: the tables of `_listed_gender`, then, if `endings`, the endings of
+    `gender_suffixes`."""
     data = request.data
     if word in data["function_words"]:
         return None
     entry = _listed_gender(word, data)
     if entry is not None:
         return GrammaticalGender(entry)
+    if not endings:
+        return None
     for suffix, gender in data["gender_suffixes"]:
         if word.lower().endswith(suffix):
             return GrammaticalGender(gender)
@@ -769,8 +773,9 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     The tables of `_listed_gender` name a noun first. When tugalex knows the word after the number, a determiner comes
     before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
     a noun"), and that word can be an adjective with no noun, as in `as 2 melhores`. A noun of two genders, such as
-    `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. Without
-    tugalex, the endings of `gender_suffixes` come before the determiner."""
+    `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. tugalex runs
+    its own ending rules before it gives no gender, so a word that it gives none, as `ainda`, takes the gender of the
+    determiner or the default. Without tugalex, the endings of `gender_suffixes` come before the determiner."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
     request = context.request
@@ -802,7 +807,7 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     listed = _listed_gender(noun, data)
     code = _lexicon_gender(noun) if noun and listed is None and noun not in data["function_words"] else None
     if code is None:
-        found = _gender_of(noun, request) if noun else None
+        found = _gender_of(noun, request, endings=find_spec("tugalex") is None) if noun else None
         gender = found or (GrammaticalGender(determiner) if determiner else None)
     else:
         if code == "mf" and noun.lower() in data["two_gender_feminine"]:
