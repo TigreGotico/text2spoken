@@ -85,8 +85,13 @@ COORDINATION = re.compile(" (?:eta|edo) ")
 """The conjunctions that join two ordinals (Araua 203, section 5, page 27)."""
 
 _HYPHEN_DIGITS = re.compile("-[0-9]+")
+"""The hyphen and the digits of a `LetterCode`, as `-19` in `COVID-19`."""
+
 _CLOCK = re.compile("[0-9][0-9]?:[0-9][0-9]")
+"""The hour and the minutes of a `BasqueTime`, as `7:10` and `15:00`."""
+
 _ROMAN_MONTH_DATE = re.compile("([0-9]{4})(?:/([IVX]+)/|-([IVX]+)-)([0-9]{1,2})")
+"""The year, the Roman month and the day of a `RomanMonthDate`, as `1995/III/07` and `1995-III-27`."""
 
 REGNAL_LETTERS = frozenset("IVX")
 """The one-letter Roman numerals that follow a name as a regnal or series number, as in `Elisabet I.a` (Araua 203,

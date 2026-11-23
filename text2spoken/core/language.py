@@ -484,6 +484,7 @@ def select(tag: str) -> tuple[str, LanguageSpec, Variety]:
 
 @lru_cache(maxsize=256)
 def _closest_variety(tag: str, language: LanguageSpec) -> Variety:
+    """The variety of `language` that `tag` matches, else the first variety. The cache keys `language` by identity."""
     import linguatag
 
     match = linguatag.closest_lang(tag, [v.tag for v in language.varieties], lects="dialect")

@@ -235,10 +235,9 @@ hour or of a time with `h` already holds the unit once: "às onze horas e trinta
 article 3267). So the time claims the written word: `Fecha às 16:00 horas` reads "Fecha às dezasseis horas", and
 `Fecha às 24:00 horas` reads "Fecha à meia-noite", because "meia-noite" and "meio-dia" name the hour with no unit
 (Priberam, "meia-noite" and "meio-dia"). A singular `hora` is claimed only after "uma hora", the reading of `1:00`.
-After any other reading it opens a time zone, as in `às 16:00 hora local`, and stays. A time with minutes and no `h`,
-as `10:30`, reads "dez e trinta" with no unit, so a written `horas` after it stays: "dez e trinta horas". A line break
-between the time and the word keeps both. No source rules on the doubled word itself; the rule follows from the
-readings cited above.
+After any other reading it stays, as in `às 16:00 hora local`. A time with minutes and no `h`, as `10:30`, reads
+"dez e trinta" with no unit, so a written `horas` after it stays: "dez e trinta horas". A line break between the time
+and the word keeps both. No source rules on the doubled word itself; the rule follows from the readings cited above.
 
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
