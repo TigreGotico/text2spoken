@@ -29,8 +29,7 @@ A mixed number of a half is one word of the whole part and "einhalb": Duden, "zw
 "2 1/2", "wir kennen uns seit zweieinhalb Jahren"; Duden, "eineinhalb": "eineinhalb Tage". No source in the list
 gives the reading of a mixed number of another fraction, so it stays as written.
 
-`Abbreviation` and `Expression` are shared recognizers, and read only the data tables of the language. An
-expression reads each operator by its word in `operators`, and "=" as "gleich": Duden, "plus": "fünf plus drei
+An expression reads each operator by its word in `operators`, and "=" as "gleich": Duden, "plus": "fünf plus drei
 [ist] gleich acht".
 """
 from __future__ import annotations
@@ -179,7 +178,8 @@ DATA = freeze({
                      **dict.fromkeys(("gebärde", "gemeinde", "geschichte"), "feminine")},
     "noun_frames": [["ge[^aeiouäöüy]+[aeiouäöüy].*e", "neuter"]],
     "noun_endings": [["ung", "feminine"], ["heit", "feminine"], ["keit", "feminine"], ["schaft", "feminine"],
-                     ["ion", "feminine"], ["tät", "feminine"], ["ei", "feminine"], ["e", "feminine"], ["kaffee", "masculine"],
+                     ["ion", "feminine"], ["tät", "feminine"], ["ei", "feminine"], ["e", "feminine"],
+                     ["kaffee", "masculine"],
                      ["erin", "feminine"], ["frau", "feminine"], ["nacht", "feminine"], ["zeit", "feminine"],
                      ["person", "feminine"],
                      ["chen", "neuter"], ["lein", "neuter"], ["kind", "neuter"], ["jahr", "neuter"],
@@ -388,10 +388,6 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     return words
 
 
-def _unit_features(context: SpanContext, gender: str) -> Features:
-    return _features(context, GrammaticalGender(gender))
-
-
 def _determiner(context: SpanContext) -> FrozenMap | None:
     if not context.before:
         return None
@@ -498,18 +494,16 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
     unit = request.data["units"][span.fields["unit"]]
-    features = _unit_features(context, unit["gender"])
+    features = _features(context, GrammaticalGender(unit["gender"]))
     link = request.data["range_word" if span.fields["relation"] == "range" else "dimension_word"]
     joined = f" {link} ".join(amount_words(a, request, features) for a in amounts)
     return f"{joined} {unit[plural_category(request, written_amount(amounts[-1]))]}"
 
 
 def speak_fraction(span: Span, context: SpanContext) -> str:
-    """A fraction; a mixed number of a half is one word of the whole part and "einhalb": Duden, "zweieinhalb":
-    Zahlwort, Bruchzahl, "2 1/2", "wir kennen uns seit zweieinhalb Jahren", and "eineinhalb": "eineinhalb Tage".
-    The word takes no ending before a noun. A whole part whose cardinal ends in "eins" past 1, or is more than one
-    word, as "zwei Millionen", has no cited form, and nor has a mixed number of another fraction, so they stay as
-    written."""
+    """A mixed number of a half is one word of the whole part and "einhalb", with no ending before a noun. A whole
+    part whose cardinal ends in "eins" past 1 or holds more than one word, as "zwei Millionen", and a mixed number of
+    another fraction have no cited form and stay as written."""
     fields, request = span.fields, context.request
     if not fields["whole"]:
         return core_speak_fraction(span, context)
@@ -524,7 +518,7 @@ def speak_fraction(span: Span, context: SpanContext) -> str:
 def speak_percent(span: Span, context: SpanContext) -> str:
     """Duden, "Prozent": "5 Prozent oder 5 %", and the noun stays unchanged after a number."""
     percent = context.request.data["percent"]
-    features = _unit_features(context, percent["gender"])
+    features = _features(context, GrammaticalGender(percent["gender"]))
     return f"{amount_words(span.fields['amount'], context.request, features)} {percent['word']}"
 
 

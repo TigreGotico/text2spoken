@@ -53,6 +53,7 @@ from text2spoken.params import FrozenMap, Form
 _OPENING = ("Ps", "Pi")
 _CLOSING = ("Pe", "Pf", "Po")
 _QUOTES = "\"'"
+_NO_NAMES = FrozenMap()
 
 
 @lru_cache(maxsize=64)
@@ -64,15 +65,15 @@ def _table(tag: str, own: FrozenMap) -> FrozenMap:
 def _names(request: Request) -> FrozenMap:
     """The name of each character that the variety names: the CLDR names with the `symbol_names` of the language
     file over them."""
-    return _table(request.variety.tag, request.data.get("symbol_names", FrozenMap()))
+    return _table(request.variety.tag, request.data.get("symbol_names", _NO_NAMES))
 
 
 def _owned(char: str, request: Request) -> bool:
     """Whether a table of the language gives the character to another form: the `symbols` table, a unit symbol, an
     operator or a symbol of the currency table."""
     data = request.data
-    return (char in data.get("symbols", FrozenMap()) or char in unit_table(request)
-            or char in data.get("operators", FrozenMap()) or char in currency_signs(request))
+    return (char in data.get("symbols", ()) or char in unit_table(request)
+            or char in data.get("operators", ()) or char in currency_signs(request))
 
 
 def symbol_name(char: str, request: Request) -> str | None:

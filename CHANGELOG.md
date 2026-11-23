@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.0.2a102](https://github.com/TigreGotico/text2spoken/tree/0.0.2a102) (2026-11-23)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a101...0.0.2a102)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a full-stop number only with evidence, and versions with "ponto" [\#429](https://github.com/TigreGotico/text2spoken/pull/429) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a101](https://github.com/TigreGotico/text2spoken/tree/0.0.2a101) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a100...0.0.2a101)
+
+**Merged pull requests:**
+
+- refactor\(core\): drop dead code and once-used helpers, compile the say-as clock patterns once [\#413](https://github.com/TigreGotico/text2spoken/pull/413) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a100](https://github.com/TigreGotico/text2spoken/tree/0.0.2a100) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a99...0.0.2a100)
+
+## [0.0.2a99](https://github.com/TigreGotico/text2spoken/tree/0.0.2a99) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a98...0.0.2a99)
+
+**Merged pull requests:**
+
+- refactor\(lang\): simpler code in it and ru, docstring wraps in it, pt, ru and zh [\#418](https://github.com/TigreGotico/text2spoken/pull/418) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- perf\(core\): cache the variety match of select, test characters with str methods [\#416](https://github.com/TigreGotico/text2spoken/pull/416) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- refactor\(lang\): simpler code and shorter docstrings in ca, de, es and eu [\#414](https://github.com/TigreGotico/text2spoken/pull/414) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a98](https://github.com/TigreGotico/text2spoken/tree/0.0.2a98) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a97...0.0.2a98)
+
+**Merged pull requests:**
+
+- feat\(tdt\): read prices, phone numbers, times, percentages and measures in Portuguese [\#408](https://github.com/TigreGotico/text2spoken/pull/408) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a97](https://github.com/TigreGotico/text2spoken/tree/0.0.2a97) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a96...0.0.2a97)
@@ -253,41 +291,21 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a69...0.0.2a70)
 
-**Merged pull requests:**
-
-- fix\(core\): read decimals and a line-start minus in languages with no file [\#218](https://github.com/TigreGotico/text2spoken/pull/218) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a69](https://github.com/TigreGotico/text2spoken/tree/0.0.2a69) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a68...0.0.2a69)
-
-**Merged pull requests:**
-
-- feat: revision\(lang\) changes when the output of a language can change [\#207](https://github.com/TigreGotico/text2spoken/pull/207) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a68](https://github.com/TigreGotico/text2spoken/tree/0.0.2a68) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a67...0.0.2a68)
 
-**Merged pull requests:**
-
-- feat: say\_as argument names the form of a run of text [\#176](https://github.com/TigreGotico/text2spoken/pull/176) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a67](https://github.com/TigreGotico/text2spoken/tree/0.0.2a67) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a66...0.0.2a67)
 
-**Merged pull requests:**
-
-- feat\(ar\): read each Arabic lect with its region and the writer's dialect words [\#195](https://github.com/TigreGotico/text2spoken/pull/195) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a66](https://github.com/TigreGotico/text2spoken/tree/0.0.2a66) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a65...0.0.2a66)
-
-**Merged pull requests:**
-
-- fix: a language with no file reads number words through ovos-number-parser [\#190](https://github.com/TigreGotico/text2spoken/pull/190) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a65](https://github.com/TigreGotico/text2spoken/tree/0.0.2a65) (2026-11-17)
 

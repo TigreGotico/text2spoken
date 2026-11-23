@@ -12,6 +12,7 @@ from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
+from itertools import accumulate
 from types import MappingProxyType
 
 from text2spoken.core import parsers
@@ -25,8 +26,8 @@ from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_ent
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import (GROUP_SPACES, SIGNS, SPACE_GROUPS, Number, declared_marks, find_numbers,
                                       group_spaces, number_marks)
-from text2spoken.core.spans import (Features, Recognizer, SpanContext, Span, Word, clause_breaks, clause_window,
-                                    context_words)
+from text2spoken.core.spans import (PHONE_WAITS, Features, Recognizer, SpanContext, Span, Word, clause_breaks,
+                                    clause_window, context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
 from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces, reads_symbol
 from text2spoken.core.times import clock_fields
@@ -373,13 +374,14 @@ _WORD_OPENERS = "([{«\"'“‘"
 """The opening brackets and quotes that may stand right before a word."""
 _GLUED = re.compile("(?:[ /:.,–-]?[0-9]+)*")
 _DIGIT_RUN = re.compile("[0-9]+")
+_TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
 
 
 @lru_cache(maxsize=8)
 def _phone_pattern(spaces: str) -> re.Pattern:
     """A run of digit groups that a space of `spaces`, a full stop or a hyphen parts, with an optional `+` and an
-    area code in brackets, which is group 1."""
-    return re.compile(f"[+]?([(][0-9]+[)] ?)?[0-9]+(?:[{re.escape(spaces)}.-][0-9]+)*")
+    area code in brackets."""
+    return re.compile(f"[+]?(?:[(][0-9]+[)] ?)?[0-9]+(?:[{re.escape(spaces)}.-][0-9]+)*")
 
 
 def _cluster_edge(text: str, start: int, end: int) -> bool:
@@ -984,7 +986,12 @@ class Telephone:
     word before it is a phone word, as on a second pass. So in pt-BR, where `☎` reads "telefone no gancho",
     `☎3 91P` reads the number, and `Ligue → 1.234,56` reads the number. A list link does not count those
     characters, so `Call ⇒ 999 or → 112.` reads both runs digit by digit. For the same reason, a lexicon key as
-    that last word counts by its spoken words: with a key `call` for "kall", `call+351` reads the number.
+    that last word counts by its spoken words: with a key `call` for "kall", `call+351` reads the number. A
+    full stop of an abbreviation that the abbreviation recognizer of the language reads with no full stop, as `Tel.`
+    in de-AT `Tel. USD20 444-2428` and `z. B.` in `Telefon z. B. 260-9726.98.61 8am`, ends no clause for the window,
+    because a second pass sees the reading there. A number abbreviation or a dotted ordinal that the tokens part, as
+    `n.º` and `2.º`, fills one slot, as its reading `número` or `segundo` does. A dotted ordinal has a suffix of one
+    or two letters, so `Call` in `7.Call` and `tel` in `3.tel` stay words.
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
@@ -1009,20 +1016,85 @@ class Telephone:
     code that ends its clause or that a function word follows when `names_short_codes` is set, as in `Call the
     police on 999 now.`, and not the count in `The phone rang 101 times.`
 
+    A last group of one or two digits after a space is the hour of a time, not a phone group, when a letter
+    continues the run, when a full stop and two digits complete it in a language whose `clock_marks` hold a full
+    stop, or when a space and a day period of `day_periods` follow it. So `Call 1-800-555-0199 8 a.m.` reads the
+    number and the time: a second pass, which sees the words of the time, finds the same run. Only one group drops
+    (design section 4.3), so `777 67.18 2e` keeps the run `777 67.18`. No group drops when the last phone word before
+    the run, in a clause that only `;`, `!` and `?` end, has a full stop right after it and a word between it and
+    the run, as in de-DE `Fax. EUR5 0733.16.45 1st`. That full stop ends the clause only before a capital, and
+    the reading of the word after it may start in lower case, as `fünf Euro` does, so a second pass may see the
+    phone word name the run. A reading may also hold more words than its written form and move the phone word out
+    of the window. The run then reads as with no cut, on both passes. With `keeps_hour_after_stop` off, as in
+    English, the group drops there too, as it does with no full stop: there a run that kept the group reads
+    otherwise on a second pass, as `7` in en-GB `Phone. 7:US$5 023 8am`. A shorter run that stays as written keeps the
+    dropped group when the cut would drop its new last group too, as a second pass does once the dropped group
+    reads, and the run tries again whole. So `teléfono 151 954 383 780 20.15 8 a.m.` reads the time and the groups
+    as with no cut, and en-US `30-9813 1419 4.37 10.39.` reads `1419 4.37 10.39` digit by digit. A shorter run that
+    reads leaves words to a second pass. A run that the cut shortens and that holds more than 15 digits, more than
+    a stretch holds, reads as one unit of `phone_unit_shapes` only once a span reads the group that the cut drops. A
+    second pass then sees the whole run, and while that group stays as written, a second pass cuts it again. So in
+    de-DE `(1) 0301 023456789012 9.30 h` the 16 digits stay as written on both passes. A mark after the group keeps
+    it in the run, as in `02 08/85 98-0`, because the group and the digits after the mark may be one number.
+
+    A run that gives no span tries again after its first group when a mark joins that group to the digits before it, as
+    `5` in `3,5 0 180 030 068`, or a full stop or a hyphen parts the group, as `1.6` in `1.6 0 800 757 652` and `1-2` in
+    `1-2 0 800 123 456`. The group may be a number of its own. A run that gives no span, or that starts inside a span
+    kept as written, also tries each stretch of its groups between two spaces, as `08 08` in `45 08 08 2x.`,
+    `032 088 30.22` in `032 088 30.22 184 2e`, `062` in `2 062 6 9.30`, `(01) 00 20.15` in `(01) 00 20.15 8 h` and
+    `+351 000.7-4171` in `+351 000.7-4171 508 524`. A second pass sees a stretch as a run when the first pass reads the
+    groups around it. So the span of a shorter run claims only when a span that ends before it reads the last digit of
+    the group before it, as on a second pass, which sees words there. That digit stands before the bracket of an area
+    code, as `0` in `(0) 001-186-13 8am`. A shorter run from the start of the run waits on the digit before the run when
+    a mark joins that digit to it, as `53` in `53,(0161) 07 22.34 646`, and needs no read after a space or at the start
+    of the text. A run that reads waits on that digit too, so that `53,(0161) 4514 481 29 1st` reads `53` and the
+    run. The span of a stretch also claims only when a span reads the first digit of the group after the
+    stretch, and no other span reads a character of the span. `Request.memo` holds these conditions under `PHONE_WAITS`,
+    so the span fields keep their schema. So `3,5 0 180 030 068` reads `0 180 030 068`, `032 088 30.22 184 2e` reads
+    `032 088` digit by digit, and `1:1 000 000` and `405–01 03 02` stay as written: no span reads `1`, and a span keeps
+    `405–01` as written. A phone number holds at most 15 digits (ITU-T E.164), and the rule above may drop the last
+    group of a stretch, so a stretch with more digits before its last group does not try. A run whose last group does
+    not drop also tries itself with no last group when the rule above cuts that shorter run, under the conditions of a
+    stretch and with no bound on its digits, because a second pass sees it as a whole run. So
+    `(0161) 0316322125 0502 5.29 4 Uhr` reads `(0161) 0316322125 0502` digit by digit, `(01) 00 20.15 8 h` reads
+    `(01) 00` digit by digit, and `(030) 1234 20.15 8 h` reads `1234` as a number on both passes. A run that reads,
+    also as one unit, tries its stretches too, because another span may take the run or a part of it. A date takes
+    `12.05.2020` in `Tel. 12.05.2020 015 044 2x.`, and `1 km` takes the last group of
+    `70·(0161) 0776558839 0467920505 1 km`, and a second pass then sees `015 044` and `(0161) 0776558839 0467920505`
+    as runs. A stretch with the extent of a run that reads gives no second span.
+
     A language file that names phone numbers by context of its own subclasses this recognizer and replaces the
-    methods `trimmed`, `window` and `names_back` as it needs. `EnglishTelephone` replaces only `trimmed`."""
+    methods `trimmed`, `continued`, `hour_after`, `window` and `names_back` as it needs. `EnglishTelephone`
+    replaces only `continued` and `hour_after`."""
     name: str = "telephone"
     form: Form = Form.TELEPHONE
     reach: int = 1
     content_words: bool = False
     names_shaped: bool = False
     names_short_codes: bool = False
+    keeps_hour_after_stop: bool = True
     spaces: str = " "
     plans: FrozenMap = PHONE_PLANS
 
     def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
-        """The run of digit groups that starts at `start`, less a last group that the language reads apart."""
+        """The run of digit groups that starts at `start`, less a last group that is the hour of a time."""
+        dotted = any(clock["mark"] == "." for clock in request.data.get("clock_marks", ()))
+        if (cut := max(written.rfind(space) for space in self.spaces)) != -1 \
+                and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
+                    (dotted and "." in written[cut:]) or self.continued(text, start, start + len(written))
+                    or self.hour_after(text, start + len(written), request)):
+            written = written[:cut]
         return written
+
+    def continued(self, text: str, start: int, end: int) -> bool:
+        """Whether a letter continues text[start:end], so that its last group belongs to a word, as in `555 3rd`."""
+        return end < len(text) and is_letter(text[end])
+
+    def hour_after(self, text: str, end: int, request: Request) -> bool:
+        """Whether a space and a day period follow text[:end], as `8 am` follows a phone number."""
+        return text.startswith(" ", end) and any(
+            text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period))
+            for periods in request.data.get("day_periods", {}).values() for period in periods)
 
     def window(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
                request: Request) -> range:
@@ -1048,12 +1120,49 @@ class Telephone:
         return all(word.lower() in function_words for word in following)
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        words = _spoken_words(text, tokens, request)
+        folded = fold_digits(text)
+        runs: list[tuple[int, str, tuple[int | None, int | None, bool] | None]] = [
+            (match.start(), match.group(), None) for match in _phone_pattern(self.spaces).finditer(folded)][::-1]
+        if not runs:
+            return
+        phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
+        words = list(_spoken_words(text, tokens, request))
+        # A number abbreviation or a dotted ordinal that the tokens part, as `n.º` in es-ES
+        # `teléfono n.º 5 01.5951193286 18.48 84031` and `2.º` in es-MX `teléfono y 2.º 0025.52.40 8am`, is one word to
+        # the window, as its reading `número` or `segundo` is on a second pass.
+        numbered = request.data.get("number_abbreviations", {})
+        merged: list[Word] = []
+        for word in words:
+            pair = text[merged[-1].start:word.end] if merged else ""
+            number, _, suffix = pair.partition(".")
+            if pair in numbered or (number.isdigit() and suffix.isalpha() and len(suffix) <= 2):
+                merged[-1] = replace(word, start=merged[-1].start, text=pair)
+            else:
+                merged.append(word)
+        words = merged
+        # An abbreviation that reads as words loses its full stops, as `Tel.` in de-AT `Tel. USD20 444-2428` and
+        # `z. B.` in `Telefon z. B. 260-9726.98.61 8am`, so they end no clause for the window, as on a second pass. A
+        # key that ends the sentence keeps its full stop as the trail of its span.
+        stops = frozenset(index for recognizer in request.language.recognizers if recognizer.form is Form.ABBREVIATION
+                          for span in recognizer.find(text, tokens, request) if not span.trail
+                          for index in range(span.start, span.end) if text[index] == ".")
         lexicon = {span.end: span.fields["spoken"] for span in Lexicon().find(text, tokens, request)} \
             if Form.LEXICON in request.params.forms else {}
         covered = frozenset(index for start, end, _ in named_pieces(text, request) for index in range(start, end))
-        breaks = clause_breaks(text)
-        phone_words = frozenset(w.lower() for w in request.data.get("phone_words", ()))
+        breaks = tuple(index for index in clause_breaks(text) if index not in stops)
+        loose = tuple(index for index in breaks if text[index] != ".")
+        # The last phone word at or before each word, in a clause that only `;`, `!` and `?` end.
+        callers: list[int | None] = []
+        if self.keeps_hour_after_stop:
+            caller = None
+            for index, word in enumerate(words):
+                if index and bisect_left(loose, words[index - 1].end) < bisect_left(loose, word.start):
+                    caller = None
+                if word.clause_end:
+                    caller = None
+                elif phone_words.intersection(_last_parts(word.text)):
+                    caller = index
+                callers.append(caller)
         shapes = [re.compile(shape) for shape in request.data.get("phone_shapes", ())]
         unit_shapes = [re.compile(shape) for shape in request.data.get("phone_unit_shapes", ())]
         kept_shapes = [re.compile(shape) for shape in request.data.get("phone_kept_shapes", ())]
@@ -1066,18 +1175,53 @@ class Telephone:
         operators = "".join(request.data.get("operators", ()))
         operand = re.compile(f"[{re.escape(operators)}][0-9]") if operators else None
         named_end = None
-        folded = fold_digits(text)
-        kept_end = position = 0
-        pattern = _phone_pattern(self.spaces)
-        while (match := pattern.search(folded, position)) is not None:
-            position = match.end()
-            if match.start() < kept_end:
+        kept_end = 0
+        read_spans: set[tuple[int, int]] = set()
+        uncut: set[tuple[int, str]] = set()
+        head_group = re.compile(f"[0-9]+([.-][0-9]+)?[{re.escape(self.spaces)}]")
+        waits = request.memo.setdefault((PHONE_WAITS, text), {})
+        while runs:
+            start, run, wait = runs.pop()
+            written = run if (start, run) in uncut else self.trimmed(text, start, run, request)
+            if written != run and self.keeps_hour_after_stop:
+                # A full stop right after the last phone word before the run, and a word between, as in de-DE
+                # `Fax. EUR5 0733.16.45 1st`: a second pass may see no clause end there, so no group drops.
+                index = bisect_right(words, start, key=lambda word: word.end)
+                caller = callers[index - 1] if index and bisect_left(loose, words[index - 1].end) == bisect_left(
+                    loose, start) else None
+                stop = -1 if caller is None else words[caller].end
+                if caller is not None and caller < index - 1 and stop not in stops and text.startswith(".", stop):
+                    written = run
+            retries = []
+            if wait is None:
+                head = head_group.match(run)
+                joined = head and (head[1] or (start > 1 and text[start - 1] in _JOINERS and is_digit(text[start - 2])))
+                # A retry from the run start waits on the digit before the run when a mark joins that digit to the
+                # run, as `3` in `53,(0161) 07 22.34 646`, so the retry reads once `53` reads. After a space, at the
+                # start of the text, or after a mark with no digit before it, the run start is an edge. A digit right
+                # before the run glues the run and each retry from its start, so none of them reads.
+                glue = None if start < 2 or text[start - 1].isspace() or not is_digit(text[start - 2]) else start - 2
+                bounds = [-1, *(index for index, char in enumerate(run) if char in self.spaces), len(run)]
+                counts = list(accumulate((char.isdigit() for char in run), initial=0))
+                for i in range(len(bounds) - 2, -1, -1):
+                    # The last digit of the group before; an area code in brackets ends in `)`, as `(0)`.
+                    left = start + bounds[i] - 1 - (run[bounds[i] - 1] == ")") if i else glue
+                    for j in range(i + 1, len(bounds) - (i == 0)):
+                        # A phone number holds at most 15 digits (ITU-T E.164), and the cut may drop the last
+                        # group, so no stretch with more digits before its last group reads.
+                        if counts[bounds[j - 1] + 1] - counts[bounds[i] + 1] > 15:
+                            break
+                        retries.append((start + bounds[i] + 1, run[bounds[i] + 1:bounds[j]],
+                                        (left, start + bounds[j] + 1 if j < len(bounds) - 1 else None, True)))
+                if written == run and (gap := max(run.rfind(space) for space in self.spaces)) != -1 \
+                        and self.trimmed(text, start, run[:gap], request) != run[:gap]:
+                    # A second pass sees words for the last group once a span reads it, and cuts the group before.
+                    retries.append((start, run[:gap], (glue, start + gap + 1, True)))
+                if joined:
+                    retries.append((start + head.end(), run[head.end():], (start + head.end() - 2, None, False)))
+            if start < kept_end:
+                runs.extend(retry for retry in retries if retry[0] >= kept_end)
                 continue
-            area = match.group(1) or ""
-            reads_as_number = area.endswith(" ") and (area[1] != "0" or area[2] == ")")
-            unread = match.end(1) if reads_as_number else position
-            start = match.start()
-            written = self.trimmed(text, start, match.group(), request)
             end = start + len(written)
             glued = not _edge(text, start, end) or (operand is not None and operand.match(folded, end) is not None)
             prefix = suffix = ""
@@ -1110,24 +1254,8 @@ class Telephone:
                      or (bool(phone_ends) and self.names_back(text, words, breaks, start, end, shaped, short_code,
                                                                request))
                      or (named_end is not None and listed.fullmatch(gap) is not None))
-            named_end = end + len(suffix) if named else None
             unknown_code = written.startswith("+") and not country_code
-            if glued:
-                if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
-                    position = unread
-                    continue
-                chained = _GLUED.match(folded, end).group()
-                if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
-                    chained = re.sub("[ /:.,–-]?[0-9]+$", "", chained)
-                end = kept_end = named_end = end + len(chained)
-            first, last = start - len(prefix), end + len(suffix)
-            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
-            if glued or not one_digit_set(text[start:end]) or (keeps and (len(digits) > 15 or unknown_code)):
-                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
-                continue
-            if any(shape.fullmatch(written) for shape in unit_shapes):
-                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name)
-                continue
+            unit = any(shape.fullmatch(written) for shape in unit_shapes)
             if unknown_code or len(digits) > 15:
                 reads = False
             elif 7 <= len(digits):
@@ -1137,14 +1265,69 @@ class Telephone:
                                       and len(digits) - len(plan["trunk"]) in plan["lengths"] for plan in plans)))
             else:
                 reads = named and short_code
+            stays = glued or not one_digit_set(text[start:end]) or (keeps and (len(digits) > 15 or unknown_code))
+            # At most one group drops over every pass. A shorter run that stays as written keeps its groups when the
+            # cut would drop its new last group too, as a second pass does once the dropped group reads, so the run
+            # tries again whole, as `1419 4.37 10.39` in en-US `30-9813 1419 4.37 10.39.` A shorter run that reads
+            # leaves words to a second pass.
+            if (stays or not (unit or reads)) and written != run and (start, run) not in uncut \
+                    and self.trimmed(text, start, written, request) != written:
+                uncut.add((start, run))
+                runs.append((start, run, wait))
+                continue
+            # A retry, as a stretch of a run that reads, keeps the end of the named run before it, so a list link
+            # after that run still names the next run, as `955 062 627` in es-ES `teléfonos 902 505 505 y 955 062 627`.
+            if wait is None:
+                named_end = end + len(suffix) if named else None
+            if glued:
+                if not (keeps and len(digits) >= 3 and (shaped or short_code or len(digits) >= 7)):
+                    runs.extend(retries)
+                    continue
+                chained = _GLUED.match(folded, end).group()
+                if chained and end + len(chained) < len(text) and is_word_char(text[end + len(chained)]):
+                    chained = re.sub("[ /:.,–-]?[0-9]+$", "", chained)
+                end = kept_end = named_end = end + len(chained)
+            first, last = start - len(prefix), end + len(suffix)
+            if wait is not None and (first, last) in read_spans:
+                continue
+            if wait is not None:
+                waits.setdefault((first, last), set()).add(wait)
+            # A run that reads waits on the digit before its mark, as its retries from the run start do, so that the
+            # number and the run read, as `53` and `(0161) 4514 481 29` in `53,(0161) 4514 481 29 1st`, and a span
+            # that the number holds does not hold the number in turn.
+            glue_wait = (glue, None, False) if wait is None and glue is not None else None
+            written_only = FrozenMap({"country_code": "", "groups": tuple(groups), "prefix": prefix, "suffix": suffix})
+            if stays:
+                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
+                continue
+            if unit:
+                # A run that the cut shortens and that holds more than 15 digits, more than a stretch holds, reads
+                # only once a span reads the group that the cut drops: a second pass then sees the whole run, and
+                # while that group stays as written, a second pass cuts it again and the run stays as written.
+                if wait is None and written != run and len(digits) > 15:
+                    waits.setdefault((first, last), set()).add((glue, start + len(written) + 1, False))
+                elif glue_wait is not None:
+                    waits.setdefault((first, last), set()).add(glue_wait)
+                elif wait is None:
+                    read_spans.add((first, last))
+                yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name)
+                runs.extend(retries)
+                continue
             if reads:
+                if glue_wait is not None:
+                    waits.setdefault((first, last), set()).add(glue_wait)
+                elif wait is None:
+                    read_spans.add((first, last))
                 yield Span(first, last, Form.TELEPHONE,
                            FrozenMap({"country_code": country_code, "groups": tuple(groups), "prefix": prefix,
                                       "suffix": suffix}), recognizer=self.name)
+                # Another span may take the run, as a date takes `12.05.2020` in `Tel. 12.05.2020 015 044 2x.`, and a
+                # second pass then sees `015 044`, so the stretches try too, as after a unit span.
+                runs.extend(retries)
             elif any(shape.fullmatch(written) for shape in kept_shapes):
                 yield Span(first, last, Form.TELEPHONE, written_only, recognizer=self.name, keep=True)
             else:
-                position = unread
+                runs.extend(retries)
 
 
 def speak_lexicon(span: Span, context: SpanContext) -> str:

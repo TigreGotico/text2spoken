@@ -24,30 +24,29 @@ feminine form; a scale word from `milhão` up is a masculine noun, so the words 
 masculino"; "trilião": "nome masculino").
 
 A number right after a noun of `label_nouns` or `roman_letter_nouns` names one item of a series, and it reads in the
-masculine when no noun that it counts follows it — the number ends the text, or a punctuation mark, a function word
-or a verb of `label_verbs` follows it: `sala 2, porta 4` reads "sala dois, porta quatro" and `o artigo 2 das
-disposições` "o artigo dois das disposições". A counted noun after it, as `semanas` in `em casa 2 semanas`, gives the
-number its gender: "duas semanas". `label_verbs` holds the third-person verbs that a numbered figure or table
-stands before, which the ending `a` reads as a feminine noun: Priberam, "mostrar": "verbo transitivo". Priberam,
-"mas": "conjunção adversativa", and "cada": "quantificador universal", join the words of `function_words`. So do
-the demonstratives and their contractions with `em` and `de`, which are no noun that a number counts: Priberam,
-"nesta": "Contracção da preposição em e do pronome ou determinante esta."; "desta": "Contracção da preposição de e
-do pronome demonstrativo esta."; "naquela": "Contracção da preposição em com o determinante ou pronome demonstrativo
-aquela." `ganhou 1 nesta terça-feira` reads "ganhou um nesta terça-feira". A plural contraction with `de` right
-after the number is a partitive, as `das` is, so `2 destas maçãs` reads "duas destas maçãs". Cunha and
-Cintra, Nova Gramática do Português Contemporâneo, p. 374, quoted in
-Ciberdúvidas 33468: "Na enumeração de páginas e de folhas de um livro, assim como na de casas, apartamentos, quartos
-de hotel, cabines de navio, poltronas de casas de diversões e equivalentes, empregam-se os CARDINAIS. Nestes casos
-sente-se a omissão da palavra número: Página 3 (três) [...] Cabine 2 (dois)". The Gramática do Português (Fundação
-Calouste Gulbenkian, 2013, p. 929), quoted in the same answer, names the class: such a cardinal occurs "em forma
-invariável à direita do nome" and serves "para especificar um exemplar único do tipo denotado pelo nome". So
-`label_nouns` holds the nouns of Cunha and Cintra and the nouns that name one numbered room, door, figure, table,
-line, row or seat; `fig` is the abbreviation of "figura" in `Fig. 2`. The parts of a work of `roman_letter_nouns`
-take the same reading (Ciberdúvidas 9067: "parte doze [mas: na página cinco; na página trinta e dois]"). After the
-preposition `a` and the plural `páginas` or `folhas` of `plural_labels`, the number agrees with the noun: Bechara,
-Moderna Gramática Portuguesa, 37.ª ed., quoted in Ciberdúvidas 33527: "Com a preposição a, usa-se o substantivo no
-plural [...] "a páginas duas", "a páginas vinte e uma" [...] com páginas, no plural, o cardinal se flexiona em
-gênero". So `a páginas 21 da obra` reads "a páginas vinte e uma da obra".
+masculine when no noun that it counts follows it — the number ends the text, or a punctuation mark, a function word or a
+verb of `label_verbs` follows it: `sala 2, porta 4` reads "sala dois, porta quatro" and `o artigo 2 das disposições` "o
+artigo dois das disposições". A counted noun after it, as `semanas` in `em casa 2 semanas`, gives the number its gender:
+"duas semanas". `label_verbs` holds the third-person verbs that a numbered figure or table stands before, which the
+ending `a` reads as a feminine noun: Priberam, "mostrar": "verbo transitivo". Priberam, "mas": "conjunção adversativa",
+and "cada": "quantificador universal", join the words of `function_words`. So do the demonstratives and their
+contractions with `em` and `de`, which are no noun that a number counts: Priberam, "nesta": "Contracção da preposição em
+e do pronome ou determinante esta."; "desta": "Contracção da preposição de e do pronome demonstrativo esta."; "naquela":
+"Contracção da preposição em com o determinante ou pronome demonstrativo aquela." `ganhou 1 nesta terça-feira` reads
+"ganhou um nesta terça-feira". A plural contraction with `de` right after the number is a partitive, as `das` is, so `2
+destas maçãs` reads "duas destas maçãs". Cunha and Cintra, Nova Gramática do Português Contemporâneo, p. 374, quoted in
+Ciberdúvidas 33468: "Na enumeração de páginas e de folhas de um livro, assim como na de casas, apartamentos, quartos de
+hotel, cabines de navio, poltronas de casas de diversões e equivalentes, empregam-se os CARDINAIS. Nestes casos sente-se
+a omissão da palavra número: Página 3 (três) [...] Cabine 2 (dois)". The Gramática do Português (Fundação Calouste
+Gulbenkian, 2013, p. 929), quoted in the same answer, names the class: such a cardinal occurs "em forma invariável à
+direita do nome" and serves "para especificar um exemplar único do tipo denotado pelo nome". So `label_nouns` holds the
+nouns of Cunha and Cintra and the nouns that name one numbered room, door, figure, table, line, row or seat; `fig` is
+the abbreviation of "figura" in `Fig. 2`. The parts of a work of `roman_letter_nouns` take the same reading
+(Ciberdúvidas 9067: "parte doze [mas: na página cinco; na página trinta e dois]"). After the preposition `a` and the
+plural `páginas` or `folhas` of `plural_labels`, the number agrees with the noun: Bechara, Moderna Gramática Portuguesa,
+37.ª ed., quoted in Ciberdúvidas 33527: "Com a preposição a, usa-se o substantivo no plural [...] "a páginas duas", "a
+páginas vinte e uma" [...] com páginas, no plural, o cardinal se flexiona em gênero". So `a páginas 21 da obra` reads "a
+páginas vinte e uma da obra".
 
 A number before `da` and a word of `hour_periods` counts hours that the text leaves out, so it reads in the
 feminine: `são 2 da tarde` reads "são duas da tarde". Senado Federal, Manual de Comunicação, "Hora": "diga "são duas
@@ -56,26 +55,34 @@ da tarde", e não "são 14 horas"", and "às dez da noite, e não às vinte e du
 A number before a word of `number_links` and a second number reads in the masculine. Before `vezes`, it is a factor of a
 product: `2 vezes 2` reads "dois vezes dois". When a noun that the number counts follows the second number, as `frases`
 in `2 vezes 3 frases`, `vezes` is the feminine noun "vez" and the number agrees with it: "duas vezes três frases".
-Priberam, "vez", sense 7: "Usa-se a seguir a um numeral e antes de outro
-numeral para indicar multiplicação (ex.: dois vezes dois são quatro)". The dictionary of the Academia das Ciências de
-Lisboa, quoted in Ciberdúvidas 33489, gives the same reading: "Mat. Designação de um operador de multiplicação [...] Um
-vezes três (1x3)". The same answer recommends "duas vezes dois" after Botelho de Amaral (1958) and Sá Nogueira (1989);
-the Academy dictionary and Priberam are the more reputable sources, and the masculine is also the reading of `2×2`.
-Before `vírgula`, it is the whole part of a decimal written with the word: `(1) vírgula 5 m` reads "(um) vírgula cinco
-metros". Ciberdúvidas 25561 quotes "dois vírgula cinco milhões de euros" and answers "Não se pode considerar errado".
-Digits with a leading zero after the number and `vírgula` are the digits of the decimal part, and they read as the
-digits after a decimal mark: `0 vírgula 02` reads "zero vírgula zero dois", as `0,02` does.
+Priberam, "vez", sense 7: "Usa-se a seguir a um numeral e antes de outro numeral para indicar multiplicação (ex.: dois
+vezes dois são quatro)". The dictionary of the Academia das Ciências de Lisboa, quoted in Ciberdúvidas 33489, gives the
+same reading: "Mat. Designação de um operador de multiplicação [...] Um vezes três (1x3)". The same answer recommends
+"duas vezes dois" after Botelho de Amaral (1958) and Sá Nogueira (1989); the Academy dictionary and Priberam are the
+more reputable sources, and the masculine is also the reading of `2×2`. Before `vírgula`, it is the whole part of a
+decimal written with the word: `(1) vírgula 5 m` reads "(um) vírgula cinco metros". Ciberdúvidas 25561 quotes "dois
+vírgula cinco milhões de euros" and answers "Não se pode considerar errado". Digits with a leading zero after the number
+and `vírgula` are the digits of the decimal part, and they read as the digits after a decimal mark: `0 vírgula 02` reads
+"zero vírgula zero dois", as `0,02` does.
 
 The comma is the decimal mark, and the full stop is the decimal mark of the English convention. Norma Portuguesa 9
 (IPQ, 2006), quoted in Ciberdúvidas 12873: "Esses sinais são o ponto e a vírgula, sendo o primeiro empregado nos
 países de língua inglesa, e o segundo, nos restantes." So a full stop with one, two, or four or more digits after
 it, which no group of three explains, is a decimal mark, and `1.500` still reads as a number grouped with the full
-stop. Such a decimal reads with a percent sign, a currency or the symbol of a unit that `Measure` reads, as in
-`1.5 km`, and before the CLDR 49 name of such a unit, as in `10.4 graus`. Anywhere else it stays as written: in the
-"meio milhão de frases" sentence set, digits that a full stop parts are mostly a version, an engine size or a section
-(`Versão 14.2`, mmf-487795; `motor 1.6`, mmf-431047; `Termo de Referência, 5.3`, mmf-462875), which a speaker does
-not read with "vírgula". A unit of duration, as a symbol or a name, is no evidence: `1.30 h` and `1.30 horas` may
-write one hour and thirty minutes, and `às 9.30h` writes a clock.
+stop. A number with the full stop reads as a decimal only when something shows the decimal: a sign before it, as
+`-10.4`, or a percent sign, a currency, the symbol of a unit that `Measure` reads or the CLDR 49 name of such a unit
+after it, as in `3.1416 graus`. With nothing of that, as in `o valor é 10.4`, the number stays as written, because in
+running text it writes a version, a section, a reference or an engine size as often as an amount.
+
+After a word of `point_version_words`, as `versão`, and after the name of a product or a standard, as `iOS 17.4` and
+`Python 3.12`, the full stop parts the levels of a version and reads "ponto" (Priberam, "ponto", sense 7: "Sinal
+gráfico (.)"): `versão 2.10` reads "versão dois ponto dez". No source states that reading of a version number. A
+section number stays as written after a word of `point_section_words`, as `artigo 10.4` and `secção 3.2`: ISO
+2145:1978, clause 4, says "When a division or subdivision number is spoken, full stops are not expressed.", and no
+source gives the Portuguese words of the levels. An hour and its minutes may take the full
+stop, so a number with a sign that may write one stays as written after a word of `time_words` and before a unit of
+the hour, the minute or the second. So does a section number: one that opens a line before a capital, as
+`2.1 Se cancelarmos`, and one that a full stop and a lowercase word close, as `10.10. licitação`.
 
 Two numbers that `a`, `e` or `ou` join, as in `de 1 a 3 semanas` and `entre 1 e 2 semanas`, stay as written when the
 noun after the second number gives the first number another reading. No source gives the gender of the first number
@@ -156,20 +163,19 @@ língua". A run that splits into syllables stays as written. Any other run reads
 so with the `LETTERS` form on, `Tome vitamina C.` reads "Tome vitamina cê.": Dicio names "vitamina C" (see the
 titles below).
 
-The vowels are a, e, i, o and u, with the acute and the circumflex of AO1990, Bases VIII to XI, the grave of Base
-XII, and the tilde of "ã" ("representa-se a nasalidade pelo til, se essa vogal é de timbre a", Base VI, 1) and of
-"õ" ("ditongos representados por vogal com til e semivogal", Base VII, 3). A diphthong of Base VII is two vowel
-letters, which already form two syllables of the rule, so the set holds single vowels only. An onset is a consonant
-letter of Base I other than k, w and y, which "usam-se nos seguintes casos especiais" (Base I, 2), or ç and the
-digraphs ch, lh and nh (Base I, Obs. 1), which open a syllable in "ca-cho, lha-no, ma-lha, ma-nha" (Base XX). An
-onset of two consonants is a group of Base XX, 1, where "a primeira consoante é uma labial, uma velar, uma dental ou
-uma labiodental e a segunda um l ou um r" (p, b; c, g; t, d; f, v). A coda is one consonant: "Syllables ending in a
-consonant generally end in one of the single consonants /S/, /l/, /R/, /N/" (Cristófaro Silva 2024, p. 98, quoted in
-Wikipedia, "Portuguese phonology", a secondary source). The letters are s, z and x for /S/ ("nas-cer",
-"atroz-mente", "bissex-to", Base XX, 2), l, r, and m and n "com valor de nasalidade" (Base XX, 2). n and s also
-close a syllable together: Base XX, 3 divides "As sucessões de mais de duas consoantes ou de m ou n, com o valor de
-nasalidade, e duas ou mais consoantes" as in "in- cluir, ins- crição, subs- crever, trans- gredir", so INSTITUTO
-reads ins-ti-tu-to. So IRS, with the coda rs, reads letter by letter.
+The vowels are a, e, i, o and u, with the acute and the circumflex of AO1990, Bases VIII to XI, the grave of Base XII,
+and the tilde of "ã" ("representa-se a nasalidade pelo til, se essa vogal é de timbre a", Base VI, 1) and of "õ"
+("ditongos representados por vogal com til e semivogal", Base VII, 3). A diphthong of Base VII is two vowel letters,
+which already form two syllables of the rule, so the set holds single vowels only. An onset is a consonant letter of
+Base I other than k, w and y, which "usam-se nos seguintes casos especiais" (Base I, 2), or ç and the digraphs ch, lh
+and nh (Base I, Obs. 1), which open a syllable in "ca-cho, lha-no, ma-lha, ma-nha" (Base XX). An onset of two consonants
+is a group of Base XX, 1, where "a primeira consoante é uma labial, uma velar, uma dental ou uma labiodental e a segunda
+um l ou um r" (p, b; c, g; t, d; f, v). A coda is one consonant: "Syllables ending in a consonant generally end in one
+of the single consonants /S/, /l/, /R/, /N/" (Cristófaro Silva 2024, p. 98, quoted in Wikipedia, "Portuguese phonology",
+a secondary source). The letters are s, z and x for /S/ ("nas-cer", "atroz-mente", "bissex-to", Base XX, 2), l, r, and m
+and n "com valor de nasalidade" (Base XX, 2). n and s also close a syllable together: Base XX, 3 divides "As sucessões
+de mais de duas consoantes ou de m ou n, com o valor de nasalidade, e duas ou mais consoantes" as in "in- cluir, ins-
+crição, subs- crever, trans- gredir", so INSTITUTO reads ins-ti-tu-to. So IRS, with the coda rs, reads letter by letter.
 
 A consonant of `letter_free_consonants` can also stand before a vowel that the reader adds. Mendes, Oliveira and
 Teixeira, "PLE: uma sigla para ler ou soletrar?", Cadernos de PLE, Universidade de Aveiro, DOI
@@ -273,14 +279,13 @@ ordinal até nove, e o cardinal de dez em diante". So `Pio X` reads "Pio Décimo
 reads "artigo décimo" in pt-PT and "artigo dez" in pt-BR. Ciberdúvidas 9067 gives nine for every noun in Brazil ("no
 Brasil até ao nono"), but cites no grammar.
 
-A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun
-of `roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
+A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun of
+`roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
 letters: the parts of a work and of a law (capítulo, volume, tomo, livro, parte, ato, acto, cena, título, artigo,
-secção, seção), as Ciberdúvidas 11716 applies the rule "a todas as partes em que se divide uma obra". A group, a
-class, a category, a level and a phase are labelled with letters as well as numbers: the measurement for
-the measurement below found `Grupo C` and `classe C`, and "meio milhão de frases" holds `No Grupo I, houve duas
-goleadas` (mmf-210324), a group of a series from A. So `Grupo I`, `Fase I`, `classe A` and `vitamina E`
-stay as written, and `Grupo II` reads "Grupo segundo".
+secção, seção), as Ciberdúvidas 11716 applies the rule "a todas as partes em que se divide uma obra". A group, a class,
+a category, a level and a phase are labelled with letters as well as numbers: the measurement below found `Grupo C` and
+`classe C`, and "meio milhão de frases" holds `No Grupo I, houve duas goleadas` (mmf-210324), a group of a series from
+A. So `Grupo I`, `Fase I`, `classe A` and `vitamina E` stay as written, and `Grupo II` reads "Grupo segundo".
 
 After a capitalised word that is no noun of `roman_nouns`, the value is at most 30, as after a regnal title, because an
 acronym in capitals looks like a numeral. A measurement ran the recognizer, with no such limit, over the FLORES+ devtest
@@ -328,25 +333,25 @@ this, and the numeral itself does: it is a word of the clause only when `letter_
 `letter_words` holds "vi", the verb form of "ver" (Priberam, "vi": "primeira pessoa singular do pretérito perfeito
 do indicativo de ver"), and "li", of "ler" (Priberam, "li": "primeira pessoa singular do pretérito perfeito do
 indicativo de ler"), so `EU VI` and `EU LI` stay as written with or without tugalex, and `Paulo VI` still reads.
-A numeral between a singular demonstrative contracted with `em` or `de` (`nesta`, `deste`, `naquele`) and a common
-noun of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, also above
-`roman_ordinal_limit`: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro Congresso", with
-a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
+
+A numeral between a singular demonstrative contracted with `em` or `de` (`nesta`, `deste`, `naquele`) and a common noun
+of the same gender orders that noun, so it reads as an ordinal that agrees with the noun, also above
+`roman_ordinal_limit`: `Nesta XV edição` reads "Nesta décima quinta edição" and `Deste III Congresso` "Deste Terceiro
+Congresso", with a capital when the noun has one. Ciberdúvidas 11716, "A numeração ordinal e cardinal na prática
 jurídica": "Se o numeral antecede o substantivo, é usual continuar a usar-se o ordinal, mesmo depois de dez".
 Ciberdúvidas 28509, "Plurais com números romanos": "«II directriz», «III directriz», etc. (os símbolos são lidos:
 «segunda», «terceira», etc.)". Migalhas, Gramatigalhas, "Numeral", after José de Nicola and Ernani Terra: "O numeral
-anteposto ao substantivo deve ser lido como ordinal, concordando com esse substantivo." The
-ordinal reads only between a singular demonstrative contracted with `em` or `de` and with a capital, as `Nesta`,
-`Deste` or `Daquele`, and a common noun of the same gender that is no word of `function_words`, and only for a
-numeral of two letters or more up to C. The contraction starts a prepositional phrase, so the word after the numeral
-is its noun. An article or a demonstrative alone gives no such evidence, because `O XV segundo a imprensa` and
-`ESTE XV NUNCA PERDEU` are sentences about the XV de Portugal, so `A II Guerra Mundial` stays as written. The gender
-of the noun comes from `noun_gender` or tugalex, which guesses from the ending of a word that it does not list, so a
-verb form such as `joga` gets a gender too. That is one more reason why an article alone, as in `O XV joga`, keeps
-the cardinal reading. A plural article, as in `As II partes`, keeps it too, because the ordinal would be plural.
-After any other word of `function_words` in any case, which starts many sentences
-in capitals, as the article in `O XV de Portugal`, a numeral reads only from 11 to 30, as a cardinal, so `O XV` and
-`O XV DE PORTUGAL VENCEU` read "O Quinze". A function word is never the capitalised word before a numeral.
+anteposto ao substantivo deve ser lido como ordinal, concordando com esse substantivo." The ordinal reads only between a
+singular demonstrative contracted with `em` or `de` and with a capital, as `Nesta`, `Deste` or `Daquele`, and a common
+noun of the same gender that is no word of `function_words`, and only for a numeral of two letters or more up to C. The
+contraction starts a prepositional phrase, so the word after the numeral is its noun. An article or a demonstrative
+alone gives no such evidence, because `O XV segundo a imprensa` and `ESTE XV NUNCA PERDEU` are sentences about the XV de
+Portugal, so `A II Guerra Mundial` stays as written. The gender of the noun comes from `noun_gender` or tugalex, which
+guesses from the ending of a word that it does not list, so a verb form such as `joga` gets a gender too. That is one
+more reason why an article alone, as in `O XV joga`, keeps the cardinal reading. A plural article, as in `As II partes`,
+keeps it too, because the ordinal would be plural. After any other word of `function_words` in any case, which starts
+many sentences in capitals, as the article in `O XV de Portugal`, a numeral reads only from 11 to 30, as a cardinal, so
+`O XV` and `O XV DE PORTUGAL VENCEU` read "O Quinze". A function word is never the capitalised word before a numeral.
 
 In a clause in capitals, a run of `letter_words` reads as a word, so `SAIA DA SALA` keeps `DA`. A clause in capitals
 is the text between two marks of a clause, a full stop, a comma, a semicolon, a colon, a bracket, a quote or the
@@ -383,15 +388,14 @@ or more after letters that read letter by letter, read one by one.
 
 The titles: Priberam, "Sr.": "Abreviatura de senhor"; "Sr.ª": "Abreviatura de senhora"; "Dra.": "Abreviatura de
 doutora"; "D.": "Abreviatura de dom e de dona". Dicio, "Abreviaturas: lista de abreviações": "senhora - Sr.ª, Sr.a ou
-Sra.", "doutora - Dra. ou Dr.ª", "dona - D., d., D.ª ou Da.". The Manual de Comunicação of the Senado Federal writes
-the titles before a name in lowercase: "prefira abreviá-las: sr. e sra. (use com inicial minúscula)". Dicio,
-"Abreviação de senhora e senhor": "O ponto abreviativo deverá ser grafado no fim da abreviatura (como em Sr. e Sra.)
-ou antes das letras em expoente (como em Sr.ª)", so `Drª.` and `Dª` are no titles. After a noun of
-`letter_label_nouns`, `D.` is the letter D and a full stop, so `a vitamina D. Boa noite.` stays as written: Priberam,
-"vitamina", names "vitamina A", "vitamina B", "vitamina D" and "vitamina E", and Dicio, "vitamina C"
-(dicio.com.br, fetched 2026-11-18): "substantivo feminino [Bioquímica] O ácido ascórbico (C6H8O6), molécula
-hidrossolúvel essencial ao funcionamento do corpo humano", names the most common vitamin. A group and a class are
-labelled with letters, as the Roman numerals above show.
+Sra.", "doutora - Dra. ou Dr.ª", "dona - D., d., D.ª ou Da.". The Manual de Comunicação of the Senado Federal writes the
+titles before a name in lowercase: "prefira abreviá-las: sr. e sra. (use com inicial minúscula)". Dicio, "Abreviação de
+senhora e senhor": "O ponto abreviativo deverá ser grafado no fim da abreviatura (como em Sr. e Sra.) ou antes das
+letras em expoente (como em Sr.ª)", so `Drª.` and `Dª` are no titles. After a noun of `letter_label_nouns`, `D.` is the
+letter D and a full stop, so `a vitamina D. Boa noite.` stays as written: Priberam, "vitamina", names "vitamina A",
+"vitamina B", "vitamina D" and "vitamina E", and Dicio, "vitamina C" (dicio.com.br, fetched 2026-11-18): "substantivo
+feminino [Bioquímica] O ácido ascórbico (C6H8O6), molécula hidrossolúvel essencial ao funcionamento do corpo humano",
+names the most common vitamin. A group and a class are labelled with letters, as the Roman numerals above show.
 
 pt-PT writes the space as the group mark of an amount: CLDR 49 pt-PT gives the group mark U+00A0 and the currency
 format `#,##0.00 ¤`, so `250 000 €` reads "duzentos e cinquenta mil euros". pt-BR takes the full stop (CLDR 49 pt).
@@ -448,6 +452,23 @@ DATA = freeze({
     **_pt_electronic.ELECTRONIC,
     "number_marks": {"Latn": [{"decimal": ",.", "group": "."}, {"decimal": ".", "group": ","}]},
     "decimal_word": "vírgula",
+    "point_word": "ponto",
+    "point_version_words": ["versão", "atualização", "v"],
+    "point_section_words": ["artigo", "art.", "cláusula", "secção", "seção", "capítulo", "cap.", "alínea", "ponto",
+                            "figura", "fig.", "gráfico", "tabela", "quadro", "anexo", "item", "itens", "subitem",
+                            "subitens", "n.º", "nº", "rcl"],
+    "bible_books": ["gênesis", "génesis", "gn", "êxodo", "êx", "levítico", "lv", "números", "nm", "deuteronômio",
+                    "deuteronómio", "dt", "josué", "js", "juízes", "jz", "rute", "rt", "samuel", "sm", "reis", "rs",
+                    "crônicas", "crónicas", "cr", "esdras", "ed", "neemias", "ne", "ester", "et", "jó", "salmos",
+                    "salmo", "sl", "provérbios", "pv", "eclesiastes", "ec", "cânticos", "ct", "isaías", "is",
+                    "jeremias", "jr", "lamentações", "lm", "ezequiel", "ez", "daniel", "dn", "oseias", "os", "joel",
+                    "jl", "amós", "am", "obadias", "ob", "jonas", "jn", "miqueias", "mq", "naum", "na", "habacuque",
+                    "hc", "sofonias", "sf", "ageu", "ag", "zacarias", "zc", "malaquias", "ml", "mateus", "mt", "marcos",
+                    "mc", "lucas", "lc", "joão", "jo", "atos", "at", "romanos", "rm", "coríntios", "co", "gálatas",
+                    "gl", "efésios", "ef", "filipenses", "fp", "colossenses", "cl", "tessalonicenses", "ts",
+                    "timóteo", "tm", "tito", "tt", "filemom", "fm", "hebreus", "hb", "tiago", "tg", "pedro", "pe",
+                    "judas", "jd", "apocalipse", "ap", "tobias", "tb", "judite", "jt", "macabeus", "mc", "sabedoria",
+                    "sb", "eclesiástico", "eclo", "baruc", "br"],
     "sign_words": {"-": "menos", "+": "mais"},
     "digit_words": ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"],
     "leads": {"#": "número", "-": ""},
@@ -615,8 +636,8 @@ class PortugueseSpeller:
         return self.ovos.cardinal(digits, Features(gender=gender), at_variety(request))
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """From 2000 up, the first element is a cardinal: `2022.º` reads `dois milésimo vigésimo segundo`
-        (Teyssier, Manual de Língua Portuguesa, p. 183, as the owner of ovos-number-parser reports it)."""
+        """From 2000 up, the first element is a cardinal: `2022.º` reads `dois milésimo vigésimo segundo` (Teyssier,
+        Manual de Língua Portuguesa, p. 183, as the owner of ovos-number-parser reports it)."""
         gender = FEMININE if features.gender is FEMININE else MASCULINE
         return self.ovos.ordinal(digits, Features(gender=gender), at_variety(request))
 
@@ -916,12 +937,11 @@ def _contracted_word(prefix: str, hour: int, request: Request) -> str:
 
 
 def speak_time(span: Span, context: SpanContext) -> str:
-    """`catorze e trinta` for `14:30`, `vinte e uma horas` for `21:00`, and `meia-noite` for `0:00`. A time that
-    writes the hour symbol `h` reads its units, so `17h30` reads `dezassete horas e trinta minutos` (Ciberdúvidas
-    14648; Ciberdúvidas, O nosso idioma, article 3267: "às onze horas e trinta minutos"), and its seconds
-    (Ciberdúvidas 14586: "vinte horas, trinta minutos e vinte e quatro segundos"). The parser gives words with no
-    comma, so `17 h 34 min 25 s` reads `dezassete horas trinta e quatro minutos e vinte e cinco segundos`. A
-    written zero second is not read."""
+    """`catorze e trinta` for `14:30`, `vinte e uma horas` for `21:00`, and `meia-noite` for `0:00`. A time that writes
+    the hour symbol `h` reads its units, so `17h30` reads `dezassete horas e trinta minutos` (Ciberdúvidas 14648;
+    Ciberdúvidas, O nosso idioma, article 3267: "às onze horas e trinta minutos"), and its seconds (Ciberdúvidas 14586:
+    "vinte horas, trinta minutos e vinte e quatro segundos"). The parser gives words with no comma, so `17 h 34 min 25
+    s` reads `dezassete horas trinta e quatro minutos e vinte e cinco segundos`. A written zero second is not read."""
     fields = span.fields
     request = context.request
     tag = request.variety.tag
@@ -1015,13 +1035,13 @@ def speak_abbreviation(span: Span, context: SpanContext) -> str:
 
 def speak_roman(span: Span, context: SpanContext) -> str:
     """Ordinal up to `roman_ordinal_limit` and cardinal after it (Ciberdúvidas 14167, for kings and popes; 12370, for
-    centuries; 11716, for the parts of a work; Vitória, Bueno and Cunha, for pt-BR, as the module docstring quotes). After `século` or a noun of
-    `roman_nouns`, the reading takes the gender of the noun and a small letter, and so does each numeral of a list that
-    follows it, as in `séculos XI, XII e XIII`. After a title and its full stop,
-    which ends the context words, it takes the gender of the title that the recognizer keeps in the memo of the
-    request, and a capital. After a name, it agrees with the name and takes a capital, as the name does. Between a
-    singular article and a common noun, it takes the gender of both, which the recognizer keeps in the memo of the
-    request, and a capital when the noun has one."""
+    centuries; 11716, for the parts of a work; Vitória, Bueno and Cunha, for pt-BR, as the module docstring quotes).
+    After `século` or a noun of `roman_nouns`, the reading takes the gender of the noun and a small letter, and so does
+    each numeral of a list that follows it, as in `séculos XI, XII e XIII`. After a title and its full stop, which ends
+    the context words, it takes the gender of the title that the recognizer keeps in the memo of the request, and a
+    capital. After a name, it agrees with the name and takes a capital, as the name does. Between a singular article and
+    a common noun, it takes the gender of both, which the recognizer keeps in the memo of the request, and a capital
+    when the noun has one."""
     request = context.request
     data = request.data
     value = str(span.fields["value"])
@@ -1231,12 +1251,11 @@ _SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,2}
 
 @dataclass(frozen=True)
 class SpacedMoney(Money):
-    """`250 000 €`: a currency symbol next to digits in groups of three with a space between them, where the
-    variety writes the space as its group mark. CLDR 49 pt-PT gives the no-break space as the group mark
-    (`numbers.json`, `group`: U+00A0, currency format `#,##0.00 ¤`), and the SI Brochure, 9th edition, 5.4.4, divides
-    the digits of a number into groups of three with a space. The claim order puts this recognizer before the
-    telephone, which keeps a run of such groups as written. A run that the telephone reads, as in
-    `+351 912 345 678 €`, is no amount."""
+    """`250 000 €`: a currency symbol next to digits in groups of three with a space between them, where the variety
+    writes the space as its group mark. CLDR 49 pt-PT gives the no-break space as the group mark (`numbers.json`,
+    `group`: U+00A0, currency format `#,##0.00 ¤`), and the SI Brochure, 9th edition, 5.4.4, divides the digits of a
+    number into groups of three with a space. The claim order puts this recognizer before the telephone, which keeps a
+    run of such groups as written. A run that the telephone reads, as in `+351 912 345 678 €`, is no amount."""
     name: str = "money_space_groups"
 
     def _amounts(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
@@ -1393,8 +1412,17 @@ class SpelledDecimal:
 
 @dataclass(frozen=True)
 class PointDecimal(CoreDecimal):
-    """The decimals of the core. A decimal with the full stop reads only before a word of `_unit_names`, as
-    `10.4 graus`, or with a symbol that `PointMeasure`, `Percent` or `Money` reads."""
+    """The decimals of the core. A decimal with the full stop reads before a word of `_unit_names`, as `10.4567 graus`,
+    and, with one or two digits after the full stop, after a sign, as `-10.4`. After a word of `point_version_words`
+    or a name of `_after_name`, the full stop parts the levels of a version, so the span reads through
+    `speak_point_decimal`: `versão 2.10` reads "versão dois ponto dez", and so does each number of a list after the
+    word, as `versão 4.6 ou 4.7`. These stay as written: a number with no sign and no unit, as `o valor é 10.4`; a
+    number after a word of `point_section_words`, as `artigo 10.4`; a number that a full stop or a comma and a digit
+    continue or that a full stop or a comma comes right before, as `1.2.3` and `A.4.3`; a number with no whole part,
+    as `.50`, or whose whole part has a leading zero, which may write a day and a month, as `01.02`; and a number with
+    a sign that opens a line before a capital, as `-1.3 Objeto`, that a full stop and a lowercase word close, or that
+    may write an hour and minutes, after a word of `time_words` or before a unit of `_clock_units`, as
+    `-3.30 horas`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         points = _point_starts(text, request)
@@ -1404,10 +1432,87 @@ class PointDecimal(CoreDecimal):
             if span.start + len(span.fields["prefix"]) not in points:
                 yield span
                 continue
+            before = text[:span.start]
+            integer = span.fields["integer"]
+            short = (integer == "0" or integer[:1] not in ("", "0")) and len(span.fields["fraction"]) <= 2 \
+                and not before.endswith((".", ","))
+            links = (",", *request.data["list_links"], request.data["range_word"], "à")
             index = bisect_left(words, span.end, key=lambda word: word.start)
-            if index < len(words) and text[span.end:words[index].start].isspace() \
-                    and words[index].text in names:
+            after = words[index].text if index < len(words) and text[span.end:words[index].start].isspace() else ""
+            if after in names:
                 yield span
+                continue
+            if _after_word(before, request.data["point_section_words"], links):
+                continue
+            if _after_word(before, request.data["point_version_words"], links) \
+                    or _after_name(before, text[span.end:], request):
+                if short and not span.fields["sign"]:
+                    yield replace(span, recognizer=POINT_LABEL)
+                continue
+            heading = re.fullmatch("[-–•]?\\s*", before.rpartition("\n")[2]) \
+                and re.match("[.]?\\s*(?:[-–:]\\s*)?[\"“]?[A-ZÀ-Ý]", text[span.end:])
+            closed = re.match("[.]\\s+[a-zà-ý]", text[span.end:])
+            clock = _clock_like(span.fields) and (after in _clock_units(request.variety.tag)
+                                                  or _after_word(before, request.data["time_words"]))
+            if short and span.fields["sign"] and not heading and not closed and not clock:
+                yield span
+
+
+POINT_LABEL = f"{PointDecimal.name}:label"
+
+
+def _after_word(before: str, words: Sequence[str], links: Sequence[str] = ()) -> bool:
+    """Whether `before` ends in one of `words`, perhaps a colon, and white space, as `versão `, `Versão: ` and `art. `,
+    or also in a list of numbers with a full stop that `links` join, as `itens 4.6 e `."""
+    pattern = "|".join(map(re.escape, words))
+    chain = f"(?:[0-9]+[.][0-9]+\\s*(?:{'|'.join(map(re.escape, links))})\\s+)*" if links else ""
+    return re.search(f"(?<![\\w.])(?:{pattern}):?\\s*{chain}$", before, re.IGNORECASE) is not None
+
+
+def _after_name(before: str, rest: str, request: Request) -> bool:
+    """Whether `before` ends in the name of a product or a standard and spaces, as `iOS ` and `Windows `, and `rest`,
+    the text after the number, starts with a space, a mark of a clause or the end, but no dash between spaces and no
+    full stop before a lowercase word, which a section number takes, as `Cidade 2.1 - Atração`. A name has a capital
+    and a lowercase letter, and tugalex does not know it as a word, as it knows `Execução` in `Execução 5.1` and each
+    weekday. It opens no sentence, is no month and no book of `bible_books`, and has no bracket before it, which a
+    chapter and a verse take, as `(Rm 13.8)`."""
+    match = re.search("(?<![\\w.])\\w[\\w-]*[^\\S\\n]+$", before)
+    if match is None or not re.match("$|[\\s,;:!?)]|[.](?![0-9])", rest) \
+            or re.match("[.]\\s+[a-zà-ý]|\\s+[-–]\\s", rest):
+        return False
+    word, head = match[0].rstrip(), before[:match.start()]
+    lower = word.lower()
+    return any(map(str.isupper, word)) and any(map(str.islower, word)) and not _known_word(lower, request) \
+        and lower.lstrip("0123456789") not in (*request.data["months"], *request.data["bible_books"]) \
+        and not re.search("(?:^|[.!?…]\\s|\\n)\\s*[\"“«]?$", head) \
+        and not re.search("[(\\[]\\s*$", head)
+
+
+def _clock_like(amount: FrozenMap) -> bool:
+    """Whether a `DECIMAL` record may write an hour and minutes, as `9.30`: two digits under 60 after a whole part
+    up to 24."""
+    return len(amount["fraction"]) == 2 and int(amount["integer"] or "0") <= 24 and int(amount["fraction"]) < 60
+
+
+@cache
+def _clock_units(tag: str) -> frozenset[str]:
+    """The first word of each CLDR name and each symbol of the hour, the minute and the second, as `horas` and
+    `min`."""
+    units = cldr_data(tag)["units"]
+    return frozenset(word for key in ("duration-hour", "duration-minute", "duration-second")
+                     for word in (*(name.replace("{0}", "").split()[0] for name in units[key]["names"].values()),
+                                  *units[key]["symbols"]))
+
+
+def speak_point_decimal(span: Span, context: SpanContext) -> str:
+    """A decimal, and a version number of `PointDecimal`: the whole part, `point_word` and the part after the full
+    stop, each as a cardinal in the masculine, as a number after a noun of `label_nouns` reads. Priberam, "ponto",
+    sense 7, names the mark: "Sinal gráfico (.)"."""
+    if span.recognizer != POINT_LABEL:
+        return speak_decimal(span, context)
+    fields, request = span.fields, context.request
+    return " ".join([_cardinal(fields["integer"], request), request.data["point_word"],
+                     SPELLER.decimal_part(fields["fraction"], request)])
 
 
 @dataclass(frozen=True)
@@ -1555,10 +1660,10 @@ prepositional phrase, so the word after the numeral is its noun."""
 
 def _noun_after(text: str, end: int, article: str, request: Request) -> tuple[GrammaticalGender, bool] | None:
     """The gender of a singular demonstrative contracted with `em` or `de`, `article`, and of the common noun right
-    after the numeral and one space, and whether the noun starts with a capital. The contraction starts a
-    prepositional phrase, so the word after the numeral is its noun, as `edição` in `Nesta XV edição`. An article or a
-    demonstrative alone may start a sentence about a team, as in `O XV segundo a imprensa` or `ESTE XV NUNCA PERDEU`,
-    so it gives none. None also when the next word is a function word or no noun of the gender of the contraction
+    after the numeral and one space, and whether the noun starts with a capital. The contraction starts a prepositional
+    phrase, so the word after the numeral is its noun, as `edição` in `Nesta XV edição`. An article or a demonstrative
+    alone may start a sentence about a team, as in `O XV segundo a imprensa` or `ESTE XV NUNCA PERDEU`, so it gives
+    none. None also when the next word is a function word or no noun of the gender of the contraction
     (`_noun_gender`)."""
     gender = _SINGULAR_CONTRACTIONS.get(article.lower())
     match = re.match(r" (\w+)", text[end:])
@@ -1585,10 +1690,10 @@ def _given_name_gender(name: str, request: Request) -> GrammaticalGender | None:
 
 
 def _name_gender(before: Sequence[str], request: Request) -> GrammaticalGender:
-    """The gender of a numeral after a capitalised word, with no guess from an ending (design section 4.2): the
-    gender of a regnal title before the name, as `rainha` in `Rainha Elizabeth II`, then the common noun, as `Região`
-    in `Região III`, then the given name, as `Isabel` in `Isabel II`, else masculine, as `Godzilla II`.
-    `D.`, which reads `Dom` or `Dona`, gives no gender."""
+    """The gender of a numeral after a capitalised word, with no guess from an ending (design section 4.2): the gender
+    of a regnal title before the name, as `rainha` in `Rainha Elizabeth II`, then the common noun, as `Região` in
+    `Região III`, then the given name, as `Isabel` in `Isabel II`, else masculine, as `Godzilla II`. `D.`, which reads
+    `Dom` or `Dona`, gives no gender."""
     last = before[-1]
     if len(before) >= 2 and len(before[-2]) > 1 and before[-2].lower() in {
             title.lower() for title in request.data["regnal_titles"]}:
@@ -1613,13 +1718,13 @@ class Roman:
     30, so an acronym such as `MIX` stays as written. These rules need spaces alone between the word before the numeral
     and the numeral. When a comma or another mark parts them, a numeral from 11 to 30 after a capitalised word reads as
     a cardinal, as `XX` in `No século XIX, XX pessoas`, and a smaller one stays as written, unless a regnal title comes
-    before the word. Between a singular demonstrative contracted with `em` or `de` and a common noun of the same
-    gender, a numeral of two letters or more up to C that is no word of `roman_words` reads as an ordinal that agrees
-    with them, as in `Nesta XV edição`. After any other word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as in
-    `O XV`.
-    Outside a clause in capitals, no numeral reads right after a word of `letter_words` that is no function word, as
-    `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a word of `letter_words` or a word that tugalex
-    knows, as `VI` in `EU VI`. A short numeral after another capitalised word, as in `Malcolm X`, stays as written.
+    before the word. Between a singular demonstrative contracted with `em` or `de` and a common noun of the same gender,
+    a numeral of two letters or more up to C that is no word of `roman_words` reads as an ordinal that agrees with them,
+    as in `Nesta XV edição`. After any other word of `function_words`, a numeral from 11 to 30 reads as a cardinal, as
+    in `O XV`. Outside a clause in capitals, no numeral reads right after a word of `letter_words` that is no function
+    word, as `LI` in `Eu LI`. In a clause in capitals, no numeral reads that is a word of `letter_words` or a word that
+    tugalex knows, as `VI` in `EU VI`. A short numeral after another capitalised word, as in `Malcolm X`, stays as
+    written.
 
     A list after `século` or a noun of `roman_nouns` reads with that noun: `N1, N2, … e Nk`, with a comma and a space
     between the members and a word of `list_links`, in any case, before the last one, as in `séculos XI, XII e XIII` and
@@ -1778,7 +1883,7 @@ LANGUAGE = LanguageSpec(
         Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
         Form.RANGE: speak_range,
         Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman, Form.ABBREVIATION: speak_abbreviation,
-        Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
+        Form.DECIMAL: speak_point_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
         Form.ELECTRONIC: speak_electronic, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},

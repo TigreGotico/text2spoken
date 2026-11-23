@@ -1,12 +1,12 @@
 """Italian: it-IT, the default variety, it-CH and it-SM.
 
-Cardinals and ordinals come from ovos-number-parser (design section 5.4). Its forms agree with the
-Enciclopedia dell'Italiano Treccani, "numerali", Pronuncia e grafia. A compound in uno keeps its full form, as
-"ventuno", "centouno" and "ventunomila", and the same section allows both forms before a noun: "Nei composti (ventuno,
-trentuno, ecc.) accompagnati da un nome, questo è invariabile se il numerale segue il nome, ma può essere apocopato se
-il numerale precede il nome". 108 reads "centootto": "con cento seguito da una decina o da un'unità, l'elisione è poco
-comune con uno, otto e undici [...] (29) centootto [raramente centotto]". 1003 reads "milletré": "I composti di tre
-vanno accentati". CLDR RBNF `it` writes "centotto" and "milletre" for these numbers. The Accademia della Crusca,
+Cardinals and ordinals come from ovos-number-parser (design section 5.4). Its forms agree with the Enciclopedia
+dell'Italiano Treccani, "numerali", Pronuncia e grafia. A compound in uno keeps its full form, as "ventuno", "centouno"
+and "ventunomila", and the same section allows both forms before a noun: "Nei composti (ventuno, trentuno, ecc.)
+accompagnati da un nome, questo è invariabile se il numerale segue il nome, ma può essere apocopato se il numerale
+precede il nome". 108 reads "centootto": "con cento seguito da una decina o da un'unità, l'elisione è poco comune con
+uno, otto e undici [...] (29) centootto [raramente centotto]". 1003 reads "milletré": "I composti di tre vanno
+accentati". CLDR RBNF `it` writes "centotto" and "milletre" for these numbers. The Accademia della Crusca,
 consulenza 1077, agrees: "108: centootto, meno bene centotto", and "21.000: ventunomila o ventunmila: entrambe le forme
 vanno bene".
 
@@ -86,12 +86,12 @@ del corrispondente cardinale ital. con l'aggiunta della terminazione -èsimo: co
 centunesimo, [...] millesimo, duemillesimo, [...] diecimillesimo". So 108 reads "centoottesimo", from "centootto", and
 180 "centottantesimo". The same entry gives the separate form for the ordinals "per i quali l'altro tipo sarebbe sentito
 come poco eufonico: centesimo decimo, millesimo primo, millesimo secondo, millesimo decimo, millesimo undecimo o
-undicesimo, ecc. (in questi casi la grafia staccata è preferita)". ovos-number-parser writes the
-ordinals, the separate forms included: "millesimo primo" for 1001, "millesimo undicesimo" for 1011, and every number
-above 100 that ends in 10 as the ordinal of the number without the 10 and "decimo": "centesimo decimo" for 110,
-"duecentesimo decimo" for 210, "trecentesima decima" in the feminine. From a million up the parser writes one word with
-a singular scale word, as "tremilionecinquecentomillesimo" for 3500000, and no source gives that form, so an ordinal
-above 999999 stays as written until a sourced form exists.
+undicesimo, ecc. (in questi casi la grafia staccata è preferita)". ovos-number-parser writes the ordinals, the separate
+forms included: "millesimo primo" for 1001, "millesimo undicesimo" for 1011, and every number above 100 that ends in 10
+as the ordinal of the number without the 10 and "decimo": "centesimo decimo" for 110, "duecentesimo decimo" for 210,
+"trecentesima decima" in the feminine. From a million up the parser writes one word with a singular scale word, as
+"tremilionecinquecentomillesimo" for 3500000, and no source gives that form, so an ordinal above 999999 stays as written
+until a sourced form exists.
 
 The degree sign writes an ordinal too (Vocabolario Treccani, "primo": "Numerale ordinale (indicato con 1° se si
 utilizzano cifre arabiche"; "centesimo": "in scrittura numerica 100°"). It also writes an angle and a coordinate, as in
@@ -189,20 +189,19 @@ or percentage claims it. These forms stay as written, and so does a number with 
 number with a decimal comma right after a word of `time_words`, as `ore 15,00`, stays as written when it may be a
 clock time: a clock time reads only with `:` or `.`, and no source gives the comma as a mark of the clock.
 
-A sign after an opening bracket and before one space and a
-decimal or a number with a mark after it, as `(- 2,8%)`, stays as written with the number and its form: the space parts
-the sign from the number, so it may be a minus or a dash. A whole number alone after the sign, as `(+ 2)`, reads as a
-cardinal, as in a language with no file. An acute or a grave accent next to a letter, as in `l´Italia`, stands for an
-apostrophe or a quotation mark and stays as written.
+A sign after an opening bracket and before one space and a decimal or a number with a mark after it, as `(- 2,8%)`,
+stays as written with the number and its form: the space parts the sign from the number, so it may be a minus or a dash.
+A whole number alone after the sign, as `(+ 2)`, reads as a cardinal, as in a language with no file. An acute or a grave
+accent next to a letter, as in `l´Italia`, stands for an apostrophe or a quotation mark and stays as written.
 
-The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4),
-and so do the month names. A numeric date reads in the order day, month, year. In `25 dicembre 2024` the day and the
-month read as a date, and the year as a cardinal. The first day of a month is an ordinal: the Accademia della Crusca,
-consulenza 1077, "per il giorno iniziale di un mese si usa l'ordinale: il primo ottobre (o il 1° ottobre)", and
-consulenza 86, "il 1/2/2003 (cioè il primo febbraio duemilatré)". A day above 12 and a month with a slash and no year,
-right after a definite article or a preposition joined with one of `date_words`, read as a date too: `il 13/11` reads
-"il tredici novembre". With a day of 12 or below the pair may be a fraction, a time signature, a day range or a rating,
-as in `Il 3/4 è una frazione`, `il 4/4`, `del 3/4 luglio` and `il 5/10 in pagella`, so it stays as written. So do `24/7`
+The words of a date, a clock time and a year come from `ovos_date_parser.spoken` (design section 5.4), and so do the
+month names. A numeric date reads in the order day, month, year. In `25 dicembre 2024` the day and the month read as a
+date, and the year as a cardinal. The first day of a month is an ordinal: the Accademia della Crusca, consulenza 1077,
+"per il giorno iniziale di un mese si usa l'ordinale: il primo ottobre (o il 1° ottobre)", and consulenza 86, "il
+1/2/2003 (cioè il primo febbraio duemilatré)". A day above 12 and a month with a slash and no year, right after a
+definite article or a preposition joined with one of `date_words`, read as a date too: `il 13/11` reads "il tredici
+novembre". With a day of 12 or below the pair may be a fraction, a time signature, a day range or a rating, as in `Il
+3/4 è una frazione`, `il 4/4`, `del 3/4 luglio` and `il 5/10 in pagella`, so it stays as written. So do `24/7`
 (`kept_day_months`) and a pair before a form of di and a word, as in `il 31/12 del quinto anno`. A year reads as one
 cardinal word, as "duemilaventidue" (the Accademia della Crusca, consulenza 20176, which reports the media form "venti
 ventidue anziché [...] duemilaventidue"). A clock time with `:` or `.` reads after a word of `time_words`, as in `alle
@@ -337,6 +336,7 @@ LARGEST_ORDINAL = 999_999
 VOWELS = "aeiouàèéìíòóù"
 
 
+
 class ItalianSpeller:
     """ovos-number-parser for integers and ordinals up to `LARGEST_ORDINAL`; decimals by the RBNF `x.x` rule;
     fractions with the plural ordinals of RBNF."""
@@ -371,10 +371,6 @@ class ItalianSpeller:
 
 
 SPELLER = ItalianSpeller()
-
-
-def _default_gender(request: Request) -> GrammaticalGender | None:
-    return request.params.default_gender.get(LANGUAGE.code)
 
 
 @lru_cache(maxsize=1)
@@ -572,7 +568,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     if fields["lead"] or (role is None and (bounded_integer(fields["digits"]) != 1 or len(fields["digits"]) > 1)):
         return core_speak_cardinal(span, context)
     if role is None:
-        words = SPELLER.cardinal("1", Features(gender=_default_gender(request)), request)
+        words = SPELLER.cardinal("1", Features(gender=request.params.default_gender.get(LANGUAGE.code)), request)
         return signed(words, fields["sign"], request)
     word = "".join(takewhile(str.isalpha, context.after[0])) if context.after else ""
     if role == "noun":
@@ -633,14 +629,14 @@ def fill(pattern: str, words: str) -> str:
 
 
 def speak_measure(span: Span, context: SpanContext) -> str:
-    """The last amount agrees with the unit, by the CLDR gender of the unit or else by the noun list: "un
-    chilometro", "un'ora". A scale word takes "di": "un milione di chilometri"."""
+    """The last amount agrees with the unit, by the CLDR gender of the unit or else by the noun list: "un chilometro",
+    "un'ora". A scale word takes "di": "un milione di chilometri"."""
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
     pattern, gender = unit_reading(request, span.fields["unit"], plural_category(request, written_amount(amounts[-1])))
     noun = pattern.replace("{0}", "").split()[0]
-    gender = gender.value if isinstance(gender, GrammaticalGender) else gender or noun_genders().get(noun)
+    gender = gender or noun_genders().get(noun)
     read = [plain_amount(a, request) for a in amounts[:-1]] + [amount_before(amounts[-1], noun, gender, request)]
     words = f" {request.data['dimension_word']} ".join(read)
     if pattern.startswith("{0} ") and words.split()[-1] in scale_words():

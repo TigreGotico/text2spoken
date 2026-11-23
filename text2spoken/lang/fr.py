@@ -1453,13 +1453,14 @@ class FrenchRange(Range):
 @dataclass(frozen=True)
 class FrenchTelephone(Telephone):
     """The shared telephone recognizer. A run that mixes two digit sets stays as written, less a last group that a
-    word continues, as `3` in `٥1 3e`: that group belongs to the word, here the ordinal `3e`."""
+    word continues, as `3` in `٥1 3e`: that group belongs to the word, here the ordinal `3e`. A run of one digit set
+    drops a last hour group as the shared recognizer does."""
 
     def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
         cut, end = max(written.rfind(space) for space in self.spaces), start + len(written)
         if cut != -1 and end < len(text) and is_word_char(text[end]) and not one_digit_set(text[start:end]):
             return written[:cut]
-        return written
+        return super().trimmed(text, start, written, request)
 
 
 @dataclass(frozen=True)

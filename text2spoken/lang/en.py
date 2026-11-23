@@ -224,7 +224,6 @@ MONTHS = ["January", "February", "March", "April", "May", "June", "July", "Augus
           "November", "December"]
 _MONTH = "(" + "|".join(MONTHS) + ")"
 _ORDINAL_MARK = "(?:st|nd|rd|th)"
-_TRAILING_GROUP = re.compile("[0-9]{1,2}(?:[.][0-9]{2})?")
 
 COLORS = {
     "000000": "black", "0000cd": "medium blue", "0000ff": "blue", "006400": "dark green", "008000": "green",
@@ -591,48 +590,37 @@ def speak_year(span: Span, context: SpanContext) -> str:
     return words
 
 
-def _hour_follows(text: str, end: int, day_periods: Sequence[str], function_words: frozenset[str]) -> bool:
-    """Whether a space and a day period, or a space and a lowercase word that is no function word, follow
-    text[:end], as `8 am` and `24 hours a day` follow a phone number."""
-    if not text.startswith(" ", end):
-        return False
-    if any(text.startswith(period, end + 1) and is_bounded(text, end + 1, end + 1 + len(period))
-           for period in day_periods):
-        return True
-    stop = end + 1
-    while stop < len(text) and is_letter(text[stop]):
-        stop += 1
-    word = text[end + 1:stop]
-    return word.islower() and word not in function_words
-
-
 class EnglishTelephone(Telephone):
     """The shared telephone recognizer with the English conventions of design section 4.3.
 
     A phone word also names a run up to three words back, where a function word does not count, when the run has
     the shape of a phone number, as in `Call us on 0800 123 456.` The same window names a short code of
     `short_codes` that ends its clause or that a function word follows, as in `Call the police on 999 now.`, and
-    not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer.
+    not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer,
+    and turns `keeps_hour_after_stop` off.
 
     The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
     brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
     `phone_kept_shapes` keep thousands that spaces group, as in `10 000` and `1 000 000 2nd-generation`, as
     written, and its `no_phone_shapes` take the phone shape from two years that a dash joins.
 
-    A last group of one or two digits is the hour or a count, not a phone group, when the run ends inside a word,
-    when a full stop and two digits complete it, or when a space and a day period or a lowercase word that is no
-    function word follow it, so `Call 0800 123 456 8 am to 8 pm.` and `Ring 0800 123 456 24 hours a day.` read
-    the number and the hour."""
+    A last group of one or two digits is the hour or a count, not a phone group, when the shared recognizer drops
+    it as an hour, and also when a word character, a digit or a cluster mark continues the run on either side, or
+    a space and a lowercase word that is no function word follow it, so `Call 0800 123 456 8 am to 8 pm.` and
+    `Ring 0800 123 456 24 hours a day.` read the number and the hour."""
 
-    def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
-        function_words = frozenset(request.data.get("function_words", ()))
-        day_periods = [period for periods in request.data.get("day_periods", {}).values() for period in periods]
-        cut, after = written.rfind(" "), start + len(written)
-        if cut != -1 and _TRAILING_GROUP.fullmatch(written, cut + 1) and (
-                "." in written[cut:] or not _edge(text, start, after)
-                or _hour_follows(text, after, day_periods, function_words)):
-            return written[:cut]
-        return written
+    def continued(self, text: str, start: int, end: int) -> bool:
+        return not _edge(text, start, end)
+
+    def hour_after(self, text: str, end: int, request: Request) -> bool:
+        if not text.startswith(" ", end):
+            return False
+        stop = end + 1
+        while stop < len(text) and is_letter(text[stop]):
+            stop += 1
+        word = text[end + 1:stop]
+        return (word.islower() and word not in request.data.get("function_words", ())) \
+            or super().hour_after(text, end, request)
 
 
 @dataclass(frozen=True)
@@ -897,7 +885,8 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
                  EnglishDateNumeric(), SHARED["time_clock"],
-                 EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True),
+                 EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True,
+                                  keeps_hour_after_stop=False),
                  SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"], Year(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"],
                  SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),

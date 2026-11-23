@@ -80,7 +80,8 @@ FR_ENTRIES = {
 }
 PT_ENTRIES = {
     "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "leads": "#", "range_word": DELETE,
-    "decimal_word": DELETE,
+    "decimal_word": DELETE, "point_word": DELETE, "point_version_words": "versão",
+    "point_section_words": "rcl", "bible_books": "gênesis",
     "range_marks": "-", "clock_marks": freeze({"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}),
     "time_words": "às", "time_suffixes": "h", "day_periods": "pm", "dimension_marks": "x", "dimension_word": DELETE,
     "operators": "+", "months": "março", "currencies": "EUR", "currency_symbols": "CHF", "symbol_names": DELETE,
