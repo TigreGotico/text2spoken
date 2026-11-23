@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a104](https://github.com/TigreGotico/text2spoken/tree/0.0.2a104) (2026-11-23)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a103...0.0.2a104)
+
+**Merged pull requests:**
+
+- fix\(tdt\): make the Tetun scale words agree with the amount [\#474](https://github.com/TigreGotico/text2spoken/pull/474) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a103](https://github.com/TigreGotico/text2spoken/tree/0.0.2a103) (2026-11-23)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a102...0.0.2a103)
@@ -235,17 +243,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a77...0.0.2a78)
 
-**Merged pull requests:**
-
-- feat: say-as date reads in Dutch and in every language with no file [\#227](https://github.com/TigreGotico/text2spoken/pull/227) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a77](https://github.com/TigreGotico/text2spoken/tree/0.0.2a77) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a76...0.0.2a77)
-
-**Merged pull requests:**
-
-- feat: say-as reads digits, telephone, characters and ordinal in every language with numbers [\#226](https://github.com/TigreGotico/text2spoken/pull/226) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a76](https://github.com/TigreGotico/text2spoken/tree/0.0.2a76) (2026-11-18)
 
