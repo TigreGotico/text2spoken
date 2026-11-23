@@ -970,7 +970,8 @@ def speak_money(span: Span, context: SpanContext) -> str:
     cinquenta cêntimos` (Ciberdúvidas 25561). A scale word that the text writes reads before the plural name: `dois
     milhões de reais`. The number agrees with the first word of the currency name, so `2 £` reads `duas libras`;
     before a scale word from `milhão` up it stays masculine, and before `mil` it agrees with the name: `duas mil
-    libras`."""
+    libras`. A scale word that the data gives with plural forms agrees with the amount, by the CLDR plural category:
+    `um milhão`, `dois milhões`, `1,5 milhões`."""
     request = context.request
     fields = span.fields
     amount = FrozenMap({**fields["amount"], "sign": ""})
@@ -979,6 +980,8 @@ def speak_money(span: Span, context: SpanContext) -> str:
     integer, fraction = amount["integer"] or "0", amount["fraction"]
     if fields["scale"]:
         scale = request.data["scales"][fields["scale"]]
+        if isinstance(scale, FrozenMap):
+            scale = _counted(scale, request, written_amount(amount))
         number = amount_words(amount, request, Features(gender=gender if fields["scale"] == "mil" else None))
         words = f"{number} {scale} {_currency(currency, 'other')}"
     elif len(fraction) in (1, 2) and "minor" in currency:

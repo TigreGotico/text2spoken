@@ -23,6 +23,8 @@ The file reads numeric dates, times, money amounts, telephone numbers, percentag
 | `Kafé ida folin US$ 1,50.` | `tdt-TL` | Kafé ida folin um dólar e cinquenta centavos. |
 | `Folin 5 €.` | `tdt-TL` | Folin cinco euros. |
 | `Governu fó US$ 10 milhoens.` | `tdt-TL` | Governu fó dez milhões de dólares. |
+| `Folin $ 1 milhoens.` | `tdt-TL` | Folin um milhão de dólares. |
+| `Folin $ 2,5 milhaun.` | `tdt-TL` | Folin dois vírgula cinco milhões de dólares. |
 | `Telefone +670 7723 4567.` | `tdt-TL` | Telefone mais seis sete zero sete sete dois três quatro cinco seis sete. |
 | `Telefone 331 2345.` | `tdt-TL` | Telefone três três um dois três quatro cinco. |
 | `Sorumutu hahú tuku 15:30.` | `tdt-TL` | Sorumutu hahú tuku quinze e trinta. |
@@ -32,7 +34,7 @@ The file reads numeric dates, times, money amounts, telephone numbers, percentag
 
 The words have the Portuguese spelling, which the espeak `pt` voice of the speech stack reads. Written Tetun spells a Portuguese numeral in Tetun spelling, as "déz de Abril".
 
-Timor-Leste uses the US dollar, so `$` and `US$` read "dólares". The minor unit is the centavo of the Banco Central de Timor-Leste, where `pt-PT` says "cêntimos". A time with a colon reads after the Tetun time word `tuku`. Without a time word, `16:9` could be a ratio and `3:16` a verse. A time with `h`, as `9h30`, needs no time word. The Tetun spellings of the Portuguese scale word, `milhaun`, `milhoens` and `milloens`, read as `milhão` and `milhões`. The scale words of `pt-PT`, as `mil`, also read. An amount before any other scale word stays as written. These words are the Tetun and Indonesian `atus`, `ratus`, `rihun`, `ribu`, `tokon` and `juta`, and each word that starts with `mil`, `míl`, `bil` or `tril`, in any case. Tetun writes the words for ‘million’ and ‘billion’ in many spellings, as `millaun`, `milloes`, `mill`, `biliaun` and `billioens`, and the text does not show which value the word has. An amount right after one of these words also stays as written, unless a number stands right before the word: in `$ 1 milhaun $ 6 milhoens`, `milhaun` counts the first amount, and both amounts read. In Tetun word order, a number after a scale word counts it: `tokon $20` is 20 million dollars. These rules hold for money only, so a time, a percentage or a measure next to such a word still reads.
+Timor-Leste uses the US dollar, so `$` and `US$` read "dólares". The minor unit is the centavo of the Banco Central de Timor-Leste, where `pt-PT` says "cêntimos". A time with a colon reads after the Tetun time word `tuku`. Without a time word, `16:9` could be a ratio and `3:16` a verse. A time with `h`, as `9h30`, needs no time word. The Tetun spellings of the Portuguese scale word, `milhaun`, `milhoens` and `milloens`, read as `milhão` and `milhões`. The Portuguese word agrees with the amount: `milhão` after the integer 1, and `milhões` after any other amount, as `2` or `1,5`. The scale words of `pt-PT`, as `mil`, also read. An amount before any other scale word stays as written. These words are the Tetun and Indonesian `atus`, `ratus`, `rihun`, `ribu`, `tokon` and `juta`, and each word that starts with `mil`, `míl`, `bil` or `tril`, in any case. Tetun writes the words for ‘million’ and ‘billion’ in many spellings, as `millaun`, `milloes`, `mill`, `biliaun` and `billioens`, and the text does not show which value the word has. An amount right after one of these words also stays as written, unless a number stands right before the word: in `$ 1 milhaun $ 6 milhoens`, `milhaun` counts the first amount, and both amounts read. In Tetun word order, a number after a scale word counts it: `tokon $20` is 20 million dollars. These rules hold for money only, so a time, a percentage or a measure next to such a word still reads.
 
 ## Varieties
 
@@ -63,7 +65,7 @@ The time, percentage and measure rows are the reading of the project, and no quo
 
 CLDR 48 gives the date order of Timor-Leste: the `pt-TL` date `dd/MM/y`. CLDR 49 `currencyData.json` gives Timor-Leste the US dollar. The Banco Central de Timor-Leste names its coins "centavos". The docstring of [`tdt.py`](../../text2spoken/lang/tdt.py) quotes each source.
 
-Each of the 63 rows in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
+Each of the 68 rows in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
 
 ## Gaps
 
