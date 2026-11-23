@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2a101](https://github.com/TigreGotico/text2spoken/tree/0.0.2a101) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a100...0.0.2a101)
+
+**Merged pull requests:**
+
+- refactor\(core\): drop dead code and once-used helpers, compile the say-as clock patterns once [\#413](https://github.com/TigreGotico/text2spoken/pull/413) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a100](https://github.com/TigreGotico/text2spoken/tree/0.0.2a100) (2026-11-22)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a99...0.0.2a100)
+
 ## [0.0.2a99](https://github.com/TigreGotico/text2spoken/tree/0.0.2a99) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a98...0.0.2a99)
@@ -278,10 +290,6 @@
 ## [0.0.2a69](https://github.com/TigreGotico/text2spoken/tree/0.0.2a69) (2026-11-17)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a68...0.0.2a69)
-
-**Merged pull requests:**
-
-- feat: revision\(lang\) changes when the output of a language can change [\#207](https://github.com/TigreGotico/text2spoken/pull/207) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a68](https://github.com/TigreGotico/text2spoken/tree/0.0.2a68) (2026-11-17)
 
