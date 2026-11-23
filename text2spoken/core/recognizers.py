@@ -1001,9 +1001,9 @@ class Telephone:
     tried alone, as a second pass sees it once the number in brackets reads: `(1) 0 437 593` reads "(one) zero four
     three seven five nine three" in en. A lone `(0)` reads as zero and starts the same try, so `(0) 0 437 593-9085`
     reads "(zero) zero four three seven five nine three nine zero eight five". A number in brackets with a leading 0
-    and more digits starts no such try: `(09)` reads as no cardinal and stays as written, so a second pass sees the
-    same bracketed run. With no space, as in `(0)08 717 80`, the bracket joins its number to the run, so the number
-    stays as written too.
+    and more digits reads as no cardinal, so it stays in the run: `(09) 0 437 593` reads "zero nine zero four three
+    seven five nine three". With no space, as in `(0)08 717 80`, the bracket joins its number to the run, so
+    `(0)08` stays as written.
 
     `spaces` holds the spaces that may part two groups of a run, and `plans` the numbering plans that the recognizer
     reads, by region. A language whose `phone_regions` option offers a region that `PHONE_PLANS` lacks passes the

@@ -167,7 +167,7 @@ after it: the fraction of `1 250.5`, the high end of the ranges `081-95` and `1 
 a number such as `34 481.312`. A mark is one character that is no digit and no space (`str.isspace`)."""
 
 
-def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
+def _group_spaces(text: str, decimal_comma: bool, phones: bool = False) -> bytearray:
     """The spaces between the groups of a number written in groups of three digits, as in `12 000` and, where the
     decimal mark is the comma, `0,264 7`. A run of `_GROUP_RUNS` with a digit next to it, or one character away, is
     no such number. After the run, the digit continues it, as in `123 456 78` and `+34 481.312 50`, so a second pass
@@ -176,6 +176,12 @@ def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
     anywhere in the characters before the run up to a space refuses it too. Nor is a run after any character other
     than a space, a currency sign or an opening bracket, as the letter of the code `K1 500` and the `@` of
     `x@12 000 000`, which hold the first group: an address reads it, and a second pass would read the other groups.
+    Where the language `phones` reads telephone numbers, nor is a run after a number in brackets and a space whose
+    first group has a zero before another digit, as `08` in `(00) 08 199.36`: a number writes no zero before its
+    first digit, so the group is the local number after an area code, and the telephone recognizer reads it. After a
+    word, as in `zwei 016 182,089`, where a first pass read the groups before, the run stays a number in groups, so
+    a second pass keeps it as the first pass did. A language with no telephone recognizer keeps such a run as
+    written, as nl-NL `Bel 020 123 456.`
 
     A run that starts inside a digit run has a digit next to it, so only the start of each digit run is tried, past
     the end of the last run. Each run holds a space, so the scan back to a space stops at or after the last space of
@@ -193,7 +199,9 @@ def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
             word -= 1
         near = folded[min(word, max(start - 2, 0)):start] + folded[end:end + 2]
         glued = start and not (folded[start - 1].isspace() or unicodedata.category(folded[start - 1]) in ("Sc", "Ps"))
-        if glued or any("0" <= char <= "9" for char in near):
+        phone_code = (phones and start >= 2 and folded[start - 2] == ")" and folded[start] == "0"
+                      and "0" <= folded[start + 1] <= "9")
+        if glued or phone_code or any("0" <= char <= "9" for char in near):
             continue
         for position in range(start, end):
             if folded[position] in GROUP_SPACES:
@@ -309,7 +317,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
 
     groups = groups and not (say_as is not None and say_as.value in ("telephone", "digits", "characters"))
     grouped = _group_spaces(view, any(decimal[:1] == "," for _, decimal, _ in
-                                      number_marks(request.data, request.params.decimal_mark))) \
+                                      number_marks(request.data, request.params.decimal_mark)),
+                            any(recognizer.form is Form.TELEPHONE for recognizer in recognizers)) \
         if groups else bytearray(len(view))
     first, others = [], request
     if say_as is not None:
