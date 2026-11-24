@@ -94,8 +94,8 @@ def test_clause_5_bites(en):
 
 @pytest.mark.parametrize(("text", "lang"), [
     ("Note 3,5 0 800 123 456 2x.", "fr-FR"), ("Note 3,5 0 800 123 456.", "fr-FR"),
-    ("Il a 1.6 0 800 757 652 ici.", "fr-FR"), ("Uso Potencial, Agricultura, 1:1 000 000.", "es-ES"),
-    ("ÖNORM ISO 10007:2005 06 01", "de-DE"),
+    ("Il a 1.6 0 800 757 652 ici.", "fr-FR"), ("Uso Potencial, Agricultura, 1:1 +34 912 345 678.", "es-ES"),
+    ("ÖNORM ISO 10007:2005 0761 208 600", "de-DE"),
 ])
 def test_clause_5_reaches_a_phone_run_after_a_joined_group(text, lang):
     """Section 4.4. Clause 5 runs the recognizers with the effective params of `analyze`, as `phone_regions`, so it
@@ -172,9 +172,9 @@ def test_clause_6_requires_the_keys_of_each_shared_recognizer():
     assert "'percent'" in str(error.value) and "'phone_words'" in str(error.value)
 
 
-def test_clause_6_requires_the_keys_of_a_subclass_of_a_shared_recognizer(en):
-    telephone = next(r for r in en.recognizers if r.name == "telephone")
-    assert type(telephone) is not type(SHARED["telephone"])
+def test_clause_6_requires_the_keys_of_a_subclass_of_a_shared_recognizer():
+    shared = SHARED["telephone"]
+    telephone = type("LocalTelephone", (type(shared),), {})(shared.name, shared.form)
     with pytest.raises(AssertionError, match="'phone_words'"):
         contract.clause_6("qac", replace(STUB, recognizers=(*STUB.recognizers, telephone)))
 
@@ -210,7 +210,7 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
                    "letter_onsets": ["q"], "letter_codas": ["c"], "phone_words": ["fon"], "phone_shapes": [],
                    "phone_unit_shapes": [], "phone_kept_shapes": [], "no_phone_shapes": [], "short_codes": [],
                    "list_links": [], "operators": {}, "unit_symbols": [], "currency_symbols": [],
-                   "dimension_marks": []})
+                   "dimension_marks": [], "patterns": {}})
     readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["telephone"],
                SHARED["electronic"], SHARED["letters"], SHARED["measure"])
     verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic,
@@ -285,8 +285,7 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
     for name, keys in read.items():
         declared = READERS[name] | THROUGH_SYMBOL.get(name, frozenset()) | THROUGH_ABBREVIATION.get(name, frozenset())
         assert keys <= declared, f"{name} reads {sorted(keys - declared)}, which it does not declare"
-    assert set().union(*read.values()) == set().union(*(READERS[name] | THROUGH_ABBREVIATION.get(name, frozenset())
-                                                        for name in used))
+    assert set().union(*read.values()) == set().union(*(READERS[name] for name in used))
 
 
 @pytest.mark.parametrize("pattern", [r"\d+", r"[0-9]\b", r"\w", r"\s", r"(a)\1", "(?i)ab", "(?=a)", "(?<=a)b",

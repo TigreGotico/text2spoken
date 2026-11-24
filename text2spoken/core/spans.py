@@ -167,7 +167,7 @@ after it: the fraction of `1 250.5`, the high end of the ranges `081-95` and `1 
 a number such as `34 481.312`. A mark is one character that is no digit and no space (`str.isspace`)."""
 
 
-def _group_spaces(text: str, decimal_comma: bool, phones: bool = False) -> bytearray:
+def _group_spaces(text: str, decimal_comma: bool) -> bytearray:
     """The spaces between the groups of a number written in groups of three digits, as in `12 000` and, where the
     decimal mark is the comma, `0,264 7`. A run of `_GROUP_RUNS` with a digit next to it, or one character away, is
     no such number. After the run, the digit continues it, as in `123 456 78` and `+34 481.312 50`, so a second pass
@@ -176,12 +176,6 @@ def _group_spaces(text: str, decimal_comma: bool, phones: bool = False) -> bytea
     anywhere in the characters before the run up to a space refuses it too. Nor is a run after any character other
     than a space, a currency sign or an opening bracket, as the letter of the code `K1 500` and the `@` of
     `x@12 000 000`, which hold the first group: an address reads it, and a second pass would read the other groups.
-    Where the language `phones` reads telephone numbers, nor is a run after a number in brackets and a space whose
-    first group has a zero before another digit, as `08` in `(00) 08 199.36`: a number writes no zero before its
-    first digit, so the group is the local number after an area code, and the telephone recognizer reads it. After a
-    word, as in `zwei 016 182,089`, where a first pass read the groups before, the run stays a number in groups, so
-    a second pass keeps it as the first pass did. A language with no telephone recognizer keeps such a run as
-    written, as nl-NL `Bel 020 123 456.`
 
     A run that starts inside a digit run has a digit next to it, so only the start of each digit run is tried, past
     the end of the last run. Each run holds a space, so the scan back to a space stops at or after the last space of
@@ -199,9 +193,7 @@ def _group_spaces(text: str, decimal_comma: bool, phones: bool = False) -> bytea
             word -= 1
         near = folded[min(word, max(start - 2, 0)):start] + folded[end:end + 2]
         glued = start and not (folded[start - 1].isspace() or unicodedata.category(folded[start - 1]) in ("Sc", "Ps"))
-        phone_code = (phones and start >= 2 and folded[start - 2] == ")" and folded[start] == "0"
-                      and "0" <= folded[start + 1] <= "9")
-        if glued or phone_code or any("0" <= char <= "9" for char in near):
+        if glued or any("0" <= char <= "9" for char in near):
             continue
         for position in range(start, end):
             if folded[position] in GROUP_SPACES:
@@ -235,11 +227,6 @@ def _in_clause(span: Span, other: bytearray) -> bool:
 
 SAY_AS_SPANS = "say_as_spans"
 """The `Request.memo` key of the offsets of the spans that the recognizers of the say-as claim."""
-PHONE_WAITS = "phone_waits"
-"""With the text, the `Request.memo` key that maps the start and the end of a `TELEPHONE` span to the conditions under
-which it claims (`Telephone`). One condition holds the offset of a character that a span ending before the span must
-read, or None, the offset of a character that a span must read, or None, and whether no other span may read a
-character of the span."""
 
 
 def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]], request: Request) -> tuple[Span, ...]:
@@ -256,14 +243,7 @@ def classify(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int
     `GPT-4/5`, `©,2` and `#️⃣,2` stay as written. A waiting `SYMBOL` or `EMOJI` span holds no character, so no span
     waits on it, and two spans cannot wait on each other through a symbol, as in `•∈$2§1`. A number abbreviation
     before its number, as `n.º` in `5-n.º 5`, does not wait: it is a key only before a digit, so a second pass, which
-    reads the number after it, finds no key there and reads the `5` before it. A `TELEPHONE` span that `PHONE_WAITS`
-    names claims only in a second run of the loop, and only when the first run, which leaves the span out, meets one
-    of its conditions: a span that ends before the span reads the digit that the condition names before it, a span
-    reads the digit that it names after it, and, when the condition says so, no span reads a character of the span.
-    A span kept as written never claims this way. So the digits read as they do with no phone span until a second
-    pass sees words there (`Telephone`). In the second run such a span waits on no digit next to it, because its
-    conditions already hold and a second pass sees words there, so no other span takes its characters first, as the
-    range `33 777-60` would in fr-FR `2/+33 777-60 17.43 382`.
+    reads the number after it, finds no key there and reads the `5` before it.
 
     A space between groups of three digits joins them as a mark does, because the groups are one number (BIPM, SI
     Brochure, 9th edition, section 5.4.4: the digits "may be divided into groups of three by a space"). So a span
@@ -317,8 +297,7 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
 
     groups = groups and not (say_as is not None and say_as.value in ("telephone", "digits", "characters"))
     grouped = _group_spaces(view, any(decimal[:1] == "," for _, decimal, _ in
-                                      number_marks(request.data, request.params.decimal_mark)),
-                            any(recognizer.form is Form.TELEPHONE for recognizer in recognizers)) \
+                                      number_marks(request.data, request.params.decimal_mark))) \
         if groups else bytearray(len(view))
     first, others = [], request
     if say_as is not None:
@@ -331,7 +310,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         unit_at: list[Span | None] = [None] * len(text)
         for unit in units:
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
-        evidence = _evidence_words(text, tokens, held)
+        function_words = frozenset(word.lower() for word in request.data.get("function_words", ()))
+        evidence = _evidence_words(text, tokens, held, function_words)
         telephone = say_as.value == "telephone"
         if telephone:
             # A run that the plain analysis keeps as a telephone number is a candidate too, as a second pass sees it
@@ -365,71 +345,54 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
                                                                           if not kept_spans]
     say_as_count = len(first)
     candidates = [*first, *found(recognizers, others)]
-    said_waits, waits = request.memo.get((PHONE_WAITS, view), {}), others.memo.get((PHONE_WAITS, view), {})
-    phones = {index: conditions for index, span in enumerate(candidates) if span.form is Form.TELEPHONE
-              and (conditions := (said_waits if index < say_as_count else waits).get((span.start, span.end)))}
-    skipped = frozenset(phones)
-    # A first run leaves out each phone span that waits on a number. A second run adds the ones whose number the
-    # first run reads, as they claim on a second pass, which sees words there.
-    for _ in range(2):
-        read = bytearray(len(text))
-        other = bytearray(len(text))
-        holder: list[Span | None] = [None] * len(text)
-        neighbours: dict[int, list[int]] = {}
-        claimed: list[Span] = []
-        kept: list[Span] = []
-        said: set[tuple[int, int]] = set()
-        queue = [index for index in range(len(candidates)) if index not in skipped]
-        released = False
-        while queue:
-            index = heapq.heappop(queue)
-            if index >= say_as_count and not released:
-                holder = [None] * len(text)
-                released = True
-            span = candidates[index]
-            if any(read[span.start:span.end]) \
-                    or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
-                continue
-            sides = _sides(span, before, after)
-            if span.form is Form.LEXICON:
-                last = span.end - 1
-                while last > span.start and is_mark(view[last]):
-                    last -= 1
-                sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
-            elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
-                    and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
-                sides = ()
-            elif index in phones:
-                sides = ()
-            if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides, grouped):
-                if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
-                    for position in range(span.start, span.end):
-                        holder[position] = span
-                for position in (position for side in sides for position in side):
-                    neighbours.setdefault(position, []).append(index)
-                continue
-            if span.form is Form.LETTERS and span.fields["clause"] and not _in_clause(span, other):
-                span = replace(span, fields=FrozenMap({**span.fields, "reading": "lower"}), keep=False)
-            read[span.start:span.end] = b"\x01" * (span.end - span.start)
-            if span.keep:
-                kept.append(span)
-            else:
-                claimed.append(span)
-                if index < say_as_count:
-                    said.add((span.start, span.end))
-                if span.form is not Form.LETTERS:
-                    other[span.start:span.end] = b"\x01" * (span.end - span.start)
-            for position in range(span.start, span.end):
-                for waiting in neighbours.pop(position, ()):
-                    heapq.heappush(queue, waiting)
-        ends = [0] * len(text)
-        for span in claimed:
-            ends[span.start:span.end] = [span.end] * (span.end - span.start)
-        if (skipped := frozenset(index for index, conditions in phones.items() if candidates[index].keep or not any(
-                (left is None or 0 < ends[left] <= candidates[index].start) and (right is None or ends[right])
-                and not (alone and any(ends[candidates[index].start:candidates[index].end]))
-                for left, right, alone in conditions))) == frozenset(phones):
-            break
+    read = bytearray(len(text))
+    other = bytearray(len(text))
+    holder: list[Span | None] = [None] * len(text)
+    neighbours: dict[int, list[int]] = {}
+    claimed: list[Span] = []
+    kept: list[Span] = []
+    said: set[tuple[int, int]] = set()
+    queue = list(range(len(candidates)))
+    released = False
+    while queue:
+        index = heapq.heappop(queue)
+        if index >= say_as_count and not released:
+            holder = [None] * len(text)
+            released = True
+        span = candidates[index]
+        if any(read[span.start:span.end]) \
+                or any(holder[p] not in (None, span) for p in range(span.start, span.end)):
+            continue
+        sides = _sides(span, before, after)
+        if span.form is Form.LEXICON:
+            last = span.end - 1
+            while last > span.start and is_mark(view[last]):
+                last -= 1
+            sides = tuple(side for side, edge in zip(sides, (span.start, last)) if not is_letter(view[edge]))
+        elif span.form is Form.ABBREVIATION and next_visible(view, span.end).isdigit() \
+                and request.data.get("number_abbreviations", {}).get(span.fields["key"]) is not None:
+            sides = ()
+        if span.form is not Form.ELECTRONIC and _joined(view, span, read, holder, sides, grouped):
+            if span.form not in (Form.SYMBOL, Form.EMOJI) and not (released and index < say_as_count):
+                for position in range(span.start, span.end):
+                    holder[position] = span
+            for position in (position for side in sides for position in side):
+                neighbours.setdefault(position, []).append(index)
+            continue
+        if span.form is Form.LETTERS and span.fields["clause"] and not _in_clause(span, other):
+            span = replace(span, fields=FrozenMap({**span.fields, "reading": "lower"}), keep=False)
+        read[span.start:span.end] = b"\x01" * (span.end - span.start)
+        if span.keep:
+            kept.append(span)
+        else:
+            claimed.append(span)
+            if index < say_as_count:
+                said.add((span.start, span.end))
+            if span.form is not Form.LETTERS:
+                other[span.start:span.end] = b"\x01" * (span.end - span.start)
+        for position in range(span.start, span.end):
+            for waiting in neighbours.pop(position, ()):
+                heapq.heappush(queue, waiting)
     if say_as is not None:
         request.memo[SAY_AS_SPANS] = frozenset(said)
     waiting = {id(span): span for span in holder if span is not None and not any(read[span.start:span.end])}
@@ -473,17 +436,28 @@ def _supported(spans: Sequence[Span], keeps: Sequence[Iterable[Span]], held: Seq
     return [span for index, span in enumerate(spans) if index in fitting]
 
 
-def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span]) -> list[tuple[Span, ...]]:
+def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span],
+                    function_words: frozenset[str]) -> list[tuple[Span, ...]]:
     """For each character, the spans that stay as written next to the word that holds it: a recognizer reads that
     word as the evidence that keeps the span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4`
-    in `3/4 kg`."""
+    in `3/4 kg`. A phone word names a run past function words, so a `TELEPHONE` span holds the function words before
+    it and the word before them, as `le` and `Appelez` in `Appelez le 35 910 08416252798 2nd`. A word in square
+    brackets counts as a function word, as `1` in `Tel. [1] +49 074-63`."""
     marked: list[tuple[Span, ...]] = [()] * len(text)
     words = [token for token in tokens if context_word(token.text) is not None]
     starts = [token.start for token in words]
     for span in held:
         before, after = bisect_left(starts, span.start) - 1, bisect_left(starts, span.end)
+        while span.form is Form.TELEPHONE and before > 0 \
+                and (context_word(words[before].text).lower() in function_words
+                     or text[words[before].start - 1:words[before].start] == "["
+                     and text[words[before].end:words[before].end + 1] == "]"):
+            for position in range(words[before].start, words[before].end):
+                marked[position] += (span,)
+            before -= 1
         for word in (words[before] if before >= 0 else None, words[after] if after < len(words) else None):
-            if word is not None and (word.end <= span.start or word.start >= span.end):
+            if word is not None and (word.end <= span.start or word.start >= span.end) \
+                    and (span.form is not Form.TELEPHONE or not context_word(word.text).isdecimal()):
                 for position in range(word.start, word.end):
                     marked[position] += (span,)
     return marked

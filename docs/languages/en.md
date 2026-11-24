@@ -162,11 +162,11 @@ A word of a spoken address can become the key or the context of another form on 
 | `€2 07946001800` | `en-GB` | two euros zero seven nine four six zero zero one eight zero zero | two euros zero seven nine four six zero zero one eight zero zero | An amount right before a run of digits that starts with `0` reads, and the run reads digit by digit after it. |
 | `USD20 07946001800` | `en-GB` | twenty dollars zero seven nine four six zero zero one eight zero zero | twenty dollars zero seven nine four six zero zero one eight zero zero | The same rule. |
 
-With the `LETTERS` form on, an amount before a symbol and digits can stay as written while the symbol and the digits read:
+With the `LETTERS` form on, an amount before a symbol and digits reads, and the symbol and the digits read after it:
 
 | Written | Spoken (`en-US`, `LETTERS` on) | Second pass (`en-US`, `LETTERS` on) |
 | --- | --- | --- |
-| `US$0 0∇2` | `US$0 0 nabla two` | zero dollars zero nabla two |
+| `US$0 0∇2` | zero dollars zero nabla two | zero dollars zero nabla two |
 
 The edge cases that English shares with Portuguese are on the [Money, units and symbols](../money-units-and-symbols.md#limits) and [Addresses, letters and emoji](../addresses-letters-and-emoji.md#edge-cases) pages.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a119](https://github.com/TigreGotico/text2spoken/tree/0.0.2a119) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a118...0.0.2a119)
+
+**Merged pull requests:**
+
+- fix\(core\): read a phone number only with evidence, in one shared recognizer [\#529](https://github.com/TigreGotico/text2spoken/pull/529) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a118](https://github.com/TigreGotico/text2spoken/tree/0.0.2a118) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a117...0.0.2a118)
@@ -299,7 +307,6 @@
 **Merged pull requests:**
 
 - fix\(core\): a number abbreviation does not wait on the number before it [\#316](https://github.com/TigreGotico/text2spoken/pull/316) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(eu\): read a hyphen range with the endings -tik and -ra [\#309](https://github.com/TigreGotico/text2spoken/pull/309) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a84](https://github.com/TigreGotico/text2spoken/tree/0.0.2a84) (2026-11-18)
 

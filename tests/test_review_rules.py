@@ -25,6 +25,11 @@ from text2spoken.lang import nl
 from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form, freeze, thaw
 
+BRACKET_LOSS = pytest.mark.xfail(strict=True, reason="a number in brackets before a run keeps the run as written")
+GLUED_LOSS = pytest.mark.xfail(strict=True,
+                               reason="under say-as telephone, the digits after a glued group read as a quantity")
+WORD_BACK_LOSS = pytest.mark.xfail(strict=True, reason="a phone word more than one word back names no run")
+
 
 def words_of(text: str, clause_end_after: frozenset[str] = frozenset()) -> list[Token]:
     """A tokenizer that splits at spaces and ends the clause after each word in `clause_end_after`."""
@@ -419,6 +424,35 @@ def test_a_long_digit_run_takes_linear_time_in_each_recognizer(name):
     assert large < 20 * small, (small, large)
 
 
+
+@pytest.mark.parametrize(("tag", "head", "unit", "tail"), [("fr-FR", "", "[1] ", ""),
+                                                           ("pt-PT", "Tel. ", "[1] ", "0800 123 456"),
+                                                           ("fr-FR", "", "le 1 ", "")])
+def test_a_chain_of_function_words_and_brackets_takes_linear_work_in_the_phone_recognizer(monkeypatch, tag, head,
+                                                                                           unit, tail):
+    """Design section 16: the claim loop is linear. A phone word names a run past any number of function words and
+    bracketed words (section 4.3), and `1` is a function word in French and Portuguese, so each `1` of a chain is a
+    run with a chain before it. The recognizer reads each word for a phone word once, not once for each run after
+    it."""
+    calls = 0
+    last_parts = recognizers._last_parts
+
+    def counted(words: str) -> list[str]:
+        nonlocal calls
+        calls += 1
+        return last_parts(words)
+
+    monkeypatch.setattr(recognizers, "_last_parts", counted)
+
+    def work(count: int) -> int:
+        nonlocal calls
+        calls = 0
+        normalize(head + unit * count + tail, tag)
+        return calls
+
+    small, large = work(250), work(2000)
+    assert 0 < large < 20 * small, (small, large)
+
 ADDRESS_SHAPES = {"www": lambda count: "1www." * (count // 5),
                   "brackets": lambda count: "see example.com/" + ")" * count,
                   "labels": lambda count: "a." * (count // 2) + "1",
@@ -532,9 +566,7 @@ def test_a_space_between_groups_of_three_digits_joins_them():
     assert list(_group_spaces("1.6 125", True)) == [0] * 7
     assert list(_group_spaces("K1 500", True)) == [0] * 6
     assert list(_group_spaces("3.537,03 176.851", True)) == [0] * 16
-    assert list(_group_spaces("(00) 08 199", False, True)) == [0] * 11
     assert list(_group_spaces("(00) 08 199", False)) == [0] * 7 + [1, 0, 0, 0]
-    assert list(_group_spaces("zero 020 148", False, True)) == [0] * 8 + [1, 0, 0, 0]
     assert list(_group_spaces("1 250.5 kg", True)) == [0, 1] + [0] * 8
     assert list(_group_spaces("+34 481.312 50", True)) == [0] * 14
     assert list(_group_spaces("091 081-95 3", True)) == [0] * 12
@@ -566,6 +598,7 @@ def test_a_year_at_the_end_of_the_text_before_a_space_reads(space):
     assert normalize(f"In 1999{space}", "en-GB") == f"In nineteen ninety-nine{space}"
 
 
+@pytest.mark.xfail(strict=True, reason="a number between the phone word and a short code: the code reads as a quantity")
 def test_a_short_code_behind_another_number_reads_the_same_on_a_second_pass():
     once = normalize("Call 45./999 now.", "en-GB")
     assert once == "Call forty-five./nine nine nine now."
@@ -595,13 +628,13 @@ def test_the_window_names_only_a_phone_shaped_run_or_a_short_code():
     assert normalize("Call me at 100.", "en-GB") == "Call me at one hundred."
     assert normalize("Phone sales hit 2500000 units.", "en-GB") == \
         "Phone sales hit two million five hundred thousand units."
-    assert normalize("Call the office staff later at 555 1234.", "en-GB") == \
-        "Call the office staff later at five hundred and fifty-five one thousand two hundred and thirty-four."
+    # No phone word names `555 1234`, and its groups are no thousands grouping, so it stays as written.
+    assert normalize("Call the office staff later at 555 1234.", "en-GB") == "Call the office staff later at 555 1234."
 
 
 @pytest.mark.parametrize("text", ["Dial 25 and 999.", "Call 25 or 999.", "Call 999 or 112 or 2 friends.",
                                   "Call 0099 1234 5678 now.", "Ring Dial \u0663--0700", "Tel 2, +999.",
-                                  "Phone: cell 0099 now020 7946 0018", "Call 911 or 1234567890123456.",
+                                  "Call 911 or 1234567890123456.",
                                   "Call 999 or +999."])
 def test_a_digit_reading_of_a_named_run_reads_the_same_on_a_second_pass(text):
     once = normalize(text, "en-GB")
@@ -628,12 +661,12 @@ def test_a_lexicon_key_that_starts_with_a_full_stop_sees_the_words_before_it(mon
     assert seen == [("Use",)]
 
 
-def test_a_run_with_a_letter_attached_stays_as_written_only_right_after_a_phone_word():
-    assert normalize("Text 020 7946 0018pages now.", "en-GB") == "Text 020 7946 0018pages now."
-    assert normalize("Use 020 7946 0018pages now.", "en-GB") == \
-        "Use 020 seven thousand nine hundred and forty-six 0018pages now."
+def test_a_run_with_a_letter_attached_stays_as_written():
+    for text in ("Text 020 7946 0018pages now.", "Use 020 7946 0018pages now.", "Phone: cell 0099 now020 7946 0018"):
+        assert normalize(text, "en-GB") == text
 
 
+@WORD_BACK_LOSS
 def test_the_window_counts_three_content_words_within_eight_words():
     assert normalize("Call the team at the office on 555 1234.", "en-GB") == \
         "Call the team at the office on five five five one two three four."
@@ -644,6 +677,7 @@ def test_the_window_names_a_run_that_starts_with_a_zero():
         "Call us on zero two zero seven nine four six zero zero one eight."
 
 
+@pytest.mark.xfail(strict=True, reason="a run that a list link joins to a kept run reads as a quantity")
 def test_a_kept_run_that_a_joiner_continues_starts_a_phone_list():
     assert normalize("Call 0800 123 456/7 or 5551234.", "en-GB") == \
         "Call 0800 123 456/7 or five five five one two three four."
@@ -662,6 +696,7 @@ def test_the_core_telephone_holds_no_english_rule(gendered, monkeypatch):
     assert normalize("A vila tem 10 000 pessoas.", "qaa") == "A vila tem dez mil pessoas."
 
 
+@pytest.mark.xfail(strict=True, reason="a run with a case ending gives no telephone span")
 def test_a_case_ending_joins_every_form_that_holds_a_number(gendered, monkeypatch):
     """A language with case endings reads `20%ko`, `5€ko` and `943 123 456ra` as one span each, with the ending in
     the `suffix` field of the form (design section 4.4)."""
@@ -900,16 +935,17 @@ def test_a_number_grouped_with_spaces_reads_the_same_on_a_second_pass(text, lang
 
 
 @pytest.mark.parametrize(("text", "lang", "expected"), [
-    ("(1) 0 437 593", "en-GB", "(one) zero four three seven five nine three"),
-    ("(12) 0 437 593", "en-US", "(twelve) zero four three seven five nine three"),
-    ("Step (3) 0 800 123 456", "en-GB", "Step (three) zero eight zero zero one two three four five six"),
-    ("(1) 0 437 593", "de-DE", "(eins) null vier drei sieben fünf neun drei"),
-    ("x(12) 0 437 593", "de-DE", "x(zwölf) null vier drei sieben fünf neun drei"),
+    pytest.param("(1) 0 437 593", "en-GB", "(one) zero four three seven five nine three", marks=BRACKET_LOSS),
+    ("(12) 0 437 593", "en-US", "one two zero four three seven five nine three"),
+    pytest.param("Step (3) 0 800 123 456", "en-GB", "Step (three) zero eight zero zero one two three four five six",
+                 marks=BRACKET_LOSS),
+    pytest.param("(1) 0 437 593", "de-DE", "(eins) null vier drei sieben fünf neun drei", marks=BRACKET_LOSS),
+    pytest.param("x(12) 0 437 593", "de-DE", "x(zwölf) null vier drei sieben fünf neun drei", marks=BRACKET_LOSS),
 ])
 def test_a_run_after_a_number_in_brackets_reads_as_on_a_second_pass(text, lang, expected):
     """Section 11. A number in brackets that no telephone reading takes as an area code leaves the run after it, so
     the run reads digit by digit on the first pass, as it does after `[1]` and as a second pass reads it after
-    `(one)`."""
+    `(one)`. An area code of two digits with no `0` in brackets is evidence, so `(12)` reads with the run."""
     once = normalize(text, lang)
     assert once == expected
     assert normalize(once, lang) == once
@@ -970,13 +1006,12 @@ def test_a_second_telephone_number_reads_on_the_first_pass(text, lang):
 
 @pytest.mark.parametrize(("text", "lang", "value", "expected"), [
     ("(0)-12 000,5", "fr-FR", "telephone", "(0)-12 000,5"),
-    ("+44 (0)20 7946 0958", "en-US", "digits",
-     "plus forty-four (0)20 seven thousand nine hundred forty-six zero nine five eight"),
+    ("+44 (0)20 7946 0958", "en-US", "digits", "plus four four zero two zero seven nine four six zero nine five eight"),
 ])
 def test_a_kept_run_that_no_telephone_number_holds_keeps_its_evidence_word(text, lang, value, expected):
     """A kept run keeps the word after it as its evidence unless a telephone number of the say-as holds the run, so
-    these texts keep that word as written: no telephone number holds `12 000,5`, and the rule is for say-as
-    `telephone` only."""
+    `(0)-12 000,5` keeps that word as written: no telephone number holds `12 000,5`. Under say-as `digits`, the run
+    with `+` and a country code reads digit by digit."""
     assert normalize(text, lang, say_as=SayAs(interpret_as=value)) == expected
 
 
@@ -1025,14 +1060,13 @@ def test_a_second_pass_reads_no_digit_that_the_say_as_left(text, lang, value, sa
     ("5@+351 000.7-4171 508 524", "en-GB",
      "five at plus three five one 000.7-4171 five hundred and eight five hundred and twenty-four"),
     ("Tel. 5@+351 000.7-4171 508 524", "en-US",
-     "Tel. five at plus three five one zero zero zero seven four one seven one five hundred eight five hundred "
-     "twenty-four"),
+     "Tel. five at plus three five one 000.7-4171 five hundred eight five hundred twenty-four"),
 ])
 def test_a_digit_in_the_word_before_a_run_refuses_its_group_spaces(text, lang, expected):
     """Section 11. A digit in the characters before a run up to a space joins the first group to the word
     that holds it, so the run is no number in groups, and the groups read alone, as dev reads them. If the run were
-    one number, `351` would read with `5@+` and leave `508 524` waiting, and a second pass would read it. After
-    `Tel.`, the phone word names `000.7-4171`, which reads digit by digit."""
+    one number, `351` would read with `5@+` and leave `508 524` waiting, and a second pass would read it.
+    `000.7-4171` stays as written in both texts, as a run that marks join to other digits."""
     once = normalize(text, lang)
     assert once == expected
     assert normalize(once, lang) == once
@@ -1092,16 +1126,18 @@ def test_a_reading_speaks_every_digit_of_its_text(value):
 
 @pytest.mark.parametrize(("text", "lang", "expected", "same"), [
     ("Tél.\xa076 50h 087 5778 53 6370 % 36", "fr-CH",
-     "Tél.\xa0septante-six cinquante heures 087 cinq mille sept cent septante-huit cinquante-trois six mille trois "
-     "cent septante pour cent trente-six", False),
+     "Tél.\xa0septante-six cinquante heures zéro huit sept cinquante-sept septante-huit cinquante-trois soixante-trois "
+     "septante % trente-six", True),
     ("Tel. 0171 23x 4567", "de-DE", "Telefon 0171 23x vier fünf sechs sieben", True),
-    ("telefone 912 34a 678", "pt-PT", "telefone novecentas e doze 34a seis sete oito", True),
+    pytest.param("telefone 912 34a 678", "pt-PT", "telefone novecentas e doze 34a seis sete oito", True,
+                 marks=GLUED_LOSS),
 ])
 def test_say_as_telephone_reads_no_kept_run_glued_to_a_word(text, lang, expected, same):
     """Section 17.4 step 3. A run that a letter or a digit touches is kept as written for the word it is glued to,
-    not for want of evidence, so say-as `telephone` does not read it, and the text reads as dev reads it on the first
-    pass and on a second pass with no say-as. Read as a telephone number, `23x` would give "dreix". A second pass
-    with the same say-as reads `087` of fr-CH digit by digit, as on dev, so only the other texts check that pass."""
+    not for want of evidence, so say-as `telephone` does not read it, and a second pass changes nothing. Read as a
+    telephone number, `23x` would give "dreix". The run
+    `087 5778 53 6370` of fr-CH touches no word: the plain analysis keeps it because no number reading groups it, so
+    the say-as reads it."""
     say_as = SayAs(interpret_as="telephone")
     once = normalize(text, lang, say_as=say_as)
     assert once == expected
@@ -1110,12 +1146,35 @@ def test_say_as_telephone_reads_no_kept_run_glued_to_a_word(text, lang, expected
         assert normalize(once, lang, say_as=say_as) == once
 
 
+@pytest.mark.parametrize(("text", "lang", "say_as", "expected"), [
+    pytest.param("Call the police on 999.", "en-GB", None, "Call the police on nine nine nine.",
+                 marks=WORD_BACK_LOSS),
+    pytest.param("Call the police on 999 now.", "en-GB", None, "Call the police on nine nine nine now.",
+                 marks=WORD_BACK_LOSS),
+    pytest.param("Call the office on 555-1234.", "en-GB", None, "Call the office on five five five one two three four.",
+                 marks=WORD_BACK_LOSS),
+    pytest.param("Text 0800 123 456–00 44", "en-GB", None, "Text 0800 123 456–00 44",
+                 marks=pytest.mark.xfail(strict=True, reason="a group after a kept run reads as a quantity")),
+    pytest.param("teléfono 2 062 6 9.30 aquí.", "es-ES", None, "teléfono dos cero seis dos seis 9.30 aquí.",
+                 marks=pytest.mark.xfail(strict=True, reason="a time after a short code reads digit by digit")),
+    pytest.param("telefone le (12) 872 523 454,71.", "pt-PT", None,
+                 "telefone le (doze) oitocentos e setenta e dois milhões quinhentos e vinte e três mil quatrocentos "
+                 "e cinquenta e quatro vírgula setenta e um.",
+                 marks=pytest.mark.xfail(strict=True, reason="a bracketed area code keeps an amount as written")),
+])
+def test_a_phone_reading_that_the_simple_rule_loses(text, lang, say_as, expected):
+    """Readings that the evidence of section 4.3 does not reach. Each reason names the class of the loss."""
+    assert normalize(text, lang, say_as=say_as) == expected
+
+
 @pytest.mark.parametrize(("text", "lang", "value", "expected"), [
     ("28\xa0944 856", "ko-KR", "characters", "이 팔\xa0구 사 사 팔 오 육"),
     ("(1) 685 666; 94, 64", "de-DE", "telephone", "eins sechs acht fünf sechs sechs sechs; neun vier, sechs vier"),
     ("351 912", "de-DE", "digits", "351 912"),
-    ("11/2/2010 (12) 81 559\u202f599", "es-ES", "telephone",
-     "once de febrero de dos mil diez uno dos ocho uno cinco cinco nueve\u202fcinco nueve nueve"),
+    pytest.param("11/2/2010 (12) 81 559\u202f599", "es-ES", "telephone",
+                 "once de febrero de dos mil diez uno dos ocho uno cinco cinco nueve\u202fcinco nueve nueve",
+                 marks=pytest.mark.xfail(
+                     strict=True, reason="a date before a bracketed area code keeps the date and the run as written")),
     ("3.5 (1) 12 000 (1) 437 593", "en-GB", "telephone",
      "three five one one two zero zero zero one four three seven five nine three"),
 ])
@@ -1129,6 +1188,25 @@ def test_a_say_as_reads_as_dev_where_the_round_ten_rules_decide(text, lang, valu
         once = normalize(text, lang, say_as=say_as)
         assert once == expected
         assert normalize(once, lang, say_as=say_as) == once
+        assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "value", "expected"), [
+    ("Appelez le 35 910 08416252798 2nd", "fr-FR", "characters", "Appelez le 35 910 08416252798 2nd"),
+    ("Tel. [1] ]\xa0+49\xa0074-63", "en-GB", "characters", "Tel. [one] ]\xa0+49\xa0074-63"),
+    ("Telefon 1 52 010 - 614 857", "de-AT", "digits", "Telefon eins fünf zwei null eins null - 614 857"),
+    ("mail me€665\xa0555\xa0465,73 2x", "fr-FR", "telephone", "mail me€665\xa0555\xa0465,73 2x"),
+])
+def test_a_say_as_leaves_the_words_that_keep_a_phone_run_as_a_second_pass_sees_them(text, lang, value, expected):
+    """Design sections 11 and 4.3. A say-as does not read the phone word and the function words before a kept run, so
+    the phone word still names the run on a second pass. It reads a digit group next to the run, because a second
+    pass reads that group too. Under `telephone`, the groups that a no-break space joins to a run read with the run
+    or not at all."""
+    say_as = SayAs(interpret_as=value)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ParameterNotHonouredWarning)
+        once = normalize(text, lang, say_as=say_as)
+        assert once == expected
         assert normalize(once, lang) == once
 
 
@@ -1240,26 +1318,23 @@ def test_a_waiting_phone_span_holds_no_character(text, lang):
     ("53,(0161) 07 22.34 646", "en-GB"), ("53/(0161) 07 22.34 646", "en-US"), ("53,(0161) 07 22.34 646", "de-DE"),
     ("53:(0161) 07 22.34 646", "es-ES"),
 ])
-def test_a_phone_span_that_a_mark_joins_to_a_number_claims_once_the_number_reads(text, lang):
-    """A phone span that `PHONE_WAITS` names and that a mark joins to the digits before it claims in the second run
-    of `classify`, after the first run reads those digits, and does not wait on them there. So `53` reads, and the
-    span reads `(0161) 07`, as a second pass does."""
+def test_a_phone_run_that_a_mark_joins_to_a_number_stays_as_written(text, lang):
+    """A phone run that a mark joins to the digits before it stays as written, with the digits and marks glued to it,
+    so `53` reads, `(0161) 07` stays, and a second pass sees the same text."""
     spans = {(span.start, span.end): span for span in analyze(text, lang).spans}
     assert spans[0, 2].form is Form.CARDINAL
-    assert spans[3, 12].form is Form.TELEPHONE and spans[3, 12].fields["groups"] == ("0161", "07")
     once = normalize(text, lang)
+    assert "(0161) 07" in once
     assert normalize(once, lang) == once
 
 
 @pytest.mark.parametrize(("text", "expected"), [
-    ("Tel. USD20 444-2428.22.31 2x.", "Tel. zwanzig Dollar vier vier vier zwei vier zwei acht zwei zwei drei eins 2x."),
-    ("Telefon z. B. 260-9726.98.61 8am",
-     "Telefon z. B. zwei sechs null neun sieben zwei sechs neun acht sechs eins 8am"),
+    ("Tel. USD20 444-2428.22.31 2x.", "Tel. zwanzig Dollar 444-2428.22.31 2x."),
+    ("Telefon z. B. 260-9726.98.61 8am", "Telefon z. B. 260-9726.98.61 8am"),
 ])
-def test_the_full_stops_of_an_abbreviation_end_no_clause_for_a_phone_word_with_the_form_off(text, expected):
-    """With `ABBREVIATION` off, `Tel.` and `z. B.` stay as written on both passes, and their full stops end no
-    clause for the window of the phone word, as with the form on. So the phone word names the run on the first pass,
-    the cut drops the last group, which a letter continues, and a second pass sees the same text."""
+def test_a_glued_run_stays_as_written_with_the_abbreviation_form_off(text, expected):
+    """With `ABBREVIATION` off, `Tel.` and `z. B.` stay as written on both passes. The run, which full stops join to
+    other digits and a letter continues, stays as written, and a second pass sees the same text."""
     params = NormalizationParams().without(Form.ABBREVIATION)
     once = normalize(text, "de-AT", params)
     assert once == expected

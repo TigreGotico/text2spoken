@@ -177,17 +177,17 @@ The pairing of regional indicators follows rules GB12 and GB13 of UAX #29: "Do n
 | `🏴󠁧󠁢󠁸󠁸󠁿` | stays as written | `black flag 󠁧󠁢󠁸󠁸󠁿` | A tag sequence that Unicode does not list, here `🏴` with the tags `gbxx`, reads by the name of its first emoji. The tag characters stay, and they are invisible. |
 | `Score 3-12️⃣` | `Score three-12️⃣` | `Score three-12️⃣` | The word that an emoji sequence touches stays as written, and the text before it reads on its own. |
 | `Score 3-12😀` | Score three to twelve😀 | Score three to twelve grinning face | With `😀` after the last digit, the range reads. |
-| `Call (555) 123-45671️⃣` | `Call (five hundred and fifty-five) one hundred and twenty-three-45671️⃣` | `Call (five hundred and fifty-five) one hundred and twenty-three-45671️⃣` | The word that the keycap touches stays as written. |
-| `Call (555) 123-45671😀` | Call five five five one two three four five six seven one😀 | Call five five five one two three four five six seven one grinning face | With `😀` after the last digit, the phone number reads. |
+| `Call (555) 123-45671️⃣` | stays as written | stays as written | The keycap touches the phone run, so the run stays as written. |
+| `Call (555) 123-45671😀` | stays as written | Call five five five one two three four five six seven one grinning face | With the default params, `😀` touches the phone run, so the run stays as written. With `EMOJI` on, `😀` reads as words, and the phone number reads. |
 | `5km/next1️⃣` | `five kilometres/next1️⃣` | `five kilometres/next1️⃣` | The measure reads. |
 | `5km/next😀` | stays as written | 5km/next grinning face | The text stays as written. |
 
-A digit that touches a name, such as the `1` of `1😀`, reads as the last group of a phone run before it, and a second pass changes nothing. The `EMOJI` form has this rule from `SYMBOL`, which does the same with the default params:
+A phone run that a character such as `½` touches stays as written, and the name after the run reads. A second pass changes nothing. The `EMOJI` form has this rule from `SYMBOL`, which does the same with the default params:
 
 | Written | Spoken (`en-GB`, `EMOJI` on) | Second pass (`en-GB`, `EMOJI` on) |
 | --- | --- | --- |
-| `10½+44 20 7946 0958 1😀.` | ten½plus four four two zero seven nine four six zero nine five eight one grinning face. | ten½plus four four two zero seven nine four six zero nine five eight one grinning face. |
-| `10½+44 20 7946 0958 1©.` | ten½plus four four two zero seven nine four six zero nine five eight one copyright. | ten½plus four four two zero seven nine four six zero nine five eight one copyright. |
+| `10½+44 20 7946 0958 1😀.` | 10½+44 20 7946 0958 1 grinning face. | 10½+44 20 7946 0958 1 grinning face. |
+| `10½+44 20 7946 0958 1©.` | 10½+44 20 7946 0958 1 copyright. | 10½+44 20 7946 0958 1 copyright. |
 
 A caller lexicon matches the text as written, so a key `#️⃣` reads its value. No match starts or ends inside an emoji sequence or inside the word that it touches:
 
