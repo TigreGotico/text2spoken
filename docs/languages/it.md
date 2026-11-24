@@ -1,10 +1,18 @@
 # Italian
 
-The file `text2spoken/lang/it.py` reads Italian. Its number words come from `ovos-number-parser`, and its dates and times from `ovos-date-parser`. The base install holds both.
+<!-- agent-hint
+covers: what the Italian file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/it.py, tests/data/it.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/it.md`
+see: fr.md, ../how-it-reads.md
+-->
+
+The file `text2spoken/lang/it.py` reads Italian. Its cardinals and ordinals come from `ovos-number-parser`, the plural ordinals of fractions from the CLDR spell-out rules, and its dates and times from `ovos-date-parser`. The base install holds all of them.
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. It counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. A unit name that is also an adverb or a preposition, as `ora` ("now") or `secondo` ("according to"), counts too: `il percorso 1 ora circa` reads `un'ora circa`. Only a verb of `adverb_verbs`, such as `è` or `fa parte`, makes it the adverb: `il binario 1 ora è chiuso` reads `uno ora`. `secondo` before an article or a capital is the preposition, as in `il livello 1 secondo la scala`. Before a word with a capital, such as a name or a unit symbol that the file does not list, 1 reads `un`, as in `con 1 Airbus`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
+The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. After a noun that a determiner makes a label, as `il binario` or `la gara`, it counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. A unit name that is also an adverb or a preposition, as `ora` ("now") or `secondo` ("according to"), counts too: `il percorso 1 ora circa` reads `un'ora circa`. Only a verb of `adverb_verbs`, such as `è` or `fa parte`, makes it the adverb: `il binario 1 ora è chiuso` reads `uno ora`. `secondo` before an article or a capital is the preposition, as in `il livello 1 secondo la scala`. Before a word with a capital, such as a name or a unit symbol that the file does not list, 1 reads `un`, as in `con 1 Airbus`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -76,7 +84,7 @@ A title reads as the word that stands before a name, in lowercase, and takes a c
 | `Gentilissima Dott. Neri, le scrivo.` | `it-IT` | Gentilissima dottoressa Neri, le scrivo. |
 | `Come nota Prof. Rossi, il dato è basso.` | `it-IT` | Come nota Prof. Rossi, il dato è basso. |
 
-A day and a month, as `13/11`, read as a date only after a word of `date_words`, such as `il` and `dal`, and only when the day is above 12. A smaller day can also be the month of a month/day date, so the pair stays as written. `24/7` also stays as written:
+A day and a month, as `13/11`, read as a date only after a word of `date_words`, such as `il` and `dal`, and only when the day is above 12. With a day of 12 or below, the pair can be a fraction, a time signature, a day range or a rating, as in `il 4/4`, so it stays as written. `24/7` also stays as written:
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -92,7 +100,7 @@ A day and a month, as `13/11`, read as a date only after a word of `date_words`,
 | `it-CH` | Full stop | `'` |
 | `it-SM` | Comma | Full stop |
 
-The marks of each variety come from CLDR. The varieties read the same words. In `it-CH`, a decimal point reads as a decimal. Two forms stay as written, because Italian text also writes them with the point: three digits after the point, which may be a thousands group, and an hour and two digits, which may be a clock time.
+The marks of each variety come from CLDR. The varieties read the same words. In `it-CH`, a decimal point reads as a decimal. Three forms stay as written. Three digits after the point may be a thousands group. A letter right after the digits, as in `802.11g`, makes the name of a standard or a model. An hour and two digits that no amount, measure or percentage claims may be a clock time.
 
 ## Options
 
@@ -107,7 +115,7 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 | `phone_regions` | changes nothing | - |
 | `register` | changes nothing | - |
 
-`default_gender` sets the gender of a 1 that stands with no noun:
+`default_gender` sets the gender of a 1 with no word after it:
 
 | Written | Tag | Spoken | Spoken (`default_gender=FrozenMap({"it": GrammaticalGender.FEMININE})`) |
 | --- | --- | --- | --- |
@@ -127,7 +135,7 @@ Italian leaves these forms as written, or reads them as shown:
 | --- | --- | --- | --- |
 | `Arrivano tra 1 e 2 ore.` | `it-IT` | Arrivano tra 1 e due ore. | 1 before "e" or "o" stays as written: uno takes the gender of its noun, and the noun comes later. |
 | `Siamo a 46° nord.` | `it-IT` | stays as written | `°` before a word that is not a noun of `ordinal_nouns` writes an angle or a coordinate, and `°` alone reads no unit. |
-| `È il 2500000º cliente.` | `it-IT` | stays as written | An ordinal above 999999 stays as written, because no source gives the one-word form that ovos-number-parser writes for it, as "tremilionecinquecentomillesimo". |
+| `È il 2500000º cliente.` | `it-IT` | stays as written | An ordinal above 999999 stays as written, because no source gives the one-word form that ovos-number-parser writes for it, "duemilionecinquecentomillesimo". |
 | `Il totale è 6.000 franchi.` | `it-CH` | stays as written | In `it-CH` three digits after the point may be a thousands group. |
 | `La riunione è 8.00.` | `it-CH` | stays as written | In `it-CH` an hour and two digits after the point may be a clock time. With a time word, as in `alle 8.00`, it reads as a time. |
 | `Il 3,5% dei voti.` | `it-CH` | stays as written | `it-CH` reads no decimal comma. |

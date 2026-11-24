@@ -8,7 +8,7 @@ verify: `python scripts/check_doc_page.py docs/errors.md`
 see: api.md, languages/ar.md
 -->
 
-text2spoken has two modes. The default mode keeps a form that it cannot read as written and logs a warning, so a voice still speaks the sentence. Strict mode, `NormalizationParams(strict=True)`, raises an error instead, so a training pipeline finds each gap.
+This page gives each error and warning of text2spoken, and the case that causes it. text2spoken has two modes. The default mode keeps a form that it cannot read as written and logs a warning, so a voice still speaks the sentence. Strict mode, `NormalizationParams(strict=True)`, raises an error instead, so a training pipeline finds each gap.
 
 ## Each case
 
