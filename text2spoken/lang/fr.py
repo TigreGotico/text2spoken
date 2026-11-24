@@ -640,7 +640,7 @@ DATA = freeze(
         "short_codes": ["15", "17", "18", "112", "114", "115", "119", "191", "196", "3615", "3919", "3939"],
         "list_links": ["et", "ou"],
         "phone_shapes": [],
-        "phone_unit_shapes": ["0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}"],
+        "phone_unit_shapes": [],
         "phone_kept_shapes": [],
         "no_phone_shapes": [],
         "phone_reading": "pairs",
@@ -1451,19 +1451,6 @@ class FrenchRange(Range):
 
 
 @dataclass(frozen=True)
-class FrenchTelephone(Telephone):
-    """The shared telephone recognizer. A run that mixes two digit sets stays as written, less a last group that a
-    word continues, as `3` in `٥1 3e`: that group belongs to the word, here the ordinal `3e`. A run of one digit set
-    drops a last hour group as the shared recognizer does."""
-
-    def trimmed(self, text: str, start: int, written: str, request: Request) -> str:
-        cut, end = max(written.rfind(space) for space in self.spaces), start + len(written)
-        if cut != -1 and end < len(text) and is_word_char(text[end]) and not one_digit_set(text[start:end]):
-            return written[:cut]
-        return super().trimmed(text, start, written, request)
-
-
-@dataclass(frozen=True)
 class FrenchMoney(Money):
     """The shared money recognizer, with a scale word between the number and a symbol after it, as in `2 M€`, `5 k€`
     and `3 Mio CHF`, and with a sign before a number whose symbol follows it: `-5 €` is "moins cinq euros"."""
@@ -1901,12 +1888,13 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(
         SHARED["lexicon"],
+        Telephone(declines=True, spaces=GROUP_SPACES, plans=PLANS),
         SHARED["color"],
         SHARED["idiom"],
         DateNamed(),
         SHARED["date_numeric"],
         FrenchTime(),
-        FrenchTelephone(spaces=GROUP_SPACES, plans=PLANS),
+        Telephone(spaces=GROUP_SPACES, plans=PLANS),
         FrenchMoney(),
         SHARED["kept_money"],
         FrenchPercent(),

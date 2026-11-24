@@ -144,12 +144,27 @@ A run of digits reads as a telephone number on any of four kinds of evidence:
 - a phone shape of the language, such as `(212) 555-0123`;
 - a phone word before the run, such as `Call`.
 
+Only function words may stand between the phone word and the run. An abbreviation counts by its reading, and so does a `1` whose digit word is a function word, as `un` in French. A word in square brackets counts as a function word. So the run reads on the first pass as it reads on a second pass:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Call i.e. 0304.32.75 now.` | `en-GB` | Call that is zero three zero four three two seven five now. |
+| `Ligue para o [1] 21 3456 7890.` | `pt-PT` | Ligue para o [um] dois um três quatro cinco seis sete oito nove zero. |
+
 `phone_regions=None` takes the region of the tag, when the language has a numbering plan for it. With no plan for a region, the other three kinds of evidence still apply:
 
 | Written | Spoken (`en-GB`) | Spoken (`en-GB`, `phone_regions=frozenset()`) |
 | --- | --- | --- |
 | `Room 02079460958.` | Room zero two zero seven nine four six zero nine five eight. | stays as written |
 | `Call 02079460958.` | Call zero two zero seven nine four six zero nine five eight. | Call zero two zero seven nine four six zero nine five eight. |
+
+A run with no evidence reads as numbers only when each part between its dashes, slashes and brackets is one number. One number is one group, or a head of 1 to 3 digits and then groups of exactly 3 digits. A run of 7 to 15 digits in other groups stays as written, because a reading group by group gives numbers that the text does not hold:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Order no. 1234 5678 shipped.` | `en-GB` | stays as written |
+| `It ran from 1939-1945.` | `en-GB` | It ran from nineteen thirty-nine to nineteen forty-five. |
+| `Il y a 12 345 678 habitants.` | `fr-FR` | Il y a douze millions trois cent quarante-cinq mille six cent soixante-dix-huit habitants. |
 
 ## Identifiers
 

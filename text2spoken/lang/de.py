@@ -535,10 +535,9 @@ def _swiss_verbalizer(verbalizer):
     return speak
 
 
-TELEPHONE = Telephone(reach=3, names_shaped=True)
-"""The shared telephone recognizer, where a phone word up to three words back also names a run with the shape of a
-phone number, as in `Das Telefon hat die Nummer 030 1234567.` Two years that a dash joins have no phone shape
-(`no_phone_shapes`), so `Das Telefon war 1990-2000 grau.` reads a range of years."""
+TELEPHONE = Telephone()
+"""The shared telephone recognizer. Two years that a dash joins have no phone shape (`no_phone_shapes`), so
+`Telefon 1990-2000` reads a range of years."""
 
 
 @dataclass(frozen=True)
@@ -751,10 +750,10 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["color"], SHARED["idiom"], DateNamed(), SHARED["date_numeric"],
-                 Time(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
-                 Year(), SHARED["expression"], Fraction(), SHARED["range"], Ordinal(), TitleAbbreviation(),
-                 SHARED["decimal"], SHARED["cardinal"]),
+    recognizers=(SHARED["lexicon"], Telephone(declines=True), SHARED["color"], SHARED["idiom"], DateNamed(),
+                 SHARED["date_numeric"], Time(), TELEPHONE, Money(), SHARED["kept_money"], SHARED["percent"],
+                 SHARED["measure"], Year(), SHARED["expression"], Fraction(), SHARED["range"], Ordinal(),
+                 TitleAbbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon,
                  **{form: _swiss_verbalizer(verbalizer) for form, verbalizer in _VERBALIZERS.items()}},
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
