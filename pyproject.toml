@@ -42,9 +42,9 @@ test = [
     "pytest",
     "packaging",
     "ovos-color-parser>=0.12.4a1",
-    "tugalex>=2.5.7a1",
+    "tugalex>=2.5.9a1",
 ]
-pt = ["tugalex>=2.5.7a1"]
+pt = ["tugalex>=2.5.9a1"]
 
 [tool.setuptools.dynamic]
 version = {attr = "text2spoken.version.__version__"}
