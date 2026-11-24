@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a112](https://github.com/TigreGotico/text2spoken/tree/0.0.2a112) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a111...0.0.2a112)
+
+**Merged pull requests:**
+
+- fix\(pt\): raise the tugalex floor to 2.5.9a1 for uva, capital and grama [\#517](https://github.com/TigreGotico/text2spoken/pull/517) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a111](https://github.com/TigreGotico/text2spoken/tree/0.0.2a111) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a110...0.0.2a111)
@@ -269,7 +277,6 @@
 **Merged pull requests:**
 
 - fix\(eu\): a fraction group of one or two digits after the comma ends the number [\#299](https://github.com/TigreGotico/text2spoken/pull/299) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(pt\): a demonstrative or its contraction gives a number no gender [\#289](https://github.com/TigreGotico/text2spoken/pull/289) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a81](https://github.com/TigreGotico/text2spoken/tree/0.0.2a81) (2026-11-18)
 

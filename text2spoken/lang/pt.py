@@ -56,6 +56,18 @@ A number before `da` and a word of `hour_periods` counts hours that the text lea
 feminine: `são 2 da tarde` reads "são duas da tarde". Senado Federal, Manual de Comunicação, "Hora": "diga "são duas
 da tarde", e não "são 14 horas"", and "às dez da noite, e não às vinte e duas horas".
 
+A number of four digits with a comma, a colon or a closing bracket right after it names a year, and the word after the
+mark is no noun that it counts, so it reads in the masculine: `Braga 2012: Capital Europeia` reads "Braga dois mil e
+doze: Capital Europeia", and `(2014) capital nacional` "(dois mil e catorze) capital nacional". A semicolon ends the
+clause, so the word after it gives no number its gender. A year reads as a cardinal: Ciberdúvidas 32700
+(https://ciberduvidas.iscte-iul.pt/consultorio/perguntas/numerais-em-datas/32700), after Cunha and Cintra, Nova
+Gramática do Português Contemporâneo, p. 374: "Também na indicação dos anos e das horas se empregam os cardinais." The
+cardinal of a year is masculine: Ciberdúvidas 10879
+(https://ciberduvidas.iscte-iul.pt/consultorio/perguntas/como-se-designam-os-artigos-nas-leis-e-os-seculos/10879): "o
+século vinte e um vai de dois mil e um a dois mil e cem". The year names the noun "ano": Ciberdúvidas 33377
+(https://ciberduvidas.iscte-iul.pt/consultorio/perguntas/ano-de-2015/33377): "sendo alternativa a «o ano 2015»";
+Priberam, "ano": "nome masculino".
+
 A number before a word of `number_links` and a second number reads in the masculine. Before `vezes`, it is a factor of a
 product: `2 vezes 2` reads "dois vezes dois". When a noun that the number counts follows the second number, as `frases`
 in `2 vezes 3 frases`, `vezes` is the feminine noun "vez" and the number agrees with it: "duas vezes três frases".
@@ -452,6 +464,7 @@ from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affix
 from text2spoken.core.letters import Letters, capital_clauses, speak_letters
 from text2spoken.core.numbers import SIGNS, Number, number_marks, written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
+from text2spoken.core.recognizers import Cardinal as CoreCardinal
 from text2spoken.core.recognizers import Decimal as CoreDecimal
 from text2spoken.core.recognizers import Measure as CoreMeasure
 from text2spoken.core.recognizers import Money as CoreMoney
@@ -780,9 +793,9 @@ def _gender_of(word: str, request: Request, endings: bool = True) -> Grammatical
     return None
 
 
-def agreement(context: SpanContext) -> GrammaticalGender:
-    """The gender of a number (design section 5.6): the hint, the noun after the number, a determiner before it,
-    then the `default_gender` of the params, then the language default.
+def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
+    """The gender of a number (design section 5.6): the hint, the masculine of a `year`, the noun after the number,
+    a determiner before it, then the `default_gender` of the params, then the language default.
 
     A written `mil` after the number is not the noun: `mil` has two genders (Priberam, "mil": "quantificador
     numeral cardinal de dois géneros"), so `2 mil pessoas` takes the gender of `pessoas`, as `2000 pessoas` does. A
@@ -793,7 +806,8 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     noun that the number counts follows it — the number ends the text, or a punctuation mark, a function word or a
     verb of `label_verbs` follows it. Otherwise it falls through to the noun after it. A number after `a páginas` or
     `a folhas` agrees with that noun (the module docstring gives the sources). A number before `da tarde` and the
-    other words of `hour_periods` counts the hours that the text leaves out, and a number before a word of
+    other words of `hour_periods` counts the hours that the text leaves out. A `year`, which `Cardinal` finds, reads
+    in the masculine (the module docstring gives the sources). A number before a word of
     `number_links` and a second number reads in the masculine, unless a noun that the number counts follows the
     second number, and then `vezes` is the feminine noun that the number counts.
 
@@ -805,6 +819,8 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     determiner or the default. Without tugalex, the endings of `gender_suffixes` come before the determiner."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
+    if year:
+        return MASCULINE
     request = context.request
     data = request.data
     before = [word.lower() for word in context.before]
@@ -856,7 +872,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         after_mark = context.before and context.before[-1].lower() == request.data["decimal_word"]
         words = SPELLER.decimal_part(digits, request) if after_mark else spell_digits(digits, request)
     else:
-        words = _cardinal(digits, request, agreement(context))
+        words = _cardinal(digits, request, agreement(context, span.start in request.memo.get(_YEARS, ())))
         _check_pair(digits, context)
         if _SCALE_WORD.fullmatch(words.split()[-1]) and context.after \
                 and context.after[0].lower() not in request.data["function_words"]:
@@ -1402,6 +1418,24 @@ def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], reques
             yield match
 
 
+_YEARS = "pt_years"
+_YEAR_MARKS = frozenset(",:)")
+_FOUR_DIGITS = re.compile("[0-9]{4}")
+
+
+@dataclass(frozen=True)
+class Cardinal(CoreCardinal):
+    """The shared cardinal recognizer. A number of four digits with a mark of `_YEAR_MARKS` right after it names a
+    year, as `2012` in `Braga 2012: Capital Europeia`, and its start goes into `Request.memo` under `_YEARS`, so that
+    it reads in the masculine."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            if _FOUR_DIGITS.fullmatch(text, span.start, span.end) and text[span.end:span.end + 1] in _YEAR_MARKS:
+                request.memo.setdefault(_YEARS, set()).add(span.start)
+            yield span
+
+
 @dataclass(frozen=True)
 class SpacedRange:
     """A range of two numbers grouped with spaces. It reads when both end in the group `000` and it goes up, as in
@@ -1940,7 +1974,7 @@ LANGUAGE = LanguageSpec(
                  SHARED["kept_money"], SHARED["percent"], PointMeasure(), SHARED["expression"], SHARED["fraction"],
                  SHARED["range"], Ordinal(), Roman(), Abbreviation(),
                  Letters(known_word=_known_word, titles=frozenset(DATA["honorific_before_name"])), PointDecimal(),
-                 SpelledDecimal(), SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
+                 SpelledDecimal(), Cardinal(), SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.COLOR: speak_color, Form.DATE: speak_date, Form.TIME: speak_time,
         Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
