@@ -24,7 +24,8 @@ from text2spoken.core.electronic import ELECTRONIC, tld_after
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
 from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries, number_grouping
 from text2spoken.core.letters import LETTERS
-from text2spoken.core.numbers import SIGNS, Number, declared_marks, find_numbers, group_spaces, number_marks
+from text2spoken.core.numbers import (GROUP_SPACES, SIGNS, SPACE_GROUPS, Number, declared_marks, find_numbers,
+                                      group_spaces, number_marks)
 from text2spoken.core.spans import (PHONE_WAITS, Features, Recognizer, SpanContext, Span, Word, clause_breaks,
                                     clause_window, context_words)
 from text2spoken.core.spellers import bounded_integer, spell_digits
@@ -270,9 +271,6 @@ _DASHES = "-\u2010\u2011\u2012\u2013\u2014\u2212"
 _SPACED_MINUS = re.compile("[ \t\u00a0\u202f]+[-\u2212]")
 """A space or a tab, then a minus, as after `5` in `5 -3.5`."""
 
-_GROUP_SPACES = " \u00a0\u202f"
-"""The space, the no-break space and the narrow no-break space, which group the digits of a number."""
-
 
 def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[Span, ...]:
     """The cardinal and decimal spans of a language with no file (section 6.1), in text order, with each span whose
@@ -299,7 +297,7 @@ def _rbnf_spans(text: str, tokens: Sequence[Token], request: Request) -> tuple[S
         neighbours = []
         if before and is_digit(before[-1]):
             neighbours.append((index - 1, line_start + len(before) - 1))
-        if len(group) == 2 and group[0] in _GROUP_SPACES and is_digit(group[1]):
+        if len(group) == 2 and group[0] in GROUP_SPACES and is_digit(group[1]):
             neighbours.append((index + 1, number_end + 1))
         if neighbours or (before and (before[-1] in _DASHES or before[-1] in symbols)) or after[:1] in symbols:
             kept.add(index)
@@ -318,7 +316,7 @@ class RbnfCardinal(Cardinal):
     number with a minus stays as written where the minus may mark something else, or where the number goes on past the
     span: a range or a code after a number or a dash, as in `5 -10`, `5--10` and `333 -1234567`; an amount next to
     a symbol of `symbols`, which the language keeps as written, as in `-50 €` and `€ -50`; or a number grouped with
-    one of `_GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
+    one of `GROUP_SPACES` that is no group mark of the locale, as in `-1 000`, where the span holds only the first
     group. A minus at the start of a line reads, as in a language file. A line break or a tab groups no digits, so
     in `-5\n10` the `10` of the next line reads.
 
@@ -997,8 +995,15 @@ class Telephone:
 
     Three tables of regexes hold the written shapes of a language. A run that a shape of `phone_unit_shapes`
     matches whole reads digit by digit as one unit with no other evidence. A run that a shape of
-    `phone_kept_shapes` matches whole stays as written when it has no phone reading. A run that a shape of
-    `no_phone_shapes` matches whole has no phone shape.
+    `phone_kept_shapes` matches whole stays as written when it has no phone reading, as `1 000 000` in
+    `1 000 000 2nd`, where the last group drops. A run that a shape of `no_phone_shapes` matches whole has no phone
+    shape. When a run with an area code in brackets and a space after them gives no span, the run after the space is
+    tried alone, as a second pass sees it once the number in brackets reads: `(1) 0 437 593` reads "(one) zero four
+    three seven five nine three" in en. A lone `(0)` reads as zero and starts the same try, so `(0) 0 437 593-9085`
+    reads "(zero) zero four three seven five nine three nine zero eight five". A number in brackets with a leading 0
+    and more digits reads as no cardinal, so it stays in the run: `(09) 0 437 593` reads "zero nine zero four three
+    seven five nine three". With no space, as in `(0)08 717 80`, the bracket joins its number to the run, so
+    `(0)08` stays as written.
 
     `spaces` holds the spaces that may part two groups of a run, and `plans` the numbering plans that the recognizer
     reads, by region. A language whose `phone_regions` option offers a region that `PHONE_PLANS` lacks passes the
@@ -1725,13 +1730,6 @@ class Abbreviation:
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}),
                                    trail="." if sentence_end else "", recognizer=self.name)
                     position = text.find(key, end)
-
-
-SPACE_GROUPS = re.compile("[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?:,[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{1,3})*)?"
-                          "|[0-9]+,[0-9]{3}(?:[ \u00a0\u202f][0-9]{1,3})+")
-"""Digits in groups of three with a space, a no-break space or a narrow no-break space between them, in the
-whole part or in the fraction after a decimal comma: `36 524`, `123 456 789,987 546`, `0,264 7` (Araua 203,
-section 3.2.1.1, page 12)."""
 
 
 @dataclass(frozen=True)

@@ -437,7 +437,8 @@ from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, digit_run_matches,
                                           numbers_in, signed, speak_decimal, speak_expression, speak_fraction,
                                           speak_lexicon, speak_percent, speak_telephone)
-from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_breaks, clause_window, context_words
+from text2spoken.core.spans import (PHONE_WAITS, Features, Span, SpanContext, Word, clause_breaks, clause_window,
+                                    context_words)
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
@@ -1326,10 +1327,15 @@ def _digits(written: str) -> str:
 
 
 def _phones(text: str, tokens: Sequence[Token], request: Request) -> list[Span]:
-    """The telephone spans that read, found once for each text in one request."""
+    """The telephone spans that read, found once for each text in one request. A span that `PHONE_WAITS` names reads
+    only once a span reads the number next to it, which may be the amount itself, as `(12) 872 523` waits on `454` in
+    `(12) 872 523 454,71`. A second pass, which sees words for `(12)`, finds no such span, so the span counts only
+    when it waits on nothing."""
     key = ("phones", text)
     if key not in request.memo:
-        request.memo[key] = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
+        found = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
+        waits = request.memo.get((PHONE_WAITS, text), {})
+        request.memo[key] = [span for span in found if (span.start, span.end) not in waits]
     return request.memo[key]
 
 

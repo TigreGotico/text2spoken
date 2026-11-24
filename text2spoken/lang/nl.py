@@ -41,14 +41,15 @@ cijfers of meer. Je gebruikt ze om de cijfers per drie te groeperen"). Taaladvie
 the space of the ISO norm too, "De ISO-norm en de BIN-norm schrijven de spatie als scheidingsteken voor (10 000 000),
 maar in de praktijk is ook de schrijfwijze met punten gebruikelijk". So `1 000 000` reads "één miljoen" and `12 000`
 "twaalfduizend", alone, in an amount and in a measure, as in `€ 12 000` and `10 000 km`. A digit run that continues the
-groups after one space or one mark, as in the phone number `+31 20 123 4567`, and a first group that starts with 0, as
-in `020 123 456`, show no number of groups, so each group reads as it would alone. A date splits into groups of one, two
-or four digits, so it holds no group of three after a space. An amount reads the groups and a decimal comma after them
-whole: the same page writes "$ 34 898 456,78", and `€ 12 000,50` reads "twaalfduizend euro vijftig". No group of a
-number of groups reads alone as an amount. An amount or a measure whose whole part starts with 0 and holds more
-digits, as in `€ 05,00` and `012 000 kg`, stays as written, and so does a run whose first group starts with 0 and
-that has a decimal comma, as in `012 000,5`. Outside an amount, a number with spaces between its groups and a decimal
-comma, a percent sign or a dimension mark stays as written.
+groups after one space, as in the phone number `+31 20 123 4567`, shows no number of groups, so each group reads as it
+would alone. A first group that starts with 0, as in `020 123 456`, and a mark that joins the groups to another digit
+run, as in `10 000-20 000`, show no number of groups either, and the run stays as written: the core reads no group of a
+number grouped with spaces alone. A date splits into groups of one, two or four digits, so it holds no group of three
+after a space. An amount reads the groups and a decimal comma after them whole: the same page writes "$ 34 898 456,78",
+and `€ 12 000,50` reads "twaalfduizend euro vijftig". No group of a number of groups reads alone as an amount. An amount
+or a measure whose whole part starts with 0 and holds more digits, as in `€ 05,00` and `012 000 kg`, stays as written,
+and so does a run whose first group starts with 0 and that has a decimal comma, as in `012 000,5`. Outside an amount, a
+number with spaces between its groups and a decimal comma, a percent sign or a dimension mark stays as written.
 
 A fraction is a cardinal and an ordinal, written apart: Taaladvies.net, "Aaneenschrijven van telwoorden", Breukgetallen:
 "Bij breuken is de teller een hoofdtelwoord en de noemer een rangtelwoord [...] Teller en noemer worden los van elkaar
@@ -138,7 +139,7 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
-from text2spoken.core.numbers import SIGNS, Number, written_amount
+from text2spoken.core.numbers import GROUP_SPACES, SIGNS, Number, written_amount
 from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, digit_run_matches, numbers_in,
                                           signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_lexicon, speak_ordinal, speak_percent, speak_spoken_date)
@@ -166,12 +167,16 @@ WORD_JOINERS = "'\u2019-\u2010"
 """The apostrophe, the right single quotation mark, the hyphen-minus and the hyphen, which join a suffix or a second
 word to a word, as in `euro's` and `euro-cent`."""
 
-GROUP_SPACES = " \u00a0\u202f"
-"""The spaces between the groups of a number: the space, the no-break space and the narrow no-break space."""
-
 DIGIT_BEFORE = re.compile("[0-9][ \u00a0\u202f/:.,–-]?$")
 DIGIT_AFTER = re.compile("[ \u00a0\u202f/:.,–-]?[0-9]")
 """A digit run that continues a number of groups after one space or one mark, as in a phone number."""
+
+KEPT_GROUPS = re.compile(f"[0-9]{{1,3}}(?:[{GROUP_SPACES}][0-9]{{3}})+"
+                         f"(?:,[0-9]{{1,3}}(?:[{GROUP_SPACES}][0-9]{{1,3}})*)?"
+                         f"|[0-9]+,[0-9]{{3}}(?:[{GROUP_SPACES}][0-9]{{1,3}})+")
+"""`SPACE_GROUPS` with groups of one to three digits after the decimal comma, as in `830 333,66 4 000 000`. Such a
+run is one number or two, so `KeptGroups` keeps it whole: a part read alone, as `4` of `4 000 000`, leaves the other
+groups as written, and a say-as `telephone` reads them on a second pass."""
 
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
@@ -374,7 +379,7 @@ class KeptGroups:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         folded = fold_digits(text)
-        for match in digit_run_matches(SPACE_GROUPS, folded):
+        for match in digit_run_matches(KEPT_GROUPS, folded):
             start, end = match.span()
             script = digit_script(text[start:end])
             integer, comma, _ = match.group().partition(",")

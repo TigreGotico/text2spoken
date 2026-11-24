@@ -94,7 +94,7 @@ from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.color import speak_color
-from text2spoken.core.numbers import Number, written_amount
+from text2spoken.core.numbers import GROUP_SPACES, Number, written_amount
 from text2spoken.core import roman
 from text2spoken.core.recognizers import (
     PHONE_PLANS,
@@ -136,12 +136,10 @@ from text2spoken.core.tokens import (
 from text2spoken.params import Form, FrozenMap, GrammaticalGender, freeze
 
 FEMININE, MASCULINE = GrammaticalGender.FEMININE, GrammaticalGender.MASCULINE
-SPACES = " \u00a0\u202f"
-"""The space, the no-break space and the narrow no-break space: the gaps that French typography puts between a
-number and its unit or symbol, and between the groups of a number."""
-GROUP = SPACES + "'\u2019"
-"""The group marks of a number: the spaces above, and the apostrophe that Switzerland writes, as in `1'000`."""
-_SPACE = "[" + SPACES + "]"
+GROUP = GROUP_SPACES + "'\u2019"
+"""The group marks of a number: the spaces of `GROUP_SPACES`, and the apostrophe that Switzerland writes, as in
+`1'000`."""
+_SPACE = "[" + GROUP_SPACES + "]"
 
 _ROMAN_RUN = re.compile("[IVX]+")
 
@@ -1039,7 +1037,7 @@ def _labelled(text: str, start: int, data: FrozenMap, nouns: Sequence[str]) -> b
     only spaces between, as in "page 80", "p. 80" and "l'an 800". A comma, a full stop or a word between them ends
     the label, so "Depuis un an, 21 personnes" holds none."""
     end = start
-    while end and text[end - 1] in SPACES:
+    while end and text[end - 1] in GROUP_SPACES:
         end -= 1
     for label in (*nouns, *(key for key, noun in data["number_abbreviations"].items() if noun in nouns)):
         begin = end - len(label)
@@ -1094,15 +1092,15 @@ def _counted(text: str, end: int, data: FrozenMap) -> tuple[str, bool] | None:
     `invariable_plurals`. A word with a hyphen counts as one word, which is plural when any part is: "sans-abri",
     "années-lumière"."""
     position = end
-    while position < len(text) and text[position] in SPACES:
+    while position < len(text) and text[position] in GROUP_SPACES:
         position += 1
     if position == end:
         return None
     for noun in data["scale_nouns"]:
         stop = position + len(noun)
-        if text.startswith(noun, position) and stop < len(text) and text[stop] in SPACES:
+        if text.startswith(noun, position) and stop < len(text) and text[stop] in GROUP_SPACES:
             position = stop
-            while position < len(text) and text[position] in SPACES:
+            while position < len(text) and text[position] in GROUP_SPACES:
                 position += 1
             break
     stop = position
@@ -1136,7 +1134,7 @@ def _with_de(words: str, span: Span, request: Request) -> str:
     if found is None:
         return words
     between, elided = found
-    return words + between.rstrip(SPACES) + (" d'" if elided else " de ")
+    return words + between.rstrip(GROUP_SPACES) + (" d'" if elided else " de ")
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
@@ -1394,7 +1392,7 @@ def _count(span: Span, text: str, request: Request, round_million: bool) -> Span
     if span.fields["suffix"]:
         return span
     found = _counted(text, span.end, request.data)
-    if found is None or not (round_million or found[0].strip(SPACES)):
+    if found is None or not (round_million or found[0].strip(GROUP_SPACES)):
         return span
     request.memo.setdefault(_COUNTED, {})[span.start] = found
     return replace(span, end=span.end + len(found[0]))
@@ -1676,7 +1674,7 @@ class Roman:
     ) -> bool:
         """Whether a heading word, or a capitalised name, stands before the numeral with one space between."""
         gap = start
-        while gap > 0 and text[gap - 1] in SPACES:
+        while gap > 0 and text[gap - 1] in GROUP_SPACES:
             gap -= 1
         if gap == start or gap == 0:
             return False
@@ -1729,7 +1727,7 @@ class FrenchTime(TimeClock):
                 continue
             hour = int(match.group(1))
             minute = None if end < match.end() or match.group(2) is None else int(match.group(2))
-            rest = text[end:].lstrip(SPACES)
+            rest = text[end:].lstrip(GROUP_SPACES)
             if next((w for w in ("min", "s") if rest.startswith(w) and is_bounded(rest, 0, len(w))), None):
                 continue
             valid = hour <= 24 and (minute is None or (minute <= 59 and (hour < 24 or minute == 0)))
@@ -1833,7 +1831,7 @@ class Abbreviation:
         if text.startswith("-", end) and text[end + 1 : end + 2].isupper():
             return True
         index = end
-        while index < len(text) and text[index] in SPACES:
+        while index < len(text) and text[index] in GROUP_SPACES:
             index += 1
         if index >= len(text):
             return False
@@ -1908,7 +1906,7 @@ LANGUAGE = LanguageSpec(
         DateNamed(),
         SHARED["date_numeric"],
         FrenchTime(),
-        FrenchTelephone(spaces=SPACES, plans=PLANS),
+        FrenchTelephone(spaces=GROUP_SPACES, plans=PLANS),
         FrenchMoney(),
         SHARED["kept_money"],
         FrenchPercent(),
