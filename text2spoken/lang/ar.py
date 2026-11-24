@@ -26,13 +26,17 @@ The rules and their sources:
   in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table. The gender of a
   plural is the gender of its singular: "if the singular noun is feminine, the numeral will be in the masculine
   form" (p. 334). So the table holds plurals whose singular ends in taa' marbuuTa.
-- A number that names a thing counts no noun. "In recitation form, in counting without a counted noun, or in
-  referring to a specific numeral alone, the form with taa' marbuuTa is usually used" (Ryding 2005, p. 335). The
-  example of that page is "raqm-u sittat-in huwa raqm-un siHriyy-un", "The number six is a magic number". So a
-  number after رقم, or after the lead #, which reads رقم, reads this form: `الحافلة رقم 42 متأخرة` reads اثنان
-  وأربعون. No source names other label nouns, such as موديل. A number after a definite noun, as in `الحلقة 7
-  كاملة`, still agrees with the word after it: web text often counts a singular after 3 to 10, as in `التحضير 10
-  دقيقة`, so a singular word after the number is no sign of a label.
+- A number that names a thing counts no noun. "In recitation form, in counting without a counted noun, or in referring
+  to a specific numeral alone, the form with taa' marbuuTa is usually used" (Ryding 2005, p. 335). The example of that
+  page is "raqm-u sittat-in huwa raqm-un siHriyy-un", "The number six is a magic number". So a number after رقم, or
+  after the lead #, which reads رقم, reads this form: `الحافلة رقم 42 متأخرة` reads اثنان وأربعون. No source names
+  other label nouns. The file reads a number after موديل or موديلات, a model or a model year, in this form too:
+  `السيارة موديل 2026 متوفرة` reads ألفان وستة وعشرون. Of three to ten, "The counted noun itself is plural,
+  indefinite, and in the genitive case" (p. 335). So after a code in Latin letters, as in `MG 5 متوفرة`, a singular in
+  taa' marbuuTa after 3 to 10 is no noun that the number counts, and the number names a thing. A noun of a CLDR 49
+  unit stays a counted noun: CLDR writes the few count of length-inch as "{0} بوصة". A number after a definite noun,
+  as in `الحلقة 7 كاملة`, still agrees with the word after it: web text often counts a singular after 3 to 10, as in
+  `التحضير 10 دقيقة`, so a singular word after the number is no sign of a label.
 - Case. A number after a preposition or a semi-preposition (p. 367) or a year noun (pp. 351-353) is genitive. Ryding
   writes that "colloquial forms of Arabic do not have case marking" (p. 166), and "In spoken Arabic, the tens numbers
   are reduced to one case, the genitive-accusative" (p. 343, note 11). So the colloquial register reads the tens in
@@ -92,7 +96,8 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
-from text2spoken.core.recognizers import SHARED, Measure as CoreMeasure, Money as CoreMoney, TimeClock, speak_lexicon
+from text2spoken.core.recognizers import (SHARED, Cardinal as CoreCardinal, Measure as CoreMeasure, Money as CoreMoney,
+                                         TimeClock, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import day_hour, twelve_hour
@@ -170,7 +175,9 @@ DATA = freeze({
                          "سنوات", "سنين", "ثوان", "ثواني", "ليال", "ليالي", "قطع", "نسخ", "دفعات", "سرعات",
                          "أسطوانات", "عجلات", "وسائد", "شاشات", "فئات", "رحلات", "غرف", "كلمات"],
     "rank_nouns": ["الطابق", "الفئة", "المرتبة", "القرن", "الدور", "الصف", "الجيل", "المركز", "الفصل", "الدرجة"],
-    "label_nouns": ["رقم", "الرقم"],
+    "label_nouns": ["رقم", "الرقم", "موديل", "موديلات"],
+    "measure_nouns": ["أونصة", "بوصة", "ثانية", "درجة", "دقيقة", "دورة", "رشّة", "ساعة", "سعرة", "سنة", "شمعة", "عقدة",
+                      "قامة", "قطرة", "قمحة", "ليلة", "ميكروثانية", "نقطة", "ياردة"],
     "sign_words": {"-": "سالب"},
     "leads": {"#": "رقم"},
     "decimal_word": "فاصلة",
@@ -230,7 +237,9 @@ singular ends in taa' marbuuTa: سنين (سنة, oldid 72786001, "ثلاث سن
 "ست أسطوانات"), عجلات (عجلة, 77054753, "أربع عجلات"), وسائد (وسادة, 75479234, "ست وسائد"), شاشات (شاشة, 74093250, "ثلاث
 شاشات"), فئات (فئة, 68531917, "خمس فئات"), رحلات (رحلة, 75094475, "ثلاث رحلات"), غرف (غرفة, 76576561, "أربع غرف") and
 كلمات (كلمة, 73435197, "خمس كلمات"). `label_nouns`: the noun raqm of Ryding 2005, p. 335, with and without the
-article. `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
+article, and موديل with its plural موديلات, which no source names as a label noun. `measure_nouns`: the long names of
+CLDR 49 units.json (ar) that end in taa' marbuuTa; CLDR writes the few count of some of them in the singular, as "{0}
+بوصة" of length-inch. `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
 Wikipedia revision shows each noun before an agreeing ordinal: الدور (oldid 74639116, "الدور الخامس والثلاثين"), الصف
 (74030867, "الصف الثالث والثلاثين"), الجيل (76361085, "الجيل السادس والسبعين"), المركز (73375269, "المركز التاسع
 والتسعين"), الفصل (73569717, "الفصل السادس والتسعين") and الدرجة (76373966, "الدرجة الثالثة والأربعين"). `currencies`:
@@ -349,10 +358,18 @@ def counted_noun(after: Sequence[str]) -> str | None:
 
 def number_noun(span: Span, context: SpanContext) -> str | None:
     """The noun that the number counts: the word of `counted_noun`, but none after a label noun or the lead #. A
-    number that names a thing counts no noun (Ryding 2005, p. 335: raqm-u sittat-in)."""
-    if span.fields.get("lead") or noun_before(context, context.request.data["label_nouns"]):
+    number that names a thing counts no noun (Ryding 2005, p. 335: raqm-u sittat-in). A number from 3 to 10 counts a
+    plural (p. 335), so after a code in Latin letters, as in `MG 5 متوفرة`, a singular in taa' marbuuTa is no noun
+    that it counts, unless it names a unit of `measure_nouns`, as in `Wusthof 7 بوصة`."""
+    request = context.request
+    if span.fields.get("lead") or noun_before(context, request.data["label_nouns"]):
         return None
-    return counted_noun(context.after)
+    noun = counted_noun(context.after)
+    if (noun is not None and noun.endswith("ة") and noun not in request.data["measure_nouns"]
+            and span.form is Form.CARDINAL and span.start in request.memo.get(_CODED, ())
+            and plural_category(request, fold_digits(span.fields["digits"])) == "few"):
+        return None
+    return noun
 
 
 def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: FrozenMap) -> bool:
@@ -700,6 +717,28 @@ class Money(CoreMoney):
             yield replace(span, keep=True) if symbol in after_only and symbol in written[:first_digit] else span
 
 
+_CODED = "ar_coded"
+"""The key of `Request.memo` that holds the starts of the cardinal spans that a code in Latin letters comes right
+before, as `Cardinal` finds them."""
+
+
+@dataclass(frozen=True)
+class Cardinal(CoreCardinal):
+    """The cardinals of the core. A span right after a code in Latin letters and one space or a hyphen, as in `MG 5`
+    and `CX-5`, puts its start into `Request.memo` under `_CODED`, which `number_noun` reads. The code starts the
+    text or follows a space or `(`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            end = first = span.start - 1
+            if end > 0 and text[end] in " -":
+                while first and text[first - 1].isascii() and text[first - 1].isalpha():
+                    first -= 1
+            if first < end and (first == 0 or text[first - 1].isspace() or text[first - 1] == "("):
+                request.memo.setdefault(_CODED, set()).add(span.start)
+            yield span
+
+
 @dataclass(frozen=True)
 class Measure(CoreMeasure):
     """The measures of the core. كم before a question mark is the question word "how much" (Ryding 2005, p. 402),
@@ -772,7 +811,7 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], Clock(), Money(),
                  SHARED["kept_money"], SHARED["percent"], Measure(), SHARED["fraction"], SHARED["range"],
-                 SHARED["decimal"], SHARED["cardinal"]),
+                 SHARED["decimal"], Cardinal()),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction,
