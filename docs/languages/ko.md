@@ -79,7 +79,7 @@ The marks come from CLDR. `ko` serves every Korean tag.
 
 The number words come from the CLDR RBNF rule sets of `ko`: `spellout-numbering` for a number and a decimal, and the rule `-x` of `spellout-cardinal-sinokorean` for the minus. The word 마이너스 has the senses "the sign -" and "a number below 0" in the Standard Korean Language Dictionary of the National Institute of Korean Language. The ordinal comes from the rule set `spellout-ordinal-native`. The Standard Korean Language Dictionary gives 첫째, 둘째, 셋째, 열한째, 열두째, 스무째 and 스물두째, and article 6 of the Standard Language Rules (표준어 규정) gives 열두째 and 스물두째. The month names 유월 and 시월 come from article 52 of the Hangul Orthography (한글 맞춤법) and from the dictionary entries 유월 and 시월. The native numerals before a counter come from the rule set `spellout-cardinal-native-attributive`, and the dictionary entry 백 gives the Sino-Korean 백 before 개 and 살. The dictionary entry of each counter names the numerals it takes, and article 43 of the Hangul Orthography writes a counter apart from its number, as in 두 시 삼십 분. The decimal mark and the group mark come from the CLDR number symbols of `ko`. The docstring of [`ko.py`](../../text2spoken/lang/ko.py) names the rule of each reading.
 
-Each of the 60 test rows in `tests/data/ko.tsv` names a source for its reading. No native speaker has checked any row.
+Each test row in `tests/data/ko.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 

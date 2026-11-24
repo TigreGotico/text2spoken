@@ -117,7 +117,7 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 
 The rules cite the Vocabolario Treccani, the Enciclopedia dell'Italiano Treccani, entry "numerali", and the answers of the Accademia della Crusca. The unit names, the currency names and the symbol names come from CLDR. The gender of a noun comes from `text2spoken/data/wiktionary/it_noun_genders.json`, which `scripts/extract_noun_genders.py` makes from the categories "Italian masculine nouns" and "Italian feminine nouns" of the English Wiktionary (CC BY-SA 4.0). It also lists the words of the categories of Italian prepositions, conjunctions, adverbs, pronouns, determiners and articles. The file `text2spoken/data/wiktionary/LICENSE` gives the licence and the attribution. The docstring of [`it.py`](../../text2spoken/lang/it.py) names the entry of each rule.
 
-Each of the 261 test rows in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
+Each test row in `tests/data/it.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 

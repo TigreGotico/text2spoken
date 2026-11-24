@@ -83,7 +83,7 @@ The number words come from the CLDR RBNF rule sets of `el`. The case words come 
 
 Six rules cite the Λεξικό της κοινής νεοελληνικής of the Triantafyllidis Foundation, on the Portal for the Greek Language. They are the rules of `και`, άλλος, ακόμη, the hour, the day after a weekday name and the genitive singular. The rule of a word in capitals cites Wikipedia, "Greek diacritics".
 
-Each of the 157 test rows in `tests/data/el.tsv` names a source for its reading. No native speaker has checked any row.
+Each test row in `tests/data/el.tsv` names a source for its reading. No native speaker has checked any row.
 
 ## Limits
 

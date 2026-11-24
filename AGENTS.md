@@ -34,7 +34,7 @@ The `test` extra installs `tugalex`, so the suite runs every language file. CI r
 3. A language file meets each clause of [the contract](docs/adding-a-language.md#the-contract), which `tests/test_contract.py` checks.
 4. A language file adds the entries of its tables to `ENTRIES` in `tests/test_table_mutation.py`. See [other tests](docs/development.md#other-tests).
 5. Every docs example is the output of a real run. A new page in `docs/` needs an entry in `MINIMUM` in `tests/test_docs_examples.py`, and a language page needs at least `LANGUAGE_MINIMUM` examples. See [keep the docs true](docs/development.md#keep-the-docs-true).
-6. A language page gives the number of rows of its file once, and the test compares it with the file.
+6. A language page gives no number of rows of its file, so a pull request that adds rows does not change the page. `tests/test_docs_examples.py` checks this.
 7. `scripts/extract_cldr.py` writes `text2spoken/data/cldr/`. Change the script and run it again. See [the CLDR data](docs/development.md#the-cldr-data).
 8. A pull request does not change `text2spoken/version.py`, because the release workflows set the version from the conventional commit titles. See [CI](docs/development.md#ci).
 

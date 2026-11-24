@@ -82,7 +82,7 @@ Chinese numbers have no gender. A numeric date reads only with the year first, s
 
 The number words come from the CLDR 49 RBNF rule sets `spellout-cardinal`, `spellout-cardinal-alternate2`, `spellout-numbering`, `spellout-numbering-year` and `spellout-ordinal` of `zh` and `zh_Hant`. The rule for 两 and 二 comes from the usage notes of the English Wiktionary entry 兩. The measure words come from the classifier senses of their Wiktionary entries. The entries 第, 百分之, 分之, 點, 年, 年代, 月, 日, 號, 公元, 西元 and 民國 give the other rules. Currency names, unit names and the long date pattern come from CLDR 49. The docstring of [`zh.py`](../../text2spoken/lang/zh.py) quotes the source of each rule.
 
-Each of the 72 rows in `tests/data/zh.tsv` cites a source. 13 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Each row in `tests/data/zh.tsv` cites a source. Guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 ## Limits
 
