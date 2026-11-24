@@ -1,5 +1,13 @@
 # Adding a language
 
+<!-- agent-hint
+covers: how to write a language file, its test rows and its docs page, step by step, and the contract that the file meets.
+source: text2spoken/core/language.py:LanguageSpec, text2spoken/core/recognizers.py:SHARED, tests/contract.py, tests/data_keys.py, tests/test_rows.py, tests/test_table_mutation.py
+generated: no
+verify: `python scripts/check_doc_page.py docs/adding-a-language.md`
+see: development.md, languages/en.md
+-->
+
 This page shows how to make text2spoken read numbers and dates in your language. It builds a small file for Indonesian, step by step, and ends when every test passes. text2spoken ships no Indonesian file, and the example is not a complete or reviewed reading of Indonesian. Each output on this page comes from a real run of the example.
 
 ## Before you start
@@ -20,7 +28,7 @@ Set up a checkout with the test extra, as [Development](development.md#set-up-an
 
 ## Step 1: see what your language reads now
 
-A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere, and nothing else. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`, so `1.250` reads. The date stays as written:
+A language with no file reads cardinal numbers and decimals, from `ovos-number-parser` where it has a module for the language and from the CLDR spell-out rules elsewhere. It also reads the lexicon entries of the caller, and no other form. It reads the decimal mark `,` and the group mark `.` that CLDR gives `id`, so `1.250` reads. The date stays as written:
 
 ```python
 >>> from text2spoken import normalize, supports
@@ -167,7 +175,7 @@ FAILED tests/test_contract.py::test_language_file_passes[id-clause_6]
 
 The last line also counts the deselected tests and gives the time. Those numbers change with each language file, so this page leaves them out.
 
-Clause 6 failed. The shared `cardinal` recognizer and `speak_cardinal` read four tables that `DATA` does not have. The core reads each table with `data.get`, so a missing table turns a rule off with no error. The calls of steps 2 and 3 worked, but a negative number such as `-5` stays as written, and so does a number with a leading zero after a lead word, such as `No. 007`.
+Clause 6 failed. The shared `cardinal` recognizer and `speak_cardinal` read four tables that `DATA` does not have. The `cardinal` recognizer reads `leads` and `sign_words` with `data.get`, so a missing table turns a rule off with no error. The calls of steps 2 and 3 worked, but a negative number such as `-5` stays as written, and so does a number with a leading zero after a lead word, such as `No. 007`.
 
 ## Step 6: fix it
 
@@ -430,7 +438,7 @@ The shared verbalizers read these keys:
 | 3 | The loader gives this file for `code` and for each code in `serves`, and for no other code. No code belongs to two files. | One tag then always selects one file. |
 | 4 | Each form that a recognizer claims has a verbalizer. Each verbalizer that speaks a number has a speller for its form. | A span that a recognizer finds can then always be read. |
 | 5 | Each recognizer emits exactly the fields of its form. A sentence of the test rows reaches each recognizer. | The verbalizers and the callers of `analyze` read the fields by name. |
-| 6 | `data` and the data of each variety hold only JSON values: strings, numbers, booleans, lists and objects. Each key that the core reads has the shape that `tests/data_keys.py` declares. The data holds each key that the shared recognizers and verbalizers of the file read, as `READERS` in that file names them. | The core reads each key with `data.get`, so a key with a wrong name or shape turns a rule off with no error. |
+| 6 | `data` and the data of each variety hold only JSON values: strings, numbers, booleans, lists and objects. Each key that the core reads has the shape that `tests/data_keys.py` declares. The data holds each key that the shared recognizers and verbalizers of the file read, as `READERS` in that file names them. | The core reads most keys with `data.get`, so a key with a wrong name or shape turns a rule off with no error. |
 | 7 | Each regex in the data uses the portable subset of the regex syntax. | A pattern then means the same in every regex engine. In Python, `\d` matches every Unicode digit, and in other engines it matches only `0` to `9`. |
 | 8 | Each option is in `options` or in `not_applicable`, never in both and never in neither. A language with no genders lists `default_gender` in `not_applicable`. A language with genders has its `default_gender` in `genders`. The `defaults` of each variety give a valid value for each option in `options`, except `default_gender` and `phone_regions`. | `supports` and `effective_params` can then tell a caller what each option does in the language. |
 | 9 | For each two values of a declared gender, animacy, noun class or numeral system, the cardinal speller gives a different word for 1 or 2, in at least one case. A test row holds a word that only that value gives. | A declared distinction is then real, and a row shows each value. |

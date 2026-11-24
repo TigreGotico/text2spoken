@@ -8,7 +8,7 @@ verify: `python scripts/check_doc_page.py docs/how-it-reads.md`
 see: numbers.md, api.md
 -->
 
-text2spoken finds each written form that it can read, such as a number, a date or a sum of money, and replaces it with words. The rest of the text stays as it is, character for character.
+This page explains why a text reads as it does, and what stays as written. text2spoken finds each written form that it can read, such as a number, a date or a sum of money, and replaces it with words. The rest of the text stays as it is, character for character.
 
 | Written | Spoken (`en-GB`) |
 | --- | --- |

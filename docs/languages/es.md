@@ -1,5 +1,13 @@
 # Spanish
 
+<!-- agent-hint
+covers: what the Spanish file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/es.py, tests/data/es.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/es.md`
+see: fr.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/es.py` reads Spanish. Its number words come from `ovos-number-parser`, which the base install holds.
 
 ## What it reads
@@ -69,18 +77,18 @@ Spanish leaves these forms as written or reads them in a limited way:
 | `Hay 1,5 vol.` | `es-ES` | Hay uno coma cinco volumen | After a decimal, a noun abbreviation keeps the singular, because no source gives the number of the noun there. |
 | `Hay 2,5 vol.` | `es-ES` | Hay dos coma cinco volumen | The same rule. |
 | `Hay 3 vols.` | `es-ES` | Hay tres vols. | A plural abbreviation that the table does not hold, such as `vols.` or `tels.`, stays as written. |
-| `Tengo 2000000 ahorrados.` | `es-ES` | Tengo dos millones de ahorrados. | A round million before a participle or an adjective takes `de`, because these words are also nouns. |
+| `Tengo 2000000 ahorrados.` | `es-ES` | Tengo dos millones de ahorrados. | A round million before a participle or an adjective takes `de`, because the file reads a word in lowercase that ends in `s` as the counted noun. |
 | `Hay 1000000000 granos.` | `es-ES` | Hay un millardo de granos. | This is the output of ovos-number-parser. The DPD («millardo», 1) finds "mil millones" more natural. |
 | `Las 21 ya pasaron.` | `es-ES` | Las veintiuno ya pasaron. | Only a whole number from 0 to 24 after a lowercase `la` or `las` reads as a feminine hour. |
 | `las 200 de la lista` | `es-ES` | las doscientos de la lista | The same rule: 200 reads in the masculine. |
-| `Elige las 21 mejores.` | `es-ES` | Elige las veintiún mejores. | An adjective after a number counts as its noun and takes the masculine. |
+| `Elige las 21 mejores.` | `es-ES` | Elige las veintiún mejores. | An adjective after a number counts as its noun, and its ending gives the gender. `mejores` has no feminine ending, so it takes the masculine. |
 | `del 1 al 5 de mayo` | `es-MX` | del uno al cinco de mayo | `primero` for the first day of the month needs `1 de` and a month name, so this `1` reads `uno` in every variety. |
 | `el 01 de mayo` | `es-MX` | stays as written | The same rule. `el 1° de mayo` also stays as written. |
 | `Es la 1 de mayo.` | `es-MX` | Es la primero de mayo. | In America, this reads "la primero de mayo". |
 | `Hace 25º hoy.` | `es-ES` | stays as written | `º` with no full stop writes an ordinal or a degree. It reads as the ordinal only in a context that a degree does not take: a singular masculine determiner before it (`el 2º piso`), `de` and a month name after it (`el 1º de mayo`), or a legal division word before it (`artículo 6º`). A temperature reads with a unit, as in `25 ºC`. |
 | `Es la 24.º posición.` | `es-ES` | stays as written | The feminine `la` and the masculine mark `º` contradict each other, and no source chooses one of them. |
 | `Llame al #5.` | `es-ES` | stays as written | `#` stays as written in `es-ES`, because the reading `número` is American. |
-| `Cuesta $5.` | `es-419` | stays as written | `$` follows the 2005 text of DPD appendix 4. It stays as written in `es-419`, `es-CO`, `es-VE`, `es-BO`, `es-PY` and `es-CR`, because it can be a peso or a dollar there. |
+| `Cuesta $5.` | `es-419` | stays as written | `$` follows the 2005 text of DPD appendix 4. It stays as written in `es-419`, because it can be a peso or a dollar there, and in `es-CO`, `es-VE`, `es-BO`, `es-PY` and `es-CR`, which appendix 4 does not name. |
 | `Cuesta $5.` | `es-CU` | stays as written | `es-CU`, `es-SV` and `es-PA` get `es-419`, so `$` stays as written there too. |
 | `Mide 1,5 m.` | `es-419` | stays as written | In `es-419` and the varieties that get it, the comma is the group mark. |
 | `Cuesta $2,50.` | `es-MX` | stays as written | A decimal comma reads only next to `€`, the currency that CLDR writes with the comma. |
