@@ -144,6 +144,13 @@ A run of digits reads as a telephone number on any of four kinds of evidence:
 - a phone shape of the language, such as `(212) 555-0123`;
 - a phone word before the run, such as `Call`.
 
+Only function words may stand between the phone word and the run. An abbreviation counts by its reading, and so does a `1` whose digit word is a function word, as `un` in French. A word in square brackets counts as a function word. So the run reads on the first pass as it reads on a second pass:
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `Call i.e. 0304.32.75 now.` | `en-GB` | Call that is zero three zero four three two seven five now. |
+| `Ligue para o [1] 21 3456 7890.` | `pt-PT` | Ligue para o [um] dois um três quatro cinco seis sete oito nove zero. |
+
 `phone_regions=None` takes the region of the tag, when the language has a numbering plan for it. With no plan for a region, the other three kinds of evidence still apply:
 
 | Written | Spoken (`en-GB`) | Spoken (`en-GB`, `phone_regions=frozenset()`) |

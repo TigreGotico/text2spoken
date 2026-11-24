@@ -1099,7 +1099,7 @@ def test_a_reading_speaks_every_digit_of_its_text(value):
     ("Tél.\xa076 50h 087 5778 53 6370 % 36", "fr-CH",
      "Tél.\xa0septante-six cinquante heures zéro huit sept cinquante-sept septante-huit cinquante-trois soixante-trois "
      "septante % trente-six", True),
-    pytest.param("Tel. 0171 23x 4567", "de-DE", "Telefon 0171 23x vier fünf sechs sieben", True, marks=GLUED_LOSS),
+    ("Tel. 0171 23x 4567", "de-DE", "Telefon 0171 23x vier fünf sechs sieben", True),
     pytest.param("telefone 912 34a 678", "pt-PT", "telefone novecentas e doze 34a seis sete oito", True,
                  marks=GLUED_LOSS),
 ])
@@ -1159,6 +1159,25 @@ def test_a_say_as_reads_as_dev_where_the_round_ten_rules_decide(text, lang, valu
         once = normalize(text, lang, say_as=say_as)
         assert once == expected
         assert normalize(once, lang, say_as=say_as) == once
+        assert normalize(once, lang) == once
+
+
+@pytest.mark.parametrize(("text", "lang", "value", "expected"), [
+    ("Appelez le 35 910 08416252798 2nd", "fr-FR", "characters", "Appelez le 35 910 08416252798 2nd"),
+    ("Tel. [1] ]\xa0+49\xa0074-63", "en-GB", "characters", "Tel. [one] ]\xa0+49\xa0074-63"),
+    ("Telefon 1 52 010 - 614 857", "de-AT", "digits", "Telefon eins fünf zwei null eins null - 614 857"),
+    ("mail me€665\xa0555\xa0465,73 2x", "fr-FR", "telephone", "mail me€665\xa0555\xa0465,73 2x"),
+])
+def test_a_say_as_leaves_the_words_that_keep_a_phone_run_as_a_second_pass_sees_them(text, lang, value, expected):
+    """Design sections 11 and 4.3. A say-as does not read the phone word and the function words before a kept run, so
+    the phone word still names the run on a second pass. It reads a digit group next to the run, because a second
+    pass reads that group too. Under `telephone`, the groups that a no-break space joins to a run read with the run
+    or not at all."""
+    say_as = SayAs(interpret_as=value)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", ParameterNotHonouredWarning)
+        once = normalize(text, lang, say_as=say_as)
+        assert once == expected
         assert normalize(once, lang) == once
 
 

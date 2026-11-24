@@ -929,11 +929,10 @@ def _linked(text: str, end: int, marks: Sequence[str], by_start: dict[int, Numbe
     return None
 
 
-def _spoken_words(text: str, tokens: Sequence[Token], request: Request) -> tuple[Word, ...]:
-    """The context words of the text, where the characters that `SYMBOL` reads and the emoji sequences that `EMOJI`
-    reads stand for their names. A sequence of such pieces that only spaces part is one word, whose text is the
-    names, so it fills one slot of a window however many words the names hold."""
-    marks = named_pieces(text, request)
+def _spoken_words(text: str, tokens: Sequence[Token], marks: Sequence[tuple[int, int, str]]) -> tuple[Word, ...]:
+    """The context words of the text, where each piece of `marks`, as the characters that `SYMBOL` reads, stands for
+    its name. A sequence of such pieces that only spaces part is one word, whose text is the names, so it fills one
+    slot of a window however many words the names hold."""
     if not marks:
         return context_words(tokens)
     runs: list[list[tuple[int, int, str]]] = []
@@ -978,12 +977,11 @@ def _clean_start(text: str, start: int) -> bool:
 
 
 def _clean_end(text: str, end: int) -> bool:
-    """Whether the run ends the text, or a space and no digit follow it, or a closing mark and then no digit and no
-    mark of a number."""
-    if end == len(text):
+    """Whether the run ends the text, or a space follows it, or a closing mark and then no digit and no mark of a
+    number. A digit after a space that is no group space does not join the run, and a first pass reads it, so a second
+    pass would see a word there: `0800 123 456` reads in `Call 0800 123 456\xa024 hours`."""
+    if end == len(text) or text[end].isspace():
         return True
-    if text[end].isspace():
-        return not (end + 1 < len(text) and is_digit(text[end + 1]))
     return text[end] in _CLOSERS and (end + 1 == len(text) or text[end + 1] in _CLOSERS
                                       or not (is_digit(text[end + 1]) or text[end + 1] in _JOINERS + "+"))
 
@@ -1054,7 +1052,9 @@ class Telephone:
                 return shaped or coded or not function, (shaped or coded) and not symbol
             if word.start in symbols:
                 symbol = True
-            elif word.text.lower() in function_words:
+            # A word in square brackets is a reference, as `[1]`, which reads `[um]` on a second pass.
+            elif text[word.start - 1:word.start] == "[" and text[word.end:word.end + 1] == "]" \
+                    or function_words.issuperset(word.text.lower().split()):
                 function = True
             else:
                 return False, False
@@ -1132,9 +1132,20 @@ class Telephone:
             return
         phone_words = frozenset(w.lower() for w in data.get("phone_words", ()))
         function_words = frozenset(w.lower() for w in data.get("function_words", ()))
-        words = _spoken_words(text, tokens, request)
+        # A `1` that reads as a function word, as the article `un` or `um`, is one already on the first pass.
+        if data.get("digit_words", ("", ""))[1].lower() in function_words:
+            function_words |= {"1"}
         pieces = named_pieces(text, request)
         symbols = frozenset(start for start, _, _ in pieces)
+        # In a language that reads abbreviations, a key of an abbreviation table counts by its reading, as a second
+        # pass sees it: `i.e.` is "that is".
+        readings = {key: value for table in ("number_abbreviations", "abbreviations")
+                    for key, value in data.get(table, {}).items() if value is not None} \
+            if Form.ABBREVIATION in request.params.forms else {}
+        abbreviations = [(span.start, span.end, readings[span.fields["key"]])
+                         for span in (Abbreviation().find(text, tokens, request) if readings else ())
+                         if span.fields["key"] in readings and span.start not in symbols]
+        words = _spoken_words(text, tokens, sorted(pieces + abbreviations))
         covered = frozenset(index for start, end, _ in pieces for index in range(start, end))
         shapes = [re.compile(shape) for shape in data.get("phone_shapes", ())]
         unit_shapes = [re.compile(shape) for shape in data.get("phone_unit_shapes", ())]
@@ -1218,13 +1229,18 @@ class Telephone:
                 # that may be an hour or a count, as `8` in `US$5 023 8am`. Any other run of 7 to 15 digits that no
                 # number reading groups stays as written too (design section 10): read group by group, `31 3330 5200`
                 # and `030-477 05 342` would give quantities that the text does not hold. Such a run keeps a last
-                # group that may be a count, so that a second pass sees the same run.
+                # group that may be a count, so that a second pass sees the same run, and the run is such a run with
+                # or without that group, as `(01 60) 9 76`.
+                if re.match(f"[{re.escape(_JOINERS)}][0-9]", text[end:]):
+                    continue
                 stop = next((stop for stop in (end, start + cut if tail else None) if stop and _clean_start(text, start)
                              and any(shape.fullmatch(text, start, stop) for shape in kept_shapes)), None)
-                if stop is None:
-                    stop = end
-                    if len(groups) < 2 or not 7 <= len(digits) <= 15 or "." in written or self._grouped(written):
-                        continue
+                if stop is None and not any(
+                        len(parts := _DIGIT_RUN.findall(judged)) >= 2 and 7 <= len("".join(parts)) <= 15
+                        and "." not in judged and not self._grouped(judged)
+                        for judged in (written, written[:cut] if tail else None) if judged):
+                    continue
+                stop = stop or end
                 yield Span(start, stop, Form.TELEPHONE,
                            FrozenMap({"country_code": "", "groups": tuple(_DIGIT_RUN.findall(text, start, stop)),
                                       "prefix": "", "suffix": ""}), recognizer=self.name, keep=True), False

@@ -202,7 +202,7 @@ READERS: dict[str, frozenset[str]] = {
     "telephone": frozenset({"phone_words", "clock_marks", "day_periods", "phone_shapes", "phone_unit_shapes",
                           "phone_kept_shapes", "no_phone_shapes", "short_codes", "list_links", "operators", "symbols",
                           "proclitics", "case_suffixes", "function_words", "time_suffixes", "time_symbols",
-                          "patterns"}) | SYMBOL_KEYS,
+                          "patterns", "digit_words"}) | SYMBOL_KEYS,
     "expression": frozenset({"number_marks", "operators", "patterns", "symbols"}),
     "color": frozenset({"color_words"}),
     "electronic": frozenset({"electronic_schemes", "electronic_tlds"}),
@@ -236,11 +236,15 @@ reads, by its name in the core, and the keys of the unread check of `render` and
 `effective_params`. The telephone reader reads `patterns`, `time_suffixes` and `time_symbols` for the clock marks
 that end a run. `speak_electronic` also reads the keys of the `symbol`
 reader, with a default for each, to find the `SYMBOL` name of a character in an address. The telephone reader reads
-them to find a character that `SYMBOL` reads between a phone word and the digits."""
+them to find a character that `SYMBOL` reads between a phone word and the digits, and `digit_words`, to find whether
+a `1` reads as a function word."""
 
 THROUGH_SYMBOL = dict.fromkeys(("cardinal", "decimal", "fraction"), SYMBOL_KEYS - {"leads"})
 """The keys that `reads_symbol` reads for these shared recognizers, in a file that uses `SYMBOL`, to find whether
 `SYMBOL` reads a currency sign next to a number. A file with no `SYMBOL` needs none of these keys for them."""
+THROUGH_ABBREVIATION = {"telephone": READERS["abbreviation"]}
+"""The keys that the telephone reader reads through the `abbreviation` reader, in a file that uses it, to judge an
+abbreviation between a phone word and the digits by its reading. A file with no `abbreviation` needs none of them."""
 PHONE_SHAPE_KEYS = ("phone_shapes", "phone_unit_shapes", "phone_kept_shapes", "no_phone_shapes")
 """The tables of regexes that the shared telephone recognizer compiles."""
 

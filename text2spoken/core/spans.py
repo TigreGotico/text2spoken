@@ -310,7 +310,8 @@ def _claim(text: str, tokens: Sequence[Token], blocks: Sequence[tuple[int, int]]
         unit_at: list[Span | None] = [None] * len(text)
         for unit in units:
             unit_at[unit.start:unit.end] = [unit] * (unit.end - unit.start)
-        evidence = _evidence_words(text, tokens, held)
+        function_words = frozenset(word.lower() for word in request.data.get("function_words", ()))
+        evidence = _evidence_words(text, tokens, held, function_words)
         telephone = say_as.value == "telephone"
         if telephone:
             # A run that the plain analysis keeps as a telephone number is a candidate too, as a second pass sees it
@@ -435,17 +436,28 @@ def _supported(spans: Sequence[Span], keeps: Sequence[Iterable[Span]], held: Seq
     return [span for index, span in enumerate(spans) if index in fitting]
 
 
-def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span]) -> list[tuple[Span, ...]]:
+def _evidence_words(text: str, tokens: Sequence[Token], held: Sequence[Span],
+                    function_words: frozenset[str]) -> list[tuple[Span, ...]]:
     """For each character, the spans that stay as written next to the word that holds it: a recognizer reads that
     word as the evidence that keeps the span as written, as `Call` keeps `112` in `Call 112+1.` and `kg` keeps `3/4`
-    in `3/4 kg`."""
+    in `3/4 kg`. A phone word names a run past function words, so a `TELEPHONE` span holds the function words before
+    it and the word before them, as `le` and `Appelez` in `Appelez le 35 910 08416252798 2nd`. A word in square
+    brackets counts as a function word, as `1` in `Tel. [1] +49 074-63`."""
     marked: list[tuple[Span, ...]] = [()] * len(text)
     words = [token for token in tokens if context_word(token.text) is not None]
     starts = [token.start for token in words]
     for span in held:
         before, after = bisect_left(starts, span.start) - 1, bisect_left(starts, span.end)
+        while span.form is Form.TELEPHONE and before > 0 \
+                and (context_word(words[before].text).lower() in function_words
+                     or text[words[before].start - 1:words[before].start] == "["
+                     and text[words[before].end:words[before].end + 1] == "]"):
+            for position in range(words[before].start, words[before].end):
+                marked[position] += (span,)
+            before -= 1
         for word in (words[before] if before >= 0 else None, words[after] if after < len(words) else None):
-            if word is not None and (word.end <= span.start or word.start >= span.end):
+            if word is not None and (word.end <= span.start or word.start >= span.end) \
+                    and (span.form is not Form.TELEPHONE or not context_word(word.text).isdecimal()):
                 for position in range(word.start, word.end):
                     marked[position] += (span,)
     return marked

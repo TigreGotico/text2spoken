@@ -23,7 +23,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from text2spoken.core.dates import is_valid, resolve as resolve_date
-from text2spoken.core.recognizers import (_DATE, PHONE_PLANS, _cluster_edge, _edge, _period_after,
+from text2spoken.core.recognizers import (_DATE, PHONE_PLANS, Telephone, _cluster_edge, _edge, _period_after,
                                           _sentence_period, digit_run_matches, numbers_in, whole_part)
 from text2spoken.core.spans import SAY_AS_SPANS, Features, Recognizer, Span, SpanContext
 from text2spoken.core.spellers import bounded_integer, cardinal_digit_words
@@ -213,10 +213,26 @@ class BareTelephone:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         codes = sorted((plan["country_code"] for plan in PHONE_PLANS.values()), key=len, reverse=True)
-        for match in _TELEPHONE.finditer(fold_digits(text)):
+        folded = fold_digits(text)
+        # A group that the other phone spaces of the language join to a run, as the no-break spaces of fr-FR
+        # `ß773\u00a0882\u00a0001`, does not read when a word character is glued to the start of the run or a
+        # decimal mark and a digit follow its end, so a second pass sees the same run.
+        spaces = "".join({char for recognizer in request.language.recognizers if isinstance(recognizer, Telephone)
+                          for char in recognizer.spaces} - {" "})
+        spaced = {index: match.span() for match in re.finditer(f"[0-9]+(?:[{re.escape(spaces)} .-][0-9]+)*", folded)
+                  for index in range(*match.span())} if spaces else {}
+        for match in _TELEPHONE.finditer(folded):
             start, end = match.span()
             written = match.group()
-            if not (_edge(text, start, end) and one_digit_set(text[start:end])):
+            first, last = spaced.get(end - 1, (start, end))
+            # In such a run, a last group glued to a word leaves the run, as `2` in fr-FR `902\u00a0799\u00a0858 2x`,
+            # so `858` reads with the groups before it.
+            cut = written.rfind(" ")
+            if first < start and cut > 0 and not _edge(text, start, end) and _edge(text, start, start + cut):
+                end, written = start + cut, written[:cut]
+            if not (_edge(text, start, end) and _edge(text, min(first, start), end)
+                    and not re.match("[.,][0-9]", folded[max(last, end):])
+                    and one_digit_set(text[start:end])):
                 continue
             groups = [group for group in re.split("[ .()-]", written.lstrip("+")) if group]
             country_code = ""

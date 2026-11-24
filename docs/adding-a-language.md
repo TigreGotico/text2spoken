@@ -392,7 +392,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `scales` | `case_suffixes`, `number_gaps`, `proclitics`, `range_marks`, `range_word` |
 | `kept_money` | `MONEY` | `currencies`, `currency_symbols`, `number_marks`, `symbols` | `case_suffixes`, `number_gaps`, `proclitics`, `symbol_names` |
 | `measure` | `MEASURE` | `dimension_marks`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `elision_marks`, `number_gaps`, `proclitics`, `range_marks`, `unjoined_symbols` |
-| `telephone` | `TELEPHONE` | `clock_marks`, `currencies`, `currency_symbols`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `patterns`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names`, `time_suffixes`, `time_symbols` |
+| `telephone` | `TELEPHONE` | `clock_marks`, `currencies`, `currency_symbols`, `digit_words`, `leads`, `list_links`, `no_phone_shapes`, `operators`, `patterns`, `phone_kept_shapes`, `phone_shapes`, `phone_unit_shapes`, `phone_words`, `short_codes`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `day_periods`, `function_words`, `proclitics`, `symbol_names`, `time_suffixes`, `time_symbols` |
 | `expression` | `EXPRESSION` | `number_marks`, `operators`, `patterns`, `symbols` | none |
 | `abbreviation` | `ABBREVIATION` | `abbreviations`, `number_abbreviations`, `sentence_final`, `titles` | `electronic_tlds` |
 | `space_groups` | `CARDINAL` | none | none |
@@ -403,6 +403,8 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `emoji` | `EMOJI` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
 
 Of `units` and `unit_symbols`, and of `currencies` and `currency_symbols`, a file gives at least one. `proclitics` and `case_suffixes` give the words that a language joins to a number, such as an article or a case ending.
+
+In a file that reads the `ABBREVIATION` form, `telephone` also reads the keys of `abbreviation`. It reads an abbreviation between a phone word and the digits as its words, as a second pass does.
 
 The shared verbalizers read these keys:
 
