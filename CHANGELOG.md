@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a109](https://github.com/TigreGotico/text2spoken/tree/0.0.2a109) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a108...0.0.2a109)
+
+**Merged pull requests:**
+
+- docs: drop the row counts from the language pages [\#504](https://github.com/TigreGotico/text2spoken/pull/504) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a108](https://github.com/TigreGotico/text2spoken/tree/0.0.2a108) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a107...0.0.2a108)
@@ -282,10 +290,6 @@
 ## [0.0.2a75](https://github.com/TigreGotico/text2spoken/tree/0.0.2a75) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a74...0.0.2a75)
-
-**Merged pull requests:**
-
-- fix\(revision\): decode the probe output as UTF-8 with replacement [\#247](https://github.com/TigreGotico/text2spoken/pull/247) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a74](https://github.com/TigreGotico/text2spoken/tree/0.0.2a74) (2026-11-18)
 
