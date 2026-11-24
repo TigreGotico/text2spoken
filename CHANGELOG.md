@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a108](https://github.com/TigreGotico/text2spoken/tree/0.0.2a108) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a107...0.0.2a108)
+
+**Merged pull requests:**
+
+- chore\(tests\): remove the blank line after row pt-717 [\#499](https://github.com/TigreGotico/text2spoken/pull/499) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a107](https://github.com/TigreGotico/text2spoken/tree/0.0.2a107) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a106...0.0.2a107)
@@ -286,10 +294,6 @@
 ## [0.0.2a73](https://github.com/TigreGotico/text2spoken/tree/0.0.2a73) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a72...0.0.2a73)
-
-**Merged pull requests:**
-
-- fix\(revision\): start the probe result on its own line [\#245](https://github.com/TigreGotico/text2spoken/pull/245) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a72](https://github.com/TigreGotico/text2spoken/tree/0.0.2a72) (2026-11-18)
 
