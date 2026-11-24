@@ -33,7 +33,11 @@ and "cada": "quantificador universal", join the words of `function_words`. So do
 contractions with `em` and `de`, which are no noun that a number counts: Priberam, "nesta": "Contracção da preposição em
 e do pronome ou determinante esta."; "desta": "Contracção da preposição de e do pronome demonstrativo esta."; "naquela":
 "Contracção da preposição em com o determinante ou pronome demonstrativo aquela." `ganhou 1 nesta terça-feira` reads
-"ganhou um nesta terça-feira". A plural contraction with `de` right after the number is a partitive, as `das` is, so `2
+"ganhou um nesta terça-feira". So do `à`, `às`, `pelas` and `numa`: Priberam, "à": "Contracção da preposição a com o
+artigo ou pronome a"; "às": "Contracção da preposição a com o artigo ou pronome as."; "pela", of which `pelas` is the
+plural: "Contracção da preposição per e do artigo la."; "numa": "Contracção da preposição em e do artigo uma."
+`domingo (2), às 16h` reads "domingo (dois), às dezasseis horas", and `em 2019 numa cela` reads "em dois mil e
+dezanove numa cela". A plural contraction with `de` right after the number is a partitive, as `das` is, so `2
 destas maçãs` reads "duas destas maçãs". Cunha and Cintra, Nova Gramática do Português Contemporâneo, p. 374, quoted in
 Ciberdúvidas 33468: "Na enumeração de páginas e de folhas de um livro, assim como na de casas, apartamentos, quartos de
 hotel, cabines de navio, poltronas de casas de diversões e equivalentes, empregam-se os CARDINAIS. Nestes casos sente-se
@@ -235,10 +239,9 @@ hour or of a time with `h` already holds the unit once: "às onze horas e trinta
 article 3267). So the time claims the written word: `Fecha às 16:00 horas` reads "Fecha às dezasseis horas", and
 `Fecha às 24:00 horas` reads "Fecha à meia-noite", because "meia-noite" and "meio-dia" name the hour with no unit
 (Priberam, "meia-noite" and "meio-dia"). A singular `hora` is claimed only after "uma hora", the reading of `1:00`.
-After any other reading it opens a time zone, as in `às 16:00 hora local`, and stays. A time with minutes and no `h`,
-as `10:30`, reads "dez e trinta" with no unit, so a written `horas` after it stays: "dez e trinta horas". A line break
-between the time and the word keeps both. No source rules on the doubled word itself; the rule follows from the
-readings cited above.
+After any other reading it stays, as in `às 16:00 hora local`. A time with minutes and no `h`, as `10:30`, reads
+"dez e trinta" with no unit, so a written `horas` after it stays: "dez e trinta horas". A line break between the time
+and the word keeps both. No source rules on the doubled word itself; the rule follows from the readings cited above.
 
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
@@ -417,6 +420,7 @@ from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
+from importlib.util import find_spec
 
 from text2spoken.core import parsers
 from text2spoken.core.color import speak_color
@@ -535,7 +539,7 @@ DATA = freeze({
                        "mas", "cada", "este", "esta", "estes", "estas", "esse", "essa", "esses", "essas", "aquele",
                        "aquela", "aqueles", "aquelas", "neste", "nesta", "nestes", "nestas", "nesse", "nessa", "nesses",
                        "nessas", "naquele", "naquela", "naqueles", "naquelas", "deste", "desta", "desse", "dessa",
-                       "daquele", "daquela"],
+                       "daquele", "daquela", "à", "às", "pelas", "numa"],
     "color_words": ["cor", "cores"],
     "colors": {"000000": "preto", "0000ff": "azul", "008000": "verde", "ff0000": "vermelho", "ffff00": "amarelo",
                "ffffff": "branco"},
@@ -737,14 +741,17 @@ def _listed_gender(word: str, data: FrozenMap) -> str | None:
         or data["noun_gender"].get(word.lower())
 
 
-def _gender_of(word: str, request: Request) -> GrammaticalGender | None:
-    """The gender of a noun or a given name: the tables of `_listed_gender`, then the endings of `gender_suffixes`."""
+def _gender_of(word: str, request: Request, endings: bool = True) -> GrammaticalGender | None:
+    """The gender of a noun or a given name: the tables of `_listed_gender`, then, if `endings`, the endings of
+    `gender_suffixes`."""
     data = request.data
     if word in data["function_words"]:
         return None
     entry = _listed_gender(word, data)
     if entry is not None:
         return GrammaticalGender(entry)
+    if not endings:
+        return None
     for suffix, gender in data["gender_suffixes"]:
         if word.lower().endswith(suffix):
             return GrammaticalGender(gender)
@@ -771,8 +778,9 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     The tables of `_listed_gender` name a noun first. When tugalex knows the word after the number, a determiner comes
     before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
     a noun"), and that word can be an adjective with no noun, as in `as 2 melhores`. A noun of two genders, such as
-    `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. Without
-    tugalex, the endings of `gender_suffixes` come before the determiner."""
+    `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. tugalex runs
+    its own ending rules before it gives no gender, so a word that it gives none, as `ainda`, takes the gender of the
+    determiner or the default. Without tugalex, the endings of `gender_suffixes` come before the determiner."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
     request = context.request
@@ -804,7 +812,7 @@ def agreement(context: SpanContext) -> GrammaticalGender:
     listed = _listed_gender(noun, data)
     code = _lexicon_gender(noun) if noun and listed is None and noun not in data["function_words"] else None
     if code is None:
-        found = _gender_of(noun, request) if noun else None
+        found = _gender_of(noun, request, endings=find_spec("tugalex") is None) if noun else None
         gender = found or (GrammaticalGender(determiner) if determiner else None)
     else:
         if code == "mf" and noun.lower() in data["two_gender_feminine"]:

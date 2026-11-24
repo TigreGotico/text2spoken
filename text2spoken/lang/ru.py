@@ -493,6 +493,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     else:
         features = agreement(digits, context)
         data = request.data
+        # The counted noun, past any adjective in the genitive plural in -ых or -их.
         noun = next((word for word in map(str.lower, context.after)
                      if len(word) <= 2 or not word.endswith(("ых", "их"))), "")
         collective = data["collective_numerals"].get(digits)
