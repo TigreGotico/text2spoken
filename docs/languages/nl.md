@@ -1,6 +1,14 @@
 # Dutch
 
-The file `text2spoken/lang/nl.py` reads Dutch. Its number words come from `ovos-number-parser`, which the base install holds.
+<!-- agent-hint
+covers: what the Dutch file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/nl.py, tests/data/nl.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/nl.md`
+see: de.md, ../how-it-reads.md
+-->
+
+The file `text2spoken/lang/nl.py` reads Dutch. Its cardinals come from `ovos-number-parser`, which the base install holds, and its ordinals and years from the CLDR spell-out rules.
 
 ## What it reads
 
@@ -41,7 +49,7 @@ An ordinal takes the ending `e`, or the ending `de` or `ste` of its ordinal word
 
 A number can have a full stop or a space between its groups of three digits. An amount with spaces between its groups reads whole, as in `€ 12 000,50`. An amount or a measure whose whole part starts with 0 and holds more digits, as in `€ 05,00` or `012 000 kg`, stays as written, so that no group reads alone. A run of groups whose first group starts with 0 and that has a decimal comma, as in `012 000,5 kg`, stays as written too. A digit group after the last group shows a phone number and no number of groups. Each group without a leading 0 then reads as a cardinal, as in `Bel 020 123 4567.`, which reads "Bel 020 honderddrieëntwintig vierduizend vijfhonderdzevenenzestig." A run of groups of three digits whose first group starts with 0 shows no number of groups either, and it stays as written, as in `Bel 020 123 456.` Dutch writes a space after "duizend", as Taaladvies.net and Onze Taal give, so 4002 reads "vierduizend twee".
 
-A four-digit year from 1000 to 2099 right after `in het jaar` or `anno`, with one space or one no-break space between, reads as Dutch speakers say it. Onze Taal gives "negentienachtennegentig" for 1998 and "tweeduizend zesentwintig" for 2026. After `jaar` alone, after another preposition or after a mark, the number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het jaar 1450 bezoekers` or `het jaar, 1450 mensen`. A line break or two spaces before the number also give a count. A count reads in full, as the same page gives it. The titles `dr.`, `drs.`, `ir.`, `prof.` and `mr.` read as their full words anywhere, and `ing.` only before a capital, because it also abbreviates "ingenaaid" and "ingeënt".
+A four-digit year from 1000 to 2099 right after `in het jaar` or `anno`, with one space, one no-break space or one narrow no-break space between, reads as Dutch speakers say it. Onze Taal gives "negentienachtennegentig" for 1998 and "tweeduizend zesentwintig" for 2026. After `jaar` alone, after another preposition or after a mark, the number is often a count, as in `vorig jaar 1450 verkeersdoden`, `gedurende het jaar 1450 bezoekers` or `het jaar, 1450 mensen`. A line break or two spaces before the number also give a count. A count reads in full, as the same page gives it. The titles `dr.`, `drs.`, `ir.`, `prof.` and `mr.` read as their full words, and `ing.` only before a capital, because it also abbreviates "ingenaaid" and "ingeënt".
 
 ## Varieties
 
@@ -81,7 +89,7 @@ Each row in `tests/data/nl.tsv` cites a source. Guard rows pin text that the fil
 
 ## Limits
 
-The file reads no ranges, dates, times, telephone numbers, identifiers, words in capitals letter by letter, idioms, Roman numerals, colours or web and email addresses. `supports("nl")` lists the forms it reads. Dutch also leaves these forms as written or reads them in a limited way:
+The file reads no ranges, dates, times, telephone numbers, identifiers, words in capitals letter by letter, idioms, Roman numerals, colours or web and email addresses. A date reads only with an SSML say-as `date`, through ovos-date-parser. `supports("nl")` lists the forms it reads. Dutch also leaves these forms as written or reads them in a limited way:
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
@@ -90,8 +98,8 @@ The file reads no ranges, dates, times, telephone numbers, identifiers, words in
 | `Ik had nog maar 1/2 fles water over.` | `nl-NL` | stays as written | The word for a half takes the form "halve" before some nouns, and the file does not know the noun. |
 | `Het kost $ 2,50.` | `nl-NL` | Het kost twee komma vijf nul dollar. | Only an amount in euros reads its cents, because the source gives the spoken form for the euro only. |
 | `Hij is 1,80 m lang.` | `nl-NL` | Hij is één komma acht nul meter lang. | Each digit after the decimal comma reads alone, as the CLDR spell-out rule of Dutch gives. |
-| `In 1998.` | `nl-NL` | In duizend negenhonderdachtennegentig. | A number reads as a year only right after `in het jaar` or `anno`. Elsewhere it reads as a cardinal, because ovos-date-parser reads no Dutch date that would show a year. |
-| `Op 12-03-2024 om 14.30 uur.` | `nl-NL` | stays as written | ovos-date-parser reads no Dutch date or time, so a numeric date and a clock time stay as written. |
+| `In 1998.` | `nl-NL` | In duizend negenhonderdachtennegentig. | A number reads as a year only right after `in het jaar` or `anno`. Elsewhere it reads as a cardinal: Onze Taal reads a number in full outside a year context, as "negentienhonderdveertig euro" for `1940 euro`. |
+| `Op 12-03-2024 om 14.30 uur.` | `nl-NL` | stays as written | A numeric date stays as written, because the plain text does not show the order of its fields. A clock time is no number, so it stays as written too. |
 | `Een groei van 12 000 %.` | `nl-NL` | stays as written | A number with spaces between its groups stays as written before a percent sign or a dimension mark. |
 | `Er zijn 12 000,5 liter.` | `nl-NL` | stays as written | A number with spaces between its groups and a decimal comma reads only in an amount. |
 | `Het kost 10 000-20 000 euro.` | `nl-NL` | stays as written | The file reads no ranges. No group of a number grouped with spaces reads alone. |

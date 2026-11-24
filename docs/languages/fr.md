@@ -1,5 +1,13 @@
 # French
 
+<!-- agent-hint
+covers: what the French file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/fr.py, tests/data/fr.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/fr.md`
+see: it.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/fr.py` reads French. Its number words come from the CLDR spell-out rules, which the core dependency `unicode-rbnf` holds.
 
 ## What it reads
@@ -44,7 +52,7 @@ A number that ends in 1 says *un* or *une* with its noun. The gender comes from 
 
 ### Numbers grouped with a space
 
-A space, a no-break space, a narrow no-break space and, in Switzerland, an apostrophe group the digits of a number, three at a time. A comma and a full stop both mark a decimal, and a full stop that repeats groups digits. A range, a fraction and an expression read a number grouped with a space as one number.
+A space, a no-break space, a narrow no-break space and an apostrophe group the digits of a number, three at a time, in every variety. A comma and a full stop both mark a decimal, and a full stop that repeats groups digits. A range and an expression read a number grouped with a space as one number.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -57,9 +65,9 @@ A space, a no-break space, a narrow no-break space and, in Switzerland, an apost
 
 *Million* and *milliard* are nouns, so they take *de* before the noun that they count. A range whose high end is a round million takes it too. A number with a lower part, such as 1 200 000, ends in no noun and takes no *de*.
 
-Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunction or adverb after the number takes none: the table `no_de_words` holds each such word of the Wiktionnaire categories that ends in *s*, *x* or *z*, such as *ailleurs* and *là-bas*. An adjective after the number takes none if the table `no_de_adjectives` holds it, and a participle after a sum of money takes none if the table `no_de_participles` holds it. A verb with an inverted subject, such as *disent-ils* or *vois-tu*, takes none. An imperative with an object pronoun, such as *croyez-moi*, *allez-y* or *donnez-m'en*, takes none either. A word of one letter, a mark or the end of the text takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*, unless the table `invariable_plurals` holds it. A word with a hyphen counts as one word, and it is plural when any of its parts is, as in *années-lumière*.
+Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunction or adverb after the number takes none: the table `no_de_words` holds such words of the Wiktionnaire categories that end in *s*, *x* or *z*, such as *ailleurs* and *là-bas*. A word that also reads as a noun, such as *pas* or *fois*, is not in the table and takes *de*. An adjective after the number takes none if the table `no_de_adjectives` holds it, and a participle after a sum of money takes none if the table `no_de_participles` holds it. A verb with an inverted subject, such as *disent-ils* or *vois-tu*, takes none. An imperative with an object pronoun, such as *croyez-moi*, *allez-y* or *donnez-m'en*, takes none either. A word of one letter, a mark or the end of the text takes none either. The counted noun is plural, so a word that does not end in *s*, *x* or *z*, such as a verb, takes no *de*, unless the table `invariable_plurals` holds it. A word with a hyphen counts as one word, and it is plural when any of its parts is, as in *années-lumière*.
 
-*De* becomes *d'* before a vowel or a mute h. It stays *de* before a word that starts as a word of the OQLF list of aspirated h does, before a y and a vowel other than in *yeux* and *yeuse*, and before *oui* and *ouistiti*. A y before a consonant is a vowel, so *de* elides before it. It also stays *de* before a capitalised h, because most proper nouns with h take no elision. The OQLF calls this a tendency with exceptions, and *Haïti* and its derived words elide. A word all in capitals follows the rules of its lowercase form.
+*De* becomes *d'* before a vowel or a mute h. It stays *de* before a word that starts as a word of the OQLF list of aspirated h does, before a y and a vowel other than in *yeux* and *yeuse*, and before *oui* and *ouistiti*. A y before a consonant is a vowel, so *de* elides before it. It also stays *de* before a capitalised h, because most proper nouns with h take no elision. The OQLF calls this a tendency with exceptions, and *Haïti* and its derived words elide. A word all in capitals follows the rules of its lowercase form. A word of the table `mute_h`, such as *hallucinations*, elides, although it starts as a word of the list does.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -107,9 +115,9 @@ Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunctio
 
 | Tag | What differs |
 | --- | --- |
-| `fr-FR` (the default variety) | The base readings. `fr` and every region with no variety of its own read as `fr-FR` |
+| `fr-FR` (the default variety) | The base readings. `fr` and every region with no variety of its own use the data of `fr-FR`, with the number words of their own CLDR locale |
 | `fr-CA` | `$` is the Canadian dollar. A telephone number reads digit by digit. `register="colloquial"` says *piastres* and *cennes* |
-| `fr-CH` | `CHF`, `Fr.` and `fr.` are Swiss francs. An apostrophe groups digits |
+| `fr-CH` | `Fr.` and `fr.` are Swiss francs, as `CHF` is in every variety |
 
 The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *septante* and *nonante*, `fr-CH` says *huitante*, and every other region says *soixante-dix*, *quatre-vingts* and *quatre-vingt-dix*. CLDR gives *huitante* for all of Switzerland, and Geneva, Neuchâtel and Jura do not use it.
 
@@ -167,8 +175,8 @@ French leaves these forms as written or reads them in a limited way:
 | `Composez 911 ici.` | `fr-CA` | Composez neuf cent onze ici. | `fr-CA` reads a telephone number digit by digit, but a short code of three digits as one number. No source for either reading was fetched. |
 | `Rendez-vous le 10/11/26.` | `fr-FR` | stays as written | A date with a two-digit year stays as written. |
 | `Il pèse 1.500 kg.` | `fr-FR` | stays as written | The marks do not settle the number: it is 1,5 or 1500. A warning names it. |
-| `Il faut 1'000-2'000 francs.` | `fr-CH` | stays as written | A range, a fraction and an expression read a number grouped with a space, and not one grouped with an apostrophe. |
-| `Il en reste 2 000 000 entiers.` | `fr-FR` | Il en reste deux millions d'entiers. | An adjective after a round million that `no_de_adjectives` lacks takes *de*, as a noun does. The class is open, and the table holds the adjectives that a count of Tatoeba and FLORES+ found after a number. |
+| `Il faut 1'000-2'000 francs.` | `fr-CH` | stays as written | A range and an expression read a number grouped with a space, and not one grouped with an apostrophe. |
+| `Il en reste 2 000 000 entiers.` | `fr-FR` | Il en reste deux millions d'entiers. | An adjective after a round million that `no_de_adjectives` lacks takes *de*, as a noun does. The class is open, and the table holds the adjectives that a count of Tatoeba and FLORES+ found after a number, their other genders, and six adjectives of amounts, such as *supplémentaires*. |
 | `Il a 2 000 000 hérités de son père.` | `fr-FR` | Il a deux millions d'hérités de son père. | A participle after a round million that `no_de_participles` lacks takes *de*. The class is open, and the table holds the common participles after a sum of money. |
 | `Il a écrit 1 000 000 vers.` | `fr-FR` | Il a écrit un million vers. | *Vers* (verses) is also a preposition of `no_de_words`, so it takes no *de*, where French says *un million de vers*. |
 | `Il a gagné 2 000 000 sous.` | `fr-FR` | Il a gagné deux millions sous. | *Sous* (coins) is also a preposition of `no_de_words`, so it takes no *de*, where French says *deux millions de sous*. |

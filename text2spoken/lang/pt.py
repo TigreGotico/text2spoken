@@ -211,7 +211,12 @@ Priberam labels each of entre, desde, após, até, para, sobre, contra and sem "
 time stands for "às", the contraction of the preposition a and the article as (Ciberdúvidas 27390: "A(preposição) +
 A(S) (artigo definido feminino singular ou plural): ÀS"). So that "as" stays as written, and the time reads the
 hours that it agrees with: "Almoçamos as 12:00." reads "Almoçamos as doze horas.". A singular "à" or "da" before
-12:00 takes the masculine too: "à 12:00" reads "ao meio-dia". `time_contractions` gives the words: Priberam,
+12:00 takes the masculine too: "à 12:00" reads "ao meio-dia". Any time in the hour 1 reads "uma", which is singular, so
+the word before it takes the singular article in the same way: "às 1:00" reads "à uma hora", "das 1:30" "da uma e
+trinta" and "até às 1h" "até à uma hora". Ciberdúvidas 5175 writes "na frase «espero até à 1 hora»". João Luiz Ney,
+"Curso de Português", Revista do Serviço Público, October 1952, p. 62, after the lessons of José Oiticica: "Escreve-se
+porém: “à uma hora estarei lá (porque uma, aí, é adjetivo numeral; compare “às duas horas”, “às três”, “à meia
+noite”)". `time_contractions` gives the words: Priberam,
 "meia-noite": "nome feminino"; "meio-dia": "nome masculino"; "as": "feminino plural de o"; "ao": "Contracção da
 preposição a e do artigo ou pronome o"; "do": "Contracção da preposição de e artigo ou pronome o"; "pelo":
 "Aglutinação da preposição antiga per e do artigo ou pronome lo". The word keeps the case of its first letter only,
@@ -499,9 +504,9 @@ DATA = freeze({
     "plural_time_verbs": ["são"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
-    "time_contractions": {"às": {"0": "à", "12": "ao"}, "à": {"0": "à", "12": "ao"}, "as": {"0": "a", "12": "o"},
-                          "das": {"0": "da", "12": "do"}, "da": {"0": "da", "12": "do"},
-                          "pelas": {"0": "pela", "12": "pelo"}},
+    "time_contractions": {"às": {"0": "à", "1": "à", "12": "ao"}, "à": {"0": "à", "1": "à", "12": "ao"},
+                          "as": {"0": "a", "1": "a", "12": "o"}, "das": {"0": "da", "1": "da", "12": "do"},
+                          "da": {"0": "da", "1": "da", "12": "do"}, "pelas": {"0": "pela", "1": "pela", "12": "pelo"}},
     "time_article_prepositions": {"as": ["entre", "desde", "após", "até", "para", "sobre", "contra", "sem"]},
     "range_articles": {"da": {"one": "à", "other": "às"}, "das": {"one": "à", "other": "às"}},
     "day_periods": {"am": ["a.m."], "pm": ["p.m."]},
@@ -972,12 +977,13 @@ def speak_time(span: Span, context: SpanContext) -> str:
     try:
         if _day_point(fields) is not None:
             reading = parsers.spoken_time(tag, hour, clock="12h", period=True)
-            return _contracted_word(fields["prefix"], hour, request) + reading
-        if fields["suffix"]:
-            return parsers.spoken_time(tag, hour, minute, fields["second"] or None, style="units")
-        return parsers.spoken_time(tag, hour, minute)
+        elif fields["suffix"]:
+            reading = parsers.spoken_time(tag, hour, minute, fields["second"] or None, style="units")
+        else:
+            reading = parsers.spoken_time(tag, hour, minute)
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no time {hour}:{minute:02}: {error}") from error
+    return _contracted_word(fields["prefix"] or "", hour, request) + reading
 
 
 def _currency(currency: FrozenMap, category: str) -> str:
@@ -1109,8 +1115,8 @@ class Clock(TimeClock):
     second time takes the article of the first (Ciberdúvidas 22241: "das cinco às seis horas"). A chain of three times
     or more stays as written. A time that writes `h` keeps it in the `suffix` field, so it reads its units.
 
-    Before "meia-noite" or "meio-dia", a word of `time_contractions` right before the time takes the article of that
-    noun, when only white space stands between them. The span then starts at the word and holds the word and the
+    Before "meia-noite", "meio-dia" or a time in the hour 1, which reads "uma", a word of `time_contractions` right
+    before the time takes the article of that noun, when only white space stands between them. The span then starts at the word and holds the word and the
     white space in its `prefix` field, and the reading writes the contracted word: `às 0:00` reads `à meia-noite`.
     The time span that starts at the digits follows it, with a `prefix` of None. It reads when a lexicon entry
     claims the word first, and then the word stays as written and the time reads its 24-hour form: `às zero horas`.
@@ -1163,7 +1169,8 @@ class Clock(TimeClock):
                 one_hour = fields["minute"] == 0 and day_hour(fields["hour"], fields["period"]) == 1
                 if (fields["suffix"] or fields["minute"] == 0) and (words[after].text.lower() != "hora" or one_hour):
                     span = replace(span, end=words[after].end)
-            hour = _day_point(span.fields)
+            # Any time in the hour 1 reads "uma", which is singular.
+            hour = 1 if day_hour(span.fields["hour"], span.fields["period"]) == 1 else _day_point(span.fields)
             if hour is None:
                 out.append(span)
                 continue

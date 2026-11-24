@@ -17,6 +17,7 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Fecha às 12:00.` | `pt-PT` | Fecha ao meio-dia. |
 | `Abre das 12:00 às 14:00.` | `pt-PT` | Abre do meio-dia às catorze horas. |
 | `Fica entre as 0:00 e as 2:00.` | `pt-PT` | Fica entre a meia-noite e as duas horas. |
+| `Chega às 1:30.` | `pt-PT` | Chega à uma e trinta. |
 | `Chega às 0h.` | `pt-PT` | Chega às zero horas. |
 | `Luís XIV reinou no século XVII.` | `pt-PT` | Luís Catorze reinou no século dezassete. |
 | `A Sra. Sousa e a Dr.ª Lima.` | `pt-PT` | A Senhora Sousa e a Doutora Lima. |
@@ -55,7 +56,7 @@ A version reads with "ponto": after `versão`, `atualização` or `v`, and after
 | `Durou 1.30 h.` | `pt-PT` | stays as written |
 | `A taxa é 0 vírgula 02.` | `pt-PT` | A taxa é zero vírgula zero dois. |
 
-The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
+The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. A time in the hour 1 reads "uma", so the article before it is singular. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
 
 | Written | Spoken (`pt-PT`, `lexicon=FrozenMap({"pt": FrozenMap({"às": "às"})})`) |
 | --- | --- |
