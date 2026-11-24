@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a118](https://github.com/TigreGotico/text2spoken/tree/0.0.2a118) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a117...0.0.2a118)
+
+**Merged pull requests:**
+
+- fix\(ar\): read the CLDR currency symbols and ISO codes of the Arabic varieties [\#558](https://github.com/TigreGotico/text2spoken/pull/558) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a117](https://github.com/TigreGotico/text2spoken/tree/0.0.2a117) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a116...0.0.2a117)
@@ -190,7 +198,6 @@
 
 - fix\(pt\): a clock reads the hour word that follows it once [\#390](https://github.com/TigreGotico/text2spoken/pull/390) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): read a long digit run in linear time in pt, ru, eu and nl [\#389](https://github.com/TigreGotico/text2spoken/pull/389) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix: a tag with no script reads the CLDR locale of its likely script [\#308](https://github.com/TigreGotico/text2spoken/pull/308) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a93](https://github.com/TigreGotico/text2spoken/tree/0.0.2a93) (2026-11-19)
 
