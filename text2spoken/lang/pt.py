@@ -450,17 +450,20 @@ letter D and a full stop, so `a vitamina D. Boa noite.` stays as written: Priber
 feminino [Bioquímica] O ácido ascórbico (C6H8O6), molécula hidrossolúvel essencial ao funcionamento do corpo humano",
 names the most common vitamin. A group and a class are labelled with letters, as the Roman numerals above show.
 
-pt-PT writes the space as the group mark of an amount: CLDR 49 pt-PT gives the group mark U+00A0 and the currency
-format `#,##0.00 ¤`, so `250 000 €` reads "duzentos e cinquenta mil euros". pt-BR takes the full stop (CLDR 49 pt).
-Norma Portuguesa 9 (IPQ, 2006), quoted in Ciberdúvidas 12873, gives the same mark to any number: "Os grupos de três
-algarismos serão separados por um espaço em branco", as in «Assistiram ao jogo 109 456 espectadores.» A run of spaced
-groups is also a code: a tax number, a Multibanco entity or reference, a number of utente or a service line, as
-`509 876 543` and `800 112 233` in the authored pt prompt pool. A cardinal of such a code is a wrong reading, so in
-pt-PT a spaced number reads only with evidence of a quantity: a last group `000`, as in `100 000 habitantes`, or a
-decimal part, as in `1 250 000,50`. In the "meio milhão de frases" set and the authored pool, each of the 85 runs
-with a last group `000` is a count, as `130 000 anos` and `3 000 toneladas`. NP 9 also groups the digits of the
-decimal part, as in `78 890,322 14`, and no source gives the spoken form of such a part, so that number stays as
-written. A run with no such evidence, as `109 456 espectadores`, stays as written.
+pt-PT writes the space as the group mark of an amount: CLDR 49 pt-PT gives the group mark U+00A0 and the currency format
+`#,##0.00 ¤`, so `250 000 €` reads "duzentos e cinquenta mil euros". pt-BR takes the full stop (CLDR 49 pt) and the
+space as a second group mark. The SI Brochure in its Portuguese edition (Inmetro and IPQ, 2021), 5.4.4, which replaces
+the earlier translation in Brazil, says "os números com muitos algarismos podem ser divididos em grupos de três
+algarismos, separados por um espaço", so pt-BR reads a spaced number by the same rules as pt-PT. Norma Portuguesa 9
+(IPQ, 2006), quoted in Ciberdúvidas 12873, gives the same mark to any number: "Os grupos de três algarismos serão
+separados por um espaço em branco", as in «Assistiram ao jogo 109 456 espectadores.» A run of spaced groups is also a
+code: a tax number, a Multibanco entity or reference, a number of utente or a service line, as `509 876 543` and
+`800 112 233` in the authored pt prompt pool, or a CPF written with spaces, as `123 456 789`. A cardinal of such a code
+is a wrong reading, so a spaced number reads only with evidence of a quantity: a last group `000`, as in
+`100 000 habitantes`, or a decimal part, as in `1 250 000,50`. In the "meio milhão de frases" set and the authored pool,
+each of the 85 runs with a last group `000` is a count, as `130 000 anos` and `3 000 toneladas`. NP 9 also groups the
+digits of the decimal part, as in `78 890,322 14`, and no source gives the spoken form of such a part, so that number
+stays as written. A run with no such evidence, as `109 456 espectadores`, stays as written.
 """
 from __future__ import annotations
 
@@ -669,6 +672,7 @@ VARIETIES = (
                              **_pt_electronic.VARIETIES["pt-PT"]})),
     Variety("pt-BR", freeze({
         "defaults": {**DEFAULTS, "scale": "short"},
+        "space_group_money": True,
         **_pt_electronic.VARIETIES["pt-BR"],
         "roman_noun_ordinal_limits": {"artigo": 9},
         "colors": {"808080": "cinza"},
