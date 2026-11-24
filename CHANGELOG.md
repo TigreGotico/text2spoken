@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a114](https://github.com/TigreGotico/text2spoken/tree/0.0.2a114) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a113...0.0.2a114)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a clock time with a full stop after às, das or pelas [\#522](https://github.com/TigreGotico/text2spoken/pull/522) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a113](https://github.com/TigreGotico/text2spoken/tree/0.0.2a113) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a112...0.0.2a113)
@@ -261,7 +269,6 @@
 
 - fix\(core\): a number abbreviation does not wait on the number before it [\#316](https://github.com/TigreGotico/text2spoken/pull/316) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(eu\): read a hyphen range with the endings -tik and -ra [\#309](https://github.com/TigreGotico/text2spoken/pull/309) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- docs: a form with one easy reading must read [\#293](https://github.com/TigreGotico/text2spoken/pull/293) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a84](https://github.com/TigreGotico/text2spoken/tree/0.0.2a84) (2026-11-18)
 
@@ -288,10 +295,6 @@
 ## [0.0.2a81](https://github.com/TigreGotico/text2spoken/tree/0.0.2a81) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a80...0.0.2a81)
-
-**Merged pull requests:**
-
-- fix\(eu\): read a number grouped by spaces, as Araua 203 recommends [\#292](https://github.com/TigreGotico/text2spoken/pull/292) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a80](https://github.com/TigreGotico/text2spoken/tree/0.0.2a80) (2026-11-18)
 
