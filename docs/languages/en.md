@@ -1,10 +1,19 @@
 # English
 
+<!-- agent-hint
+covers: what the English file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/en.py, tests/data/en.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/en.md`
+see: ../addresses-letters-and-emoji.md, ../money-units-and-symbols.md
+-->
+
 The file `text2spoken/lang/en.py` reads English. It needs no extra, because its number words come from the CLDR spell-out rules.
 
 ## What it reads
 
-The file reads every form except identifiers. The `LETTERS` and `EMOJI` forms are off by default, as in every language, so a letter code such as `GPS` or `X5` stays as written unless the `LETTERS` form is on.
+The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, years, money, measures, percentages, telephone numbers, runs of capital letters, abbreviations, idioms, Roman numerals, colours, e-mail and web addresses, symbols, emoji and lexicon entries.
+The file reads no identifiers. The `LETTERS` and `EMOJI` forms are off by default, as in every language, so a letter code such as `GPS` or `X5` stays as written unless the `LETTERS` form is on.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -52,7 +61,7 @@ The test rows in `tests/data/en.tsv` name their source. The `checked_by` column 
 
 A Roman numeral reads only where a rule gives its reading. Every other numeral stays as written, because a capitalised word alone does not tell a title of a work, a product or a council from a name.
 
-A regnal number reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". A regnal number follows a regnal title and a name, such as King, Queen, Pope, Saint, Emperor or Tsar before the name, or a name of the `regnal_names` table. Only spaces part the title, the name and the numeral. One mark can also part the title from a name of `regnal_names`, as an apposition does in `the Holy Roman Emperor, Henry V` and `our king [Charles I]`. The marks are the comma, the parentheses, the square brackets, the straight and curly double quotes, the single quotes and the guillemets `«` and `»`. A single quote, `'` or `’`, is also an apostrophe, as in `the princess' Charles`, so it parts the title from the name only when it opens a quote: a space comes before it and the name comes after it. A slash, a colon, two marks or any other mark after the title leaves the text as written, and so does any mark before a name outside `regnal_names`. The `regnal_names` table holds the names from the Wikipedia lists of monarchs, popes and emperors that the docstring of `en.py` names, such as Adrian, the name of six popes, and Gustav, the name of five kings of Sweden.
+A regnal number reads "the" and an ordinal. Wikipedia, "Roman numerals", says that regnal numbers "are usually read as ordinals". A regnal number follows a regnal title and a name, such as King, Queen, Pope, Saint, Emperor or Tsar before the name, or a name of the `regnal_names` table. Only spaces part the title, the name and the numeral. One mark can also part the title from a name of `regnal_names`, as an apposition does in `the Holy Roman Emperor, Henry V` and `our king [Charles I]`. The marks are the comma, the parentheses, the square brackets, the straight and curly double quotes, the single quotes and the guillemets `«` and `»`. A single quote, `'` or `’`, is also an apostrophe, as in `the princess' Charles`, so it parts the title from the name only when it opens a quote: a space comes before it and the name comes after it. A slash, a colon, two marks or any other mark after the title leaves the text as written, and so does any mark before a name outside `regnal_names`. The `regnal_names` table holds the names from the Wikipedia lists of monarchs, popes and emperors that the docstring of `en.py` names, such as Adrian, the name of six popes, and Gustav, a name of the kings of Sweden.
 
 A generational suffix from II to IV reads the same way. Wikipedia, "Name suffix", says: "he can use the II suffix, which is pronounced "the second"". The suffix follows exactly two words: a given name and a surname. The file `text2spoken/data/en/given_names.json` holds 6,515 given names, the 1,000 names of each sex that the US Social Security Administration records most often in each year from 1900 to 2020. The file `text2spoken/data/en/surnames.json` holds the 1,000 most frequent surnames of the 2010 US census. Many given names are also words, such as Star or Golden, and the surname check keeps a title of a work such as `Star Trek II` as written. A title of a work, a company, a product or a place that is built from a given name and a surname of the two files reads as a person, as `Harry Potter IV` and `Morgan Stanley III` do. The text alone does not tell such a name from a person.
 
@@ -118,7 +127,7 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 
 ### Letter names in English phonemizers
 
-Some English letter names do not read right in every English phonemizer, and no other spelling that Wiktionary gives as the name reads right in more of them. misaki does not know `ef` (F) or `ar` (R). In `double-u` (W), orthography2ipa reads `double` with the vowel of "out" on its rules alone, and g2p_en drops the /j/. An address reads the same names.
+A letter reads by the name that Wikipedia, "English alphabet", gives from the Oxford English Dictionary, with `zed` in `en-GB` and `zee` in `en-US`. C reads `see`, another spelling of its name, because the English phonemizer misaki has no `cee` in its American lexicon. An address reads the same names.
 
 `a`, the name of A, reads as the article inside a phrase, so `nine a em` and `a at bee dot com` read the article in every English phonemizer measured. Before a full stop, espeak-ng and misaki read `a` as the letter name, as in `u ess a.` for `the USA.`. The other spelling `ay` reads as "aye", the name of I, in espeak-ng, so the table keeps `a`.
 

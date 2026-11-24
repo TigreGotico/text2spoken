@@ -1,10 +1,19 @@
 # German
 
+<!-- agent-hint
+covers: what the German file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/de.py, tests/data/de.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/de.md`
+see: en.md, ../how-it-reads.md
+-->
+
 The file `text2spoken/lang/de.py` reads German. It needs no extra, because its number words come from the CLDR spell-out rules.
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, years, money, measures, percentages, telephone numbers, abbreviations, idioms, colours and lexicon entries. It does not read addresses, symbols or Roman numerals.
+The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, dates, times, years, money, measures, percentages, telephone numbers, abbreviations, idioms, colours and lexicon entries.
+The file reads no e-mail or web addresses, runs of capital letters, symbols, emoji or Roman numerals.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -21,7 +30,7 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Das Buch kostet 23,88 €.` | `de-CH` | Das Buch kostet dreiundzwanzig Euro achtundachtzig. |
 | `von 9:00 bis 17:00 Uhr` | `de-DE` | von neun Uhr bis siebzehn Uhr |
 
-A German number takes the gender and the case of its noun, and the word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time. A form of the verb `kosten` gives the accusative to a price. Any other noun after the verb is its subject. A noun with no known gender takes the masculine, and only the dative of a preposition.
+A German number takes the gender and the case of its noun, and the word before the number gives the case. `in`, `an` and `vor` give the dative only before a noun of time. A form of the verb `kosten` right before a price gives it the accusative. Any other noun after the verb is its subject. A noun with no known gender takes the masculine, and only the dative of a preposition.
 
 In `de-CH` the full stop is also the decimal mark, so a time with a full stop needs `Uhr`. `von`, `bis`, `ab` and `seit` also come before a ratio, so a time after them needs `Uhr`, or a range that `Uhr` closes.
 
