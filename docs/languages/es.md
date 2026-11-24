@@ -77,7 +77,7 @@ Spanish leaves these forms as written or reads them in a limited way:
 | `Hay 1,5 vol.` | `es-ES` | Hay uno coma cinco volumen | After a decimal, a noun abbreviation keeps the singular, because no source gives the number of the noun there. |
 | `Hay 2,5 vol.` | `es-ES` | Hay dos coma cinco volumen | The same rule. |
 | `Hay 3 vols.` | `es-ES` | Hay tres vols. | A plural abbreviation that the table does not hold, such as `vols.` or `tels.`, stays as written. |
-| `Tengo 2000000 ahorrados.` | `es-ES` | Tengo dos millones de ahorrados. | A round million before a participle or an adjective takes `de`, because the file reads a word in lowercase that ends in `s` as the counted noun. |
+| `Tengo 2000000 ahorrados.` | `es-ES` | Tengo dos millones de ahorrados. | A round million before a participle or an adjective takes `de`, because the file reads a lowercase word that ends in `s` and is not a function word as the counted noun. |
 | `Hay 1000000000 granos.` | `es-ES` | Hay un millardo de granos. | This is the output of ovos-number-parser. The DPD («millardo», 1) finds "mil millones" more natural. |
 | `Las 21 ya pasaron.` | `es-ES` | Las veintiuno ya pasaron. | Only a whole number from 0 to 24 after a lowercase `la` or `las` reads as a feminine hour. |
 | `las 200 de la lista` | `es-ES` | las doscientos de la lista | The same rule: 200 reads in the masculine. |
