@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a113](https://github.com/TigreGotico/text2spoken/tree/0.0.2a113) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a112...0.0.2a113)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a year before a comma, a colon or a bracket in the masculine [\#524](https://github.com/TigreGotico/text2spoken/pull/524) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a112](https://github.com/TigreGotico/text2spoken/tree/0.0.2a112) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a111...0.0.2a112)
@@ -264,7 +272,6 @@
 - feat: Catalan language file [\#303](https://github.com/TigreGotico/text2spoken/pull/303) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): a numeric date with an era mark reads its calendar and the era word [\#300](https://github.com/TigreGotico/text2spoken/pull/300) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): a percent sign before its number reads, as a right-to-left line shows it [\#298](https://github.com/TigreGotico/text2spoken/pull/298) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(pt\): a Roman numeral after a contracted demonstrative and before its noun reads as an agreeing ordinal [\#290](https://github.com/TigreGotico/text2spoken/pull/290) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
 
@@ -289,10 +296,6 @@
 ## [0.0.2a80](https://github.com/TigreGotico/text2spoken/tree/0.0.2a80) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a79...0.0.2a80)
-
-**Merged pull requests:**
-
-- fix\(core\): a digit reading writes zero as the plain cardinal of the locale does [\#291](https://github.com/TigreGotico/text2spoken/pull/291) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a79](https://github.com/TigreGotico/text2spoken/tree/0.0.2a79) (2026-11-18)
 
