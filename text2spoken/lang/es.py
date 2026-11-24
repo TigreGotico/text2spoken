@@ -74,7 +74,7 @@ from text2spoken.core.numbers import written_amount
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, numbers_in, signed, speak_decimal,
                                           speak_expression, speak_lexicon, speak_mixed_half, speak_telephone)
-from text2spoken.core.spans import Features, Span, SpanContext, Word, clause_window
+from text2spoken.core.spans import Features, Span, SpanContext
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.times import day_hour, twelve_hour
 from text2spoken.core.tokens import Token, is_bounded, is_word_char, next_visible
@@ -157,7 +157,6 @@ DATA = freeze({
     "operators": {"+": "más", "−": "menos", "×": "por", "÷": "entre", "=": "igual a"},
     "phone_words": ["teléfono", "teléfonos", "tel", "tfno", "móvil", "celular", "llama", "llame", "llamá", "llamar",
                     "marca", "marque", "fax"],
-    "phone_links": ["al", "el"],
     "short_codes": ["061", "062", "091", "092", "112", "911"],
     "list_links": ["y", "o"],
     "phone_shapes": ["6[0-9]{2} [0-9]{3} [0-9]{3}", "7[1-9][0-9] [0-9]{3} [0-9]{3}"],
@@ -664,19 +663,6 @@ class Clock:
         return iter(sorted(spans.values(), key=lambda span: span.start))
 
 
-class SpanishTelephone(Telephone):
-    """The shared telephone recognizer, where an article may stand between the phone word and the run, as in
-    `Llama al 112.`, and a phone word up to three words back names a run with the shape of a phone number. The
-    `LANGUAGE` spec sets the reach of three words."""
-
-    def names_back(self, text: str, words: Sequence[Word], breaks: Sequence[int], start: int, end: int,
-                   shaped: bool, short_code: bool, request: Request) -> bool:
-        before = clause_window(text, words, start, end, -1, limit=2, breaks=breaks)
-        linked = (len(before) == 2 and before[1].lower() in request.data["phone_links"]
-                  and before[0].lower() in request.data["phone_words"])
-        return shaped or linked
-
-
 @dataclass(frozen=True)
 class Ordinal:
     """`1.º`, `2.ª`, `1.er`, `3.os`: a whole number and a marker of the `ordinal_marks` table (DPD «abreviatura»,
@@ -779,7 +765,8 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["date_numeric"], Clock(), SpanishTelephone(reach=3), SHARED["money"],
+    recognizers=(SHARED["lexicon"], Telephone(declines=True), SHARED["date_numeric"], Clock(), Telephone(),
+                 SHARED["money"],
                  SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"],
                  SHARED["range"], Ordinal(), CountedAbbreviation(), Abbreviation(), SHARED["decimal"],
                  SHARED["cardinal"]),

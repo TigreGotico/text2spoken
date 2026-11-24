@@ -171,7 +171,7 @@ French leaves these forms as written or reads them in a limited way:
 | `Il varie entre 10 %-20 %.` | `fr-FR` | Il varie entre dix pour cent à vingt pour cent. | A range after `entre` reads with *à*, where French says *entre … et …*. |
 | `Il a 2 ans 1/2.` | `fr-FR` | Il a deux ans un demi. | A half after a whole number and its noun reads apart, where French says *deux ans et demi*. |
 | `Il attend 1/4 heure.` | `fr-FR` | Il attend un quart heure. | A fraction other than a half before a noun reads with no *de*. |
-| `Composez le 3615 maintenant.` | `fr-FR` | Composez le trois mille six cent quinze maintenant. | A short code after `le` and before another word reads as a cardinal. |
+| `Composez le 3615 maintenant.` | `fr-FR` | Composez le trente-six quinze maintenant. | A short code after a phone word and `le` reads as a phone number when a word of `function_words` follows it, here `maintenant`. |
 | `Composez 911 ici.` | `fr-CA` | Composez neuf cent onze ici. | `fr-CA` reads a telephone number digit by digit, but a short code of three digits as one number. No source for either reading was fetched. |
 | `Rendez-vous le 10/11/26.` | `fr-FR` | stays as written | A date with a two-digit year stays as written. |
 | `Il pèse 1.500 kg.` | `fr-FR` | stays as written | The marks do not settle the number: it is 1,5 or 1500. A warning names it. |

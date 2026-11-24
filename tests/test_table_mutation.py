@@ -17,7 +17,9 @@ DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
 NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": {"leads"}, "tdt": {"defaults"},
-          "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_kept_shapes", "no_phone_shapes"},
+          "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
+                 "no_phone_shapes"},
+          "pt": {"phone_shapes"},
           "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
 (the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
@@ -70,7 +72,7 @@ FR_ENTRIES = {
     "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
     "operators": "+", "colors": "ff0000", "color_words": "couleur", "year_words": "en", "year_links": "et",
     "function_words": "il", "phone_words": "composez", "short_codes": "3919", "list_links": "et",
-    "phone_unit_shapes": "0[1-9](?:[ \u00a0\u202f.-]?[0-9][0-9]){4}", "phone_reading": DELETE, "roman_headings": "chapitre",
+    "phone_reading": DELETE, "roman_headings": "chapitre",
     "roman_names": "Louis", "scales": "M", "day_periods": "pm", "number_gaps": "\u202f", "elision_marks": "'",
     "ordinal_nouns": "page", "scale_nouns": "million", "no_de_words": "dans", "aspirated_h": "haricot",
     "no_de_adjectives": "supplémentaires", "invariable_plurals": "abat-jour", "mute_h": "hallucin", "eliding_y": "yeux",
@@ -88,7 +90,6 @@ PT_ENTRIES = {
     "scales": "milhões",
     "percent": "word",
     "unit_symbols": "kg", "line_power_symbols": "m", "phone_words": "ligue", "short_codes": "112", "list_links": "ou",
-    "phone_shapes": "[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}",
     "phone_unit_shapes": "[29][0-9]{2} [0-9]{3} [0-9]{3}", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "function_words": "agora",
     "color_words": "cor", "colors": "000000", "titles": "Dr.", "abbreviations_any_case": "dr.",
@@ -124,7 +125,7 @@ ES_ENTRIES = {
     "day_periods": "pm", "day_period_words": "tarde", "minute_phrases": "30", "months": "marzo", "month_variants": "setiembre",
     "first_of_month": DELETE, "currencies": "EUR", "scales": "millones", "percent": "word", "units": "kg",
     "dimension_marks": "x", "dimension_word": DELETE, "operators": "+", "phone_words": "teléfono",
-    "phone_links": "al", "short_codes": "112", "list_links": "o", "phone_shapes": "6[0-9]{2} [0-9]{3} [0-9]{3}",
+    "short_codes": "112", "list_links": "o", "phone_shapes": "6[0-9]{2} [0-9]{3} [0-9]{3}",
     "phone_unit_shapes": "(?:[(]0[0-9]*[)]|0[0-9]*)(?: [0-9]+)+", "phone_kept_shapes": "[1-9][0-9]{0,2}(?: [0-9]{3})+",
     "no_phone_shapes": "(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "titles": "Dr.", "abbreviations": "etc.",
     "sentence_final": "etc.", "number_abbreviations": "n.º", "ordinal_marks": ".er", "function_words": "de",

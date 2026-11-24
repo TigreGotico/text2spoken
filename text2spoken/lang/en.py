@@ -205,7 +205,7 @@ from text2spoken.core.electronic import speak_electronic
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.letters import speak_letters
 from text2spoken.core.numbers import Number, written_amount
-from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, _edge, amount_words, join_ranges,
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Telephone, amount_words, join_ranges,
                                           numbers_in, signed, speak_abbreviation, speak_cardinal, speak_decimal,
                                           speak_expression, speak_fraction as core_speak_fraction, speak_idiom,
                                           speak_lexicon, speak_ordinal,
@@ -294,7 +294,7 @@ DATA = freeze({
     "year_links": ["and", "or", "to"],
     "function_words": ["a", "an", "the", "and", "or", "but", "so", "then", "to", "in", "on", "at", "by",
                        "for", "from", "with", "as", "after", "before", "until", "since", "when", "while", "where",
-                       "he", "she", "it", "we", "they", "you", "his", "her", "its", "our", "their", "this",
+                       "he", "she", "it", "we", "they", "you", "me", "us", "his", "her", "its", "our", "their", "this",
                        "that", "there", "was", "were", "is", "are", "had", "has", "have", "many", "some", "all",
                        "now", "immediately", "today", "tonight"],
     "day_periods": {"am": ["am", "a.m.", "AM", "A.M."], "pm": ["pm", "p.m.", "PM", "P.M."]},
@@ -590,39 +590,6 @@ def speak_year(span: Span, context: SpanContext) -> str:
     return words
 
 
-class EnglishTelephone(Telephone):
-    """The shared telephone recognizer with the English conventions of design section 4.3.
-
-    A phone word also names a run up to three words back, where a function word does not count, when the run has
-    the shape of a phone number, as in `Call us on 0800 123 456.` The same window names a short code of
-    `short_codes` that ends its clause or that a function word follows, as in `Call the police on 999 now.`, and
-    not the count in `The phone rang 101 times.` The `LANGUAGE` spec sets these fields of the shared recognizer,
-    and turns `keeps_hour_after_stop` off.
-
-    The `phone_unit_shapes` of `en` make space-separated groups of which the first starts with `0`, perhaps in
-    brackets, read digit by digit as one unit, as in `020 7946 0018` and `(0161) 496 0000`. Its
-    `phone_kept_shapes` keep thousands that spaces group, as in `10 000` and `1 000 000 2nd-generation`, as
-    written, and its `no_phone_shapes` take the phone shape from two years that a dash joins.
-
-    A last group of one or two digits is the hour or a count, not a phone group, when the shared recognizer drops
-    it as an hour, and also when a word character, a digit or a cluster mark continues the run on either side, or
-    a space and a lowercase word that is no function word follow it, so `Call 0800 123 456 8 am to 8 pm.` and
-    `Ring 0800 123 456 24 hours a day.` read the number and the hour."""
-
-    def continued(self, text: str, start: int, end: int) -> bool:
-        return not _edge(text, start, end)
-
-    def hour_after(self, text: str, end: int, request: Request) -> bool:
-        if not text.startswith(" ", end):
-            return False
-        stop = end + 1
-        while stop < len(text) and is_letter(text[stop]):
-            stop += 1
-        word = text[end + 1:stop]
-        return (word.islower() and word not in request.data.get("function_words", ())) \
-            or super().hour_after(text, end, request)
-
-
 @dataclass(frozen=True)
 class Ordinal:
     """`1st`, `22nd`, `113th`, `1,000th`: a whole number with the suffix that it takes."""
@@ -883,10 +850,10 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], SHARED["idiom"], DateNamed(),
+    recognizers=(SHARED["lexicon"], SHARED["electronic"], Telephone(declines=True), SHARED["color"], SHARED["idiom"],
+                 DateNamed(),
                  EnglishDateNumeric(), SHARED["time_clock"],
-                 EnglishTelephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True,
-                                  keeps_hour_after_stop=False),
+                 Telephone(),
                  SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"], Year(),
                  SHARED["expression"], SHARED["fraction"], SHARED["range"], Ordinal(), Roman(), SHARED["abbreviation"],
                  SHARED["letters"], SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),

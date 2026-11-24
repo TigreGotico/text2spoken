@@ -455,7 +455,7 @@ from text2spoken.core.recognizers import Money as CoreMoney
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, amount_words, digit_run_matches,
                                           numbers_in, signed, speak_decimal, speak_expression, speak_fraction,
                                           speak_lexicon, speak_percent, speak_telephone)
-from text2spoken.core.spans import (PHONE_WAITS, Features, Span, SpanContext, Word, clause_breaks, clause_window,
+from text2spoken.core.spans import (Features, Span, SpanContext, Word, clause_breaks, clause_window,
                                     context_words)
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
@@ -548,7 +548,7 @@ DATA = freeze({
                     "contacto", "contato", "celular"],
     "short_codes": ["112", "190", "192", "193", "199"],
     "list_links": ["e", "ou"],
-    "phone_shapes": ["[(][1-9][0-9][)] 9?[0-9]{4}-[0-9]{4}"],
+    "phone_shapes": [],
     "phone_unit_shapes": ["[29][0-9]{2} [0-9]{3} [0-9]{3}"],
     "phone_kept_shapes": ["[1-9][0-9]{0,2}(?: [0-9]{3})+"],
     "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})"],
@@ -1101,11 +1101,9 @@ def speak_roman(span: Span, context: SpanContext) -> str:
     return words[0].upper() + words[1:] if capital else words
 
 
-TELEPHONE = Telephone(reach=3, content_words=True, names_shaped=True, names_short_codes=True)
-"""The shared telephone recognizer, where a phone word also names a run up to three words back, and a function word
-does not count, as in `Ligue para o 112.` The window names a run with the shape of a phone number, and a short code
-that ends its clause or that a function word follows. Two years that a dash joins have no phone shape
-(`no_phone_shapes`), so `Os telemóveis de 2010-2020` reads a range."""
+TELEPHONE = Telephone()
+"""The shared telephone recognizer. Two years that a dash joins have no phone shape (`no_phone_shapes`), so
+`Os telemóveis de 2010-2020` reads a range."""
 
 
 @dataclass(frozen=True)
@@ -1350,16 +1348,8 @@ def _digits(written: str) -> str:
 
 
 def _phones(text: str, tokens: Sequence[Token], request: Request) -> list[Span]:
-    """The telephone spans that read, found once for each text in one request. A span that `PHONE_WAITS` names reads
-    only once a span reads the number next to it, which may be the amount itself, as `(12) 872 523` waits on `454` in
-    `(12) 872 523 454,71`. A second pass, which sees words for `(12)`, finds no such span, so the span counts only
-    when it waits on nothing."""
-    key = ("phones", text)
-    if key not in request.memo:
-        found = [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
-        waits = request.memo.get((PHONE_WAITS, text), {})
-        request.memo[key] = [span for span in found if (span.start, span.end) not in waits]
-    return request.memo[key]
+    """The telephone spans that read."""
+    return [span for span in TELEPHONE.find(text, tokens, request) if not span.keep]
 
 
 def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], request: Request) -> Iterator[re.Match[str]]:
@@ -1929,7 +1919,8 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], SHARED["electronic"], SHARED["color"], DateNamed(), SHARED["date_numeric"],
+    recognizers=(SHARED["lexicon"], SHARED["electronic"], Telephone(declines=True), SHARED["color"], DateNamed(),
+                 SHARED["date_numeric"],
                  Clock(), SpacedMoney(), SpacedRange(), SpacedNumber(), SpacedDecimal(), TELEPHONE, Money(),
                  SHARED["kept_money"], SHARED["percent"], PointMeasure(), SHARED["expression"], SHARED["fraction"],
                  SHARED["range"], Ordinal(), Roman(), Abbreviation(),

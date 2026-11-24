@@ -103,8 +103,8 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 | --- | --- | --- |
 | `Son 1 000 tel.` | Son 1 000 teléfonos | In a number grouped with spaces, only the last group counts. |
 | `Son 1 001 tel.` | Son 1 001 teléfono | The same rule. A phone number right before the abbreviation counts in the same way. |
-| `Teléfono 1990-1995.` | Teléfono uno nueve nueve cero uno nueve nueve cinco. | After a phone word, a year range reads as a phone number. |
-| `Ventas de teléfonos 2019-2024.` | Ventas de teléfonos dos cero uno nueve dos cero dos cuatro. | The same rule. |
+| `Teléfono 1990-1995.` | Teléfono mil novecientos noventa a mil novecientos noventa y cinco. | A year range matches `no_phone_shapes`, so it reads as a range, also after a phone word. |
+| `Ventas de teléfonos 2019-2024.` | Ventas de teléfonos dos mil diecinueve a dos mil veinticuatro. | The same rule. |
 | `Lo dijo D. D. Palmer.` | Lo dijo don Don Palmer. | `D.` before a capitalised word reads `don`, also after a title that reads. |
 | `J. D. Salinger` | stays as written | After an initial that stays as written, `D.` is an initial too and stays as written. |
 | `el Sr. D. Juan` | el señor Don Juan | A title after a title takes a capital, because a full stop and a capital letter end the context of the second title. |
