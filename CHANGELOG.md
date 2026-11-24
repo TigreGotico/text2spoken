@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a115](https://github.com/TigreGotico/text2spoken/tree/0.0.2a115) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a114...0.0.2a115)
+
+**Merged pull requests:**
+
+- fix\(ar\): read a number after رقم in its citation form, and كم؟ as the question word [\#541](https://github.com/TigreGotico/text2spoken/pull/541) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a114](https://github.com/TigreGotico/text2spoken/tree/0.0.2a114) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a113...0.0.2a114)
@@ -278,7 +286,6 @@
 
 - feat: Catalan language file [\#303](https://github.com/TigreGotico/text2spoken/pull/303) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): a numeric date with an era mark reads its calendar and the era word [\#300](https://github.com/TigreGotico/text2spoken/pull/300) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): a percent sign before its number reads, as a right-to-left line shows it [\#298](https://github.com/TigreGotico/text2spoken/pull/298) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
 
