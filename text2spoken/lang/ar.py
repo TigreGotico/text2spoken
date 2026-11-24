@@ -66,7 +66,13 @@ The rules and their sources:
 - The CLDR 49 format names of the day periods of `ar` are ص and م (`ca-gregorian.json`, dayPeriods, format), and
   the short time pattern is "h:mm a". So ص and م after a time are its day period. م is also the CLDR 49 short
   symbol of the metre (`units.json`, length-meter), so an hour with no minutes takes ص or م only after الساعة.
-- Percent: the number and في المئة (p. 347). CLDR 49 writes the sign after the number in logical order (`#,##0%`),
+- Percent: the number and في المئة (p. 347). "To express the concept of percent, the term fii l-mi'at-i or
+  bi-l-mi'at-i is used", and the number takes the form with taa' marbuuTa before it: "yu-mlik-aani xamsat-a 'ashar-a
+  fii l-mi'at-i min-a l-sharikat-i", "The two of them own 15 percent of the company" (p. 347). So a written percent
+  word after the number, such as بالمئة, is no noun that the number counts: `ارتفع 5 بالمئة` reads خمسة, as `5%`
+  does. CLDR 49 writes the long name of concentr-percent as "{0} بالمائة" (`units.json`), and مائة is an
+  "alternative spelling of مِئَة" (English Wiktionary, مائة, revision 93330307).
+  CLDR 49 writes the sign after the number in logical order (`#,##0%`),
   and a right-to-left line shows that sign to the left of the number, so a percentage typed as it looks, `%10`,
   reads the same. The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of the minus sign is سالب
   (Arabic Wikipedia, عدد سالب, section التسمية).
@@ -231,6 +237,7 @@ DATA = freeze({
     "range_word": "إلى",
     "range_marks": ["-", "–"],
     "percent": {"signs": ["%", "٪"], "position": "either", "word": "في المئة"},
+    "percent_words": ["في المئة", "في المائة", "بالمئة", "بالمائة"],
     "currencies": {
         "USD": {"symbols": ["$", "US$", "USD"], "gender": "masculine", "one": "دولار",
                 "two": ["دولاران", "دولارين"], "few": "دولارات", "many": "دولارا", "other": "دولار"},
@@ -265,7 +272,9 @@ DATA = freeze({
     "symbols": {"%": "percent", "٪": "percent", "$": "money", "+": "expression", "=": "expression"},
 })
 """Sources, by table. `number_marks`, `months`, `day_periods` and `spoken_periods`: CLDR 49 (numbers.json,
-ca-gregorian.json, dayPeriods). `percent`: Ryding 2005, p. 347. `prepositions`: Ryding 2005, pp. 366-367.
+ca-gregorian.json, dayPeriods). `percent`: Ryding 2005, p. 347. `percent_words`: fii l-mi'at-i and bi-l-mi'at-i of
+Ryding 2005, p. 347, the long name بالمائة of CLDR 49 concentr-percent (units.json), and each in both spellings of مئة
+(English Wiktionary, مائة, revision 93330307). `prepositions`: Ryding 2005, pp. 366-367.
 `hijri_months`: Arabic Wikipedia, تقويم هجري, the table of months, which gives ربيع الآخر and جمادى الآخرة; the
 two months that start with ذو take the genitive ذي after من, as Arabic Wikipedia, ذو الحجة, writes it:
 "العشر الأوائل من ذي الحجة". `semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
@@ -407,12 +416,16 @@ def counted_noun(after: Sequence[str]) -> str | None:
 
 
 def number_noun(span: Span, context: SpanContext) -> str | None:
-    """The noun that the number counts: the word of `counted_noun`, but none after a label noun or the lead #. A
-    number that names a thing counts no noun (Ryding 2005, p. 335: raqm-u sittat-in). A number from 3 to 10 counts a
-    plural (p. 335), so after a code in Latin letters, as in `MG 5 متوفرة`, a singular in taa' marbuuTa is no noun
-    that it counts, unless it names a unit of `measure_nouns`, as in `Wusthof 7 بوصة`."""
+    """The noun that the number counts: the word of `counted_noun`, but none after a label noun or the lead #, and
+    none before a percent word, as in `5 بالمئة` (Ryding 2005, p. 347). A number that names a thing counts no noun
+    (p. 335: raqm-u sittat-in). A number from 3 to 10 counts a plural (p. 335), so after a code in Latin letters, as
+    in `MG 5 متوفرة`, a singular in taa' marbuuTa is no noun that it counts, unless it names a unit of
+    `measure_nouns`, as in `Wusthof 7 بوصة`."""
     request = context.request
     if span.fields.get("lead") or noun_before(context, request.data["label_nouns"]):
+        return None
+    after, percent_words = context.after, request.data["percent_words"]
+    if after and (after[0] in percent_words or " ".join(after[:2]) in percent_words):
         return None
     noun = counted_noun(context.after)
     if (noun is not None and noun.endswith("ة") and noun not in request.data["measure_nouns"]
