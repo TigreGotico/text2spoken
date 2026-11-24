@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a120](https://github.com/TigreGotico/text2spoken/tree/0.0.2a120) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a119...0.0.2a120)
+
+**Merged pull requests:**
+
+- fix\(core\): find the phone word in one walk per text, so a run of brackets reads in linear time [\#571](https://github.com/TigreGotico/text2spoken/pull/571) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(ar\): read a number before a written percent word as before % [\#566](https://github.com/TigreGotico/text2spoken/pull/566) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a119](https://github.com/TigreGotico/text2spoken/tree/0.0.2a119) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a118...0.0.2a119)
@@ -296,9 +305,6 @@
 - fix\(ca\): read §§ as paràgrafs [\#341](https://github.com/TigreGotico/text2spoken/pull/341) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(es\): an ordinal takes the apocope only before its own masculine noun [\#331](https://github.com/TigreGotico/text2spoken/pull/331) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(eu\): letters that touch a unit symbol are no case ending [\#320](https://github.com/TigreGotico/text2spoken/pull/320) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix: a language with no file reads the writer ordinal in its genders, and sk reads ordinals [\#313](https://github.com/TigreGotico/text2spoken/pull/313) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix: a say-as ordinal declines when the parser writer returns the cardinal [\#312](https://github.com/TigreGotico/text2spoken/pull/312) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- feat: Chinese language file [\#311](https://github.com/TigreGotico/text2spoken/pull/311) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
