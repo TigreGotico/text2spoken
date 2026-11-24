@@ -260,6 +260,22 @@ After any other reading it stays, as in `às 16:00 hora local`. A time with minu
 "dez e trinta" with no unit, so a written `horas` after it stays: "dez e trinta horas". A line break between the time
 and the word keeps both. No source rules on the doubled word itself; the rule follows from the readings cited above.
 
+An hour and its minutes may also take a full stop. Ciberdúvidas 14648, "A grafia das horas": "Há quem prefira a
+notação 17.30 h ou 17h 30´", and it warns that "17.30 h pode ser interpretado como 17,3 h". The page gives the full
+stop only, so a comma between the hour and the minutes keeps the decimal reading. A time with the full stop reads only
+right after a word of `point_time_words`: `às`, `das` and `pelas` join a preposition and the article of the hours, so
+the number after them names a time of day. It reads as the colon form does: `Chego às 10.30 horas.` reads "Chego às
+dez e trinta horas.", `às 9.30h` "às nove horas e trinta minutos", `às 10.30 da manhã` "às dez e trinta da manhã" and
+`às 24.00` "à meia-noite". With no such word, the number may write a decimal and stays as written (design section 10),
+as `Durou 1.30 h.` and `O índice fechou em 10.30.` do. A word or a sign after the number that shows an amount keeps
+the reading of the number without the rule: a scale word, a unit symbol or name (`m2` and `cm3` too), a currency
+code, sign or name, `%` and `por cento`. So `das 3.20 kg` reads "das três vírgula vinte quilogramas", and `das 10.30 euros` and `perto das 8.37
+milhões` stay as written. `a.m.` and `p.m.` keep that reading too, because this rule does not read them.
+
+A clock with a colon after `é` or another verb stays as written. `é` comes before a ratio as well as a time, as in `A
+proporção do ecrã é 16:10`, and design section 4.2 of text2spoken says: "A word that also comes before a ratio or a
+quantity, such as `to`, `by` or `about`, is no time word". No source gives the reading of a clock after `começa`.
+
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
@@ -500,6 +516,7 @@ DATA = freeze({
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
     "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são"],
+    "point_time_words": ["às", "das", "pelas"],
     "plural_time_verbs": ["são"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
@@ -1132,7 +1149,7 @@ class Clock(TimeClock):
     the word is read once: `16:00 horas` reads `dezasseis horas`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        own = list(self._ranges(text, tokens, request))
+        own = [*self._ranges(text, tokens, request), *self._marked(text, request)]
         words = context_words(tokens)
         day_ends = []
         for match in re.finditer("24:00", text):
@@ -1231,6 +1248,30 @@ class Clock(TimeClock):
             if core_form.fullmatch(match.group()) or not is_bounded(text, *match.span()):
                 continue
             if span := self._time(match.start(), h, glued or spaced or colon, "h", seconds):
+                yield replace(span, end=match.end())
+
+    def _marked(self, text: str, request: Request) -> Iterator[Span]:
+        """`às 10.30`, `pelas 17.30 h` and `às 9.30h`: a time with a full stop between the hour and the minutes, right
+        after a word of `point_time_words`. An amount word or a sign after it keeps it as written, as in `das 3.20 kg`,
+        `às 10.30 euros` and `às 10.30 €`."""
+        data, tag = request.data, request.variety.tag
+        prepositions = "|".join(data["point_time_words"])
+        pattern = re.compile(f"(?<![\\w-])(?:{prepositions})[ \t]+([0-9][0-9]?)[.]([0-9][0-9])(?:( ?)h)?"
+                             "(?![.,]?[0-9]|[^\\W\\d_])", re.IGNORECASE)
+        for match in pattern.finditer(text):
+            hour, minute, gap = match.groups()
+            rest = text[match.end():].lstrip(" \t")
+            following = re.match("[^\\s,;:!?)\\]»”\"]*", rest)[0].rstrip(".").lower()
+            amounts = {word.lower() for word in (
+                *data["scales"], *_unit_names(tag, cldr_data(tag)["units"]), *unit_table(request),
+                *joined_table(request),
+                *(word for currency in currency_table(request).values()
+                  for word in (currency["one"].split()[0], currency["other"].split()[0], *currency["symbols"])),
+                *(period.rstrip(".") for periods in data["day_periods"].values() for period in periods))}
+            if (following in amounts or following.rstrip("23²³") in amounts or following in data["percent"]["signs"]
+                    or re.match(f"{data['percent']['word']}\\b", rest, re.IGNORECASE)):
+                continue
+            if span := self._time(match.start(1), hour, minute, "" if gap is None else "h"):
                 yield replace(span, end=match.end())
 
     def _ranges(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
