@@ -287,7 +287,6 @@
 - fix\(ko\): a say-as ordinal reads the native ordinal, a date reads 유월 and 시월 [\#329](https://github.com/TigreGotico/text2spoken/pull/329) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - feat\(ko\): Korean language file, a minus reads 마이너스 [\#328](https://github.com/TigreGotico/text2spoken/pull/328) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(nl\): groups after a percentage read as a cardinal [\#318](https://github.com/TigreGotico/text2spoken/pull/318) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix: a say-as telephone reads an area code in brackets in every language [\#314](https://github.com/TigreGotico/text2spoken/pull/314) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
