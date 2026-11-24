@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a117](https://github.com/TigreGotico/text2spoken/tree/0.0.2a117) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a116...0.0.2a117)
+
+**Merged pull requests:**
+
+- fix\(ar\): read a number after a Latin code or موديل in its citation form [\#549](https://github.com/TigreGotico/text2spoken/pull/549) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a116](https://github.com/TigreGotico/text2spoken/tree/0.0.2a116) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a115...0.0.2a116)
@@ -289,10 +297,6 @@
 ## [0.0.2a84](https://github.com/TigreGotico/text2spoken/tree/0.0.2a84) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a83...0.0.2a84)
-
-**Merged pull requests:**
-
-- feat: Catalan language file [\#303](https://github.com/TigreGotico/text2spoken/pull/303) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
 
