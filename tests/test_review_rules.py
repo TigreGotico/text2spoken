@@ -424,6 +424,35 @@ def test_a_long_digit_run_takes_linear_time_in_each_recognizer(name):
     assert large < 20 * small, (small, large)
 
 
+
+@pytest.mark.parametrize(("tag", "head", "unit", "tail"), [("fr-FR", "", "[1] ", ""),
+                                                           ("pt-PT", "Tel. ", "[1] ", "0800 123 456"),
+                                                           ("fr-FR", "", "le 1 ", "")])
+def test_a_chain_of_function_words_and_brackets_takes_linear_work_in_the_phone_recognizer(monkeypatch, tag, head,
+                                                                                           unit, tail):
+    """Design section 16: the claim loop is linear. A phone word names a run past any number of function words and
+    bracketed words (section 4.3), and `1` is a function word in French and Portuguese, so each `1` of a chain is a
+    run with a chain before it. The recognizer reads each word for a phone word once, not once for each run after
+    it."""
+    calls = 0
+    last_parts = recognizers._last_parts
+
+    def counted(words: str) -> list[str]:
+        nonlocal calls
+        calls += 1
+        return last_parts(words)
+
+    monkeypatch.setattr(recognizers, "_last_parts", counted)
+
+    def work(count: int) -> int:
+        nonlocal calls
+        calls = 0
+        normalize(head + unit * count + tail, tag)
+        return calls
+
+    small, large = work(250), work(2000)
+    assert 0 < large < 20 * small, (small, large)
+
 ADDRESS_SHAPES = {"www": lambda count: "1www." * (count // 5),
                   "brackets": lambda count: "see example.com/" + ")" * count,
                   "labels": lambda count: "a." * (count // 2) + "1",
