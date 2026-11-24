@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a106](https://github.com/TigreGotico/text2spoken/tree/0.0.2a106) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a105...0.0.2a106)
+
+**Merged pull requests:**
+
+- fix\(pt\): no ending rule after tugalex gives no gender [\#489](https://github.com/TigreGotico/text2spoken/pull/489) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a105](https://github.com/TigreGotico/text2spoken/tree/0.0.2a105) (2026-11-23)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a104...0.0.2a105)
@@ -286,10 +294,6 @@
 ## [0.0.2a71](https://github.com/TigreGotico/text2spoken/tree/0.0.2a71) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a70...0.0.2a71)
-
-**Merged pull requests:**
-
-- fix: read the Arabic lects through the dialect writers of ovos-number-parser [\#235](https://github.com/TigreGotico/text2spoken/pull/235) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a70](https://github.com/TigreGotico/text2spoken/tree/0.0.2a70) (2026-11-18)
 
