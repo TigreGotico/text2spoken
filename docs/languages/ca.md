@@ -89,7 +89,7 @@ The file always reads the comma as the decimal mark and the full stop as the gro
 
 The rules cite the Ortografia catalana of the Institut d'Estudis Catalans, the Diccionari normatiu valencià of the Acadèmia Valenciana de la Llengua and the guide "Abreviacions" of the Generalitat de Catalunya. Currency names, unit names and the names of symbols and emoji come from CLDR 49. The docstring of [`ca.py`](../../text2spoken/lang/ca.py) quotes the source of each rule.
 
-Each of the 82 rows in `tests/data/ca.tsv` cites a source. 25 guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
+Each row in `tests/data/ca.tsv` cites a source. Guard rows pin text that the file leaves as written, because a wrong reading is worse than none. No native speaker has checked the rows.
 
 ## Limits
 

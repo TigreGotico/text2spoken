@@ -70,6 +70,7 @@ The test also holds the docs to these rules:
 - A table with a `Spoken` or `Second pass` column must have a `Written` column, because the test runs only the rows of such a table.
 - An output claim in prose fails: a written form in backticks, the word `reads`, and then words in quotes or guillemets. Put the example in a table instead.
 - Each page holds at least the number of examples that `MINIMUM` gives for it, so a page that loses its examples fails. A new page in `docs/` needs an entry in `MINIMUM`. A language page that `MINIMUM` does not list needs at least `LANGUAGE_MINIMUM` examples: one row of what the file reads, the values of the eight options and one limit.
+- A language page gives no number of rows of its file in `tests/data`, so a pull request that adds rows does not change the page.
 - Each relative link names a file that exists, and each anchor a heading of that file.
 
 `scripts/check_doc_page.py` checks named prose values of a page against the code, such as the languages that offer a form, the empty extras or the CLDR release. Its docstring lists the sentences and tables that it reads for each page. It reads no other prose, so the docs test is the only check of the rest, and some prose has no check: the signature table of `docs/api.md` and the case table of `docs/errors.md`. The script runs the docs test of the page first, and it exits 1 with the first value that is not true. The `verify` line of the agent hint of each page calls it, and `tests/test_doc_pages.py` runs it on each such page:

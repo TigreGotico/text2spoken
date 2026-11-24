@@ -48,7 +48,7 @@ The marks come from CLDR. `ja` serves every Japanese tag.
 
 The number words come from the CLDR RBNF rule set `spellout-cardinal` of `ja`. The English Wiktionary entry "小数点" gives the reading of the decimal mark: "A decimal point itself is pronounced as てん (ten, literally “dot”)." The docstring of [`ja.py`](../../text2spoken/lang/ja.py) quotes each source.
 
-Each of the 25 rows in `tests/data/ja.tsv` cites a source. No native speaker has checked the rows.
+Each row in `tests/data/ja.tsv` cites a source. No native speaker has checked the rows.
 
 ## Limits
 

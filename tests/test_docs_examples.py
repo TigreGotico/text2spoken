@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.conftest import DATA, rows
+from tests.conftest import DATA
 from tests.contract import SHARED_VERBALIZERS
 from tests.data_keys import OPTIONAL, READERS
 from text2spoken import Form, FrozenMap, GrammaticalGender, NormalizationParams, effective_params, normalize, supports
@@ -58,8 +58,8 @@ FENCE = re.compile(r"^```(\S*)(?: (\S+))?\n(.*?)^```$", re.M | re.S)
 NAMES = {"frozenset": frozenset, "FrozenMap": FrozenMap, "GrammaticalGender": GrammaticalGender}
 """The names that a param in a column header may use."""
 CLAIM = re.compile(r"`[^`\n]+` reads [\"'“‘«„]")
-ROW_COUNT = re.compile(r"\b(?:the|are) ([\d,]+) (?:test )?rows\b")
-"""The sentence of a language page that gives the number of rows of its file in tests/data."""
+ROW_COUNT = re.compile(r"\b\d[\d,]* (?:\w+ )?rows?\b")
+"""A number of rows in prose, such as `the 82 rows` or `25 guard rows`."""
 
 
 def tables(text: str) -> list[list[list[str]]]:
@@ -415,10 +415,12 @@ def test_no_unchecked_output_in_prose(page):
 
 
 @pytest.mark.parametrize("page", [p for p in PAGES if (DATA / f"{p.stem}.tsv").exists()], ids=lambda p: p.name)
-def test_a_language_page_gives_its_row_count(page):
-    """A language page gives the number of rows of its file in tests/data once, and the file holds that many."""
-    stated = [int(n.replace(",", "")) for n in ROW_COUNT.findall(page.read_text(encoding="utf-8"))]
-    assert stated == [len(rows(page.stem))]
+def test_a_language_page_gives_no_row_count(page):
+    """A language page gives no number of rows of its file in tests/data, so a pull request that adds rows does not
+    change the page."""
+    text = FENCE.sub("", page.read_text(encoding="utf-8"))
+    prose = [line for line in text.splitlines() if not line.startswith("|")]
+    assert not [line for line in prose if ROW_COUNT.search(line)]
 
 
 @pytest.mark.parametrize("page", PAGES, ids=lambda p: p.name)

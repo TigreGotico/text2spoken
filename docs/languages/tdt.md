@@ -65,22 +65,15 @@ The time, percentage and measure rows are the reading of the project, and no quo
 
 CLDR 48 gives the date order of Timor-Leste: the `pt-TL` date `dd/MM/y`. CLDR 49 `currencyData.json` gives Timor-Leste the US dollar. The Banco Central de Timor-Leste names its coins "centavos". The docstring of [`tdt.py`](../../text2spoken/lang/tdt.py) quotes each source.
 
-Each of the 68 rows in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
-
-## Gaps
-
-The file does not read a date with a written month, as `10 Abril 1973`, yet. For a voice that reads written text, the source gives it one reading, in Portuguese. The reading needs a table of the Tetun month names, and no source of the file gives one.
-
-The file does not read a number before a Portuguese noun, as `5 dólares`, yet. Section 7.1 gives it one reading: "if the number quantifies a following head noun, it must be read in the language of that noun." The reading needs a list of the Portuguese nouns of Tetun Dili.
-
-| Written | Tag | Spoken |
-| --- | --- | --- |
-| `Hau moris iha 10 Abril 1973.` | `tdt-TL` | stays as written |
-| `Folin 5 dólares.` | `tdt-TL` | stays as written |
+Each row in `tests/data/tdt.tsv` cites a source. No native speaker has checked the rows.
 
 ## Limits
 
 The file reads no cardinals. The source gives a cardinal more than one reading, and the written text does not choose one. A cardinal after a noun reads in Tetun when it counts, as `kaixa 7` "kaixa hitu" (seven boxes), and in Portuguese or Indonesian when it labels, as "rejiaun ún" (region one). In television reporting, "Tetun numerals are favoured over Portuguese" (section 10.1).
+
+The file does not read a date with a written month, as `10 Abril 1973`. For a voice that reads written text, the source gives it one reading, in Portuguese. The reading needs a table of the Tetun month names, and no source of the file gives one.
+
+The file does not read a number before a Portuguese noun, as `5 dólares`. Section 7.1 gives it one reading: "if the number quantifies a following head noun, it must be read in the language of that noun." The reading needs a list of the Portuguese nouns of Tetun Dili.
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
@@ -93,6 +86,8 @@ The file reads no cardinals. The source gives a cardinal more than one reading, 
 | `Orsamentu tokon $20.` | `tdt-TL` | stays as written | A number after a scale word counts it, and the Portuguese reading of the number alone loses the scale. |
 | `Folin $ 3 Milhoens.` | `tdt-TL` | stays as written | A scale word in capitals that `pt-PT` does not list keeps the amount as written. |
 | `Data 13/13/2024 la iha.` | `tdt-TL` | stays as written | Month 13 is no date. |
+| `Hau moris iha 10 Abril 1973.` | `tdt-TL` | stays as written | The file has no table of the Tetun month names. |
+| `Folin 5 dólares.` | `tdt-TL` | stays as written | The file has no list of the Portuguese nouns of Tetun Dili. |
 
 ---
 [← Russian](ru.md) · [Home](../index.md) · [Chinese →](zh.md)
