@@ -268,8 +268,8 @@ the number after them names a time of day. It reads as the colon form does: `Che
 dez e trinta horas.", `às 9.30h` "às nove horas e trinta minutos", `às 10.30 da manhã` "às dez e trinta da manhã" and
 `às 24.00` "à meia-noite". With no such word, the number may write a decimal and stays as written (design section 10),
 as `Durou 1.30 h.` and `O índice fechou em 10.30.` do. A word or a sign after the number that shows an amount keeps
-the reading of the number without the rule: a scale word, a unit symbol or name, a currency code, sign or name, and `por
-cento`. So `das 3.20 kg` reads "das três vírgula vinte quilogramas", and `das 10.30 euros` and `perto das 8.37
+the reading of the number without the rule: a scale word, a unit symbol or name (`m2` and `cm3` too), a currency
+code, sign or name, `%` and `por cento`. So `das 3.20 kg` reads "das três vírgula vinte quilogramas", and `das 10.30 euros` and `perto das 8.37
 milhões` stay as written. `a.m.` and `p.m.` keep that reading too, because this rule does not read them.
 
 A clock with a colon after `é` or another verb stays as written. `é` comes before a ratio as well as a time, as in `A
@@ -1268,7 +1268,8 @@ class Clock(TimeClock):
                 *(word for currency in currency_table(request).values()
                   for word in (currency["one"].split()[0], currency["other"].split()[0], *currency["symbols"])),
                 *(period.rstrip(".") for periods in data["day_periods"].values() for period in periods))}
-            if following in amounts or re.match(f"{data['percent']['word']}\\b", rest, re.IGNORECASE):
+            if (following in amounts or following.rstrip("23²³") in amounts or following in data["percent"]["signs"]
+                    or re.match(f"{data['percent']['word']}\\b", rest, re.IGNORECASE)):
                 continue
             if span := self._time(match.start(1), hour, minute, "" if gap is None else "h"):
                 yield replace(span, end=match.end())
