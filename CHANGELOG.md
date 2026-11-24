@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a116](https://github.com/TigreGotico/text2spoken/tree/0.0.2a116) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a115...0.0.2a116)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a full-stop time after à and as, and keep it before any CLDR unit [\#543](https://github.com/TigreGotico/text2spoken/pull/543) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a115](https://github.com/TigreGotico/text2spoken/tree/0.0.2a115) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a114...0.0.2a115)
@@ -285,7 +293,6 @@
 **Merged pull requests:**
 
 - feat: Catalan language file [\#303](https://github.com/TigreGotico/text2spoken/pull/303) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): a numeric date with an era mark reads its calendar and the era word [\#300](https://github.com/TigreGotico/text2spoken/pull/300) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
 
@@ -294,10 +301,6 @@
 ## [0.0.2a82](https://github.com/TigreGotico/text2spoken/tree/0.0.2a82) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a81...0.0.2a82)
-
-**Merged pull requests:**
-
-- fix\(eu\): a fraction group of one or two digits after the comma ends the number [\#299](https://github.com/TigreGotico/text2spoken/pull/299) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a81](https://github.com/TigreGotico/text2spoken/tree/0.0.2a81) (2026-11-18)
 
