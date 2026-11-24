@@ -89,13 +89,15 @@ A length unit with `2` or `3` right after it writes its exponent on the line, so
 | `A casa tem 80m2.` | `pt-PT` | A casa tem oitenta metros quadrados. |
 | `Tomar 500 mg por dia.` | `pt-PT` | Tomar quinhentos miligramas por dia. |
 
-In `pt-PT`, the space is the group mark (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). A run of spaced groups is also a code, such as a tax number or a Multibanco reference, so a spaced number reads only when its last group is `000` or when it has a decimal part. Any other spaced run stays as written. In `pt-BR`, the group mark is the full stop.
+In `pt-PT`, the space is the group mark (Norma Portuguesa 9, quoted in Ciberdúvidas 12873). In `pt-BR`, the group mark is the full stop, and the space is a second group mark: the SI Brochure in its Portuguese edition (Inmetro and IPQ, 2021), 5.4.4, says "os números com muitos algarismos podem ser divididos em grupos de três algarismos, separados por um espaço". Both varieties read a spaced number by the same rules. A run of spaced groups is also a code, such as a tax number, a CPF or a Multibanco reference, so a spaced number reads only when its last group is `000` or when it has a decimal part. Any other spaced run stays as written.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Tem 100 000 habitantes.` | `pt-PT` | Tem cem mil habitantes. |
 | `Custa 1 250 000,50.` | `pt-PT` | Custa um milhão duzentos e cinquenta mil vírgula cinquenta. |
 | `O NIF é 509 876 543.` | `pt-PT` | stays as written |
+| `O orçamento é de 1 000 000 000 reais.` | `pt-BR` | O orçamento é de um bilhão de reais. |
+| `O CPF 123 456 789 aparece na nota.` | `pt-BR` | stays as written |
 
 [Money, units and symbols](../money-units-and-symbols.md) describes the units, currencies and symbols of CLDR, which Portuguese reads. [Addresses, letters and emoji](../addresses-letters-and-emoji.md) describes the addresses and the emoji.
 
@@ -219,7 +221,6 @@ The limits that Portuguese shares with English are on the [Addresses, letters an
 | `1,5h` | `pt-PT` | um vírgula cinco horas | The unit `h` reads when it touches the number. |
 | `1,5 h` | `pt-PT` | stays as written | With a space between the number and `h`, the measure stays as written. |
 | `A Drª. Sousa.` | `pt-PT` | stays as written | The full stop of an abbreviation comes before the letter in superscript, as in `Dr.ª` (Dicio), so `Drª.` and `Dª` are no titles of the file. |
-| `Custa 250 000 €.` | `pt-BR` | stays as written | A space reads as the group mark of an amount only in `pt-PT`, where CLDR gives it. CLDR gives the full stop for `pt-BR`. |
 | `8 ÷ 2` | `pt-PT` | oito sinal de divisão dois | A symbol name is the CLDR name, with no agreement and no context. |
 | `PAGUEI 2 CÓRDOBAS.` | `pt-PT` | PAGUEI duas CÓRDOBAS. | Text in capitals cannot tell the city Córdoba from the currency, because the currency gender entry matches the word as written. |
 | `Paguei 2 córdobas.` | `pt-PT` | Paguei dois córdobas. | The comparison for the row above. |
