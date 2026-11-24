@@ -128,6 +128,10 @@ SUFFIX_READINGS = {
     "pt-765": "A Indústria quatro ponto zero chegou.",
     "pt-789": "Paguei trezentas ainda ontem.",
     "pt-793": "Comprei duas pra você.",
+    "pt-844": "Visitei dois capitais.",
+    "pt-845": "Visitei dois capitais.",
+    "pt-846": "Visitei um capital.",
+    "pt-847": "Em dois mil e dezesseis visitei dois capitais.",
 }
 """The Portuguese rows that need tugalex, read without it. The `gender_suffixes` of pt.py alone give the gender: a
 noun that no ending matches takes the masculine default, and `-as` reads feminine. Only `letter_words` makes a run of
