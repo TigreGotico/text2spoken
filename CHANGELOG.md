@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a124](https://github.com/TigreGotico/text2spoken/tree/0.0.2a124) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a123...0.0.2a124)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a count in a phone list on the first pass [\#584](https://github.com/TigreGotico/text2spoken/pull/584) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a123](https://github.com/TigreGotico/text2spoken/tree/0.0.2a123) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a122...0.0.2a123)
@@ -267,7 +275,6 @@
 
 - fix\(core\): read the CLDR marks and grouping of a language with no file [\#342](https://github.com/TigreGotico/text2spoken/pull/342) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ja\): a decimal reads 点 for its mark, as in 三点五 [\#322](https://github.com/TigreGotico/text2spoken/pull/322) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): a phone word is also the last part of a hyphenated word [\#319](https://github.com/TigreGotico/text2spoken/pull/319) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a89](https://github.com/TigreGotico/text2spoken/tree/0.0.2a89) (2026-11-19)
 
@@ -317,7 +324,6 @@
 - fix\(core\): keep a number before a minus and digits that no number covers [\#343](https://github.com/TigreGotico/text2spoken/pull/343) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ca\): read §§ as paràgrafs [\#341](https://github.com/TigreGotico/text2spoken/pull/341) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(es\): an ordinal takes the apocope only before its own masculine noun [\#331](https://github.com/TigreGotico/text2spoken/pull/331) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(eu\): letters that touch a unit symbol are no case ending [\#320](https://github.com/TigreGotico/text2spoken/pull/320) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
