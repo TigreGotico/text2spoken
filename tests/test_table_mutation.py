@@ -97,7 +97,7 @@ PT_ENTRIES = {
     "currency_noun_gender": "córdobas", "two_gender_feminine": "caixas",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "h",
     "time_contractions": "às", "time_article_prepositions": "as",
-    "plural_time_verbs": "são",
+    "plural_time_verbs": "são", "point_time_words": "pelas",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
     "electronic_symbols": "@", "electronic_vowels": "a", "electronic_schemes": "https", "electronic_tlds": "pt",
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
