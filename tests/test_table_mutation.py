@@ -98,7 +98,8 @@ PT_ENTRIES = {
     "currency_noun_gender": "córdobas", "two_gender_feminine": "caixas",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "h",
     "time_contractions": "às", "time_article_prepositions": "as",
-    "plural_time_verbs": "são",
+    "plural_time_verbs": "são", "point_time_words": "pelas", "point_one_words": "à",
+    "point_article_prepositions": "as", "amount_words": "vezes",
     "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_word": DELETE,
     "electronic_symbols": "@", "electronic_vowels": "a", "electronic_schemes": "https", "electronic_tlds": "pt",
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
@@ -110,7 +111,7 @@ PT_ENTRIES = {
 }
 AR_ENTRIES = {
     "number_marks": "Arab", "defaults": "decimal_mark", "proclitics": "بـ", "prepositions": "في",
-    "semi_prepositions": "بعد", "year_nouns": "سنة", "feminine_plurals": "سيارات", "rank_nouns": "الطابق", "sign_words": "-", "leads": "#",
+    "semi_prepositions": "بعد", "year_nouns": "سنة", "feminine_plurals": "سيارات", "rank_nouns": "الطابق", "label_nouns": "رقم", "measure_nouns": "بوصة", "sign_words": "-", "leads": "#",
     "decimal_word": DELETE, "fraction_names": "2", "construct_duals": "مئتان", "range_word": DELETE,
     "range_marks": "-", "percent": "word",
     "currencies": "USD", "symbols_after_only": "ريال", "scales": "مليون", "units": "كم", "dimension_marks": "×",

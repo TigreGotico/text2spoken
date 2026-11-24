@@ -260,6 +260,39 @@ After any other reading it stays, as in `às 16:00 hora local`. A time with minu
 "dez e trinta" with no unit, so a written `horas` after it stays: "dez e trinta horas". A line break between the time
 and the word keeps both. No source rules on the doubled word itself; the rule follows from the readings cited above.
 
+An hour and its minutes may also take a full stop. Ciberdúvidas 14648, "A grafia das horas": "Há quem prefira a
+notação 17.30 h ou 17h 30´", and it warns that "17.30 h pode ser interpretado como 17,3 h". The page gives the full
+stop only, so a comma between the hour and the minutes keeps the decimal reading. A time with the full stop reads only
+right after a word that names the hours. `às`, `das` and `pelas` of `point_time_words` join a preposition and the
+article of the hours, so the number after them names a time of day. `à` of `point_one_words` joins the preposition and
+the singular article, which agrees with "uma" only: Ciberdúvidas 5175 writes "espero até à 1 hora", and Ney writes "à
+uma hora estarei lá" against "às duas horas" (above). So `até à 1.30` reads and `quanto à 8.14` stays. The article
+`as` reads after a preposition of `point_article_prepositions`: Dicio, Flávia Neves, "Crase antes de horas: quando
+usar?", gives "A reunião foi marcada para as seis horas.", "Já está tudo preparado desde as nove horas.", "Ele apenas
+poderá entrar após as 16h.", "O ônibus chegará entre as 15h e as 16h." and "O prazo de candidatura vai até as 18h de
+hoje.", and Ciberdúvidas 22241 writes "desde as cinco até às seis horas". The `as` after `e` reads when a time of
+this form ends right before `e`, as the second hour of `entre as 15h e as 16h` does. A bare `as`, `a`, `até` or
+`entre` also comes before an amount, so the number after it stays. A time reads as the colon form does: `Chego às
+10.30 horas.` reads "Chego às dez e trinta horas.", `às 9.30h` "às nove horas e trinta minutos", `às 10.30 da manhã`
+"às dez e trinta da manhã", `até à 1.30` "até à uma e trinta" and `às 24.00` "à meia-noite". With no such word, the
+number may write a decimal and stays as written (design section 10), as `Durou 1.30 h.` and `O índice fechou em
+10.30.` do. A word or a sign after the number that shows an amount keeps the reading of the number without the rule:
+a scale word, a currency code, sign or name, `%`, `por cento`, a word of `amount_words`, and a symbol or the first
+word of a name of a CLDR unit of the variety, with `2` or `3` after it too (`m2`, `cm3`). This holds every CLDR unit
+but the hour itself, so the units of duration count too: `às 2.30 t` and `das 2.30 anos` stay as written. A CLDR
+symbol that is a word of `function_words` or `letter_words`, or a day period with no full stop, as the picometre
+`pm`, does not count. `ºC` counts as `°C`, because `º` is the masculine ordinal indicator that a text writes for the
+degree sign (Unicode: U+00BA MASCULINE ORDINAL INDICATOR, U+00B0 DEGREE SIGN). `amount_words` holds the abbreviations
+and nouns that count an amount and that CLDR does not name: Priberam, "vez": "Usa-se a seguir a um numeral"; "valor":
+"valores nome masculino plural 8. Grau do aproveitamento escolar de um estudante."; "pp.": "Abreviatura de
+páginas"; Ipea, Manual Editorial, "Abreviaturas": "registrou 5 pontos percentuais (p.p.) a menos". So `das 3.20 kg`
+reads "das três vírgula vinte quilogramas", and `das 10.30 euros`, `pelas 10.30 ha` and `perto das 8.37 milhões` stay
+as written. `a.m.` and `p.m.` keep that reading too, because this rule does not read them.
+
+A clock with a colon after `é` or another verb stays as written. `é` comes before a ratio as well as a time, as in `A
+proporção do ecrã é 16:10`, and design section 4.2 of text2spoken says: "A word that also comes before a ratio or a
+quantity, such as `to`, `by` or `about`, is no time word". No source gives the reading of a clock after `começa`.
+
 `letter_runs` holds five runs that the rule reads wrong. EUA reads letter by letter against the syllable rule:
 Ciberdúvidas answer 9355 lists EUA among the "Siglas (siglóides)", with "letras em que é típico (mas não
 obrigatório) serem soletradas independentemente". APPO and OCDE read letter by letter against the free consonant
@@ -500,6 +533,10 @@ DATA = freeze({
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
     "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são"],
+    "point_time_words": ["às", "das", "pelas"],
+    "point_one_words": ["à"],
+    "point_article_prepositions": {"as": ["até", "desde", "após", "para", "entre"]},
+    "amount_words": ["vezes", "valores", "pp.", "p.p."],
     "plural_time_verbs": ["são"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
@@ -1130,7 +1167,7 @@ class Clock(TimeClock):
     the word is read once: `16:00 horas` reads `dezasseis horas`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        own = list(self._ranges(text, tokens, request))
+        own = [*self._ranges(text, tokens, request), *self._marked(text, request)]
         words = context_words(tokens)
         day_ends = []
         for match in re.finditer("24:00", text):
@@ -1229,6 +1266,50 @@ class Clock(TimeClock):
             if core_form.fullmatch(match.group()) or not is_bounded(text, *match.span()):
                 continue
             if span := self._time(match.start(), h, glued or spaced or colon, "h", seconds):
+                yield replace(span, end=match.end())
+
+    def _marked(self, text: str, request: Request) -> Iterator[Span]:
+        """`às 10.30`, `pelas 17.30 h`, `até à 1.30` and `entre as 9.30 e as 10.30`: a time with a full stop between
+        the hour and the minutes, right after a word of `point_time_words`, a word of `point_one_words` before the
+        hour 1, or a word of `point_article_prepositions` after one of its prepositions. The `as` after `e` reads
+        when a time of this form ends right before `e`. A word or a sign after the time that shows an amount keeps it
+        as written, as in `das 3.20 kg`, `às 2.30 t`, `das 2.30 anos` and `às 10.30 €`."""
+        data, tag = request.data, request.variety.tag
+        governed = data["point_article_prepositions"]
+        words = "|".join([*data["point_time_words"], *data["point_one_words"], *governed])
+        pattern = re.compile(f"(?<![\\w-])({words})[ \t]+([0-9][0-9]?)[.]([0-9][0-9])(?:( ?)h)?"
+                             "(?![.,]?[0-9]|[^\\W\\d_])", re.IGNORECASE)
+        last_end = None
+        for match in pattern.finditer(text):
+            word, hour, minute, gap = match.groups()
+            word = word.lower()
+            if word in data["point_one_words"] and int(hour) != 1:
+                continue
+            if word in governed:
+                previous = re.search("([^\\W\\d_]+)([ \t]+)$", text[max(match.start() - 40, 0):match.start()])
+                link = previous is not None and previous[1].lower() == "e" and last_end is not None \
+                    and text[last_end:match.start() - len(previous[0])].isspace()
+                if previous is None or not (previous[1].lower() in governed[word] or link):
+                    continue
+            rest = text[match.end():].lstrip(" \t")
+            following = re.match("[^\\s,;:!?)\\]»”\"]*", rest)[0].rstrip(".").lower().replace("º", "°")
+            units = [unit for unit in cldr_data(tag)["units"].values()
+                     if not set(unit["symbols"]) & set(data["time_units"])]
+            unit_words = {entry.lower() for unit in units for entry in (
+                *unit["symbols"], *(name.replace("{0}", "").split()[0] for name in unit["names"].values()))}
+            periods = [period for spellings in data["day_periods"].values() for period in spellings]
+            amounts = {entry.lower().rstrip(".") for entry in (
+                *data["scales"], *data["amount_words"],
+                *(name for currency in currency_table(request).values()
+                  for name in (currency["one"].split()[0], currency["other"].split()[0], *currency["symbols"])),
+                *periods)}
+            amounts |= unit_words - {entry.lower().replace(".", "")
+                                     for entry in (*data["function_words"], *data["letter_words"], *periods)}
+            if (following in amounts or following.rstrip("23²³") in amounts or following in data["percent"]["signs"]
+                    or re.match(f"{data['percent']['word']}\\b", rest, re.IGNORECASE)):
+                continue
+            if span := self._time(match.start(2), hour, minute, "" if gap is None else "h"):
+                last_end = match.end()
                 yield replace(span, end=match.end())
 
     def _ranges(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:

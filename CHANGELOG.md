@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.0.2a118](https://github.com/TigreGotico/text2spoken/tree/0.0.2a118) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a117...0.0.2a118)
+
+**Merged pull requests:**
+
+- fix\(ar\): read the CLDR currency symbols and ISO codes of the Arabic varieties [\#558](https://github.com/TigreGotico/text2spoken/pull/558) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a117](https://github.com/TigreGotico/text2spoken/tree/0.0.2a117) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a116...0.0.2a117)
+
+**Merged pull requests:**
+
+- fix\(ar\): read a number after a Latin code or موديل in its citation form [\#549](https://github.com/TigreGotico/text2spoken/pull/549) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a116](https://github.com/TigreGotico/text2spoken/tree/0.0.2a116) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a115...0.0.2a116)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a full-stop time after à and as, and keep it before any CLDR unit [\#543](https://github.com/TigreGotico/text2spoken/pull/543) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a115](https://github.com/TigreGotico/text2spoken/tree/0.0.2a115) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a114...0.0.2a115)
+
+**Merged pull requests:**
+
+- fix\(ar\): read a number after رقم in its citation form, and كم؟ as the question word [\#541](https://github.com/TigreGotico/text2spoken/pull/541) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a114](https://github.com/TigreGotico/text2spoken/tree/0.0.2a114) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a113...0.0.2a114)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a clock time with a full stop after às, das or pelas [\#522](https://github.com/TigreGotico/text2spoken/pull/522) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a113](https://github.com/TigreGotico/text2spoken/tree/0.0.2a113) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a112...0.0.2a113)
@@ -158,7 +198,6 @@
 
 - fix\(pt\): a clock reads the hour word that follows it once [\#390](https://github.com/TigreGotico/text2spoken/pull/390) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): read a long digit run in linear time in pt, ru, eu and nl [\#389](https://github.com/TigreGotico/text2spoken/pull/389) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix: a tag with no script reads the CLDR locale of its likely script [\#308](https://github.com/TigreGotico/text2spoken/pull/308) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a93](https://github.com/TigreGotico/text2spoken/tree/0.0.2a93) (2026-11-19)
 
@@ -261,17 +300,10 @@
 
 - fix\(core\): a number abbreviation does not wait on the number before it [\#316](https://github.com/TigreGotico/text2spoken/pull/316) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(eu\): read a hyphen range with the endings -tik and -ra [\#309](https://github.com/TigreGotico/text2spoken/pull/309) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- docs: a form with one easy reading must read [\#293](https://github.com/TigreGotico/text2spoken/pull/293) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a84](https://github.com/TigreGotico/text2spoken/tree/0.0.2a84) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a83...0.0.2a84)
-
-**Merged pull requests:**
-
-- feat: Catalan language file [\#303](https://github.com/TigreGotico/text2spoken/pull/303) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): a numeric date with an era mark reads its calendar and the era word [\#300](https://github.com/TigreGotico/text2spoken/pull/300) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): a percent sign before its number reads, as a right-to-left line shows it [\#298](https://github.com/TigreGotico/text2spoken/pull/298) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a83](https://github.com/TigreGotico/text2spoken/tree/0.0.2a83) (2026-11-18)
 
@@ -281,17 +313,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a81...0.0.2a82)
 
-**Merged pull requests:**
-
-- fix\(eu\): a fraction group of one or two digits after the comma ends the number [\#299](https://github.com/TigreGotico/text2spoken/pull/299) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a81](https://github.com/TigreGotico/text2spoken/tree/0.0.2a81) (2026-11-18)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a80...0.0.2a81)
-
-**Merged pull requests:**
-
-- fix\(eu\): read a number grouped by spaces, as Araua 203 recommends [\#292](https://github.com/TigreGotico/text2spoken/pull/292) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a80](https://github.com/TigreGotico/text2spoken/tree/0.0.2a80) (2026-11-18)
 

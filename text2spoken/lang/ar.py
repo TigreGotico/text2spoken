@@ -26,6 +26,17 @@ The rules and their sources:
   in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table. The gender of a
   plural is the gender of its singular: "if the singular noun is feminine, the numeral will be in the masculine
   form" (p. 334). So the table holds plurals whose singular ends in taa' marbuuTa.
+- A number that names a thing counts no noun. "In recitation form, in counting without a counted noun, or in referring
+  to a specific numeral alone, the form with taa' marbuuTa is usually used" (Ryding 2005, p. 335). The example of that
+  page is "raqm-u sittat-in huwa raqm-un siHriyy-un", "The number six is a magic number". So a number after رقم, or
+  after the lead #, which reads رقم, reads this form: `الحافلة رقم 42 متأخرة` reads اثنان وأربعون. No source names
+  other label nouns. The file reads a number after موديل or موديلات, a model or a model year, in this form too:
+  `السيارة موديل 2026 متوفرة` reads ألفان وستة وعشرون. Of three to ten, "The counted noun itself is plural,
+  indefinite, and in the genitive case" (p. 335). So after a code in Latin letters, as in `MG 5 متوفرة`, a singular in
+  taa' marbuuTa after 3 to 10 is no noun that the number counts, and the number names a thing. A noun of a CLDR 49
+  unit stays a counted noun: CLDR writes the few count of length-inch as "{0} بوصة". A number after a definite noun,
+  as in `الحلقة 7 كاملة`, still agrees with the word after it: web text often counts a singular after 3 to 10, as in
+  `التحضير 10 دقيقة`, so a singular word after the number is no sign of a label.
 - Case. A number after a preposition or a semi-preposition (p. 367) or a year noun (pp. 351-353) is genitive. Ryding
   writes that "colloquial forms of Arabic do not have case marking" (p. 166), and "In spoken Arabic, the tens numbers
   are reduced to one case, the genitive-accusative" (p. 343, note 11). So the colloquial register reads the tens in
@@ -59,7 +70,10 @@ The rules and their sources:
   and a right-to-left line shows that sign to the left of the number, so a percentage typed as it looks, `%10`,
   reads the same. The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of the minus sign is سالب
   (Arabic Wikipedia, عدد سالب, section التسمية).
-- كم before an indefinite noun is the question word "how many" (pp. 402-403), not the kilometre.
+- كم before an indefinite noun is the question word "how many" (pp. 402-403), not the kilometre. كم is also the
+  question word "how much" (p. 402) before a question mark, as in `كامري 2024 كم؟`, so the number reads alone and
+  كم stays as written. No source gives this rule: CLDR 49 writes the short and narrow symbol of length-kilometer as
+  كم, and a question mark does not change the symbol there. Latin `km` reads the kilometre before a question mark.
 
 The `units` and `currencies` tables give each noun in every count form, with the nominative and the oblique dual.
 CLDR 49 does not: `units.json` writes the dual of length-kilometer as "{0} كيلومتر", writes mass-kilogram as
@@ -80,13 +94,15 @@ import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
+from text2spoken.core.currencies import has_sign
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
-from text2spoken.core.recognizers import SHARED, Money as CoreMoney, TimeClock, speak_lexicon
+from text2spoken.core.recognizers import (SHARED, Cardinal as CoreCardinal, Measure as CoreMeasure, Money as CoreMoney,
+                                         TimeClock, speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import day_hour, twelve_hour
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, one_digit_set
+from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, one_digit_set
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
@@ -146,6 +162,46 @@ KILOMETRE_PER_HOUR = {**KILOMETRE, "per": "في الساعة"}
 KILOGRAM = {"gender": "masculine", "one": "كيلوغرام", "two": ["كيلوغرامان", "كيلوغرامين"], "few": "كيلوغرامات",
             "many": "كيلوغراما", "other": "كيلوغرام"}
 
+CLDR_CURRENCIES = (
+    ("AED", "د.إ.\u200f", "masculine", "درهم إماراتي", "درهمان إماراتيان", "دراهم إماراتية", "درهما إماراتيا"),
+    ("BHD", "د.ب.\u200f", "masculine", "دينار بحريني", "ديناران بحرينيان", "دنانير بحرينية", "دينارا بحرينيا"),
+    ("DZD", "د.ج.\u200f", "masculine", "دينار جزائري", "ديناران جزائريان", "دينارات جزائرية", "دينارا جزائريا"),
+    ("EGP", "ج.م.\u200f", "masculine", "جنيه مصري", "جنيهان مصريان", "جنيهات مصرية", "جنيها مصريا"),
+    ("IQD", "د.ع.\u200f", "masculine", "دينار عراقي", "ديناران عراقيان", "دنانير عراقية", "دينارا عراقيا"),
+    ("IRR", "ر.إ.", "masculine", "ريال إيراني", "ريالان إيرانيان", "ريالات إيرانية", "ريالا إيرانيا"),
+    ("JOD", "", "masculine", "دينار أردني", "ديناران أردنيان", "دنانير أردنية", "دينارا أردنيا"),
+    ("KWD", "د.ك.\u200f", "masculine", "دينار كويتي", "ديناران كويتيان", "دنانير كويتية", "دينارا كويتيا"),
+    ("LBP", "ل.ل.\u200f", "feminine", "ليرة لبنانية", "ليرتان لبنانيتان", "ليرات لبنانية", "ليرة لبنانية"),
+    ("LYD", "د.ل.\u200f", "masculine", "دينار ليبي", "ديناران ليبيان", "دينارات ليبية", "دينارا ليبيا"),
+    ("MAD", "د.م.\u200f", "masculine", "درهم مغربي", "درهمان مغربيان", "دراهم مغربية", "درهما مغربيا"),
+    ("OMR", "ر.ع.\u200f", "masculine", "ريال عماني", "ريالان عمانيان", "ريالات عمانية", "ريالا عمانيا"),
+    ("QAR", "ر.ق.\u200f", "masculine", "ريال قطري", "ريالان قطريان", "ريالات قطرية", "ريالا قطريا"),
+    ("SDG", "ج.س.", "masculine", "جنيه سوداني", "جنيهان سودانيان", "جنيهات سودانية", "جنيها سودانيا"),
+    ("SYP", "ل.س.\u200f", "feminine", "ليرة سورية", "ليرتان سوريتان", "ليرات سورية", "ليرة سورية"),
+    ("TND", "د.ت.\u200f", "masculine", "دينار تونسي", "ديناران تونسيان", "دينارات تونسية", "دينارا تونسيا"),
+    ("YER", "ر.ي.\u200f", "masculine", "ريال يمني", "ريالان يمنيان", "ريالات يمنية", "ريالا يمنيا"),
+)
+"""The currencies with a CLDR 49 `symbol` in Arabic letters in `cldr-numbers-full/main/ar/currencies.json`, with
+the symbol as CLDR writes it, the gender of the noun and the count forms of the name: one (and other), the nominative
+dual, few and many. Three CLDR symbols do not read, because running text uses them for something else. Lebanese
+classified ads write the JOD symbol د.أ for a price in US dollars, as in `1,000 د. أ: تصميم … في لبنان`, so JOD holds
+no symbol here and only its code reads. MRU, whose symbol أ.م. also starts the abbreviations of Lebanese law codes,
+as in `المادة 579 أ.م.م`, and SDD, which Sudan stopped using in 2007 (CLDR 49 `currencyData.json`, region SD), stay
+out."""
+
+
+def _cldr_currency(code: str, symbol: str, gender: str, one: str, two: str, few: str, many: str) -> dict:
+    """An entry of the `currencies` table. The ISO 4217 code reads, and so does the CLDR symbol with or without a
+    space after its inner full stop. The trailing full stop of the symbol, and U+200F after it, stay as written, so
+    the full stop of a sentence that ends in the symbol stays too. The oblique dual ends in -ayni where the
+    nominative ends in -aani (Ryding 2005, p. 332)."""
+    bare = symbol.rstrip(".\u200f")
+    oblique = " ".join(word[:-2] + "ين" for word in two.split())
+    symbols = [code, bare, bare.replace(".", ". ")] if bare else [code]
+    return {"symbols": symbols, "gender": gender, "one": one, "two": [two, oblique], "few": few, "many": many,
+            "other": one}
+
+
 SCALE_DUALS = ("مئتان", "مئتين", "ألفان", "ألفين", "مليونان", "مليونين")
 
 DATA = freeze({
@@ -160,6 +216,9 @@ DATA = freeze({
                          "سنوات", "سنين", "ثوان", "ثواني", "ليال", "ليالي", "قطع", "نسخ", "دفعات", "سرعات",
                          "أسطوانات", "عجلات", "وسائد", "شاشات", "فئات", "رحلات", "غرف", "كلمات"],
     "rank_nouns": ["الطابق", "الفئة", "المرتبة", "القرن", "الدور", "الصف", "الجيل", "المركز", "الفصل", "الدرجة"],
+    "label_nouns": ["رقم", "الرقم", "موديل", "موديلات"],
+    "measure_nouns": ["أونصة", "بوصة", "ثانية", "درجة", "دقيقة", "دورة", "رشّة", "ساعة", "سعرة", "سنة", "شمعة", "عقدة",
+                      "قامة", "قطرة", "قمحة", "ليلة", "ميكروثانية", "نقطة", "ياردة"],
     "sign_words": {"-": "سالب"},
     "leads": {"#": "رقم"},
     "decimal_word": "فاصلة",
@@ -173,13 +232,14 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "percent": {"signs": ["%", "٪"], "position": "either", "word": "في المئة"},
     "currencies": {
-        "USD": {"symbols": ["$", "US$"], "gender": "masculine", "one": "دولار", "two": ["دولاران", "دولارين"],
-                "few": "دولارات", "many": "دولارا", "other": "دولار"},
+        "USD": {"symbols": ["$", "US$", "USD"], "gender": "masculine", "one": "دولار",
+                "two": ["دولاران", "دولارين"], "few": "دولارات", "many": "دولارا", "other": "دولار"},
         "SAR": {"symbols": ["SAR"], "gender": "masculine", "one": "ريال سعودي",
                 "two": ["ريالان سعوديان", "ريالين سعوديين"], "few": "ريالات سعودية", "many": "ريالا سعوديا",
                 "other": "ريال سعودي"},
-        "SAR-sign": {"symbols": ["ريال", "ر.س"], "gender": "masculine", "one": "ريال", "two": ["ريالان", "ريالين"],
-                     "few": "ريالات", "many": "ريالا", "other": "ريال"},
+        "SAR-sign": {"symbols": ["ريال", "ر.س", "ر. س"], "gender": "masculine", "one": "ريال",
+                     "two": ["ريالان", "ريالين"], "few": "ريالات", "many": "ريالا", "other": "ريال"},
+        **{row[0]: _cldr_currency(*row) for row in CLDR_CURRENCIES},
     },
     "symbols_after_only": ["ريال"],
     "scales": {"مليون": "000000"},
@@ -218,12 +278,23 @@ singular ends in taa' marbuuTa: سنين (سنة, oldid 72786001, "ثلاث سن
 "ثلاث نسخ"), دفعات (دفعة, 75774492, "أربع دفعات"), سرعات (سرعة, 72665705, "ثماني سرعات"), أسطوانات (أسطوانة, 76540398,
 "ست أسطوانات"), عجلات (عجلة, 77054753, "أربع عجلات"), وسائد (وسادة, 75479234, "ست وسائد"), شاشات (شاشة, 74093250, "ثلاث
 شاشات"), فئات (فئة, 68531917, "خمس فئات"), رحلات (رحلة, 75094475, "ثلاث رحلات"), غرف (غرفة, 76576561, "أربع غرف") and
-كلمات (كلمة, 73435197, "خمس كلمات"). `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
+كلمات (كلمة, 73435197, "خمس كلمات"). `label_nouns`: the noun raqm of Ryding 2005, p. 335, with and without the
+article, and موديل with its plural موديلات, which no source names as a label noun. `measure_nouns`: the long names of
+CLDR 49 units.json (ar) that end in taa' marbuuTa; CLDR writes the few count of some of them in the singular, as "{0}
+بوصة" of length-inch. `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
 Wikipedia revision shows each noun before an agreeing ordinal: الدور (oldid 74639116, "الدور الخامس والثلاثين"), الصف
 (74030867, "الصف الثالث والثلاثين"), الجيل (76361085, "الجيل السادس والسبعين"), المركز (73375269, "المركز التاسع
 والتسعين"), الفصل (73569717, "الفصل السادس والتسعين") and الدرجة (76373966, "الدرجة الثالثة والأربعين"). `currencies`:
 `SAR` reads the CLDR name ريال سعودي, and the sign ر.س (English Wikipedia, Saudi riyal, revision 1252604873) and the
-word ريال read ريال. `fraction_names`: Ryding 2005, pp. 360-361. `minute_phrases`: Ryding 2005, pp. 361-362.
+word ريال read ريال. Each currency of `CLDR_CURRENCIES` reads its CLDR 49 `displayName` (`currencies.json` of `ar`),
+and its count forms are the `displayName-count-*` names where CLDR gives them, for DZD, EGP, LYD, MAD and TND, with
+the tanween mark left out. The genders and the other count forms come from the nouns of Wiktionary, درهم (revision
+95817866, masculine, plural دراهم), دينار (95819933, masculine, plural دنانير), جنيه (95643228, masculine, plural
+جنيهات), ريال (95819810, masculine, plural ريالات) and ليرة (91168060, feminine, plural ليرات), and from the
+agreement of the adjective (Ryding 2005, pp. 242-243): a dual adjective after a dual noun, as safiinat-aani
+kabiirat-aani, and a feminine singular adjective after a plural noun that names no person. So the dual of LBP and
+SDG is ليرتان لبنانيتان and جنيهان سودانيان, where CLDR writes the singular. `fraction_names`: Ryding 2005,
+pp. 360-361. `minute_phrases`: Ryding 2005, pp. 361-362.
 `decimal_word`: Wiktionary, فاصلة, sense "decimal point". `sign_words`: Arabic Wikipedia, عدد سالب, section التسمية. The
 count forms of `currencies` and `units`: Wiktionary دولار, ريال and كيلوغرام (revision 95591224: masculine, with the
 sound feminine plural), CLDR units.json (length-kilometer, and the symbols كغم of mass-kilogram and كم/س of
@@ -335,6 +406,22 @@ def counted_noun(after: Sequence[str]) -> str | None:
     return word if _is_arabic_word(word) and not word.startswith("ال") else None
 
 
+def number_noun(span: Span, context: SpanContext) -> str | None:
+    """The noun that the number counts: the word of `counted_noun`, but none after a label noun or the lead #. A
+    number that names a thing counts no noun (Ryding 2005, p. 335: raqm-u sittat-in). A number from 3 to 10 counts a
+    plural (p. 335), so after a code in Latin letters, as in `MG 5 متوفرة`, a singular in taa' marbuuTa is no noun
+    that it counts, unless it names a unit of `measure_nouns`, as in `Wusthof 7 بوصة`."""
+    request = context.request
+    if span.fields.get("lead") or noun_before(context, request.data["label_nouns"]):
+        return None
+    noun = counted_noun(context.after)
+    if (noun is not None and noun.endswith("ة") and noun not in request.data["measure_nouns"]
+            and span.form is Form.CARDINAL and span.start in request.memo.get(_CODED, ())
+            and plural_category(request, fold_digits(span.fields["digits"])) == "few"):
+        return None
+    return noun
+
+
 def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: FrozenMap) -> bool:
     """Whether a whole hour right after الساعة reads as the hour of a time (Ryding 2005, p. 361). It does not before
     a noun that the number counts, as in حتى الساعة 10 شهداء (p. 335): و, إلى, a definite word, a day period or the end
@@ -390,7 +477,7 @@ def agreement(span: Span, context: SpanContext, gender: GrammaticalGender | None
         gender = context.hint.gender
     elif gender is None:
         before = context.before[-1] if context.before else ""
-        noun = counted_noun(context.after)
+        noun = number_noun(span, context)
         if before in request.data["year_nouns"]:
             gender = GrammaticalGender(request.data["year_nouns"][before])
         elif noun is not None:
@@ -431,11 +518,11 @@ def _signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}"
 
 
-def rank_noun(context: SpanContext) -> tuple[str, str] | None:
-    """The rank noun right before the number, as in الطابق 3, بالمرتبة 1 and للطابق 3, with its proclitic."""
+def noun_before(context: SpanContext, nouns: Sequence[str]) -> tuple[str, str] | None:
+    """The noun of `nouns` right before the number, as in الطابق 3, بالمرتبة 1 and للطابق 3, with its proclitic."""
     if not context.before:
         return None
-    word, nouns = context.before[-1], context.request.data["rank_nouns"]
+    word = context.before[-1]
     if word.startswith("لل") and (noun := "ا" + word[1:]) in nouns:
         return "ل", noun
     for proclitic in ("", *context.request.data["proclitics"]):
@@ -475,10 +562,10 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
             and (high := fold_digits(after[1])).isdigit() and 1 <= int(digits) < int(high) <= 31
             and any(name.split()[0] == after[2] for name in request.data["months"])):
         return SPELLER.ordinal(digits, Features(gender=MASCULINE, case=_case(span, context)), request)
-    rank = rank_noun(context)
+    rank = noun_before(context, request.data["rank_nouns"])
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
-    noun = counted_noun(after)
+    noun = number_noun(span, context)
     if noun is not None and digits in ("1", "2"):
         raise DeclinedReading("one and two follow the noun that they count")
     features = agreement(span, context)
@@ -669,15 +756,57 @@ class Clock(TimeClock):
 class Money(CoreMoney):
     """The money of the core. The word ريال is a counted noun, which follows the number (Ryding 2005, p. 335), so
     `ريال 5` stays as written. The reading of an amount ends in ريال, so a digit after it would read on a second
-    pass."""
+    pass. A symbol joined by a full stop to another letter is part of a longer abbreviation, as ج.م in ج.م.ع, and a
+    symbol joined by a slash to a Latin letter is part of a currency pair, as USD in EUR/USD, so neither reads.
+    `speak_money` gives no reading for an amount with a fraction, so next to a symbol of letters such an amount reads
+    as a number and the symbol stays as written."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         after_only = request.data["symbols_after_only"]
         for span in super().find(text, tokens, request):
             symbol = span.fields["written_symbol"]
             written = text[span.start:span.end]
+            first = written.startswith(span.fields["prefix"] + symbol)
+            edge = text[max(0, span.start - 2):span.start][::-1] if first else text[span.end:span.end + 2]
+            mark, letter = edge[:1], edge[1:2]
+            joined = is_letter(letter) and (mark == "." or mark == "/" and letter.isascii())
+            if joined or (span.fields["amount"]["fraction"] and not has_sign(symbol)):
+                continue
             first_digit = next(index for index, char in enumerate(written) if char.isdigit())
             yield replace(span, keep=True) if symbol in after_only and symbol in written[:first_digit] else span
+
+
+_CODED = "ar_coded"
+"""The key of `Request.memo` that holds the starts of the cardinal spans that a code in Latin letters comes right
+before, as `Cardinal` finds them."""
+
+
+@dataclass(frozen=True)
+class Cardinal(CoreCardinal):
+    """The cardinals of the core. A span right after a code in Latin letters and one space or a hyphen, as in `MG 5`
+    and `CX-5`, puts its start into `Request.memo` under `_CODED`, which `number_noun` reads. The code starts the
+    text or follows a space or `(`."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            end = first = span.start - 1
+            if end > 0 and text[end] in " -":
+                while first and text[first - 1].isascii() and text[first - 1].isalpha():
+                    first -= 1
+            if first < end and (first == 0 or text[first - 1].isspace() or text[first - 1] == "("):
+                request.memo.setdefault(_CODED, set()).add(span.start)
+            yield span
+
+
+@dataclass(frozen=True)
+class Measure(CoreMeasure):
+    """The measures of the core. كم before a question mark is the question word "how much" (Ryding 2005, p. 402),
+    as in `كامري 2024 كم؟`, so the number reads alone and كم stays as written."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            if not (span.fields["unit"] == "كم" and text[span.end:].lstrip().startswith(("؟", "?"))):
+                yield span
 
 
 @dataclass(frozen=True)
@@ -740,8 +869,8 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES + LECT_VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], Clock(), Money(),
-                 SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"],
-                 SHARED["decimal"], SHARED["cardinal"]),
+                 SHARED["kept_money"], SHARED["percent"], Measure(), SHARED["fraction"], SHARED["range"],
+                 SHARED["decimal"], Cardinal()),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction,
