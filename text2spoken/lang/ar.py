@@ -26,6 +26,13 @@ The rules and their sources:
   in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table. The gender of a
   plural is the gender of its singular: "if the singular noun is feminine, the numeral will be in the masculine
   form" (p. 334). So the table holds plurals whose singular ends in taa' marbuuTa.
+- A number that names a thing counts no noun. "In recitation form, in counting without a counted noun, or in
+  referring to a specific numeral alone, the form with taa' marbuuTa is usually used" (Ryding 2005, p. 335). The
+  example of that page is "raqm-u sittat-in huwa raqm-un siHriyy-un", "The number six is a magic number". So a
+  number after رقم, or after the lead #, which reads رقم, reads this form: `الحافلة رقم 42 متأخرة` reads اثنان
+  وأربعون. No source names other label nouns, such as موديل. A number after a definite noun, as in `الحلقة 7
+  كاملة`, still agrees with the word after it: web text often counts a singular after 3 to 10, as in `التحضير 10
+  دقيقة`, so a singular word after the number is no sign of a label.
 - Case. A number after a preposition or a semi-preposition (p. 367) or a year noun (pp. 351-353) is genitive. Ryding
   writes that "colloquial forms of Arabic do not have case marking" (p. 166), and "In spoken Arabic, the tens numbers
   are reduced to one case, the genitive-accusative" (p. 343, note 11). So the colloquial register reads the tens in
@@ -59,7 +66,10 @@ The rules and their sources:
   and a right-to-left line shows that sign to the left of the number, so a percentage typed as it looks, `%10`,
   reads the same. The decimal word is فاصلة (Wiktionary, فاصلة, sense 6), and the word of the minus sign is سالب
   (Arabic Wikipedia, عدد سالب, section التسمية).
-- كم before an indefinite noun is the question word "how many" (pp. 402-403), not the kilometre.
+- كم before an indefinite noun is the question word "how many" (pp. 402-403), not the kilometre. كم is also the
+  question word "how much" (p. 402) before a question mark, as in `كامري 2024 كم؟`, so the number reads alone and
+  كم stays as written. No source gives this rule: CLDR 49 writes the short and narrow symbol of length-kilometer as
+  كم, and a question mark does not change the symbol there. Latin `km` reads the kilometre before a question mark.
 
 The `units` and `currencies` tables give each noun in every count form, with the nominative and the oblique dual.
 CLDR 49 does not: `units.json` writes the dual of length-kilometer as "{0} كيلومتر", writes mass-kilogram as
@@ -82,7 +92,7 @@ from dataclasses import dataclass, replace
 
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
-from text2spoken.core.recognizers import SHARED, Money as CoreMoney, TimeClock, speak_lexicon
+from text2spoken.core.recognizers import SHARED, Measure as CoreMeasure, Money as CoreMoney, TimeClock, speak_lexicon
 from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import day_hour, twelve_hour
@@ -160,6 +170,7 @@ DATA = freeze({
                          "سنوات", "سنين", "ثوان", "ثواني", "ليال", "ليالي", "قطع", "نسخ", "دفعات", "سرعات",
                          "أسطوانات", "عجلات", "وسائد", "شاشات", "فئات", "رحلات", "غرف", "كلمات"],
     "rank_nouns": ["الطابق", "الفئة", "المرتبة", "القرن", "الدور", "الصف", "الجيل", "المركز", "الفصل", "الدرجة"],
+    "label_nouns": ["رقم", "الرقم"],
     "sign_words": {"-": "سالب"},
     "leads": {"#": "رقم"},
     "decimal_word": "فاصلة",
@@ -218,7 +229,8 @@ singular ends in taa' marbuuTa: سنين (سنة, oldid 72786001, "ثلاث سن
 "ثلاث نسخ"), دفعات (دفعة, 75774492, "أربع دفعات"), سرعات (سرعة, 72665705, "ثماني سرعات"), أسطوانات (أسطوانة, 76540398,
 "ست أسطوانات"), عجلات (عجلة, 77054753, "أربع عجلات"), وسائد (وسادة, 75479234, "ست وسائد"), شاشات (شاشة, 74093250, "ثلاث
 شاشات"), فئات (فئة, 68531917, "خمس فئات"), رحلات (رحلة, 75094475, "ثلاث رحلات"), غرف (غرفة, 76576561, "أربع غرف") and
-كلمات (كلمة, 73435197, "خمس كلمات"). `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
+كلمات (كلمة, 73435197, "خمس كلمات"). `label_nouns`: the noun raqm of Ryding 2005, p. 335, with and without the
+article. `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
 Wikipedia revision shows each noun before an agreeing ordinal: الدور (oldid 74639116, "الدور الخامس والثلاثين"), الصف
 (74030867, "الصف الثالث والثلاثين"), الجيل (76361085, "الجيل السادس والسبعين"), المركز (73375269, "المركز التاسع
 والتسعين"), الفصل (73569717, "الفصل السادس والتسعين") and الدرجة (76373966, "الدرجة الثالثة والأربعين"). `currencies`:
@@ -335,6 +347,14 @@ def counted_noun(after: Sequence[str]) -> str | None:
     return word if _is_arabic_word(word) and not word.startswith("ال") else None
 
 
+def number_noun(span: Span, context: SpanContext) -> str | None:
+    """The noun that the number counts: the word of `counted_noun`, but none after a label noun or the lead #. A
+    number that names a thing counts no noun (Ryding 2005, p. 335: raqm-u sittat-in)."""
+    if span.fields.get("lead") or noun_before(context, context.request.data["label_nouns"]):
+        return None
+    return counted_noun(context.after)
+
+
 def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: FrozenMap) -> bool:
     """Whether a whole hour right after الساعة reads as the hour of a time (Ryding 2005, p. 361). It does not before
     a noun that the number counts, as in حتى الساعة 10 شهداء (p. 335): و, إلى, a definite word, a day period or the end
@@ -390,7 +410,7 @@ def agreement(span: Span, context: SpanContext, gender: GrammaticalGender | None
         gender = context.hint.gender
     elif gender is None:
         before = context.before[-1] if context.before else ""
-        noun = counted_noun(context.after)
+        noun = number_noun(span, context)
         if before in request.data["year_nouns"]:
             gender = GrammaticalGender(request.data["year_nouns"][before])
         elif noun is not None:
@@ -431,11 +451,11 @@ def _signed(words: str, sign: str, request: Request) -> str:
     return f"{request.data['sign_words'][sign]} {words}"
 
 
-def rank_noun(context: SpanContext) -> tuple[str, str] | None:
-    """The rank noun right before the number, as in الطابق 3, بالمرتبة 1 and للطابق 3, with its proclitic."""
+def noun_before(context: SpanContext, nouns: Sequence[str]) -> tuple[str, str] | None:
+    """The noun of `nouns` right before the number, as in الطابق 3, بالمرتبة 1 and للطابق 3, with its proclitic."""
     if not context.before:
         return None
-    word, nouns = context.before[-1], context.request.data["rank_nouns"]
+    word = context.before[-1]
     if word.startswith("لل") and (noun := "ا" + word[1:]) in nouns:
         return "ل", noun
     for proclitic in ("", *context.request.data["proclitics"]):
@@ -475,10 +495,10 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
             and (high := fold_digits(after[1])).isdigit() and 1 <= int(digits) < int(high) <= 31
             and any(name.split()[0] == after[2] for name in request.data["months"])):
         return SPELLER.ordinal(digits, Features(gender=MASCULINE, case=_case(span, context)), request)
-    rank = rank_noun(context)
+    rank = noun_before(context, request.data["rank_nouns"])
     if rank is not None and not (fields["sign"] or fields["lead"]) and 1 <= int(digits) <= 99:
         return speak_rank(span, context, *rank)
-    noun = counted_noun(after)
+    noun = number_noun(span, context)
     if noun is not None and digits in ("1", "2"):
         raise DeclinedReading("one and two follow the noun that they count")
     features = agreement(span, context)
@@ -681,6 +701,17 @@ class Money(CoreMoney):
 
 
 @dataclass(frozen=True)
+class Measure(CoreMeasure):
+    """The measures of the core. كم before a question mark is the question word "how much" (Ryding 2005, p. 402),
+    as in `كامري 2024 كم؟`, so the number reads alone and كم stays as written."""
+
+    def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        for span in super().find(text, tokens, request):
+            if not (span.fields["unit"] == "كم" and text[span.end:].lstrip().startswith(("؟", "?"))):
+                yield span
+
+
+@dataclass(frozen=True)
 class EraDate:
     """`15/9/1447هـ`, `1447-12-10 هـ` and `5/3/2026م`: a numeric date, day first with slashes or year first with
     hyphens, and an era mark of `era_marks` right after it or after one space. A Hijri month has 29 or 30 days."""
@@ -740,7 +771,7 @@ LANGUAGE = LanguageSpec(
     varieties=VARIETIES + LECT_VARIETIES,
     data=DATA,
     recognizers=(SHARED["lexicon"], EraDate(), DateNamed(), SHARED["date_numeric"], Clock(), Money(),
-                 SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["fraction"], SHARED["range"],
+                 SHARED["kept_money"], SHARED["percent"], Measure(), SHARED["fraction"], SHARED["range"],
                  SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,

@@ -14,6 +14,8 @@ The file `text2spoken/lang/ar.py` reads Modern Standard Arabic in Arabic script,
 
 The file reads cardinals, decimals, fractions, ranges, dates, times, money, measures, percentages and lexicon entries. A number agrees in gender and case with the noun after it. An ordinal follows the noun that it ranks, and one follows the noun that it counts.
 
+A number after `رقم` or `#` names a thing and counts no noun, so it reads in the form with taa' marbuuTa (Ryding 2005, p. 335). `كم` before a question mark is the question word "how much", not the kilometre.
+
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `الطابق 3` | `ar` | الطابق الثالث |
@@ -31,6 +33,8 @@ The file reads cardinals, decimals, fractions, ranges, dates, times, money, meas
 | `العرض من 1 إلى 7 مارس` | `ar` | العرض من الأول إلى السابع من مارس |
 | `الساعة 3` | `ar` | الساعة الثالثة |
 | `موعدك الساعة 10:30 ص` | `ar` | موعدك الساعة العاشرة والنصف صباحا |
+| `الحافلة رقم 42 متأخرة` | `ar` | الحافلة رقم اثنان وأربعون متأخرة |
+| `كامري 2024 كم؟` | `ar` | كامري ألفان وأربعة وعشرون كم؟ |
 
 These stay as written: telephone numbers, operators such as `5+3`, a number with a `+` sign, and the word `ريال` before a number.
 
