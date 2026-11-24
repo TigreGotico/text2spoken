@@ -1029,37 +1029,45 @@ class Telephone:
             request.memo[key] = tuple(self._runs(text, tokens, request))
         return (span for span, early in request.memo[key] if early == self.declines)
 
-    def _named(self, text: str, words: Sequence[Word], start: int, end: int, shaped: bool, short_code: bool,
-               symbols: frozenset[int], phone_words: frozenset[str], function_words: frozenset[str],
-               spoken: dict[int, str]) -> tuple[bool, bool]:
-        """Whether a phone word names the run text[start:end], and whether it names it firmly, so that a second pass
-        sees the same words: right before the run, or with only function words between when the run is shaped or a
-        short code. A symbol between names it, not firmly, because a first pass reads the symbol as words. A lexicon
-        key counts by its value, as a second pass sees it."""
-        edge, function, symbol = start, False, False
-        for index in range(bisect_right(words, start, key=lambda word: word.end) - 1, -1, -1):
-            word = words[index]
-            if not _GAP.fullmatch(text, word.end, edge):
-                return False, False
+    @staticmethod
+    def _reach(text: str, words: Sequence[Word], symbols: frozenset[int], phone_words: frozenset[str],
+               function_words: frozenset[str], spoken: dict[int, str]) -> list[tuple[bool, bool, bool] | None]:
+        """For each word, where a walk back from it over function words, bracketed words and symbols ends: None when
+        it ends before a phone word, else whether the word itself is the phone word, and whether the walk passed a
+        function word and a symbol. Each word extends the walk of the word before it, so all runs take linear time.
+        A lexicon key counts by its value, as a second pass sees it."""
+        reach: list[tuple[bool, bool, bool] | None] = []
+        for index, word in enumerate(words):
             # Only the last name of a run of symbols stands right before the next word, as on a second pass.
             if phone_words.intersection(_last_parts(spoken.get(word.end, word.text))[-1:]):
-                if edge == start:
-                    return True, True
-                after = re.match(r"[^\w\s]*\s*(\w*)", text[end:])
-                # A short code past other words needs a function word or the end of its clause after it, so that
-                # `Appel du 18 mai` reads a date.
-                coded = short_code and (not after[1] or after[1].lower() in function_words)
-                return shaped or coded or not function, (shaped or coded) and not symbol
-            if word.start in symbols:
-                symbol = True
+                reach.append((True, False, False))
+                continue
+            symbol = word.start in symbols
             # A word in square brackets is a reference, as `[1]`, which reads `[um]` on a second pass.
-            elif text[word.start - 1:word.start] == "[" and text[word.end:word.end + 1] == "]" \
-                    or function_words.issuperset(word.text.lower().split()):
-                function = True
-            else:
-                return False, False
-            edge = word.start
-        return False, False
+            function = not symbol and (text[word.start - 1:word.start] == "[" and text[word.end:word.end + 1] == "]"
+                                       or function_words.issuperset(word.text.lower().split()))
+            before = reach[index - 1] if index and _GAP.fullmatch(text, words[index - 1].end, word.start) else None
+            reach.append((False, before[1] or function, before[2] or symbol)
+                         if before and (symbol or function) else None)
+        return reach
+
+    @staticmethod
+    def _named(text: str, words: Sequence[Word], reach: Sequence[tuple[bool, bool, bool] | None], start: int,
+               end: int, shaped: bool, short_code: bool, function_words: frozenset[str]) -> tuple[bool, bool]:
+        """Whether a phone word names the run text[start:end], and whether it names it firmly, so that a second pass
+        sees the same words: right before the run, or with only function words between when the run is shaped or a
+        short code. A symbol between names it, not firmly, because a first pass reads the symbol as words."""
+        index = bisect_right(words, start, key=lambda word: word.end) - 1
+        if index < 0 or not _GAP.fullmatch(text, words[index].end, start) or reach[index] is None:
+            return False, False
+        direct, function, symbol = reach[index]
+        if direct:
+            return True, True
+        after = re.match(r"[^\w\s]*\s*(\w*)", text[end:])
+        # A short code past other words needs a function word or the end of its clause after it, so that
+        # `Appel du 18 mai` reads a date.
+        coded = short_code and (not after[1] or after[1].lower() in function_words)
+        return shaped or coded or not function, (shaped or coded) and not symbol
 
     def _coded(self, written: str, digits: str, codes: Sequence[str]) -> str:
         """The country code after a written `+` or `00`, or "". After `+`, alone or in brackets, a first group of up to
@@ -1163,6 +1171,7 @@ class Telephone:
         listed = re.compile(f",? (?:{links}) |, " if links else ", ")
         spoken = {span.end: span.fields["spoken"] for span in Lexicon().find(text, tokens, request)} \
             if Form.LEXICON in request.params.forms else {}
+        reach = self._reach(text, words, symbols, phone_words, function_words, spoken)
         named_end = None
         for match in runs:
             start, end, written = match.start(), match.end(), match.group()
@@ -1191,8 +1200,7 @@ class Telephone:
                 groups = [group for group in groups if group]
             shaped = written.startswith(("+", "0")) or any(c in self.spaces + ".()-" for c in written)
             short_code = "".join(groups) in short_codes
-            loose, direct = self._named(text, words, start, end, shaped, short_code, symbols, phone_words,
-                                        function_words, spoken)
+            loose, direct = self._named(text, words, reach, start, end, shaped, short_code, function_words)
             gap = "" if named_end is None else "".join(c for i, c in enumerate(text[named_end:start], named_end)
                                                        if i not in covered)
             named = loose or (named_end is not None and listed.fullmatch(re.sub(" {2,}", " ", gap)) is not None)
