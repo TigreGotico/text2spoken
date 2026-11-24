@@ -70,13 +70,16 @@ A clock with a colon reads after a time word, such as `às`, `das` or the verb `
 | `Já são 12:00!` | `pt-PT` | Já são doze horas! |
 | `Fecha às 24:00.` | `pt-PT` | Fecha à meia-noite. |
 
-A time with a full stop between the hour and the minutes reads only after `às`, `das` or `pelas` (Ciberdúvidas 14648: "Há quem prefira a notação 17.30 h"). With no such word, the number may also be a decimal, so it stays as written. A unit, a currency, `por cento` or a scale word after the number shows an amount, so the time reading does not apply. A number with a comma, as `às 10,30`, reads as a decimal.
+A time with a full stop between the hour and the minutes reads only after a word that names the hours: `às`, `das` or `pelas`, `à` before the hour 1, and `as` after `até`, `desde`, `após`, `para` or `entre` (Ciberdúvidas 14648: "Há quem prefira a notação 17.30 h"; Dicio, "Crase antes de horas: quando usar?": "O ônibus chegará entre as 15h e as 16h."). A second time after `e as` reads too. With no such word, the number may also be a decimal, so it stays as written. A unit symbol or name of CLDR, a currency, `por cento`, a scale word, `vezes`, `valores`, `pp.` or `p.p.` after the number shows an amount, so the time reading does not apply. A number with a comma, as `às 10,30`, reads as a decimal.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Chego às 10.30 horas.` | `pt-PT` | Chego às dez e trinta horas. |
 | `O peso desceu das 3.20 kg.` | `pt-PT` | O peso desceu das três vírgula vinte quilogramas. |
 | `O comboio parte às 9.30h.` | `pt-PT` | O comboio parte às nove horas e trinta minutos. |
+| `Espero até à 1.30 da manhã.` | `pt-PT` | Espero até à uma e trinta da manhã. |
+| `O ônibus chegará entre as 15.30 e as 16.30.` | `pt-BR` | O ônibus chegará entre as quinze e trinta e as dezesseis e trinta. |
+| `Chegou às 2.30 t de carga.` | `pt-PT` | stays as written |
 | `O índice fechou em 10.30.` | `pt-PT` | stays as written |
 
 A length unit with `2` or `3` right after it writes its exponent on the line, so `80 m2` reads as `80 m²`.
