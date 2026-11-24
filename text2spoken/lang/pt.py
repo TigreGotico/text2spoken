@@ -907,7 +907,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     else:
         masculine = span.start in request.memo.get(_YEARS, ()) or span.start in request.memo.get(_LISTED, ())
         words = _cardinal(digits, request, agreement(context, masculine))
-        _check_pair(digits, context)
+        _check_pair(digits, context, span.start in request.memo.get(_AFTER_PHONE, ()))
         if _SCALE_WORD.fullmatch(words.split()[-1]) and context.after \
                 and context.after[0].lower() not in request.data["function_words"]:
             words += " de"
@@ -947,15 +947,17 @@ def _first_of_pair_differs(digits: str, before: Sequence[str], after: Sequence[s
     return _cardinal(digits, context.request, near) != _cardinal(digits, context.request, far)
 
 
-def _check_pair(digits: str, context: SpanContext) -> None:
+def _check_pair(digits: str, context: SpanContext, after_phone: bool = False) -> None:
     """Decline both numbers of a pair such as `de 1 a 3 semanas` or `entre 1 e 2 semanas` when the noun after the
     second number gives the first number another gender. No source gives the gender of the first number, so the
-    pair stays as written. The second number declines too, so a second pass leaves the text unchanged."""
+    pair stays as written. The second number declines too, so a second pass leaves the text unchanged. A number
+    `after_phone` is no second number: the phone number before it reads digit by digit, so a second pass sees words
+    there."""
     if context.hint is not None:
         return
     before, after = context.before, context.after
     first = _first_of_pair_differs(digits, before, after, context)
-    if not first and len(before) > 1:
+    if not first and not after_phone and len(before) > 1:
         second = _pair_digits(before[-2], context.request)
         if second is not None:
             first = _first_of_pair_differs(second, before[:-2], (before[-1], digits, *after), context)
@@ -1468,6 +1470,8 @@ _YEAR_MARKS = frozenset(",:)")
 _FOUR_DIGITS = re.compile("[0-9]{4}")
 _LISTED = "pt_listed"
 _LIST_MARK = re.compile(" *[-–.)] ")
+_AFTER_PHONE = "pt_after_phone"
+_ONE_WORD = re.compile("[,;:.!?)]*[ \t\n\u00a0]+[^ \t\n\u00a0,;:.!?()]+[ \t\n\u00a0]+")
 
 
 @dataclass(frozen=True)
@@ -1476,15 +1480,20 @@ class Cardinal(CoreCardinal):
     year, as `2012` in `Braga 2012: Capital Europeia`, and its start goes into `Request.memo` under `_YEARS`, so that
     it reads in the masculine. An unsigned number that starts a line, with optional spaces, one of `-`, `–`, `.` or
     `)` and a space after it, as in `2 - Casa de campo`, numbers an item of a list, and its start goes under
-    `_LISTED`."""
+    `_LISTED`. A number one word after a phone number that reads, as `2` in `912 345 678 ou 2 casas`, goes in under
+    `_AFTER_PHONE`, so that it is no second number of a pair."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
+        after_phone = {word.end() for phone in _phones(text, tokens, request)
+                       if (word := _ONE_WORD.match(text, phone.end))}
         for span in super().find(text, tokens, request):
             if _FOUR_DIGITS.fullmatch(text, span.start, span.end) and text[span.end:span.end + 1] in _YEAR_MARKS:
                 request.memo.setdefault(_YEARS, set()).add(span.start)
             if (text[span.start].isdigit() and not text[text.rfind("\n", 0, span.start) + 1:span.start].strip()
                     and _LIST_MARK.match(text, span.end)):
                 request.memo.setdefault(_LISTED, set()).add(span.start)
+            if span.start in after_phone:
+                request.memo.setdefault(_AFTER_PHONE, set()).add(span.start)
             yield span
 
 
