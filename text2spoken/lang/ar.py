@@ -37,6 +37,18 @@ The rules and their sources:
   unit stays a counted noun: CLDR writes the few count of length-inch as "{0} بوصة". A number after a definite noun,
   as in `الحلقة 7 كاملة`, still agrees with the word after it: web text often counts a singular after 3 to 10, as in
   `التحضير 10 دقيقة`, so a singular word after the number is no sign of a label.
+- A number that starts a line and that a mark of `list_marks` and a space follow, as in `4- وطبيعة المنتج`, numbers
+  an item of a list. It counts no noun and reads the form with taa' marbuuTa, as in counting: "waaHid-un, ithnaani,
+  thalaathat-un!" (Ryding 2005, p. 335). No source names the list mark; the rule rests on p. 335 and on a corpus
+  measure.
+- A counted noun after the number is indefinite. Of three to ten, "The counted noun itself is plural, indefinite,
+  and in the genitive case" (Ryding 2005, p. 335). "In the definite form, the numeral is in apposition with the
+  noun. It follows the noun" (p. 338), and a definite noun counted by eleven or twelve comes before the numeral too
+  (p. 340). The definite article "is attached as a prefix" and "is a proclitic particle, i.e., always attached to a
+  word" (p. 40), and bi-, li- and ka- "need to be prefixed to the noun that follows" (p. 367), with li- before the
+  article written لل (p. 371). So a word with the article after a proclitic, as in `فاز 5 بالجائزة` or `المادة 23
+  للائحة`, is no noun that the number counts, as a word with the bare article is not. The conjunctions wa- and fa-
+  (p. 72) may come first, as in والسيارة.
 - Case. A number after a preposition or a semi-preposition (p. 367) or a year noun (pp. 351-353) is genitive. Ryding
   writes that "colloquial forms of Arabic do not have case marking" (p. 166), and "In spoken Arabic, the tens numbers
   are reduced to one case, the genitive-accusative" (p. 343, note 11). So the colloquial register reads the tens in
@@ -217,6 +229,7 @@ DATA = freeze({
                          "أسطوانات", "عجلات", "وسائد", "شاشات", "فئات", "رحلات", "غرف", "كلمات"],
     "rank_nouns": ["الطابق", "الفئة", "المرتبة", "القرن", "الدور", "الصف", "الجيل", "المركز", "الفصل", "الدرجة"],
     "label_nouns": ["رقم", "الرقم", "موديل", "موديلات"],
+    "list_marks": ["-", ".", ")", "–"],
     "measure_nouns": ["أونصة", "بوصة", "ثانية", "درجة", "دقيقة", "دورة", "رشّة", "ساعة", "سعرة", "سنة", "شمعة", "عقدة",
                       "قامة", "قطرة", "قمحة", "ليلة", "ميكروثانية", "نقطة", "ياردة"],
     "sign_words": {"-": "سالب"},
@@ -279,7 +292,8 @@ singular ends in taa' marbuuTa: سنين (سنة, oldid 72786001, "ثلاث سن
 "ست أسطوانات"), عجلات (عجلة, 77054753, "أربع عجلات"), وسائد (وسادة, 75479234, "ست وسائد"), شاشات (شاشة, 74093250, "ثلاث
 شاشات"), فئات (فئة, 68531917, "خمس فئات"), رحلات (رحلة, 75094475, "ثلاث رحلات"), غرف (غرفة, 76576561, "أربع غرف") and
 كلمات (كلمة, 73435197, "خمس كلمات"). `label_nouns`: the noun raqm of Ryding 2005, p. 335, with and without the
-article, and موديل with its plural موديلات, which no source names as a label noun. `measure_nouns`: the long names of
+article, and موديل with its plural موديلات, which no source names as a label noun. `list_marks`: the marks after a
+list number at the start of a line; no source names them. `measure_nouns`: the long names of
 CLDR 49 units.json (ar) that end in taa' marbuuTa; CLDR writes the few count of some of them in the singular, as "{0}
 بوصة" of length-inch. `rank_nouns`: nouns that an ordinal follows (Ryding 2005, pp. 354-359). An Arabic
 Wikipedia revision shows each noun before an agreeing ordinal: الدور (oldid 74639116, "الدور الخامس والثلاثين"), الصف
@@ -410,7 +424,8 @@ def number_noun(span: Span, context: SpanContext) -> str | None:
     """The noun that the number counts: the word of `counted_noun`, but none after a label noun or the lead #. A
     number that names a thing counts no noun (Ryding 2005, p. 335: raqm-u sittat-in). A number from 3 to 10 counts a
     plural (p. 335), so after a code in Latin letters, as in `MG 5 متوفرة`, a singular in taa' marbuuTa is no noun
-    that it counts, unless it names a unit of `measure_nouns`, as in `Wusthof 7 بوصة`."""
+    that it counts, unless it names a unit of `measure_nouns`, as in `Wusthof 7 بوصة`. A list number at the start of
+    a line counts no noun, nor does a number before a definite word, as in `فاز 5 بالجائزة` (p. 335)."""
     request = context.request
     if span.fields.get("lead") or noun_before(context, request.data["label_nouns"]):
         return None
@@ -419,7 +434,9 @@ def number_noun(span: Span, context: SpanContext) -> str | None:
             and span.form is Form.CARDINAL and span.start in request.memo.get(_CODED, ())
             and plural_category(request, fold_digits(span.fields["digits"])) == "few"):
         return None
-    return noun
+    if span.form is Form.CARDINAL and span.start in request.memo.get(_LISTED, ()):
+        return None
+    return None if noun is not None and DEFINITE.match(noun) else noun
 
 
 def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: FrozenMap) -> bool:
@@ -779,13 +796,19 @@ class Money(CoreMoney):
 _CODED = "ar_coded"
 """The key of `Request.memo` that holds the starts of the cardinal spans that a code in Latin letters comes right
 before, as `Cardinal` finds them."""
+_LISTED = "ar_listed"
+"""The key of `Request.memo` that holds the starts of the cardinal spans that number an item of a list."""
+DEFINITE = re.compile("(?:[وف]?[بكل]?ال|[وف]?لل)[ء-ي]{3}")
+"""A word with the article after a proclitic: بالجائزة, للائحة, والسيارة, وبالمدينة. Three letters after the article
+keep the nouns وكالة and وكالات out."""
 
 
 @dataclass(frozen=True)
 class Cardinal(CoreCardinal):
     """The cardinals of the core. A span right after a code in Latin letters and one space or a hyphen, as in `MG 5`
     and `CX-5`, puts its start into `Request.memo` under `_CODED`, which `number_noun` reads. The code starts the
-    text or follows a space or `(`."""
+    text or follows a space or `(`. A span that starts a line, with a mark of `list_marks` and a space or the end of
+    the text after it, as in `4- وطبيعة`, puts its start under `_LISTED`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in super().find(text, tokens, request):
@@ -795,6 +818,10 @@ class Cardinal(CoreCardinal):
                     first -= 1
             if first < end and (first == 0 or text[first - 1].isspace() or text[first - 1] == "("):
                 request.memo.setdefault(_CODED, set()).add(span.start)
+            line_start = text.rfind("\n", 0, span.start) + 1
+            if (not text[line_start:span.start].strip() and text[span.end:span.end + 1] in request.data["list_marks"]
+                    and not text[span.end + 1:span.end + 2].strip()):
+                request.memo.setdefault(_LISTED, set()).add(span.start)
             yield span
 
 

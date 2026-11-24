@@ -14,7 +14,7 @@ The file `text2spoken/lang/ar.py` reads Modern Standard Arabic in Arabic script,
 
 The file reads cardinals, decimals, fractions, ranges, dates, times, money, measures, percentages and lexicon entries. A number agrees in gender and case with the noun after it. An ordinal follows the noun that it ranks, and one follows the noun that it counts.
 
-A number after `رقم` or `#` names a thing and counts no noun, so it reads in the form with taa' marbuuTa (Ryding 2005, p. 335). A number after `موديل` names a model or a model year and reads the same form. A number from 3 to 10 counts a plural (p. 335), so after a code in Latin letters, such as `MG 5`, a singular in taa' marbuuTa is no counted noun, and the number reads the same form. A unit noun such as `بوصة` stays a counted noun. `كم` before a question mark is the question word "how much", not the kilometre.
+A number after `رقم` or `#` names a thing and counts no noun, so it reads in the form with taa' marbuuTa (Ryding 2005, p. 335). A number after `موديل` names a model or a model year and reads the same form. A number from 3 to 10 counts a plural (p. 335), so after a code in Latin letters, such as `MG 5`, a singular in taa' marbuuTa is no counted noun, and the number reads the same form. A unit noun such as `بوصة` stays a counted noun. `كم` before a question mark is the question word "how much", not the kilometre. A number at the start of a line before `-`, `.` or `)` numbers an item of a list, and a word with the article after a proclitic, such as `بالجائزة`, is no counted noun. In both cases the number reads the form with taa' marbuuTa.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -37,6 +37,8 @@ A number after `رقم` or `#` names a thing and counts no noun, so it reads in 
 | `كامري 2024 كم؟` | `ar` | كامري ألفان وأربعة وعشرون كم؟ |
 | `MG 5 متوفرة` | `ar` | MG خمسة متوفرة |
 | `السيارة موديل 2026 متوفرة` | `ar` | السيارة موديل ألفان وستة وعشرون متوفرة |
+| `4- وطبيعة المنتج` | `ar` | أربعة- وطبيعة المنتج |
+| `فاز 5 بالجائزة` | `ar` | فاز خمسة بالجائزة |
 
 These stay as written: telephone numbers, operators such as `5+3`, a number with a `+` sign, and the word `ريال` before a number.
 
