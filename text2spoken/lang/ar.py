@@ -94,6 +94,7 @@ import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 
+from text2spoken.core.currencies import has_sign
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category, primary_subtag
 from text2spoken.core.recognizers import (SHARED, Cardinal as CoreCardinal, Measure as CoreMeasure, Money as CoreMoney,
@@ -101,7 +102,7 @@ from text2spoken.core.recognizers import (SHARED, Cardinal as CoreCardinal, Meas
 from text2spoken.core.spans import Features, Span, SpanContext, clause_window, context_words
 from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import day_hour, twelve_hour
-from text2spoken.core.tokens import Token, fold_digits, is_bounded, one_digit_set
+from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, one_digit_set
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form, GrammaticalGender, freeze
 
@@ -161,6 +162,46 @@ KILOMETRE_PER_HOUR = {**KILOMETRE, "per": "في الساعة"}
 KILOGRAM = {"gender": "masculine", "one": "كيلوغرام", "two": ["كيلوغرامان", "كيلوغرامين"], "few": "كيلوغرامات",
             "many": "كيلوغراما", "other": "كيلوغرام"}
 
+CLDR_CURRENCIES = (
+    ("AED", "د.إ.\u200f", "masculine", "درهم إماراتي", "درهمان إماراتيان", "دراهم إماراتية", "درهما إماراتيا"),
+    ("BHD", "د.ب.\u200f", "masculine", "دينار بحريني", "ديناران بحرينيان", "دنانير بحرينية", "دينارا بحرينيا"),
+    ("DZD", "د.ج.\u200f", "masculine", "دينار جزائري", "ديناران جزائريان", "دينارات جزائرية", "دينارا جزائريا"),
+    ("EGP", "ج.م.\u200f", "masculine", "جنيه مصري", "جنيهان مصريان", "جنيهات مصرية", "جنيها مصريا"),
+    ("IQD", "د.ع.\u200f", "masculine", "دينار عراقي", "ديناران عراقيان", "دنانير عراقية", "دينارا عراقيا"),
+    ("IRR", "ر.إ.", "masculine", "ريال إيراني", "ريالان إيرانيان", "ريالات إيرانية", "ريالا إيرانيا"),
+    ("JOD", "", "masculine", "دينار أردني", "ديناران أردنيان", "دنانير أردنية", "دينارا أردنيا"),
+    ("KWD", "د.ك.\u200f", "masculine", "دينار كويتي", "ديناران كويتيان", "دنانير كويتية", "دينارا كويتيا"),
+    ("LBP", "ل.ل.\u200f", "feminine", "ليرة لبنانية", "ليرتان لبنانيتان", "ليرات لبنانية", "ليرة لبنانية"),
+    ("LYD", "د.ل.\u200f", "masculine", "دينار ليبي", "ديناران ليبيان", "دينارات ليبية", "دينارا ليبيا"),
+    ("MAD", "د.م.\u200f", "masculine", "درهم مغربي", "درهمان مغربيان", "دراهم مغربية", "درهما مغربيا"),
+    ("OMR", "ر.ع.\u200f", "masculine", "ريال عماني", "ريالان عمانيان", "ريالات عمانية", "ريالا عمانيا"),
+    ("QAR", "ر.ق.\u200f", "masculine", "ريال قطري", "ريالان قطريان", "ريالات قطرية", "ريالا قطريا"),
+    ("SDG", "ج.س.", "masculine", "جنيه سوداني", "جنيهان سودانيان", "جنيهات سودانية", "جنيها سودانيا"),
+    ("SYP", "ل.س.\u200f", "feminine", "ليرة سورية", "ليرتان سوريتان", "ليرات سورية", "ليرة سورية"),
+    ("TND", "د.ت.\u200f", "masculine", "دينار تونسي", "ديناران تونسيان", "دينارات تونسية", "دينارا تونسيا"),
+    ("YER", "ر.ي.\u200f", "masculine", "ريال يمني", "ريالان يمنيان", "ريالات يمنية", "ريالا يمنيا"),
+)
+"""The currencies with a CLDR 49 `symbol` in Arabic letters in `cldr-numbers-full/main/ar/currencies.json`, with
+the symbol as CLDR writes it, the gender of the noun and the count forms of the name: one (and other), the nominative
+dual, few and many. Three CLDR symbols do not read, because running text uses them for something else. Lebanese
+classified ads write the JOD symbol د.أ for a price in US dollars, as in `1,000 د. أ: تصميم … في لبنان`, so JOD holds
+no symbol here and only its code reads. MRU, whose symbol أ.م. also starts the abbreviations of Lebanese law codes,
+as in `المادة 579 أ.م.م`, and SDD, which Sudan stopped using in 2007 (CLDR 49 `currencyData.json`, region SD), stay
+out."""
+
+
+def _cldr_currency(code: str, symbol: str, gender: str, one: str, two: str, few: str, many: str) -> dict:
+    """An entry of the `currencies` table. The ISO 4217 code reads, and so does the CLDR symbol with or without a
+    space after its inner full stop. The trailing full stop of the symbol, and U+200F after it, stay as written, so
+    the full stop of a sentence that ends in the symbol stays too. The oblique dual ends in -ayni where the
+    nominative ends in -aani (Ryding 2005, p. 332)."""
+    bare = symbol.rstrip(".\u200f")
+    oblique = " ".join(word[:-2] + "ين" for word in two.split())
+    symbols = [code, bare, bare.replace(".", ". ")] if bare else [code]
+    return {"symbols": symbols, "gender": gender, "one": one, "two": [two, oblique], "few": few, "many": many,
+            "other": one}
+
+
 SCALE_DUALS = ("مئتان", "مئتين", "ألفان", "ألفين", "مليونان", "مليونين")
 
 DATA = freeze({
@@ -191,13 +232,14 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "percent": {"signs": ["%", "٪"], "position": "either", "word": "في المئة"},
     "currencies": {
-        "USD": {"symbols": ["$", "US$"], "gender": "masculine", "one": "دولار", "two": ["دولاران", "دولارين"],
-                "few": "دولارات", "many": "دولارا", "other": "دولار"},
+        "USD": {"symbols": ["$", "US$", "USD"], "gender": "masculine", "one": "دولار",
+                "two": ["دولاران", "دولارين"], "few": "دولارات", "many": "دولارا", "other": "دولار"},
         "SAR": {"symbols": ["SAR"], "gender": "masculine", "one": "ريال سعودي",
                 "two": ["ريالان سعوديان", "ريالين سعوديين"], "few": "ريالات سعودية", "many": "ريالا سعوديا",
                 "other": "ريال سعودي"},
-        "SAR-sign": {"symbols": ["ريال", "ر.س"], "gender": "masculine", "one": "ريال", "two": ["ريالان", "ريالين"],
-                     "few": "ريالات", "many": "ريالا", "other": "ريال"},
+        "SAR-sign": {"symbols": ["ريال", "ر.س", "ر. س"], "gender": "masculine", "one": "ريال",
+                     "two": ["ريالان", "ريالين"], "few": "ريالات", "many": "ريالا", "other": "ريال"},
+        **{row[0]: _cldr_currency(*row) for row in CLDR_CURRENCIES},
     },
     "symbols_after_only": ["ريال"],
     "scales": {"مليون": "000000"},
@@ -244,7 +286,15 @@ Wikipedia revision shows each noun before an agreeing ordinal: الدور (oldid
 (74030867, "الصف الثالث والثلاثين"), الجيل (76361085, "الجيل السادس والسبعين"), المركز (73375269, "المركز التاسع
 والتسعين"), الفصل (73569717, "الفصل السادس والتسعين") and الدرجة (76373966, "الدرجة الثالثة والأربعين"). `currencies`:
 `SAR` reads the CLDR name ريال سعودي, and the sign ر.س (English Wikipedia, Saudi riyal, revision 1252604873) and the
-word ريال read ريال. `fraction_names`: Ryding 2005, pp. 360-361. `minute_phrases`: Ryding 2005, pp. 361-362.
+word ريال read ريال. Each currency of `CLDR_CURRENCIES` reads its CLDR 49 `displayName` (`currencies.json` of `ar`),
+and its count forms are the `displayName-count-*` names where CLDR gives them, for DZD, EGP, LYD, MAD and TND, with
+the tanween mark left out. The genders and the other count forms come from the nouns of Wiktionary, درهم (revision
+95817866, masculine, plural دراهم), دينار (95819933, masculine, plural دنانير), جنيه (95643228, masculine, plural
+جنيهات), ريال (95819810, masculine, plural ريالات) and ليرة (91168060, feminine, plural ليرات), and from the
+agreement of the adjective (Ryding 2005, pp. 242-243): a dual adjective after a dual noun, as safiinat-aani
+kabiirat-aani, and a feminine singular adjective after a plural noun that names no person. So the dual of LBP and
+SDG is ليرتان لبنانيتان and جنيهان سودانيان, where CLDR writes the singular. `fraction_names`: Ryding 2005,
+pp. 360-361. `minute_phrases`: Ryding 2005, pp. 361-362.
 `decimal_word`: Wiktionary, فاصلة, sense "decimal point". `sign_words`: Arabic Wikipedia, عدد سالب, section التسمية. The
 count forms of `currencies` and `units`: Wiktionary دولار, ريال and كيلوغرام (revision 95591224: masculine, with the
 sound feminine plural), CLDR units.json (length-kilometer, and the symbols كغم of mass-kilogram and كم/س of
@@ -706,13 +756,22 @@ class Clock(TimeClock):
 class Money(CoreMoney):
     """The money of the core. The word ريال is a counted noun, which follows the number (Ryding 2005, p. 335), so
     `ريال 5` stays as written. The reading of an amount ends in ريال, so a digit after it would read on a second
-    pass."""
+    pass. A symbol joined by a full stop to another letter is part of a longer abbreviation, as ج.م in ج.م.ع, and a
+    symbol joined by a slash to a Latin letter is part of a currency pair, as USD in EUR/USD, so neither reads.
+    `speak_money` gives no reading for an amount with a fraction, so next to a symbol of letters such an amount reads
+    as a number and the symbol stays as written."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         after_only = request.data["symbols_after_only"]
         for span in super().find(text, tokens, request):
             symbol = span.fields["written_symbol"]
             written = text[span.start:span.end]
+            first = written.startswith(span.fields["prefix"] + symbol)
+            edge = text[max(0, span.start - 2):span.start][::-1] if first else text[span.end:span.end + 2]
+            mark, letter = edge[:1], edge[1:2]
+            joined = is_letter(letter) and (mark == "." or mark == "/" and letter.isascii())
+            if joined or (span.fields["amount"]["fraction"] and not has_sign(symbol)):
+                continue
             first_digit = next(index for index, char in enumerate(written) if char.isdigit())
             yield replace(span, keep=True) if symbol in after_only and symbol in written[:first_digit] else span
 
