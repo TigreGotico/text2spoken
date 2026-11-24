@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2a122](https://github.com/TigreGotico/text2spoken/tree/0.0.2a122) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a121...0.0.2a122)
+
+**Merged pull requests:**
+
+- fix\(ar\): read a list number and a number before a definite word in the citation form [\#568](https://github.com/TigreGotico/text2spoken/pull/568) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a121](https://github.com/TigreGotico/text2spoken/tree/0.0.2a121) (2026-11-24)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a120...0.0.2a121)
+
 ## [0.0.2a120](https://github.com/TigreGotico/text2spoken/tree/0.0.2a120) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a119...0.0.2a120)
@@ -262,7 +274,6 @@
 - docs\(el\): cite CLDR 49 for the case rule sets [\#361](https://github.com/TigreGotico/text2spoken/pull/361) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(el\): a day and a month stay as written, 2 1/2 reads δυόμισι, 1/60 to 1/80 read [\#359](https://github.com/TigreGotico/text2spoken/pull/359) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(pt\): read a decimal written with a full stop before a unit, and the zeros after vírgula [\#352](https://github.com/TigreGotico/text2spoken/pull/352) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): a say-as date of a language with no file reads its day and year in the cited form [\#315](https://github.com/TigreGotico/text2spoken/pull/315) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a88](https://github.com/TigreGotico/text2spoken/tree/0.0.2a88) (2026-11-19)
 
@@ -308,10 +319,6 @@
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a84...0.0.2a85)
-
-**Merged pull requests:**
-
-- fix\(core\): a number abbreviation does not wait on the number before it [\#316](https://github.com/TigreGotico/text2spoken/pull/316) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a84](https://github.com/TigreGotico/text2spoken/tree/0.0.2a84) (2026-11-18)
 
