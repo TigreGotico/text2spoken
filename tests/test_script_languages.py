@@ -28,8 +28,20 @@ def test_trailing_marks_join_the_last_run():
     assert script_runs("42") == [(None, "42")]
 
 
-def test_a_letter_of_an_unlisted_script_is_its_own_run():
-    assert [script for script, _ in script_runs("ሰላም hello")] == ["Zzzz", "Latn"]
+def test_a_letter_outside_the_table_joins_the_runs_around_it():
+    assert script_runs("مرحبا o 1º lugar") == [("Arab", "مرحبا"), ("Latn", " o 1º lugar")]
+    assert script_runs("مرحبا 5 µm") == [("Arab", "مرحبا"), ("Latn", " 5 µm")]
+    assert script_runs("コーヒー") == [("Kana", "コーヒー")]
+
+
+def test_a_combining_mark_stays_with_its_letter():
+    assert script_runs("e\u0301 مرحبا") == [("Latn", "e\u0301"), ("Arab", " مرحبا")]
+
+
+def test_an_ordinal_and_a_unit_read_in_the_language_of_their_run():
+    assert normalize("مرحبا o 1º lugar", "ar", NormalizationParams(
+        script_languages=FrozenMap({"Latn": "pt-PT"}))) == "مرحبا o primeiro lugar"
+    assert normalize("مرحبا 5 µm", "ar", LATIN_AS_EN) == "مرحبا five micrometres"
 
 
 def test_an_empty_map_reads_as_before():

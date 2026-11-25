@@ -55,18 +55,23 @@ def normalize(text: str, lang: str, params: NormalizationParams | None = None,
 
 
 def _script(char: str) -> str | None:
-    return SCRIPT_NAMES.get(unicodedata.name(char, "").split(" ", 1)[0], "Zzzz") if char.isalpha() else None
+    """The script of a letter in the table, else None: an ordinal indicator, a micro sign or a length mark joins the
+    runs around it as a digit does."""
+    return SCRIPT_NAMES.get(unicodedata.name(char, "").split(" ", 1)[0]) if char.isalpha() else None
 
 
 def script_runs(text: str) -> list[tuple[str | None, str]]:
-    """The text cut where the script of its letters changes. A stretch with no letter, such as a number and its
-    spaces, joins the run of the next letter, as a number comes before the noun that it counts ("25 كتاب",
-    "1999 people"). At the end of the text it joins the run before it."""
+    """The text cut where the script of its letters changes. A combining mark stays with the letter before it. A
+    stretch with no letter of the table, such as a number and its spaces, joins the run of the next letter, as a
+    number comes before the noun that it counts ("25 كتاب", "1999 people"). At the end of the text it joins the run
+    before it."""
     runs: list[list] = []
     pending = ""
     for char in text:
         script = _script(char)
-        if script is None:
+        if script is None and not pending and runs and unicodedata.category(char).startswith("M"):
+            runs[-1][1] += char
+        elif script is None:
             pending += char
         elif runs and runs[-1][0] == script:
             runs[-1][1] += pending + char
