@@ -70,7 +70,8 @@ The rules and their sources:
   ordinal, then من and the month (pp. 357-358). A numeric date with the era mark هـ or ه after it is a date of the
   Hijri calendar: the month is the Hijri month, and the mark reads هجري (English Wiktionary, هـ: "abbreviation of
   هِجْرِيّ (hijriyy): in the year of the Hegira (AH)"). The mark م after a numeric date reads ميلادي (English
-  Wiktionary, م: "abbreviation of مِيلَادِيّ (mīlādiyy), AD, CE").
+  Wiktionary, م: "abbreviation of مِيلَادِيّ (mīlādiyy), AD, CE"). An era mark after a cardinal is no counted noun,
+  so 200 before هـ, ه, ق.م or م after a year noun keeps its free form (pp. 346-347).
   In a range of days before one month, the first day is a date of that month and reads as an ordinal too, as
   Arabic Wikipedia writes it: "من الأول إلى السابع من آذار" (أستراليا في الألعاب البارالمبية الشتوية 2002, oldid
   71881762) and "من الثاني إلى الرابع من فبراير" (ردود الفعل على الأمر التنفيذي رقم 13769, oldid 76868665).
@@ -293,6 +294,8 @@ DATA = freeze({
     "hijri_months": ["محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
                      "رمضان", "شوال", "ذي القعدة", "ذي الحجة"],
     "era_marks": {"هـ": "هجري", "ه": "هجري", "م": "ميلادي"},
+    "bce_mark": ["ق", "م"],
+    "shared_era_marks": ["م"],
     "hijri_marks": ["هـ", "ه"],
     "symbols": {"%": "percent", "٪": "percent", "$": "money", "+": "expression", "=": "expression"},
 })
@@ -304,6 +307,13 @@ Ryding 2005, p. 347, the long name بالمائة of CLDR 49 concentr-percent (u
 'aw 'or' (p. 418), thumma 'then' (section 6.2.8, p. 416), the adverb faqaT 'only' (p. 277), the quantifier Jakthar
 'more' (section 3.2.2, pp. 234-235), the elative Jaqall 'less' (pp. 246-247), and the spelling او with no hamza. None
 of them is a noun, so none is the counted noun of pp. 346-347.
+`bce_mark`: the words of the abbreviation ق.م, written with or without a space or a full stop after each letter: English
+Wiktionary, "ق. م." (revision 93329147), "abbreviation of قَبْلَ المِيلَاد", t=before birth, BC, B.C.; Arabic Wikipedia,
+قبل الميلاد (oldid 78084126): "وتختصر بالعربية بـ ق.م.". An era mark after a number is an abbreviation, so no counted
+noun: the number keeps its free form (Ryding 2005, pp. 346-347). `shared_era_marks`: م is also the symbol of the metre
+(English Wiktionary, م, revision 93361480: "abbr of مِيلَادِيّ AD, CE" and "abbr of مِتْر meter") and the evening day
+period (CLDR 49, `day_periods`), so it is an era only right after a year noun, as in عام 200 م; after any other word
+the number counts the unit, as in سباق 200 م.
 `hijri_months`: Arabic Wikipedia, تقويم هجري, the table of months, which gives ربيع الآخر and جمادى الآخرة; the
 two months that start with ذو take the genitive ذي after من, as Arabic Wikipedia, ذو الحجة, writes it:
 "العشر الأوائل من ذي الحجة". `semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
@@ -453,6 +463,17 @@ def _uncounted(word: str, data: FrozenMap) -> bool:
     before a feminine plural that it counts."""
     words = (*data["prepositions"], *data["semi_prepositions"], *data["uncounted_words"])
     return word in words or word.startswith(("و", "ف")) and word[1:] in words
+
+
+def _era_mark(context: SpanContext) -> bool:
+    """Whether the words right after a number are an era mark of `era_marks` or the mark `bce_mark`, an abbreviation
+    that no number counts. A mark of `shared_era_marks` is one only right after a year noun."""
+    data, after = context.request.data, context.after
+    if after[:2] == data["bce_mark"]:
+        return True
+    if after[0] not in data["era_marks"]:
+        return False
+    return after[0] not in data["shared_era_marks"] or bool(context.before) and context.before[-1] in data["year_nouns"]
 
 
 def number_noun(span: Span, context: SpanContext) -> str | None:
@@ -631,7 +652,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     words = SPELLER.cardinal(digits, features, request)
     if noun is None:
         words = _alone(words, digits)
-    elif not _uncounted(noun, request.data):
+    elif not (_uncounted(noun, request.data) or _era_mark(context)):
         words = _before_noun(words, features.gender, request.data)
     words = _signed(words, fields["sign"], request)
     if fields["lead"]:
