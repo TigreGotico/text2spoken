@@ -524,7 +524,7 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeCl
                                           speak_lexicon, speak_percent, speak_telephone)
 from text2spoken.core.spans import (Features, Span, SpanContext, Word, clause_breaks, clause_window,
                                     context_words)
-from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import NumtagSpeller, OvosNumberSpeller, bounded_integer, numtag_writes, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char, one_digit_set
@@ -722,20 +722,28 @@ def at_variety(request: Request) -> Request:
 
 
 class PortugueseSpeller:
-    """ovos-number-parser, read with the variety tag and the gender of the noun."""
+    """numtag for a variety with a numtag writer (pt-PT), ovos-number-parser for the others, read with the variety
+    tag and the gender of the noun."""
 
     def __init__(self):
-        self.ovos = OvosNumberSpeller({MASCULINE: "masculine", FEMININE: "feminine"})
+        genders = {MASCULINE: "masculine", FEMININE: "feminine"}
+        self.numtag = NumtagSpeller(genders)
+        self.ovos = OvosNumberSpeller(genders)
+
+    def _writer(self, request: Request) -> NumtagSpeller | OvosNumberSpeller:
+        return self.numtag if numtag_writes(request.tag) else self.ovos
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         gender = FEMININE if features.gender is FEMININE else MASCULINE
-        return self.ovos.cardinal(digits, Features(gender=gender), at_variety(request))
+        request = at_variety(request)
+        return self._writer(request).cardinal(digits, Features(gender=gender), request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         """From 2000 up, the first element is a cardinal: `2022.º` reads `dois milésimo vigésimo segundo` (Teyssier,
         Manual de Língua Portuguesa, p. 183, as the owner of ovos-number-parser reports it)."""
         gender = FEMININE if features.gender is FEMININE else MASCULINE
-        return self.ovos.ordinal(digits, Features(gender=gender), at_variety(request))
+        request = at_variety(request)
+        return self._writer(request).ordinal(digits, Features(gender=gender), request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         """The whole part, `vírgula`, each leading zero of the decimal part as `zero`, and the rest of the decimal
@@ -743,6 +751,9 @@ class PortugueseSpeller:
         ovos-number-parser reads a float, which drops a trailing zero, so the decimal part with a trailing zero is
         read here from the written digits: `1,80` reads "um vírgula oitenta", as `1,97` reads "um vírgula noventa e
         sete", and never "um vírgula oito", which is the reading of `1,8`."""
+        if numtag_writes(at_variety(request).tag) and fraction.strip("0"):
+            return " ".join([self.cardinal(integer or "0", Features(), request), request.data["decimal_word"],
+                             self.decimal_part(fraction, request)])
         words = self.ovos.decimal(integer, fraction, Features(), at_variety(request))
         if not fraction.endswith("0") or not fraction.strip("0"):
             return words
