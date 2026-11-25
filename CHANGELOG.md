@@ -1,12 +1,17 @@
 # Changelog
 
-## [0.0.2a136](https://github.com/TigreGotico/text2spoken/tree/0.0.2a136) (2026-11-25)
+## [0.0.2a137](https://github.com/TigreGotico/text2spoken/tree/0.0.2a137) (2026-11-25)
 
-[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a135...0.0.2a136)
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a136...0.0.2a137)
 
 **Merged pull requests:**
 
+- feat: read each script run of a text in its own language [\#632](https://github.com/TigreGotico/text2spoken/pull/632) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - refactor\(fr\): write Span calls in the style of the file [\#628](https://github.com/TigreGotico/text2spoken/pull/628) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a136](https://github.com/TigreGotico/text2spoken/tree/0.0.2a136) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a135...0.0.2a136)
 
 ## [0.0.2a135](https://github.com/TigreGotico/text2spoken/tree/0.0.2a135) (2026-11-25)
 
@@ -361,7 +366,6 @@
 **Merged pull requests:**
 
 - docs\(el\): cite CLDR 49 for the case rule sets [\#361](https://github.com/TigreGotico/text2spoken/pull/361) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(el\): a day and a month stay as written, 2 1/2 reads δυόμισι, 1/60 to 1/80 read [\#359](https://github.com/TigreGotico/text2spoken/pull/359) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a88](https://github.com/TigreGotico/text2spoken/tree/0.0.2a88) (2026-11-19)
 
@@ -374,7 +378,6 @@
 **Merged pull requests:**
 
 - fix\(ar\): a region with the CLDR months and marks of ar reads ar-001 [\#369](https://github.com/TigreGotico/text2spoken/pull/369) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(el\): a percentage with a decimal reads, as 2,5% δύο κόμμα πέντε τοις εκατό [\#360](https://github.com/TigreGotico/text2spoken/pull/360) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
