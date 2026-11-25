@@ -111,7 +111,7 @@ PT_ENTRIES = {
 }
 AR_ENTRIES = {
     "number_marks": "Arab", "defaults": "decimal_mark", "proclitics": "بـ", "prepositions": "في",
-    "semi_prepositions": "بعد", "year_nouns": "سنة", "feminine_plurals": "سيارات", "rank_nouns": "الطابق", "label_nouns": "رقم", "list_marks": "-", "measure_nouns": "بوصة", "percent_words": "في المئة", "sign_words": "-", "leads": "#",
+    "semi_prepositions": "بعد", "year_nouns": "سنة", "feminine_plurals": "سيارات", "afila_plurals": "أجهزة", "rank_nouns": "الطابق", "label_nouns": "رقم", "list_marks": "-", "measure_nouns": "بوصة", "percent_words": "في المئة", "sign_words": "-", "leads": "#",
     "decimal_word": DELETE, "fraction_names": "2", "construct_duals": "مئتان", "range_word": DELETE,
     "range_marks": "-", "percent": "word",
     "currencies": "USD", "symbols_after_only": "ريال", "scales": "مليون", "units": "كم", "dimension_marks": "×",
