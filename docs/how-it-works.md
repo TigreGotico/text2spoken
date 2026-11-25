@@ -3,7 +3,7 @@
 <!-- agent-hint
 covers: the stages of a normalize call, how overlapping forms are resolved, and the cost of a call.
 source: text2spoken/core/pipeline.py:analyze, text2spoken/core/spans.py:classify, text2spoken/core/spans.py:render, text2spoken/core/language.py:_registry, docs/figures/timing.json
-generated: no, except docs/figures/time-by-length.svg, which scripts/docs_figures.py writes
+generated: no, except docs/img/time-by-length.svg, which docs/img/plot_time_by_length.py writes
 verify: `python scripts/check_doc_page.py docs/how-it-works.md`
 see: api.md, adding-a-language.md, how-it-reads.md
 -->
@@ -123,9 +123,14 @@ The test rows check this for every row. The known exceptions are on the pages of
 
 The time of a call grows in proportion to the length of the text. The figure shows one machine and one text: a sentence with an abbreviation, a sum of money, a number, a date and a time, repeated up to 16,128 characters. The time per character stays the same from 1,000 characters to the largest text.
 
-![A straight line from the origin: 63 characters take 3.1 ms, 1,008 characters take 37.6 ms, 16,128 characters take 625.5 ms.](figures/time-by-length.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/time-by-length-dark.svg">
+  <img alt="A straight line from the origin: 63 characters take 3.1 ms, 1,008 characters take 37.6 ms, 16,128 characters take 625.5 ms." src="img/time-by-length.svg">
+</picture>
 
-*Figure: time of `normalize` against the length of the text, en-GB, one machine. Read the straight line, not the milliseconds: doubling the text doubles the time. The numbers are in `docs/figures/timing.json`, and `python scripts/docs_figures.py --measure` runs the measurement again on your machine.*
+`img/plot_time_by_length.py` makes this figure from `img/timing.json`.
+
+*Figure: time of `normalize` against the length of the text, en-GB, one machine. Read the straight line, not the milliseconds: doubling the text doubles the time. The numbers are in `docs/img/timing.json`, and `python scripts/docs_figures.py --measure` runs the measurement again on your machine.*
 
 Other shapes of text, such as plain words, groups of digits, phone numbers, dates, capital words and web addresses, give the same straight line, with a different cost for each character. The cost per character depends on the form that the text holds.
 
