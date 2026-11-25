@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a125](https://github.com/TigreGotico/text2spoken/tree/0.0.2a125) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a124...0.0.2a125)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a list number before a dash in the masculine [\#583](https://github.com/TigreGotico/text2spoken/pull/583) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a124](https://github.com/TigreGotico/text2spoken/tree/0.0.2a124) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a123...0.0.2a124)
@@ -165,10 +173,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a102...0.0.2a103)
 
-**Merged pull requests:**
-
-- fix\(core\): a phone run drops a last hour group in every language [\#321](https://github.com/TigreGotico/text2spoken/pull/321) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a102](https://github.com/TigreGotico/text2spoken/tree/0.0.2a102) (2026-11-23)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a101...0.0.2a102)
@@ -274,7 +278,6 @@
 **Merged pull requests:**
 
 - fix\(core\): read the CLDR marks and grouping of a language with no file [\#342](https://github.com/TigreGotico/text2spoken/pull/342) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ja\): a decimal reads 点 for its mark, as in 三点五 [\#322](https://github.com/TigreGotico/text2spoken/pull/322) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a89](https://github.com/TigreGotico/text2spoken/tree/0.0.2a89) (2026-11-19)
 

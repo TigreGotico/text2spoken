@@ -23,6 +23,13 @@ feminine form; a scale word from `milhão` up is a masculine noun, so the words 
 "duas": "uma mesa e duas cadeiras"; "uma": "Flexão feminina de um"; "milhão": "nome masculino"; "trilhão": "nome
 masculino"; "trilião": "nome masculino").
 
+A number with no sign that starts a line, with optional spaces, one of `-`, `–`, `.` or `)` and a space after it, as in
+`2 - Casa de campo`, numbers an item of a list. It counts no noun, so it reads in the masculine whatever word follows
+the mark. Priberam, "dois": under "nome masculino de dois números", "O algarismo 2."; under "quantificador numeral
+cardinal", "Um mais um.", the count with no noun. The Cunha and Cintra passage below feels "a omissão da palavra
+número" in a numbered item, and `número` is masculine. No source names the list marks; the rule rests on these
+entries and on a corpus measure.
+
 A number right after a noun of `label_nouns` or `roman_letter_nouns` names one item of a series, and it reads in the
 masculine when no noun that it counts follows it — the number ends the text, or a punctuation mark, a function word or a
 verb of `label_verbs` follows it: `sala 2, porta 4` reads "sala dois, porta quatro" and `o artigo 2 das disposições` "o
@@ -828,6 +835,8 @@ def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
     partitive `das`, `dos` or a plural contraction of `de` and a demonstrative right after the number gives the
     gender, as in `1 das casas` and `2 destas maçãs`.
 
+    A number of a list item (the module docstring gives the sources) reads in the masculine, as a `year` does.
+
     A number after a noun of `label_nouns` or `roman_letter_nouns` names an item and reads in the masculine when no
     noun that the number counts follows it — the number ends the text, or a punctuation mark, a function word or a
     verb of `label_verbs` follows it. Otherwise it falls through to the noun after it. A number after `a páginas` or
@@ -898,7 +907,8 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         after_mark = context.before and context.before[-1].lower() == request.data["decimal_word"]
         words = SPELLER.decimal_part(digits, request) if after_mark else spell_digits(digits, request)
     else:
-        words = _cardinal(digits, request, agreement(context, span.start in request.memo.get(_YEARS, ())))
+        masculine = span.start in request.memo.get(_YEARS, ()) or span.start in request.memo.get(_LISTED, ())
+        words = _cardinal(digits, request, agreement(context, masculine))
         _check_pair(digits, context, span.start in request.memo.get(_AFTER_PHONE, ()))
         if _SCALE_WORD.fullmatch(words.split()[-1]) and context.after \
                 and context.after[0].lower() not in request.data["function_words"]:
@@ -1460,6 +1470,8 @@ def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], reques
 _YEARS = "pt_years"
 _YEAR_MARKS = frozenset(",:)")
 _FOUR_DIGITS = re.compile("[0-9]{4}")
+_LISTED = "pt_listed"
+_LIST_MARK = re.compile(" *[-–.)] ")
 _AFTER_PHONE = "pt_after_phone"
 _ONE_WORD = re.compile("[,;:.!?)]*[ \t\n\u00a0]+[^ \t\n\u00a0,;:.!?()]+[ \t\n\u00a0]+")
 
@@ -1468,8 +1480,10 @@ _ONE_WORD = re.compile("[,;:.!?)]*[ \t\n\u00a0]+[^ \t\n\u00a0,;:.!?()]+[ \t\n\u0
 class Cardinal(CoreCardinal):
     """The shared cardinal recognizer. A number of four digits with a mark of `_YEAR_MARKS` right after it names a
     year, as `2012` in `Braga 2012: Capital Europeia`, and its start goes into `Request.memo` under `_YEARS`, so that
-    it reads in the masculine. A number one word after a phone number that reads, as `2` in `912 345 678 ou 2
-    casas`, goes in under `_AFTER_PHONE`, so that it is no second number of a pair."""
+    it reads in the masculine. An unsigned number that starts a line, with optional spaces, one of `-`, `–`, `.` or
+    `)` and a space after it, as in `2 - Casa de campo`, numbers an item of a list, and its start goes under
+    `_LISTED`. A number one word after a phone number that reads, as `2` in `912 345 678 ou 2 casas`, goes in under
+    `_AFTER_PHONE`, so that it is no second number of a pair."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         after_phone = {word.end() for phone in _phones(text, tokens, request)
@@ -1477,6 +1491,9 @@ class Cardinal(CoreCardinal):
         for span in super().find(text, tokens, request):
             if _FOUR_DIGITS.fullmatch(text, span.start, span.end) and text[span.end:span.end + 1] in _YEAR_MARKS:
                 request.memo.setdefault(_YEARS, set()).add(span.start)
+            if (text[span.start].isdigit() and not text[text.rfind("\n", 0, span.start) + 1:span.start].strip()
+                    and _LIST_MARK.match(text, span.end)):
+                request.memo.setdefault(_LISTED, set()).add(span.start)
             if span.start in after_phone:
                 request.memo.setdefault(_AFTER_PHONE, set()).add(span.start)
             yield span
