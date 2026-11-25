@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a128](https://github.com/TigreGotico/text2spoken/tree/0.0.2a128) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a127...0.0.2a128)
+
+**Merged pull requests:**
+
+- feat\(it,nl\): read telephone numbers digit by digit [\#601](https://github.com/TigreGotico/text2spoken/pull/601) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a127](https://github.com/TigreGotico/text2spoken/tree/0.0.2a127) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a126...0.0.2a127)
@@ -323,7 +331,6 @@
 - fix\(el\): a percentage with a decimal reads, as 2,5% δύο κόμμα πέντε τοις εκατό [\#360](https://github.com/TigreGotico/text2spoken/pull/360) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(pt\): read a clock after "são", and 24:00 as midnight [\#354](https://github.com/TigreGotico/text2spoken/pull/354) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): a number next to a currency sign reads only as an amount [\#349](https://github.com/TigreGotico/text2spoken/pull/349) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(pt\): pt-BR reads a Roman numeral up to ten as an ordinal, artigo up to nine [\#332](https://github.com/TigreGotico/text2spoken/pull/332) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
@@ -338,7 +345,6 @@
 - fix\(ar\): count kilograms and speeds, more feminine plurals and rank nouns [\#346](https://github.com/TigreGotico/text2spoken/pull/346) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): a percent range reads its second number in the genitive, and a day range before a month reads both days [\#344](https://github.com/TigreGotico/text2spoken/pull/344) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): keep a number before a minus and digits that no number covers [\#343](https://github.com/TigreGotico/text2spoken/pull/343) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ca\): read §§ as paràgrafs [\#341](https://github.com/TigreGotico/text2spoken/pull/341) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
