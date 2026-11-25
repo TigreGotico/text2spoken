@@ -206,7 +206,7 @@ class NumtagSpeller:
         from numtag import spell
         gender = self.gender_arg.get(features.gender)
         try:
-            return spell(value, request.tag, form=form, gender=gender)[0].text
+            return spell(value, request.tag, form=form, gender=gender, scale=request.params.scale)[0].text
         except ValueError as error:
             raise DeclinedReading(f"numtag reads no {form} of {len(value)} characters in {request.tag}: "
                                   f"{error}") from error
