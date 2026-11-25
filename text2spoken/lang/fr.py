@@ -1001,11 +1001,15 @@ SPELLER = FrenchSpeller()
 
 
 @lru_cache(maxsize=8)
+def _feminine(nouns: tuple[str, ...]) -> frozenset[str]:
+    return frozenset(nouns)
+
+
 def _gender(context: SpanContext, noun: bool = True) -> GrammaticalGender:
     """The agreement order: the hint, the noun after the number, `default_gender`, then the file."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
-    if noun and context.after and context.after[0].lower() in context.request.data["feminine_nouns"]:
+    if noun and context.after and context.after[0].lower() in _feminine(context.request.data["feminine_nouns"]):
         return FEMININE
     return context.request.params.default_gender.get(LANGUAGE.code) or MASCULINE
 
