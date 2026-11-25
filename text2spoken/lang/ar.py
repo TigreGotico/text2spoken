@@ -24,8 +24,13 @@ The rules and their sources:
   opposite to its noun (p. 334), and eight before a feminine plural is ثماني (p. 336). From 11 to 99 the noun follows
   in the accusative singular (pp. 339-345). A noun that ends in taa' marbuuTa is feminine (p. 121), and the plurals
   in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table. The gender of a
-  plural is the gender of its singular: "if the singular noun is feminine, the numeral will be in the masculine
-  form" (p. 334). So the table holds plurals whose singular ends in taa' marbuuTa.
+  plural is the gender of its singular: "if the singular noun is masculine, the numeral will have the feminine
+  marker taa' marbuuTa, and if the singular noun is feminine, the numeral will be in the masculine form" (p. 334).
+  So the table holds plurals whose singular ends in taa' marbuuTa. Ryding writes that "Most feminine nouns are
+  marked by the taa' marbuuTa suffix" (p. 121), and the ending of a plural is no such mark: the plurals of the
+  pattern أفعلة, such as أجهزة, the plural of the masculine جهاز, end in ة, and the table `afila_plurals` lists them,
+  so that their numbers read as those of a masculine noun, as in `5 أجهزة`. A shape rule reads the feminine singulars
+  of the same shape (أوقية, أونصة, أهمية, أغنية) wrong, so a table lists the plurals.
 - A number that names a thing counts no noun. "In recitation form, in counting without a counted noun, or in referring
   to a specific numeral alone, the form with taa' marbuuTa is usually used" (Ryding 2005, p. 335). The example of that
   page is "raqm-u sittat-in huwa raqm-un siHriyy-un", "The number six is a magic number". So a number after رقم, or
@@ -233,6 +238,9 @@ DATA = freeze({
     "feminine_plurals": ["مخطوطات", "قصائد", "مقابلات", "آبار", "مرات", "فرق", "ساعات", "سيارات", "دقائق",
                          "سنوات", "سنين", "ثوان", "ثواني", "ليال", "ليالي", "قطع", "نسخ", "دفعات", "سرعات",
                          "أسطوانات", "عجلات", "وسائد", "شاشات", "فئات", "رحلات", "غرف", "كلمات"],
+    "afila_plurals": ["أسئلة", "أجهزة", "أنظمة", "أطعمة", "أندية", "أمثلة", "أشرطة", "أفدنة", "أعمدة", "أدوية", "أقنعة",
+                      "ألوية", "أسلحة", "أجنحة", "أرصدة", "أنشطة", "أحزمة", "أرغفة", "أرصفة", "أحذية", "أبنية", "أغذية",
+                      "أجوبة", "أوعية", "أروقة", "أوسمة", "أحصنة"],
     "rank_nouns": ["الطابق", "الفئة", "المرتبة", "القرن", "الدور", "الصف", "الجيل", "المركز", "الفصل", "الدرجة"],
     "label_nouns": ["رقم", "الرقم", "موديل", "موديلات"],
     "list_marks": ["-", ".", ")", "–"],
@@ -300,7 +308,7 @@ singular ends in taa' marbuuTa: سنين (سنة, oldid 72786001, "ثلاث سن
 "ثلاث نسخ"), دفعات (دفعة, 75774492, "أربع دفعات"), سرعات (سرعة, 72665705, "ثماني سرعات"), أسطوانات (أسطوانة, 76540398,
 "ست أسطوانات"), عجلات (عجلة, 77054753, "أربع عجلات"), وسائد (وسادة, 75479234, "ست وسائد"), شاشات (شاشة, 74093250, "ثلاث
 شاشات"), فئات (فئة, 68531917, "خمس فئات"), رحلات (رحلة, 75094475, "ثلاث رحلات"), غرف (غرفة, 76576561, "أربع غرف") and
-كلمات (كلمة, 73435197, "خمس كلمات"). `label_nouns`: the noun raqm of Ryding 2005, p. 335, with and without the
+كلمات (كلمة, 73435197, "خمس كلمات"). `afila_plurals`: the plural of each masculine noun in an English Wiktionary revision, which gives the plural of the entry: أسئلة (سؤال, 92009884), أجهزة (جهاز, 95648366), أنظمة (نظام, 95814058), أطعمة (طعام, 95461735), أندية (ناد, 93332440), أمثلة (مثال, 95375051), أشرطة (شريط, 93327209), أفدنة (فدان, 93328884), أعمدة (عمود, 92948489), أدوية (دواء, 92972104), أقنعة (قناع, 93329489), ألوية (لواء, 92915299), أسلحة (سلاح, 92980330), أجنحة (جناح, 95809883), أرصدة (رصيد, 93325997), أنشطة (نشاط, 93332662), أحزمة (حزام, 93324830), أرغفة (رغيف, 91190377), أرصفة (رصيف, 95798928), أحذية (حذاء, 95843289), أبنية (بناء, 95498261), أغذية (غذاء, 93328628), أجوبة (جواب, 93364138), أوعية (وعاء, 95648404), أروقة (رواق, 88967129), أوسمة (وسام, 88977656) and أحصنة (حصان, 93377187). Each entry reads `{{ar-noun|…|m|pl=…}}`. `label_nouns`: the noun raqm of Ryding 2005, p. 335, with and without the
 article, and موديل with its plural موديلات, which no source names as a label noun. `list_marks`: the marks after a
 list number at the start of a line; no source names them. `measure_nouns`: the long names of
 CLDR 49 units.json (ar) that end in taa' marbuuTa; CLDR writes the few count of some of them in the singular, as "{0}
@@ -474,7 +482,10 @@ def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: F
 
 def noun_gender(noun: str, data: FrozenMap) -> GrammaticalGender:
     """Feminine for a noun that ends in taa' marbuuTa (Ryding 2005, p. 121) or for a plural of the table: a plural
-    in -aat also comes from masculine nouns (Wright 1896, vol. 1, section 303), so no rule reads it."""
+    in -aat also comes from masculine nouns (Wright 1896, vol. 1, section 303), so no rule reads it. A plural of
+    `afila_plurals` ends in taa' marbuuTa and is masculine."""
+    if noun in data["afila_plurals"]:
+        return MASCULINE
     return FEMININE if noun.endswith("ة") or noun in data["feminine_plurals"] else MASCULINE
 
 
