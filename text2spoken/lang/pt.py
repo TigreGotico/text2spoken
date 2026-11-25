@@ -23,21 +23,24 @@ feminine form; a scale word from `milhão` up is a masculine noun, so the words 
 "duas": "uma mesa e duas cadeiras"; "uma": "Flexão feminina de um"; "milhão": "nome masculino"; "trilhão": "nome
 masculino"; "trilião": "nome masculino").
 
-A number with no sign that starts a line, with optional spaces, one of `-`, `–`, `.` or `)` and a space after it, as in
-`2 - Casa de campo`, numbers an item of a list. It counts no noun, so it reads in the masculine whatever word follows
-the mark. Priberam, "dois": under "nome masculino de dois números", "O algarismo 2."; under "quantificador numeral
-cardinal", "Um mais um.", the count with no noun. The Cunha and Cintra passage below feels "a omissão da palavra
+A number with no sign that starts a line, with optional spaces, one of `-`, `–`, `—`, `.` or `)` and a space after it,
+as in `2 - Casa de campo`, numbers an item of a list. It counts no noun, so it reads in the masculine whatever word
+follows the mark. Priberam, "dois": under "nome masculino de dois números", "O algarismo 2."; under
+"quantificador numeral cardinal", "Um mais um.", the count with no noun. The Cunha and Cintra passage below feels "a
+omissão da palavra
 número" in a numbered item, and `número` is masculine. No source names the list marks; the rule rests on these
 entries and on a corpus measure.
 
 A number right after a noun of `label_nouns` or `roman_letter_nouns` names one item of a series, and it reads in the
-masculine when no noun that it counts follows it — the number ends the text, or a punctuation mark, a function word or a
-verb of `label_verbs` follows it: `sala 2, porta 4` reads "sala dois, porta quatro" and `o artigo 2 das disposições` "o
-artigo dois das disposições". A counted noun after it, as `semanas` in `em casa 2 semanas`, gives the number its gender:
-"duas semanas". `label_verbs` holds the third-person verbs that a numbered figure or table stands before, which the
-ending `a` reads as a feminine noun: Priberam, "mostrar": "verbo transitivo". Priberam, "mas": "conjunção adversativa",
-and "cada": "quantificador universal", join the words of `function_words`. So do the demonstratives and their
-contractions with `em` and `de`, which are no noun that a number counts: Priberam, "nesta": "Contracção da preposição em
+masculine whatever word follows it, a verb as in `o capítulo 2 trata disso` included: `sala 2, porta 4` reads "sala
+dois, porta quatro" and `o artigo 2 das disposições` "o artigo dois das disposições". Only a plural word after the
+number, as `semanas` in `em casa 2 semanas`, is a counted noun and gives the number its gender: "duas semanas". A
+number above one counts a plural noun, and a verb after the number is rarely a plural in `s`. No source gives the part
+of speech of a word and tugalex reads any word as a noun, so a plural word that is no word of `function_words`,
+`label_nouns` or `roman_letter_nouns` counts as a noun; the rule rests on a corpus measure. Priberam, "mas":
+"conjunção adversativa", and "cada": "quantificador universal", join the words of `function_words`. So do the
+demonstratives and their contractions with `em` and `de`, which are no noun that a number counts: Priberam, "nesta":
+"Contracção da preposição em
 e do pronome ou determinante esta."; "desta": "Contracção da preposição de e do pronome demonstrativo esta."; "naquela":
 "Contracção da preposição em com o determinante ou pronome demonstrativo aquela." `ganhou 1 nesta terça-feira` reads
 "ganhou um nesta terça-feira". So do `à`, `às`, `pelas` and `numa`: Priberam, "à": "Contracção da preposição a com o
@@ -63,8 +66,14 @@ A number before `da` and a word of `hour_periods` counts hours that the text lea
 feminine: `são 2 da tarde` reads "são duas da tarde". Senado Federal, Manual de Comunicação, "Hora": "diga "são duas
 da tarde", e não "são 14 horas"", and "às dez da noite, e não às vinte e duas horas".
 
-A number of four digits with a comma, a colon or a closing bracket right after it names a year, and the word after the
-mark is no noun that it counts, so it reads in the masculine: `Braga 2012: Capital Europeia` reads "Braga dois mil e
+A number of four digits with a comma, a colon or a closing bracket right after it names a year, and so does a number
+from 1000 to 2099 after a word of `year_words` and before a capitalised word, a word that is no plural or a mark, as
+`1998` in `Em 1998 Lisboa recebeu a Expo` and `2003` in `o relatório de 2003 sublinha`. A number above one counts a
+plural noun, so a lowercase word that does not end in `s` is no noun that the year counts. Priberam, "desde":
+"preposição 1. A começar de; a contar de; a datar de."; "até": "preposição 1. Indica limite ou termo espacial, temporal
+ou quantitativo"; "em": "preposição 2. Usa-se para indicar tempo". No source gives
+the list of `year_words` or the bound of 2099; they rest on a corpus measure. The word after the year is no noun that
+it counts, so a year reads in the masculine: `Braga 2012: Capital Europeia` reads "Braga dois mil e
 doze: Capital Europeia", and `(2014) capital nacional` "(dois mil e catorze) capital nacional". A semicolon ends the
 clause, so the word after it gives no number its gender. A year reads as a cardinal: Ciberdúvidas 32700
 (https://ciberduvidas.iscte-iul.pt/consultorio/perguntas/numerais-em-datas/32700), after Cunha and Cintra, Nova
@@ -74,6 +83,20 @@ cardinal of a year is masculine: Ciberdúvidas 10879
 século vinte e um vai de dois mil e um a dois mil e cem". The year names the noun "ano": Ciberdúvidas 33377
 (https://ciberduvidas.iscte-iul.pt/consultorio/perguntas/ano-de-2015/33377): "sendo alternativa a «o ano 2015»";
 Priberam, "ano": "nome masculino".
+
+A number alone between `[` and `]` marks a note or a reference, as in `intervenção.[22] Gente`. It counts no noun, so
+it reads in the masculine whatever word follows the bracket (Priberam, "dois": "nome masculino de dois números", "O
+algarismo 2."). No source names the brackets; the rule rests on a corpus measure.
+
+`outro`, `outra`, `outros` and `outras` before a number agree with the noun that the number counts, as `as` does
+(Priberam, "outras": "A forma outras é [ feminino plural de outro ]"; "outro": "determinante e pronome indefinido";
+"outros": "pronome indefinido masculino plural"), so `outras 2 ficaram` reads "outras duas ficaram".
+
+A number before `mil e` and a second number counts the noun that follows the second number, as `2 mil e 500 pessoas`
+reads "duas mil e quinhentas pessoas". Cunha and Cintra, Nova Gramática do Português Contemporâneo, 7.ª ed., p. 384,
+item 1: "Os NUMERAIS CARDINAIS um, dois, e as centenas a partir de duzentos variam em gênero"; p. 385, item 4: "Os
+outros
+CARDINAIS são invariáveis."
 
 A number before a word of `number_links` and a second number reads in the masculine. Before `vezes`, it is a factor of a
 product: `2 vezes 2` reads "dois vezes dois". When a noun that the number counts follows the second number, as `frases`
@@ -482,7 +505,6 @@ from bisect import bisect_left, bisect_right
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, replace
 from functools import cache
-from importlib.util import find_spec
 
 from text2spoken.core import parsers
 from text2spoken.core.color import speak_color
@@ -582,12 +604,12 @@ DATA = freeze({
                        "8": "oitavo", "9": "nono", "10": "décimo", "100": "centésimo"},
     "fraction_word": "avos",
     "label_nouns": ["página", "folha", "casa", "apartamento", "quarto", "cabine", "poltrona", "sala", "porta",
-                    "figura", "fig", "tabela", "linha", "fila", "lugar"],
+                    "figura", "fig", "tabela", "linha", "fila", "lugar", "número"],
     "plural_labels": {"a páginas": "feminine", "a folhas": "feminine"},
+    "year_words": ["em", "desde", "até", "de"],
     "hour_periods": ["manhã", "tarde", "noite", "madrugada"],
     "number_links": ["vezes", "vírgula"],
     "letter_label_nouns": ["vitamina", "grupo", "classe"],
-    "label_verbs": ["mostra", "apresenta", "indica", "mostram", "apresentam", "indicam"],
     "mixed_word": "e",
     "mixed_half": {"feminine": "meia", "other": "meio"},
     "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "l", "ml", "cl", "cL", "dl", "dL", "h", "min", "s"],
@@ -634,7 +656,8 @@ DATA = freeze({
     "determiners": {"as": "feminine", "das": "feminine", "nas": "feminine", "pelas": "feminine", "às": "feminine",
                     "à": "feminine", "os": "masculine", "dos": "masculine", "nos": "masculine", "pelos": "masculine",
                     "destas": "feminine", "dessas": "feminine", "daquelas": "feminine", "destes": "masculine",
-                    "desses": "masculine", "daqueles": "masculine"},
+                    "desses": "masculine", "daqueles": "masculine", "outra": "feminine", "outras": "feminine",
+                    "outro": "masculine", "outros": "masculine"},
     "noun_gender": {
         "dia": "masculine", "dias": "masculine", "mapa": "masculine", "mapas": "masculine",
         "problema": "masculine", "problemas": "masculine", "sistema": "masculine", "sistemas": "masculine",
@@ -765,13 +788,21 @@ _LEXICON_GENDERS = {"m": "masculine", "f": "feminine"}
 _PARTITIVES = ("das", "dos", "destas", "destes", "dessas", "desses", "daquelas", "daqueles")
 
 
+def _tugalex_installed() -> bool:
+    """Whether tugalex imports. A package that is on the path and fails to import is no tugalex."""
+    try:
+        import tugalex  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def _lexicon_gender(word: str) -> str | None:
     """The gender code that `tugalex` gives a word read as a common noun: "m", "f", "mf" for a noun of two genders,
     or None when tugalex does not know the word or is not installed."""
-    try:
-        from tugalex import TugaLexicon
-    except ImportError:
+    if not _tugalex_installed():
         return None
+    from tugalex import TugaLexicon
     return TugaLexicon.get_noun_gender(word)
 
 
@@ -793,9 +824,7 @@ def _known_word(word: str, request: Request) -> bool:
     """Whether tugalex knows `word`, in lower case, as a word form of the variety (design section 4.6). tugalex names
     the pt-BR forms by the region `rjx` and the pt-PT forms by `lbx`. Without tugalex, it knows no word, and one
     warning names the extra."""
-    try:
-        import tugalex  # noqa: F401
-    except ImportError:
+    if not _tugalex_installed():
         _warn_no_extra()
         return False
     return word in _tugalex_words("rjx" if request.variety.tag == "pt-BR" else "lbx")
@@ -813,7 +842,7 @@ def _gender_of(word: str, request: Request, endings: bool = True) -> Grammatical
     """The gender of a noun or a given name: the tables of `_listed_gender`, then, if `endings`, the endings of
     `gender_suffixes`."""
     data = request.data
-    if word in data["function_words"]:
+    if word.lower() in data["function_words"]:
         return None
     entry = _listed_gender(word, data)
     if entry is not None:
@@ -826,25 +855,35 @@ def _gender_of(word: str, request: Request, endings: bool = True) -> Grammatical
     return None
 
 
-def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
-    """The gender of a number (design section 5.6): the hint, the masculine of a `year`, the noun after the number,
-    a determiner before it, then the `default_gender` of the params, then the language default.
+_UNCOUNTED = ("year", "list", "reference", "label")
+
+
+def _label_role(context: SpanContext) -> str | None:
+    """`label` for a number after a noun of `label_nouns` or `roman_letter_nouns`, which names an item. The number
+    counts the noun after it only when that noun is a plural, as `semanas` in `em casa 2 semanas`, and not a word of
+    `function_words`, `label_nouns` or `roman_letter_nouns`. A number after `a páginas` or `a folhas` agrees with that
+    noun (the module docstring gives the sources)."""
+    data = context.request.data
+    before = [word.lower() for word in context.before]
+    if before and before[-1] in (*data["label_nouns"], *data["roman_letter_nouns"]):
+        following = [word.lower() for word in context.after]
+        if not following or not following[0].endswith("s") or following[0] in data["function_words"] \
+                or following[0] in (*data["label_nouns"], *data["roman_letter_nouns"]):
+            return "label"
+    return None
+
+
+def _counted_gender(context: SpanContext) -> GrammaticalGender:
+    """The gender of the noun that the number counts, or of the noun that the text leaves out.
+
+    A number before `da tarde` and the other words of `hour_periods` counts the hours that the text leaves out. A
+    number before a word of `number_links` and a second number reads in the masculine, unless a noun that the number
+    counts follows the second number, and then `vezes` is the feminine noun that the number counts.
 
     A written `mil` after the number is not the noun: `mil` has two genders (Priberam, "mil": "quantificador
     numeral cardinal de dois géneros"), so `2 mil pessoas` takes the gender of `pessoas`, as `2000 pessoas` does. A
     partitive `das`, `dos` or a plural contraction of `de` and a demonstrative right after the number gives the
     gender, as in `1 das casas` and `2 destas maçãs`.
-
-    A number of a list item (the module docstring gives the sources) reads in the masculine, as a `year` does.
-
-    A number after a noun of `label_nouns` or `roman_letter_nouns` names an item and reads in the masculine when no
-    noun that the number counts follows it — the number ends the text, or a punctuation mark, a function word or a
-    verb of `label_verbs` follows it. Otherwise it falls through to the noun after it. A number after `a páginas` or
-    `a folhas` agrees with that noun (the module docstring gives the sources). A number before `da tarde` and the
-    other words of `hour_periods` counts the hours that the text leaves out. A `year`, which `Cardinal` finds, reads
-    in the masculine (the module docstring gives the sources). A number before a word of
-    `number_links` and a second number reads in the masculine, unless a noun that the number counts follows the
-    second number, and then `vezes` is the feminine noun that the number counts.
 
     The tables of `_listed_gender` name a noun first. When tugalex knows the word after the number, a determiner comes
     before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
@@ -852,19 +891,9 @@ def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
     `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. tugalex runs
     its own ending rules before it gives no gender, so a word that it gives none, as `ainda`, takes the gender of the
     determiner or the default. Without tugalex, the endings of `gender_suffixes` come before the determiner."""
-    if context.hint is not None and context.hint.gender is not None:
-        return context.hint.gender
-    if year:
-        return MASCULINE
     request = context.request
     data = request.data
     before = [word.lower() for word in context.before]
-    if before and before[-1] in (*data["label_nouns"], *data["roman_letter_nouns"]):
-        following = [word.lower() for word in context.after]
-        if not following or following[0] in data["function_words"] or following[0] in data["label_verbs"] \
-                or following[0] in (*data["label_nouns"], *data["roman_letter_nouns"]):
-            return MASCULINE
-        # A noun that the number counts follows, so it falls through to the noun lookup below.
     if " ".join(before[-2:]) in data["plural_labels"]:
         return GrammaticalGender(data["plural_labels"][" ".join(before[-2:])])
     following = [word.lower() for word in context.after[:2]]
@@ -883,9 +912,9 @@ def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
         return GrammaticalGender(data["determiners"][noun.lower()])
     determiner = data["determiners"].get(context.before[-1].lower()) if context.before else None
     listed = _listed_gender(noun, data)
-    code = _lexicon_gender(noun) if noun and listed is None and noun not in data["function_words"] else None
+    code = _lexicon_gender(noun) if noun and listed is None and noun.lower() not in data["function_words"] else None
     if code is None:
-        found = _gender_of(noun, request, endings=find_spec("tugalex") is None) if noun else None
+        found = _gender_of(noun, request, endings=not _tugalex_installed()) if noun else None
         gender = found or (GrammaticalGender(determiner) if determiner else None)
     else:
         if code == "mf" and noun.lower() in data["two_gender_feminine"]:
@@ -894,6 +923,17 @@ def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
             name = determiner or _LEXICON_GENDERS.get(code)
         gender = GrammaticalGender(name) if name else None
     return gender or request.params.default_gender.get(LANGUAGE.code) or LANGUAGE.default_gender
+
+
+def agreement(context: SpanContext, role: str | None = None) -> GrammaticalGender:
+    """The gender of a number (design section 5.6): the hint, then the masculine of a number that counts no noun,
+    then the noun that it counts. The `role` is `year` or `list` when `Cardinal.find` found one (the module docstring
+    gives the sources), and a number after a label noun has the role `label`."""
+    if context.hint is not None and context.hint.gender is not None:
+        return context.hint.gender
+    if role not in _UNCOUNTED:
+        role = _label_role(context)
+    return MASCULINE if role in _UNCOUNTED else _counted_gender(context)
 
 
 def speak_cardinal(span: Span, context: SpanContext) -> str:
@@ -907,9 +947,10 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         after_mark = context.before and context.before[-1].lower() == request.data["decimal_word"]
         words = SPELLER.decimal_part(digits, request) if after_mark else spell_digits(digits, request)
     else:
-        masculine = span.start in request.memo.get(_YEARS, ()) or span.start in request.memo.get(_LISTED, ())
-        words = _cardinal(digits, request, agreement(context, masculine))
-        _check_pair(digits, context, span.start in request.memo.get(_AFTER_PHONE, ()))
+        role = request.memo.get(_ROLES, {}).get(span.start)
+        counted = request.memo.get(_SCALED_NOUNS, {}).get(span.start)
+        words = _cardinal(digits, request, agreement(replace(context, after=(counted,)) if counted else context, role))
+        _check_pair(digits, context, role == "after_phone")
         if _SCALE_WORD.fullmatch(words.split()[-1]) and context.after \
                 and context.after[0].lower() not in request.data["function_words"]:
             words += " de"
@@ -933,14 +974,14 @@ def _pair_digits(token: str, request: Request) -> str | None:
 
 def _first_of_pair_differs(digits: str, before: Sequence[str], after: Sequence[str], context: SpanContext) -> bool:
     """Whether the number `digits`, which `before` and `after` surround, is the first of a pair that a link word of
-    `list_links` or the `range_word` joins to a second number, as `1` in `de 1 a 3 semanas`, and the noun after the
+    `list_links` or the `range_word`, written as in the data, joins to a second number, as `1` in `de 1 a 3 semanas`, and the noun after the
     second number gives it another reading. The far reading is computed only when a noun comes right after the
     second number: a word of `function_words`, a conjunction or a punctuation mark ends the pair, and then the pair
     does not decline."""
     request = context.request
     data = request.data
     if len(after) < 3 or _pair_digits(after[1], request) is None \
-            or after[0].lower() not in (*data["list_links"], data["range_word"]):
+            or after[0] not in (*data["list_links"], data["range_word"]):
         return False
     if after[2].lower() in data["function_words"]:
         return False
@@ -1467,35 +1508,56 @@ def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], reques
             yield match
 
 
-_YEARS = "pt_years"
+_ROLES = "pt_roles"
+_SCALED_NOUNS = "pt_scaled_nouns"
+_AFTER_SCALE = re.compile("[ \u00a0]+mil[ \u00a0]+e[ \u00a0]+[0-9]+[ \u00a0]+([^ \t\n\u00a0,;:.!?()]+)")
 _YEAR_MARKS = frozenset(",:)")
 _FOUR_DIGITS = re.compile("[0-9]{4}")
-_LISTED = "pt_listed"
-_LIST_MARK = re.compile(" *[-–.)] ")
-_AFTER_PHONE = "pt_after_phone"
+_WORD_BEFORE = re.compile("([^ \t\n\u00a0,;:.!?()]+)[ \u00a0]+$")
+_WORD_AFTER = re.compile("[ \u00a0]*([^ \t\n\u00a0,;:.!?()\\-–—]*)")
+_LIST_MARK = re.compile(" *[-–—.)] ")
 _ONE_WORD = re.compile("[,;:.!?)]*[ \t\n\u00a0]+[^ \t\n\u00a0,;:.!?()]+[ \t\n\u00a0]+")
 
 
 @dataclass(frozen=True)
 class Cardinal(CoreCardinal):
-    """The shared cardinal recognizer. A number of four digits with a mark of `_YEAR_MARKS` right after it names a
-    year, as `2012` in `Braga 2012: Capital Europeia`, and its start goes into `Request.memo` under `_YEARS`, so that
-    it reads in the masculine. An unsigned number that starts a line, with optional spaces, one of `-`, `–`, `.` or
-    `)` and a space after it, as in `2 - Casa de campo`, numbers an item of a list, and its start goes under
-    `_LISTED`. A number one word after a phone number that reads, as `2` in `912 345 678 ou 2 casas`, goes in under
-    `_AFTER_PHONE`, so that it is no second number of a pair."""
+    """The shared cardinal recognizer. It gives a number the role that `agreement` reads, in `Request.memo` under
+    `_ROLES`, by the start of the number. A number of four digits is a `year` with a mark of `_YEAR_MARKS` right after
+    it, as `2012` in `Braga 2012: Capital Europeia`, and from 1000 to 2099 after a word of `year_words` and before a
+    capitalised word, a word that is no plural or a mark, as `1998` in `Em 1998 Lisboa recebeu a Expo`.
+    An unsigned number that starts a line, with optional spaces, one of `-`, `–`, `—`, `.` or `)` and a space after
+    it, as in `2 - Casa de campo`, numbers an item of a `list`. A number alone in square brackets is a `reference`. A
+number
+    one word after a phone number that reads, as `2` in `912 345 678 ou 2 casas`, is `after_phone`, so that it is no
+    second number of a pair. A number before `mil e` and a second number, as `2` in `2 mil e 500 pessoas`, counts the
+    noun after the second number, which lies beyond the context words, so its start goes under `_SCALED_NOUNS` with
+    that word."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         after_phone = {word.end() for phone in _phones(text, tokens, request)
                        if (word := _ONE_WORD.match(text, phone.end))}
         for span in super().find(text, tokens, request):
-            if _FOUR_DIGITS.fullmatch(text, span.start, span.end) and text[span.end:span.end + 1] in _YEAR_MARKS:
-                request.memo.setdefault(_YEARS, set()).add(span.start)
-            if (text[span.start].isdigit() and not text[text.rfind("\n", 0, span.start) + 1:span.start].strip()
-                    and _LIST_MARK.match(text, span.end)):
-                request.memo.setdefault(_LISTED, set()).add(span.start)
-            if span.start in after_phone:
-                request.memo.setdefault(_AFTER_PHONE, set()).add(span.start)
+            role = None
+            if _FOUR_DIGITS.fullmatch(text, span.start, span.end):
+                before = _WORD_BEFORE.search(text, max(span.start - 12, 0), span.start)
+                after = _WORD_AFTER.match(text, span.end).group(1)
+                if text[span.end:span.end + 1] in _YEAR_MARKS or (
+                        1000 <= int(span.fields["digits"]) <= 2099 and before
+                        and before.group(1).lower() in request.data["year_words"]
+                        and (not after or after[0].isupper() or not after.endswith("s"))):
+                    role = "year"
+            if role is None and text[span.start].isdigit() \
+                    and not text[text.rfind("\n", 0, span.start) + 1:span.start].strip() \
+                    and _LIST_MARK.match(text, span.end):
+                role = "list"
+            if role is None and text[span.start - 1:span.start] == "[" and text[span.end:span.end + 1] == "]":
+                role = "reference"
+            if role is None and span.start in after_phone:
+                role = "after_phone"
+            if role:
+                request.memo.setdefault(_ROLES, {})[span.start] = role
+            if scaled := _AFTER_SCALE.match(text, span.end):
+                request.memo.setdefault(_SCALED_NOUNS, {})[span.start] = scaled.group(1)
             yield span
 
 

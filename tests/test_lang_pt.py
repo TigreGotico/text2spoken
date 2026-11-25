@@ -1,4 +1,6 @@
 """Portuguese readings outside the sentence rows: the refusal of ovos-date-parser and the hour symbol at 0 and 12."""
+import sys
+
 import pytest
 from ovos_date_parser import spoken
 from ovos_date_parser.spoken import UnsupportedForm
@@ -148,4 +150,28 @@ def test_a_title_keeps_the_full_stop_only_at_the_end_of_the_text(tag, text, expe
 ])
 def test_a_time_claims_an_hour_word_after_spaces_or_tabs_only(text, expected):
     """A line break between the time and the word keeps the word, which starts the next line."""
+    assert normalize(text, "pt-PT") == expected
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    ("Comprei 2 casas.", "Comprei duas casas."),
+    ("Vi 2 coisas.", "Vi duas coisas."),
+    ("Ouvi 2 canções.", "Ouvi duas canções."),
+])
+def test_a_tugalex_that_fails_to_import_is_no_tugalex(monkeypatch, tmp_path, text, expected):
+    """The endings of `gender_suffixes` read the noun when the package is on the path and does not import."""
+    (tmp_path / "tugalex").mkdir()
+    (tmp_path / "tugalex" / "__init__.py").write_text('raise ImportError("broken install")\n')
+    monkeypatch.syspath_prepend(str(tmp_path))
+    monkeypatch.delitem(sys.modules, "tugalex", raising=False)
+    assert normalize(text, "pt-PT") == expected
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    ("Vi 2 Às 10h.", "Vi dois Às dez horas."),
+    ("Comprei 2 Numa loja.", "Comprei dois Numa loja."),
+])
+def test_a_capital_function_word_gives_no_gender_without_tugalex(monkeypatch, text, expected):
+    """The endings of `gender_suffixes` read `Às` as a feminine noun unless the table of function words holds it."""
+    monkeypatch.setitem(sys.modules, "tugalex", None)
     assert normalize(text, "pt-PT") == expected
