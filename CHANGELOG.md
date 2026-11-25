@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a126](https://github.com/TigreGotico/text2spoken/tree/0.0.2a126) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a125...0.0.2a126)
+
+**Merged pull requests:**
+
+- fix\(ar\): read a number before a masculine أفعلة plural as masculine [\#599](https://github.com/TigreGotico/text2spoken/pull/599) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a125](https://github.com/TigreGotico/text2spoken/tree/0.0.2a125) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a124...0.0.2a125)
@@ -309,8 +317,6 @@
 - fix\(pt\): read a clock after "são", and 24:00 as midnight [\#354](https://github.com/TigreGotico/text2spoken/pull/354) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): a number next to a currency sign reads only as an amount [\#349](https://github.com/TigreGotico/text2spoken/pull/349) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(pt\): pt-BR reads a Roman numeral up to ten as an ordinal, artigo up to nine [\#332](https://github.com/TigreGotico/text2spoken/pull/332) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ko\): a say-as ordinal reads the native ordinal, a date reads 유월 and 시월 [\#329](https://github.com/TigreGotico/text2spoken/pull/329) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- feat\(ko\): Korean language file, a minus reads 마이너스 [\#328](https://github.com/TigreGotico/text2spoken/pull/328) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
