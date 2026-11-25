@@ -46,6 +46,18 @@ def test_a_tag_that_is_not_bcp47_raises(tag):
         normalize("1", tag)
 
 
+def test_a_tag_with_a_repeated_extension_singleton_raises():
+    """RFC 5646 section 2.2.6, rule 3: "Each singleton subtag MUST appear at most one time in each tag"."""
+    with pytest.raises(InvalidLanguageTagError):
+        normalize("1", "en-a-bb-a-cc")
+
+
+@pytest.mark.parametrize("tag, preferred", [("i-klingon", "tlh"), ("en-GB-oed", "en-GB-oxendict")])
+def test_a_grandfathered_tag_reads_as_its_preferred_value(tag, preferred):
+    """The Preferred-Value of each tag in the IANA Language Subtag Registry."""
+    assert select(tag)[0] == preferred
+
+
 @pytest.mark.parametrize("value", [None, 5, b"en"])
 def test_lang_and_text_must_be_str(value):
     with pytest.raises(TypeError, match="lang"):

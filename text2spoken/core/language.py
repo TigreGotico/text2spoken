@@ -1,7 +1,6 @@
 """LanguageSpec, Variety, Request, the loader and CLDR locale mapping (design sections 5.2, 5.3, 6)."""
 from __future__ import annotations
 
-import re
 import sys
 import warnings
 from collections.abc import Callable, Collection, Mapping
@@ -115,29 +114,25 @@ class Support:
     context_words: bool
 
 
-_LANGUAGE = "(?:[a-z][a-z][a-z]?(?:-[a-z][a-z][a-z]){0,3}|[a-z][a-z][a-z][a-z][a-z]?[a-z]?[a-z]?[a-z]?)"
-_TAG = re.compile(
-    _LANGUAGE
-    + "(?:-[a-z][a-z][a-z][a-z])?"
-    + "(?:-(?:[a-z][a-z]|[0-9][0-9][0-9]))?"
-    + "(?:-(?:[a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9][a-z0-9]?[a-z0-9]?[a-z0-9]?|[0-9][a-z0-9][a-z0-9][a-z0-9]))*"
-    + "(?:-[0-9a-wy-z](?:-[a-z0-9][a-z0-9][a-z0-9]?[a-z0-9]?[a-z0-9]?[a-z0-9]?[a-z0-9]?[a-z0-9]?)+)*"
-    + "(?:-x(?:-[a-z0-9][a-z0-9]?[a-z0-9]?[a-z0-9]?[a-z0-9]?[a-z0-9]?[a-z0-9]?[a-z0-9]?)+)?"
-)
-"""RFC 5646 `langtag`, lower case. The check belongs in linguatag; it leaves when the linguatag floor has it."""
-
-
 def check_tag(tag: str) -> str:
-    """The standardized tag, or InvalidLanguageTagError when the tag does not parse as BCP 47."""
+    """The standardized tag, or InvalidLanguageTagError when the tag does not parse as BCP 47 or names no language
+    (a private-use tag such as `x-foo`)."""
     import linguatag
+    from linguatag.bcp47 import LanguageTagError, parse
 
-    if not isinstance(tag, str) or not _TAG.fullmatch(tag.replace("_", "-").lower()):
-        raise InvalidLanguageTagError(f"not a BCP 47 language tag: {tag!r}")
-    return linguatag.standardize_lang(tag)
+    try:
+        standard = linguatag.standardize_lang(tag)
+        if parse(standard).whole is None:
+            return standard
+    except (AttributeError, LanguageTagError):
+        pass
+    raise InvalidLanguageTagError(f"not a BCP 47 language tag: {tag!r}")
 
 
+@lru_cache(maxsize=1024)
 def primary_subtag(tag: str) -> str:
-    return tag.split("-")[0].lower()
+    """The language subtag of a standardized tag, `und` when it has none."""
+    return subtags(tag)[0]
 
 
 @cache
@@ -202,15 +197,13 @@ def plural_locales() -> frozenset[str]:
     return frozenset(_load(PluralType.CARDINAL))
 
 
+@lru_cache(maxsize=1024)
 def subtags(tag: str) -> tuple[str, str | None, str | None]:
-    """The language, script and region subtags of a standardized tag."""
-    parts = tag.split("-")
-    rest = parts[1:parts.index("x")] if "x" in parts else parts[1:]
-    script = next((s.title() for s in rest[:1] if len(s) == 4 and s.isalpha()), None)
-    at = 1 if script else 0
-    region = next((s.upper() for s in rest[at:at + 1]
-                   if (len(s) == 2 and s.isalpha()) or (len(s) == 3 and s.isdigit())), None)
-    return parts[0].lower(), script, region
+    """The language, script and region subtags of a standardized tag; the language is `und` when it has none."""
+    from linguatag.bcp47 import parse
+
+    parsed = parse(tag)
+    return parsed.language or "und", parsed.script, parsed.region
 
 
 @cache
@@ -436,7 +429,7 @@ def writer_ordinals(tag: str) -> tuple[NumberSpeller | None, frozenset[Grammatic
     others = frozenset(gender for gender in WRITER_GENDERS
                        if gender is not GrammaticalGender.MASCULINE and readings(gender) != masculine)
     gender_arg = WRITER_GENDERS
-    if tag.split("-")[0] in NEUTER_READS_MASCULINE:
+    if primary_subtag(tag) in NEUTER_READS_MASCULINE:
         gender_arg = {**WRITER_GENDERS, GrammaticalGender.NEUTER: "masculine"}
     return OvosNumberSpeller(gender_arg), (others | {GrammaticalGender.MASCULINE}) if others else frozenset()
 
