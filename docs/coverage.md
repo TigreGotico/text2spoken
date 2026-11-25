@@ -3,7 +3,7 @@
 <!-- agent-hint
 covers: which forms each language file reads, and how many test rows each file holds and how many cite a source.
 source: text2spoken/lang/, text2spoken/core/language.py:supports, tests/data/*.tsv
-generated: no, except docs/figures/forms-per-language.svg and docs/figures/rows-per-language.svg, which scripts/docs_figures.py writes
+generated: no, except docs/img/forms-per-language.svg and docs/img/rows-per-language.svg, which docs/img/plot_forms_per_language.py and docs/img/plot_rows_per_language.py write
 verify: `python scripts/check_doc_page.py docs/coverage.md`
 see: how-it-reads.md, development.md, languages/en.md
 -->
@@ -24,7 +24,12 @@ Each language file reads the forms that its recognizers and verbalizers offer. `
 '5 kg and 三点五'
 ```
 
-![Matrix of 16 language files by 22 forms. English reads 22, Portuguese 20, French 18, German 17, Italian 15, Spanish 14, Basque 14, Dutch 14, Russian 12, Catalan 11, Arabic 10, Chinese 10, Tetun Dili 7, Greek 5, Japanese 3, Korean 3.](figures/forms-per-language.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/forms-per-language-dark.svg">
+  <img alt="Matrix of 16 language files by 22 forms. English reads 22, Portuguese 20, French 18, German 17, Italian 15, Spanish 14, Basque 14, Dutch 14, Russian 12, Catalan 11, Arabic 10, Chinese 10, Tetun Dili 7, Greek 5, Japanese 3, Korean 3." src="img/forms-per-language.svg">
+</picture>
+
+`img/plot_forms_per_language.py` makes this figure from `supports(code).forms`.
 
 *Figure: the forms that each language file reads. A large dot means the file reads the form. English reads the most forms, and Japanese and Korean read three. The form `IDENTIFIER` has a column in no file, because no language file reads it, so the figure leaves it out.*
 
@@ -36,7 +41,12 @@ A tag with no language file reads cardinals and decimals only. [How it reads tex
 
 Each language file has a file of test rows in `tests/data`. Each row holds a written text and the spoken text that a cited rule, a calculation by hand or a native speaker gives, never a run of the code. A row whose reading no source holds is marked `silver` in its `source` column. [Development](development.md#the-row-files) describes the columns.
 
-![Horizontal bars of test rows for 16 languages, 4,189 rows in all, 4,058 with a cited source and 131 marked silver. Portuguese 927, English 678, French 587, Arabic 329, Italian 294, Dutch 202, Spanish 197, Russian 179, German 167, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25.](figures/rows-per-language.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/rows-per-language-dark.svg">
+  <img alt="Horizontal bars of test rows for 16 languages, 4,189 rows in all, 4,058 with a cited source and 131 marked silver. Portuguese 927, English 678, French 587, Arabic 329, Italian 294, Dutch 202, Spanish 197, Russian 179, German 167, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
+</picture>
+
+`img/plot_rows_per_language.py` makes this figure from `tests/data`.
 
 *Figure: the test rows of each language file, in blue where the row cites a source and in orange where it is marked silver. Portuguese, English and French hold the most rows, and nine files hold only cited rows.*
 

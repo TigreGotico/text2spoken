@@ -239,7 +239,7 @@ def check_figures(page: str):
                          text=True)
     if run.returncode:
         fail(page, "a figure is out of date: " + run.stderr.strip())
-    for alt in re.findall(r"!\[(.*?)\]\(figures/[\w-]+\.svg\)", read(page)):
+    for alt in re.findall(r'<img alt="([^"]*)" src="img/[\w-]+\.svg">', read(page)):
         if len(alt) < 40:
             fail(page, f"the alt text {alt!r} holds no numbers")
 
