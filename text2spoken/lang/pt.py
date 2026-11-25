@@ -751,9 +751,9 @@ class PortugueseSpeller:
         ovos-number-parser reads a float, which drops a trailing zero, so the decimal part with a trailing zero is
         read here from the written digits: `1,80` reads "um vírgula oitenta", as `1,97` reads "um vírgula noventa e
         sete", and never "um vírgula oito", which is the reading of `1,8`."""
-        if numtag_writes(at_variety(request).tag) and fraction.strip("0"):
-            return " ".join([self.cardinal(integer or "0", Features(), request), request.data["decimal_word"],
-                             self.decimal_part(fraction, request)])
+        variety = at_variety(request)
+        if numtag_writes(variety.tag) and fraction.strip("0"):
+            return self.numtag.decimal(integer, fraction, Features(), variety)
         words = self.ovos.decimal(integer, fraction, Features(), at_variety(request))
         if not fraction.endswith("0") or not fraction.strip("0"):
             return words
@@ -768,10 +768,14 @@ class PortugueseSpeller:
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """`um meio`, `três quartos`, `um centésimo`, and the cardinal and `avos` for any other denominator:
-        `dois onze avos` (Ciberdúvidas 11493, after Cunha and Cintra). A field with a leading zero, as in `01/02`,
-        may be a day and a month, so the fraction stays as written."""
+        `dois onze avos` (Ciberdúvidas 11493, after Cunha and Cintra). numtag writes the pt-PT fractions, where a
+        denominator with a one-word ordinal takes it: `sete milésimos` (Ciberdúvidas 3242, 35323). A field with a
+        leading zero, as in `01/02`, may be a day and a month, so the fraction stays as written."""
         if numerator.startswith("0") or denominator.startswith("0"):
             raise DeclinedReading("a fraction with a leading zero may be a day and a month")
+        variety = at_variety(request)
+        if numtag_writes(variety.tag):
+            return self.numtag.fraction(numerator, denominator, Features(), variety)
         top = self.cardinal(numerator, Features(), request)
         name = request.data["fraction_names"].get(denominator)
         if name is None:
