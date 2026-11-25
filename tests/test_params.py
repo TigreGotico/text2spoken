@@ -65,8 +65,9 @@ def test_a_wrong_type_raises_type_error(kwargs):
         NormalizationParams(**kwargs)
 
 
-def test_options_name_every_field_but_forms_lexicon_and_strict():
-    assert set(OPTIONS) == {f.name for f in fields(NormalizationParams)} - {"forms", "lexicon", "strict"}
+def test_options_name_every_field_but_the_maps_and_strict():
+    assert set(OPTIONS) == {f.name for f in fields(NormalizationParams)} - {
+        "forms", "lexicon", "script_languages", "strict"}
 
 
 def test_enum_values_follow_universal_dependencies_names():

@@ -47,7 +47,7 @@ def normalize(text: str, lang: str, params: NormalizationParams | None = None,
               tokenizer: Tokenizer | None = None, *, say_as: SayAs | None = None) -> str:
     """The spoken text. With `params.script_languages`, each run of a mapped script reads in its language, and the
     rest reads in `lang`."""
-    if params is None or not params.script_languages:
+    if not isinstance(params, NormalizationParams) or not params.script_languages:
         return render(analyze(text, lang, params, tokenizer, say_as=say_as))
     plain = replace(params, script_languages=FrozenMap())
     return "".join(render(analyze(run, params.script_languages.get(script, lang), plain, tokenizer, say_as=say_as))
