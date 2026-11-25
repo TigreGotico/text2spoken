@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a129](https://github.com/TigreGotico/text2spoken/tree/0.0.2a129) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a128...0.0.2a129)
+
+**Merged pull requests:**
+
+- fix\(pt\): read the gender of a number in two steps, a role and the counted noun [\#602](https://github.com/TigreGotico/text2spoken/pull/602) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a128](https://github.com/TigreGotico/text2spoken/tree/0.0.2a128) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a127...0.0.2a128)
@@ -299,10 +307,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a89...0.0.2a90)
 
-**Merged pull requests:**
-
-- fix\(core\): read the CLDR marks and grouping of a language with no file [\#342](https://github.com/TigreGotico/text2spoken/pull/342) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a89](https://github.com/TigreGotico/text2spoken/tree/0.0.2a89) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a88...0.0.2a89)
@@ -344,7 +348,6 @@
 - fix\(core\): correct the CLDR RBNF words of da, hi, is and sr [\#347](https://github.com/TigreGotico/text2spoken/pull/347) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): count kilograms and speeds, more feminine plurals and rank nouns [\#346](https://github.com/TigreGotico/text2spoken/pull/346) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): a percent range reads its second number in the genitive, and a day range before a month reads both days [\#344](https://github.com/TigreGotico/text2spoken/pull/344) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): keep a number before a minus and digits that no number covers [\#343](https://github.com/TigreGotico/text2spoken/pull/343) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
