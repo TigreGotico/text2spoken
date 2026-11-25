@@ -202,11 +202,11 @@ class NumtagSpeller:
     def __init__(self, gender_arg: Mapping[GrammaticalGender, str]):
         self.gender_arg = dict(gender_arg)
 
-    def _spell(self, value: str, features: Features, request: Request, form: str = "cardinal") -> str:
+    def _spell(self, value: str, features: Features, request: Request, form: str = "cardinal", **kwargs) -> str:
         from numtag import spell
         gender = self.gender_arg.get(features.gender)
         try:
-            return spell(value, request.tag, form=form, gender=gender, scale=request.params.scale)[0].text
+            return spell(value, request.tag, form=form, gender=gender, scale=request.params.scale, **kwargs)[0].text
         except ValueError as error:
             raise DeclinedReading(f"numtag reads no {form} of {len(value)} characters in {request.tag}: "
                                   f"{error}") from error
@@ -216,6 +216,14 @@ class NumtagSpeller:
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         return self._spell(str(_integer(digits)), features, request, "ordinal")
+
+    def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
+        """The decimals as one number, with their written zeros: `1.80` reads eighty."""
+        return self._spell(f"{_integer(integer or '0')}.{fraction}", features, request, decimals="number",
+                           places=len(fraction))
+
+    def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
+        return self._spell(f"{_integer(numerator)}/{_integer(denominator)}", features, request)
 
 
 RBNF_HELD = frozenset({

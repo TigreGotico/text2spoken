@@ -13,6 +13,8 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 | `Demora 2 h.` | `pt-PT` | Demora duas horas. |
 | `Pagou 1000000000 €.` | `pt-PT` | Pagou mil milhões de euros. |
 | `Pagou 1000000000 €.` | `pt-BR` | Pagou um bilhão de euros. |
+| `Comeu 3/20 do bolo.` | `pt-PT` | Comeu três vigésimos do bolo. |
+| `Comeu 3/20 do bolo.` | `pt-BR` | Comeu três vinte avos do bolo. |
 | `Chega às 0:00.` | `pt-PT` | Chega à meia-noite. |
 | `Fecha às 12:00.` | `pt-PT` | Fecha ao meio-dia. |
 | `Abre das 12:00 às 14:00.` | `pt-PT` | Abre do meio-dia às catorze horas. |
@@ -27,7 +29,7 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 
 A number agrees with the noun that it counts. The gender of a common noun comes from the noun lexicon of `tugalex`, and a number before a unit takes the gender of the unit.
 
-The number words of `pt-PT` come from `numtag`, and those of `pt-BR` from `ovos-number-parser`.
+The number words of `pt-PT` come from `numtag`, and those of `pt-BR` from `ovos-number-parser`. In `pt-PT`, a denominator with a one-word ordinal takes that ordinal (Ciberdúvidas 35323, after Cunha and Cintra).
 
 A number right after a noun that names one item of a series, such as `sala`, `página`, `artigo` or `Fig.`, reads in the masculine when no noun that it counts follows, because the word "número" is left out (Cunha and Cintra, quoted in Ciberdúvidas 33468). After `a páginas`, the number agrees with the plural noun (Bechara, quoted in Ciberdúvidas 33527). A number before `da tarde` counts hours. A number before `vezes` or `vírgula` and a second number reads in the masculine, unless a noun follows the second number and then `vezes` is the noun it counts. Two numbers that `a`, `e` or `ou` join stay as written when the noun after the second number gives the first number another gender, because no source gives that gender. An amount of money with one decimal reads the decimal as tens of cents. After `vitamina`, `grupo` or `classe`, `D.` is a letter, not a title.
 
