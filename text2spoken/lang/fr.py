@@ -1001,15 +1001,11 @@ SPELLER = FrenchSpeller()
 
 
 @lru_cache(maxsize=8)
-def _feminine(nouns: tuple[str, ...]) -> frozenset[str]:
-    return frozenset(nouns)
-
-
 def _gender(context: SpanContext, noun: bool = True) -> GrammaticalGender:
     """The agreement order: the hint, the noun after the number, `default_gender`, then the file."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
-    if noun and context.after and context.after[0].lower() in _feminine(context.request.data["feminine_nouns"]):
+    if noun and context.after and context.after[0].lower() in context.request.data["feminine_nouns"]:
         return FEMININE
     return context.request.params.default_gender.get(LANGUAGE.code) or MASCULINE
 
@@ -1218,11 +1214,11 @@ def _day_part(hour: int, request: Request) -> str:
 
 def speak_time(span: Span, context: SpanContext) -> str:
     """ "14 h 30" is "quatorze heures trente", and "7 h 05" "sept heures cinq". Hour 12 reads "midi" and hour 0 or 24
-    reads "minuit" when a time word or "est" comes before it, as in `à 12 h`, on the 12-hour clock, after a written `am` or `pm`
-    (which Tunisia and Algeria write, CLDR `fr_TN`) and in the phrase style,
-    so `12 h` stays "douze heures" after "pendant". The phrase style, which `register="colloquial"` also
-    selects, says "et quart", "et demie" and "moins le quart". The 12-hour clock adds "du matin", "de
-    l'après-midi" or "du soir" (Académie française, "L'heure")."""
+    reads "minuit" when a time word or "est" comes before it, as in `à 12 h`, on the 12-hour clock, after a written
+    `am` or `pm` (which Tunisia and Algeria write, CLDR `fr_TN`) and in the phrase style, so `12 h` stays "douze
+    heures" after "pendant". The phrase style, which `register="colloquial"` also selects, says "et quart", "et
+    demie" and "moins le quart". The 12-hour clock adds "du matin", "de l'après-midi" or "du soir" (Académie
+    française, "L'heure")."""
     request, params, fields = context.request, context.request.params, span.fields
     hour, minute, second = fields["hour"], fields["minute"], fields["second"]
     if fields["period"] is not None:
@@ -1345,7 +1341,7 @@ def _phone_group(group: str, request: Request) -> str:
     if request.data["phone_reading"] == "digits" or len(group) in (1, 3):
         return spell_digits(group, request)
     head = group[:1] if len(group) % 2 else ""
-    pairs = [_pair(group[i : i + 2], request) for i in range(len(head), len(group), 2)]
+    pairs = [_pair(group[i:i + 2], request) for i in range(len(head), len(group), 2)]
     return " ".join([*([spell_digits(head, request)] if head else []), *pairs])
 
 
@@ -1375,7 +1371,7 @@ def speak_year(span: Span, context: SpanContext) -> str:
     if span.end - span.start == 2:
         head = SPELLER.year(digits[:2] + "00", Features(), request) + " "
         if words.startswith(head):
-            return words[len(head) :]
+            return words[len(head):]
     return words
 
 
@@ -1468,25 +1464,19 @@ class FrenchMoney(Money):
                 if found is not None:
                     yield found
 
-    def _after(
-        self,
-        text: str,
-        number: Number,
-        symbols: Sequence[tuple[str, str]],
-        scales: Sequence[str],
-        gaps: Sequence[str],
-        request: Request,
-    ) -> Span | None:
+    def _after(self, text: str, number: Number, symbols: Sequence[tuple[str, str]], scales: Sequence[str],
+               gaps: Sequence[str], request: Request) -> Span | None:
         for scale, after in dict.fromkeys((_scale(text, number.end, scales, gaps), ("", number.end))):
             for gap in gaps:
                 for symbol, code in symbols:
                     end = after + len(gap) + len(symbol)
-                    if text.startswith(gap + symbol, after) and (
-                        bounds := _affixes(text, number.start, end, request.data, ())
-                    ) is not None:
-                        fields = {"amount": number.amount(), "currency": code, "written_symbol": symbol}
-                        fields |= {"scale": scale, "prefix": bounds[2], "suffix": bounds[3]}
-                        return Span(bounds[0], bounds[1], Form.MONEY, FrozenMap(fields), recognizer=self.name)
+                    if text.startswith(gap + symbol, after) \
+                            and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
+                        start, stop, prefix, suffix = bounds
+                        return Span(start, stop, Form.MONEY,
+                                    FrozenMap({"amount": number.amount(), "currency": code, "written_symbol": symbol,
+                                               "scale": scale, "prefix": prefix, "suffix": suffix}),
+                                    recognizer=self.name)
         return None
 
 
@@ -1497,7 +1487,7 @@ class FrenchPercent(Percent):
 
     def _percents(self, text: str, request: Request) -> Iterator[Span]:
         for span in super()._percents(text, request):
-            written = text[span.start : span.end]
+            written = text[span.start:span.end]
             if "‰" in written or "%o" in written:
                 span = replace(span, fields=FrozenMap({**span.fields, "sign_position": "permille"}))
             yield span
@@ -1607,16 +1597,8 @@ class Roman:
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
-        marks = sorted(
-            (
-                (m, kind)
-                for kind, spellings in data["ordinal_marks"].items()
-                if not kind.startswith("second")
-                for m in spellings
-            ),
-            key=lambda p: len(p[0]),
-            reverse=True,
-        )
+        marks = sorted(((m, kind) for kind, spellings in data["ordinal_marks"].items()
+                        if not kind.startswith("second") for m in spellings), key=lambda p: len(p[0]), reverse=True)
         headings = frozenset(w.lower() for w in data["roman_headings"])
         names = frozenset(data["roman_names"])
         for run in _ROMAN_RUN.finditer(text):
@@ -1626,39 +1608,22 @@ class Roman:
             value = roman.value(run.group())
             if value is None or value > 39:
                 continue
-            marker = next(
-                (
-                    m
-                    for m, kind in marks
-                    if text.startswith(m, end)
-                    and (end + len(m) == len(text) or not is_word_char(text[end + len(m)]))
-                    and (value == 1) == kind.startswith(("masculine", "feminine"))
-                ),
-                None,
-            )
+            marker = next((m for m, kind in marks
+                           if text.startswith(m, end)
+                           and (end + len(m) == len(text) or not is_word_char(text[end + len(m)]))
+                           and (value == 1) == kind.startswith(("masculine", "feminine"))), None)
             if marker is not None:
-                yield Span(
-                    start,
-                    end + len(marker),
-                    Form.ROMAN,
-                    FrozenMap({"value": value, "role": f"ordinal {marker}", "suffix": ""}),
-                    recognizer=self.name,
-                )
-            elif (end == len(text) or not is_word_char(text[end])) and self._named(
-                text, start, run.group(), value, headings, names
-            ):
-                yield Span(
-                    start,
-                    end,
-                    Form.ROMAN,
-                    FrozenMap({"value": value, "role": "cardinal", "suffix": ""}),
-                    recognizer=self.name,
-                )
+                yield Span(start, end + len(marker), Form.ROMAN,
+                           FrozenMap({"value": value, "role": f"ordinal {marker}", "suffix": ""}),
+                           recognizer=self.name)
+            elif (end == len(text) or not is_word_char(text[end])) \
+                    and self._named(text, start, run.group(), value, headings, names):
+                yield Span(start, end, Form.ROMAN, FrozenMap({"value": value, "role": "cardinal", "suffix": ""}),
+                           recognizer=self.name)
 
     @staticmethod
-    def _named(
-        text: str, start: int, numeral: str, value: int, headings: frozenset[str], names: frozenset[str]
-    ) -> bool:
+    def _named(text: str, start: int, numeral: str, value: int, headings: frozenset[str],
+               names: frozenset[str]) -> bool:
         """Whether a heading word, or a capitalised name, stands before the numeral with one space between."""
         gap = start
         while gap > 0 and text[gap - 1] in GROUP_SPACES:
@@ -1679,12 +1644,10 @@ class Roman:
 def speak_roman(span: Span, context: SpanContext) -> str:
     """`XXe` is "vingtième", `Ier` "premier", `Louis XIV` "quatorze" and `Acte II` "deux".
 
-    The `role` of a span is "cardinal",
-    or "ordinal" and the marker that the text writes: the `suffix` field is the text that `attach` appends, so it stays
-    empty."""
+    The `role` of a span is "cardinal", or "ordinal" and the marker that the text writes."""
     request, fields = context.request, span.fields
     if fields["role"].startswith("ordinal "):
-        return _ordinal_words(str(fields["value"]), fields["role"][len("ordinal ") :], request)
+        return _ordinal_words(str(fields["value"]), fields["role"].removeprefix("ordinal "), request)
     return _cardinal(str(fields["value"]), request)
 
 
@@ -1720,16 +1683,9 @@ class FrenchTime(TimeClock):
             valid = hour <= 24 and (minute is None or (minute <= 59 and (hour < 24 or minute == 0)))
             if not valid and minute is None:
                 continue
-            yield Span(
-                start,
-                end,
-                Form.TIME,
-                FrozenMap(
-                    {"hour": hour, "minute": minute or 0, "second": None, "period": None, "prefix": "", "suffix": ""}
-                ),
-                recognizer=self.name,
-                keep=not valid,
-            )
+            yield Span(start, end, Form.TIME,
+                       FrozenMap({"hour": hour, "minute": minute or 0, "second": None, "period": None, "prefix": "",
+                                  "suffix": ""}), recognizer=self.name, keep=not valid)
 
 
 @dataclass(frozen=True)
@@ -1756,21 +1712,9 @@ class Ordinal:
                 plain = not (first or second)
                 if (first and value != "1") or (second and value != "2") or (plain and value in ("", "1")):
                     continue
-                yield Span(
-                    number.start,
-                    end,
-                    Form.ORDINAL,
-                    FrozenMap(
-                        {
-                            "digits": number.integer,
-                            "marker": marker,
-                            "prefix": "",
-                            "suffix": "",
-                            "script": number.script,
-                        }
-                    ),
-                    recognizer=self.name,
-                )
+                yield Span(number.start, end, Form.ORDINAL,
+                           FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
+                                      "script": number.script}), recognizer=self.name)
                 break
 
 
@@ -1799,15 +1743,14 @@ class Abbreviation:
                         ok = self._name_follows(text, end, particles)
                     elif table == "number_abbreviations":
                         ok = following.isdigit()
-                        trail = " " if text[end : end + 1].isdigit() else ""
+                        trail = " " if text[end:end + 1].isdigit() else ""
                     else:
                         ok = is_bounded(text, position, end)
                         if key in final and (following in ("", ".") or following.isupper()):
                             trail = "."
                     if ok:
-                        yield Span(
-                            position, end, Form.ABBREVIATION, FrozenMap({"key": key}), trail=trail, recognizer=self.name
-                        )
+                        yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}), trail=trail,
+                                   recognizer=self.name)
                     position = text.find(key, end)
 
     @staticmethod
@@ -1815,7 +1758,7 @@ class Abbreviation:
         """Whether a capitalised word, or a particle and more text, or a hyphen and a capital, follows text[:end]."""
         if end < len(text) and is_letter(text[end]):
             return False
-        if text.startswith("-", end) and text[end + 1 : end + 2].isupper():
+        if text.startswith("-", end) and text[end + 1:end + 2].isupper():
             return True
         index = end
         while index < len(text) and text[index] in GROUP_SPACES:
@@ -1826,7 +1769,7 @@ class Abbreviation:
         while stop < len(text) and (is_letter(text[stop]) or text[stop] == "'"):
             stop += 1
         word = text[index:stop]
-        elided = word[: word.find("'") + 1] if "'" in word else word
+        elided = word[:word.find("'") + 1] if "'" in word else word
         if word.lower() in particles or elided.lower() in particles:
             return stop < len(text)
         return text[index].isupper() and not (len(word) == 1 and text.startswith(".", stop))
@@ -1845,11 +1788,8 @@ class DateNamed:
         for key in ("date_day_month", "date_month_year"):
             for match in re.finditer(patterns[key], folded):
                 start, end = match.span()
-                if (
-                    not is_bounded(text, start, end)
-                    or (start and text[start - 1] in symbols)
-                    or not one_digit_set(text[start:end])
-                ):
+                if (not is_bounded(text, start, end) or (start and text[start - 1] in symbols)
+                        or not one_digit_set(text[start:end])):
                     continue
                 if key == "date_day_month":
                     day, ordinal, month_name, year = match.groups()
@@ -1861,23 +1801,10 @@ class DateNamed:
                 year_value = int(year) if year is not None else None
                 if day is not None and not is_valid(year_value, month, int(day)):
                     continue
-                yield Span(
-                    start,
-                    end,
-                    Form.DATE,
-                    FrozenMap(
-                        {
-                            "year": year_value,
-                            "month": month,
-                            "day": int(day) if day else None,
-                            "written_order": "DMY",
-                            "month_written": "name", "era": "",
-                            "prefix": "",
-                            "suffix": "",
-                        }
-                    ),
-                    recognizer=self.name,
-                )
+                yield Span(start, end, Form.DATE,
+                           FrozenMap({"year": year_value, "month": month, "day": int(day) if day else None,
+                                      "written_order": "DMY", "month_written": "name", "era": "", "prefix": "",
+                                      "suffix": ""}), recognizer=self.name)
 
 
 LANGUAGE = LanguageSpec(
