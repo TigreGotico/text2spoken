@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a131](https://github.com/TigreGotico/text2spoken/tree/0.0.2a131) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a130...0.0.2a131)
+
+**Merged pull requests:**
+
+- fix: parse language tags through linguatag [\#606](https://github.com/TigreGotico/text2spoken/pull/606) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a130](https://github.com/TigreGotico/text2spoken/tree/0.0.2a130) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a129...0.0.2a130)
@@ -352,8 +360,6 @@
 - fix\(el\): a number finds its noun past και, ακόμη, άλλος, capitals and an hour [\#358](https://github.com/TigreGotico/text2spoken/pull/358) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(pt\): read mg, cl and dl, and m2 with its exponent on the line [\#353](https://github.com/TigreGotico/text2spoken/pull/353) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): decline a Serbian RBNF ordinal past its last rule [\#348](https://github.com/TigreGotico/text2spoken/pull/348) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): correct the CLDR RBNF words of da, hi, is and sr [\#347](https://github.com/TigreGotico/text2spoken/pull/347) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): count kilograms and speeds, more feminine plurals and rank nouns [\#346](https://github.com/TigreGotico/text2spoken/pull/346) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
