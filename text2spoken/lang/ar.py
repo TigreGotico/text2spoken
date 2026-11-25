@@ -301,8 +301,9 @@ ca-gregorian.json, dayPeriods). `percent`: Ryding 2005, p. 347. `percent_words`:
 Ryding 2005, p. 347, the long name بالمائة of CLDR 49 concentr-percent (units.json), and each in both spellings of مئة
 (English Wiktionary, مائة, revision 93330307). `prepositions`: Ryding 2005, pp. 366-367.
 `uncounted_words`: words that no number counts, besides every preposition and semi-preposition: wa- 'and' (p. 409),
-'aw 'or' (p. 418), thumma 'then' (p. 415), faqaT 'only' (p. 277), the elative Jakthar 'more' (p. 235), Jaqall 'less'
-(pp. 246-247), and the spelling او with no hamza.
+'aw 'or' (p. 418), thumma 'then' (section 6.2.8, p. 416), the adverb faqaT 'only' (p. 277), the quantifier Jakthar
+'more' (p. 235), the elative Jaqall 'less' (pp. 246-247), and the spelling او with no hamza. None of them is a noun, so
+none is the counted noun of pp. 346-347.
 `hijri_months`: Arabic Wikipedia, تقويم هجري, the table of months, which gives ربيع الآخر and جمادى الآخرة; the
 two months that start with ذو take the genitive ذي after من, as Arabic Wikipedia, ذو الحجة, writes it:
 "العشر الأوائل من ذي الحجة". `semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
@@ -446,7 +447,9 @@ def counted_noun(after: Sequence[str]) -> str | None:
 
 def _uncounted(word: str, data: FrozenMap) -> bool:
     """Whether a word is one that no number counts: a preposition, a semi-preposition, a conjunction, a particle or
-    a comparative, with or without the conjunction wa- or fa- joined to it."""
+    a comparative, with or without the conjunction wa- or fa- joined to it. Before such a word every number that ends
+    in a construct form keeps its free form: 200 and 2,000 read مئتان and ألفان, 1,200 and 2,000,000 read ومئتان and
+    مليونان (Ryding 2005, p. 347), and eight reads ثمان, not ثماني (p. 336)."""
     words = (*data["prepositions"], *data["semi_prepositions"], *data["uncounted_words"])
     return word in words or word.startswith(("و", "ف")) and word[1:] in words
 
