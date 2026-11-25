@@ -120,12 +120,13 @@ def check_tag(tag: str) -> str:
     import linguatag
     from linguatag.bcp47 import LanguageTagError, parse
 
-    try:
-        standard = linguatag.standardize_lang(tag)
-        if parse(standard).whole is None:
-            return standard
-    except (AttributeError, LanguageTagError):
-        pass
+    if isinstance(tag, str):
+        try:
+            standard = linguatag.standardize_lang(tag)
+            if parse(standard).whole is None:
+                return standard
+        except LanguageTagError:
+            pass
     raise InvalidLanguageTagError(f"not a BCP 47 language tag: {tag!r}")
 
 

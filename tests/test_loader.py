@@ -8,7 +8,8 @@ from packaging.requirements import Requirement
 
 from text2spoken import (Form, InvalidLanguageTagError, NormalizationParams, UnreadFormError, normalize,
                          supports)
-from text2spoken.core.language import cldr_locale, language_file, plural_locales, rbnf_locales, select
+from text2spoken.core.language import (check_tag, cldr_locale, language_file, plural_locales, rbnf_locales, select,
+                                       subtags)
 
 # (input tag, standardized tag with region, file code, variety): design section 6 and loader_probe.out.txt.
 LOADER_ROWS = [
@@ -56,6 +57,22 @@ def test_a_tag_with_a_repeated_extension_singleton_raises():
 def test_a_grandfathered_tag_reads_as_its_preferred_value(tag, preferred):
     """The Preferred-Value of each tag in the IANA Language Subtag Registry."""
     assert select(tag)[0] == preferred
+
+
+@pytest.mark.parametrize("value", [None, 5, b"en"])
+def test_a_tag_that_is_not_a_str_is_no_language_tag(value):
+    with pytest.raises(InvalidLanguageTagError):
+        select(value)
+
+
+@pytest.mark.parametrize("tag, standard", [("EN_us", "en-US"), ("iw", "he"), ("pt_br", "pt-BR")])
+def test_check_tag_gives_the_standardized_tag(tag, standard):
+    """`iw` is the deprecated subtag of `he` in the IANA registry; case and `_` carry no meaning (RFC 5646 §2.1.1)."""
+    assert check_tag(tag) == standard
+
+
+def test_a_tag_with_no_language_subtag_has_the_language_und():
+    assert subtags("und-Latn-RS") == ("und", "Latn", "RS")
 
 
 @pytest.mark.parametrize("value", [None, 5, b"en"])
