@@ -60,9 +60,12 @@ The rules and their sources:
   the oblique form. It also reads every other number, the dual and the ordinals in the oblique form; no source gives
   this choice, and the README lists it. With no diacritics, the genitive and the accusative of a number are one
   written form, the oblique form of ovos-number-parser, and the oblique dual ends in -ayni (p. 332).
-- Hundreds, thousands and millions. A dual before its counted noun drops its nuun (p. 347), a thousand or a million
-  counted from 11 to 99 with no noun is an accusative tamyiz (pp. 350 and 353), and a scale word makes the million
-  the counted noun of an amount (p. 353).
+- Hundreds, thousands and millions. A dual before its counted noun drops its nuun (p. 347): "The dual suffix here
+  obeys the law of nuun-drop when it goes into an 'iDaafa with a following counted noun" (pp. 346-347, section 1.7).
+  With no counted noun after it, 200 is miJat-aani or miJat-ayni (p. 347) and 2,000 is Jalf-aani or Jalf-ayni
+  (p. 350), so a dual before a preposition, a conjunction, a particle or a comparative keeps its nuun. A thousand
+  or a million counted from 11 to 99 with no noun is an accusative tamyiz (pp. 350 and 353), and a scale word makes
+  the million the counted noun of an amount (p. 353).
 - Ordinals follow the noun that they rank and agree with it (pp. 354-359). A date reads the day as a masculine
   ordinal, then من and the month (pp. 357-358). A numeric date with the era mark هـ or ه after it is a date of the
   Hijri calendar: the month is the Hijri month, and the mark reads هجري (English Wiktionary, هـ: "abbreviation of
@@ -259,6 +262,7 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "percent": {"signs": ["%", "٪"], "position": "either", "word": "في المئة"},
     "percent_words": ["في المئة", "في المائة", "بالمئة", "بالمائة"],
+    "uncounted_words": ["و", "او", "أو", "ثم", "فقط", "أكثر", "أقل"],
     "currencies": {
         "USD": {"symbols": ["$", "US$", "USD"], "gender": "masculine", "one": "دولار",
                 "two": ["دولاران", "دولارين"], "few": "دولارات", "many": "دولارا", "other": "دولار"},
@@ -296,6 +300,9 @@ DATA = freeze({
 ca-gregorian.json, dayPeriods). `percent`: Ryding 2005, p. 347. `percent_words`: fii l-mi'at-i and bi-l-mi'at-i of
 Ryding 2005, p. 347, the long name بالمائة of CLDR 49 concentr-percent (units.json), and each in both spellings of مئة
 (English Wiktionary, مائة, revision 93330307). `prepositions`: Ryding 2005, pp. 366-367.
+`uncounted_words`: words that no number counts, besides every preposition and semi-preposition: wa- 'and' (p. 409),
+'aw 'or' (p. 418), thumma 'then' (p. 415), faqaT 'only' (p. 277), the elative Jakthar 'more' (p. 235), Jaqall 'less'
+(pp. 246-247), and the spelling او with no hamza.
 `hijri_months`: Arabic Wikipedia, تقويم هجري, the table of months, which gives ربيع الآخر and جمادى الآخرة; the
 two months that start with ذو take the genitive ذي after من, as Arabic Wikipedia, ذو الحجة, writes it:
 "العشر الأوائل من ذي الحجة". `semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
@@ -435,6 +442,13 @@ def counted_noun(after: Sequence[str]) -> str | None:
         return None
     word = after[0]
     return word if _is_arabic_word(word) and not word.startswith("ال") else None
+
+
+def _uncounted(word: str, data: FrozenMap) -> bool:
+    """Whether a word is one that no number counts: a preposition, a semi-preposition, a conjunction, a particle or
+    a comparative, with or without the conjunction wa- or fa- joined to it."""
+    words = (*data["prepositions"], *data["semi_prepositions"], *data["uncounted_words"])
+    return word in words or word.startswith(("و", "ف")) and word[1:] in words
 
 
 def number_noun(span: Span, context: SpanContext) -> str | None:
@@ -613,7 +627,7 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
     words = SPELLER.cardinal(digits, features, request)
     if noun is None:
         words = _alone(words, digits)
-    else:
+    elif not _uncounted(noun, request.data):
         words = _before_noun(words, features.gender, request.data)
     words = _signed(words, fields["sign"], request)
     if fields["lead"]:

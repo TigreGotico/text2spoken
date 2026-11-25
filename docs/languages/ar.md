@@ -124,7 +124,7 @@ Some Arabic readings are wrong or stay as written:
 | `اشترى 200 كتاب` | اشترى مئتا كتاب | A number that is the object of a verb takes the nominative. Only a preposition, a semi-preposition or a year noun before it gives the oblique case. The object takes "مئتي كتاب" (Ryding 2005, p. 347). |
 | `فوق 20 طابقا` | فوق عشرون طابقا | Only the semi-prepositions بعد, قبل, نحو, خلال, طوال and مع give the genitive. Another semi-preposition gives the nominative. |
 | `وصلت 3 طائرات` | وصلت ثلاثة طائرات | A feminine plural that the `feminine_plurals` table does not list counts as masculine, because a plural in -aat also comes from masculine nouns. The feminine طائرة takes "ثلاث". |
-| `اشتريت 3 من السيارات` | اشتريت ثلاثة من السيارات | The word after a number counts as its noun, also when it is من. |
+| `اشتريت 3 من السيارات` | اشتريت ثلاثة من السيارات | The word after a number counts as its noun for gender, also when it is من. The dual of 200 and 2,000 loses its nuun only before a noun, so `200 من الناس` reads مئتان من الناس. |
 | `الثمن 3 مليون ريال` | الثمن ثلاثة مليون ريال | A scale word reads as the noun of the number only after a currency symbol. Ryding (p. 353) gives the plural ملايين. |
 | `الثمن -5 ريال` | الثمن سالب خمسة ريال | A negative amount of money reads as a number, and the noun stays singular. |
 
