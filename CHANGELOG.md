@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a140](https://github.com/TigreGotico/text2spoken/tree/0.0.2a140) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a139...0.0.2a140)
+
+**Merged pull requests:**
+
+- feat: pt-PT number words from numtag [\#640](https://github.com/TigreGotico/text2spoken/pull/640) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a139](https://github.com/TigreGotico/text2spoken/tree/0.0.2a139) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a138...0.0.2a139)
