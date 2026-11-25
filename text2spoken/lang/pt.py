@@ -127,13 +127,13 @@ with no list. `unit_symbols` names the symbols made only of letters that read as
 de minuto é min"). The litre symbol also has the capital form `L` (Priberam, "litro": "Unidade de medida de
 capacidade (símbolo: l ou L)"), so `cL` and `dL` read as the CLDR units `cl` and `dl`, the case fallback of
 `core/units.py`, as in `mg/dL`. A bare `L` stays as written: after a number it also names a lot (`Q.30 L.6`), a model
-(`L-200`, `402 L`) or a lens (`f/4L`), so a reading is wrong in about one changed line in ten of natural text. `mL`
-stays as written, because CLDR also names `ML` (pt-PT) or `Ml` (pt-BR) the megalitre, and the case of the prefix alone
-tells the two apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it writes the exponent on the line, as
-a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros quadrados" (Priberam, "metro": "metro
-quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo: m²)"). `unjoined_symbols` holds `ML`,
-the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so `ML` in capitals may be either unit,
-and `2ML` stays as written.
+(`L-200`, `402 L`) or a lens (`f/4L`), and a litre reading of it was wrong in more than one changed line in ten of
+natural text. `mL` stays as written, because CLDR also names `ML` (pt-PT) or `Ml` (pt-BR) the megalitre, and the case of
+the prefix alone tells the two apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it
+writes the exponent on the line, as a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros
+quadrados" (Priberam, "metro": "metro quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo:
+m²)"). `unjoined_symbols` holds `ML`, the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so
+`ML` in capitals may be either unit, and `2ML` stays as written.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of pt-PT and pt), and
 a symbol with a currency sign reads with no list: `20 CHF` reads "vinte francos suíços" and `₹50` "cinquenta rupias
