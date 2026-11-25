@@ -26,11 +26,11 @@ The rules and their sources:
   in -aat of masculine nouns (Wright 1896, vol. 1, section 303) make the feminine plurals a table. The gender of a
   plural is the gender of its singular: "if the singular noun is masculine, the numeral will have the feminine
   marker taa' marbuuTa, and if the singular noun is feminine, the numeral will be in the masculine form" (p. 334).
-  So the table holds plurals whose singular ends in taa' marbuuTa. Ryding writes that "Most feminine nouns are
-  marked by the taa' marbuuTa suffix" (p. 121), and the ending of a plural is no such mark: the plurals of the
-  pattern أفعلة, such as أجهزة, the plural of the masculine جهاز, end in ة, and the table `afila_plurals` lists them,
-  so that their numbers read as those of a masculine noun, as in `5 أجهزة`. A shape rule reads the feminine singulars
-  of the same shape (أوقية, أونصة, أهمية, أغنية) wrong, so a table lists the plurals.
+  So `feminine_plurals` holds plurals whose singular ends in taa' marbuuTa. Ryding writes that "Most feminine nouns
+  are marked by the taa' marbuuTa suffix" (p. 121), and the ending of a plural is no such mark: the plurals of the
+  pattern أفعلة, such as أجهزة, the plural of the masculine جهاز, end in ة, and the table `afila_plurals` lists
+  them, so that their numbers read as those of a masculine noun, as in `5 أجهزة`. A shape rule reads the feminine
+  singulars of the same shape (أوقية, أونصة, أهمية, أغنية) wrong, so a table lists the plurals.
 - A number that names a thing counts no noun. "In recitation form, in counting without a counted noun, or in referring
   to a specific numeral alone, the form with taa' marbuuTa is usually used" (Ryding 2005, p. 335). The example of that
   page is "raqm-u sittat-in huwa raqm-un siHriyy-un", "The number six is a magic number". So a number after رقم, or
@@ -481,9 +481,9 @@ def hour_after(before: Sequence[str], digits: str, after: Sequence[str], data: F
 
 
 def noun_gender(noun: str, data: FrozenMap) -> GrammaticalGender:
-    """Feminine for a noun that ends in taa' marbuuTa (Ryding 2005, p. 121) or for a plural of the table: a plural
-    in -aat also comes from masculine nouns (Wright 1896, vol. 1, section 303), so no rule reads it. A plural of
-    `afila_plurals` ends in taa' marbuuTa and is masculine."""
+    """Feminine for a noun that ends in taa' marbuuTa (Ryding 2005, p. 121) or for a plural of `feminine_plurals`: a
+    plural in -aat also comes from masculine nouns (Wright 1896, vol. 1, section 303), so no rule reads it. A plural
+    of `afila_plurals` ends in taa' marbuuTa and is masculine."""
     if noun in data["afila_plurals"]:
         return MASCULINE
     return FEMININE if noun.endswith("ة") or noun in data["feminine_plurals"] else MASCULINE
