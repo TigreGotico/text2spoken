@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a136](https://github.com/TigreGotico/text2spoken/tree/0.0.2a136) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a135...0.0.2a136)
+
+**Merged pull requests:**
+
+- refactor\(fr\): write Span calls in the style of the file [\#628](https://github.com/TigreGotico/text2spoken/pull/628) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a135](https://github.com/TigreGotico/text2spoken/tree/0.0.2a135) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a134...0.0.2a135)
@@ -359,10 +367,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a87...0.0.2a88)
 
-**Merged pull requests:**
-
-- fix\(numbers\): a group run that starts with 0 is no grouped number [\#357](https://github.com/TigreGotico/text2spoken/pull/357) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a87](https://github.com/TigreGotico/text2spoken/tree/0.0.2a87) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a86...0.0.2a87)
@@ -375,10 +379,6 @@
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a85...0.0.2a86)
-
-**Merged pull requests:**
-
-- fix\(el\): a number finds its noun past και, ακόμη, άλλος, capitals and an hour [\#358](https://github.com/TigreGotico/text2spoken/pull/358) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
