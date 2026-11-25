@@ -972,14 +972,14 @@ def _pair_digits(token: str, request: Request) -> str | None:
 
 def _first_of_pair_differs(digits: str, before: Sequence[str], after: Sequence[str], context: SpanContext) -> bool:
     """Whether the number `digits`, which `before` and `after` surround, is the first of a pair that a link word of
-    `list_links` or the `range_word` joins to a second number, as `1` in `de 1 a 3 semanas`, and the noun after the
+    `list_links` or the `range_word`, written as in the data, joins to a second number, as `1` in `de 1 a 3 semanas`, and the noun after the
     second number gives it another reading. The far reading is computed only when a noun comes right after the
     second number: a word of `function_words`, a conjunction or a punctuation mark ends the pair, and then the pair
     does not decline."""
     request = context.request
     data = request.data
     if len(after) < 3 or _pair_digits(after[1], request) is None \
-            or after[0].lower() not in (*data["list_links"], data["range_word"]):
+            or after[0] not in (*data["list_links"], data["range_word"]):
         return False
     if after[2].lower() in data["function_words"]:
         return False
