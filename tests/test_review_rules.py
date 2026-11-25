@@ -1037,7 +1037,7 @@ def test_a_telephone_number_relies_only_on_a_kept_telephone_number_that_the_say_
     ("(00)17/10/2018; (1) 152 397 / (1) 934 029.53", "de-DE", "telephone", True),
     ("3 km 830\xa0333,66 4 000 000", "nl-NL", "telephone", True),
     ("383 470.21 people 437 007,33 7 000 000", "nl-NL", "telephone", True),
-    ("0498124205, 513 588,48 322\xa0394", "nl-NL", "characters", True),
+    ("0498124205, 513 588,48 322\xa0394", "nl-NL", "characters", False),
     ("Call 370 227 Tel. 17 - 9.8  [1]-292 262.79", "pt-PT", "characters", False),
 ])
 def test_a_second_pass_reads_no_digit_that_the_say_as_left(text, lang, value, same):

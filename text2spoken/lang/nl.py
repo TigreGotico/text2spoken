@@ -129,7 +129,31 @@ jaar 1450 bezoekers` and `het jaar, 1450 mensen`, so `jaar` needs `in het` right
 A numeric date stays as written, because the plain reading has no evidence of its field order. With an SSML say-as
 `date`, the markup gives that evidence, and the date reads through `ovos_date_parser.spoken_date`: `09-11-2026` reads
 "negen november tweeduizend zesentwintig". A clock time such as `14.30 uur` or `14:30` is no number, so it stays as
-written."""
+written.
+
+A run of digits with phone evidence reads digit by digit, as in es and de: no source found for a spoken grouping of a
+Dutch number, and Wikipedia, "Telephone numbers in the Netherlands", gives only the written plan: "Geographical
+telephone numbers have nine digits", "06: mobile telephone operators", "Mobile telephone numbers, however, always have
+10 digits", and "If dialling from abroad, the 0 (Zero) in front of the prefix must be omitted". The numbering plans of
+the Netherlands (country code 31, trunk prefix 0, 9 digits) and Belgium (country code 32, trunk prefix 0, 8 or 9
+digits: Wikipedia, "Telephone numbers in Belgium") give a number with a trunk prefix its evidence. A leading `+` reads
+"plus" (`sign_words`) and `00` "nul nul", then the country code digit by digit: "09 was used as the international
+access code before this changed to 00". The phone words come from the Wiktionary: "telefoon" ("een toestel waarmee men
+geluid over kan brengen door middel van galvanische stroom"), "telefoonnummer" ("een uniek nummer toegewezen aan een
+telefoonaansluiting"), "tel." ("(afkorting) van telefoonnummer"), "gsm" ("in de betekenis van 'mobiele telefoon'"),
+"mobiel" ("met betrekking tot mobiele telefonie"), "fax" ("een apparaat waarmee documenten per telefoon verzonden
+kunnen worden"), "bel" ("gebiedende wijs van bellen"), "bellen" ("telefoneren naar of met iemand"), "opbellen"
+("iemand telefonisch proberen te bereiken"), "alarmnummer" ("telefoonnummer dat je ingeval van nood kunt bellen om
+hulp te vragen") and "noodnummer" ("een telefoonnummer om de hulpdiensten [...] snel te kunnen spreken"). The short
+codes are "112" ("geldt 112 als alarmnummer"; Wikipedia, "Telephone numbers in the Netherlands": "The emergency number
+is 112") and "101", the Belgian police ("112 and 100 (fire brigade and ambulance); 101 (police)", Wikipedia,
+"Telephone numbers in Belgium"); "100" stays a count, as in `Bel 100 keer`. A run joins a named run after "en" ("wordt
+gebruikt tussen de laatste woorden van een opsomming") or "of" ("en anders (nevenschikkend): gebruikt om een keuze aan
+te geven"). The article "de" ("bepaald lidwoord") and the preposition "naar" ("in de richting van") may stand between
+a phone word and a short code, as in `Bel de 112.` and `Bel naar 112.` Two years that a dash or a space joins, a
+number of three digits before or after a year, and a number with full-stop groups, the group mark of the file, have no
+phone evidence. A run of spaced groups reads as one number, so `phone_kept_shapes` is empty.
+"""
 from __future__ import annotations
 
 import re
@@ -140,9 +164,10 @@ from dataclasses import dataclass, replace
 from text2spoken.core.currencies import currency_name, currency_symbols, currency_table
 from text2spoken.core.language import LanguageSpec, Request, Variety, plural_category
 from text2spoken.core.numbers import GROUP_SPACES, SIGNS, Number, written_amount
-from text2spoken.core.recognizers import (SHARED, SPACE_GROUPS, amount_words, digit_run_matches, numbers_in,
-                                          signed, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
-                                          speak_lexicon, speak_ordinal, speak_percent, speak_spoken_date)
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, SPACE_GROUPS, Telephone, amount_words, digit_run_matches,
+                                          numbers_in, signed, speak_abbreviation, speak_cardinal, speak_decimal,
+                                          speak_expression, speak_lexicon, speak_ordinal, speak_percent,
+                                          speak_spoken_date, speak_telephone)
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
 from text2spoken.core.spans import Features, Span, SpanContext
@@ -209,7 +234,27 @@ DATA = freeze({
     "number_abbreviations": {"blz.": "bladzijde"},
     "symbols": {"%": "percent", "€": "money", "$": "money", "£": "money", "¥": "money", "°": "measure",
                 "×": "measure"},
+    "phone_words": ["telefoon", "telefoonnummer", "tel", "gsm", "mobiel", "fax", "bel", "bellen", "opbellen",
+                    "alarmnummer", "noodnummer"],
+    "short_codes": ["101", "112"],
+    "list_links": ["en", "of"],
+    "function_words": ["de", "naar"],
+    "clock_marks": [],
+    "phone_shapes": [],
+    "phone_unit_shapes": [],
+    "phone_kept_shapes": [],
+    "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "[1-9][0-9]{0,2}(?:[.][0-9]{3})+",
+                        "(?:1[0-9]{3}|20[0-9]{2})(?: (?:1[0-9]{3}|20[0-9]{2}))+",
+                        "[1-9][0-9]{2} (?:1[0-9]{3}|20[0-9]{2})", "(?:1[0-9]{3}|20[0-9]{2}) [1-9][0-9]{2}"],
 })
+
+PLANS = FrozenMap({
+    **PHONE_PLANS,
+    "BE": FrozenMap({"country_code": "32", "trunk": "0", "lengths": (8, 9)}),
+    "NL": FrozenMap({"country_code": "31", "trunk": "0", "lengths": (9,)}),
+})
+"""The numbering plans of the core and those of Belgium and the Netherlands, where Dutch is an official language: the
+country calling code of ITU-T E.164, the trunk prefix and the lengths of the national significant number."""
 
 DOLLAR = {"currencies": {"USD": {"symbols": ["$"], "one": "dollar", "other": "dollar"}}}
 """`$` is the dollar in the Netherlands and Belgium (Taaladvies.net, "de dollar ($)")."""
@@ -587,13 +632,14 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], Money(), SHARED["kept_money"], SpacedMeasure(), SpacedCardinal(),
-                 KeptGroups(), KeptDate(), SHARED["percent"],
+    recognizers=(SHARED["lexicon"], Telephone(declines=True, plans=PLANS), Telephone(plans=PLANS), Money(),
+                 SHARED["kept_money"], SpacedMeasure(), SpacedCardinal(), KeptGroups(), KeptDate(), SHARED["percent"],
                  SHARED["measure"], SHARED["expression"], SHARED["fraction"], Ordinal(), Year(), Abbreviation(),
                  SHARED["decimal"], SHARED["cardinal"], SHARED["emoji"], SHARED["symbol"]),
     verbalizers={
-        Form.LEXICON: speak_lexicon, Form.MONEY: speak_money, Form.PERCENT: speak_percent,
-        Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression, Form.FRACTION: speak_fraction,
+        Form.LEXICON: speak_lexicon, Form.TELEPHONE: speak_telephone, Form.MONEY: speak_money,
+        Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
+        Form.FRACTION: speak_fraction,
         Form.ORDINAL: speak_ordinal, Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal,
         Form.CARDINAL: speak_cardinal, Form.YEAR: speak_year, Form.DATE: speak_spoken_date, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
@@ -605,6 +651,6 @@ LANGUAGE = LanguageSpec(
     noun_classes=frozenset(),
     numeral_systems=frozenset(),
     context_words=True,
-    options={},
-    not_applicable=frozenset(OPTIONS),
+    options={"phone_regions": frozenset(PLANS)},
+    not_applicable=frozenset(OPTIONS) - {"phone_regions"},
 )

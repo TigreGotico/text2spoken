@@ -12,12 +12,14 @@ The file `text2spoken/lang/nl.py` reads Dutch. Its cardinals come from `ovos-num
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, expressions, money, measures, percentages, years, abbreviations, symbols, emoji and lexicon entries. Dutch has no grammatical gender that changes a number word, so the file declares none.
+The file reads cardinals, ordinals, decimals, fractions, expressions, telephone numbers, money, measures, percentages, years, abbreviations, symbols, emoji and lexicon entries. Dutch has no grammatical gender that changes a number word, so the file declares none.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Er zijn 21 katten en 43 honden.` | `nl-NL` | Er zijn eenentwintig katten en drieënveertig honden. |
 | `Ik moet rijden, dus ik neem maar 1 biertje.` | `nl-NL` | Ik moet rijden, dus ik neem maar één biertje. |
+| `Bel +31 20 123 4567.` | `nl-NL` | Bel plus drie één twee nul één twee drie vier vijf zes zeven. |
+| `Bel 112 bij nood.` | `nl-NL` | Bel één één twee bij nood. |
 | `Hij werd 1e en zij werd 3de.` | `nl-NL` | Hij werd eerste en zij werd derde. |
 | `Het is haar 101ste overwinning.` | `nl-NL` | Het is haar honderdeerste overwinning. |
 | `Er is sprake van 6,3 procent huurstijging.` | `nl-BE` | Er is sprake van zes komma drie procent huurstijging. |
@@ -76,7 +78,7 @@ The varieties also take their currency and unit names from the CLDR data of thei
 | `decimal_mark` | changes nothing | - |
 | `scale` | changes nothing | - |
 | `default_gender` | changes nothing | - |
-| `phone_regions` | changes nothing | - |
+| `phone_regions` | `AE`, `BE`, `BR`, `EG`, `ES`, `FR`, `GB`, `NL`, `PT`, `SA`, `US` | `NL` |
 | `register` | changes nothing | - |
 
 The file always reads the comma as the decimal mark and the full stop as the group mark. For every value of `scale`, ovos-number-parser reads 10^9 as "miljard" and 10^12 as "biljoen".
@@ -89,7 +91,7 @@ Each row in `tests/data/nl.tsv` cites a source. Guard rows pin text that the fil
 
 ## Limits
 
-The file reads no ranges, dates, times, telephone numbers, identifiers, words in capitals letter by letter, idioms, Roman numerals, colours or web and email addresses. A date reads only with an SSML say-as `date`, through ovos-date-parser. `supports("nl")` lists the forms it reads. Dutch also leaves these forms as written or reads them in a limited way:
+The file reads no ranges, dates, times, identifiers, words in capitals letter by letter, idioms, Roman numerals, colours or web and email addresses. A date reads only with an SSML say-as `date`, through ovos-date-parser. `supports("nl")` lists the forms it reads. Dutch also leaves these forms as written or reads them in a limited way:
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
@@ -103,7 +105,6 @@ The file reads no ranges, dates, times, telephone numbers, identifiers, words in
 | `Een groei van 12 000 %.` | `nl-NL` | stays as written | A number with spaces between its groups stays as written before a percent sign or a dimension mark. |
 | `Er zijn 12 000,5 liter.` | `nl-NL` | stays as written | A number with spaces between its groups and a decimal comma reads only in an amount. |
 | `Het kost 10 000-20 000 euro.` | `nl-NL` | stays as written | The file reads no ranges. No group of a number grouped with spaces reads alone. |
-| `Bel 020 123 4567.` | `nl-NL` | Bel 020 honderddrieëntwintig vierduizend vijfhonderdzevenenzestig. | The file reads no telephone numbers. Each group of digits reads as a cardinal, and a group that starts with 0 stays as written. |
 | `Ik noem koning Leopold II.` | `nl-NL` | stays as written | A Roman numeral after a name stays as written. Taaladvies.net reads `Leopold II` as "Leopold de Tweede". |
 | `Een kamer van 3 × 4 m.` | `nl-NL` | stays as written | No source gives the Dutch word for the dimension mark. |
 | `Het is 5 min lopen.` | `nl-NL` | Het is vijf min lopen. | `min` is also the word "min", so the file does not read it as a unit. |
