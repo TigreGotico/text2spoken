@@ -27,6 +27,8 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, da
 
 A number agrees with the noun that it counts. The gender of a common noun comes from the noun lexicon of `tugalex`, and a number before a unit takes the gender of the unit.
 
+The number words of `pt-PT` come from `numtag`, and those of `pt-BR` from `ovos-number-parser`.
+
 A number right after a noun that names one item of a series, such as `sala`, `página`, `artigo` or `Fig.`, reads in the masculine when no noun that it counts follows, because the word "número" is left out (Cunha and Cintra, quoted in Ciberdúvidas 33468). After `a páginas`, the number agrees with the plural noun (Bechara, quoted in Ciberdúvidas 33527). A number before `da tarde` counts hours. A number before `vezes` or `vírgula` and a second number reads in the masculine, unless a noun follows the second number and then `vezes` is the noun it counts. Two numbers that `a`, `e` or `ou` join stay as written when the noun after the second number gives the first number another gender, because no source gives that gender. An amount of money with one decimal reads the decimal as tens of cents. After `vitamina`, `grupo` or `classe`, `D.` is a letter, not a title.
 
 | Written | Tag | Spoken |

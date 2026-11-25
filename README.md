@@ -31,7 +31,7 @@ The second argument is a BCP 47 tag. It selects the language file and the variet
 ## Where this fits
 
 Alone: rewrite one string for one language tag with `from text2spoken import normalize`.
-In the stack: the normalisation stage before a phonemizer or a voice. The phonemizers tugaphone and euskaphone, the voice library phoonnx and the scriptconv `TextFrontend` call `normalize(text, lang)`. It calls ovos-number-parser, ovos-date-parser, unicode-rbnf, linguatag and quebra-frases.
+In the stack: the normalisation stage before a phonemizer or a voice. The phonemizers tugaphone and euskaphone, the voice library phoonnx and the scriptconv `TextFrontend` call `normalize(text, lang)`. It calls numtag for the numbers of pt-PT, and ovos-number-parser, ovos-date-parser, unicode-rbnf, linguatag and quebra-frases.
 Through scriptconv: `uv pip install --prerelease=allow "scriptconv[normalize]"`.
 
 ## Find your answer

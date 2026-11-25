@@ -277,4 +277,5 @@ def test_without_the_number_library_digits_read_one_by_one(monkeypatch, text, ex
     monkeypatch.setitem(sys.modules, "tugalex", None)
     monkeypatch.setitem(sys.modules, "ovos_number_parser", None)
     monkeypatch.setitem(sys.modules, "ovos_number_parser.util", None)
+    monkeypatch.setitem(sys.modules, "numtag", None)
     assert normalize(text, "pt-PT", LETTERS_ON) == expected

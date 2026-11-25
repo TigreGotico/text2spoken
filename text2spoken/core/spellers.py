@@ -185,6 +185,39 @@ class OvosNumberSpeller:
                           lambda: parsers.pronounce_fraction(written, request.tag, scale=scale))
 
 
+@cache
+def numtag_writes(tag: str) -> bool:
+    """Whether numtag has a writer for the tag. numtag raises `UnsupportedLanguageError` for a tag with no writer."""
+    from numtag import UnsupportedLanguageError, spell
+    try:
+        spell("1", tag)
+    except UnsupportedLanguageError:
+        return False
+    return True
+
+
+class NumtagSpeller:
+    """numtag.spell, for a tag where `numtag_writes` is true. A value that numtag refuses declines the span."""
+
+    def __init__(self, gender_arg: Mapping[GrammaticalGender, str]):
+        self.gender_arg = dict(gender_arg)
+
+    def _spell(self, value: str, features: Features, request: Request, form: str = "cardinal") -> str:
+        from numtag import spell
+        gender = self.gender_arg.get(features.gender)
+        try:
+            return spell(value, request.tag, form=form, gender=gender, scale=request.params.scale)[0].text
+        except ValueError as error:
+            raise DeclinedReading(f"numtag reads no {form} of {len(value)} characters in {request.tag}: "
+                                  f"{error}") from error
+
+    def cardinal(self, digits: str, features: Features, request: Request) -> str:
+        return self._spell(str(_integer(digits)), features, request)
+
+    def ordinal(self, digits: str, features: Features, request: Request) -> str:
+        return self._spell(str(_integer(digits)), features, request, "ordinal")
+
+
 RBNF_HELD = frozenset({
     "da",  # "og" before the last part after tusind: 1001 reads "tusind en"; da.wikipedia writes "Tusind og en Nat"
     "sk",  # thousands 2000 to 2999: "dva tisíce", where Wiktionary writes "dvetisíc" and RBNF keeps "dve"
