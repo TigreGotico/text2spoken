@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a132](https://github.com/TigreGotico/text2spoken/tree/0.0.2a132) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a131...0.0.2a132)
+
+**Merged pull requests:**
+
+- fix\(core\): a kept-money or kept-measure language is built once per language [\#611](https://github.com/TigreGotico/text2spoken/pull/611) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a131](https://github.com/TigreGotico/text2spoken/tree/0.0.2a131) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a130...0.0.2a131)
@@ -349,7 +357,6 @@
 - fix\(ar\): a region with the CLDR months and marks of ar reads ar-001 [\#369](https://github.com/TigreGotico/text2spoken/pull/369) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(el\): a percentage with a decimal reads, as 2,5% δύο κόμμα πέντε τοις εκατό [\#360](https://github.com/TigreGotico/text2spoken/pull/360) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(pt\): read a clock after "são", and 24:00 as midnight [\#354](https://github.com/TigreGotico/text2spoken/pull/354) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): a number next to a currency sign reads only as an amount [\#349](https://github.com/TigreGotico/text2spoken/pull/349) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
@@ -359,7 +366,6 @@
 
 - fix\(el\): a number finds its noun past και, ακόμη, άλλος, capitals and an hour [\#358](https://github.com/TigreGotico/text2spoken/pull/358) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(pt\): read mg, cl and dl, and m2 with its exponent on the line [\#353](https://github.com/TigreGotico/text2spoken/pull/353) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): decline a Serbian RBNF ordinal past its last rule [\#348](https://github.com/TigreGotico/text2spoken/pull/348) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
