@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a138](https://github.com/TigreGotico/text2spoken/tree/0.0.2a138) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a137...0.0.2a138)
+
+**Merged pull requests:**
+
+- refactor: take parse\_tag and LanguageTagError from the linguatag public API [\#634](https://github.com/TigreGotico/text2spoken/pull/634) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a137](https://github.com/TigreGotico/text2spoken/tree/0.0.2a137) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a136...0.0.2a137)
@@ -345,7 +353,6 @@
 **Merged pull requests:**
 
 - fix\(core\): decline a number that unicode-rbnf 2.5.1 writes in digits [\#387](https://github.com/TigreGotico/text2spoken/pull/387) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- test\(en\): tag the two rows with a UK date source as en-GB [\#362](https://github.com/TigreGotico/text2spoken/pull/362) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a92](https://github.com/TigreGotico/text2spoken/tree/0.0.2a92) (2026-11-19)
 
@@ -362,10 +369,6 @@
 ## [0.0.2a89](https://github.com/TigreGotico/text2spoken/tree/0.0.2a89) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a88...0.0.2a89)
-
-**Merged pull requests:**
-
-- docs\(el\): cite CLDR 49 for the case rule sets [\#361](https://github.com/TigreGotico/text2spoken/pull/361) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a88](https://github.com/TigreGotico/text2spoken/tree/0.0.2a88) (2026-11-19)
 
