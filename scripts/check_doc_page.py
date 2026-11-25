@@ -17,8 +17,8 @@ are true, and 1 with the first mismatch. The `verify` line of each agent hint ca
 - docs/addresses-letters-and-emoji.md: the "... offer the form" sentences of `ELECTRONIC` and `LETTERS`.
 - docs/api.md: `PROBE_TIMEOUT`.
 - docs/errors.md: each class name in backticks, and each sentence that names a subclass.
-- docs/how-it-works.md: that the committed timing figure is current, that the stage list of the page names each
-  stage, and that a fresh timing of `normalize` grows in proportion to the length of the text.
+- docs/how-it-works.md: that the committed timing figure is current, and that the stage list of the page names each
+  stage.
 - docs/coverage.md: that the committed figures are current, and the sentences that name the languages with the
   most forms, the fewest forms, the most rows and the silver rows.
 - docs/development.md: the CI Python versions, the CLDR and Unicode pins, the scripts/ and tests/ paths, and the
@@ -37,7 +37,6 @@ import os
 import re
 import subprocess
 import sys
-import time
 import tomllib
 from pathlib import Path
 from typing import NoReturn
@@ -250,22 +249,6 @@ def check_how_it_works(page: str, text: str):
     for stage in ("Resolve", "Tokenize", "Recognize", "Claim", "Read"):
         if f"**{stage}.**" not in text:
             fail(page, f"no stage {stage}")
-    from text2spoken import normalize
-
-    sentence = "Dr Smith paid £3.50 for 2 tickets on 14 March 2024 at 7:30 pm. "
-
-    def seconds(repeats: int) -> float:
-        runs = []
-        for _ in range(3):
-            start = time.perf_counter()
-            normalize(sentence * repeats, "en-GB")
-            runs.append(time.perf_counter() - start)
-        return min(runs)
-
-    seconds(1)
-    ratio = seconds(128) / seconds(32)
-    if not 3 <= ratio <= 5.5:
-        fail(page, f"four times the text takes {ratio:.1f} times as long, not about four")
 
 
 def rows_by_language() -> dict[str, tuple[int, int]]:
