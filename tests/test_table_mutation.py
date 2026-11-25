@@ -119,7 +119,7 @@ AR_ENTRIES = {
     "currencies": "USD", "symbols_after_only": "ريال", "scales": "مليون", "units": "كم", "dimension_marks": "×",
     "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_words": "الساعة",
     "day_periods": "pm", "spoken_periods": "afternoon2", "minute_phrases": "30", "months": "مارس",
-    "date_reading": "full", "era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ", "short_periods": "م",
+    "date_reading": "full", "era_marks": "م", "bce_mark": "ق", "shared_era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ", "short_periods": "م",
 }
 ES_ENTRIES = {
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
