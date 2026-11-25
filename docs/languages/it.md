@@ -12,7 +12,7 @@ The file `text2spoken/lang/it.py` reads Italian. Its cardinals and ordinals come
 
 ## What it reads
 
-The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. After a noun that a determiner makes a label, as `il binario` or `la gara`, it counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. A unit name that is also an adverb or a preposition, as `ora` ("now") or `secondo` ("according to"), counts too: `il percorso 1 ora circa` reads `un'ora circa`. Only a verb of `adverb_verbs`, such as `è` or `fa parte`, makes it the adverb: `il binario 1 ora è chiuso` reads `uno ora`. `secondo` before an article or a capital is the preposition, as in `il livello 1 secondo la scala`. Before a word with a capital, such as a name or a unit symbol that the file does not list, 1 reads `un`, as in `con 1 Airbus`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
+The file reads cardinals, ordinals, decimals, fractions, percentages, expressions, dates, times, telephone numbers, money, measures, titles, abbreviations, symbols, emoji and lexicon entries. The number 1 agrees with its noun when the file knows the gender of the noun: `un` or `uno` before a masculine noun, as the indefinite article, and `una` or `un'` before a feminine one. After a label noun, such as `pagina` or `il binario`, 1 is a label and reads `uno`. After a noun that a determiner makes a label, as `il binario` or `la gara`, it counts the next word only when that word is a CLDR unit name, as in `la gara 1 anno fa`, or a word of `label_counted_nouns`, such as `punto` and `volta`. A unit name that is also an adverb or a preposition, as `ora` ("now") or `secondo` ("according to"), counts too: `il percorso 1 ora circa` reads `un'ora circa`. Only a verb of `adverb_verbs`, such as `è` or `fa parte`, makes it the adverb: `il binario 1 ora è chiuso` reads `uno ora`. `secondo` before an article or a capital is the preposition, as in `il livello 1 secondo la scala`. Before a word with a capital, such as a name or a unit symbol that the file does not list, 1 reads `un`, as in `con 1 Airbus`. The genders come from a list of 59,654 Italian nouns, taken from the English Wiktionary, and from the CLDR unit names.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -21,6 +21,8 @@ The file reads cardinals, ordinals, decimals, fractions, percentages, expression
 | `La Dott.ssa Neri lavora qui da 10 anni.` | `it-IT` | La dottoressa Neri lavora qui da dieci anni. |
 | `Il Prof. Gallo ha 2 lezioni.` | `it-IT` | Il professor Gallo ha due lezioni. |
 | `Il libro ha 21 pagine.` | `it-IT` | Il libro ha ventuno pagine. |
+| `Chiamate il +39 06 1234 5678.` | `it-IT` | Chiamate il più tre nove zero sei uno due tre quattro cinque sei sette otto. |
+| `Per informazioni chiama il 112.` | `it-IT` | Per informazioni chiama il uno uno due. |
 | `Riceverete 1 anno di abbonamento.` | `it-IT` | Riceverete un anno di abbonamento. |
 | `Ho adottato 1 gatta.` | `it-IT` | Ho adottato una gatta. |
 | `Porta 1 zaino.` | `it-IT` | Porta uno zaino. |
@@ -112,7 +114,7 @@ The marks of each variety come from CLDR. The varieties read the same words. In 
 | `decimal_mark` | changes nothing | - |
 | `scale` | changes nothing | - |
 | `default_gender` | `feminine`, `masculine` | `masculine` |
-| `phone_regions` | changes nothing | - |
+| `phone_regions` | `AE`, `BR`, `EG`, `ES`, `FR`, `GB`, `IT`, `PT`, `SA`, `US` | `IT` |
 | `register` | changes nothing | - |
 
 `default_gender` sets the gender of a 1 with no word after it:

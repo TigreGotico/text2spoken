@@ -147,14 +147,16 @@ gives `duration-hour` the feminine gender. A symbol that cannot be a plain word,
 with no list. `unit_symbols` names the symbols made only of letters that read as units: the SI symbols `kg`, `g`, `mg`,
 `km`, `m`, `cm`, `mm`, `l`, `ml`, `cl` and `dl` of CLDR 49 pt-PT (`mass-milligram` `mg`, `volume-centiliter` `cl`,
 `volume-deciliter` `dl`), and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h e a abreviatura
-de minuto é min"). The litre symbol `L` (Priberam, "litro": "Unidade de medida de capacidade (símbolo: l ou L)"), `cL`
-and `dL` stay as written, because each symbol of `unit_symbols` is a CLDR 49 symbol, and CLDR 49 writes `l`, `cl` and
-`dl`. `mL` stays as written, because CLDR also names `ML` the megalitre, and the case of the prefix alone tells the two
-apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it writes the exponent on the line, as
-a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros quadrados" (Priberam, "metro": "metro
-quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo: m²)"). `unjoined_symbols` holds `ML`,
-the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so `ML` in capitals may be either unit,
-and `2ML` stays as written.
+de minuto é min"). The litre symbol also has the capital form `L` (Priberam, "litro": "Unidade de medida de
+capacidade (símbolo: l ou L)"), so `cL` and `dL` read as the CLDR units `cl` and `dl`, the case fallback of
+`core/units.py`, as in `mg/dL`. A bare `L` stays as written: after a number it also names a lot (`Q.30 L.6`), a model
+(`L-200`, `402 L`) or a lens (`f/4L`), and a litre reading of it was wrong in more than one changed line in ten of
+natural text. `mL` stays as written, because CLDR also names `ML` (pt-PT) or `Ml` (pt-BR) the megalitre, and the case of
+the prefix alone tells the two apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it
+writes the exponent on the line, as a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros
+quadrados" (Priberam, "metro": "metro quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo:
+m²)"). `unjoined_symbols` holds `ML`, the CLDR symbol of the megalitre, because CLDR also names `mL` the millilitre, so
+`ML` in capitals may be either unit, and `2ML` stays as written.
 
 Currency names and currency symbols come from CLDR 49 (`cldr-numbers-full`, `currencies.json` of pt-PT and pt), and
 a symbol with a currency sign reads with no list: `20 CHF` reads "vinte francos suíços" and `₹50` "cinquenta rupias
@@ -610,7 +612,7 @@ DATA = freeze({
     "letter_label_nouns": ["vitamina", "grupo", "classe"],
     "mixed_word": "e",
     "mixed_half": {"feminine": "meia", "other": "meio"},
-    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "l", "ml", "cl", "dl", "h", "min", "s"],
+    "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "l", "ml", "cl", "cL", "dl", "dL", "h", "min", "s"],
     "line_power_symbols": ["km", "m", "cm", "mm"],
     "unjoined_symbols": ["ML"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
