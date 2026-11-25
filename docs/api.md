@@ -203,7 +203,7 @@ The probe raises `RevisionError` too when it exits with an error, prints no read
 | `register` | `formal`, `colloquial` |
 | `phone_regions` | ISO 3166 region codes for telephone number plans. [Numbers](numbers.md#telephone-numbers) shows the evidence that reads a phone number |
 | `lexicon` | A `FrozenMap` of language tag to a `FrozenMap` of written form to spoken words. [Usage](usage.md#add-your-own-words) gives the matching rules |
-| `script_languages` | A `FrozenMap` of ISO 15924 script code to language tag. `normalize` reads each run of a mapped script in its language, and the rest in `lang`. A number joins the run of the letter after it. `FrozenMap({"Latn": "en"})` reads the English of Levantine text in English. A number before a word of the other script, as `page 25, مرحبا`, reads in the language of that word. Japanese needs `Hira`, `Kana` and `Hani` mapped; `Hani` is shared by Chinese, Japanese and Korean |
+| `script_languages` | A `FrozenMap` of ISO 15924 script code to language tag. `normalize` reads each run of a mapped script in its language, and the rest in `lang`. A number joins the run of the letter after it. `FrozenMap({"Latn": "en"})` reads the English of Levantine text in English. A number before a word of the other script, as `page 25, مرحبا`, reads in the language of that word. Japanese needs `Hira`, `Kana` and `Hani` mapped; `Hani` is shared by Chinese, Japanese and Korean. A word that mixes two scripts is cut where the script changes |
 | `strict` | `True` raises an error where the default mode logs a warning |
 
 ```python
