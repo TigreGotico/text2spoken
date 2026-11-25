@@ -71,10 +71,12 @@ def test_both_micro_signs_name_the_micrometre(tag):
 
 @pytest.mark.parametrize("module", [ca, en, it, nl, pt])
 def test_each_listed_symbol_is_made_of_letters_and_is_a_cldr_symbol(module):
+    """A listed symbol may differ from its CLDR symbol in case only, as pt `cL` and `dL` do from `cl` and `dl` (design
+    section 4.7). A symbol that cannot be a word needs the list only for that case fallback."""
     listed = module.DATA["unit_symbols"]
     symbols = {s for v in module.VARIETIES for u in data(v.tag)["units"].values() for s in u["symbols"]}
-    assert all(not no_word(symbol) for symbol in listed)
-    assert set(listed) <= symbols
+    assert all(not no_word(symbol) or symbol not in symbols for symbol in listed)
+    assert {symbol.lower() for symbol in listed} <= {symbol.lower() for symbol in symbols}
     assert not {"in", "A", "GB", "ms", "ha", "st", "rd", "cup", "l"} & set(en.DATA["unit_symbols"])
 
 
