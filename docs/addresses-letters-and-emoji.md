@@ -212,4 +212,4 @@ An address keeps an emoji sequence whole, so a lexicon key for that sequence doe
 ```
 
 ---
-[← Money, units and symbols](money-units-and-symbols.md) · [Home](index.md) · [API →](api.md)
+[← Money, units and symbols](money-units-and-symbols.md) · [Home](index.md) · [Languages at a glance →](coverage.md)

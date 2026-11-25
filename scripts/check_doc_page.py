@@ -17,6 +17,10 @@ are true, and 1 with the first mismatch. The `verify` line of each agent hint ca
 - docs/addresses-letters-and-emoji.md: the "... offer the form" sentences of `ELECTRONIC` and `LETTERS`.
 - docs/api.md: `PROBE_TIMEOUT`.
 - docs/errors.md: each class name in backticks, and each sentence that names a subclass.
+- docs/how-it-works.md: that the committed timing figure is current, and that the stage list of the page names each
+  stage.
+- docs/coverage.md: that the committed figures are current, and the sentences that name the languages with the
+  most forms, the fewest forms, the most rows and the silver rows.
 - docs/development.md: the CI Python versions, the CLDR and Unicode pins, the scripts/ and tests/ paths, and the
   test extra.
 - docs/languages/<code>.md: the forms of the sentence "The file reads ...", and the forms that each sentence
@@ -27,6 +31,7 @@ for example the signature table of docs/api.md, the rows of the case table of do
 which has no check of its own.
 """
 import builtins
+import csv
 import json
 import os
 import re
@@ -228,6 +233,62 @@ def check_errors(page: str, text: str):
             fail(page, f"{child} is not a subclass of {parent}")
 
 
+def check_figures(page: str):
+    """The committed figures equal the figures that `scripts/docs_figures.py` writes from the current data."""
+    run = subprocess.run([sys.executable, "scripts/docs_figures.py", "--check"], cwd=ROOT, capture_output=True,
+                         text=True)
+    if run.returncode:
+        fail(page, "a figure is out of date: " + run.stderr.strip())
+    for alt in re.findall(r"!\[(.*?)\]\(figures/[\w-]+\.svg\)", read(page)):
+        if len(alt) < 40:
+            fail(page, f"the alt text {alt!r} holds no numbers")
+
+
+def check_how_it_works(page: str, text: str):
+    check_figures(page)
+    for stage in ("Resolve", "Tokenize", "Recognize", "Claim", "Read"):
+        if f"**{stage}.**" not in text:
+            fail(page, f"no stage {stage}")
+
+
+def rows_by_language() -> dict[str, tuple[int, int]]:
+    counts = {}
+    for path in sorted((ROOT / "tests/data").glob("*.tsv")):
+        with open(path, encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle, delimiter="\t", quoting=csv.QUOTE_NONE))
+        counts[path.stem] = (len(rows), sum(bool(re.search(r"\bsilver\b", row["source"])) for row in rows))
+    return counts
+
+
+def check_coverage(page: str, text: str):
+    check_figures(page)
+    forms = {code: len(supports(code).forms) for code in rows_by_language()}
+    read = {form for code in forms for form in supports(code).forms}
+    top = [code for code, count in forms.items() if count == len(read)]
+    if not re.search(rf"^English reads all {len(read)} forms that any file reads\.", text, re.M) or top != ["en"]:
+        fail(page, f"the files that read all {len(read)} forms are {top}")
+    least = sorted(code for code, count in forms.items() if count == min(forms.values()))
+    if least != ["ja", "ko"] or "Japanese and Korean read three" not in text or min(forms.values()) != 3:
+        fail(page, f"the files with the fewest forms are {least}, with {min(forms.values())}")
+    counts = rows_by_language()
+    biggest = sorted(counts, key=lambda code: -counts[code][0])[:3]
+    if biggest != ["pt", "en", "fr"] or "Portuguese, English and French hold the most rows" not in text:
+        fail(page, f"the files with the most rows are {biggest}")
+    cited_only = [code for code, (_, silver) in counts.items() if not silver]
+    if len(cited_only) != 9 or "nine files hold only cited rows" not in text:
+        fail(page, f"{len(cited_only)} files hold only cited rows")
+    silver_names = {"nl": "Dutch", "de": "German", "it": "Italian", "pt": "Portuguese", "ru": "Russian",
+                    "es": "Spanish", "tdt": "Tetun Dili"}
+    silvered = sorted(code for code, (_, silver) in counts.items() if silver)
+    if silvered != sorted(silver_names) or "Seven files hold silver rows" not in text:
+        fail(page, f"the files with silver rows are {silvered}")
+    listed = re.search(r"^Seven files hold silver rows: those of (.+?)\.", text, re.M)[1]
+    if sorted(re.split(r", | and ", listed)) != sorted(silver_names.values()):
+        fail(page, "the silver sentence names other languages")
+    if "(22, 3)" not in text or (len(supports("en-GB").forms), len(supports("ja").forms)) != (22, 3):
+        fail(page, "the doctest counts of en-GB and ja are not 22 and 3")
+
+
 def check_development(page: str, text: str):
     workflow = read(".github/workflows/build-tests.yml")
     versions = json.loads(re.search(r"python_versions: '(.*)'", workflow)[1])
@@ -278,6 +339,8 @@ CHECKS = {
     "docs/dates-and-times.md": check_such_as,
     "docs/money-units-and-symbols.md": check_money,
     "docs/addresses-letters-and-emoji.md": check_addresses,
+    "docs/how-it-works.md": check_how_it_works,
+    "docs/coverage.md": check_coverage,
     "docs/api.md": check_api,
     "docs/errors.md": check_errors,
     "docs/development.md": check_development,

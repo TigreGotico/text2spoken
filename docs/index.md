@@ -19,6 +19,8 @@ text2spoken rewrites written forms, such as `12/03/2024`, `£3.50` or `Dr`, into
 | How does it read dates, times and years? | [Dates and times](dates-and-times.md) |
 | How does it read money, units, percentages and symbols? | [Money, units and symbols](money-units-and-symbols.md) |
 | How does it read addresses, capital letters, abbreviations and emoji? | [Addresses, letters and emoji](addresses-letters-and-emoji.md) |
+| Which forms does each language read, and how well are its rows sourced? | [Languages at a glance](coverage.md) |
+| How does a text go through the library, and what does a call cost? | [How it works](how-it-works.md) |
 | What does each function, param and field do? | [API](api.md) |
 | What does each error and warning mean? | [Errors and warnings](errors.md) |
 | How do I add my language? | [Adding a language](adding-a-language.md) |

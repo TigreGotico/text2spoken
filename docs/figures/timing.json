@@ -1,0 +1,42 @@
+{
+  "tag": "en-GB",
+  "sentence": "Dr Smith paid £3.50 for 2 tickets on 14 March 2024 at 7:30 pm. ",
+  "points": [
+    {
+      "characters": 63,
+      "milliseconds": 3.1
+    },
+    {
+      "characters": 126,
+      "milliseconds": 5.4
+    },
+    {
+      "characters": 252,
+      "milliseconds": 10.5
+    },
+    {
+      "characters": 504,
+      "milliseconds": 20.0
+    },
+    {
+      "characters": 1008,
+      "milliseconds": 37.6
+    },
+    {
+      "characters": 2016,
+      "milliseconds": 75.7
+    },
+    {
+      "characters": 4032,
+      "milliseconds": 153.4
+    },
+    {
+      "characters": 8064,
+      "milliseconds": 308.9
+    },
+    {
+      "characters": 16128,
+      "milliseconds": 625.5
+    }
+  ]
+}
