@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a133](https://github.com/TigreGotico/text2spoken/tree/0.0.2a133) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a132...0.0.2a133)
+
+**Merged pull requests:**
+
+- fix\(ar\): 200 and 2000 keep the free form before a word that is no counted noun [\#610](https://github.com/TigreGotico/text2spoken/pull/610) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a132](https://github.com/TigreGotico/text2spoken/tree/0.0.2a132) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a131...0.0.2a132)
@@ -313,10 +321,6 @@
 ## [0.0.2a92](https://github.com/TigreGotico/text2spoken/tree/0.0.2a92) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a91...0.0.2a92)
-
-**Merged pull requests:**
-
-- fix\(pt\): read e-mail and web addresses [\#351](https://github.com/TigreGotico/text2spoken/pull/351) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a91](https://github.com/TigreGotico/text2spoken/tree/0.0.2a91) (2026-11-19)
 
