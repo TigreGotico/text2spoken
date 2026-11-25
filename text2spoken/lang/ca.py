@@ -401,6 +401,15 @@ class Ordinal:
                        keep=not word.endswith(marker))
 
 
+@lru_cache(maxsize=16)
+def _kept_measure_language(language: LanguageSpec, data: FrozenMap) -> LanguageSpec:
+    """The language with only the marks and symbols of `data` and the units of every language. One object for each
+    language and data, so that a cache keyed on the language keeps one entry for it, not one for each call."""
+    table = FrozenMap({**{key: data[key] for key in ("number_marks", "dimension_marks", "symbols")},
+                       "units": written_shapes()["units"]})
+    return replace(language, data=table)
+
+
 @dataclass(frozen=True)
 class KeptMeasure:
     """A number and a unit symbol that every language writes the same way, which the CLDR units of the variety do not
@@ -410,11 +419,8 @@ class KeptMeasure:
     form: Form = Form.MEASURE
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        data = request.data
-        table = FrozenMap({**{key: data[key] for key in ("number_marks", "dimension_marks", "symbols")},
-                           "units": written_shapes()["units"]})
-        kept = Request(request.tag, Variety(request.variety.tag), replace(request.language, data=table),
-                       request.params)
+        language = _kept_measure_language(request.language, request.data)
+        kept = Request(request.tag, Variety(request.variety.tag), language, request.params)
         for span in SHARED["measure"].find(text, tokens, kept):
             yield replace(span, keep=True)
 
