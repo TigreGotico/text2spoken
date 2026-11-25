@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a130](https://github.com/TigreGotico/text2spoken/tree/0.0.2a130) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a129...0.0.2a130)
+
+**Merged pull requests:**
+
+- docs: name feminine\_plurals in ar docstrings, rewrap long pt lines [\#607](https://github.com/TigreGotico/text2spoken/pull/607) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a129](https://github.com/TigreGotico/text2spoken/tree/0.0.2a129) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a128...0.0.2a129)
@@ -301,7 +309,6 @@
 **Merged pull requests:**
 
 - fix\(pt\): read a pt-PT number grouped with spaces when it is a quantity [\#355](https://github.com/TigreGotico/text2spoken/pull/355) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): a whole hour after الساعة reads as a time, and ص and م mark the day period [\#345](https://github.com/TigreGotico/text2spoken/pull/345) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a90](https://github.com/TigreGotico/text2spoken/tree/0.0.2a90) (2026-11-19)
 
@@ -347,7 +354,6 @@
 - fix\(core\): decline a Serbian RBNF ordinal past its last rule [\#348](https://github.com/TigreGotico/text2spoken/pull/348) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): correct the CLDR RBNF words of da, hi, is and sr [\#347](https://github.com/TigreGotico/text2spoken/pull/347) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ar\): count kilograms and speeds, more feminine plurals and rank nouns [\#346](https://github.com/TigreGotico/text2spoken/pull/346) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): a percent range reads its second number in the genitive, and a day range before a month reads both days [\#344](https://github.com/TigreGotico/text2spoken/pull/344) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
