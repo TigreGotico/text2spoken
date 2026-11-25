@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a134](https://github.com/TigreGotico/text2spoken/tree/0.0.2a134) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a133...0.0.2a134)
+
+**Merged pull requests:**
+
+- fix\(ar\): an era mark after a number takes the free form [\#617](https://github.com/TigreGotico/text2spoken/pull/617) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a133](https://github.com/TigreGotico/text2spoken/tree/0.0.2a133) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a132...0.0.2a133)
@@ -342,7 +350,6 @@
 
 - docs\(el\): cite CLDR 49 for the case rule sets [\#361](https://github.com/TigreGotico/text2spoken/pull/361) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(el\): a day and a month stay as written, 2 1/2 reads δυόμισι, 1/60 to 1/80 read [\#359](https://github.com/TigreGotico/text2spoken/pull/359) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(pt\): read a decimal written with a full stop before a unit, and the zeros after vírgula [\#352](https://github.com/TigreGotico/text2spoken/pull/352) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a88](https://github.com/TigreGotico/text2spoken/tree/0.0.2a88) (2026-11-19)
 
@@ -369,7 +376,6 @@
 **Merged pull requests:**
 
 - fix\(el\): a number finds its noun past και, ακόμη, άλλος, capitals and an hour [\#358](https://github.com/TigreGotico/text2spoken/pull/358) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(pt\): read mg, cl and dl, and m2 with its exponent on the line [\#353](https://github.com/TigreGotico/text2spoken/pull/353) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
