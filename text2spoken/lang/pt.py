@@ -353,16 +353,16 @@ takes the gender of the noun, which Priberam gives: "classe", "parte", "fase", "
 capítulo XV` "o capítulo quinze". A numeral of two letters or more, up to XXX, also reads after any other
 capitalised word, as in `João Paulo II` and `Isabel II`, and right after a title and its full stop, with the gender
 of the title, as in `D. XIV`, which reads "Dom Catorze". `roman_ordinal_limit` holds the last value that reads as
-an ordinal, ten in both varieties, and `roman_noun_ordinal_limits` of a variety holds another limit after a noun. In pt-BR the
-ordinal after `artigo` stops at nine. Two Brazilian works, both quoted in Migalhas, Gramatigalhas, "Numeral", give
-ten for kings, popes, centuries and chapters. Luís A. P. Vitória, Dicionário de Dificuldades, Erros e Definições de
-Português (1969), p. 174: "para indicar a ordem dos séculos, ou a ordem de sucessão de soberanos, usa-se o ordinal
-até dez e o cardinal de onze em diante". Francisco da Silveira Bueno, Questões de Português (1957), vol. II, p. 318:
-"de 1 a 10, usam-se os ordinais [...] Pio X (décimo), século VIII (oitavo), capítulo V (quinto)". The same column
-quotes Celso Cunha for the articles of a law: "na numeração dos artigos de leis, decretos e portarias, usa-se o
-ordinal até nove, e o cardinal de dez em diante". So `Pio X` reads "Pio Décimo" in both varieties, and `artigo X`
-reads "artigo décimo" in pt-PT and "artigo dez" in pt-BR. Ciberdúvidas 9067 gives nine for every noun in Brazil ("no
-Brasil até ao nono"), but cites no grammar.
+an ordinal, ten in both varieties, and `roman_noun_ordinal_limits` of a variety holds another limit after a noun. In
+pt-BR the ordinal after `artigo` stops at nine. Two Brazilian works, both quoted in Migalhas, Gramatigalhas,
+"Numeral", give ten for kings, popes, centuries and chapters. Luís A. P. Vitória, Dicionário de Dificuldades, Erros
+e Definições de Português (1969), p. 174: "para indicar a ordem dos séculos, ou a ordem de sucessão de soberanos,
+usa-se o ordinal até dez e o cardinal de onze em diante". Francisco da Silveira Bueno, Questões de Português (1957),
+vol. II, p. 318: "de 1 a 10, usam-se os ordinais [...] Pio X (décimo), século VIII (oitavo), capítulo V (quinto)".
+The same column quotes Celso Cunha for the articles of a law: "na numeração dos artigos de leis, decretos e
+portarias, usa-se o ordinal até nove, e o cardinal de dez em diante". So `Pio X` reads "Pio Décimo" in both
+varieties, and `artigo X` reads "artigo décimo" in pt-PT and "artigo dez" in pt-BR. Ciberdúvidas 9067 gives nine for
+every noun in Brazil ("no Brasil até ao nono"), but cites no grammar.
 
 A numeral of one letter reads after `século`, after a regnal title and a name, as in `D. João V`, and after a noun of
 `roman_letter_nouns` when the letter is `I`, `V` or `X`, as in `o capítulo V`. These nouns take numbers and never
@@ -974,10 +974,10 @@ def _pair_digits(token: str, request: Request) -> str | None:
 
 def _first_of_pair_differs(digits: str, before: Sequence[str], after: Sequence[str], context: SpanContext) -> bool:
     """Whether the number `digits`, which `before` and `after` surround, is the first of a pair that a link word of
-    `list_links` or the `range_word`, written as in the data, joins to a second number, as `1` in `de 1 a 3 semanas`, and the noun after the
-    second number gives it another reading. The far reading is computed only when a noun comes right after the
-    second number: a word of `function_words`, a conjunction or a punctuation mark ends the pair, and then the pair
-    does not decline."""
+    `list_links` or the `range_word`, written as in the data, joins to a second number, as `1` in `de 1 a 3
+    semanas`, and the noun after the second number gives it another reading. The far reading is computed only when a
+    noun comes right after the second number: a word of `function_words`, a conjunction or a punctuation mark ends
+    the pair, and then the pair does not decline."""
     request = context.request
     data = request.data
     if len(after) < 3 or _pair_digits(after[1], request) is None \
@@ -1035,7 +1035,8 @@ def speak_range(span: Span, context: SpanContext) -> str:
 def speak_date(span: Span, context: SpanContext) -> str:
     fields = span.fields
     try:
-        return parsers.spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"], year=fields["year"])
+        return parsers.spoken_date(context.request.variety.tag, day=fields["day"], month=fields["month"],
+                                   year=fields["year"])
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no date {fields['day']}/{fields['month']}: {error}") from error
 
@@ -1212,18 +1213,18 @@ class Clock(TimeClock):
     or more stays as written. A time that writes `h` keeps it in the `suffix` field, so it reads its units.
 
     Before "meia-noite", "meio-dia" or a time in the hour 1, which reads "uma", a word of `time_contractions` right
-    before the time takes the article of that noun, when only white space stands between them. The span then starts at the word and holds the word and the
-    white space in its `prefix` field, and the reading writes the contracted word: `às 0:00` reads `à meia-noite`.
-    The time span that starts at the digits follows it, with a `prefix` of None. It reads when a lexicon entry
-    claims the word first, and then the word stays as written and the time reads its 24-hour form: `às zero horas`.
-    A word with two characters right before it that are no white space, as in `5(às 0:00`, gives only that span,
-    because the span at the word would wait on the digit that the word touches (design section 4.2). So does a
-    character between the word and the time, such as the `§` of `às § 0:00`, so that the span claims no character
-    that another form reads. So does a word of `time_article_prepositions` with no preposition of its list right
-    before it, as in `Almoçamos as 12:00`. In a range, the range word of the first time takes the article: `das
-    9:00-12:00` reads `das nove horas ao meio-dia`. A time that reads its own hour unit, a whole hour or a time with
-    `h`, claims a `h` or `horas` right after it, and a `hora` after `1:00`, with only spaces or tabs between, so that
-    the word is read once: `16:00 horas` reads `dezasseis horas`."""
+    before the time takes the article of that noun, when only white space stands between them. The span then starts
+    at the word and holds the word and the white space in its `prefix` field, and the reading writes the contracted
+    word: `às 0:00` reads `à meia-noite`. The time span that starts at the digits follows it, with a `prefix` of
+    None. It reads when a lexicon entry claims the word first, and then the word stays as written and the time reads
+    its 24-hour form: `às zero horas`. A word with two characters right before it that are no white space, as in
+    `5(às 0:00`, gives only that span, because the span at the word would wait on the digit that the word touches
+    (design section 4.2). So does a character between the word and the time, such as the `§` of `às § 0:00`, so that
+    the span claims no character that another form reads. So does a word of `time_article_prepositions` with no
+    preposition of its list right before it, as in `Almoçamos as 12:00`. In a range, the range word of the first
+    time takes the article: `das 9:00-12:00` reads `das nove horas ao meio-dia`. A time that reads its own hour
+    unit, a whole hour or a time with `h`, claims a `h` or `horas` right after it, and a `hora` after `1:00`, with
+    only spaces or tabs between, so that the word is read once: `16:00 horas` reads `dezasseis horas`."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         own = [*self._ranges(text, tokens, request), *self._marked(text, request)]
