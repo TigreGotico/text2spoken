@@ -109,6 +109,11 @@ class Animacy(StrEnum):
     PERSONAL = "personal"
 
 
+SCRIPT_NAMES = {"LATIN": "Latn", "ARABIC": "Arab", "CYRILLIC": "Cyrl", "GREEK": "Grek", "HEBREW": "Hebr",
+                "DEVANAGARI": "Deva", "HANGUL": "Hang", "HIRAGANA": "Hira", "KATAKANA": "Kana", "CJK": "Hani",
+                "ARMENIAN": "Armn", "GEORGIAN": "Geor", "THAI": "Thai"}
+"""The first word of a Unicode character name, and the ISO 15924 code of its script."""
+
 _CHOICES = {
     "date_order": frozenset({"DMY", "MDY", "YMD"}),
     "clock": frozenset({"12h", "24h"}),
@@ -134,6 +139,7 @@ class NormalizationParams:
     register: Literal["formal", "colloquial"] | None = None
     phone_regions: frozenset[str] | None = None
     lexicon: FrozenMap = field(default_factory=FrozenMap)
+    script_languages: FrozenMap = field(default_factory=FrozenMap)
     strict: bool = False
 
     def __post_init__(self):
@@ -166,6 +172,12 @@ class NormalizationParams:
                 for tag, entries in self.lexicon.items()):
             raise ArgumentTypeError(
                 "lexicon must be a FrozenMap of language tag to a FrozenMap of written form to spoken words")
+        if not isinstance(self.script_languages, FrozenMap) or not all(
+                isinstance(script, str) and script in SCRIPT_NAMES.values() and isinstance(tag, str) and tag
+                for script, tag in self.script_languages.items()):
+            raise ArgumentTypeError(
+                f"script_languages must be a FrozenMap of ISO 15924 code ({', '.join(sorted(SCRIPT_NAMES.values()))}) "
+                "to language tag")
         if not isinstance(self.strict, bool):
             raise ArgumentTypeError("strict must be a bool")
 
