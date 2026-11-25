@@ -824,25 +824,35 @@ def _gender_of(word: str, request: Request, endings: bool = True) -> Grammatical
     return None
 
 
-def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
-    """The gender of a number (design section 5.6): the hint, the masculine of a `year`, the noun after the number,
-    a determiner before it, then the `default_gender` of the params, then the language default.
+_UNCOUNTED = ("year", "list", "label")
+
+
+def _label_role(context: SpanContext) -> str | None:
+    """`label` for a number after a noun of `label_nouns` or `roman_letter_nouns` that names an item, when no noun that
+    the number counts follows it: the number ends the text, or a punctuation mark, a function word, a verb of
+    `label_verbs` or another label noun follows it. Otherwise the number counts the noun after it. A number after `a
+    páginas` or `a folhas` agrees with that noun (the module docstring gives the sources)."""
+    data = context.request.data
+    before = [word.lower() for word in context.before]
+    if before and before[-1] in (*data["label_nouns"], *data["roman_letter_nouns"]):
+        following = [word.lower() for word in context.after]
+        if not following or following[0] in data["function_words"] or following[0] in data["label_verbs"] \
+                or following[0] in (*data["label_nouns"], *data["roman_letter_nouns"]):
+            return "label"
+    return None
+
+
+def _counted_gender(context: SpanContext) -> GrammaticalGender:
+    """The gender of the noun that the number counts, or of the noun that the text leaves out.
+
+    A number before `da tarde` and the other words of `hour_periods` counts the hours that the text leaves out. A
+    number before a word of `number_links` and a second number reads in the masculine, unless a noun that the number
+    counts follows the second number, and then `vezes` is the feminine noun that the number counts.
 
     A written `mil` after the number is not the noun: `mil` has two genders (Priberam, "mil": "quantificador
     numeral cardinal de dois géneros"), so `2 mil pessoas` takes the gender of `pessoas`, as `2000 pessoas` does. A
     partitive `das`, `dos` or a plural contraction of `de` and a demonstrative right after the number gives the
     gender, as in `1 das casas` and `2 destas maçãs`.
-
-    A number of a list item (the module docstring gives the sources) reads in the masculine, as a `year` does.
-
-    A number after a noun of `label_nouns` or `roman_letter_nouns` names an item and reads in the masculine when no
-    noun that the number counts follows it — the number ends the text, or a punctuation mark, a function word or a
-    verb of `label_verbs` follows it. Otherwise it falls through to the noun after it. A number after `a páginas` or
-    `a folhas` agrees with that noun (the module docstring gives the sources). A number before `da tarde` and the
-    other words of `hour_periods` counts the hours that the text leaves out. A `year`, which `Cardinal` finds, reads
-    in the masculine (the module docstring gives the sources). A number before a word of
-    `number_links` and a second number reads in the masculine, unless a noun that the number counts follows the
-    second number, and then `vezes` is the feminine noun that the number counts.
 
     The tables of `_listed_gender` name a noun first. When tugalex knows the word after the number, a determiner comes
     before the answer of tugalex, because tugalex reads any word as a noun ("The caller decides whether the word is
@@ -850,19 +860,9 @@ def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
     `artista` (Priberam: "nome de dois géneros"), takes its gender from the determiner or the default. tugalex runs
     its own ending rules before it gives no gender, so a word that it gives none, as `ainda`, takes the gender of the
     determiner or the default. Without tugalex, the endings of `gender_suffixes` come before the determiner."""
-    if context.hint is not None and context.hint.gender is not None:
-        return context.hint.gender
-    if year:
-        return MASCULINE
     request = context.request
     data = request.data
     before = [word.lower() for word in context.before]
-    if before and before[-1] in (*data["label_nouns"], *data["roman_letter_nouns"]):
-        following = [word.lower() for word in context.after]
-        if not following or following[0] in data["function_words"] or following[0] in data["label_verbs"] \
-                or following[0] in (*data["label_nouns"], *data["roman_letter_nouns"]):
-            return MASCULINE
-        # A noun that the number counts follows, so it falls through to the noun lookup below.
     if " ".join(before[-2:]) in data["plural_labels"]:
         return GrammaticalGender(data["plural_labels"][" ".join(before[-2:])])
     following = [word.lower() for word in context.after[:2]]
@@ -894,6 +894,17 @@ def agreement(context: SpanContext, year: bool = False) -> GrammaticalGender:
     return gender or request.params.default_gender.get(LANGUAGE.code) or LANGUAGE.default_gender
 
 
+def agreement(context: SpanContext, role: str | None = None) -> GrammaticalGender:
+    """The gender of a number (design section 5.6): the hint, then the masculine of a number that counts no noun,
+    then the noun that it counts. The `role` is `year` or `list` when `Cardinal.find` found one (the module docstring
+    gives the sources), and a number after a label noun has the role `label`."""
+    if context.hint is not None and context.hint.gender is not None:
+        return context.hint.gender
+    if role not in _UNCOUNTED:
+        role = _label_role(context)
+    return MASCULINE if role in _UNCOUNTED else _counted_gender(context)
+
+
 def speak_cardinal(span: Span, context: SpanContext) -> str:
     """A cardinal that agrees with its noun, with the sign and lead words of the data. A lead word of "" stands for
     a space. Digits with a leading zero, which only a lead admits, read one by one. A reading that ends in a scale
@@ -905,9 +916,9 @@ def speak_cardinal(span: Span, context: SpanContext) -> str:
         after_mark = context.before and context.before[-1].lower() == request.data["decimal_word"]
         words = SPELLER.decimal_part(digits, request) if after_mark else spell_digits(digits, request)
     else:
-        masculine = span.start in request.memo.get(_YEARS, ()) or span.start in request.memo.get(_LISTED, ())
-        words = _cardinal(digits, request, agreement(context, masculine))
-        _check_pair(digits, context, span.start in request.memo.get(_AFTER_PHONE, ()))
+        role = request.memo.get(_ROLES, {}).get(span.start)
+        words = _cardinal(digits, request, agreement(context, role))
+        _check_pair(digits, context, role == "after_phone")
         if _SCALE_WORD.fullmatch(words.split()[-1]) and context.after \
                 and context.after[0].lower() not in request.data["function_words"]:
             words += " de"
@@ -1465,35 +1476,33 @@ def _spaced(pattern: re.Pattern[str], text: str, tokens: Sequence[Token], reques
             yield match
 
 
-_YEARS = "pt_years"
+_ROLES = "pt_roles"
 _YEAR_MARKS = frozenset(",:)")
 _FOUR_DIGITS = re.compile("[0-9]{4}")
-_LISTED = "pt_listed"
 _LIST_MARK = re.compile(" *[-–.)] ")
-_AFTER_PHONE = "pt_after_phone"
 _ONE_WORD = re.compile("[,;:.!?)]*[ \t\n\u00a0]+[^ \t\n\u00a0,;:.!?()]+[ \t\n\u00a0]+")
 
 
 @dataclass(frozen=True)
 class Cardinal(CoreCardinal):
-    """The shared cardinal recognizer. A number of four digits with a mark of `_YEAR_MARKS` right after it names a
-    year, as `2012` in `Braga 2012: Capital Europeia`, and its start goes into `Request.memo` under `_YEARS`, so that
-    it reads in the masculine. An unsigned number that starts a line, with optional spaces, one of `-`, `–`, `.` or
-    `)` and a space after it, as in `2 - Casa de campo`, numbers an item of a list, and its start goes under
-    `_LISTED`. A number one word after a phone number that reads, as `2` in `912 345 678 ou 2 casas`, goes in under
-    `_AFTER_PHONE`, so that it is no second number of a pair."""
+    """The shared cardinal recognizer. It gives a number the role that `agreement` reads, in `Request.memo` under
+    `_ROLES`, by the start of the number. A number of four digits with a mark of `_YEAR_MARKS` right after it is a
+    `year`, as `2012` in `Braga 2012: Capital Europeia`. An unsigned number that starts a line, with optional spaces,
+    one of `-`, `–`, `.` or `)` and a space after it, as in `2 - Casa de campo`, numbers an item of a `list`. A number
+    one word after a phone number that reads, as `2` in `912 345 678 ou 2 casas`, is `after_phone`, so that it is no
+    second number of a pair."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         after_phone = {word.end() for phone in _phones(text, tokens, request)
                        if (word := _ONE_WORD.match(text, phone.end))}
         for span in super().find(text, tokens, request):
             if _FOUR_DIGITS.fullmatch(text, span.start, span.end) and text[span.end:span.end + 1] in _YEAR_MARKS:
-                request.memo.setdefault(_YEARS, set()).add(span.start)
-            if (text[span.start].isdigit() and not text[text.rfind("\n", 0, span.start) + 1:span.start].strip()
+                request.memo.setdefault(_ROLES, {})[span.start] = "year"
+            elif (text[span.start].isdigit() and not text[text.rfind("\n", 0, span.start) + 1:span.start].strip()
                     and _LIST_MARK.match(text, span.end)):
-                request.memo.setdefault(_LISTED, set()).add(span.start)
-            if span.start in after_phone:
-                request.memo.setdefault(_AFTER_PHONE, set()).add(span.start)
+                request.memo.setdefault(_ROLES, {})[span.start] = "list"
+            elif span.start in after_phone:
+                request.memo.setdefault(_ROLES, {})[span.start] = "after_phone"
             yield span
 
 
