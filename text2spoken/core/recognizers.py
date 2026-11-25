@@ -370,7 +370,7 @@ _FRACTION = re.compile("[-+−]?[0-9]+/[0-9]+")
 _DATE = re.compile("[0-9]+/[0-9]+/[0-9]+|[0-9]+-[0-9]+-[0-9]+|[0-9]+[.][0-9]+[.][0-9]+")
 _HOUR = re.compile("[0-9][0-9]?")
 _JOINERS = "/:.,-–"
-_WORD_OPENERS = "([{«\"'“‘"
+_OPENERS = "([{«\"'“‘"
 """The opening brackets and quotes that may stand right before a word."""
 _DIGIT_RUN = re.compile("[0-9]+")
 
@@ -647,7 +647,7 @@ class DateNumeric:
 def _period_after(text: str, end: int, periods) -> tuple[str, int] | None:
     """The day period written after a time, with its end: `pm` in `2:30 pm`, `am` in `9am`."""
     rest = text[end:]
-    gap = len(rest) - len(rest.lstrip(" ")) if rest.startswith(" ") else 0
+    gap = len(rest) - len(rest.lstrip(" "))
     if gap > 1:
         return None
     for period, spellings in periods.items():
@@ -729,7 +729,7 @@ def _starts_word(text: str, start: int) -> bool:
     """Whether text[start] starts a word: the start of the text, a space or an opening bracket or quote comes before
     it, or a dash right after a digit, which joins a range as in `%10-%20`."""
     before = text[start - 1] if start else " "
-    return before.isspace() or before in _WORD_OPENERS \
+    return before.isspace() or before in _OPENERS \
         or before in "-\u2013" and start >= 2 and is_digit(text[start - 2])
 
 
@@ -751,24 +751,24 @@ class Percent:
         for number in numbers_in(text, request):
             if number.sign and any(text.endswith(sign, 0, number.start) for sign in percent["signs"]):
                 number = replace(number, start=number.start + 1, sign="")
+            sides = []
             if percent["position"] in ("after", "either"):
                 for sign in percent["signs"]:
                     for gap in number_gaps(request.data):
                         end = number.end + len(gap) + len(sign)
                         if text.startswith(gap + sign, number.end) \
                                 and (bounds := _affixes(text, number.start, end, request.data, ())) is not None:
-                            yield Span(bounds[0], bounds[1], Form.PERCENT,
-                                       FrozenMap({"amount": number.amount(), "sign_position": "after",
-                                                  "prefix": bounds[2], "suffix": bounds[3]}), recognizer=self.name)
+                            sides.append(("after", bounds))
             if percent["position"] in ("before", "either"):
                 for sign in percent["signs"]:
                     start = number.start - len(sign)
-                    if start >= 0 and text[start:number.start] == sign \
-                            and _starts_word(text, start) \
+                    if start >= 0 and text[start:number.start] == sign and _starts_word(text, start) \
                             and (bounds := _affixes(text, start, number.end, request.data, ())) is not None:
-                        yield Span(bounds[0], bounds[1], Form.PERCENT,
-                                   FrozenMap({"amount": number.amount(), "sign_position": "before",
-                                              "prefix": bounds[2], "suffix": bounds[3]}), recognizer=self.name)
+                        sides.append(("before", bounds))
+            for side, (start, end, prefix, suffix) in sides:
+                yield Span(start, end, Form.PERCENT,
+                           FrozenMap({"amount": number.amount(), "sign_position": side, "prefix": prefix,
+                                      "suffix": suffix}), recognizer=self.name)
 
 
 @dataclass(frozen=True)
@@ -847,9 +847,9 @@ class Money:
 def _comma_decimals(text: str, request: Request) -> tuple[Number, ...]:
     """In a variety whose decimal mark is the point, the numbers with a decimal comma and one or two digits after
     it, as in `23,88`. The marks of the variety do not parse such a number, because a group has three digits (CLDR
-    49 decimal format `#,##0.###` of en, es and de), and only a script that declares the decimal comma gives one. CLDR
-    49 writes a euro amount
-    with this comma in de, es, fr and it (currency format `#,##0.00 ¤`, decimal mark `,`)."""
+    49 decimal format `#,##0.###` of en, es and de), and only a script that declares the decimal comma gives one.
+    CLDR 49 writes a euro amount with this comma in de, es, fr and it (currency format `#,##0.00 ¤`, decimal mark
+    `,`)."""
     if request.params.decimal_mark != ".":
         return ()
     comma = tuple(marks for marks in number_marks(request.data, ",") if marks[1] == ",")
@@ -893,15 +893,17 @@ class Measure:
                     amounts.append(following)
                     end = following.end
             for gap in number_gaps(data):
+                if not text.startswith(gap, end):
+                    continue
                 candidates = units_at(text, end + len(gap), request)
                 if not gap:
                     candidates = (*candidates, *(u for u in joined_table(request) if text.startswith(u, end)))
-                unit = next((u for u in candidates if text.startswith(gap, end)
-                             and _suffix(text, end + len(gap) + len(u), data) is not None
-                             and not _per_unit(text, end + len(gap) + len(u))
-                             and not _elided(text, end + len(gap) + len(u), data)), None)
-                if unit is not None:
-                    stop, suffix = _suffix(text, end + len(gap) + len(unit), data)
+                found = next(((unit, ending) for unit in candidates
+                              if (ending := _suffix(text, end + len(gap) + len(unit), data)) is not None
+                              and not _per_unit(text, end + len(gap) + len(unit))
+                              and not _elided(text, end + len(gap) + len(unit), data)), None)
+                if found is not None:
+                    unit, (stop, suffix) = found
                     amount = amounts[0].amount() if len(amounts) == 1 else tuple(a.amount() for a in amounts)
                     yield Span(before[0], stop, Form.MEASURE,
                                FrozenMap({"amount": amount, "relation": relation, "unit": unit,
@@ -964,11 +966,10 @@ def _last_parts(words: str) -> list[str]:
 
 
 _CLOSERS = ".,;:!?)]}»\"'”’…"
-_OPENERS = "([{«\"'“‘"
 _GAP = re.compile("[ \t\n\u00a0\u202f:.()\\[\\]–—-]*")
+"""The marks that may stand between a phone word, the function words after it and the run it names."""
 _HOUR_GROUP = re.compile("([0-9]{1,2})(?:[.][0-9]{2})?")
 """A last group that may be the hour of a time or a count, as `8` in `0800 123 456 8 am`."""
-"""The marks that may stand between a phone word, the function words after it and the run it names."""
 
 
 def _clean_start(text: str, start: int) -> bool:
@@ -1371,10 +1372,9 @@ def speak_mixed_half(span: Span, context: SpanContext) -> str:
     word and the half, both in the gender of `default_gender` (design section 5.6), as pt "dois e meio" and es "dos
     y medio". `mixed_half` gives the half by gender, and under "other" for any other gender or none. A language
     with no grammatical gender takes no gender (design section 2.3), so nl reads "twee en een half" for any
-    `default_gender`. The noun that
-    the number counts sets the gender of the half, and in pt, es, fr and it it stands between the whole part and the
-    half, as in pt "uma página e meia", so a mixed number before a word declines, as does any other fraction and
-    any language with no `mixed_half`."""
+    `default_gender`. The noun that the number counts sets the gender of the half, and in pt, es, fr and it it stands
+    between the whole part and the half, as in pt "uma página e meia", so a mixed number before a word declines, as
+    does any other fraction and any language with no `mixed_half`."""
     fields, request = span.fields, context.request
     language = request.language
     halves = request.data.get("mixed_half")
