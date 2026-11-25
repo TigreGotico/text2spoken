@@ -211,6 +211,29 @@ ventidue anziché [...] duemilaventidue"). A clock time with `:` or `.` reads af
 pressoché generalizzato l'uso di l' / all'una", so `alle 1:30` reads "all'una e trenta". `time_articles` gives these
 forms. After "le", which cannot stand before mezzogiorno, 0 and 12 read the 24-hour form: `Sono le 12:00` reads "Sono le
 dodici".
+
+A run of digits with phone evidence reads digit by digit. Wikipedia, "Telephone numbers in Italy": "Italian
+regulations prescribe no fixed rules for grouping the digits of telephone numbers for printing or display. [...] a
+telephone number is likely to be written or pronounced differently by different people". No source gives one spoken
+grouping, so the file follows es and de and reads every digit alone. A leading `+` reads "più" and `00` "zero zero",
+then the country code digit by digit: "The country code for calling Italy from abroad is 39" and "the international
+call prefix is 00". The plan of Italy holds no trunk prefix, because the `0` of a landline number belongs to the
+number: "Since 1998, the leading 0 of landline numbers has to be included also when calling from abroad". The phone
+words come from the Wikizionario: "telefono" ("dispositivo elettronico per lo scambio a distanza di voce e suoni con
+segnali elettrici", "Numero di telefono 159"), "telefonino" ("telefono cellulare"), "cellulare" ("telefono portatile
+per lo scambio a distanza di voce e suoni"), "fax" ("abbreviazione di telefax"), "telefonare" ("comunicare con un
+telefono"), "telefona" ("seconda persona singolare dell'imperativo di telefonare"), "chiamare" (synonym "telefonare")
+and "chiama" ("seconda persona singolare dell'imperativo di chiamare"). The short codes are the numbers of Wikipedia,
+"Telephone numbers in Italy": "112" (Carabinieri), "113" (Polizia di Stato), "114" (helpline for children), "115"
+(Vigili del Fuoco), "117" (Guardia di Finanza) and "118" (regional emergency medical service). The shapes follow the
+same page: "Landline numbers start with the digit 0 and are 6 to 11 digits long", "Mobile telephone numbers start with
+the digit 3 and are generally ten digits long", with "the space character, the dot, full stop, and the hyphen" as
+marks. A run joins a named run after "e" ("usato per enfatizzare l'ultimo elemento di una lista") or "o" ("oppure").
+The article "il" and the articulated preposition "al" of `function_words` may stand between a phone word and a short
+code, as in `chiama il 112` and `telefona al 113` (Wikizionario, "il": "articolo determinativo maschile singolare";
+"al": "contrazione di a ed il"). Two years that a dash or a space joins, a number of three digits before or after a
+year, a number with full-stop groups, and a group that starts with `00` before a dash and thousands groups have no
+phone evidence: `00` is the international call prefix, not the start of an area code.
 """
 from __future__ import annotations
 
@@ -227,7 +250,8 @@ from text2spoken.core.currencies import currency_name, currency_table
 from text2spoken.core.dates import is_valid
 from text2spoken.core.language import LanguageSpec, Request, Variety, drop_affixes, plural_category
 from text2spoken.core.numbers import Number, written_amount
-from text2spoken.core.recognizers import SHARED, TimeClock, numbers_in, signed, speak_decimal, speak_expression
+from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeClock, numbers_in, signed, speak_decimal,
+                                          speak_expression, speak_telephone)
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import speak_cardinal as core_speak_cardinal
 from text2spoken.core.recognizers import speak_fraction as core_speak_fraction
@@ -316,7 +340,23 @@ DATA = freeze({
     "number_abbreviations": {"art.": "articolo"},
     "symbols": {"%": "percent", "€": "money", "£": "money", "$": "money", "¥": "money", "°": "measure", "×": "measure"},
     "patterns": {"expression": "[-−+]?[0-9]+(?: ?[+−×=] ?[-−+]*[0-9]+)+"},
+    "phone_words": ["telefono", "telefonino", "cellulare", "fax", "telefona", "telefonare", "chiama", "chiamare"],
+    "short_codes": ["112", "113", "114", "115", "117", "118"],
+    "list_links": ["e", "o"],
+    "function_words": ["il", "al"],
+    "phone_shapes": ["0[1-9][0-9]{0,2}[ .-][0-9]{3,4} [0-9]{3,4}", "0[1-9][0-9]{0,2}[ .-][0-9]{6,8}",
+                     "3[0-9]{2}[ .-][0-9]{3}[ .-][0-9]{4}", "3[0-9]{2}[ .-][0-9]{7}"],
+    "phone_unit_shapes": ["[(]0[0-9]*[)](?: [0-9]+)+"],
+    "phone_kept_shapes": [],
+    "no_phone_shapes": ["(?:1[0-9]{3}|20[0-9]{2})-(?:1[0-9]{3}|20[0-9]{2})", "[1-9][0-9]{0,2}(?:[.][0-9]{3})+",
+                        "(?:1[0-9]{3}|20[0-9]{2})(?: (?:1[0-9]{3}|20[0-9]{2}))+",
+                        "[1-9][0-9]{2} (?:1[0-9]{3}|20[0-9]{2})", "(?:1[0-9]{3}|20[0-9]{2}) [1-9][0-9]{2}",
+                        "00[0-9]* [–-] [0-9]+(?: [0-9]{3})+"],
 })
+
+PLANS = FrozenMap({**PHONE_PLANS, "IT": FrozenMap({"country_code": "39", "trunk": "", "lengths": tuple(range(6, 12))})})
+"""The numbering plans of the core and that of Italy: the country calling code of ITU-T E.164, no trunk prefix, because
+the `0` of a landline number belongs to the number, and the lengths of a national number."""
 
 DEFAULTS = {"date_order": "DMY", "clock": "24h"}
 
@@ -1028,16 +1068,18 @@ LANGUAGE = LanguageSpec(
     cldr_aliases=(),
     varieties=VARIETIES,
     data=DATA,
-    recognizers=(SHARED["lexicon"], KeptSign(), DateNamed(), DateDayMonth(), SHARED["date_numeric"], Clock(),
-                 KeptDecimal(), SHARED["money"], SHARED["kept_money"], SHARED["percent"], SHARED["measure"],
-                 SHARED["expression"], SHARED["fraction"], Ordinal(), Abbreviation(),
-                 KeptDecimal(name="kept_clock", clock=True), KeptCommaTime(), SHARED["decimal"], BeforeWord(),
-                 SHARED["cardinal"], SHARED["emoji"], KeptApostrophe(), SHARED["symbol"]),
+    recognizers=(SHARED["lexicon"], Telephone(declines=True, plans=PLANS), KeptSign(), DateNamed(), DateDayMonth(),
+                 SHARED["date_numeric"], Clock(), Telephone(plans=PLANS), KeptDecimal(), SHARED["money"],
+                 SHARED["kept_money"], SHARED["percent"], SHARED["measure"], SHARED["expression"], SHARED["fraction"],
+                 Ordinal(), Abbreviation(), KeptDecimal(name="kept_clock", clock=True), KeptCommaTime(),
+                 SHARED["decimal"], BeforeWord(), SHARED["cardinal"], SHARED["emoji"], KeptApostrophe(),
+                 SHARED["symbol"]),
     verbalizers={
         Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.TIME: speak_time, Form.MONEY: speak_money,
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.EXPRESSION: speak_expression,
         Form.FRACTION: speak_fraction, Form.ORDINAL: speak_ordinal, Form.ABBREVIATION: speak_abbreviation,
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
+        Form.TELEPHONE: speak_telephone,
     },
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=drop_affixes,  # the one prefix, a word of `time_articles` before a time, is a word of the time reading
@@ -1048,6 +1090,6 @@ LANGUAGE = LanguageSpec(
     numeral_systems=frozenset(),
     context_words=True,
     options={"date_order": frozenset({"DMY", "MDY", "YMD"}), "clock": frozenset({"24h"}),
-             "default_gender": frozenset({"masculine", "feminine"})},
-    not_applicable=frozenset(OPTIONS) - {"date_order", "clock", "default_gender"},
+             "default_gender": frozenset({"masculine", "feminine"}), "phone_regions": frozenset(PLANS)},
+    not_applicable=frozenset(OPTIONS) - {"date_order", "clock", "default_gender", "phone_regions"},
 )
