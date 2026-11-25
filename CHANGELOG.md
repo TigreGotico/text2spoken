@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a139](https://github.com/TigreGotico/text2spoken/tree/0.0.2a139) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a138...0.0.2a139)
+
+**Merged pull requests:**
+
+- docs: plots through the shared plot style, and the index head [\#636](https://github.com/TigreGotico/text2spoken/pull/636) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a138](https://github.com/TigreGotico/text2spoken/tree/0.0.2a138) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a137...0.0.2a138)
@@ -377,10 +385,6 @@
 ## [0.0.2a87](https://github.com/TigreGotico/text2spoken/tree/0.0.2a87) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a86...0.0.2a87)
-
-**Merged pull requests:**
-
-- fix\(ar\): a region with the CLDR months and marks of ar reads ar-001 [\#369](https://github.com/TigreGotico/text2spoken/pull/369) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
