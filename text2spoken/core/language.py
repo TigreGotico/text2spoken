@@ -118,7 +118,7 @@ def check_tag(tag: str) -> str:
     """The standardized tag, or InvalidLanguageTagError when the tag does not parse as BCP 47 or names no language
     (a private-use tag such as `x-foo`)."""
     import linguatag
-    from linguatag.bcp47 import LanguageTagError, parse
+    from linguatag import LanguageTagError, parse_tag as parse
 
     if isinstance(tag, str):
         try:
@@ -201,7 +201,7 @@ def plural_locales() -> frozenset[str]:
 @lru_cache(maxsize=1024)
 def subtags(tag: str) -> tuple[str, str | None, str | None]:
     """The language, script and region subtags of a standardized tag; the language is `und` when it has none."""
-    from linguatag.bcp47 import parse
+    from linguatag import parse_tag as parse
 
     parsed = parse(tag)
     return parsed.language or "und", parsed.script, parsed.region
