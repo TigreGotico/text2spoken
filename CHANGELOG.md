@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a135](https://github.com/TigreGotico/text2spoken/tree/0.0.2a135) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a134...0.0.2a135)
+
+**Merged pull requests:**
+
+- refactor\(core\): simplify the shared recognizers [\#629](https://github.com/TigreGotico/text2spoken/pull/629) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- docs: complete pages, figures and navigation [\#623](https://github.com/TigreGotico/text2spoken/pull/623) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a134](https://github.com/TigreGotico/text2spoken/tree/0.0.2a134) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a133...0.0.2a134)
@@ -324,7 +333,6 @@
 
 - fix\(core\): decline a number that unicode-rbnf 2.5.1 writes in digits [\#387](https://github.com/TigreGotico/text2spoken/pull/387) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - test\(en\): tag the two rows with a UK date source as en-GB [\#362](https://github.com/TigreGotico/text2spoken/pull/362) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(electronic\): a full stop after a full stop or … is no address marker [\#356](https://github.com/TigreGotico/text2spoken/pull/356) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a92](https://github.com/TigreGotico/text2spoken/tree/0.0.2a92) (2026-11-19)
 
@@ -333,10 +341,6 @@
 ## [0.0.2a91](https://github.com/TigreGotico/text2spoken/tree/0.0.2a91) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a90...0.0.2a91)
-
-**Merged pull requests:**
-
-- fix\(pt\): read a pt-PT number grouped with spaces when it is a quantity [\#355](https://github.com/TigreGotico/text2spoken/pull/355) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a90](https://github.com/TigreGotico/text2spoken/tree/0.0.2a90) (2026-11-19)
 
@@ -367,7 +371,6 @@
 
 - fix\(ar\): a region with the CLDR months and marks of ar reads ar-001 [\#369](https://github.com/TigreGotico/text2spoken/pull/369) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(el\): a percentage with a decimal reads, as 2,5% δύο κόμμα πέντε τοις εκατό [\#360](https://github.com/TigreGotico/text2spoken/pull/360) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(pt\): read a clock after "são", and 24:00 as midnight [\#354](https://github.com/TigreGotico/text2spoken/pull/354) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a86](https://github.com/TigreGotico/text2spoken/tree/0.0.2a86) (2026-11-19)
 
