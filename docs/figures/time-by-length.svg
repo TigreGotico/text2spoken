@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="390" viewBox="0 0 660 390" role="img" aria-labelledby="title description">
+<title id="title">Time of normalize against the length of the text</title>
+<desc id="description">Line chart of the time of normalize against the length of the text: 63 characters take 3.1 ms; 126 characters take 5.4 ms; 252 characters take 10.5 ms; 504 characters take 20.0 ms; 1008 characters take 37.6 ms; 2016 characters take 75.7 ms; 4032 characters take 153.4 ms; 8064 characters take 308.9 ms; 16128 characters take 625.5 ms. A dashed straight line from the origin through the mean slope lies on the points.</desc>
+<line x1="70" y1="320" x2="630" y2="320" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="62" y="325" text-anchor="end" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">0</text>
+<line x1="70" y1="245" x2="630" y2="245" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="62" y="250" text-anchor="end" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">200</text>
+<line x1="70" y1="170" x2="630" y2="170" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="62" y="175" text-anchor="end" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">400</text>
+<line x1="70" y1="95" x2="630" y2="95" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="62" y="100" text-anchor="end" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">600</text>
+<line x1="70" y1="20" x2="630" y2="20" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="62" y="25" text-anchor="end" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">800</text>
+<line x1="70" y1="20" x2="70" y2="320" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="70" y="342" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">0</text>
+<line x1="182" y1="20" x2="182" y2="320" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="182" y="342" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">4000</text>
+<line x1="294" y1="20" x2="294" y2="320" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="294" y="342" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">8000</text>
+<line x1="406" y1="20" x2="406" y2="320" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="406" y="342" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">12000</text>
+<line x1="518" y1="20" x2="518" y2="320" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="518" y="342" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">16000</text>
+<line x1="630" y1="20" x2="630" y2="320" stroke="#9aa0a6" stroke-opacity="0.4"/>
+<text x="630" y="342" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">20000</text>
+<line x1="70" y1="320" x2="521.584" y2="86.2928" stroke="#e08e3c" stroke-width="2" stroke-dasharray="6 5"/>
+<polyline points="71.764,318.837 73.528,317.975 77.056,316.062 84.112,312.5 98.224,305.9 126.448,291.613 182.896,262.475 295.792,204.163 521.584,85.4375" fill="none" stroke="#4a8fd9" stroke-width="2.5"/>
+<circle cx="71.764" cy="318.837" r="4.5" fill="#4a8fd9"/>
+<circle cx="73.528" cy="317.975" r="4.5" fill="#4a8fd9"/>
+<circle cx="77.056" cy="316.062" r="4.5" fill="#4a8fd9"/>
+<circle cx="84.112" cy="312.5" r="4.5" fill="#4a8fd9"/>
+<circle cx="98.224" cy="305.9" r="4.5" fill="#4a8fd9"/>
+<circle cx="126.448" cy="291.613" r="4.5" fill="#4a8fd9"/>
+<circle cx="182.896" cy="262.475" r="4.5" fill="#4a8fd9"/>
+<circle cx="295.792" cy="204.163" r="4.5" fill="#4a8fd9"/>
+<circle cx="521.584" cy="85.4375" r="4.5" fill="#4a8fd9"/>
+<text x="350" y="370" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15">characters in the text</text>
+<text x="18" y="170" text-anchor="middle" fill="#707880" font-family="DejaVu Sans, Verdana, sans-serif" font-size="15" transform="rotate(-90 18 170)">milliseconds</text>
+</svg>

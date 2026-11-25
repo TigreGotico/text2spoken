@@ -251,4 +251,4 @@ python -m text2spoken.export en
 If the tag is not valid, or if no language file reads the tag, the command writes one error line and exits with code 1.
 
 ---
-[← Addresses, letters and emoji](addresses-letters-and-emoji.md) · [Home](index.md) · [Errors and warnings →](errors.md)
+[← How it works](how-it-works.md) · [Home](index.md) · [Errors and warnings →](errors.md)

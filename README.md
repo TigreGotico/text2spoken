@@ -5,7 +5,7 @@ covers: what text2spoken does, how to install and call it, and where it sits in 
 source: text2spoken/__init__.py, pyproject.toml, text2spoken/lang/
 generated: no
 verify: `python scripts/check_doc_page.py README.md`
-see: docs/index.md, docs/quickstart.md, AGENTS.md
+see: docs/index.md, docs/quickstart.md, docs/coverage.md, AGENTS.md
 -->
 
 text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours, abbreviations, and e-mail and web addresses. The rest of the text stays as it is, character for character. It uses no network and no model.
@@ -42,6 +42,8 @@ Through scriptconv: `uv pip install --prerelease=allow "scriptconv[normalize]"`.
 | Turn a form off or on, or add your own words | [Usage](docs/usage.md) |
 | Read a form that SSML `say-as` markup names | [API, say_as](docs/api.md#say_as) |
 | Know why a text reads as it does | [How it reads text](docs/how-it-reads.md) |
+| See which forms each language reads | [Languages at a glance](docs/coverage.md) |
+| See how a text goes through the library, and what a call costs | [How it works](docs/how-it-works.md) |
 | Add your language, step by step | [Adding a language](docs/adding-a-language.md) |
 | Look up a function, a param or an error | [API](docs/api.md), [Errors and warnings](docs/errors.md) |
 | Know when the output of a language can change | [API, revision](docs/api.md#revision) |
