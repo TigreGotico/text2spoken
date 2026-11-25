@@ -302,8 +302,8 @@ Ryding 2005, p. 347, the long name بالمائة of CLDR 49 concentr-percent (u
 (English Wiktionary, مائة, revision 93330307). `prepositions`: Ryding 2005, pp. 366-367.
 `uncounted_words`: words that no number counts, besides every preposition and semi-preposition: wa- 'and' (p. 409),
 'aw 'or' (p. 418), thumma 'then' (section 6.2.8, p. 416), the adverb faqaT 'only' (p. 277), the quantifier Jakthar
-'more' (section 3.2.2, pp. 234-235), the elative Jaqall 'less' (pp. 246-247), and the spelling او with no hamza. None of them is a noun, so
-none is the counted noun of pp. 346-347.
+'more' (section 3.2.2, pp. 234-235), the elative Jaqall 'less' (pp. 246-247), and the spelling او with no hamza. None
+of them is a noun, so none is the counted noun of pp. 346-347.
 `hijri_months`: Arabic Wikipedia, تقويم هجري, the table of months, which gives ربيع الآخر and جمادى الآخرة; the
 two months that start with ذو take the genitive ذي after من, as Arabic Wikipedia, ذو الحجة, writes it:
 "العشر الأوائل من ذي الحجة". `semi_prepositions`: Ryding 2005, chapter 16, sections 3.4 bacd-a (p. 388), 3.18 maca (p. 393), 3.20 naHw-a and
