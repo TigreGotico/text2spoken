@@ -21,7 +21,8 @@ from text2spoken.core.dates import date_locales, long_date
 from text2spoken.core.dates import resolve as resolve_date
 from text2spoken.core.electronic import ELECTRONIC, tld_after
 from text2spoken.core.emoji import sequences_in, touched_words, written_text
-from text2spoken.core.language import Request, Variety, cldr_locale, lexicon_entries, number_grouping
+from text2spoken.core.language import (LanguageSpec, Request, Variety, cldr_locale, lexicon_entries,
+                                      number_grouping)
 from text2spoken.core.letters import LETTERS
 from text2spoken.core.numbers import (GROUP_SPACES, SIGNS, SPACE_GROUPS, Number, declared_marks, find_numbers,
                                       group_spaces, number_marks)
@@ -1502,6 +1503,15 @@ class Written:
 _KEPT_MONEY_KEYS = ("number_marks", "number_gaps", "proclitics", "case_suffixes")
 
 
+@lru_cache(maxsize=128)
+def _kept_money_language(language: LanguageSpec, data: FrozenMap) -> LanguageSpec:
+    """The language with only the marks of `data` and the currencies of every language. One object for each language
+    and data, so that a cache keyed on the language keeps one entry for it, not one for each call."""
+    table = FrozenMap({**{key: data[key] for key in _KEPT_MONEY_KEYS if key in data},
+                       "currencies": written_shapes()["currencies"]})
+    return replace(language, data=table)
+
+
 @dataclass(frozen=True)
 class KeptMoney:
     """An amount next to a currency sign that the money recognizers of the language do not read stays as
@@ -1515,10 +1525,7 @@ class KeptMoney:
     form: Form = Form.MONEY
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        data = request.data
-        table = FrozenMap({**{key: data[key] for key in _KEPT_MONEY_KEYS if key in data},
-                           "currencies": written_shapes()["currencies"]})
-        kept = Request(request.tag, Variety(request.variety.tag), replace(request.language, data=table),
+        kept = Request(request.tag, Variety(request.variety.tag), _kept_money_language(request.language, request.data),
                        request.params)
         for span in SHARED["money"].find(text, tokens, kept):
             if not _read_by_the_language(span.fields["written_symbol"], request):
