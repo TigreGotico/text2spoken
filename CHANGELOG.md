@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a127](https://github.com/TigreGotico/text2spoken/tree/0.0.2a127) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a126...0.0.2a127)
+
+**Merged pull requests:**
+
+- fix\(pt\): read the capital litre symbols cL and dL [\#598](https://github.com/TigreGotico/text2spoken/pull/598) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a126](https://github.com/TigreGotico/text2spoken/tree/0.0.2a126) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a125...0.0.2a126)
@@ -304,7 +312,6 @@
 **Merged pull requests:**
 
 - fix\(numbers\): a group run that starts with 0 is no grouped number [\#357](https://github.com/TigreGotico/text2spoken/pull/357) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ko\): a number before a counter reads in the numerals of the counter [\#330](https://github.com/TigreGotico/text2spoken/pull/330) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a87](https://github.com/TigreGotico/text2spoken/tree/0.0.2a87) (2026-11-19)
 
@@ -332,7 +339,6 @@
 - fix\(ar\): a percent range reads its second number in the genitive, and a day range before a month reads both days [\#344](https://github.com/TigreGotico/text2spoken/pull/344) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(core\): keep a number before a minus and digits that no number covers [\#343](https://github.com/TigreGotico/text2spoken/pull/343) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - fix\(ca\): read §§ as paràgrafs [\#341](https://github.com/TigreGotico/text2spoken/pull/341) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(es\): an ordinal takes the apocope only before its own masculine noun [\#331](https://github.com/TigreGotico/text2spoken/pull/331) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a85](https://github.com/TigreGotico/text2spoken/tree/0.0.2a85) (2026-11-19)
 
