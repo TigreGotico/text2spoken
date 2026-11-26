@@ -186,19 +186,27 @@ class OvosNumberSpeller:
 
 
 class NumtagSpeller:
-    """numtag.spell. A value that numtag refuses declines the span."""
+    """numtag.spell. A value that numtag refuses declines the span. `cases` names the cases that numtag inflects
+    in the language; a speller with no cases passes no case."""
 
-    def __init__(self, gender_arg: Mapping[GrammaticalGender, str]):
+    def __init__(self, gender_arg: Mapping[GrammaticalGender, str], cases: tuple[str, ...] = ()):
         self.gender_arg = dict(gender_arg)
+        self.cases = cases
 
-    def _spell(self, value: str, features: Features, request: Request, form: str = "cardinal", **kwargs) -> str:
+    def spellings(self, value: str, features: Features, request: Request, form: str = "cardinal", **kwargs):
+        """All the spellings of numtag, the standard one first."""
         from numtag import spell
         gender = self.gender_arg.get(features.gender)
+        case = features.case if gender and features.case in self.cases else None
         try:
-            return spell(value, request.tag, form=form, gender=gender, scale=request.params.scale, **kwargs)[0].text
+            return spell(value, request.tag, form=form, gender=gender, case=case, scale=request.params.scale,
+                         **kwargs)
         except ValueError as error:
             raise DeclinedReading(f"numtag reads no {form} of {len(value)} characters in {request.tag}: "
                                   f"{error}") from error
+
+    def _spell(self, value: str, features: Features, request: Request, form: str = "cardinal", **kwargs) -> str:
+        return self.spellings(value, features, request, form, **kwargs)[0].text
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self._spell(str(_integer(digits)), features, request)

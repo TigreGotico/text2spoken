@@ -21,7 +21,7 @@ This page gives each error and warning of text2spoken, and the case that causes 
 | A param value that the language cannot produce | Language default, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
 | A `say_as` value, format or detail that the language cannot read | The reading without it, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
 | A `say_as` whose form is not in the text | The reading with no `say_as`, WARNING logged | `UnreadFormError` |
-| A `say_as` span that the language cannot speak, such as a German ordinal of one million | The reading with no `say_as`, WARNING logged | `UnreadFormError` |
+| A `say_as` span that the language cannot speak, such as a Dutch ordinal of one million | The reading with no `say_as`, WARNING logged | `UnreadFormError` |
 | A `say_as` `characters` in a language with no letter names | Each letter as written, alone, `ParameterNotHonouredWarning` | `UnsupportedParameterError` |
 | A `say_as` `telephone` with a `+` that the language has no word for | The country code without the `+`, WARNING logged | `UnreadFormError` |
 | A gender that a language with genders does not have | `UndefinedGrammaticalGender` | `UndefinedGrammaticalGender` |

@@ -8,7 +8,7 @@ verify: `python scripts/check_doc_page.py docs/languages/de.md`
 see: en.md, ../how-it-reads.md
 -->
 
-The file `text2spoken/lang/de.py` reads German. It needs no extra, because its number words come from the CLDR spell-out rules.
+The file `text2spoken/lang/de.py` reads German. It needs no extra. Its number words come from numtag, and its years from the CLDR spell-out rules.
 
 ## What it reads
 
@@ -93,7 +93,7 @@ Some German readings are wrong or stay as written:
 | `2 Mio. Einwohner` | `de-DE` | zwei Mio. Einwohner | A scale abbreviation after a number stays as written. |
 | `2 Mio. €` | `de-DE` | zwei Mio. € | A scale abbreviation after a number stays as written. |
 | `Er wurde 1999 geboren.` | `de-DE` | Er wurde eintausendneunhundertneunundneunzig geboren. | In German, a year with no year word reads as a cardinal. |
-| `Er wurde 2. Sieger.` | `de-DE` | stays as written | An ordinal with no determiner before it stays as written, and so does an ordinal from one million up. |
+| `Er wurde 2. Sieger.` | `de-DE` | stays as written | An ordinal with no determiner before it stays as written. |
 | `das 12/03/2024 Wetter` | `de-DE` | das zwölfter März zweitausendvierundzwanzig Wetter | A determiner that does not agree with a date is ignored. |
 
 A `default_gender` param gives the feminine in the case of the preposition. A gender hint gives the feminine with no case, unless the hint also gives the case:
