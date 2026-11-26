@@ -383,7 +383,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `lexicon` | `LEXICON` | none | none |
 | `cardinal` | `CARDINAL` | `leads`, `number_marks`, `sign_words`, `symbols` | `case_suffixes`, `proclitics` |
 | `decimal` | `DECIMAL` | `number_marks`, `symbols` | `case_suffixes`, `proclitics` |
-| `fraction` | `FRACTION` | `currencies`, `currency_symbols`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `number_gaps`, `proclitics` |
+| `fraction` | `FRACTION` | `currencies`, `currency_symbols`, `number_marks`, `symbols`, `unit_symbols`, `units` | `case_suffixes`, `fraction_denominators`, `number_gaps`, `proclitics` |
 | `idiom` | `IDIOM` | `idioms` | `case_suffixes`, `proclitics` |
 | `range` | `RANGE` | `number_marks`, `symbols` | `case_suffixes`, `proclitics`, `range_marks` |
 | `date_numeric` | `DATE` | `symbols` | `case_suffixes`, `proclitics` |
@@ -401,6 +401,8 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `letters` | `LETTERS` | `letter_codas`, `letter_names`, `letter_onsets`, `letter_vowels` | `letter_free_consonants`, `letter_label_nouns`, `letter_runs`, `letter_words` |
 | `symbol` | `SYMBOL` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
 | `emoji` | `EMOJI` | `currencies`, `currency_symbols`, `leads`, `operators`, `symbols`, `unit_symbols`, `units` | `symbol_names` |
+
+The `fraction` recognizer reads a fraction with a denominator from 2 to 100. `fraction_denominators` lists more denominators that read as a fraction, as digit strings. Portuguese lists `"1000"`, so `7/1000` reads as a fraction, and `3/250` stays as written.
 
 Of `units` and `unit_symbols`, and of `currencies` and `currency_symbols`, a file gives at least one. `proclitics` and `case_suffixes` give the words that a language joins to a number, such as an article or a case ending.
 
