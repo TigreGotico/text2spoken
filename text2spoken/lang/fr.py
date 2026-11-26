@@ -105,7 +105,11 @@ The rules cite these sources, by rule family:
   ("Abréviation de boulevard", "8, bd Bonne-Nouvelle"). `Me` and `bd` are also the pronoun "me" and the noun "bd",
   so they read only as titles do, before a capitalised name: "Me Dupond", "bd Haussmann". The full stop of a
   `J.-C.` abbreviation also ends a sentence, as the one of `etc.` does.
-- Unit, month and currency names: CLDR `common/main` `fr`, `fr_CA` and `fr_CH`.
+- Unit, month and currency names: CLDR `common/main` `fr`, `fr_CA` and `fr_CH`. The volt and its multiples: SI
+  Brochure, Table 4 ("volt", "V") and Table 7 (the prefixes "kilo", "k", and "milli", "m").
+- A written "million" or "milliard" before a currency symbol, as in `1 million €`, reads as the scale `M` does, with
+  "de" before the currency, by the Larousse rule above: "un million d'euros".
+- A rate after a currency symbol, as in `5 €/mois`: see `speak_french_abbreviation`.
 
 The rows of `tests/data/fr.tsv` give the source of each expected reading. The rows of the telephone, abbreviation,
 date, money and Imprimerie nationale families say that their source was not fetched.
@@ -396,6 +400,9 @@ UNITS = {
     "dm": _unit("décimètre"),
     "ms": _unit("milliseconde", "feminine"),
     "W": _unit("watt"),
+    "V": _unit("volt"),
+    "kV": _unit("kilovolt"),
+    "mV": _unit("millivolt"),
 }
 
 
@@ -509,6 +516,10 @@ DATA = freeze(
             "Mrd": "milliard",
             "Mio": "million",
             "Mia": "milliard",
+            "million": "million",
+            "millions": "million",
+            "milliard": "milliard",
+            "milliards": "milliard",
         },
         "currencies": {"EUR": EURO, "USD": DOLLAR, "GBP": POUND, "CHF": FRANC, "CAD": CANADIAN},
         "percent": {"signs": ["%", "‰", "%o"], "position": "after", "word": "pour cent", "permille_word": "pour mille"},
@@ -753,6 +764,10 @@ DATA = freeze(
             "etc.": "et cetera", "c.-à-d.": "c'est-à-dire", "p. ex.": "par exemple", "&": "et", "cf.": "confer",
             "env.": "environ", "av. J.-C.": "avant Jésus-Christ", "apr. J.-C.": "après Jésus-Christ",
             "ap. J.-C.": "après Jésus-Christ",
+        },
+        "rate_words": {
+            "mois": "mois", "an": "an", "année": "année", "jour": "jour", "j": "jour", "semaine": "semaine",
+            "heure": "heure", "h": "heure", "nuit": "nuit", "personne": "personne",
         },
         "sentence_final": ["etc.", "av. J.-C.", "apr. J.-C.", "ap. J.-C."],
         "number_abbreviations": {
@@ -1616,6 +1631,17 @@ class Roman:
         return word in names and (len(numeral) >= 2 or numeral in ("V", "X"))
 
 
+def speak_french_abbreviation(span: Span, context: SpanContext) -> str:
+    """An abbreviation of the tables, or a rate: `€/mois` is "euros par mois". The slash marks a division, which reads
+    "par" (Office québécois de la langue française, Banque de dépannage linguistique, "Signe décimal et division dans
+    les unités de mesure": "Les divisions sont indiquées symboliquement par la barre oblique et littéralement par la
+    préposition par (ou à)")."""
+    key = span.fields["key"]
+    if key.startswith("/"):
+        return f" par {context.request.data['rate_words'][key[1:]]}"
+    return speak_abbreviation(span, context)
+
+
 def speak_roman(span: Span, context: SpanContext) -> str:
     """`XXe` is "vingtième", `Ier` "premier", `Louis XIV` "quatorze" and `Acte II` "deux".
 
@@ -1696,13 +1722,15 @@ class Ordinal:
 @dataclass(frozen=True)
 class Abbreviation:
     """A title before a capitalised name, a saint before a capitalised name or after a hyphen, `n°` before a number,
-    and the abbreviations of the table. A title that an initial follows, as in `M. J. Dupont`, stays as written."""
+    and the abbreviations of the table. A title that an initial follows, as in `M. J. Dupont`, stays as written.
+    A slash between a currency symbol and a word of `rate_words`, as in `5 €/mois`, reads "par" and the word."""
 
     name: str = "abbreviation"
     form: Form = Form.ABBREVIATION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
+        yield from self._rates(text, request)
         final = frozenset(data["sentence_final"])
         particles = tuple(data["name_particles"])
         for table in ("titles", "number_abbreviations", "abbreviations"):
@@ -1727,6 +1755,21 @@ class Abbreviation:
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}), trail=trail,
                                    recognizer=self.name)
                     position = text.find(key, end)
+
+    def _rates(self, text: str, request: Request) -> Iterator[Span]:
+        """The slash and the word after a currency symbol: "€/mois", "$/h". The word ends at a word boundary."""
+        symbols = tuple(symbol for symbol, _ in currency_symbols(request))
+        words = sorted(request.data["rate_words"], key=len, reverse=True)
+        position = text.find("/")
+        while position != -1:
+            if text[:position].endswith(symbols):
+                for word in words:
+                    end = position + 1 + len(word)
+                    if text.startswith(word, position + 1) and is_bounded(text, position + 1, end):
+                        yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": "/" + word}),
+                                   recognizer=self.name)
+                        break
+            position = text.find("/", position + 1)
 
     @staticmethod
     def _name_follows(text: str, end: int, particles: tuple[str, ...]) -> bool:
@@ -1827,7 +1870,7 @@ LANGUAGE = LanguageSpec(
         Form.RANGE: speak_range,
         Form.ROMAN: speak_roman,
         Form.ORDINAL: speak_ordinal,
-        Form.ABBREVIATION: speak_abbreviation,
+        Form.ABBREVIATION: speak_french_abbreviation,
         Form.DECIMAL: speak_french_decimal,
         Form.CARDINAL: speak_cardinal,
     },
