@@ -127,6 +127,7 @@ def check_readme(page: str, text: str):
 
 
 def check_index(page: str, text: str):
+    check_figures(page)
     listed = list(dict.fromkeys(re.findall(r"\]\(([\w/-]+\.md)\)", text)))
     for path in sorted((ROOT / "docs").glob("*.md")) + sorted((ROOT / "docs/languages").glob("*.md")):
         name = path.relative_to(ROOT / "docs").as_posix()
@@ -233,15 +234,64 @@ def check_errors(page: str, text: str):
             fail(page, f"{child} is not a subclass of {parent}")
 
 
+NAMES = {"ar": "Arabic", "ca": "Catalan", "de": "German", "el": "Greek", "en": "English", "es": "Spanish",
+         "eu": "Basque", "fr": "French", "it": "Italian", "ja": "Japanese", "ko": "Korean", "nl": "Dutch",
+         "pt": "Portuguese", "ru": "Russian", "tdt": "Tetun Dili", "zh": "Chinese"}
+
+
+def figure_data(stem: str) -> dict:
+    return json.loads(read(f"docs/img/{stem}.json"))
+
+
+def alt_forms(data: dict) -> str:
+    order = data["order"][::-1]
+    counts = ", ".join(f"{NAMES[code]} {len(data['read'][code])}" for code in order[1:])
+    return (f"Matrix of {len(order)} language files by {len(data['forms'])} forms. "
+            f"{NAMES[order[0]]} reads {len(data['read'][order[0]])}, {counts}.")
+
+
+def alt_forms_short(data: dict) -> str:
+    order = data["order"][::-1]
+    count = {code: len(data["read"][code]) for code in order}
+    fewest = [NAMES[code] for code in sorted(order) if count[code] == min(count.values())]
+    return (f"Forms that each of {len(order)} language files reads, of {len(data['forms'])}: "
+            f"{NAMES[order[0]]} reads all {count[order[0]]}, "
+            + ", ".join(f"{NAMES[code]} {count[code]}" for code in order[1:3])
+            + f"; {' and '.join(fewest)} read {min(count.values())}.")
+
+
+def alt_rows(data: dict) -> str:
+    order = sorted(data, key=lambda code: -sum(data[code]))
+    cited, silver = (sum(pair[i] for pair in data.values()) for i in (0, 1))
+    return (f"Horizontal bars of test rows for {len(data)} languages, {cited + silver:,} rows in all, "
+            f"{cited:,} with a cited source and {silver} marked silver. "
+            + ", ".join(f"{NAMES[code]} {sum(data[code]):,}" for code in order) + ".")
+
+
+def alt_timing(data: dict) -> str:
+    points = {point["characters"]: point["milliseconds"] for point in figure_data("timing")["points"]}
+    cpu = re.sub(r"^\d+\w+ Gen |\((?:R|TM)\)| @ .*$", "", figure_data("timing")["cpu"])
+    shown = ", ".join(f"{chars:,} characters take {points[chars]} ms" for chars in (63, 1008, 16128))
+    return f"A straight line from the origin: {shown}, on an {cpu}."
+
+
+ALT_TEXTS = {("docs/coverage.md", "forms-per-language"): alt_forms,
+             ("docs/index.md", "forms-per-language"): alt_forms_short,
+             ("docs/coverage.md", "rows-per-language"): alt_rows,
+             ("docs/how-it-works.md", "time-by-length"): alt_timing}
+
+
 def check_figures(page: str):
-    """The committed figures equal the figures that `scripts/docs_figures.py` writes from the current data."""
+    """The committed figures equal the figures that `scripts/docs_figures.py` writes from the current data, and
+    each alt text gives the numbers of its figure data."""
     run = subprocess.run([sys.executable, "scripts/docs_figures.py", "--check"], cwd=ROOT, capture_output=True,
                          text=True)
     if run.returncode:
         fail(page, "a figure is out of date: " + run.stderr.strip())
-    for alt in re.findall(r'<img alt="([^"]*)" src="img/[\w-]+\.svg">', read(page)):
-        if len(alt) < 40:
-            fail(page, f"the alt text {alt!r} holds no numbers")
+    for alt, stem in re.findall(r'<img alt="([^"]*)" src="img/([\w-]+)\.svg">', read(page)):
+        expected = ALT_TEXTS[page, stem](figure_data(stem))
+        if alt != expected:
+            fail(page, f"the alt text of {stem} is not\n{expected}")
 
 
 def check_how_it_works(page: str, text: str):
@@ -277,8 +327,7 @@ def check_coverage(page: str, text: str):
     cited_only = [code for code, (_, silver) in counts.items() if not silver]
     if len(cited_only) != 9 or "nine files hold only cited rows" not in text:
         fail(page, f"{len(cited_only)} files hold only cited rows")
-    silver_names = {"nl": "Dutch", "de": "German", "it": "Italian", "pt": "Portuguese", "ru": "Russian",
-                    "es": "Spanish", "tdt": "Tetun Dili"}
+    silver_names = {code: NAMES[code] for code in ("nl", "de", "it", "pt", "ru", "es", "tdt")}
     silvered = sorted(code for code, (_, silver) in counts.items() if silver)
     if silvered != sorted(silver_names) or "Seven files hold silver rows" not in text:
         fail(page, f"the files with silver rows are {silvered}")
