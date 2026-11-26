@@ -567,7 +567,7 @@ def test_feminine_cardinals(number, spoken):
         (90, "quatre-vingt-dixième"),
         (99, "quatre-vingt-dix-neuvième"),
         (100, "centième"),
-        (101, "cent unième"),
+        (101, "cent et unième"),
         (200, "deux centième"),
         (1000, "millième"),
         (1000000, "millionième"),

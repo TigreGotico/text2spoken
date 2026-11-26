@@ -1,10 +1,8 @@
 """French: fr-FR, the default variety, fr-CA and fr-CH. Every other `fr-*` tag reads as fr-FR.
 
-Number words come from CLDR RBNF, by the CLDR locale of the tag, so `fr-BE` and `fr-CH` say "septante" and
-"nonante", `fr-CH` says "huitante" (CLDR lists it for Switzerland), and every other region says "soixante-dix",
-"quatre-vingts" and "quatre-vingt-dix". The file writes the traditional spelling "vingt et un" and "soixante et
-onze" where CLDR hyphenates, and it builds the ordinals from the cardinals, because the CLDR ordinal rules give
-"quatre-vingt-et-unième" and "cent-et-unième".
+Number words come from the numtag writer, by the tag, so `fr-BE` and `fr-CH` say "septante" and "nonante",
+`fr-CH` says "huitante", and every other region says "soixante-dix", "quatre-vingts" and "quatre-vingt-dix", in the
+traditional spelling "vingt et un" and "soixante et onze".
 
 Agreement. A number that ends in 1 says "un" or "une" with its noun: "vingt et un kilos", "vingt et une heures".
 The gender of a number comes, in this order, from the hint of the caller, from the noun after the number when
@@ -63,7 +61,7 @@ The rules cite these sources, by rule family:
 - Ordinals: Académie française, Questions de langue, "Deuxième, second": "seul deuxième entre dans la formation
   des ordinaux complexes (vingt-deuxième, etc.)". Dictionnaire de l'Académie française, 9th edition, "unième":
   "Ne s'emploie qu'avec les nombres vingt, trente, quarante, cinquante, soixante, quatre-vingts, cent et mille,
-  souvent précédé de et", with the example "la mille et unième nuit". So 1001e is "mille et unième".
+  souvent précédé de et", with the example "la mille et unième nuit". So 101e is "cent et unième" and 1001e is "mille et unième".
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
   symbol `h` of the hour.
 - Number marks and gaps: BIPM, The International System of Units (SI Brochure), 9th edition. Section 5.4.4 says
@@ -121,7 +119,7 @@ from text2spoken.core.recognizers import (
     speak_mixed_half,
 )
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import RbnfSpeller, spell_digits
+from text2spoken.core.spellers import NumtagSpeller, spell_digits
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import (
     Token,
@@ -854,72 +852,6 @@ def _clock_edge(text: str, start: int, end: int) -> bool:
     return before and after
 
 
-SCALE_NOUNS = frozenset(
-    {
-        "million",
-        "millions",
-        "milliard",
-        "milliards",
-        "billion",
-        "billions",
-        "billiard",
-        "billiards",
-        "trillion",
-        "trillions",
-    }
-)
-"""The nouns that count a scale of a thousand: a number before them takes the plural of "cent" and "vingt"."""
-MULTIPLIERS = frozenset({"deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"})
-
-
-UNIT_STARTS = frozenset(
-    {
-        "un",
-        "une",
-        "deux",
-        "trois",
-        "quatre",
-        "cinq",
-        "six",
-        "sept",
-        "huit",
-        "neuf",
-        "dix",
-        "onze",
-        "douze",
-        "treize",
-        "quatorze",
-        "quinze",
-        "seize",
-    }
-)
-
-
-def _spell(words: str) -> str:
-    """The traditional spelling of CLDR's cardinal, with the agreement rules that CLDR misses.
-
-    "vingt et un", not "vingt-et-un". "Cent" and "quatre-vingt" take an "s" before a noun that counts millions, as
-    in "deux cents millions" and "quatre-vingts millions", where CLDR gives "deux cent millions" and, for France,
-    "quatre-vingt millions". "Quatre-vingt" takes none before "mille", and a hyphen before a unit, as in
-    "quatre-vingt-un", where the CLDR rules of Belgium give "quatre-vingts mille" and "quatre-vingt un"
-    (Académie française, "Nombres")."""
-    parts = words.replace("-et-", " et ").split(" ")
-    out: list[str] = []
-    for index, word in enumerate(parts):
-        following = parts[index + 1] if index + 1 < len(parts) else ""
-        if word == "quatre-vingts" and following == "mille":
-            word = "quatre-vingt"
-        if following in SCALE_NOUNS and (
-            word == "quatre-vingt" or (word == "cent" and index and parts[index - 1] in MULTIPLIERS)
-        ):
-            word += "s"
-        if out and out[-1] == "quatre-vingt" and word.split("-")[0] in UNIT_STARTS:
-            out[-1] += "-" + word
-        else:
-            out.append(word)
-    return " ".join(out)
-
-
 def _invariable(words: str) -> str:
     """The words of a numeral that stands for an ordinal: "cent" and "vingt" take no "s" (Académie française,
     "Nombres": "page deux cent ; page quatre-vingt ; l'an mille neuf cent"). "Millions" and "milliards" are nouns
@@ -928,43 +860,17 @@ def _invariable(words: str) -> str:
 
 
 class FrenchSpeller:
-    """RBNF cardinals with the masculine and the feminine rule sets, ordinals built from the cardinals, and decimals
-    that read the digits after the comma as one number when there are one or two of them."""
+    """numtag cardinals and ordinals, and decimals that read the digits after the comma as one number when there are
+    one or two of them."""
 
     def __init__(self):
-        cardinal = {Features(): "spellout-cardinal-masculine", Features(gender=FEMININE): "spellout-cardinal-feminine"}
-        self.rbnf = RbnfSpeller(cardinal=cardinal, ordinal={Features(): "spellout-ordinal-masculine"})
+        self.numtag = NumtagSpeller({MASCULINE: "masculine", FEMININE: "feminine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        return _spell(self.rbnf.cardinal(digits, features, request))
+        return self.numtag.cardinal(digits, features, request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """The ordinal of a cardinal: "premier", "deuxième", "vingt et unième", "quatre-vingt-unième", "centième",
-        "mille et unième", "millionième", "deux cent millionième". A last word that ends in "e" loses it, "cinq"
-        takes "u" and "neuf" turns to "neuv". "Cent" and "vingt" take no "s" in an ordinal (`_invariable`)."""
-        words = _invariable(self.cardinal(digits, Features(), request))
-        if words in ("un million", "un milliard"):
-            words = words[3:]
-        if words == "un":
-            return "première" if features.gender is GrammaticalGender.FEMININE else "premier"
-        if words == "mille un":
-            return "mille et unième"
-        head, _, last = words.rpartition(" ")
-        prefix, _, last = last.rpartition("-")
-        last = last or prefix
-        if prefix and last == prefix:
-            prefix = ""
-        for plural in ("millions", "milliards"):
-            if last == plural:
-                last = last[:-1]
-        if last == "cinq":
-            last = "cinqu"
-        elif last == "neuf":
-            last = "neuv"
-        elif last.endswith("e"):
-            last = last[:-1]
-        ordinal = f"{prefix}-{last}ième" if prefix else f"{last}ième"
-        return f"{head} {ordinal}" if head else ordinal
+        return self.numtag.ordinal(digits, Features(gender=features.gender or MASCULINE), request)
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         """A year reads as a cardinal in which "cent" and "vingt" stay singular at its end, as numerals that
