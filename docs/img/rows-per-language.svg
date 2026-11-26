@@ -409,8 +409,8 @@ z
    </g>
    <g id="patch_16">
     <path d="M 24.189303 88.358331 
-L 262.543861 88.358331 
-L 262.543861 74.09725 
+L 294.567687 88.358331 
+L 294.567687 74.09725 
 L 24.189303 74.09725 
 z
 " clip-path="url(#paf723ce318)" style="fill: #257de0"/>
@@ -536,10 +536,10 @@ z
 " clip-path="url(#paf723ce318)" style="fill: #f47230"/>
    </g>
    <g id="patch_32">
-    <path d="M 262.543861 88.358331 
-L 262.543861 88.358331 
-L 262.543861 74.09725 
-L 262.543861 74.09725 
+    <path d="M 294.567687 88.358331 
+L 294.567687 88.358331 
+L 294.567687 74.09725 
+L 294.567687 74.09725 
 z
 " clip-path="url(#paf723ce318)" style="fill: #f47230"/>
    </g>
@@ -609,7 +609,7 @@ L 500.99976 369.19976
     <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #191919" x="160.797272" y="103.938654" transform="rotate(-0 160.797272 103.938654)">329</text>
    </g>
    <g id="text_37">
-    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #191919" x="265.78678" y="83.565681" transform="rotate(-0 265.78678 83.565681)">588</text>
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #191919" x="297.810606" y="83.565681" transform="rotate(-0 297.810606 83.565681)">667</text>
    </g>
    <g id="text_38">
     <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #191919" x="302.26962" y="63.192709" transform="rotate(-0 302.26962 63.192709)">678</text>
@@ -618,7 +618,7 @@ L 500.99976 369.19976
     <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #191919" x="408.880588" y="42.820087" transform="rotate(-0 408.880588 42.820087)">941, 27 silver</text>
    </g>
    <g id="text_40">
-    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #191919" x="24.189303" y="11.358521" transform="rotate(-0 24.189303 11.358521)">4,207 test rows in 16 languages</text>
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #191919" x="24.189303" y="11.358521" transform="rotate(-0 24.189303 11.358521)">4,286 test rows in 16 languages</text>
    </g>
    <g id="legend_1">
     <g id="patch_37">

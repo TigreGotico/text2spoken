@@ -423,8 +423,13 @@ def test_a_number_agrees_with_the_noun_after_it(written, spoken):
 
 def test_default_gender_decides_when_no_noun_does():
     feminine = NormalizationParams(default_gender=FrozenMap({"fr": F}))
-    assert normalize("21 chats et 21 heures", "fr", feminine) == "vingt et une chats et vingt et une heures"
-    assert normalize("21 chats et 21 heures", "fr") == "vingt et un chats et vingt et une heures"
+    assert normalize("Elles sont 21, et 21 élèves.", "fr", feminine) == "Elles sont vingt et une, et vingt et une élèves."
+    assert normalize("Elles sont 21, et 21 élèves.", "fr") == "Elles sont vingt et un, et vingt et un élèves."
+
+
+def test_a_noun_decides_before_the_default_gender():
+    feminine = NormalizationParams(default_gender=FrozenMap({"fr": F}))
+    assert normalize("21 chats et 21 heures", "fr", feminine) == "vingt et un chats et vingt et une heures"
 
 
 def test_a_hint_decides_before_the_noun_and_the_params():
