@@ -43,12 +43,12 @@ Each language file has a file of test rows in `tests/data`. Each row holds a wri
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/rows-per-language-dark.svg">
-  <img alt="Horizontal bars of test rows for 16 languages, 4,295 rows in all, 4,163 with a cited source and 132 marked silver. Portuguese 941, English 678, French 676, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 179, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
+  <img alt="Horizontal bars of test rows for 16 languages, 4,306 rows in all, 4,174 with a cited source and 132 marked silver. Portuguese 941, French 687, English 678, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 179, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
 </picture>
 
 `img/plot_rows_per_language.py` makes this figure from `tests/data`.
 
-*Figure: the test rows of each language file, in blue where the row cites a source and in orange where it is marked silver. Portuguese, English and French hold the most rows, and nine files hold only cited rows.*
+*Figure: the test rows of each language file, in blue where the row cites a source and in orange where it is marked silver. Portuguese, French and English hold the most rows, and nine files hold only cited rows.*
 
 Seven files hold silver rows: those of Dutch, German, Italian, Portuguese, Russian, Spanish and Tetun Dili. A silver row is a reading that no source states.
 

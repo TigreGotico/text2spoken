@@ -322,7 +322,7 @@ def check_coverage(page: str, text: str):
         fail(page, f"the files with the fewest forms are {least}, with {min(forms.values())}")
     counts = rows_by_language()
     biggest = sorted(counts, key=lambda code: -counts[code][0])[:3]
-    if biggest != ["pt", "en", "fr"] or "Portuguese, English and French hold the most rows" not in text:
+    if biggest != ["pt", "fr", "en"] or "Portuguese, French and English hold the most rows" not in text:
         fail(page, f"the files with the most rows are {biggest}")
     cited_only = [code for code, (_, silver) in counts.items() if not silver]
     if len(cited_only) != 9 or "nine files hold only cited rows" not in text:
