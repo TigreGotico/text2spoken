@@ -26,7 +26,7 @@ Each language file reads the forms that its recognizers and verbalizers offer. `
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/forms-per-language-dark.svg">
-  <img alt="Matrix of 16 language files by 22 forms. English reads 22, Portuguese 20, French 18, German 17, Italian 15, Spanish 14, Basque 14, Dutch 14, Russian 12, Catalan 11, Arabic 10, Chinese 10, Tetun Dili 7, Greek 5, Japanese 3, Korean 3." src="img/forms-per-language.svg">
+  <img alt="Matrix of 16 language files by 22 forms. English reads 22, Portuguese 20, French 18, German 17, Italian 15, Dutch 14, Basque 14, Spanish 14, Russian 12, Catalan 11, Chinese 10, Arabic 10, Tetun Dili 7, Greek 5, Korean 3, Japanese 3." src="img/forms-per-language.svg">
 </picture>
 
 `img/plot_forms_per_language.py` makes this figure from `supports(code).forms`.
@@ -43,7 +43,7 @@ Each language file has a file of test rows in `tests/data`. Each row holds a wri
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/rows-per-language-dark.svg">
-  <img alt="Horizontal bars of test rows for 16 languages, 4,189 rows in all, 4,058 with a cited source and 131 marked silver. Portuguese 927, English 678, French 587, Arabic 329, Italian 294, Dutch 202, Spanish 197, Russian 179, German 167, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
+  <img alt="Horizontal bars of test rows for 16 languages, 4,200 rows in all, 4,069 with a cited source and 131 marked silver. Portuguese 938, English 678, French 587, Arabic 329, Italian 294, Dutch 202, Spanish 197, Russian 179, German 167, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
 </picture>
 
 `img/plot_rows_per_language.py` makes this figure from `tests/data`.
