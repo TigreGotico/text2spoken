@@ -192,3 +192,13 @@ def test_the_base_install_holds_the_speller_that_writes_the_construct_dual():
     base = [line for line in lines if line.marker is None and line.name == "ovos-number-parser"]
     assert len(base) == 1
     assert not base[0].specifier.contains(Version("0.24.2a1"), prereleases=True)
+
+
+@pytest.mark.xfail(strict=True, raises=AssertionError,
+                   reason="https://github.com/TigreGotico/text2spoken/issues/672: ovos-number-parser gives apc "
+                          "the Standard feminine اثنتي عشرة")
+@pytest.mark.parametrize("number", ["12", "13"])
+def test_a_levantine_number_above_three_has_no_gender(number):
+    """Wikipedia, "Levantine Arabic grammar" (oldid 1368977674), silver: "Numbers larger than 3 do not have gender"."""
+    masculine = normalize(f"عندي {number} كتاب.", "apc")
+    assert normalize(f"عندي {number} قطة.", "apc") == masculine.replace("كتاب", "قطة")
