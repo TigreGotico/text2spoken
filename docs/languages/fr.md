@@ -45,7 +45,10 @@ The gender of a noun comes from a noun list of the English Wiktionary, in the fi
 | `Cela coûte 3,50 €.` | `fr-FR` | Cela coûte trois euros cinquante. |
 | `Cela coûte 0,50 €.` | `fr-FR` | Cela coûte cinquante centimes. |
 | `Il gagne 1 000 000 €.` | `fr-FR` | Il gagne un million d'euros. |
+| `Il gagne 1 million €.` | `fr-FR` | Il gagne un million d'euros. |
+| `Cela coûte 5 €/mois.` | `fr-FR` | Cela coûte cinq euros par mois. |
 | `Il fait 6 °C.` | `fr-FR` | Il fait six degrés Celsius. |
+| `Le réseau fournit 220 V.` | `fr-FR` | Le réseau fournit deux cent vingt volts. |
 | `Il pèse 3,5 kg.` | `fr-FR` | Il pèse trois virgule cinq kilogrammes. |
 | `Il pèse 3,14159 kg.` | `fr-FR` | Il pèse trois virgule un quatre un cinq neuf kilogrammes. |
 | `Le prix monte de 50 %.` | `fr-FR` | Le prix monte de cinquante pour cent. |
