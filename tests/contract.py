@@ -32,7 +32,7 @@ from text2spoken.core.spans import FIELDS, Span
 from text2spoken.core.recognizers import (SHARED, speak_abbreviation, speak_cardinal, speak_decimal, speak_expression,
                                           speak_fraction, speak_idiom, speak_lexicon, speak_ordinal, speak_percent,
                                           speak_range, speak_telephone)
-from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, rbnf_engine
+from text2spoken.core.spellers import NumtagSpeller, OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
 from text2spoken.params import OPTIONS, Form, FrozenMap
 
@@ -344,8 +344,9 @@ def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = N
     speller = spec.spellers.get(Form.CARDINAL)
     request = request_for(spec)
     # Values may differ in one case only, as German masculine "einen" and neuter "ein" in the accusative, so the
-    # check also reads each case that an RBNF cardinal map of the file names.
-    cases = (None, *sorted({key.case for s in _rbnf_spellers(spec) for key in s.cardinal_sets if key.case}))
+    # check also reads each case that an RBNF cardinal map or a numtag speller of the file names.
+    cases = (None, *sorted({key.case for s in _rbnf_spellers(spec) for key in s.cardinal_sets if key.case}
+                           | {case for s in _spellers(spec) if isinstance(s, NumtagSpeller) for case in s.cases}))
     keys = [(n, case) for n in ("1", "2") for case in cases]
     for field, values in (("gender", spec.genders), ("animacy", spec.animacies), ("noun_class", spec.noun_classes),
                           ("numeral_system", spec.numeral_systems)):

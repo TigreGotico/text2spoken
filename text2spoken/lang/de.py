@@ -1,10 +1,10 @@
 """German: de-DE, the default variety, de-AT and de-CH.
 
-Number words come from CLDR RBNF. The cardinal rule sets of `de` carry the endings of the indefinite article,
+Number words come from numtag, and years from CLDR RBNF. numtag writes the endings of the indefinite article,
 so `1` reads "ein", "eine", "einen", "einem", "einer" or "eines" by the gender of the counted noun and the case
-that a preposition before it governs, and "eins" when no noun follows. The ordinal rule sets carry the adjective
-endings -e, -en, -er, -es and -em. The design page `text2spoken-design.md`, section 5.4, gives the measured
-reason for each speller.
+that a preposition before it governs, and "eins" when no noun follows. It writes the weak and the strong adjective
+endings of an ordinal, and the speller builds the mixed endings after "ein" from them. The design page
+`text2spoken-design.md`, section 5.4, gives the measured reason for each speller.
 
 de-CH, whose decimal mark is the point, reads a decimal comma next to `€`, as in `23,88 €`, because CLDR 49 de
 writes the euro with that comma (`#,##0.00 ¤`).
@@ -47,7 +47,7 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Abbreviation, Tel
                                           speak_fraction as core_speak_fraction, speak_idiom, speak_lexicon,
                                           speak_range, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import NumtagSpeller, RbnfSpeller, _integer, bounded_integer, spell_digits
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, next_visible, one_digit_set
 from text2spoken.errors import DeclinedReading
@@ -214,61 +214,29 @@ VARIETIES = (
     })),
 )
 
-_ORDINAL_SETS = {"e": "spellout-ordinal", "en": "spellout-ordinal-n", "er": "spellout-ordinal-r",
-                 "es": "spellout-ordinal-s", "em": "spellout-ordinal-m"}
-
-_ENDINGS = {
-    # (definite, case): ending by gender; definite True is weak, False mixed, None strong (no article).
-    (True, "nominative"): {M: "e", F: "e", N: "e"},
-    (True, "accusative"): {M: "en", F: "e", N: "e"},
-    (True, "dative"): {M: "en", F: "en", N: "en"},
-    (True, "genitive"): {M: "en", F: "en", N: "en"},
-    (False, "nominative"): {M: "er", F: "e", N: "es"},
-    (False, "accusative"): {M: "en", F: "e", N: "es"},
-    (False, "dative"): {M: "en", F: "en", N: "en"},
-    (False, "genitive"): {M: "en", F: "en", N: "en"},
-    (None, "nominative"): {M: "er", F: "e", N: "es"},
-    (None, "accusative"): {M: "en", F: "e", N: "es"},
-    (None, "dative"): {M: "em", F: "er", N: "em"},
-    (None, "genitive"): {M: "en", F: "er", N: "en"},
-}
-"""The adjective endings of an ordinal after a definite article (weak), after "ein" (mixed) and with no article
-(strong), by case and gender."""
-
 
 class GermanSpeller:
-    """RBNF integers: the counting form "eins" with no features, the article endings by gender and case, and the
-    adjective endings of an ordinal; decimals read digit by digit after "Komma"."""
+    """numtag integers: the counting form "eins" with no features, the article endings by gender and case, and
+    the adjective endings of an ordinal; RBNF years; decimals read digit by digit after "Komma"."""
 
     def __init__(self):
-        cardinal = {Features(): "spellout-numbering"}
-        for gender, nominative, dative, genitive, accusative in (
-                (M, "spellout-cardinal-masculine", "spellout-cardinal-m", "spellout-cardinal-s",
-                 "spellout-cardinal-n"),
-                (F, "spellout-cardinal-feminine", "spellout-cardinal-r", "spellout-cardinal-r",
-                 "spellout-cardinal-feminine"),
-                (N, "spellout-cardinal-neuter", "spellout-cardinal-m", "spellout-cardinal-s",
-                 "spellout-cardinal-neuter")):
-            cardinal[Features(gender=gender)] = nominative
-            for case, name in (("nominative", nominative), ("accusative", accusative), ("dative", dative),
-                               ("genitive", genitive)):
-                cardinal[Features(gender=gender, case=case)] = name
-        self.rbnf = RbnfSpeller(cardinal=cardinal, ordinal={Features(): "spellout-ordinal"})
-        self.ordinal_sets = {ending: RbnfSpeller(cardinal={Features(): name}, ordinal={Features(): name})
-                             for ending, name in _ORDINAL_SETS.items()}
+        self.numtag = NumtagSpeller({M: "masculine", F: "feminine", N: "neuter"},
+                                    cases=("nominative", "accusative", "dative", "genitive"))
+        self.rbnf = RbnfSpeller(cardinal={Features(): "spellout-numbering"}, ordinal={Features(): "spellout-ordinal"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        return self.rbnf.cardinal(digits, features, request)
+        return self.numtag.cardinal(digits, features, request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """The ending follows `features.definite`: True after a definite article, False after "ein", None with no
-        article. RBNF writes "zwei Millionenste" where the Regelwerk, § 36 (1.6), writes "der zweimillionste
-        Besucher", so an ordinal from one million up declines."""
-        value = bounded_integer(digits)
-        if value is None or value >= 1_000_000:
-            raise DeclinedReading("no German ordinal rule reads one million or more")
-        ending = _ENDINGS[(features.definite, features.case or "nominative")][features.gender or M]
-        return self.ordinal_sets[ending].ordinal(digits, Features(), request)
+        """The ending follows `features.definite`: True after a definite article (weak), None with no article
+        (strong), False after "ein" (mixed: strong in the nominative and accusative singular, weak elsewhere).
+        numtag gives the weak form first and the strong form last. An ordinal from one million up is one word, as
+        the Regelwerk, § 36 (1.6), writes "der zweimillionste Besucher"."""
+        features = replace(features, gender=features.gender or M, case=features.case or "nominative")
+        spellings = self.numtag.spellings(str(_integer(digits)), features, request, "ordinal")
+        strong = features.definite is None or (
+            features.definite is False and features.case in ("nominative", "accusative"))
+        return spellings[-1 if strong else 0].text
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         return self.rbnf.year(digits, features, request)

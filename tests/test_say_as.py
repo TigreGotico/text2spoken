@@ -257,9 +257,9 @@ def test_a_say_as_ordinal_never_reads_the_cardinal_of_the_parser(lang):
         assert spoken != " ".join(pronounce_number(number, lang).replace(",", " ").split()), (lang, number)
 
 
-@pytest.mark.parametrize("lang", ["de-DE"])
+@pytest.mark.parametrize("lang", ["it-IT"])
 def test_a_say_as_span_that_the_verbalizer_declines_gives_the_plain_reading(caplog, lang):
-    """The German ordinal speller declines from one million (design section 17.6)."""
+    """The Italian ordinal speller declines above 999999 (design section 17.6)."""
     named = SayAs(interpret_as="ordinal")
     with caplog.at_level(logging.WARNING, logger="text2spoken"):
         once = normalize("3981900", lang, say_as=named)
