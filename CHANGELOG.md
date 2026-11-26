@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2a147](https://github.com/TigreGotico/text2spoken/tree/0.0.2a147) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a146...0.0.2a147)
+
+**Merged pull requests:**
+
+- test: each figure alt text gives the numbers of its figure data [\#656](https://github.com/TigreGotico/text2spoken/pull/656) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a146](https://github.com/TigreGotico/text2spoken/tree/0.0.2a146) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a145...0.0.2a146)
+
 ## [0.0.2a145](https://github.com/TigreGotico/text2spoken/tree/0.0.2a145) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a144...0.0.2a145)
