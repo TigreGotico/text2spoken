@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a148](https://github.com/TigreGotico/text2spoken/tree/0.0.2a148) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a147...0.0.2a148)
+
+**Merged pull requests:**
+
+- feat\(es\): Spanish numbers through numtag [\#658](https://github.com/TigreGotico/text2spoken/pull/658) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a147](https://github.com/TigreGotico/text2spoken/tree/0.0.2a147) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a146...0.0.2a147)
@@ -385,10 +393,6 @@
 ## [0.0.2a97](https://github.com/TigreGotico/text2spoken/tree/0.0.2a97) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a96...0.0.2a97)
-
-**Merged pull requests:**
-
-- feat\(tdt\): Tetun Dili language file, a numeric date reads in Portuguese [\#401](https://github.com/TigreGotico/text2spoken/pull/401) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a96](https://github.com/TigreGotico/text2spoken/tree/0.0.2a96) (2026-11-21)
 
