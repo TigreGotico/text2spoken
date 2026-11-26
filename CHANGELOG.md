@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a154](https://github.com/TigreGotico/text2spoken/tree/0.0.2a154) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a153...0.0.2a154)
+
+**Merged pull requests:**
+
+- test\(ar\): strict xfail for the Standard feminine under apc [\#673](https://github.com/TigreGotico/text2spoken/pull/673) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a153](https://github.com/TigreGotico/text2spoken/tree/0.0.2a153) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a152...0.0.2a153)
@@ -380,10 +388,6 @@
 ## [0.0.2a104](https://github.com/TigreGotico/text2spoken/tree/0.0.2a104) (2026-11-23)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a103...0.0.2a104)
-
-**Merged pull requests:**
-
-- fix\(tdt\): make the Tetun scale words agree with the amount [\#474](https://github.com/TigreGotico/text2spoken/pull/474) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a103](https://github.com/TigreGotico/text2spoken/tree/0.0.2a103) (2026-11-23)
 
