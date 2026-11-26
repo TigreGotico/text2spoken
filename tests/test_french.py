@@ -423,8 +423,17 @@ def test_a_number_agrees_with_the_noun_after_it(written, spoken):
 
 def test_default_gender_decides_when_no_noun_does():
     feminine = NormalizationParams(default_gender=FrozenMap({"fr": F}))
-    assert normalize("Elles sont 21, et 21 élèves.", "fr", feminine) == "Elles sont vingt et une, et vingt et une élèves."
+    assert normalize("Elles sont 21, et 21 élèves.", "fr", feminine) == (
+        "Elles sont vingt et une, et vingt et une élèves."
+    )
     assert normalize("Elles sont 21, et 21 élèves.", "fr") == "Elles sont vingt et un, et vingt et un élèves."
+
+
+def test_a_function_word_after_the_number_leaves_the_default_gender():
+    feminine = NormalizationParams(default_gender=FrozenMap({"fr": F}))
+    assert normalize("Elles sont 21 par équipe.", "fr", feminine) == "Elles sont vingt et une par équipe."
+    assert normalize("Elles sont 21 contre 3.", "fr", feminine) == "Elles sont vingt et une contre trois."
+    assert normalize("Elles sont 21 ensemble.", "fr", feminine) == "Elles sont vingt et une ensemble."
 
 
 def test_a_noun_decides_before_the_default_gender():

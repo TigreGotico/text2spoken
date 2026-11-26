@@ -16,7 +16,7 @@ The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, pe
 
 A number that ends in 1 says *un* or *une* with its noun. The gender comes from the hint of the caller, then from the words after the number, then from `default_gender`, and then from the file, which is masculine. A unit and a currency carry their own gender.
 
-The gender of a noun comes from a noun list of the English Wiktionary, in the file `data/wiktionary/fr_noun_genders.json` (CC BY-SA 4.0). A plural reads through its singular. A noun that the list gives both genders, such as *livre* or *élève*, takes the masculine of the file, and the table `feminine_nouns` names the few such nouns that count things only as feminine nouns, such as *page* and *orange*. An adjective before the noun, such as *belle*, *grande* or *petite*, gives the gender that its form marks, and *jeune*, which marks none, passes to the noun.
+The gender of a noun comes from a noun list of the English Wiktionary, in the file `data/wiktionary/fr_noun_genders.json` (CC BY-SA 4.0). A plural reads through its singular. A noun that the list gives both genders, such as *livre* or *élève*, takes the masculine of the file, and the table `feminine_nouns` names the few such nouns that count things only as feminine nouns, such as *page* and *orange*. An adjective before the noun, such as *belle*, *grande* or *petite*, gives the gender that its form marks, and *jeune*, which marks none, passes to the noun. After *des*, or *de* and a plural determiner, the noun after them decides, as in *une des filles*. A function word after the number, such as *de*, *par* or *plus*, gives no gender, so `default_gender` decides. A number after a singular determiner, as in *le 21*, or after a determiner and a word, as in *le joueur 1*, names a numeral or a numéro and takes no gender from the word after it, unless a plural word follows, which it counts, as in *le film 21 fois*.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -26,6 +26,9 @@ The gender of a noun comes from a noun list of the English Wiktionary, in the fi
 | `Il y a 1 belle maison.` | `fr-FR` | Il y a une belle maison. |
 | `Il y a 1 jeune fille.` | `fr-FR` | Il y a une jeune fille. |
 | `Il y a 1 livre.` | `fr-FR` | Il y a un livre. |
+| `C'est 1 des filles.` | `fr-FR` | C'est une des filles. |
+| `Le joueur 1 marque un but.` | `fr-FR` | Le joueur un marque un but. |
+| `Il a vu le film 21 fois.` | `fr-FR` | Il a vu le film vingt et une fois. |
 | `Il y a 80 places.` | `fr-FR` | Il y a quatre-vingts places. |
 | `Il y a 280 places.` | `fr-FR` | Il y a deux cent quatre-vingts places. |
 | `Rendez-vous à 21 h.` | `fr-FR` | Rendez-vous à vingt et une heures. |
@@ -205,6 +208,11 @@ French leaves these forms as written or reads them in a limited way:
 | `Il y a 2 000 000 chez-moi.` | `fr-FR` | Il y a deux millions chez-moi. | A noun whose last part is an object pronoun, such as *chez-moi*, *chez-toi*, *revenez-y* or *aimez-moi* (the forget-me-not), reads as an imperative and takes no *de* if `invariable_plurals` lacks it. |
 | `Il y a 2 000 000 chromosomes-Y.` | `fr-FR` | Il y a deux millions chromosomes-Y. | A letter label after a hyphen that is also the pronoun *y* reads as an imperative and takes no *de*. Other letter labels, such as *lymphocytes-T* and *chromosomes-X*, keep it. |
 | `Il y a 2 000 000 tête-à-tête.` | `fr-FR` | Il y a deux millions tête-à-tête. | A noun with an invariable plural and no part in *s*, *x* or *z* takes no *de* if `invariable_plurals` lacks it. |
+| `La veille 1 personne est venue.` | `fr-FR` | La veille un personne est venue. | A number after a determiner and a word names a numéro, as in *le joueur 1*, when a singular word follows it, also where it counts that word. |
+| `Il y a 21 œuvres.` | `fr-FR` | Il y a vingt et un œuvres. | A noun that the Wiktionary list gives both genders takes the masculine, also where its feminine is the common one. |
+| `La classe 3 V gagne.` | `fr-FR` | La classe trois volts gagne. | A capital letter after a number reads as a unit symbol, here the volt, also where it is a letter label, as `W` does. |
+| `Me Paris? Non.` | `fr-FR` | Maître Paris? Non. | A capitalised word after *Me* reads as a surname, so *Me* reads *Maître*, unless a subject pronoun, *ne* or a capitalised word inside the sentence comes before it, a function word comes after it, or the name is *Me Too*. |
+| `Le réseau fournit 220 V/50 Hz.` | `fr-FR` | Le réseau fournit deux cent vingt volts/cinquante hertz. | A slash between two measures stays as written. |
 | `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after a label, such as *page* or *numéro*, takes the invariable form, also where it counts the next noun. |
 
 The *de* rule reads only spaces between a number and the noun that it counts. A line break between them stops the rule, and the noun on the next line takes no *de*.
