@@ -44,7 +44,7 @@ test = [
     "packaging",
     "ovos-color-parser>=0.12.4a1",
     "tugalex>=2.5.9a1",
-    "matplotlib>=3.11.2",
+    "matplotlib==3.11.2",  # the SVG bytes in docs/img depend on the exact version
 ]
 pt = ["tugalex>=2.5.9a1"]
 
