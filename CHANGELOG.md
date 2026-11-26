@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2a153](https://github.com/TigreGotico/text2spoken/tree/0.0.2a153) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a152...0.0.2a153)
+
+**Merged pull requests:**
+
+- feat\(es,it,fr\): read 1000 as a fraction denominator [\#668](https://github.com/TigreGotico/text2spoken/pull/668) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a152](https://github.com/TigreGotico/text2spoken/tree/0.0.2a152) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a151...0.0.2a152)
+
 ## [0.0.2a151](https://github.com/TigreGotico/text2spoken/tree/0.0.2a151) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a150...0.0.2a151)
