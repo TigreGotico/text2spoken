@@ -769,6 +769,16 @@ def _plural(request: Request, written: str) -> str:
     return plural_category(at_variety(request), written)
 
 
+def _unit_plural(request: Request, written: str) -> str:
+    """The plural category of a unit of measure: a decimal under 2 is `one` in each variety, "1,5 metro".
+    Ciberdúvidas 12132: "a norma recomenda que só se use o nome da unidade no plural a partir de duas unidades,
+    inclusive … 0 grama, 0,23 grama e 1,5 grama". CLDR pt-PT gives `one` to 1 only, which follows speech
+    (Ciberdúvidas 721). Money and scale words keep the CLDR category."""
+    category = _plural(request, written)
+    whole, point, _ = written.lstrip("-").partition(".")
+    return "one" if point and whole.lstrip("0") in ("", "1") else category
+
+
 def _counted(forms: FrozenMap, request: Request, written: str) -> str:
     """The word of `forms` for the plural category of the written number: `hora` or `horas`."""
     return forms.get(_plural(request, written), forms["other"])
@@ -1124,7 +1134,7 @@ def speak_measure(span: Span, context: SpanContext) -> str:
     request = context.request
     amounts = span.fields["amount"]
     amounts = amounts if isinstance(amounts, tuple) else (amounts,)
-    category = _plural(request, written_amount(amounts[-1]))
+    category = _unit_plural(request, written_amount(amounts[-1]))
     pattern, gender = unit_reading(request, span.fields["unit"], category)
     if gender is None:
         gender = _gender_of(pattern.replace("{0}", "").split()[0], request)
