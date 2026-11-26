@@ -66,6 +66,7 @@ DE_ENTRIES = {
     "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
 }
 FR_ENTRIES = {
+    "fraction_denominators": "1000",
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_word": DELETE, "digit_words": "zéro",
     "leads": "-", "idioms": "24h/24", "range_word": DELETE, "range_marks": "-", "dimension_marks": "x",
     "dimension_word": DELETE, "time_words": "à", "months": "novembre", "currencies": "EUR", "percent": "word",
@@ -122,6 +123,7 @@ AR_ENTRIES = {
     "date_reading": "full", "era_marks": "م", "bce_mark": "ق", "shared_era_marks": "م", "hijri_months": "رمضان", "hijri_marks": "هـ", "short_periods": "م",
 }
 ES_ENTRIES = {
+    "fraction_denominators": "1000",
     "number_marks": "Latn", "defaults": "decimal_mark", "sign_words": "-", "decimal_words": ",", "digit_words": "cero",
     "leads": "-", "range_word": DELETE, "range_marks": "-", "time_words": "las",
     "clock_marks": freeze({"mark": ":", "seconds": False, "needs": "evidence"}), "time_symbols": " h",
@@ -165,6 +167,7 @@ ENTRIES = {
         "sentence_final": "etab.", "range_marks": "-", "range_followers": "bitartean",
     },
     "it": {
+        "fraction_denominators": "1000",
         "number_marks": "Latn", "sign_words": "-", "digit_words": "zero", "decimal_word": DELETE, "leads": "pag. ",
         "percent": "word", "currency_symbols": "CHF", "currencies": "EUR",
         "scales": "milioni", "unit_symbols": "kg", "dimension_marks": "×", "dimension_word": DELETE, "operators": "+",

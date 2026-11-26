@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.0.2a153](https://github.com/TigreGotico/text2spoken/tree/0.0.2a153) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a152...0.0.2a153)
+
+**Merged pull requests:**
+
+- feat\(es,it,fr\): read 1000 as a fraction denominator [\#668](https://github.com/TigreGotico/text2spoken/pull/668) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a152](https://github.com/TigreGotico/text2spoken/tree/0.0.2a152) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a151...0.0.2a152)
+
+## [0.0.2a151](https://github.com/TigreGotico/text2spoken/tree/0.0.2a151) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a150...0.0.2a151)
+
+**Merged pull requests:**
+
+- test: strict xfails name AssertionError [\#666](https://github.com/TigreGotico/text2spoken/pull/666) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat\(it\): Italian numbers through numtag [\#664](https://github.com/TigreGotico/text2spoken/pull/664) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a150](https://github.com/TigreGotico/text2spoken/tree/0.0.2a150) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a149...0.0.2a150)
@@ -372,10 +393,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a101...0.0.2a102)
 
-**Merged pull requests:**
-
-- fix\(pt\): read a full-stop number only with evidence, and versions with "ponto" [\#429](https://github.com/TigreGotico/text2spoken/pull/429) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a101](https://github.com/TigreGotico/text2spoken/tree/0.0.2a101) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a100...0.0.2a101)
@@ -387,10 +404,6 @@
 ## [0.0.2a99](https://github.com/TigreGotico/text2spoken/tree/0.0.2a99) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a98...0.0.2a99)
-
-**Merged pull requests:**
-
-- refactor\(lang\): simpler code in it and ru, docstring wraps in it, pt, ru and zh [\#418](https://github.com/TigreGotico/text2spoken/pull/418) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a98](https://github.com/TigreGotico/text2spoken/tree/0.0.2a98) (2026-11-22)
 

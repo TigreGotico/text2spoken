@@ -137,7 +137,7 @@ Italian leaves these forms as written, or reads them as shown:
 | --- | --- | --- | --- |
 | `Arrivano tra 1 e 2 ore.` | `it-IT` | Arrivano tra 1 e due ore. | 1 before "e" or "o" stays as written: uno takes the gender of its noun, and the noun comes later. |
 | `Siamo a 46° nord.` | `it-IT` | stays as written | `°` before a word that is not a noun of `ordinal_nouns` writes an angle or a coordinate, and `°` alone reads no unit. |
-| `È il 2500000º cliente.` | `it-IT` | stays as written | An ordinal above 999999 stays as written, because no source gives the one-word form that ovos-number-parser writes for it, "duemilionecinquecentomillesimo". |
+| `È il 2500000º cliente.` | `it-IT` | stays as written | An ordinal above 999999 stays as written, because no source gives its form. |
 | `Il totale è 6.000 franchi.` | `it-CH` | stays as written | In `it-CH` three digits after the point may be a thousands group. |
 | `La riunione è 8.00.` | `it-CH` | stays as written | In `it-CH` an hour and two digits after the point may be a clock time. With a time word, as in `alle 8.00`, it reads as a time. |
 | `Il 3,5% dei voti.` | `it-CH` | stays as written | `it-CH` reads no decimal comma. |
