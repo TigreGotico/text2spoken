@@ -33,7 +33,7 @@ from text2spoken.core.symbols import EMOJI, SYMBOL, named_pieces, reads_symbol
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (EMOJI_MARKS, Token, context_word, digit_script, fold_digits, is_bounded, is_digit,
                                      is_letter, is_mark, is_word_char, next_visible, one_digit_set)
-from text2spoken.core.units import elided, joined_table, unit_table, units_at
+from text2spoken.core.units import decimal_table, elided, joined_table, unit_table, units_at
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import FrozenMap, Form
 
@@ -900,6 +900,10 @@ class Measure:
                 candidates = units_at(text, end + len(gap), request)
                 if not gap:
                     candidates = (*candidates, *(u for u in joined_table(request) if text.startswith(u, end)))
+                if amounts[-1].fraction:
+                    at = end + len(gap)
+                    candidates = (*candidates, *(u for u in decimal_table(request) if text.startswith(u, at)
+                                                 and not is_word_char(text[at + len(u):at + len(u) + 1] or " ")))
                 found = next(((unit, ending) for unit in candidates
                               if (ending := _suffix(text, end + len(gap) + len(unit), data)) is not None
                               and not _per_unit(text, end + len(gap) + len(unit))

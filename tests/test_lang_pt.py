@@ -175,3 +175,18 @@ def test_a_capital_function_word_gives_no_gender_without_tugalex(monkeypatch, te
     """The endings of `gender_suffixes` read `Às` as a feminine noun unless the table of function words holds it."""
     monkeypatch.setitem(sys.modules, "tugalex", None)
     assert normalize(text, "pt-PT") == expected
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("Bebi 1,8 L.", "Bebi um vírgula oito litros."),
+    ("Bebi 0,5L e 2,25 L", "Bebi zero vírgula cinco litros e dois vírgula vinte e cinco litros"),
+])
+def test_a_capital_l_after_a_decimal_reads_as_the_litre(text, expected):
+    """DL 128/2010, note (a): «Os dois símbolos «l» e «L» podem ser usados para a unidade litro»."""
+    assert normalize(text, "pt-PT") == expected
+
+
+@pytest.mark.parametrize("text", ["O modelo 402 L.", "Lote Q.30 L.6", "A lente f/4L.", "Tamanho L", "tamanho XL",
+                                  "Bebi 1,8 Lx"])
+def test_a_capital_l_after_a_whole_number_or_in_a_word_reads_no_litre(text):
+    assert "litro" not in normalize(text, "pt-PT")

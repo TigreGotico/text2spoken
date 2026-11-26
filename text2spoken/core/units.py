@@ -102,6 +102,16 @@ def unit_table(request: Request) -> FrozenMap:
     return _cldr_table(request.variety.tag, tuple(data["unit_symbols"]))
 
 
+def decimal_table(request: Request) -> FrozenMap:
+    """The units of `decimal_unit_symbols`, which read only after a number with a decimal part, as `L` in `1,8 L`."""
+    data = request.data
+    decimal = tuple(data.get("decimal_unit_symbols", ()))
+    if not decimal:
+        return FrozenMap()
+    table = _cldr_table(request.variety.tag, tuple(data["unit_symbols"]) + decimal)
+    return FrozenMap({symbol: table[symbol] for symbol in decimal if symbol in table})
+
+
 def _takes_power(symbol: str) -> bool:
     """Whether `²` or `³` may follow the symbol: not after a power, and not after `/`, so `kWh/100km²` is no square
     of `kWh/100km`."""
@@ -150,7 +160,7 @@ def _pattern(names: FrozenMap, category: str) -> str:
 
 
 def _simple(request: Request, unit: str, category: str) -> tuple[str, str | None] | None:
-    table = {**joined_table(request), **unit_table(request)}
+    table = {**decimal_table(request), **joined_table(request), **unit_table(request)}
     if unit in table:
         return _pattern(table[unit]["names"], category), table[unit].get("gender")
     if unit[-1:] in POWERS and unit[:-1] in table and _takes_power(unit[:-1]):
