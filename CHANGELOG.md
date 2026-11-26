@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a143](https://github.com/TigreGotico/text2spoken/tree/0.0.2a143) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a142...0.0.2a143)
+
+**Merged pull requests:**
+
+- build: the figure check compares plotted data, not SVG bytes [\#651](https://github.com/TigreGotico/text2spoken/pull/651) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a142](https://github.com/TigreGotico/text2spoken/tree/0.0.2a142) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a141...0.0.2a142)
@@ -381,10 +389,6 @@
 ## [0.0.2a93](https://github.com/TigreGotico/text2spoken/tree/0.0.2a93) (2026-11-19)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a92...0.0.2a93)
-
-**Merged pull requests:**
-
-- fix\(core\): decline a number that unicode-rbnf 2.5.1 writes in digits [\#387](https://github.com/TigreGotico/text2spoken/pull/387) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a92](https://github.com/TigreGotico/text2spoken/tree/0.0.2a92) (2026-11-19)
 
