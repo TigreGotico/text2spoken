@@ -107,7 +107,7 @@ PT_ENTRIES = {
     "electronic_symbols": "@", "electronic_vowels": "a", "electronic_schemes": "https", "electronic_tlds": "pt",
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
     "letter_free_consonants": "b", "roman_nouns": "capítulo", "roman_words": "MC", "letter_words": "DA",
-    "roman_letter_nouns": "capítulo", "unjoined_symbols": "ML", "label_nouns": "sala", "plural_labels": "a páginas",
+    "roman_letter_nouns": "capítulo", "unjoined_symbols": "ML", "decimal_unit_symbols": "L", "label_nouns": "sala", "plural_labels": "a páginas",
     "hour_periods": "tarde", "number_links": "vírgula", "letter_label_nouns": "vitamina", "year_words": "desde",
     "roman_ordinal_limit": DELETE,
     "mixed_word": DELETE, "mixed_half": "other",

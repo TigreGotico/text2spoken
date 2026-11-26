@@ -170,6 +170,7 @@ SHAPES: dict[str, Shape] = {
     "titles": map_of(word, reading),
     "unit_symbols": WORDS,
     "unjoined_symbols": list_of(capitals),
+    "decimal_unit_symbols": WORDS,
     "units": map_of(word, anything),
 }
 """Each key that the core reads, with its shape. A shape names only what the core reads: the value of a unit is
@@ -199,7 +200,7 @@ READERS: dict[str, frozenset[str]] = {
     "kept_money": frozenset({"number_marks", "number_gaps", "proclitics", "case_suffixes", "symbols", "symbol_names",
                            "currencies", "currency_symbols"}),
     "measure": frozenset({"number_marks", "number_gaps", "elision_marks", "symbols", "units", "unit_symbols",
-                        "unjoined_symbols", "dimension_marks", "range_marks", "proclitics", "case_suffixes"}),
+                        "unjoined_symbols", "decimal_unit_symbols", "dimension_marks", "range_marks", "proclitics", "case_suffixes"}),
     "telephone": frozenset({"phone_words", "clock_marks", "day_periods", "phone_shapes", "phone_unit_shapes",
                           "phone_kept_shapes", "no_phone_shapes", "short_codes", "list_links", "operators", "symbols",
                           "proclitics", "case_suffixes", "function_words", "time_suffixes", "time_symbols",
@@ -253,6 +254,7 @@ OPTIONAL = frozenset({
     "proclitics", "case_suffixes", "time_suffixes", "time_symbols", "range_marks", "range_word", "day_periods",
     "electronic_labels",
     "letter_runs", "letter_free_consonants", "letter_words", "letter_label_nouns", "unjoined_symbols",
+    "decimal_unit_symbols",
     "symbol_names", "function_words", "electronic_tlds",
     "colors", "number_gaps", "elision_marks", "mixed_half", "mixed_word", "fraction_denominators",
 })

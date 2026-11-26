@@ -149,9 +149,12 @@ with no list. `unit_symbols` names the symbols made only of letters that read as
 `volume-deciliter` `dl`), and `h`, `min` and `s` (Ciberdúvidas 14648: "a abreviatura da unidade hora é h e a abreviatura
 de minuto é min"). The litre symbol also has the capital form `L` (Priberam, "litro": "Unidade de medida de
 capacidade (símbolo: l ou L)"), so `cL` and `dL` read as the CLDR units `cl` and `dl`, the case fallback of
-`core/units.py`, as in `mg/dL`. A bare `L` stays as written: after a number it also names a lot (`Q.30 L.6`), a model
-(`L-200`, `402 L`) or a lens (`f/4L`), and a litre reading of it was wrong in more than one changed line in ten of
-natural text. `mL` stays as written, because CLDR also names `ML` (pt-PT) or `Ml` (pt-BR) the megalitre, and the case of
+`core/units.py`, as in `mg/dL`. DL 128/2010, note (a), gives both: "Os dois símbolos «l» e «L» podem ser usados para a unidade
+litro". `decimal_unit_symbols` holds `L`, which reads as the litre only after a number with a decimal part and before
+a space, a punctuation mark or the end of the text, so `1,8 L` reads "um vírgula oito litros". After a whole number a
+bare `L` stays as written, because it also names a lot (`Q.30 L.6`), a model (`L-200`, `402 L`) or a lens (`f/4L`),
+and a lot, model or lens number has no decimal part. A litre reading after any number was wrong in more than one
+changed line in ten of natural text. `mL` stays as written, because CLDR also names `ML` (pt-PT) or `Ml` (pt-BR) the megalitre, and the case of
 the prefix alone tells the two apart. A unit of `line_power_symbols` right after a number with `2` or `3` after it
 writes the exponent on the line, as a text with no superscript does, so `80 m2` reads as `80 m²`: "oitenta metros
 quadrados" (Priberam, "metro": "metro quadrado [...] Unidade de medida de superfície do Sistema Internacional (símbolo:
@@ -613,6 +616,7 @@ DATA = freeze({
     "unit_symbols": ["kg", "g", "mg", "km", "m", "cm", "mm", "l", "ml", "cl", "cL", "dl", "dL", "h", "min", "s"],
     "line_power_symbols": ["km", "m", "cm", "mm"],
     "unjoined_symbols": ["ML"],
+    "decimal_unit_symbols": ["L"],
     "phone_words": ["telefone", "tel", "telemóvel", "telemóveis", "ligue", "ligar", "liga", "telefona", "fax",
                     "contacto", "contato", "celular"],
     "short_codes": ["112", "190", "192", "193", "199"],
