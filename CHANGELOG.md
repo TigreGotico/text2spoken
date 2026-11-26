@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.2a149](https://github.com/TigreGotico/text2spoken/tree/0.0.2a149) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a148...0.0.2a149)
+
+**Merged pull requests:**
+
+- fix\(pt\): a pt-PT unit after a decimal takes the plural [\#660](https://github.com/TigreGotico/text2spoken/pull/660) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a148](https://github.com/TigreGotico/text2spoken/tree/0.0.2a148) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a147...0.0.2a148)
+
+**Merged pull requests:**
+
+- feat\(es\): Spanish numbers through numtag [\#658](https://github.com/TigreGotico/text2spoken/pull/658) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a147](https://github.com/TigreGotico/text2spoken/tree/0.0.2a147) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a146...0.0.2a147)
@@ -356,10 +372,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a100...0.0.2a101)
 
-**Merged pull requests:**
-
-- refactor\(core\): drop dead code and once-used helpers, compile the say-as clock patterns once [\#413](https://github.com/TigreGotico/text2spoken/pull/413) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a100](https://github.com/TigreGotico/text2spoken/tree/0.0.2a100) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a99...0.0.2a100)
@@ -378,17 +390,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a97...0.0.2a98)
 
-**Merged pull requests:**
-
-- feat\(tdt\): read prices, phone numbers, times, percentages and measures in Portuguese [\#408](https://github.com/TigreGotico/text2spoken/pull/408) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a97](https://github.com/TigreGotico/text2spoken/tree/0.0.2a97) (2026-11-22)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a96...0.0.2a97)
-
-**Merged pull requests:**
-
-- feat\(tdt\): Tetun Dili language file, a numeric date reads in Portuguese [\#401](https://github.com/TigreGotico/text2spoken/pull/401) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a96](https://github.com/TigreGotico/text2spoken/tree/0.0.2a96) (2026-11-21)
 

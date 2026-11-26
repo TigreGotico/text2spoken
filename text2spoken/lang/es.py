@@ -1,12 +1,10 @@
 """Spanish: es-ES, the default variety, es-419, es-MX, es-AR, es-US, and the American varieties that write a decimal
 comma: es-CO, es-CL, es-UY, es-VE, es-EC, es-BO, es-PY and es-CR.
 
-Number words come from ovos-number-parser, as the speller table of design section 5.4 names it. The file adds
-the agreement that the speller does not give: `uno` takes the apocope `un` before a masculine noun, and the
-feminine `una` and `-ientas` before a feminine noun (Diccionario panhispánico de dudas, DPD, entry «uno», 2.2 and
-2.3). It writes its own fractions, because ovos-number-parser reads `1/21` as "uno vigésimo primero" where the DPD
-entry «fraccionarios» gives "un veintiunavo". It writes its own decimals, because the speller reads a float and
-drops the written zero of `2,50`, and because the DLE entry «coma» (1.b) reads the decimal part as a number:
+Number words come from numtag: cardinals with the feminine `una` and `-ientas` before a feminine noun, ordinals,
+and fractions such as "un veintiunavo" (Diccionario panhispánico de dudas, DPD, entries «uno» and «fraccionarios»).
+The file adds the apocope `un` and `veintiún` before a masculine noun (DPD «uno», 2.2). It writes its own decimals,
+because the DLE entry «coma» (1.b) reads the decimal part as a number after one `cero` for each leading zero:
 "trescientos veinticinco coma ochenta y cinco".
 
 A mixed number of a half reads the whole part, `y` and `medio`, as `2 1/2` reads "dos y medio" (Wiktionary, "y
@@ -65,7 +63,6 @@ them, and the ordinal stays as written (design section 10).
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
@@ -75,7 +72,7 @@ from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, numbers_in, signed, speak_decimal,
                                           speak_expression, speak_lexicon, speak_mixed_half, speak_telephone)
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import OvosNumberSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import NumtagSpeller, bounded_integer, spell_digits
 from text2spoken.core.times import day_hour, twelve_hour
 from text2spoken.core.tokens import Token, is_bounded, is_word_char, next_visible
 from text2spoken.errors import DeclinedReading
@@ -92,7 +89,6 @@ MONTH_VARIANTS = ["setiembre"]
 Uruguay (DPD «septiembre», 1). A date reads the month from `MONTHS`."""
 
 _INITIAL = re.compile("[A-ZÁÉÍÓÚÑ][.] $")
-_SCALE_NOUN = re.compile(".*(?:llón|llones|llardo|llardos)$")
 
 DATA = freeze({
     "number_marks": {"Latn": [{"decimal": ".", "group": ","}, {"decimal": ",", "group": "."}]},
@@ -104,8 +100,6 @@ DATA = freeze({
     "leads": {"-": ""},
     "mixed_word": "y",
     "mixed_half": {"feminine": "media", "other": "medio"},
-    "fraction_names": {"2": "medio", "3": "tercio", "4": "cuarto", "5": "quinto", "6": "sexto", "7": "séptimo",
-                       "8": "octavo", "9": "noveno", "10": "décimo", "100": "centésimo"},
     "range_word": "a",
     "range_marks": ["-", "–"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
@@ -257,19 +251,6 @@ CLDR gives `es_419` the decimal point, and `es_CO`, `es_CL`, `es_UY`, `es_VE`, `
 does; CLDR gives `es_CR` a space, and a run grouped with spaces stays as written (design section 4.3)."""
 
 
-def feminine(words: str) -> str:
-    """The feminine of a cardinal before a feminine noun: `una`, `veintiuna` and `-ientas` below the last
-    `millón`, which is a masculine noun (DPD «uno», 2.3: "setecientas mil toneladas", "veintiuna toneladas")."""
-    tokens = words.split()
-    last_scale = max((i for i, token in enumerate(tokens) if _SCALE_NOUN.fullmatch(token)), default=-1)
-    for i in range(last_scale + 1, len(tokens)):
-        if tokens[i].endswith("ientos"):
-            tokens[i] = tokens[i][:-2] + "as"
-    if last_scale < len(tokens) - 1:
-        tokens[-1] = {"uno": "una", "veintiuno": "veintiuna"}.get(tokens[-1], tokens[-1])
-    return " ".join(tokens)
-
-
 def apocope(words: str) -> str:
     """`un` and `veintiún` before a noun (DPD «uno», 2.2: "Tengo veintiún años")."""
     *head, last = words.split()
@@ -277,16 +258,10 @@ def apocope(words: str) -> str:
     return " ".join([*head, last])
 
 
-def _plain(text: str) -> str:
-    return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
-
-
 LARGEST = 10**42
 """The first number that stays as written. Wiktionary es names each long-scale word up to 10**36: «quintillón», "un
 millón de cuatrillones; es decir, diez elevado a treinta", and «sextillón», "un millón de quintillones; o sea, diez
-elevado a treinta y seis". ovos-number-parser reads 10**42 + 1 as "uno por diez elevado a
-cuarenta y dos", which is the value of 10**42, and it raises `NotImplementedError` for an ordinal from 10**24, which
-declines the span."""
+elevado a treinta y seis"."""
 
 
 def _below_largest(digits: str) -> None:
@@ -296,19 +271,19 @@ def _below_largest(digits: str) -> None:
 
 
 class SpanishSpeller:
-    """ovos-number-parser cardinals and ordinals, with the agreement, decimals and fractions of this file."""
+    """numtag cardinals, ordinals and fractions, with the decimals of this file."""
 
     def __init__(self):
-        self.ovos = OvosNumberSpeller({M: "masculine", F: "feminine"})
+        self.numtag = NumtagSpeller({M: "masculine", F: "feminine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
+        """The bare form, or the feminine: a masculine noun takes the apocope from `apocope`."""
         _below_largest(digits)
-        words = self.ovos.cardinal(digits, Features(), request)
-        return feminine(words) if features.gender is F else words
+        return self.numtag.cardinal(digits, Features(gender=F if features.gender is F else None), request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         _below_largest(digits)
-        return self.ovos.ordinal(digits, Features(gender=features.gender or M), request)
+        return self.numtag.ordinal(digits, Features(gender=features.gender or M), request)
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         return self.cardinal(digits, Features(), request)
@@ -322,20 +297,10 @@ class SpanishSpeller:
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """The numerator as a cardinal and the denominator as a fraction noun, which is masculine (DPD
-        «fraccionarios», 1 and 3: "un tercio", "dos tercios", "veintiunavo")."""
-        top = apocope(self.cardinal(numerator, Features(), request))
-        value = bounded_integer(denominator)
-        bottom = request.data["fraction_names"].get(str(value)) if value is not None else None
-        if bottom is None:
-            bottom = self._avo(denominator, request)
-        return f"{top} {bottom if bounded_integer(numerator) == 1 else bottom + 's'}"
-
-    def _avo(self, denominator: str, request: Request) -> str:
-        """The cardinal in one word with the suffix -avo: a final `a` merges with it, any other vowel stays, and
-        `y` becomes `i` (DPD «fraccionarios», 4 and 5: "cincuentavo", "onceavo", "cincuentaiseisavo")."""
-        stem = _plain(self.cardinal(denominator, Features(), request)).replace(" y ", "i").replace(" ", "")
-        stem = stem[:-1] if stem.endswith("a") else stem[:-1] if stem.endswith("uno") else stem
-        return stem + "avo"
+        «fraccionarios»: "un tercio", "dos tercios", "un veintiunavo", "cincuentaiseisavo")."""
+        _below_largest(numerator)
+        _below_largest(denominator)
+        return self.numtag.fraction(numerator, denominator, Features(), request)
 
 
 SPELLER = SpanishSpeller()
