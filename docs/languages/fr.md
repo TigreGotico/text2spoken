@@ -56,6 +56,9 @@ The gender of a noun comes from a noun list of the English Wiktionary, in the fi
 | `M. Dupont et Mme Martin arrivent.` | `fr-FR` | Monsieur Dupont et Madame Martin arrivent. |
 | `Le Dr Martin habite à St-Denis.` | `fr-FR` | Le Docteur Martin habite à Saint-Denis. |
 | `Lisez le n° 5.` | `fr-FR` | Lisez le numéro cinq. |
+| `César meurt en 44 av. J.-C. à Rome.` | `fr-FR` | César meurt en quarante-quatre avant Jésus-Christ à Rome. |
+| `Voir Me Dupond, bd Haussmann.` | `fr-FR` | Voir Maître Dupond, boulevard Haussmann. |
+| `Il pèse env. 3 kg (cf. p. 2).` | `fr-FR` | Il pèse environ trois kilogrammes (confer page deux). |
 
 ### Numbers grouped with a space
 
@@ -166,7 +169,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 ## Sources
 
-The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second", and the Dictionnaire, "unième"), the Office québécois de la langue française for the agreement of *un*, the plural, the aspirated h and the imperative, the English Wiktionary for the gender of a noun, the Clés de la rédaction of the Bureau de la traduction for an adjective before a noun, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
+The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second", and the Dictionnaire, "unième"), the Office québécois de la langue française for the agreement of *un*, the plural, the common abbreviations, the aspirated h and the imperative, the English Wiktionary for the gender of a noun, the Clés de la rédaction of the Bureau de la traduction for an adjective before a noun, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
 Some test rows in `tests/data/fr.tsv` quote a source that was fetched. Others say that a rule comes from memory. No native speaker has checked any row. The cited rows are the check for numbers. No other number engine checks them.
 

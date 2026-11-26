@@ -93,6 +93,13 @@ The rules cite these sources, by rule family:
   and the ARCEP numbering plan of France for the ten digits read in pairs.
 - Abbreviations, amounts (`k`, `M`, `Md`) and Roman numerals after a sovereign or before `e`: Lexique des règles
   typographiques en usage à l'Imprimerie nationale.
+- `cf.`, `env.`, `av. J.-C.`, `apr. J.-C.`, `boul.` and `Me`: Office québécois de la langue française, Vitrine
+  linguistique, "Liste d'abréviations courantes": "confer (« reportez-vous à ») | cf.", "environ | env.", "avant
+  Jésus-Christ | av. J.-C.", "après Jésus-Christ | apr. J.-C.", "boulevard | boul.", and "Me" for "maître (avocat ou
+  avocate, notaire)". The Wiktionnaire gives `ap. J.-C.` ("Par abréviation de après Jésus-Christ") and `bd`
+  ("Abréviation de boulevard", "8, bd Bonne-Nouvelle"). `Me` and `bd` are also the pronoun "me" and the noun "bd",
+  so they read only as titles do, before a capitalised name: "Me Dupond", "bd Haussmann". The full stop of a
+  `J.-C.` abbreviation also ends a sentence, as the one of `etc.` does.
 - Unit, month and currency names: CLDR `common/main` `fr`, `fr_CA` and `fr_CH`.
 
 The rows of `tests/data/fr.tsv` give the source of each expected reading. The rows of the telephone, abbreviation,
@@ -732,10 +739,17 @@ DATA = freeze(
             "St.": "Saint",
             "Ste": "Sainte",
             "Ste.": "Sainte",
+            "Me": "Maître",
+            "bd": "boulevard",
+            "boul.": "boulevard",
         },
         "name_particles": ["le", "la", "de", "du", "des", "d'", "l'"],
-        "abbreviations": {"etc.": "et cetera", "c.-à-d.": "c'est-à-dire", "p. ex.": "par exemple", "&": "et"},
-        "sentence_final": ["etc."],
+        "abbreviations": {
+            "etc.": "et cetera", "c.-à-d.": "c'est-à-dire", "p. ex.": "par exemple", "&": "et", "cf.": "confer",
+            "env.": "environ", "av. J.-C.": "avant Jésus-Christ", "apr. J.-C.": "après Jésus-Christ",
+            "ap. J.-C.": "après Jésus-Christ",
+        },
+        "sentence_final": ["etc.", "av. J.-C.", "apr. J.-C.", "ap. J.-C."],
         "number_abbreviations": {
             "n°": "numéro",
             "N°": "numéro",
