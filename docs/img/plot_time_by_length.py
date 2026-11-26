@@ -14,15 +14,14 @@ from plot_style import save  # noqa: E402
 TIMING = Path(__file__).with_name("timing.json")
 
 
-def draw(fig, theme):
-    data = json.loads(TIMING.read_text(encoding="utf-8"))
+def draw(fig, theme, data):
     xs = [p["characters"] for p in data["points"]]
     ys = [p["milliseconds"] for p in data["points"]]
     slope = sum(x * y for x, y in zip(xs, ys)) / sum(x * x for x in xs)
     ax = fig.subplots()
     ax.plot([0, max(xs)], [0, slope * max(xs)], color=theme["series"][1], linestyle="--", linewidth=1.5,
             label=f"straight line from 0, {slope * 1000:.1f} ms per 1,000 characters")
-    ax.plot(xs, ys, color=theme["series"][0], marker="o", label=f"measured, {data['tag']}")
+    ax.plot(xs, ys, color=theme["series"][0], marker="o", label=f"measured, {data['tag']}, {data['cpu'].replace('(R)', '').replace('(TM)', '')}")
     ax.set_xlabel("Characters in the text")
     ax.set_ylabel("Milliseconds")
     ax.set_xlim(0)
@@ -32,4 +31,4 @@ def draw(fig, theme):
 
 
 if __name__ == "__main__":
-    save("docs/img/time-by-length", draw)
+    save("docs/img/time-by-length", draw, json.loads(TIMING.read_text(encoding="utf-8")))
