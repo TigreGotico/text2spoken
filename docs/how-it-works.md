@@ -2,7 +2,7 @@
 
 <!-- agent-hint
 covers: the stages of a normalize call, how overlapping forms are resolved, and the cost of a call.
-source: text2spoken/core/pipeline.py:analyze, text2spoken/core/spans.py:classify, text2spoken/core/spans.py:render, text2spoken/core/language.py:_registry, docs/figures/timing.json
+source: text2spoken/core/pipeline.py:analyze, text2spoken/core/spans.py:classify, text2spoken/core/spans.py:render, text2spoken/core/language.py:_registry, docs/img/timing.json
 generated: no, except docs/img/time-by-length.svg, which docs/img/plot_time_by_length.py writes
 verify: `python scripts/check_doc_page.py docs/how-it-works.md`
 see: api.md, adding-a-language.md, how-it-reads.md
@@ -125,7 +125,7 @@ The time of a call grows in proportion to the length of the text. The figure sho
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/time-by-length-dark.svg">
-  <img alt="A straight line from the origin: 63 characters take 3.1 ms, 1,008 characters take 37.6 ms, 16,128 characters take 625.5 ms." src="img/time-by-length.svg">
+  <img alt="A straight line from the origin: 63 characters take 2.9 ms, 1,008 characters take 34.8 ms, 16,128 characters take 525.7 ms, on an Intel Core i9-11900H." src="img/time-by-length.svg">
 </picture>
 
 `img/plot_time_by_length.py` makes this figure from `img/timing.json`.

@@ -21,7 +21,7 @@ def draw(fig, theme, data):
     ax = fig.subplots()
     ax.plot([0, max(xs)], [0, slope * max(xs)], color=theme["series"][1], linestyle="--", linewidth=1.5,
             label=f"straight line from 0, {slope * 1000:.1f} ms per 1,000 characters")
-    ax.plot(xs, ys, color=theme["series"][0], marker="o", label=f"measured, {data['tag']}")
+    ax.plot(xs, ys, color=theme["series"][0], marker="o", label=f"measured, {data['tag']}, {data['cpu'].replace('(R)', '').replace('(TM)', '')}")
     ax.set_xlabel("Characters in the text")
     ax.set_ylabel("Milliseconds")
     ax.set_xlim(0)

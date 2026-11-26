@@ -1,42 +1,43 @@
 {
  "tag": "en-GB",
  "sentence": "Dr Smith paid £3.50 for 2 tickets on 14 March 2024 at 7:30 pm. ",
+ "cpu": "11th Gen Intel(R) Core(TM) i9-11900H @ 2.50GHz",
  "points": [
   {
    "characters": 63,
-   "milliseconds": 3.1
+   "milliseconds": 2.9
   },
   {
    "characters": 126,
-   "milliseconds": 5.4
+   "milliseconds": 4.9
   },
   {
    "characters": 252,
-   "milliseconds": 10.5
+   "milliseconds": 9.7
   },
   {
    "characters": 504,
-   "milliseconds": 20.0
+   "milliseconds": 18.9
   },
   {
    "characters": 1008,
-   "milliseconds": 37.6
+   "milliseconds": 34.8
   },
   {
    "characters": 2016,
-   "milliseconds": 75.7
+   "milliseconds": 73.2
   },
   {
    "characters": 4032,
-   "milliseconds": 153.4
+   "milliseconds": 133.6
   },
   {
    "characters": 8064,
-   "milliseconds": 308.9
+   "milliseconds": 258.8
   },
   {
    "characters": 16128,
-   "milliseconds": 625.5
+   "milliseconds": 525.7
   }
  ]
 }
