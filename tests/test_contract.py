@@ -212,7 +212,7 @@ def test_clause_6_admits_a_file_with_none_of_the_optional_keys():
                    "list_links": [], "operators": {}, "unit_symbols": [], "currency_symbols": [],
                    "dimension_marks": [], "patterns": {}})
     readers = (SHARED["decimal"], SHARED["date_numeric"], SHARED["time_clock"], SHARED["telephone"],
-               SHARED["electronic"], SHARED["letters"], SHARED["measure"])
+               SHARED["electronic"], SHARED["letters"], SHARED["measure"], SHARED["fraction"])
     verbalizers = {**STUB.verbalizers, Form.ELECTRONIC: contract.speak_electronic,
                    Form.LETTERS: contract.speak_letters, Form.COLOR: contract.speak_color}
     spec = replace(STUB, data=data, recognizers=(*STUB.recognizers, *readers), verbalizers=verbalizers)

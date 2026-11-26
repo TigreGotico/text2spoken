@@ -127,6 +127,7 @@ SHAPES: dict[str, Shape] = {
     "electronic_schemes": map_of(word, one_of("read", "drop")),
     "electronic_symbols": map_of(character, word),
     "electronic_tlds": WORDS,
+    "fraction_denominators": list_of(digits, minimum=1),
     "electronic_vowels": list_of(one_of(*"abcdefghijklmnopqrstuvwxyz"), minimum=1),
     "function_words": WORDS,
     "idioms": map_of(word, text),
@@ -186,7 +187,7 @@ READERS: dict[str, frozenset[str]] = {
     "cardinal": frozenset({"number_marks", "leads", "sign_words", "symbols", "proclitics", "case_suffixes"}),
     "decimal": frozenset({"number_marks", "symbols", "proclitics", "case_suffixes"}),
     "fraction": frozenset({"number_marks", "symbols", "units", "unit_symbols", "number_gaps", "proclitics",
-                            "case_suffixes", "currencies", "currency_symbols"}),
+                            "case_suffixes", "currencies", "currency_symbols", "fraction_denominators"}),
     "idiom": frozenset({"idioms", "proclitics", "case_suffixes"}),
     "range": frozenset({"number_marks", "range_marks", "symbols", "proclitics", "case_suffixes"}),
     "date_numeric": frozenset({"symbols", "proclitics", "case_suffixes"}),
@@ -253,7 +254,7 @@ OPTIONAL = frozenset({
     "electronic_labels",
     "letter_runs", "letter_free_consonants", "letter_words", "letter_label_nouns", "unjoined_symbols",
     "symbol_names", "function_words", "electronic_tlds",
-    "colors", "number_gaps", "elision_marks", "mixed_half", "mixed_word",
+    "colors", "number_gaps", "elision_marks", "mixed_half", "mixed_word", "fraction_denominators",
 })
 """Keys whose absence means that the language has none, so a file that uses their reader may leave them out.
 Design section 4.2 lets a language have no range word: "A language that marks a range with case endings has no
