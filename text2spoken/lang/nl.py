@@ -3,7 +3,7 @@
 The sources are the advice pages of the Nederlandse Taalunie (taaladvies.net), the advice pages of Genootschap Onze Taal
 (onzetaal.nl/taalloket), the Dutch Wiktionary and CLDR 49.
 
-Cardinals come from ovos-number-parser (design section 5.4). Its words follow Taaladvies.net,
+Cardinals and ordinals come from numtag. Its words follow Taaladvies.net,
 "Aaneenschrijven van telwoorden (algemeen)", Hoofdtelwoorden: "21 eenentwintig", "43 drieënveertig", "800 achthonderd",
 "135 honderdvijfendertig", "101 honderdeen of honderdeneen". The number 1 alone reads "één": Onze Taal, "een van de /
 één van de", "Eén is juist als het telwoord één bedoeld is en er ook nadruk op één ligt", with "Ik moet rijden, dus ik
@@ -11,9 +11,9 @@ neem maar één biertje. (duidelijker)". A digit writes the numeral and never th
 is a count that the speaker stresses. The same Taaladvies.net page puts a space after "duizend": "Na het woord
 duizend (en samenstellingen hiermee, zoals vierduizend) staat een spatie", with "vierduizend twee" and "zesduizend
 achtentwintig". Onze Taal, "Getallen uitschrijven", says "Na duizend komt een spatie" and "Deze regel geldt zowel voor
-hoofdtelwoorden als voor rangtelwoorden". ovos-number-parser and CLDR RBNF `nl` write no space there, as in
-"tweeduizenddriehonderdvijftig", so the file puts it in a cardinal, an ordinal and a year: "tweeduizend
-driehonderdvijftig", "tweeduizend tweeëntwintigste".
+hoofdtelwoorden als voor rangtelwoorden". numtag writes the space in a cardinal and an ordinal: "tweeduizend
+driehonderdvijftig", "tweeduizend tweeëntwintigste". CLDR RBNF `nl` writes no space there, as in
+"tweeduizenddriehonderdvijftig", so the file puts it in a year.
 
 A minus sign reads "min": CLDR RBNF `nl`, `spellout-cardinal`, `-x: min →→`, and Wiktionary, "min", "minus, verminderd
 met (-)". `digit_words` holds the CLDR RBNF words of 0 to 9, with "één" for 1 by the Onze Taal rule above. A number
@@ -27,11 +27,9 @@ koppelteken". Onze Taal, "1ste / 1e", gives "1ste, 2de, 8ste, 12de, 1000ste" and
 rangtelwoorden ga je van het laatste deel uit: negenhonderdzevende, driehonderdachtste, honderdeneerste" (Onze Taal,
 "Honderdeneende / honderdeneerste"). So `ste` follows a number that ends in 1 or 8 after a ten digit 0, or in 00, or
 that has a ten digit of 2 or more, and `de` follows the others: `3de`, `21ste`, `12de`, `100ste`. Any other ending, as
-in `3ste`, stays as written. The ordinal words come from CLDR RBNF `nl`, `spellout-ordinal`, which writes
-"honderdeerste" (Onze Taal gives "honderdeerste" as correct) and "honderdtweede". ovos-number-parser writes
-"honderdeenste" and "honderdtweeste", so the file does not read ordinals through it. RBNF writes the ordinal of a
-million as "eenmiljoenste", and Taaladvies.net writes "4 000 000e vier miljoenste" with no "een", so an ordinal above
-999999 stays as written.
+in `3ste`, stays as written. numtag writes "honderdeerste" (Onze Taal gives "honderdeerste" as correct) and
+"honderdtweede", and the ordinal of a million with no "een", as Taaladvies.net writes "4 000 000e vier miljoenste" and
+"4 400 000e vier miljoen vierhonderdduizendste".
 
 A decimal reads the CLDR RBNF `nl` rule `x.x: ←← komma →→` of `spellout-cardinal`: the whole part, "komma", then each
 digit of the decimal part, so `3,14` reads "drie komma één vier" and the zero of `2,50` stays. The decimal mark is the
@@ -171,15 +169,12 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, SPACE_GROUPS, Tel
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import NumtagSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char
 from text2spoken.core.units import unit_reading, units_at
 from text2spoken.errors import DeclinedReading
 from text2spoken.params import OPTIONS, FrozenMap, Form, freeze
-
-LARGEST_ORDINAL = 999999
-"""The largest ordinal that reads: RBNF writes "eenmiljoenste" for 1000000, and no source writes the "een"."""
 
 FRACTION_ONE = "een"
 """The numerator 1 of a fraction, as Onze Taal writes "een derde"."""
@@ -284,21 +279,17 @@ def space_after_thousand(words: str) -> str:
 
 
 class DutchSpeller:
-    """Cardinals through ovos-number-parser, ordinals and years through CLDR RBNF, and decimals and fractions built
-    from both."""
+    """Cardinals and ordinals through numtag, years through CLDR RBNF, and decimals and fractions built from both."""
 
     def __init__(self):
-        self.words = OvosNumberSpeller({})
+        self.words = NumtagSpeller({})
         self.rbnf = RbnfSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        return space_after_thousand(self.words.cardinal(digits, features, request))
+        return self.words.cardinal(digits, features, request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        value = bounded_integer(digits)
-        if value is None or value > LARGEST_ORDINAL:
-            raise DeclinedReading(f"no source writes the ordinal of a number above {LARGEST_ORDINAL}")
-        return space_after_thousand(self.rbnf.ordinal(digits, features, request))
+        return self.words.ordinal(digits, features, request)
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         return space_after_thousand(self.rbnf.year(digits, features, request))
