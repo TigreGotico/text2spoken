@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a156](https://github.com/TigreGotico/text2spoken/tree/0.0.2a156) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a155...0.0.2a156)
+
+**Merged pull requests:**
+
+- feat\(en\): English numbers from numtag [\#677](https://github.com/TigreGotico/text2spoken/pull/677) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a155](https://github.com/TigreGotico/text2spoken/tree/0.0.2a155) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a154...0.0.2a155)
@@ -381,17 +389,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a105...0.0.2a106)
 
-**Merged pull requests:**
-
-- fix\(pt\): no ending rule after tugalex gives no gender [\#489](https://github.com/TigreGotico/text2spoken/pull/489) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a105](https://github.com/TigreGotico/text2spoken/tree/0.0.2a105) (2026-11-23)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a104...0.0.2a105)
-
-**Merged pull requests:**
-
-- refactor: name the letter test, the variety cache, the eu patterns and the ru noun skip [\#485](https://github.com/TigreGotico/text2spoken/pull/485) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a104](https://github.com/TigreGotico/text2spoken/tree/0.0.2a104) (2026-11-23)
 
