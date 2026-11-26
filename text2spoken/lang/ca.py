@@ -148,11 +148,16 @@ DATA = freeze({
 VARIETIES = (
     Variety("ca-ES"),
     Variety("ca-AD"),
-    Variety("ca-ES-valencia"),
+    Variety("ca-ES-valencia", freeze({"ordinal_marks": {"r": "masculine", "n": "masculine", "t": "masculine",
+                                                         "è": "masculine", "é": "masculine", "a": "feminine"}})),
 )
 
 
 FEMININE_ENDS = {"un": "una", "dos": "dues"}
+
+OPEN_E = {"è": "é"}
+"""The central mark of an ordinal in -è also marks the Valencian -é: AVL, Diccionari normatiu valencià, «cinqué»:
+"cinqué -ena (o cinquè)", so `5è` reads "cinqué" in ca-ES-valencia."""
 """The words of a number that take the feminine, also at the end of a compound: DNV "un -a", "dos (o dos dues)"."""
 
 ELIDING = "aeiouàèéíòóú"
@@ -374,7 +379,7 @@ class Ordinal:
             yield Span(number.start, end, Form.ORDINAL,
                        FrozenMap({"digits": number.integer, "marker": marker, "prefix": "", "suffix": "",
                                   "script": number.script}), recognizer=self.name,
-                       keep=not word.endswith(marker))
+                       keep=not word.endswith(OPEN_E.get(marker, marker)) and not word.endswith(marker))
 
 
 @lru_cache(maxsize=16)
