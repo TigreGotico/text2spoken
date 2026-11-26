@@ -10,8 +10,10 @@ sources:
 - Правила-2006: Правила русской орфографии и пунктуации. Полный академический справочник, 2006, by paragraph
   (orfo.ruslang.ru).
 
-Number words take the letter ё, as Грамматика-80 § 1374 writes "трёх", "четырёх", "трём", so that a reader says
-them right (Правила-2006 § 5).
+Number words take the letter ё, as Грамматика-80 § 1374 writes "трёх", "четырёх", "трём". Правила-2006 § 5 makes
+ё obligatory only in texts with stress marks throughout, in books for young children and in teaching texts, and in
+ordinary texts recommends it "Для указания правильного произношения слова". Text for a voice is read aloud, so the
+file writes ё in each number word that has it.
 """
 from __future__ import annotations
 
