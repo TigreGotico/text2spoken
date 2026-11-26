@@ -91,6 +91,7 @@ Uruguay (DPD «septiembre», 1). A date reads the month from `MONTHS`."""
 _INITIAL = re.compile("[A-ZÁÉÍÓÚÑ][.] $")
 
 DATA = freeze({
+    "fraction_denominators": ("1000",),
     "number_marks": {"Latn": [{"decimal": ".", "group": ","}, {"decimal": ",", "group": "."}]},
     "defaults": {"date_order": "DMY", "clock": "24h", "minute_style": "number", "decimal_mark": ",",
                  "scale": "long"},
