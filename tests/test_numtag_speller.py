@@ -1,23 +1,24 @@
-"""pt-PT number words come from numtag, and pt-BR words from ovos-number-parser."""
+"""Portuguese number words come from numtag, for pt-PT and pt-BR."""
+import pytest
 from numtag import SpokenForm, spell
 
-from text2spoken.core.spellers import NumtagSpeller, OvosNumberSpeller, numtag_writes
+from text2spoken.core.spans import Features
 from text2spoken.lang.pt import SPELLER
 
 
-def test_numtag_writes_pt_pt_and_not_pt_br():
-    assert numtag_writes("pt-PT")
-    assert not numtag_writes("pt-BR")
+@pytest.mark.parametrize(("tag", "ordinal"), [("pt-PT", "quadringentésimo"), ("pt-BR", "quadringentésimo")])
+def test_a_portuguese_ordinal_is_the_numtag_ordinal(tag, ordinal):
+    assert SPELLER.ordinal("400", Features(), _request(tag)) == spell("400", tag, form=SpokenForm.ORDINAL)[0].text \
+        == ordinal
 
 
-def test_the_portuguese_speller_picks_the_writer_of_the_variety():
-    assert isinstance(SPELLER._writer(_request("pt-PT")), NumtagSpeller)
-    assert isinstance(SPELLER._writer(_request("pt-BR")), OvosNumberSpeller)
+def test_pt_br_reads_its_own_spellings():
+    assert SPELLER.cardinal("16", Features(), _request("pt-BR")) == "dezesseis"
+    assert SPELLER.cardinal("16", Features(), _request("pt-PT")) == "dezasseis"
 
 
-def test_a_pt_pt_ordinal_is_the_numtag_ordinal():
-    from text2spoken.core.spans import Features
-    assert SPELLER.ordinal("400", Features(), _request("pt-PT")) == spell("400", "pt-PT", form=SpokenForm.ORDINAL)[0].text
+def test_a_decimal_of_zeros_reads_one_zero():
+    assert SPELLER.decimal("1", "00", Features(), _request("pt-BR")) == "um vírgula zero"
 
 
 def _request(tag):

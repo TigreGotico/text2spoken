@@ -102,7 +102,7 @@ PT_ENTRIES = {
     "time_contractions": "às", "time_article_prepositions": "as",
     "plural_time_verbs": "são", "point_time_words": "pelas", "point_one_words": "à",
     "point_article_prepositions": "as", "amount_words": "vezes",
-    "range_articles": "das", "symbols_before_only": "$", "fraction_names": "3", "fraction_denominators": "1000", "fraction_word": DELETE,
+    "range_articles": "das", "symbols_before_only": "$", "fraction_denominators": "1000",
     "electronic_symbols": "@", "electronic_vowels": "a", "electronic_schemes": "https", "electronic_tlds": "pt",
     "letter_names": "p", "letter_vowels": "o", "letter_onsets": "n", "letter_codas": "l", "letter_runs": "APPO",
     "letter_free_consonants": "b", "roman_nouns": "capítulo", "roman_words": "MC", "letter_words": "DA",
