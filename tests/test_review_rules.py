@@ -25,10 +25,10 @@ from text2spoken.lang import nl
 from text2spoken.lang.en import LANGUAGE as EN
 from text2spoken.params import Form, freeze, thaw
 
-BRACKET_LOSS = pytest.mark.xfail(strict=True, reason="a number in brackets before a run keeps the run as written")
-GLUED_LOSS = pytest.mark.xfail(strict=True,
+BRACKET_LOSS = pytest.mark.xfail(strict=True, raises=AssertionError, reason="a number in brackets before a run keeps the run as written")
+GLUED_LOSS = pytest.mark.xfail(strict=True, raises=AssertionError,
                                reason="under say-as telephone, the digits after a glued group read as a quantity")
-WORD_BACK_LOSS = pytest.mark.xfail(strict=True, reason="a phone word more than one word back names no run")
+WORD_BACK_LOSS = pytest.mark.xfail(strict=True, raises=AssertionError, reason="a phone word more than one word back names no run")
 
 
 def words_of(text: str, clause_end_after: frozenset[str] = frozenset()) -> list[Token]:
@@ -598,7 +598,7 @@ def test_a_year_at_the_end_of_the_text_before_a_space_reads(space):
     assert normalize(f"In 1999{space}", "en-GB") == f"In nineteen ninety-nine{space}"
 
 
-@pytest.mark.xfail(strict=True, reason="a number between the phone word and a short code: the code reads as a quantity")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="a number between the phone word and a short code: the code reads as a quantity")
 def test_a_short_code_behind_another_number_reads_the_same_on_a_second_pass():
     once = normalize("Call 45./999 now.", "en-GB")
     assert once == "Call forty-five./nine nine nine now."
@@ -677,7 +677,7 @@ def test_the_window_names_a_run_that_starts_with_a_zero():
         "Call us on zero two zero seven nine four six zero zero one eight."
 
 
-@pytest.mark.xfail(strict=True, reason="a run that a list link joins to a kept run reads as a quantity")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="a run that a list link joins to a kept run reads as a quantity")
 def test_a_kept_run_that_a_joiner_continues_starts_a_phone_list():
     assert normalize("Call 0800 123 456/7 or 5551234.", "en-GB") == \
         "Call 0800 123 456/7 or five five five one two three four."
@@ -696,7 +696,7 @@ def test_the_core_telephone_holds_no_english_rule(gendered, monkeypatch):
     assert normalize("A vila tem 10 000 pessoas.", "qaa") == "A vila tem dez mil pessoas."
 
 
-@pytest.mark.xfail(strict=True, reason="a run with a case ending gives no telephone span")
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="a run with a case ending gives no telephone span")
 def test_a_case_ending_joins_every_form_that_holds_a_number(gendered, monkeypatch):
     """A language with case endings reads `20%ko`, `5€ko` and `943 123 456ra` as one span each, with the ending in
     the `suffix` field of the form (design section 4.4)."""
@@ -1154,13 +1154,13 @@ def test_say_as_telephone_reads_no_kept_run_glued_to_a_word(text, lang, expected
     pytest.param("Call the office on 555-1234.", "en-GB", None, "Call the office on five five five one two three four.",
                  marks=WORD_BACK_LOSS),
     pytest.param("Text 0800 123 456–00 44", "en-GB", None, "Text 0800 123 456–00 44",
-                 marks=pytest.mark.xfail(strict=True, reason="a group after a kept run reads as a quantity")),
+                 marks=pytest.mark.xfail(strict=True, raises=AssertionError, reason="a group after a kept run reads as a quantity")),
     pytest.param("teléfono 2 062 6 9.30 aquí.", "es-ES", None, "teléfono dos cero seis dos seis 9.30 aquí.",
-                 marks=pytest.mark.xfail(strict=True, reason="a time after a short code reads digit by digit")),
+                 marks=pytest.mark.xfail(strict=True, raises=AssertionError, reason="a time after a short code reads digit by digit")),
     pytest.param("telefone le (12) 872 523 454,71.", "pt-PT", None,
                  "telefone le (doze) oitocentos e setenta e dois milhões quinhentos e vinte e três mil quatrocentos "
                  "e cinquenta e quatro vírgula setenta e um.",
-                 marks=pytest.mark.xfail(strict=True, reason="a bracketed area code keeps an amount as written")),
+                 marks=pytest.mark.xfail(strict=True, raises=AssertionError, reason="a bracketed area code keeps an amount as written")),
 ])
 def test_a_phone_reading_that_the_simple_rule_loses(text, lang, say_as, expected):
     """Readings that the evidence of section 4.3 does not reach. Each reason names the class of the loss."""
@@ -1174,7 +1174,7 @@ def test_a_phone_reading_that_the_simple_rule_loses(text, lang, say_as, expected
     pytest.param("11/2/2010 (12) 81 559\u202f599", "es-ES", "telephone",
                  "once de febrero de dos mil diez uno dos ocho uno cinco cinco nueve\u202fcinco nueve nueve",
                  marks=pytest.mark.xfail(
-                     strict=True, reason="a date before a bracketed area code keeps the date and the run as written")),
+                     strict=True, raises=AssertionError, reason="a date before a bracketed area code keeps the date and the run as written")),
     ("3.5 (1) 12 000 (1) 437 593", "en-GB", "telephone",
      "three five one one two zero zero zero one four three seven five nine three"),
 ])
