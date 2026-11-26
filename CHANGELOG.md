@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a157](https://github.com/TigreGotico/text2spoken/tree/0.0.2a157) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a156...0.0.2a157)
+
+**Merged pull requests:**
+
+- fix\(units\): read a capital L after a decimal number as the litre in pt [\#682](https://github.com/TigreGotico/text2spoken/pull/682) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat\(nl\): Dutch numbers from numtag [\#680](https://github.com/TigreGotico/text2spoken/pull/680) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a156](https://github.com/TigreGotico/text2spoken/tree/0.0.2a156) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a155...0.0.2a156)
@@ -376,10 +385,6 @@
 ## [0.0.2a108](https://github.com/TigreGotico/text2spoken/tree/0.0.2a108) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a107...0.0.2a108)
-
-**Merged pull requests:**
-
-- chore\(tests\): remove the blank line after row pt-717 [\#499](https://github.com/TigreGotico/text2spoken/pull/499) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a107](https://github.com/TigreGotico/text2spoken/tree/0.0.2a107) (2026-11-24)
 
