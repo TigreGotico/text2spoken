@@ -213,7 +213,7 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, DateNumeric, Tele
 from bisect import bisect_right
 
 from text2spoken.core.spans import Features, Span, SpanContext, clause_breaks, clause_window, context_words
-from text2spoken.core.spellers import RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import NumtagSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import twelve_hour
 from text2spoken.core.tokens import Token, fold_digits, is_bounded, is_letter, is_word_char, one_digit_set
@@ -407,20 +407,25 @@ def ordinal_suffix(number: int) -> str:
 
 
 class EnglishSpeller:
-    """RBNF integers with the rule sets of each variety, decimals read digit by digit after "point"."""
+    """numtag integers in the tag of the request, RBNF years, decimals read digit by digit after "point"."""
 
     def __init__(self):
+        self.numtag = NumtagSpeller({})
         self.rbnf = {
             "en-GB": RbnfSpeller(cardinal={Features(): "spellout-cardinal-verbose"},
                                  ordinal={Features(): "spellout-ordinal-verbose"}),
             "en-US": RbnfSpeller(cardinal={Features(): "spellout-cardinal"}, ordinal={Features(): "spellout-ordinal"}),
         }
 
+    def _speller(self, request: Request):
+        """numtag has no Indian English writer, so `en-IN` keeps the lakh and crore of CLDR `en_IN`."""
+        return self.rbnf[request.variety.tag] if request.tag.startswith("en-IN") else self.numtag
+
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        return self.rbnf[request.variety.tag].cardinal(digits, features, request)
+        return self._speller(request).cardinal(digits, features, request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        return self.rbnf[request.variety.tag].ordinal(digits, features, request)
+        return self._speller(request).ordinal(digits, features, request)
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         """`spellout-numbering-year`, except that a year it reads with "thousand" reads as the cardinal of the

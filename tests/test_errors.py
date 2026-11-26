@@ -174,9 +174,9 @@ def test_a_hint_must_be_features():
 
 
 def test_a_speller_that_raises_keeps_the_written_form_and_logs(caplog):
-    # RBNF has no rule for 10^21 in en (section 5.4), so the cardinal stays as written.
+    # RBNF has no rule for 10^21 in ko (section 5.4), so the cardinal stays as written.
     with caplog.at_level(logging.WARNING, logger="text2spoken"):
-        assert normalize("It is 1000000000000000000000 now.", "en") == "It is 1000000000000000000000 now."
+        assert normalize("그것은 1000000000000000000000 입니다.", "ko") == "그것은 1000000000000000000000 입니다."
     assert any("unread cardinal" in r.message for r in caplog.records)
 
 
@@ -215,7 +215,7 @@ def test_a_decimal_that_no_float_holds_keeps_the_written_form_and_logs_the_reaso
 
 def test_a_speller_that_raises_in_strict_mode_raises_chained():
     with pytest.raises(UnreadFormError) as raised:
-        normalize("It is 1000000000000000000000 now.", "en", NormalizationParams(strict=True))
+        normalize("It is 1000000000000000000000 now.", "ko", NormalizationParams(strict=True))
     assert raised.value.__cause__ is not None
 
 
@@ -339,14 +339,14 @@ def test_rbnf_declines_a_number_outside_its_range_through_declined_reading():
     from text2spoken import DeclinedReading
 
     with pytest.raises(UnreadFormError) as raised:
-        normalize("It is 1000000000000000000000 now.", "en", NormalizationParams(strict=True))
+        normalize("It is 1000000000000000000000 now.", "ko", NormalizationParams(strict=True))
     assert isinstance(raised.value.__cause__, DeclinedReading)
 
 
 LONG_RUNS = ["9" * 309, "9" * 4301, "$" + "9" * 400, "9" * 400 + ".5"]
 
 
-@pytest.mark.parametrize("tag", ["en", "de"])
+@pytest.mark.parametrize("tag", ["en", "de", "ko"])
 @pytest.mark.parametrize("run", LONG_RUNS, ids=["309 nines", "4301 nines", "$ and 400 nines", "400 nines .5"])
 def test_a_number_that_rbnf_cannot_read_stays_as_written(tag, run):
     text = f"It is {run} now."
@@ -360,7 +360,7 @@ def test_rbnf_declines_a_number_with_no_rule_and_a_run_past_the_digit_bound(run)
     from text2spoken import DeclinedReading
 
     with pytest.raises(UnreadFormError) as raised:
-        normalize(f"It is {run} now.", "en", NormalizationParams(strict=True))
+        normalize(f"It is {run} now.", "ko", NormalizationParams(strict=True))
     assert isinstance(raised.value.__cause__, DeclinedReading)
 
 
@@ -373,7 +373,7 @@ def test_rbnf_output_with_a_digit_keeps_the_written_form(monkeypatch):
         return FormatResult(text="12 345", text_ruleset=ruleset_names[0], text_by_ruleset={ruleset_names[0]: "12 345"})
 
     monkeypatch.setattr(type(spellers.rbnf_engine("en")), "format_number", digits)
-    assert normalize("It is 12345 now.", "en") == "It is 12345 now."
+    assert normalize("It is 12345 now.", "en-IN") == "It is 12345 now."
 
 
 def test_a_value_error_of_the_rbnf_library_still_raises(monkeypatch):
@@ -385,7 +385,7 @@ def test_a_value_error_of_the_rbnf_library_still_raises(monkeypatch):
 
     monkeypatch.setattr(spellers, "rbnf_engine", lambda locale: Broken())
     with pytest.raises(ValueError, match="a defect in the library"):
-        normalize("It is 5 now.", "en")
+        normalize("It is 5 now.", "en-IN")
 
 
 def test_the_note_of_a_defect_holds_a_fixed_length_of_the_text(monkeypatch):

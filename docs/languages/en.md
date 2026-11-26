@@ -53,7 +53,7 @@ Every other `en-*` tag reads the variety that `linguatag.closest_lang` gives it,
 
 ## Sources
 
-Number words come from CLDR RBNF. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
+Number words come from the numtag writer. `en-IN` and the years take their words from CLDR RBNF, because numtag has no Indian English writer. Unit words, currency names and symbol names come from CLDR 49. The names of the address symbols come from Wiktionary, and the letter names from Wikipedia, "English alphabet", which gives them from the Oxford English Dictionary. The syllable rule of the `LETTERS` form follows Wikipedia, "English phonology" and "English orthography". The docstring of [`en.py`](../../text2spoken/lang/en.py) gives each source.
 
 The test rows in `tests/data/en.tsv` name their source. The `checked_by` column shows that no native speaker has checked them.
 
