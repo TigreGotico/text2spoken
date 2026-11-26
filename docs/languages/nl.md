@@ -8,7 +8,7 @@ verify: `python scripts/check_doc_page.py docs/languages/nl.md`
 see: de.md, ../how-it-reads.md
 -->
 
-The file `text2spoken/lang/nl.py` reads Dutch. Its cardinals come from `ovos-number-parser`, which the base install holds, and its ordinals and years from the CLDR spell-out rules.
+The file `text2spoken/lang/nl.py` reads Dutch. Its cardinals and ordinals come from numtag, which the base install holds, and its years from the CLDR spell-out rules.
 
 ## What it reads
 
@@ -81,7 +81,7 @@ The varieties also take their currency and unit names from the CLDR data of thei
 | `phone_regions` | `AE`, `BE`, `BR`, `EG`, `ES`, `FR`, `GB`, `NL`, `PT`, `SA`, `US` | `NL` |
 | `register` | changes nothing | - |
 
-The file always reads the comma as the decimal mark and the full stop as the group mark. For every value of `scale`, ovos-number-parser reads 10^9 as "miljard" and 10^12 as "biljoen".
+The file always reads the comma as the decimal mark and the full stop as the group mark. For every value of `scale`, numtag reads 10^9 as "miljard" and 10^12 as "biljoen".
 
 ## Sources
 
@@ -95,7 +95,6 @@ The file reads no ranges, dates, times, identifiers, words in capitals letter by
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
-| `De 1000000e bezoeker.` | `nl-NL` | stays as written | An ordinal above 999999 stays as written. CLDR writes "eenmiljoenste", and Taaladvies.net writes "vier miljoenste" with no "een" before a million. |
 | `Het 3ste boek.` | `nl-NL` | stays as written | The ordinal word of 3 is "derde", so the ending `ste` does not fit it. |
 | `Ik had nog maar 1/2 fles water over.` | `nl-NL` | stays as written | The word for a half takes the form "halve" before some nouns, and the file does not know the noun. |
 | `Het kost $ 2,50.` | `nl-NL` | Het kost twee komma vijf nul dollar. | Only an amount in euros reads its cents, because the source gives the spoken form for the euro only. |
