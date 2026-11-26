@@ -765,7 +765,12 @@ def _cardinal(digits: str, request: Request, gender: GrammaticalGender | None = 
 
 
 def _plural(request: Request, written: str) -> str:
-    return plural_category(at_variety(request), written)
+    """The CLDR plural category, except that a decimal under 2 is `one` in each variety: "1,5 metro". Ciberdúvidas
+    12132: "a norma recomenda que só se use o nome da unidade no plural a partir de duas unidades, inclusive … 0
+    grama, 0,23 grama e 1,5 grama". CLDR pt-PT gives `one` to 1 only, which follows speech (Ciberdúvidas 721)."""
+    category = plural_category(at_variety(request), written)
+    whole, point, _ = written.lstrip("-").partition(".")
+    return "one" if point and whole.lstrip("0") in ("", "1") else category
 
 
 def _counted(forms: FrozenMap, request: Request, written: str) -> str:
