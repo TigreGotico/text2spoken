@@ -51,7 +51,7 @@ A version reads with "ponto": after `versão`, `atualização` or `v`, and after
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `A temperatura é de 10.4 graus.` | `pt-PT` | A temperatura é de dez vírgula quatro graus. |
-| `Corri 1.5 km.` | `pt-PT` | Corri um vírgula cinco quilómetro. |
+| `Corri 1.5 km.` | `pt-PT` | Corri um vírgula cinco quilómetros. |
 | `O valor é -10.4.` | `pt-PT` | O valor é menos dez vírgula quatro. |
 | `O valor é 10.4.` | `pt-PT` | stays as written |
 | `A versão 14.2 está pronta.` | `pt-PT` | A versão catorze ponto dois está pronta. |
@@ -220,9 +220,9 @@ The limits that Portuguese shares with English are on the [Addresses, letters an
 | --- | --- | --- | --- |
 | `12 min e 20 máx.` | `pt-PT` | doze minutos e vinte máx. | `min` and `s` read as units also where they abbreviate other words. |
 | `2 s/ uso` | `pt-PT` | dois segundos/ uso | The same rule. |
-| `1,5 min` | `pt-PT` | um vírgula cinco minuto | A decimal below 2 takes the singular in each variety (Ciberdúvidas 12132). |
+| `1,5 min` | `pt-PT` | um vírgula cinco minutos | In pt-PT a unit after any decimal takes the plural: "um vírgula dois litros" (FLiP DID 1881, which reports Peres & Móia 1995, p. 517). In pt-BR a decimal below 2 takes the singular (CLDR `pt`: `one` is i = 0..1). |
 | `2,5h` | `pt-PT` | dois vírgula cinco horas | A decimal takes no unit gender. |
-| `1,5h` | `pt-PT` | um vírgula cinco hora | The unit `h` reads when it touches the number. |
+| `1,5h` | `pt-PT` | um vírgula cinco horas | The unit `h` reads when it touches the number. |
 | `1,5 h` | `pt-PT` | stays as written | With a space between the number and `h`, the measure stays as written. |
 | `A Drª. Sousa.` | `pt-PT` | stays as written | The full stop of an abbreviation comes before the letter in superscript, as in `Dr.ª` (Dicio), so `Drª.` and `Dª` are no titles of the file. |
 | `8 ÷ 2` | `pt-PT` | oito sinal de divisão dois | A symbol name is the CLDR name, with no agreement and no context. |
