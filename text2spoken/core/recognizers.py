@@ -574,7 +574,9 @@ class Fraction:
                            FrozenMap({"whole": fold_digits(text[begin:start - 1]), "numerator": numerator,
                                       "denominator": denominator, "sign": "", "prefix": "", "suffix": suffix}),
                            recognizer=self.name, keep=keep)
-            if unclear or (bottom is not None and 2 <= bottom <= 100 and top is not None and top < bottom):
+            denominators = request.data.get("fraction_denominators", ())
+            if unclear or (bottom is not None and (2 <= bottom <= 100 or denominator in denominators)
+                           and top is not None and top < bottom):
                 yield Span(start, end, Form.FRACTION,
                            FrozenMap({"whole": "", "numerator": numerator, "denominator": denominator, "sign": sign,
                                       "prefix": prefix, "suffix": suffix}), recognizer=self.name, keep=unclear)

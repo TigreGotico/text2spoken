@@ -600,6 +600,7 @@ DATA = freeze({
                "triliões": "triliões de"},
     "symbols_before_only": ["$"],
     "percent": {"signs": ["%"], "position": "after", "word": "por cento"},
+    "fraction_denominators": ("1000",),
     "label_nouns": ["página", "folha", "casa", "apartamento", "quarto", "cabine", "poltrona", "sala", "porta",
                     "figura", "fig", "tabela", "linha", "fila", "lugar", "número"],
     "plural_labels": {"a páginas": "feminine", "a folhas": "feminine"},
