@@ -43,7 +43,7 @@ Each language file has a file of test rows in `tests/data`. Each row holds a wri
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/rows-per-language-dark.svg">
-  <img alt="Horizontal bars of test rows for 16 languages, 4,306 rows in all, 4,174 with a cited source and 132 marked silver. Portuguese 941, French 687, English 678, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 179, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
+  <img alt="Horizontal bars of test rows for 16 languages, 4,312 rows in all, 4,180 with a cited source and 132 marked silver. Portuguese 941, French 693, English 678, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 179, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
 </picture>
 
 `img/plot_rows_per_language.py` makes this figure from `tests/data`.

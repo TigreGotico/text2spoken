@@ -40,6 +40,8 @@ The gender of a noun comes from a noun list of the English Wiktionary, in the fi
 | `Le roi Louis XIV règne.` | `fr-FR` | Le roi Louis quatorze règne. |
 | `Rendez-vous le 10/11/2026.` | `fr-FR` | Rendez-vous le dix novembre deux mille vingt-six. |
 | `Il part le 1er mars.` | `fr-FR` | Il part le premier mars. |
+| `Il part le 1ᵉʳ mars.` | `fr-FR` | Il part le premier mars. |
+| `Il habite au 2ᵉ étage.` | `fr-FR` | Il habite au deuxième étage. |
 | `Cela coûte 3,50 €.` | `fr-FR` | Cela coûte trois euros cinquante. |
 | `Cela coûte 0,50 €.` | `fr-FR` | Cela coûte cinquante centimes. |
 | `Il gagne 1 000 000 €.` | `fr-FR` | Il gagne un million d'euros. |
