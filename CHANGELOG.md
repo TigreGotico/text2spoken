@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a144](https://github.com/TigreGotico/text2spoken/tree/0.0.2a144) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a143...0.0.2a144)
+
+**Merged pull requests:**
+
+- docs: the timing figure names its CPU [\#652](https://github.com/TigreGotico/text2spoken/pull/652) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a143](https://github.com/TigreGotico/text2spoken/tree/0.0.2a143) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a142...0.0.2a143)
@@ -384,7 +392,6 @@
 **Merged pull requests:**
 
 - fix\(pt\): a clock reads the hour word that follows it once [\#390](https://github.com/TigreGotico/text2spoken/pull/390) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(core\): read a long digit run in linear time in pt, ru, eu and nl [\#389](https://github.com/TigreGotico/text2spoken/pull/389) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a93](https://github.com/TigreGotico/text2spoken/tree/0.0.2a93) (2026-11-19)
 
