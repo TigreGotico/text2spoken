@@ -257,7 +257,7 @@ from text2spoken.core.recognizers import speak_cardinal as core_speak_cardinal
 from text2spoken.core.recognizers import speak_fraction as core_speak_fraction
 from text2spoken.core.recognizers import speak_lexicon, speak_mixed_half, speak_percent
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import DIGIT_BOUND, OvosNumberSpeller, RbnfSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import DIGIT_BOUND, NumtagSpeller, OvosNumberSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import day_hour
 from text2spoken.core.tokens import Token, is_bounded, is_letter, is_word_char
@@ -378,16 +378,16 @@ VOWELS = "aeiouàèéìíòóù"
 
 
 class ItalianSpeller:
-    """ovos-number-parser for integers and ordinals up to `LARGEST_ORDINAL`; decimals by the RBNF `x.x` rule;
-    fractions with the plural ordinals of RBNF."""
+    """numtag for integers and fractions; ovos-number-parser for ordinals up to `LARGEST_ORDINAL`, because numtag
+    writes "centodecimo" where Vocabolario Treccani «ordinale» prefers "centesimo decimo"; decimals by the RBNF
+    `x.x` rule."""
 
     def __init__(self):
+        self.numtag = NumtagSpeller({M: "masculine", F: "feminine"})
         self.parser = OvosNumberSpeller({M: "masculine", F: "feminine"})
-        self.plural = RbnfSpeller(cardinal={Features(): "spellout-numbering"},
-                                  ordinal={Features(): "spellout-ordinal-masculine-plural"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        return self.parser.cardinal(digits, Features(gender=features.gender), request)
+        return self.numtag.cardinal(digits, Features(gender=F if features.gender is F else None), request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         value = bounded_integer(digits)
@@ -400,14 +400,12 @@ class ItalianSpeller:
         return f"{whole} {request.data['decimal_word']} {spell_digits(fraction, request)}"
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
-        if bounded_integer(numerator) == 1:
-            bottom = "mezzo" if bounded_integer(denominator) == 2 else self.ordinal(denominator, Features(), request)
-            return f"un {bottom}"
+        """`un mezzo`, `due terzi`, `sette millesimi`: the numerator as a cardinal and the denominator as an ordinal
+        noun (Treccani, "numerali", Frazionari)."""
         value = bounded_integer(denominator)
         if value is None or value > LARGEST_PLURAL_ORDINAL:
             raise DeclinedReading(f"no plural ordinal above {LARGEST_PLURAL_ORDINAL}")
-        bottom = self.plural.ordinal(denominator, Features(), request)
-        return f"{self.cardinal(numerator, Features(), request)} {bottom}"
+        return self.numtag.fraction(numerator, denominator, Features(), request)
 
 
 SPELLER = ItalianSpeller()
