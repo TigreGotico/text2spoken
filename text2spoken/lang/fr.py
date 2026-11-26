@@ -31,7 +31,13 @@ The rules cite these sources, by rule family:
   ordinaux : page deux cent ; page quatre-vingt ; l'an mille neuf cent." The file reads that singular in an
   ordinal ("deux cent millionième"), in a year, and in a number that labels a page or a year, as the passage
   writes them: "page" and "l'an", which the table `ordinal_nouns` holds, with only spaces before the number.
-  Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix".
+  Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix". The table holds the other
+  labels of a numeral with "une valeur ordinale" of the Office québécois de la langue française, Vitrine
+  linguistique, "Pluriel de vingt, de cent et de mille": "Le paragraphe quatre-vingt (le 80e paragraphe)",
+  "L'article quatre-vingt (le 80e article)", "Le quatre-vingt de la rue des Érables (le numéro 80)", so "numéro",
+  and with it `n°`, reads so; and the decade of Larousse, "quatre-vingts, quatre-vingt", Difficultés: "S'écrit sans
+  s à vingt quand il est employé comme adjectif numéral ordinal [...] les années quatre-vingt", which "des années"
+  and "aux années" contract.
 - A mixed number of a half: Dictionnaire de l'Académie française, 9th edition, "demi", II.1: "La moitié d'une
   unité", "Douze et demi ou 12,5". So `12 1/2` reads "douze et demi". Before a noun, "demi" follows the noun and
   agrees with it, I.1: "Coordonné par et à un nom précédé d'un numéral, s'accorde en genre", "Il va bientôt être
@@ -457,7 +463,7 @@ DATA = freeze(
         },
         "range_word": "à",
         "range_marks": ["-", "–"],
-        "ordinal_nouns": ["page", "l'an"],
+        "ordinal_nouns": ["page", "l'an", "les années", "des années", "aux années", "numéro", "paragraphe", "article"],
         "scale_nouns": [
             "million", "millions", "milliard", "milliards", "billion", "billions", "billiard", "billiards",
             "trillion", "trillions",

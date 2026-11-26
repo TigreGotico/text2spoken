@@ -106,7 +106,7 @@ Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunctio
 
 ### A number that stands for an ordinal
 
-*Cent* and *vingt* take no *s* when the number stands for an ordinal: in an ordinal, in a year, and in a number that labels a page or a year. The Académie française names two labels, *page* and *l'an*. Only spaces can stand between the label and the number. A comma, a full stop or another word ends the label, so the number after it agrees with its noun.
+*Cent* and *vingt* take no *s* when the number stands for an ordinal: in an ordinal, in a year, and in a number that labels a page, a year, a decade, a paragraph, an article or a number. The Académie française names *page* and *l'an*, the OQLF *paragraphe*, *article* and *numéro*, and Larousse *les années*. Only spaces can stand between the label and the number. A comma, a full stop or another word ends the label, so the number after it agrees with its noun.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -115,6 +115,9 @@ Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunctio
 | `Voir p. 80 ici.` | `fr-FR` | Voir page quatre-vingt ici. |
 | `Voir la page 80-90 ici.` | `fr-FR` | Voir la page quatre-vingt à quatre-vingt-dix ici. |
 | `Il est mort en l'an 800.` | `fr-FR` | Il est mort en l'an huit cent. |
+| `Il a grandi dans les années 80.` | `fr-FR` | Il a grandi dans les années quatre-vingt. |
+| `Il habite au numéro 80.` | `fr-FR` | Il habite au numéro quatre-vingt. |
+| `Lisez l'article 200.` | `fr-FR` | Lisez l'article deux cent. |
 | `Depuis un an, 21 personnes attendent.` | `fr-FR` | Depuis un an, vingt et une personnes attendent. |
 | `Sur cette page, 21 recettes vous attendent.` | `fr-FR` | Sur cette page, vingt et une recettes vous attendent. |
 
@@ -194,7 +197,7 @@ French leaves these forms as written or reads them in a limited way:
 | `Il y a 2 000 000 chez-moi.` | `fr-FR` | Il y a deux millions chez-moi. | A noun whose last part is an object pronoun, such as *chez-moi*, *chez-toi*, *revenez-y* or *aimez-moi* (the forget-me-not), reads as an imperative and takes no *de* if `invariable_plurals` lacks it. |
 | `Il y a 2 000 000 chromosomes-Y.` | `fr-FR` | Il y a deux millions chromosomes-Y. | A letter label after a hyphen that is also the pronoun *y* reads as an imperative and takes no *de*. Other letter labels, such as *lymphocytes-T* and *chromosomes-X*, keep it. |
 | `Il y a 2 000 000 tête-à-tête.` | `fr-FR` | Il y a deux millions tête-à-tête. | A noun with an invariable plural and no part in *s*, *x* or *z* takes no *de* if `invariable_plurals` lacks it. |
-| `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after *page* takes the invariable form, also where it counts the next noun. |
+| `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after a label, such as *page* or *numéro*, takes the invariable form, also where it counts the next noun. |
 
 The *de* rule reads only spaces between a number and the noun that it counts. A line break between them stops the rule, and the noun on the next line takes no *de*.
 
