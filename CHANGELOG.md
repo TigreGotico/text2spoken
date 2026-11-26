@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a155](https://github.com/TigreGotico/text2spoken/tree/0.0.2a155) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a154...0.0.2a155)
+
+**Merged pull requests:**
+
+- feat\(ca\): Catalan numbers from numtag [\#674](https://github.com/TigreGotico/text2spoken/pull/674) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a154](https://github.com/TigreGotico/text2spoken/tree/0.0.2a154) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a153...0.0.2a154)
