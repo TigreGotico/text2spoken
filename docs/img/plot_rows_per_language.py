@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from leaders import leaders_first  # noqa: E402
 from plot_style import save  # noqa: E402
 
 DATA = Path(__file__).resolve().parents[2] / "tests" / "data"
@@ -26,7 +27,7 @@ def row_counts() -> dict[str, list[int]]:
 
 
 def draw(fig, theme, counts):
-    order = sorted(counts, key=lambda code: (sum(counts[code]), code))
+    order = leaders_first(counts, key=lambda code: (sum(counts[code]), code))
     cited = [counts[code][0] for code in order]
     silver = [counts[code][1] for code in order]
     ax = fig.subplots()

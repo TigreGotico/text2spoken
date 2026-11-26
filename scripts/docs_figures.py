@@ -1,7 +1,7 @@
 """Write the figures of docs/img/, or check that the committed files are current.
 
 Usage:
-    python scripts/docs_figures.py            run each docs/img/plot_*.py
+    python scripts/docs_figures.py            run each docs/img/plot_*.py and write the no-file table of docs/coverage.md
     python scripts/docs_figures.py --check    exit 1 when the data of a committed figure differs from a fresh read
     python scripts/docs_figures.py --measure  run the timing again, write docs/img/timing.json, then write each figure
 
@@ -18,6 +18,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 IMG = ROOT / "docs" / "img"
 TIMING = IMG / "timing.json"
+COVERAGE = ROOT / "docs" / "coverage.md"
+TABLE_START, TABLE_END = "<!-- no-file-table -->\n", "<!-- /no-file-table -->"
 
 TIMING_SENTENCE = "Dr Smith paid £3.50 for 2 tickets on 14 March 2024 at 7:30 pm. "
 TIMING_REPEATS = (1, 2, 4, 8, 16, 32, 64, 128, 256)
@@ -50,6 +52,24 @@ def cpu() -> str:
         return platform.processor() or platform.machine()
 
 
+def no_file_table() -> str:
+    """The table of the leader tags with no language file, from supports(tag).forms."""
+    sys.path.insert(0, str(IMG))
+    from leaders import NO_FILE_TAGS
+    from text2spoken import supports
+
+    rows = ["| Tag | Forms |", "| --- | --- |"]
+    for tag in NO_FILE_TAGS:
+        forms = ", ".join(f"`{form}`" for form in sorted(form.value for form in supports(tag).forms))
+        rows.append(f"| `{tag}` | {forms} |")
+    return "\n".join(rows) + "\n"
+
+
+def with_table(page: str) -> str:
+    head, rest = page.split(TABLE_START, 1)
+    return head + TABLE_START + no_file_table() + TABLE_END + rest.split(TABLE_END, 1)[1]
+
+
 def main(argv: list[str]) -> int:
     if "--measure" in argv:
         TIMING.write_text(json.dumps(measure(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -59,6 +79,12 @@ def main(argv: list[str]) -> int:
     for script in sorted(IMG.glob("plot_*.py")):
         if script.name != "plot_style.py":
             subprocess.run([sys.executable, str(script)], cwd=ROOT, check=True, env=env)
+    page = COVERAGE.read_text(encoding="utf-8")
+    if with_table(page) != page:
+        if check:
+            print("stale: the no-file table of docs/coverage.md; run python scripts/docs_figures.py", file=sys.stderr)
+            return 1
+        COVERAGE.write_text(with_table(page), encoding="utf-8")
     if check:
         stale = [path.name for path in sorted(IMG.glob("*.json"))
                  if path != TIMING and before.get(path) != path.read_bytes()]

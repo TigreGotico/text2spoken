@@ -48,6 +48,8 @@ from text2spoken.core.language import _registry, core_language, rbnf_locales
 from text2spoken.core.revision import PROBE_TIMEOUT
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "docs" / "img"))
+from leaders import leaders_first  # noqa: E402
 
 # The word that a "The file reads" sentence of a language page uses for each form, as a regex. `mentions` adds the
 # word boundaries and a plural ending.
@@ -251,8 +253,8 @@ def alt_forms(data: dict) -> str:
 
 
 def alt_forms_short(data: dict) -> str:
-    order = data["order"][::-1]
-    count = {code: len(data["read"][code]) for code in order}
+    count = {code: len(data["read"][code]) for code in data["order"]}
+    order = sorted(count, key=lambda code: (-count[code], code))
     fewest = [NAMES[code] for code in sorted(order) if count[code] == min(count.values())]
     return (f"Forms that each of {len(order)} language files reads, of {len(data['forms'])}: "
             f"{NAMES[order[0]]} reads all {count[order[0]]}, "
@@ -261,7 +263,7 @@ def alt_forms_short(data: dict) -> str:
 
 
 def alt_rows(data: dict) -> str:
-    order = sorted(data, key=lambda code: -sum(data[code]))
+    order = leaders_first(data, key=lambda code: (sum(data[code]), code))[::-1]
     cited, silver = (sum(pair[i] for pair in data.values()) for i in (0, 1))
     return (f"Horizontal bars of test rows for {len(data)} languages, {cited + silver:,} rows in all, "
             f"{cited:,} with a cited source and {silver} marked silver. "

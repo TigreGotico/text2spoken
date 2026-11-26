@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+from leaders import leaders_first  # noqa: E402
 from plot_style import save  # noqa: E402
 
 from text2spoken import Form, supports  # noqa: E402
@@ -19,7 +20,7 @@ def matrix() -> dict:
     codes = sorted(path.stem for path in DATA.glob("*.tsv"))
     read = {code: sorted(form.value for form in supports(code).forms) for code in codes}
     forms = [form.value for form in Form if any(form.value in forms_of for forms_of in read.values())]
-    order = sorted(codes, key=lambda code: (len(read[code]), code))
+    order = leaders_first(codes, key=lambda code: (len(read[code]), code))
     return {"order": order, "forms": forms, "read": read}
 
 

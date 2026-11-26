@@ -442,3 +442,11 @@ def test_links_resolve(page):
             headings = re.findall(r"^#+ (.+)$", FENCE.sub("", file.read_text(encoding="utf-8")), re.M)
             slugs = {re.sub(r"[^\w\- ]", "", h.lower()).replace(" ", "-") for h in headings}
             assert anchor in slugs, f"{page.name}: {target}"
+
+
+@pytest.mark.parametrize("tag", ["da-DK", "kab", "hi-IN", "bn-IN", "mwr"])
+def test_coverage_no_file_row(tag):
+    page = (Path(__file__).parent.parent / "docs" / "coverage.md").read_text(encoding="utf-8")
+    row = re.search(rf"^\| `{re.escape(tag)}` \| (.*) \|$", page, re.MULTILINE)
+    assert row, f"docs/coverage.md has no row for {tag}"
+    assert row.group(1) == ", ".join(f"`{form}`" for form in sorted(form.value for form in supports(tag).forms))
