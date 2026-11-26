@@ -8,7 +8,7 @@ verify: `python scripts/check_doc_page.py docs/languages/es.md`
 see: fr.md, ../how-it-reads.md
 -->
 
-The file `text2spoken/lang/es.py` reads Spanish. Its number words come from `ovos-number-parser`, which the base install holds.
+The file `text2spoken/lang/es.py` reads Spanish. Its number words come from `numtag`, which the base install holds.
 
 ## What it reads
 
@@ -70,7 +70,7 @@ Spanish leaves these forms as written or reads them in a limited way:
 
 | Written | Tag | Spoken | Limit |
 | --- | --- | --- | --- |
-| `Hay 1000000000000000000000000000000000000000001 granos.` | `es-ES` | stays as written | A number of 10^42 or more stays as written. ovos-number-parser reads 10^42 + 1 as "uno por diez elevado a cuarenta y dos", the value of 10^42. |
+| `Hay 1000000000000000000000000000000000000000001 granos.` | `es-ES` | stays as written | A number of 10^42 or more stays as written: Wiktionary names each long-scale word up to 10^36 («sextillón»), and no source checked names the next. |
 | `Hay 21 vol.` | `es-ES` | Hay veintiún volúmenes | A noun abbreviation that an integer other than one counts reads in the plural. No source states this rule. The file infers it from DPD «abreviatura» 3, which reads an abbreviation as its full word, from the plural noun in the examples of DPD «uno» 2.2, and from DPD «plural» 1. |
 | `Ver cap. 2, pág. 10` | `es-ES` | Ver capítulo dos, página diez | The integer counts the abbreviation only when spaces alone stand between them and no digit follows the abbreviation, so these keep the singular. |
 | `Ley 30 art. 21` | `es-ES` | Ley treinta artículo veintiuno | The same rule. |
@@ -78,7 +78,6 @@ Spanish leaves these forms as written or reads them in a limited way:
 | `Hay 2,5 vol.` | `es-ES` | Hay dos coma cinco volumen | The same rule. |
 | `Hay 3 vols.` | `es-ES` | Hay tres vols. | A plural abbreviation that the table does not hold, such as `vols.` or `tels.`, stays as written. |
 | `Tengo 2000000 ahorrados.` | `es-ES` | Tengo dos millones de ahorrados. | A round million before a participle or an adjective takes `de`, because the file reads a lowercase word that ends in `s` and is not a function word as the counted noun. |
-| `Hay 1000000000 granos.` | `es-ES` | Hay un millardo de granos. | This is the output of ovos-number-parser. The DPD («millardo», 1) finds "mil millones" more natural. |
 | `Las 21 ya pasaron.` | `es-ES` | Las veintiuno ya pasaron. | Only a whole number from 0 to 24 after a lowercase `la` or `las` reads as a feminine hour. |
 | `las 200 de la lista` | `es-ES` | las doscientos de la lista | The same rule: 200 reads in the masculine. |
 | `Elige las 21 mejores.` | `es-ES` | Elige las veintiún mejores. | An adjective after a number counts as its noun, and its ending gives the gender. `mejores` has no feminine ending, so it takes the masculine. |
