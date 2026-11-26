@@ -393,8 +393,8 @@ z
    </g>
    <g id="patch_14">
     <path d="M 24.189303 129.104277 
-L 135.614518 129.104277 
-L 135.614518 114.843196 
+L 135.207857 129.104277 
+L 135.207857 114.843196 
 L 24.189303 114.843196 
 z
 " clip-path="url(#pc257450eb6)" style="fill: #338ced"/>
@@ -520,10 +520,10 @@ z
 " clip-path="url(#pc257450eb6)" style="fill: #e76624"/>
    </g>
    <g id="patch_30">
-    <path d="M 135.614518 129.104277 
+    <path d="M 135.207857 129.104277 
 L 143.747746 129.104277 
 L 143.747746 114.843196 
-L 135.614518 114.843196 
+L 135.207857 114.843196 
 z
 " clip-path="url(#pc257450eb6)" style="fill: #e76624"/>
    </g>
@@ -603,7 +603,7 @@ L 500.99976 369.19976
     <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #efefef" x="109.58819" y="144.684951" transform="rotate(-0 109.58819 144.684951)">202, 25 silver</text>
    </g>
    <g id="text_35">
-    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #efefef" x="147.001037" y="124.311978" transform="rotate(-0 147.001037 124.311978)">294, 20 silver</text>
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #efefef" x="147.001037" y="124.311978" transform="rotate(-0 147.001037 124.311978)">294, 21 silver</text>
    </g>
    <g id="text_36">
     <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start; fill: #efefef" x="161.234185" y="103.938654" transform="rotate(-0 161.234185 103.938654)">329</text>
