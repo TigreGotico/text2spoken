@@ -1,6 +1,6 @@
 """Italian: it-IT, the default variety, it-CH and it-SM.
 
-Cardinals and ordinals come from ovos-number-parser (design section 5.4). Its forms agree with the Enciclopedia
+Cardinals, ordinals and fractions come from the numtag writer. Its forms agree with the Enciclopedia
 dell'Italiano Treccani, "numerali", Pronuncia e grafia. A compound in uno keeps its full form, as "ventuno", "centouno"
 and "ventunomila", and the same section allows both forms before a noun: "Nei composti (ventuno, trentuno, ecc.)
 accompagnati da un nome, questo è invariabile se il numerale segue il nome, ma può essere apocopato se il numerale
@@ -86,12 +86,10 @@ del corrispondente cardinale ital. con l'aggiunta della terminazione -èsimo: co
 centunesimo, [...] millesimo, duemillesimo, [...] diecimillesimo". So 108 reads "centoottesimo", from "centootto", and
 180 "centottantesimo". The same entry gives the separate form for the ordinals "per i quali l'altro tipo sarebbe sentito
 come poco eufonico: centesimo decimo, millesimo primo, millesimo secondo, millesimo decimo, millesimo undecimo o
-undicesimo, ecc. (in questi casi la grafia staccata è preferita)". ovos-number-parser writes the ordinals, the separate
-forms included: "millesimo primo" for 1001, "millesimo undicesimo" for 1011, and every number above 100 that ends in 10
-as the ordinal of the number without the 10 and "decimo": "centesimo decimo" for 110, "duecentesimo decimo" for 210,
-"trecentesima decima" in the feminine. From a million up the parser writes one word with a singular scale word, as
-"tremilionecinquecentomillesimo" for 3500000, and no source gives that form, so an ordinal above 999999 stays as written
-until a sourced form exists.
+undicesimo, ecc. (in questi casi la grafia staccata è preferita)". numtag writes the separate forms for
+this group: "centesimo decimo" for 110, "duecentesimo decimo" for 210, "trecentesima decima" in the feminine, "millesimo
+primo" for 1001 and "millesimo undicesimo" for 1011. Outside the group it writes one word, as "duemiladecimo" for 2010.
+No source gives an ordinal from a million up, so an ordinal above 999999 stays as written until a sourced form exists.
 
 The degree sign writes an ordinal too (Vocabolario Treccani, "primo": "Numerale ordinale (indicato con 1° se si
 utilizzano cifre arabiche"; "centesimo": "in scrittura numerica 100°"). It also writes an angle and a coordinate, as in
@@ -257,7 +255,7 @@ from text2spoken.core.recognizers import speak_cardinal as core_speak_cardinal
 from text2spoken.core.recognizers import speak_fraction as core_speak_fraction
 from text2spoken.core.recognizers import speak_lexicon, speak_mixed_half, speak_percent
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import DIGIT_BOUND, NumtagSpeller, OvosNumberSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import DIGIT_BOUND, NumtagSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import day_hour
 from text2spoken.core.tokens import Token, is_bounded, is_letter, is_word_char
@@ -371,20 +369,16 @@ LARGEST_PLURAL_ORDINAL = 100
 """The last plural ordinal that a fraction reads, by RBNF `it`. The core fraction recognizer reads no larger
 denominator."""
 LARGEST_ORDINAL = 999_999
-"""The last ordinal that reads. From a million up ovos-number-parser writes "tremilionecinquecentomillesimo" for
-3500000, a form that no source gives."""
+"""The last ordinal that reads. No source gives an ordinal from a million up, as 3500000."""
 VOWELS = "aeiouàèéìíòóù"
 
 
 
 class ItalianSpeller:
-    """numtag for integers and fractions; ovos-number-parser for ordinals up to `LARGEST_ORDINAL`, because numtag
-    writes "centodecimo" where Vocabolario Treccani «ordinale» prefers "centesimo decimo"; decimals by the RBNF
-    `x.x` rule."""
+    """numtag for integers, ordinals up to `LARGEST_ORDINAL` and fractions; decimals by the RBNF `x.x` rule."""
 
     def __init__(self):
         self.numtag = NumtagSpeller({M: "masculine", F: "feminine"})
-        self.parser = OvosNumberSpeller({M: "masculine", F: "feminine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         return self.numtag.cardinal(digits, Features(gender=F if features.gender is F else None), request)
@@ -393,7 +387,7 @@ class ItalianSpeller:
         value = bounded_integer(digits)
         if value is None or value > LARGEST_ORDINAL:
             raise DeclinedReading(f"no ordinal above {LARGEST_ORDINAL}")
-        return self.parser.ordinal(digits, Features(gender=features.gender), request)
+        return self.numtag.ordinal(digits, Features(gender=features.gender), request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", Features(), request)

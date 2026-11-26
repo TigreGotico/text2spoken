@@ -151,7 +151,7 @@ it-149	it-IT	time	Ci vediamo alle 12:00.	Ci vediamo a mezzogiorno.	ovos-date-par
 it-150	it-IT	time	Ci vediamo alle 0:00.	Ci vediamo a mezzanotte.	ovos-date-parser 0.37.0a1 spoken_time 12h: mezzanotte; Treccani Vocabolario, mezzanotte: in partic. a mezzanotte	unchecked
 it-151	it-IT	time	Ci vediamo alle 1:30.	Ci vediamo all'una e trenta.	Accademia della Crusca, consulenza 236: mostrano pressoché generalizzato l'uso di l' / all'una	unchecked
 it-152	it-IT	time	Sono le 12:00.	Sono le dodici.	le cannot stand before mezzogiorno; ovos-date-parser 0.37.0a1 spoken_time: dodici	unchecked
-it-153	it-IT	ordinal	Il 2010º anniversario.	Il duemillesimo decimo anniversario.	Treccani Vocabolario, ordinale: centesimo decimo [...] (in questi casi la grafia staccata è preferita)	unchecked
+it-153	it-IT	ordinal	Il 2010º anniversario.	Il duemiladecimo anniversario.	Treccani Vocabolario, ordinale: ventitreesimo, duemillesimo (the -esimo rule); silver: no source found; the separate form for 2010, which the euphony list names only after mille	unchecked
 it-154	it-IT	money	Costa 5 $.	Costa cinque dollari.	Treccani Vocabolario, dollaro: Unità monetaria degli Stati Uniti d'America [...] Anche unità monetaria di altri paesi [...]: d. canadese, australiano; $ and USD read the bare name dollaro, dollari, as de.py and es.py read them	unchecked
 it-155	it-IT	cardinal	Un puzzle di 120 pezzi.	Un puzzle di centoventi pezzi.	Treccani Enciclopedia dell'Italiano, numerali, Cardinali: only milione, miliardo take the preposition di before a noun; centoventi is no scale word	unchecked
 it-156	it-IT	cardinal	C'era 1 sola persona.	C'era una sola persona.	Treccani Vocabolario, articolo: una per il femm.; c' is the clitic ci, no determiner, so 1 is no label	unchecked
