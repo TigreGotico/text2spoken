@@ -37,7 +37,17 @@ def measure() -> dict:
             normalize(sample, TIMING_TAG)
             seconds.append(time.perf_counter() - start)
         points.append({"characters": len(sample), "milliseconds": round(min(seconds) * 1000, 1)})
-    return {"tag": TIMING_TAG, "sentence": TIMING_SENTENCE, "points": points}
+    return {"tag": TIMING_TAG, "sentence": TIMING_SENTENCE, "cpu": cpu(), "points": points}
+
+
+def cpu() -> str:
+    """The CPU model name from /proc/cpuinfo, or the platform processor string."""
+    import platform
+    try:
+        with open("/proc/cpuinfo", encoding="utf-8") as info:
+            return next(line.split(":", 1)[1].strip() for line in info if line.startswith("model name"))
+    except (OSError, StopIteration):
+        return platform.processor() or platform.machine()
 
 
 def main(argv: list[str]) -> int:
