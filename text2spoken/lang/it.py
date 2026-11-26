@@ -104,8 +104,8 @@ the first day of the month, and reads as a date.
 
 A fraction is "formati da un aggettivo numerale cardinale e da un ordinale (un terzo, due quinti, quattro decimi, ecc.)"
 ("numerali", Frazionari), and 1/2 is "un mezzo" (Vocabolario Treccani, "mezzo", 5: "un mezzo, una metà"). The ordinal is
-plural after a numerator other than one (`spellout-ordinal-masculine-plural`), and a denominator above 100 stays as
-written. Before a noun, mezzo is an adjective that agrees with it ("numerali", Frazionari: "mi darebbe mezzo chilo di
+plural after a numerator other than one, and a denominator above 100 other than 1000 stays as written: `7/1000`
+reads "sette millesimi". Before a noun, mezzo is an adjective that agrees with it ("numerali", Frazionari: "mi darebbe mezzo chilo di
 patate e mezza lattuga?"), so 1/2 before a noun of the noun list reads "mezzo" or "mezza", and before another lowercase
 word it stays as written. Every other fraction has "il valore di nomi" ("numerali", Frazionari), so the noun it counts
 follows "di", as in `I 3/4 della popolazione`. Before a word that is not "di" or one of its forms, as in `2/3
@@ -266,6 +266,7 @@ from text2spoken.params import OPTIONS, FrozenMap, Form, GrammaticalGender, free
 M, F = GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE
 
 DATA = freeze({
+    "fraction_denominators": ("1000",),
     "number_marks": {"Latn": [{"decimal": ",", "group": "."}]},
     "sign_words": {"-": "meno", "+": "più"},
     "digit_words": ["zero", "uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove"],
@@ -365,9 +366,6 @@ VARIETIES = (
     Variety("it-SM", freeze({"defaults": DEFAULTS})),
 )
 
-LARGEST_PLURAL_ORDINAL = 100
-"""The last plural ordinal that a fraction reads, by RBNF `it`. The core fraction recognizer reads no larger
-denominator."""
 LARGEST_ORDINAL = 999_999
 """The last ordinal that reads. No source gives an ordinal from a million up, as 3500000."""
 VOWELS = "aeiouàèéìíòóù"
@@ -396,9 +394,6 @@ class ItalianSpeller:
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
         """`un mezzo`, `due terzi`, `sette millesimi`: the numerator as a cardinal and the denominator as an ordinal
         noun (Treccani, "numerali", Frazionari)."""
-        value = bounded_integer(denominator)
-        if value is None or value > LARGEST_PLURAL_ORDINAL:
-            raise DeclinedReading(f"no plural ordinal above {LARGEST_PLURAL_ORDINAL}")
         return self.numtag.fraction(numerator, denominator, Features(), request)
 
 

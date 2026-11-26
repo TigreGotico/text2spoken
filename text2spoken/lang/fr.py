@@ -453,6 +453,7 @@ its digits."""
 
 DATA = freeze(
     {
+        "fraction_denominators": ("1000",),
         "number_marks": {"Latn": [{"decimal": ".,", "group": GROUP}, {"decimal": ",.", "group": GROUP}]},
         "number_gaps": ["", " ", "\u00a0", "\u202f"],
         "elision_marks": ["'", "\u2019"],
