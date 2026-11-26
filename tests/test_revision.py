@@ -167,9 +167,9 @@ def test_an_edit_of_the_number_writer_of_the_language_changes_the_revision(tmp_p
 
 
 def test_an_edit_of_a_module_that_the_probe_does_not_load_changes_the_revision(tmp_path):
-    assert "ovos_date_parser.roman" not in probe("pt-PT")
-    dates = copy_package(installed("ovos_date_parser"), tmp_path)
-    edit(dates / "roman.py", '__all__ = ["roman_to_julian"]', "__all__ = []")
+    assert "chronologia.computus" not in probe("pt-PT")
+    dates = copy_package(installed("chronologia"), tmp_path)
+    edit(dates / "computus.py", "def _gregorian_easter(year: int)", "def _gregorian_easter(year)")
     assert revision_in_process("pt-PT", tmp_path) != revision("pt-PT")
 
 
