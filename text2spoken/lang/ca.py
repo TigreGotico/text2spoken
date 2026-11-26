@@ -32,14 +32,14 @@ An ordinal is written as the number and "l'última lletra del mot desplegat" ("A
 "1r 1a 2n 2a 3r 3a 4t 4a 5è 5a", "primer primera segon segona tercer tercera quart quarta cinquè cinquena". CLDR RBNF
 `ca` writes the same marks in `digits-ordinal-masculine`. So a number and a letter of `ordinal_marks` reads as an
 ordinal when the letter is the last letter of the ordinal word, and `a` gives the feminine. The words come from
-ovos-number-parser. They follow OIEC section 4.3.2.2a, "vint-i-dosè, quaranta-tresè, noranta-unè", and section
-3.1.2.1a, "els numerals ordinals (cinquè, sisè, setè, vuitè, novè, dissetè)". The parser writes the ordinal of 101
-"cent primer", which the OIEC rule does not give, so an ordinal above 100 stays as written. A plural ordinal, as
-`1rs` and `5ns` ("Quan els ordinals van en plural"), stays as written: the parser writes no plural ordinal.
+the numtag writer. They follow OIEC section 4.3.2.2a, "vint-i-dosè, quaranta-tresè, noranta-unè", and section
+3.1.2.1a, "els numerals ordinals (cinquè, sisè, setè, vuitè, novè, dissetè)". A plural ordinal, as
+`1rs` and `5ns` ("Quan els ordinals van en plural"), stays as written: the file reads no plural ordinal.
 
-A fraction is a cardinal and the name of the part: DNV "terç", "Un terç, 1/3. Dos terços, 2/3"; "quart", "Tres
-quarts, ¾"; "quint", "Un quint, 1/5. Quatre quints, 4/5"; "mig", "Un mig, ½". `fraction_names` holds these names, and
-a fraction with another denominator stays as written. "mig" agrees with its noun (DNV "mig mitja": "Mitja hora"), so
+A fraction is a cardinal and the name of the part, from the numtag writer. GIEC section 17.2.2: "La forma de la
+majoria dels quantificadors fraccionaris coincideix amb la dels numerals ordinals", "Amb tot, tenen formes particulars
+els numerals fraccionaris mig, meitat i terç", so 4/5 reads "quatre cinquens", and section 17.2.5: "En general, són
+preferibles els ordinals en ‑er/‑er(a) i en ‑è/‑en(a) a les formes simples corresponents", so not "quints". "mig" agrees with its noun (DNV "mig mitja": "Mitja hora"), so
 1/2 before a word stays as written, and so does 1/2 with another numerator. Another fraction reads before "de" and
 its forms of `of_words`, as `3/4 de la població`, or with no word after it. Before another word, or after a word of
 `date_words`, the slash may write a date of the CLDR 49 `ca` short date pattern `d/M/yy`, as in `el 3/4`, so the
@@ -109,7 +109,7 @@ from text2spoken.core.recognizers import (SHARED, Money, OrdinalStop, numbers_in
                                           speak_decimal as core_speak_decimal, speak_lexicon,
                                           speak_percent as core_speak_percent, written_shapes)
 from text2spoken.core.spans import Features, Span, SpanContext
-from text2spoken.core.spellers import DIGIT_BOUND, OvosNumberSpeller, bounded_integer, spell_digits
+from text2spoken.core.spellers import DIGIT_BOUND, NumtagSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded
 from text2spoken.core.units import unit_reading
@@ -125,8 +125,6 @@ DATA = freeze({
     "decimal_word": "coma",
     "leads": {},
     "ordinal_marks": {"r": "masculine", "n": "masculine", "t": "masculine", "è": "masculine", "a": "feminine"},
-    "fraction_names": {"2": {"one": "mig"}, "3": {"one": "terç", "other": "terços"},
-                       "4": {"one": "quart", "other": "quarts"}, "5": {"one": "quint", "other": "quints"}},
     "of_words": ["de", "del", "dels"],
     "date_words": ["el", "l'", "l’", "del", "al", "pel", "dia"],
     "percent": {"signs": ["%"], "position": "after", "word": "per cent"},
@@ -153,9 +151,6 @@ VARIETIES = (
     Variety("ca-ES-valencia"),
 )
 
-LARGEST_ORDINAL = 100
-"""The last ordinal that reads: ovos-number-parser writes "cent primer" for 101, which OIEC section 4.3.2.2a does not
-give."""
 
 FEMININE_ENDS = {"un": "una", "dos": "dues"}
 """The words of a number that take the feminine, also at the end of a compound: DNV "un -a", "dos (o dos dues)"."""
@@ -165,44 +160,25 @@ SEMIVOWELS = "iu"
 
 
 class CatalanSpeller:
-    """Cardinals and ordinals through ovos-number-parser. A feminine cardinal reads only when the parser writes the
-    form of `feminine`. Decimals read the digits of the decimal part one by one, and fractions read the names of
-    `fraction_names`."""
+    """numtag cardinals, ordinals and fractions. Decimals read the digits of the decimal part one by one."""
 
     def __init__(self):
-        self.parser = OvosNumberSpeller({M: "masculine", F: "feminine"})
+        self.numtag = NumtagSpeller({M: "masculine", F: "feminine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        words = self.parser.cardinal(digits, Features(), request)
-        if features.gender != F:
-            return words
-        expected = feminine(words)
-        if expected is None:
-            raise DeclinedReading(f"no source gives the feminine of {words!r}")
-        written = self.parser.cardinal(digits, Features(gender=F), request)
-        if written != expected:
-            raise DeclinedReading(f"ovos-number-parser writes the feminine {written!r}, not {expected!r}")
-        return written
+        return self.numtag.cardinal(digits, features, request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        value = bounded_integer(digits)
-        if value is None or value > LARGEST_ORDINAL:
-            raise DeclinedReading(f"no ordinal above {LARGEST_ORDINAL}")
-        return self.parser.ordinal(digits, Features(gender=features.gender or M), request)
+        return self.numtag.ordinal(digits, Features(gender=features.gender or M), request)
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         whole = self.cardinal(integer or "0", features, request)
         return f"{whole} {request.data['decimal_word']} {spell_digits(fraction, request)}"
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
-        names = request.data["fraction_names"].get(str(bounded_integer(denominator)))
-        if names is None:
-            raise DeclinedReading(f"no name of the part 1/{denominator}")
-        if bounded_integer(numerator) == 1:
-            return f"un {names['one']}"
-        if "other" not in names:
-            raise DeclinedReading(f"no plural of {names['one']!r}")
-        return f"{self.cardinal(numerator, Features(), request)} {names['other']}"
+        if bounded_integer(denominator) == 2 and bounded_integer(numerator) != 1:
+            raise DeclinedReading("no source gives the plural of mig")
+        return self.numtag.fraction(numerator, denominator, Features(), request)
 
 
 SPELLER = CatalanSpeller()
