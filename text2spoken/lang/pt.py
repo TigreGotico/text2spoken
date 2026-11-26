@@ -1,7 +1,7 @@
 """Portuguese: pt-PT, the default variety, and pt-BR. Every other `pt-*` tag reads the variety that
 `linguatag.closest_lang` gives it, so `pt-AO` and `pt-MZ` read pt-PT.
 
-Number words come from ovos-number-parser (design section 5.4), read with the variety tag. pt-PT follows the
+Number words come from numtag, read with the variety tag. pt-PT follows the
 official norm: the long scale (Priberam, "bilião": "Um milhão de milhões"), "dezanove" (Priberam, "dezanove":
 "Grafia no Brasil: dezenove"), and lowercase month names (AO1990, Base XIX, 1.º b). pt-BR reads 14 as "quatorze"
 and pt-PT as "catorze". Dicio, "Catorze ou quatorze": "As duas palavras existem na língua portuguesa e estão
@@ -524,7 +524,7 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, Telephone, TimeCl
                                           speak_lexicon, speak_percent, speak_telephone)
 from text2spoken.core.spans import (Features, Span, SpanContext, Word, clause_breaks, clause_window,
                                     context_words)
-from text2spoken.core.spellers import NumtagSpeller, OvosNumberSpeller, bounded_integer, numtag_writes, spell_digits
+from text2spoken.core.spellers import NumtagSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.times import clock_fields, day_hour
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char, one_digit_set
@@ -600,9 +600,6 @@ DATA = freeze({
                "triliões": "triliões de"},
     "symbols_before_only": ["$"],
     "percent": {"signs": ["%"], "position": "after", "word": "por cento"},
-    "fraction_names": {"2": "meio", "3": "terço", "4": "quarto", "5": "quinto", "6": "sexto", "7": "sétimo",
-                       "8": "oitavo", "9": "nono", "10": "décimo", "100": "centésimo"},
-    "fraction_word": "avos",
     "label_nouns": ["página", "folha", "casa", "apartamento", "quarto", "cabine", "poltrona", "sala", "porta",
                     "figura", "fig", "tabela", "linha", "fila", "lugar", "número"],
     "plural_labels": {"a páginas": "feminine", "a folhas": "feminine"},
@@ -722,43 +719,28 @@ def at_variety(request: Request) -> Request:
 
 
 class PortugueseSpeller:
-    """numtag for a variety with a numtag writer (pt-PT), ovos-number-parser for the others, read with the variety
-    tag and the gender of the noun."""
+    """numtag, read with the variety tag and the gender of the noun."""
 
     def __init__(self):
-        genders = {MASCULINE: "masculine", FEMININE: "feminine"}
-        self.numtag = NumtagSpeller(genders)
-        self.ovos = OvosNumberSpeller(genders)
-
-    def _writer(self, request: Request) -> NumtagSpeller | OvosNumberSpeller:
-        return self.numtag if numtag_writes(request.tag) else self.ovos
+        self.numtag = NumtagSpeller({MASCULINE: "masculine", FEMININE: "feminine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
         gender = FEMININE if features.gender is FEMININE else MASCULINE
-        request = at_variety(request)
-        return self._writer(request).cardinal(digits, Features(gender=gender), request)
+        return self.numtag.cardinal(digits, Features(gender=gender), at_variety(request))
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
         """From 2000 up, the first element is a cardinal: `2022.º` reads `dois milésimo vigésimo segundo` (Teyssier,
-        Manual de Língua Portuguesa, p. 183, as the owner of ovos-number-parser reports it)."""
+        Manual de Língua Portuguesa, p. 183)."""
         gender = FEMININE if features.gender is FEMININE else MASCULINE
-        request = at_variety(request)
-        return self._writer(request).ordinal(digits, Features(gender=gender), request)
+        return self.numtag.ordinal(digits, Features(gender=gender), at_variety(request))
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        """The whole part, `vírgula`, each leading zero of the decimal part as `zero`, and the rest of the decimal
-        part as a cardinal: `2,25` reads "dois vírgula vinte e cinco" and `1,05` "um vírgula zero cinco".
-        ovos-number-parser reads a float, which drops a trailing zero, so the decimal part with a trailing zero is
-        read here from the written digits: `1,80` reads "um vírgula oitenta", as `1,97` reads "um vírgula noventa e
-        sete", and never "um vírgula oito", which is the reading of `1,8`."""
-        variety = at_variety(request)
-        if numtag_writes(variety.tag) and fraction.strip("0"):
-            return self.numtag.decimal(integer, fraction, Features(), variety)
-        words = self.ovos.decimal(integer, fraction, Features(), at_variety(request))
-        if not fraction.endswith("0") or not fraction.strip("0"):
-            return words
+        """The decimals as one number with their written zeros: `1,80` reads "um vírgula oitenta" and `1,05` "um
+        vírgula zero cinco". A decimal part of zeros only reads one `zero`: `1,00` reads "um vírgula zero"."""
+        if fraction.strip("0"):
+            return self.numtag.decimal(integer, fraction, Features(), at_variety(request))
         return " ".join([self.cardinal(integer or "0", Features(), request), request.data["decimal_word"],
-                         self.decimal_part(fraction, request)])
+                         request.data["digit_words"][0]])
 
     def decimal_part(self, fraction: str, request: Request) -> str:
         """The digits after the decimal mark: each leading zero as `zero`, and the rest as a cardinal."""
@@ -767,20 +749,12 @@ class PortugueseSpeller:
         return " ".join([*zeros, self.cardinal(rest, Features(), request)] if rest else zeros)
 
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str:
-        """`um meio`, `três quartos`, `um centésimo`, and the cardinal and `avos` for any other denominator:
-        `dois onze avos` (Ciberdúvidas 11493, after Cunha and Cintra). numtag writes the pt-PT fractions, where a
-        denominator with a one-word ordinal takes it: `sete milésimos` (Ciberdúvidas 3242, 35323). A field with a
-        leading zero, as in `01/02`, may be a day and a month, so the fraction stays as written."""
+        """`um meio`, `três quartos`, `dois onze avos`, and the one-word ordinal where the denominator has one:
+        `três vigésimos`, `sete milésimos` (Ciberdúvidas 3242, 11493, 35323). A field with a leading zero, as in
+        `01/02`, may be a day and a month, so the fraction stays as written."""
         if numerator.startswith("0") or denominator.startswith("0"):
             raise DeclinedReading("a fraction with a leading zero may be a day and a month")
-        variety = at_variety(request)
-        if numtag_writes(variety.tag):
-            return self.numtag.fraction(numerator, denominator, Features(), variety)
-        top = self.cardinal(numerator, Features(), request)
-        name = request.data["fraction_names"].get(denominator)
-        if name is None:
-            return f"{top} {self.cardinal(denominator, Features(), request)} {request.data['fraction_word']}"
-        return f"{top} {name if numerator == '1' else name + 's'}"
+        return self.numtag.fraction(numerator, denominator, Features(), at_variety(request))
 
 
 SPELLER = PortugueseSpeller()

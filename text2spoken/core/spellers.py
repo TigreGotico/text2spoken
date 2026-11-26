@@ -185,19 +185,8 @@ class OvosNumberSpeller:
                           lambda: parsers.pronounce_fraction(written, request.tag, scale=scale))
 
 
-@cache
-def numtag_writes(tag: str) -> bool:
-    """Whether numtag has a writer for the tag. numtag raises `UnsupportedLanguageError` for a tag with no writer."""
-    from numtag import UnsupportedLanguageError, spell
-    try:
-        spell("1", tag)
-    except UnsupportedLanguageError:
-        return False
-    return True
-
-
 class NumtagSpeller:
-    """numtag.spell, for a tag where `numtag_writes` is true. A value that numtag refuses declines the span."""
+    """numtag.spell. A value that numtag refuses declines the span."""
 
     def __init__(self, gender_arg: Mapping[GrammaticalGender, str]):
         self.gender_arg = dict(gender_arg)
