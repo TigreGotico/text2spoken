@@ -80,6 +80,11 @@ The rules cite these sources, by rule family:
   des ordinaux complexes (vingt-deuxième, etc.)". Dictionnaire de l'Académie française, 9th edition, "unième":
   "Ne s'emploie qu'avec les nombres vingt, trente, quarante, cinquante, soixante, quatre-vingts, cent et mille,
   souvent précédé de et", with the example "la mille et unième nuit". So 101e is "cent et unième" and 1001e is "mille et unième".
+  The marks are "lettres minuscules surélevées", and "Lorsqu'il n'est pas possible de surélever les lettres, il est
+  admis de les écrire sur la ligne" (Office québécois de la langue française, Vitrine linguistique, "Abréviation de
+  l'adjectif ordinal"). Plain text writes the raised letters with the Unicode modifier letters ᵉ (U+1D49), ʳ
+  (U+02B3), ˢ (U+02E2), ᵈ (U+1D48) and ⁿ (U+207F), so `2ᵉ`, `1ᵉʳ`, `1ʳᵉ`, `2ᵈᵉ` and `XIXᵉ` read as `2e`, `1er`,
+  `1re`, `2de` and `XIXe` do, and so does `1ᵉʳ` in a date.
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
   symbol `h` of the hour.
 - Number marks and gaps: BIPM, The International System of Units (SI Brochure), 9th edition. Section 5.4.4 says
@@ -184,7 +189,7 @@ MONTHS = [
 ]
 _MONTH = "(" + "|".join(f"[{m[0].upper()}{m[0]}]{m[1:]}" for m in MONTHS) + ")"
 _YEAR = "([0-9][0-9][0-9][0-9])"
-_DAY = "([0-9][0-9]?)(er)?"
+_DAY = "([0-9][0-9]?)(er|\u1d49\u02b3)?"
 
 FEMININE_NOUNS = ("page", "pages", "part", "parts", "orange", "oranges", "souris")
 """The nouns of both gender categories of `fr_noun_genders.json` that count things only as feminine nouns. The English
@@ -765,16 +770,16 @@ DATA = freeze(
             "vol.": "volume",
         },
         "ordinal_marks": {
-            "masculine": ["er"],
-            "feminine": ["re", "ère", "ere"],
-            "masculine_plural": ["ers"],
-            "feminine_plural": ["res", "ères", "eres"],
-            "other": ["e", "ème", "eme"],
-            "other_plural": ["es", "èmes", "emes"],
-            "second": ["nd", "d"],
-            "second_feminine": ["nde", "de"],
-            "second_plural": ["nds", "ds"],
-            "second_feminine_plural": ["ndes", "des"],
+            "masculine": ["er", "\u1d49\u02b3"],
+            "feminine": ["re", "ère", "ere", "\u02b3\u1d49"],
+            "masculine_plural": ["ers", "\u1d49\u02b3\u02e2"],
+            "feminine_plural": ["res", "ères", "eres", "\u02b3\u1d49\u02e2"],
+            "other": ["e", "ème", "eme", "\u1d49"],
+            "other_plural": ["es", "èmes", "emes", "\u1d49\u02e2"],
+            "second": ["nd", "d", "\u207f\u1d48", "\u1d48"],
+            "second_feminine": ["nde", "de", "\u207f\u1d48\u1d49", "\u1d48\u1d49"],
+            "second_plural": ["nds", "ds", "\u207f\u1d48\u02e2", "\u1d48\u02e2"],
+            "second_feminine_plural": ["ndes", "des", "\u207f\u1d48\u1d49\u02e2", "\u1d48\u1d49\u02e2"],
         },
         "feminine_nouns": FEMININE_NOUNS,
         "preposed_adjectives": PREPOSED_ADJECTIVES,
