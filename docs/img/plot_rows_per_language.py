@@ -15,18 +15,17 @@ from plot_style import save  # noqa: E402
 DATA = Path(__file__).resolve().parents[2] / "tests" / "data"
 
 
-def row_counts() -> dict[str, tuple[int, int]]:
+def row_counts() -> dict[str, list[int]]:
     counts = {}
     for path in sorted(DATA.glob("*.tsv")):
         with open(path, encoding="utf-8", newline="") as handle:
             rows = list(csv.DictReader(handle, delimiter="\t", quoting=csv.QUOTE_NONE))
         silver = sum(bool(re.search(r"\bsilver\b", row["source"])) for row in rows)
-        counts[path.stem] = (len(rows) - silver, silver)
+        counts[path.stem] = [len(rows) - silver, silver]
     return counts
 
 
-def draw(fig, theme):
-    counts = row_counts()
+def draw(fig, theme, counts):
     order = sorted(counts, key=lambda code: (sum(counts[code]), code))
     cited = [counts[code][0] for code in order]
     silver = [counts[code][1] for code in order]
@@ -46,4 +45,4 @@ def draw(fig, theme):
 
 
 if __name__ == "__main__":
-    save("docs/img/rows-per-language", draw, height=5.6)
+    save("docs/img/rows-per-language", draw, row_counts(), height=5.6)

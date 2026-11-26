@@ -14,8 +14,7 @@ from plot_style import save  # noqa: E402
 TIMING = Path(__file__).with_name("timing.json")
 
 
-def draw(fig, theme):
-    data = json.loads(TIMING.read_text(encoding="utf-8"))
+def draw(fig, theme, data):
     xs = [p["characters"] for p in data["points"]]
     ys = [p["milliseconds"] for p in data["points"]]
     slope = sum(x * y for x, y in zip(xs, ys)) / sum(x * x for x in xs)
@@ -32,4 +31,4 @@ def draw(fig, theme):
 
 
 if __name__ == "__main__":
-    save("docs/img/time-by-length", draw)
+    save("docs/img/time-by-length", draw, json.loads(TIMING.read_text(encoding="utf-8")))
