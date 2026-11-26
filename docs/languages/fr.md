@@ -14,11 +14,18 @@ The file `text2spoken/lang/fr.py` reads French. Its number words come from the C
 
 The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, percentages and per mille, money, measures, times, dates, years, telephone numbers, colours, Roman numerals, abbreviations, idioms and lexicon entries. It does not read addresses, symbols, emoji, letter codes or identifiers.
 
-A number that ends in 1 says *un* or *une* with its noun. The gender comes from the hint of the caller, then from the noun after the number when the table `feminine_nouns` holds it, then from `default_gender`, and then from the file, which is masculine. A unit and a currency carry their own gender.
+A number that ends in 1 says *un* or *une* with its noun. The gender comes from the hint of the caller, then from the words after the number, then from `default_gender`, and then from the file, which is masculine. A unit and a currency carry their own gender.
+
+The gender of a noun comes from a noun list of the English Wiktionary, in the file `data/wiktionary/fr_noun_genders.json` (CC BY-SA 4.0). A plural reads through its singular. A noun that the list gives both genders, such as *livre* or *élève*, takes the masculine of the file, and the table `feminine_nouns` names the few such nouns that count things only as feminine nouns, such as *page* and *orange*. An adjective before the noun, such as *belle*, *grande* or *petite*, gives the gender that its form marks, and *jeune*, which marks none, passes to the noun.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Il y a 21 pommes.` | `fr-FR` | Il y a vingt et une pommes. |
+| `Il y a 21 tonnes.` | `fr-FR` | Il y a vingt et une tonnes. |
+| `Il y a 1 idée.` | `fr-FR` | Il y a une idée. |
+| `Il y a 1 belle maison.` | `fr-FR` | Il y a une belle maison. |
+| `Il y a 1 jeune fille.` | `fr-FR` | Il y a une jeune fille. |
+| `Il y a 1 livre.` | `fr-FR` | Il y a un livre. |
 | `Il y a 80 places.` | `fr-FR` | Il y a quatre-vingts places. |
 | `Il y a 280 places.` | `fr-FR` | Il y a deux cent quatre-vingts places. |
 | `Rendez-vous à 21 h.` | `fr-FR` | Rendez-vous à vingt et une heures. |
@@ -156,7 +163,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 ## Sources
 
-The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second", and the Dictionnaire, "unième"), the Office québécois de la langue française for the plural, the aspirated h and the imperative, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
+The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second", and the Dictionnaire, "unième"), the Office québécois de la langue française for the agreement of *un*, the plural, the aspirated h and the imperative, the English Wiktionary for the gender of a noun, the Clés de la rédaction of the Bureau de la traduction for an adjective before a noun, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
 Some test rows in `tests/data/fr.tsv` quote a source that was fetched. Others say that a rule comes from memory. No native speaker has checked any row. The cited rows are the check for numbers. No other number engine checks them.
 

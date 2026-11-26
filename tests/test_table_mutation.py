@@ -71,7 +71,7 @@ FR_ENTRIES = {
     "leads": "-", "idioms": "24h/24", "range_word": DELETE, "range_marks": "-", "dimension_marks": "x",
     "dimension_word": DELETE, "time_words": "à", "months": "novembre", "currencies": "EUR", "percent": "word",
     "units": "kg", "titles": "M.", "name_particles": "le", "abbreviations": "etc.", "sentence_final": "etc.",
-    "number_abbreviations": "n°", "ordinal_marks": "masculine", "feminine_nouns": "pommes", "patterns": "date_day_month",
+    "number_abbreviations": "n°", "ordinal_marks": "masculine", "feminine_nouns": "pages", "preposed_adjectives": "petite", "adjective_links": "et", "patterns": "date_day_month",
     "clock_marks": freeze({"mark": ":", "seconds": True, "needs": "evidence"}),
     "operators": "+", "colors": "ff0000", "color_words": "couleur", "year_words": "en", "year_links": "et",
     "function_words": "il", "phone_words": "composez", "short_codes": "3919", "list_links": "et",

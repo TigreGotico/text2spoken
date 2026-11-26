@@ -5,12 +5,24 @@ Number words come from the numtag writer, by the tag, so `fr-BE` and `fr-CH` say
 traditional spelling "vingt et un" and "soixante et onze".
 
 Agreement. A number that ends in 1 says "un" or "une" with its noun: "vingt et un kilos", "vingt et une heures".
-The gender of a number comes, in this order, from the hint of the caller, from the noun after the number when
-it is in the table `feminine_nouns`, from `default_gender`, and from the file, which is masculine. A unit and a
-currency carry their own gender.
+The gender of a number comes, in this order, from the hint of the caller, from the words after the number, from
+`default_gender`, and from the file, which is masculine. A unit and a currency carry their own gender.
+
+The gender of a noun comes from the noun list `data/wiktionary/fr_noun_genders.json`, which
+`scripts/extract_noun_genders.py fr` makes from the categories "French masculine nouns", "French feminine nouns" and
+"French nouns with multiple genders" of the English Wiktionary (CC BY-SA 4.0). The list holds the singular, so a
+plural reads through the singulars that `_singulars` gives it: `21 tonnes` reads "vingt et une tonnes". A noun of both
+categories or of several genders, as "élève", "enfant" and "livre", takes no gender from the list, so `1 livre` reads
+"un livre", and the table `feminine_nouns` names the few of them that count things only as feminine nouns, as "page".
+An adjective of `preposed_adjectives` between the number and its noun agrees with the noun, so a form that marks a
+gender gives it: `1 belle maison` reads "une belle maison"; "jeune" marks none and passes to the noun.
 
 The rules cite these sources, by rule family:
 
+- The gender of "un": Office québécois de la langue française, Vitrine linguistique, "Déterminant numéral se
+  terminant par un": "Lorsqu'il fait partie d'un déterminant numéral composé, un est variable seulement en genre",
+  "Trente et une espèces de parulines", "Vingt et un mille personnes [...] Vingt et un détermine le nom mille, et non
+  le nom personnes".
 - Cardinals, the agreement of "cent", "vingt" and "mille", and years: Académie française, Questions de langue,
   "Nombres (écriture, lecture, accord)" (academie-francaise.fr/questions-de-langue). It gives the hyphen and "et"
   rule, "quatre-vingts hommes" but "quatre-vingt-deux hommes", "deux cents euros" but "deux cent vingt euros",
@@ -82,11 +94,13 @@ date, money and Imprimerie nationale families say that their source was not fetc
 """
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from functools import lru_cache
+from importlib.resources import files
 
 from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import is_valid
@@ -159,62 +173,27 @@ _MONTH = "(" + "|".join(f"[{m[0].upper()}{m[0]}]{m[1:]}" for m in MONTHS) + ")"
 _YEAR = "([0-9][0-9][0-9][0-9])"
 _DAY = "([0-9][0-9]?)(er)?"
 
-_FEMININE_SINGULAR = (
-    "heure",
-    "minute",
-    "seconde",
-    "semaine",
-    "année",
-    "journée",
-    "soirée",
-    "matinée",
-    "nuit",
-    "fois",
-    "personne",
-    "page",
-    "ligne",
-    "porte",
-    "chambre",
-    "place",
-    "pièce",
-    "voiture",
-    "maison",
-    "rue",
-    "ville",
-    "chose",
-    "question",
-    "réponse",
-    "version",
-    "photo",
-    "image",
-    "tâche",
-    "alarme",
-    "notification",
-    "minuterie",
-    "pomme",
-    "bouteille",
-    "tasse",
-    "cuillère",
-    "unité",
-    "feuille",
-    "fenêtre",
-    "lampe",
-    "chaîne",
-    "chanson",
-    "playlist",
-    "étape",
-    "table",
-    "famille",
-    "fille",
-    "femme",
-    "dame",
-    "bière",
-    "carte",
-    "touche",
-    "marche",
-    "recette",
-)
-FEMININE_NOUNS = tuple(w for noun in _FEMININE_SINGULAR for w in ((noun,) if noun == "fois" else (noun, noun + "s")))
+FEMININE_NOUNS = ("page", "pages", "part", "parts", "orange", "oranges", "souris")
+"""The nouns of both gender categories of `fr_noun_genders.json` that count things only as feminine nouns. The English
+Wiktionary gives the feminine "page" of a book and the masculine "page", a page boy; the feminine "part", a share or a
+slice, and the masculine "part", a newborn; the feminine "orange", the fruit, and the masculine "orange", the colour;
+and the feminine "souris", a mouse, and the masculine "souris", "archaic, literary" for a smile."""
+
+PREPOSED_ADJECTIVES = {
+    **dict.fromkeys(("vieux", "vieil", "beau", "bel", "beaux", "joli", "jolis", "bon", "bons", "petit", "petits",
+                     "grand", "grands", "gros", "meilleur", "meilleurs", "nouveau", "nouvel", "nouveaux", "seul",
+                     "seuls"), "masculine"),
+    **dict.fromkeys(("vieille", "vieilles", "belle", "belles", "jolie", "jolies", "bonne", "bonnes", "petite",
+                     "petites", "grande", "grandes", "grosse", "grosses", "meilleure", "meilleures", "nouvelle",
+                     "nouvelles", "seule", "seules"), "feminine"),
+    **dict.fromkeys(("jeune", "jeunes"), "both"),
+}
+"""The adjectives that come before the noun, in each form: Bureau de la traduction, Clés de la rédaction, "adjectif
+(place de l'adjectif avec un nom)": "L'adjectif est généralement placé avant le nom dans les cas suivants : il est
+court ou très courant (jeune, vieux, beau, joli, bon, petit, grand, gros, meilleur, nouveau, etc.) : une belle fille
+une nouvelle maison un vieux vêtement", and "un seul homme". An adjective agrees with its noun, so a form that marks a
+gender gives the gender of the number before it, as in "une belle maison", and "jeune", which marks none, passes to
+the next word."""
 
 
 NO_DE_WORDS = (
@@ -778,6 +757,8 @@ DATA = freeze(
             "second_feminine_plural": ["ndes", "des"],
         },
         "feminine_nouns": FEMININE_NOUNS,
+        "preposed_adjectives": PREPOSED_ADJECTIVES,
+        "adjective_links": ["et", "ou"],
         "mixed_word": "et",
         "mixed_half": {"feminine": "demie", "other": "demi"},
         "patterns": {
@@ -912,12 +893,70 @@ def _feminine(nouns: tuple[str, ...]) -> frozenset[str]:
     return frozenset(nouns)
 
 
+@lru_cache(maxsize=1)
+def noun_genders() -> dict[str, str]:
+    """The gender of each noun of `data/wiktionary/fr_noun_genders.json`, by its singular as the list writes it:
+    "masculine", "feminine", or "both" for a word of both categories or of several genders, as "élève"."""
+    path = files("text2spoken") / "data" / "wiktionary" / "fr_noun_genders.json"
+    table = json.loads(path.read_text(encoding="utf-8"))
+    return {**dict.fromkeys(table["masculine"], "masculine"), **dict.fromkeys(table["feminine"], "feminine"),
+            **dict.fromkeys(table["both"], "both")}
+
+
+def _singulars(word: str) -> Iterator[str]:
+    """The word, then the singulars that its plural can have: less a final "s" or "x", and "-al" or "-ail" for "-aux".
+    A noun takes "s" in the plural, as the OQLF page on the plural of foreign words gives the general rule (see
+    `_counted`), and the Office québécois de la langue française, Vitrine linguistique, gives the rest: "La plupart des
+    noms qui se terminent en -au et en -eu ainsi que tous les noms qui se terminent en -eau prennent un x au pluriel"
+    ("Pluriel des noms en -au, -eau et -eu"), "La plupart des noms qui se terminent en -al forment leur pluriel en
+    -aux" ("Pluriel des noms en -al"), and "bail, corail, émail, fermail, gemmail, soupirail, travail, vantail, ventail
+    et vitrail" form it "en -aux plutôt qu'en -ails" ("Pluriel des noms en -ail")."""
+    yield word
+    if word.endswith("aux"):
+        yield word[:-3] + "al"
+        yield word[:-3] + "ail"
+    if word.endswith(("s", "x")):
+        yield word[:-1]
+
+
+def _noun_gender(word: str, data: FrozenMap) -> str | None:
+    """The gender of a noun of `feminine_nouns` or of the noun list, as the text writes it or in lowercase, and in
+    the singular or the plural."""
+    if word.lower() in _feminine(data["feminine_nouns"]):
+        return "feminine"
+    genders = noun_genders()
+    for form in dict.fromkeys((word, word.lower())):
+        for singular in _singulars(form):
+            if singular in genders:
+                return genders[singular]
+    return None
+
+
+def _noun_after(words: Sequence[str], data: FrozenMap) -> GrammaticalGender | None:
+    """The gender that the words after a number give it. An adjective of `preposed_adjectives` that marks a gender
+    gives it, and one that marks none, or a link of `adjective_links` between two of them, passes to the next word,
+    as in "une grande et belle maison" and "une jeune fille". Then a noun of the list gives its gender, and a noun
+    of both genders, or any other word, gives none."""
+    adjectives = data["preposed_adjectives"]
+    for index, word in enumerate(words):
+        lower = word.lower()
+        if lower in adjectives:
+            if adjectives[lower] != "both":
+                return GrammaticalGender(adjectives[lower])
+            continue
+        if index and lower in data["adjective_links"] and words[index - 1].lower() in adjectives:
+            continue
+        gender = _noun_gender(word, data)
+        return GrammaticalGender(gender) if gender in ("masculine", "feminine") else None
+    return None
+
+
 def _gender(context: SpanContext, noun: bool = True) -> GrammaticalGender:
     """The agreement order: the hint, the noun after the number, `default_gender`, then the file."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
-    if noun and context.after and context.after[0].lower() in _feminine(context.request.data["feminine_nouns"]):
-        return FEMININE
+    if noun and (found := _noun_after(context.after, context.request.data)) is not None:
+        return found
     return context.request.params.default_gender.get(LANGUAGE.code) or MASCULINE
 
 
