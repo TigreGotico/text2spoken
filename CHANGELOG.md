@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a145](https://github.com/TigreGotico/text2spoken/tree/0.0.2a145) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a144...0.0.2a145)
+
+**Merged pull requests:**
+
+- fix\(pt\): a unit after a decimal under 2 takes the singular in pt-PT [\#650](https://github.com/TigreGotico/text2spoken/pull/650) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- fix\(pt\): read fractions over 1000 [\#646](https://github.com/TigreGotico/text2spoken/pull/646) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a144](https://github.com/TigreGotico/text2spoken/tree/0.0.2a144) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a143...0.0.2a144)
@@ -381,17 +390,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a94...0.0.2a95)
 
-**Merged pull requests:**
-
-- docs: README, docs index, navigation and agent hints [\#391](https://github.com/TigreGotico/text2spoken/pull/391) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a94](https://github.com/TigreGotico/text2spoken/tree/0.0.2a94) (2026-11-21)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a93...0.0.2a94)
-
-**Merged pull requests:**
-
-- fix\(pt\): a clock reads the hour word that follows it once [\#390](https://github.com/TigreGotico/text2spoken/pull/390) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a93](https://github.com/TigreGotico/text2spoken/tree/0.0.2a93) (2026-11-19)
 
