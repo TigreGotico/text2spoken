@@ -187,7 +187,7 @@ ENTRIES = {
     },
     "ca": {
         "number_marks": "Latn", "sign_words": "-", "digit_words": "u", "decimal_word": DELETE, "ordinal_marks": "è",
-        "fraction_names": "3", "of_words": "dels", "date_words": "el", "percent": "word", "currency_symbols": "EUR",
+        "of_words": "dels", "date_words": "el", "percent": "word", "currency_symbols": "EUR",
         "currencies": "USD", "currency_genders": "EUR", "scales": "milions", "unit_symbols": "kg",
         "dimension_marks": "×", "titles": "Dr.", "abbreviations": "p. ex.", "sentence_final": "etc.",
         "number_abbreviations": "núm.", "symbol_names": "§",

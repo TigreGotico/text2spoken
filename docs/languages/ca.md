@@ -8,7 +8,7 @@ verify: `python scripts/check_doc_page.py docs/languages/ca.md`
 see: de.md, ../how-it-reads.md
 -->
 
-The file `text2spoken/lang/ca.py` reads Catalan. Its number words come from `ovos-number-parser`, which the base install holds.
+The file `text2spoken/lang/ca.py` reads Catalan. Its number words come from the numtag writer, which the base install holds.
 
 ## What it reads
 
@@ -41,9 +41,9 @@ The file reads cardinals, ordinals, decimals, fractions, money, measures, percen
 | `Vegeu el § 3.` | `ca-ES` | Vegeu el paràgraf tres. |
 | `Vegeu els §§ 3 i 4.` | `ca-ES` | Vegeu els paràgrafs tres i quatre. |
 
-A hyphen joins the tens and the units, and the units and the hundreds, as the Ortografia catalana of the IEC writes them. An ordinal is the number and the last letter of its word: `r`, `n`, `t` and `è` give the masculine, and `a` gives the feminine. A full stop after the letter belongs to the ordinal when a lowercase word follows.
+A hyphen joins the tens and the units, and the units and the hundreds, as the Ortografia catalana of the IEC writes them. An ordinal is the number and the last letter of its word: `r`, `n`, `t` and `è` give the masculine, and `a` gives the feminine. In `ca-ES-valencia`, `é` also gives the masculine, and `5è` reads in the Valencian form. A full stop after the letter belongs to the ordinal when a lowercase word follows.
 
-Each digit after the decimal comma reads alone, so the zero of `2,50` stays. The digit 1 then reads "u", the name of the number. A fraction reads with the names "terç", "quart" and "quint" before `de`, `del`, `dels` or `d'`, or at the end of a clause.
+Each digit after the decimal comma reads alone, so the zero of `2,50` stays. The digit 1 then reads "u", the name of the number. A fraction reads as a cardinal and the name of the part. From 5 the part is the ordinal (GIEC 17.2.2), and `ca-ES-valencia` takes the part names of the AVL dictionary. A fraction reads before `de`, `del`, `dels` or `d'`, or at the end of a clause.
 
 An amount reads in the gender of its currency. The file gives the euro and the dollar the masculine. A unit takes its gender from CLDR, so the hour takes the feminine, as the table above shows. A number with the group mark before a word reads only when its words are the same in both genders. A scale word before the currency takes "de", as in "vint milions d'euros".
 
@@ -57,10 +57,12 @@ An amount reads in the gender of its currency. The file gives the euro and the d
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
-| `Vam fer 8 km.` | `ca-ES-valencia` | Vam fer vuit quilòmetres. |
-| `El 5è curs i la 5a fila.` | `ca-ES-valencia` | El cinquè curs i la cinquena fila. |
+| `Vam fer 8 km.` | `ca-ES-valencia` | Vam fer huit quilòmetres. |
+| `Aproven 4/5 dels alumnes.` | `ca-ES-valencia` | Aproven quatre quints dels alumnes. |
+| `Aproven 4/5 dels alumnes.` | `ca-ES` | Aproven quatre cinquens dels alumnes. |
+| `El 5è curs i la 5a fila.` | `ca-ES-valencia` | El cinqué curs i la cinquena fila. |
 
-The Diccionari normatiu valencià of the AVL gives "huit", "dèsset" and "cinqué" first, and "vuit", "disset" and "cinquè" as accepted forms. ovos-number-parser writes the second set for every variety. The varieties take their currency and unit names from the CLDR data of their own locale.
+The Diccionari normatiu valencià of the AVL gives "huit", "dèsset" and "cinqué" first, and "vuit", "disset" and "cinquè" as accepted forms. `ca-ES-valencia` reads the first set, and the other varieties read the second. The varieties take their currency and unit names from the CLDR data of their own locale.
 
 ## Options
 
@@ -99,10 +101,8 @@ The file reads no dates, times, ranges, telephone numbers, identifiers, words in
 | --- | --- | --- | --- |
 | `Té 1 casa.` | `ca-ES` | Té un casa. | A number before a noun does not agree with the noun, because the file does not know the gender of a noun. Only a unit and a currency give a gender. |
 | `Té 1.234 pàgines.` | `ca-ES` | stays as written | A number with the group mark whose words change in the feminine stays as written before a word. |
-| `En tinc 21.` | `ca-ES` | En tinc vint-i-un. | ovos-number-parser writes "vint-i-un" where the name of the number is "vint-i-u". |
+| `En tinc 21.` | `ca-ES` | En tinc vint-i-un. | numtag writes "vint-i-un" where the name of the number is "vint-i-u". |
 | `En va venir 91.` | `ca-ES` | En va venir noranta-un. | The same: the Ortografia catalana writes "noranta-u". |
-| `L'acte està previst per a les 17 h.` | `ca-ES-valencia` | stays as written | A feminine number reads only when ovos-number-parser writes its correct form. The parser writes "disseta" for 17 and "vinta" for 20, so these stay as written before a feminine unit. |
-| `El 101è aniversari.` | `ca-ES` | stays as written | An ordinal above 100 stays as written: the parser writes "cent primer" for 101. |
 | `Els 1rs i les 2es.` | `ca-ES` | stays as written | A plural ordinal stays as written. |
 | `La 2.a edició.` | `ca-ES` | stays as written | An ordinal with a full stop before its letter stays as written. |
 | `Espera 1/2 hora.` | `ca-ES` | stays as written | "mig" agrees with its noun ("mitja hora"), so 1/2 before a word stays as written. |
