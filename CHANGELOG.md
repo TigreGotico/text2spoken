@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a150](https://github.com/TigreGotico/text2spoken/tree/0.0.2a150) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a149...0.0.2a150)
+
+**Merged pull requests:**
+
+- feat\(fr\): French numbers through numtag [\#665](https://github.com/TigreGotico/text2spoken/pull/665) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a149](https://github.com/TigreGotico/text2spoken/tree/0.0.2a149) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a148...0.0.2a149)
@@ -383,8 +391,6 @@
 **Merged pull requests:**
 
 - refactor\(lang\): simpler code in it and ru, docstring wraps in it, pt, ru and zh [\#418](https://github.com/TigreGotico/text2spoken/pull/418) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- perf\(core\): cache the variety match of select, test characters with str methods [\#416](https://github.com/TigreGotico/text2spoken/pull/416) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- refactor\(lang\): simpler code and shorter docstrings in ca, de, es and eu [\#414](https://github.com/TigreGotico/text2spoken/pull/414) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a98](https://github.com/TigreGotico/text2spoken/tree/0.0.2a98) (2026-11-22)
 
