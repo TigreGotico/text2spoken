@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a158](https://github.com/TigreGotico/text2spoken/tree/0.0.2a158) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a157...0.0.2a158)
+
+**Merged pull requests:**
+
+- docs\(ru\): Правила-2006 § 5 recommends ё, it does not require it [\#684](https://github.com/TigreGotico/text2spoken/pull/684) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat\(de\): German numbers from numtag [\#681](https://github.com/TigreGotico/text2spoken/pull/681) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a157](https://github.com/TigreGotico/text2spoken/tree/0.0.2a157) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a156...0.0.2a157)
@@ -377,10 +386,6 @@
 ## [0.0.2a109](https://github.com/TigreGotico/text2spoken/tree/0.0.2a109) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a108...0.0.2a109)
-
-**Merged pull requests:**
-
-- docs: drop the row counts from the language pages [\#504](https://github.com/TigreGotico/text2spoken/pull/504) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a108](https://github.com/TigreGotico/text2spoken/tree/0.0.2a108) (2026-11-24)
 
