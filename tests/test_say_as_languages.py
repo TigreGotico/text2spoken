@@ -28,12 +28,13 @@ TAGS = ["en-US", "pt-PT", "de-DE", "fr-FR", "es-ES", "it-IT", "nl-NL", "ru-RU", 
         "cy-GB", "is-IS", "bn-IN", "ta-IN", "sk-SK"]
 """Forty-one language tags: the languages with a file, and others with and without a CLDR RBNF locale."""
 
-NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw", "bn-IN"})
+NO_NUMBERS = frozenset({"yo-NG", "ha-NG", "tw"})
 """Tags with no writer of ovos-number-parser and no RBNF locale: no word for a digit, so `digits`, `telephone` and
 `characters` decline to the plain reading."""
 
-NO_ORDINAL = NO_NUMBERS | {"cy-GB", "is-IS"}
-"""Tags whose say-as `ordinal` declines. RBNF `cy` and `is` have no ordinal rule set, and no writer reads them."""
+NO_ORDINAL = NO_NUMBERS | {"cy-GB", "is-IS", "bn-IN"}
+"""Tags whose say-as `ordinal` declines. RBNF `cy` and `is` have no ordinal rule set, and no writer reads them. The
+`bn` file reads no ordinal."""
 
 LETTER_NAMES = frozenset({"en-US", "pt-PT"})
 """Tags whose language file has a `letter_names` table."""
@@ -66,9 +67,15 @@ def rbnf(tag: str, number: int, rule_set: str) -> str:
     return "".join(CORRECTIONS.get((code(tag), part), part) for part in re.split("([ \u00a0\u200b]+)", text))
 
 
+BN_DIGITS = ("শূন্য", "এক", "দুই", "তিন", "চার", "পাঁচ", "ছয়", "সাত", "আট", "নয়")
+"""The words of 0 to 9 of the English Wiktionary, "Appendix:Bengali numerals" (oldid 95460450). RBNF has no `bn`."""
+
+
 def digit_word(tag: str, digit: str) -> str:
     """The cardinal of one digit: the writer of the language, else RBNF `spellout-numbering`, with zero from the
     first plain cardinal rule set of the locale (`spellout-numbering` of `zh` writes the digit sign 〇 for zero)."""
+    if code(tag) == "bn":
+        return BN_DIGITS[int(digit)]
     if (code(tag) in WRITERS or code(tag) in AR_LECTS) and code(tag) not in RBNF_DIGITS:
         return pronounce_number(int(digit), tag)
     if digit == "0":
@@ -103,8 +110,8 @@ ORDINALS = {
        for tag in ("zh-CN", "ja-JP", "sw-KE", "vi-VN", "ta-IN")},
 }
 """The source of the ordinal of each tag that no language file reads with an ordinal verbalizer. A language with a
-writer reads through it, as it reads its cardinals; `da` reads its cardinals through RBNF (`RBNF_HELD`), so its
-ordinals too. The Korean file reads the native ordinal (`ko.py`). The Greek file reads a number with no noun in the
+writer reads through it, as it reads its cardinals; the Danish file reads its ordinals through RBNF (`da.py`). The
+Korean file reads the native ordinal (`ko.py`). The Greek file reads a number with no noun in the
 neuter (`el.py`), and the Arabic file reads its default gender, the masculine (`ar.py`). With no gender, RBNF `hi`
 reads the masculine and RBNF `da` the common gender: neither has an ordinal rule set with no gender."""
 

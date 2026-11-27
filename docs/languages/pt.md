@@ -60,7 +60,7 @@ A version reads with "ponto": after `versão`, `atualização` or `v`, and after
 | `Durou 1.30 h.` | `pt-PT` | stays as written |
 | `A taxa é 0 vírgula 02.` | `pt-PT` | A taxa é zero vírgula zero dois. |
 
-The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. A time in the hour 1 reads "uma", so the article before it is singular. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
+The words of a date, a clock time and a year come from `chronologia`, in `pt-PT` and in `pt-BR`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. A time in the hour 1 reads "uma", so the article before it is singular. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
 
 | Written | Spoken (`pt-PT`, `lexicon=FrozenMap({"pt": FrozenMap({"às": "às"})})`) |
 | --- | --- |

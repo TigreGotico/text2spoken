@@ -192,4 +192,4 @@ French leaves these forms as written or reads them in a limited way:
 The *de* rule reads only spaces between a number and the noun that it counts. A line break between them stops the rule, and the noun on the next line takes no *de*.
 
 ---
-[← Basque](eu.md) · [Home](../index.md) · [Italian →](it.md)
+[← Basque](eu.md) · [Home](../index.md) · [Hindi →](hi.md)

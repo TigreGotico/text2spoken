@@ -12,7 +12,7 @@ text2spoken rewrites written forms, such as `12/03/2024`, `£3.50` or `Dr`, into
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/forms-per-language-dark.svg">
-  <img alt="Forms that each of 17 language files reads, of 22: English reads all 22, Portuguese 20, French 18; Kabyle reads 2." src="img/forms-per-language.svg">
+  <img alt="Forms that each of 20 language files reads, of 22: English reads all 22, Portuguese 20, French 18; Bengali and Kabyle read 2." src="img/forms-per-language.svg">
 </picture>
 
 `img/plot_forms_per_language.py` makes this figure from `supports(code).forms`.
@@ -53,26 +53,31 @@ Find the page for your question below. The pages are in reading order, from a fi
 
 ## Languages
 
-Each language page gives what the language reads, its varieties and the codes that it serves, its options, its sources and its limits.
+Each language page gives what the language reads, its varieties and the codes that it serves, its options, its sources and its limits. `supports(lang)` gives the same facts from code.
 
-| Language | Page |
+| Language | Varieties |
 | --- | --- |
-| Arabic | [ar](languages/ar.md) |
-| Catalan | [ca](languages/ca.md) |
-| German | [de](languages/de.md) |
-| Greek | [el](languages/el.md) |
-| English | [en](languages/en.md) |
-| Spanish | [es](languages/es.md) |
-| Basque | [eu](languages/eu.md) |
-| French | [fr](languages/fr.md) |
-| Italian | [it](languages/it.md) |
-| Japanese | [ja](languages/ja.md) |
-| Kabyle | [kab](languages/kab.md) |
-| Korean | [ko](languages/ko.md) |
-| Dutch | [nl](languages/nl.md) |
-| Portuguese | [pt](languages/pt.md) |
-| Russian | [ru](languages/ru.md) |
-| Tetun Dili | [tdt](languages/tdt.md) |
-| Chinese | [zh](languages/zh.md) |
+| [Arabic](languages/ar.md) | `ar-001`, the regional `ar-*` tags, and the spoken lects of ISO 639-3, such as `arz` |
+| [Bengali](languages/bn.md) | `bn-BD`, `bn-IN` |
+| [Catalan](languages/ca.md) | `ca-ES`, `ca-AD`, `ca-ES-valencia` |
+| [Danish](languages/da.md) | `da-DK` |
+| [German](languages/de.md) | `de-DE`, `de-AT`, `de-CH` |
+| [Greek](languages/el.md) | `el-GR` |
+| [English](languages/en.md) | `en-GB`, `en-US` |
+| [Spanish](languages/es.md) | `es-ES`, `es-419` and the American varieties, such as `es-MX` |
+| [Basque](languages/eu.md) | `eu-ES` |
+| [French](languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`, and each other `fr-*` tag with the number words of its CLDR locale |
+| [Hindi](languages/hi.md) | `hi-IN` |
+| [Italian](languages/it.md) | `it-IT`, `it-CH`, `it-SM` |
+| [Japanese](languages/ja.md) | `ja-JP` |
+| [Kabyle](languages/kab.md) | `kab-DZ` |
+| [Korean](languages/ko.md) | `ko-KR` |
+| [Dutch](languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` |
+| [Portuguese](languages/pt.md) | `pt-PT`, `pt-BR` |
+| [Russian](languages/ru.md) | `ru-RU` |
+| [Tetun Dili](languages/tdt.md) | `tdt-TL` |
+| [Chinese](languages/zh.md) | `zh-CN`, `zh-TW`, and `cmn` |
+
+A tag with no language file reads cardinal numbers, decimals and a minus, with the words of ovos-number-parser or of the CLDR spell-out rules, in the decimal and group marks of CLDR for the locale. The page [How it reads text](how-it-reads.md#a-language-with-no-file) gives the rules.
 
 The language pages come after [Errors and warnings](errors.md) in the reading order.

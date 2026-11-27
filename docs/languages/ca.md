@@ -122,4 +122,4 @@ The file reads no dates, times, ranges, telephone numbers, identifiers, words in
 | `El rei Lluís XIV.` | `ca-ES` | stays as written | A Roman numeral stays as written. |
 
 ---
-[← Arabic](ar.md) · [Home](../index.md) · [German →](de.md)
+[← Bengali](bn.md) · [Home](../index.md) · [Danish →](da.md)

@@ -458,6 +458,7 @@ LANGUAGE = LanguageSpec(
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
         Form.DATE: speak_cldr_date, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
+    writers=("numtag", "ovos-number-parser"),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     genders=frozenset({M, F}),
     default_gender=M,

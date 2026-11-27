@@ -38,6 +38,7 @@ LANGUAGE = LanguageSpec(
     code="qaa", serves=("qab",), cldr_aliases=("pt",), varieties=(Variety("qaa"),),
     data=freeze({"defaults": {}}), recognizers=(SHARED["lexicon"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal},
+    writers=(),
     spellers={Form.CARDINAL: SPELLER},
     genders=frozenset({GrammaticalGender.MASCULINE, GrammaticalGender.FEMININE}),
     default_gender=GrammaticalGender.MASCULINE, animacies=frozenset(), noun_classes=frozenset(),

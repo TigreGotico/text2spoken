@@ -112,4 +112,4 @@ A `default_gender` param gives the feminine in the case of the preposition. A ge
 The core table `PHONE_PLANS` holds no plan for DE, AT or CH.
 
 ---
-[← Catalan](ca.md) · [Home](../index.md) · [Greek →](el.md)
+[← Danish](da.md) · [Home](../index.md) · [Greek →](el.md)

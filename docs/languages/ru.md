@@ -8,7 +8,7 @@ verify: `python scripts/check_doc_page.py docs/languages/ru.md`
 see: zh.md, ../how-it-reads.md
 -->
 
-The file `text2spoken/lang/ru.py` reads Russian. Its number words come from `ovos-number-parser`, which the base install holds.
+The file `text2spoken/lang/ru.py` reads Russian. Its number words come from numtag, which the base install holds.
 
 ## What it reads
 

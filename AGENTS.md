@@ -6,7 +6,7 @@ text2spoken rewrites written forms, such as numbers, dates and sums of money, in
 
 | Path | What it holds |
 | --- | --- |
-| `text2spoken/__init__.py` | The public names. The main calls: `normalize`, `analyze`, `render`, `supports`, `effective_params`, `revision` |
+| `text2spoken/__init__.py` | The public names. The main calls: `normalize`, `analyze`, `render`, `supports`, `effective_params`, `distributions`, `revision` |
 | `text2spoken/params.py`, `text2spoken/errors.py` | `NormalizationParams`, and the errors and warnings |
 | `text2spoken/core/` | The shared steps: tokens, recognizers, spellers, dates, times, units, currencies, revision |
 | `text2spoken/lang/<code>.py` | One language file. Its module docstring cites the source of each rule |

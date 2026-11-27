@@ -285,3 +285,19 @@ def test_a_phone_number_may_be_grouped_with_the_spaces_of_the_recognizer(gap):
     groups = gap.join(["01", "23", "45", "67", "89"])
     assert normalize(f"Composez le {groups} ici.", "fr-FR") == (
         "Composez le zéro un vingt-trois quarante-cinq soixante-sept quatre-vingt-neuf ici.")
+
+
+def test_number_parser_languages_are_the_numbers_modules_of_the_floor_release():
+    from text2spoken.core.parsers import NUMBER_PARSER_LANGUAGES
+    # The `ovos_number_parser/numbers_<code>.py` files of the ovos-number-parser 0.30.0a1 wheel.
+    assert NUMBER_PARSER_LANGUAGES == frozenset(
+        "an ar ast az bg ca cs da de el en es et eu fa fi fr fy gl he hr hu id it kab mwl nb nl nn oc pl pt ro ru sk "
+        "sl sv tr uk".split())
+
+
+def test_parsers_reads_no_installed_package_list():
+    from text2spoken.core import parsers
+    tree = ast.parse(Path(parsers.__file__).read_text())
+    imported = {alias.name for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))
+                for alias in node.names} | {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
+    assert "pkgutil" not in imported

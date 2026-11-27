@@ -229,9 +229,8 @@ def _rbnf_words(locale: str, rule_set: str, number: str) -> str:
 
 
 # Languages with no file that read through RBNF: (tag, RBNF locale, the rule set of the -x and x.x rules, the decimal
-# mark of the locale). The rule set is `spellout-cardinal`, or the rule set that its 0 rule names, as in km and da.
-# The decimal mark is `decimal` of symbols-numberSystem-latn in CLDR 49 numbers.json. da has a parser module, and
-# RBNF_HELD keeps it on RBNF, decimals too.
+# mark of the locale). The rule set is `spellout-cardinal`, or the rule set that its 0 rule names, as in km.
+# The decimal mark is `decimal` of symbols-numberSystem-latn in CLDR 49 numbers.json.
 NO_FILE_RBNF_DECIMALS = [
     ("hi-IN", "hi", "spellout-cardinal", "."),
     ("th-TH", "th", "spellout-cardinal", "."),
@@ -246,7 +245,6 @@ NO_FILE_RBNF_DECIMALS = [
     ("lt-LT", "lt", "spellout-cardinal-masculine", ","),
     ("am-ET", "am", "spellout-cardinal", "."),
     ("af-ZA", "af", "spellout-cardinal", ","),
-    ("da-DK", "da", "spellout-cardinal-neuter", ","),
 ]
 
 
@@ -304,7 +302,7 @@ def test_a_held_language_reads_decimals_through_rbnf():
     from text2spoken.core.language import select
     from text2spoken.core.spellers import RBNF_HELD, RbnfSpeller
 
-    assert RBNF_HELD == {"da", "sk"}
+    assert RBNF_HELD == {"sk"}
     for code in RBNF_HELD:
         spellers = select(code)[1].spellers
         assert isinstance(spellers[Form.CARDINAL], RbnfSpeller) and isinstance(spellers[Form.DECIMAL], RbnfSpeller)
@@ -312,7 +310,7 @@ def test_a_held_language_reads_decimals_through_rbnf():
 
 # A say-as `cardinal` reads a decimal in the CLDR mark of the locale, as a text with no say-as does. The mark of sw
 # is the full stop, so `3,5` stays as written in sw-TZ.
-SAY_AS_DECIMALS = [("da-DK", "3,5"), ("sv-SE", "3,5"), ("nb-NO", "3,5"), ("af-ZA", "3,5"),
+SAY_AS_DECIMALS = [("sv-SE", "3,5"), ("nb-NO", "3,5"), ("af-ZA", "3,5"),
                    ("sw-TZ", "3.5"), ("fy-NL", "3,5")]
 
 
@@ -335,11 +333,10 @@ def _parser_words(tag: str, number: str) -> str:
 
 
 # The marks of each locale come from CLDR 49 numbers.json, `symbols-numberSystem-latn`. hi writes 3,500 (group `,`),
-# nb 3,5 (decimal `,`, group no-break space), tr, da and vi 1.234,5 (decimal `,`, group `.`), and sw-CD 3,5 where sw
+# nb 3,5 (decimal `,`, group no-break space), tr and vi 1.234,5 (decimal `,`, group `.`), and sw-CD 3,5 where sw
 # writes 3.5. Each mark reads in the role that the locale gives it, as in a language file: `1.234` is a group in tr
 # and `3,500` a decimal in nb. A full stop where the locale has no such mark splits the number, so `3.5` stays as
-# written in nb. da reads through RBNF (RBNF_HELD), in spellout-cardinal-neuter, the rule set that the 0 rule of its
-# spellout-cardinal names.
+# written in nb.
 NO_FILE_MARKS = [
     ("hi-IN", "3,500", _rbnf_words("hi", "spellout-cardinal", "3500")),
     ("hi-IN", "1,234.5", _rbnf_words("hi", "spellout-cardinal", "1234.5")),
@@ -349,7 +346,6 @@ NO_FILE_MARKS = [
     ("vi-VN", "1.234.567", _rbnf_words("vi", "spellout-cardinal", "1234567")),
     ("vi-VN", "1.234", _rbnf_words("vi", "spellout-cardinal", "1234")),
     ("vi-VN", "10.000", _rbnf_words("vi", "spellout-cardinal", "10000")),
-    ("da-DK", "10.000", _rbnf_words("da", "spellout-cardinal-neuter", "10000")),
     ("nb-NO", "3,500", _parser_words("nb-NO", "3.500")),
     ("nb-NO", "2,500", _parser_words("nb-NO", "2.500")),
     ("nb-NO", "3.5", "3.5"),
@@ -443,7 +439,7 @@ def test_the_languages_without_the_rules_are_listed():
     from unicode_rbnf.engine import RbnfSpecialRule, ReplaceRulePart
 
     from text2spoken.core.language import cldr_number_marks
-    from text2spoken.core.parsers import number_writer_languages
+    from text2spoken.core.parsers import NUMBER_PARSER_LANGUAGES
     from text2spoken.core.spellers import RBNF_HELD
 
     def holds(names, name, rule):
@@ -469,7 +465,7 @@ def test_the_languages_without_the_rules_are_listed():
         for rule, locales in missing.items():
             if not holds(names, cardinal, rule):
                 locales.add(locale)
-    parser = sorted(code for code in number_writer_languages() if code not in RBNF_HELD and not language_file(code))
+    parser = sorted(code for code in NUMBER_PARSER_LANGUAGES if code not in RBNF_HELD and not language_file(code))
     assert sorted(missing[RbnfSpecialRule.NEGATIVE_NUMBER]) == list(NO_MINUS_RULE)
     assert sorted(missing[RbnfSpecialRule.IMPROPER_FRACTION]) == list(NO_DECIMAL_RULE)
     assert [code for code in parser if code not in cldr_number_marks()] == list(NO_CLDR_MARKS)
@@ -544,12 +540,6 @@ def test_no_icelandic_number_reads_the_word_for_sea(tag):
     for number in range(1001):
         spoken = normalize(str(number), tag)
         assert not any(char.isdigit() for char in spoken) and "sjó" not in spoken, (number, spoken)
-
-
-def test_a_language_that_rbnf_holds_reads_through_rbnf():
-    """RBNF_HELD holds da and sk. Danish shows it: the parser drops the "og" of "tusind og en", which the title of
-    the Danish Wikipedia page "Tusind og en Nat" writes. RBNF da, spellout-cardinal: 1001 "tusind og et"."""
-    assert normalize("år 1001", "da-DK") == "år tusind og et"
 
 
 def test_a_language_with_no_file_and_no_rbnf_reads_only_the_lexicon():
