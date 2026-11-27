@@ -20,8 +20,8 @@ def distributions(lang: str) -> tuple[str, ...]:
     """The distribution names on the output path of `normalize(text, lang)`, with `text2spoken` first. A writer that
     is not installed, as `tugalex` without the `pt` extra, is not in the tuple."""
     require_type(lang, "lang", str)
-    tag, language, _ = select(lang)
-    names = [parsers.date_distribution(tag) if name == parsers.DATES else name for name in language.writers]
+    _, language, variety = select(lang)
+    names = [parsers.date_distribution(variety.tag) if name == parsers.DATES else name for name in language.writers]
     return tuple(name for name in dict.fromkeys((*CORE, *names)) if _installed(name))
 
 

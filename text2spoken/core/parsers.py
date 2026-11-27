@@ -25,7 +25,7 @@ CHRONOLOGIA_TAGS = frozenset({"pt-PT"})
 
 
 DATES = "dates"
-"""The name in `LanguageSpec.writers` of the date writer of the tag, `date_distribution(tag)`."""
+"""The name in `LanguageSpec.writers` of the date writer of the variety, `date_distribution(variety.tag)`."""
 
 
 def date_distribution(tag: str) -> str:

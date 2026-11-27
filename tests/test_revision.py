@@ -22,6 +22,15 @@ def test_pt_br_dates_read_through_ovos_date_parser():
     assert distributions("pt-BR") == (*CORE, "numtag", "tugalex", "ovos-date-parser")
 
 
+@pytest.mark.parametrize("lang", ["pt-AO", "pt-MZ", "pt-PT-x-lisbon", "pt-PT-x-coimbra"])
+def test_a_tag_of_the_pt_pt_variety_reads_dates_through_chronologia(lang):
+    assert distributions(lang) == (*CORE, "numtag", "tugalex", "chronologia")
+
+
+def test_tetun_reads_through_the_pt_pt_writers():
+    assert distributions("tdt") == (*CORE, "numtag", "chronologia")
+
+
 def test_en_us_reads_numbers_through_numtag_and_no_date_writer():
     assert distributions("en-US") == (*CORE, "numtag")
     assert revision("en-US") == pinned(*CORE, "numtag")

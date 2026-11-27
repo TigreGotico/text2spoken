@@ -180,7 +180,7 @@ True
 
 The value is `t2s2:` and one `name==version` for each distribution, with `;` between them.
 
-Every language reads through `text2spoken`, `linguatag` (the tag rules), `quebra-frases` (the default tokenizer) and `unicode-rbnf` (the CLDR plural rules). The `writers` field of each language file names its number and date writers, such as `numtag`. The date writer of a tag is `chronologia` for the tags of `text2spoken.core.parsers.CHRONOLOGIA_TAGS` and `ovos-date-parser` for other tags. A language with no file reads through `ovos-number-parser` when the parser has a writer for the language. A writer that is not installed, such as `tugalex` without the `pt` extra, is not in the list.
+Every language reads through `text2spoken`, `linguatag` (the tag rules), `quebra-frases` (the default tokenizer) and `unicode-rbnf` (the CLDR plural rules). The `writers` field of each language file names its number and date writers, such as `numtag`. The date writer follows the variety tag: `chronologia` for a variety in `text2spoken.core.parsers.CHRONOLOGIA_TAGS`, and `ovos-date-parser` for other varieties. Thus `pt-AO` and `pt-PT-x-lisbon` read dates through `chronologia`, because their variety is `pt-PT`. Tetun (`tdt`) reads dates, times and numbers through the `pt-PT` writers, so it lists `numtag` and `chronologia`. A language with no file reads through `ovos-number-parser` when the parser has a writer for the language. A writer that is not installed, such as `tugalex` without the `pt` extra, is not in the list.
 
 `revision` reads the package metadata of each distribution. It reads no code file and starts no process.
 
