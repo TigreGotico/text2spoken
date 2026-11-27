@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a164](https://github.com/TigreGotico/text2spoken/tree/0.0.2a164) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a163...0.0.2a164)
+
+**Merged pull requests:**
+
+- fix: read ovos-number-parser languages from a fixed set [\#707](https://github.com/TigreGotico/text2spoken/pull/707) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- docs: README, docs index, navigation and walk-throughs [\#699](https://github.com/TigreGotico/text2spoken/pull/699) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a163](https://github.com/TigreGotico/text2spoken/tree/0.0.2a163) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a162...0.0.2a163)
@@ -366,17 +375,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a115...0.0.2a116)
 
-**Merged pull requests:**
-
-- fix\(pt\): read a full-stop time after à and as, and keep it before any CLDR unit [\#543](https://github.com/TigreGotico/text2spoken/pull/543) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a115](https://github.com/TigreGotico/text2spoken/tree/0.0.2a115) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a114...0.0.2a115)
-
-**Merged pull requests:**
-
-- fix\(ar\): read a number after رقم in its citation form, and كم؟ as the question word [\#541](https://github.com/TigreGotico/text2spoken/pull/541) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a114](https://github.com/TigreGotico/text2spoken/tree/0.0.2a114) (2026-11-24)
 
