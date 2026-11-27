@@ -74,6 +74,7 @@ LANGUAGE = LanguageSpec(
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DECIMAL: speak_rbnf_decimal,
                  Form.DATE: speak_cldr_date},
     spellers={Form.CARDINAL: NumtagSpeller({}), Form.DECIMAL: RBNF, Form.ORDINAL: RBNF},
+    writers=("numtag", "unicode-rbnf"),
     genders=frozenset({M, F}),
     default_gender=M,
     animacies=frozenset(),

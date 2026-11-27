@@ -222,6 +222,7 @@ LANGUAGE = LanguageSpec(
     recognizers=(LEXICON, SHARED["date_numeric"], *(Portuguese(form) for form in READ_IN_PORTUGUESE)),
     verbalizers={Form.LEXICON: speak_lexicon, Form.DATE: speak_date,
                  **dict.fromkeys(READ_IN_PORTUGUESE, speak_portuguese)},
+    writers=("numtag", parsers.date_distribution(PORTUGUESE)),
     spellers={},
     attach=drop_affixes,  # the Portuguese verbalizers say the one suffix, the `h` of `14:30h`
     genders=frozenset(),

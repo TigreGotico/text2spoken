@@ -966,6 +966,7 @@ LANGUAGE = LanguageSpec(
         Form.PERCENT: speak_percent, Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction,
         Form.RANGE: speak_range, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
+    writers=("ovos-number-parser",),
     spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER, Form.ORDINAL: SPELLER},
     genders=frozenset({MASCULINE, FEMININE}),
     default_gender=MASCULINE,

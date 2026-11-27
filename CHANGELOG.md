@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.0.2a162](https://github.com/TigreGotico/text2spoken/tree/0.0.2a162) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a161...0.0.2a162)
+
+**Merged pull requests:**
+
+- perf: compute Request.data once per request [\#702](https://github.com/TigreGotico/text2spoken/pull/702) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- refactor: drop the unused SPELLER\_METHODS constant [\#701](https://github.com/TigreGotico/text2spoken/pull/701) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat: Bengali language file with numtag cardinals [\#694](https://github.com/TigreGotico/text2spoken/pull/694) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a161](https://github.com/TigreGotico/text2spoken/tree/0.0.2a161) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a160...0.0.2a161)
+
+**Merged pull requests:**
+
+- refactor: revision is a plain version string; add distributions\(lang\) [\#698](https://github.com/TigreGotico/text2spoken/pull/698) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a160](https://github.com/TigreGotico/text2spoken/tree/0.0.2a160) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a159...0.0.2a160)
@@ -360,17 +378,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a113...0.0.2a114)
 
-**Merged pull requests:**
-
-- fix\(pt\): read a clock time with a full stop after às, das or pelas [\#522](https://github.com/TigreGotico/text2spoken/pull/522) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a113](https://github.com/TigreGotico/text2spoken/tree/0.0.2a113) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a112...0.0.2a113)
-
-**Merged pull requests:**
-
-- fix\(pt\): read a year before a comma, a colon or a bracket in the masculine [\#524](https://github.com/TigreGotico/text2spoken/pull/524) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a112](https://github.com/TigreGotico/text2spoken/tree/0.0.2a112) (2026-11-24)
 

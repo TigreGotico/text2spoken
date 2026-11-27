@@ -149,4 +149,4 @@ Some Arabic readings wait for a native speaker:
 | `دفعت 45001 دولار` | دفعت خمسة وأربعون ألف وواحد دولار | 45,001 reads with no tamyiz ending on the thousand, as ovos-number-parser writes it. |
 
 ---
-[← Errors and warnings](../errors.md) · [Home](../index.md) · [Catalan →](ca.md)
+[← Errors and warnings](../errors.md) · [Home](../index.md) · [Bengali →](bn.md)

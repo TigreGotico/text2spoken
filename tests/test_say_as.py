@@ -134,7 +134,7 @@ UNSUPPORTED = [
     ("2024-01-02", "en-US", "vxml:date"),
     ("3", "cy-GB", "ordinal"),
     ("3", "yo-NG", "digits"),
-    ("W3C", "bn-IN", "characters"),
+    ("W3C", "ha-NG", "characters"),
 ]
 """A value that the core does not read, a prefixed value, and a value whose form the language does not read."""
 
