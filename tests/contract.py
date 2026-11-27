@@ -4,6 +4,7 @@ Each check takes the module name and the LanguageSpec, and raises AssertionError
 runs them over every file in `text2spoken/lang/`, and over broken specs to show that each check bites.
 """
 import ast
+import csv
 import json
 import re
 import subprocess
@@ -34,7 +35,7 @@ from text2spoken.core.recognizers import (SHARED, speak_abbreviation, speak_card
                                           speak_range, speak_telephone)
 from text2spoken.core.spellers import NumtagSpeller, OvosNumberSpeller, RbnfSpeller, rbnf_engine
 from text2spoken.core.tokens import default_tokenizer
-from text2spoken.params import OPTIONS, Form, FrozenMap
+from text2spoken.params import OPTIONS, Form, FrozenMap, GrammaticalGender
 
 FORM_METHOD = {Form.CARDINAL: "cardinal", Form.ORDINAL: "ordinal", Form.YEAR: "year", Form.DECIMAL: "decimal",
                Form.FRACTION: "fraction"}
@@ -337,7 +338,18 @@ def clause_8(name: str, spec: LanguageSpec) -> None:
             assert defaults.get(option) in values, f"{spec.varieties[index].tag}: no valid default for {option}"
 
 
-def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = None) -> None:
+def say_as_ordinal_rows(name: str) -> list[tuple[str, str, str]]:
+    """(digits, gender, expected) of each say-as `ordinal` row of the language in tests/data/say_as/rows.tsv. An empty
+    gender stands for the default gender of the file."""
+    from tests.conftest import DATA
+
+    with open(DATA / "say_as" / "rows.tsv", encoding="utf-8") as f:
+        return [(row["text"], row["gender"] or "", row["expected"]) for row in csv.DictReader(f, delimiter="\t")
+                if row["interpret_as"] == "ordinal" and row["tag"].split("-")[0] == name]
+
+
+def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = None,
+             ordinal_rows: list[tuple[str, str, str]] | None = None) -> None:
     from tests.conftest import rows
 
     cells = [row["expected"] for row in rows(name)] if expected_cells is None else expected_cells
@@ -352,6 +364,9 @@ def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = N
                           ("numeral_system", spec.numeral_systems)):
         def spoken(value) -> dict:
             return {(n, case): speller.cardinal(n, Features(**{field: value}, case=case), request) for n, case in keys}
+        if field == "gender" and len(values) > 1 and len({tuple(spoken(v).values()) for v in values}) == 1:
+            _ordinal_genders(name, spec, ordinal_rows)
+            continue
         for value in values:
             words = spoken(value)
             for other in values - {value}:
@@ -359,6 +374,21 @@ def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = N
                 assert any(words[k] != others[k] for k in words), f"{value} and {other} give the same words"
             distinct = [w for k, w in words.items() if all(w != spoken(o)[k] for o in values - {value})]
             assert any(any(w in cell.split() for cell in cells) for w in distinct), f"no row holds a {value} word"
+
+
+def _ordinal_genders(name: str, spec: LanguageSpec, ordinal_rows: list[tuple[str, str, str]] | None) -> None:
+    """Genders whose cardinals give the same words: each gender needs a say-as ordinal row, read in that gender,
+    whose words no other gender gives."""
+    ordinal = spec.spellers.get(Form.ORDINAL)
+    assert ordinal is not None, "the cardinals give the same words in each gender, and the file reads no ordinal"
+    request = request_for(spec)
+    found = say_as_ordinal_rows(name) if ordinal_rows is None else ordinal_rows
+    for value in spec.genders:
+        assert any((GrammaticalGender(gender) if gender else spec.default_gender) == value
+                   and ordinal.ordinal(digits, Features(gender=value), request) == expected
+                   and all(ordinal.ordinal(digits, Features(gender=o), request) != expected
+                           for o in spec.genders - {value})
+                   for digits, gender, expected in found), f"no say-as ordinal row holds a {value} word"
 
 
 def clause_10(name: str, spec: LanguageSpec) -> None:
