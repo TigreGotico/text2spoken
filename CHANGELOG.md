@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a176](https://github.com/TigreGotico/text2spoken/tree/0.0.2a176) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a175...0.0.2a176)
+
+**Merged pull requests:**
+
+- fix\(da\): 1 takes the gender of the noun after it [\#738](https://github.com/TigreGotico/text2spoken/pull/738) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a175](https://github.com/TigreGotico/text2spoken/tree/0.0.2a175) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a174...0.0.2a175)
@@ -364,10 +372,6 @@
 ## [0.0.2a129](https://github.com/TigreGotico/text2spoken/tree/0.0.2a129) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a128...0.0.2a129)
-
-**Merged pull requests:**
-
-- fix\(pt\): read the gender of a number in two steps, a role and the counted noun [\#602](https://github.com/TigreGotico/text2spoken/pull/602) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a128](https://github.com/TigreGotico/text2spoken/tree/0.0.2a128) (2026-11-25)
 
