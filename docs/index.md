@@ -12,7 +12,7 @@ text2spoken rewrites written forms, such as `12/03/2024`, `£3.50` or `Dr`, into
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/forms-per-language-dark.svg">
-  <img alt="Forms that each of 18 language files reads, of 22: English reads all 22, Portuguese 20, French 18; Bengali reads 2." src="img/forms-per-language.svg">
+  <img alt="Forms that each of 19 language files reads, of 22: English reads all 22, Portuguese 20, French 18; Bengali reads 2." src="img/forms-per-language.svg">
 </picture>
 
 `img/plot_forms_per_language.py` makes this figure from `supports(code).forms`.
@@ -60,6 +60,7 @@ Each language page gives what the language reads, its varieties and the codes th
 | [Arabic](languages/ar.md) | `ar-001`, the regional `ar-*` tags, and the spoken lects of ISO 639-3, such as `arz` |
 | [Bengali](languages/bn.md) | `bn-BD`, `bn-IN` |
 | [Catalan](languages/ca.md) | `ca-ES`, `ca-AD`, `ca-ES-valencia` |
+| [Danish](languages/da.md) | `da-DK` |
 | [German](languages/de.md) | `de-DE`, `de-AT`, `de-CH` |
 | [Greek](languages/el.md) | `el-GR` |
 | [English](languages/en.md) | `en-GB`, `en-US` |
