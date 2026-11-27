@@ -2,7 +2,10 @@
 
 Cardinals come from numtag. Its words agree with the French Wiktionary, "Modèle:cardinaux/kab" (oldid 39522335):
 "1 yiwen", "2 sin", "7 sebɛa", "10 ɛecṛa", "21 waḥed u ɛecrin", "99 tesɛa u tesɛin", "100 mya", "200 mitin",
-"900 tesɛa-mya", "1 000 alef", "2 000 juǧ alaf", "3 000 telt-alaf", "amelyun". The English Wikipedia, "Kabyle
+"1 000 alef", "3 000 telt-alaf", "amelyun". For the hundreds from 400 and for 2000, numtag follows the Kabyle native
+reviewer, Mokraoui (2026), answers on Kabyle numbers: "8. 80: tmanyin | 13: telṭac | 90: tesɛin | 400: ṛebɛ-mya | 3,000:
+telt-alaf", "For 400 and 900 I write "ṛebɛ-mya" and "tesɛ-mya", without the final "a" that the PR has.", and Dallet
+(1982), Dictionnaire kabyle-français, p. 446: "alfin (wa) ‖ Deux mille." The English Wikipedia, "Kabyle
 grammar" (oldid 1383353682), section Numerotation: "Only the first two numbers are Berber; for higher numbers,
 Arabic is used. They are yiwen (f. yiwet) "one", sin (f. snat) "two"."
 

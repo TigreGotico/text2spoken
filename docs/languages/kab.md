@@ -22,9 +22,9 @@ The file reads cardinals and lexicon entries. The numbers 1 and 2 are Berber wor
 | `21` | `kab-DZ` | waḥed u ɛecrin |
 | `99` | `kab-DZ` | tesɛa u tesɛin |
 | `100` | `kab-DZ` | mya |
-| `400` | `kab-DZ` | ṛebɛa-mya |
-| `900` | `kab-DZ` | tesɛa-mya |
-| `2000` | `kab-DZ` | juǧ alaf |
+| `400` | `kab-DZ` | ṛebɛ-mya |
+| `900` | `kab-DZ` | tesɛ-mya |
+| `2000` | `kab-DZ` | alfin |
 | `1000000` | `kab-DZ` | amelyun |
 | `Ẓriɣ 2 n yirgazen.` | `kab-DZ` | Ẓriɣ sin n yirgazen. |
 
@@ -57,9 +57,11 @@ The file reads no noun, so 1 and 2 read in the masculine, `yiwen` and `sin`, bef
 | --- | --- |
 | French Wiktionary, "Modèle:cardinaux/kab" (oldid 39522335) | The words of 0 to 99, the hundreds, the thousands to 9000, and "amelyun" |
 | English Wikipedia, "Kabyle grammar" (oldid 1383353682), section Numerotation | The Berber 1 and 2 with their feminines "yiwet" and "snat", and "sin n yirgazen" |
+| Mokraoui (2026), answers of the Kabyle native reviewer on Kabyle numbers | The hundreds without a final "a" ("ṛebɛ-mya", "tesɛ-mya") |
+| Dallet (1982), *Dictionnaire kabyle-français*, p. 446 | "alfin" for 2000 |
 | numtag | The words of each cardinal |
 
-The docstring of [`kab.py`](../../text2spoken/lang/kab.py) quotes each source. Each row in `tests/data/kab.tsv` cites a source. No native speaker has checked the rows.
+The docstring of [`kab.py`](../../text2spoken/lang/kab.py) quotes each source. Each row in `tests/data/kab.tsv` cites a source. The Kabyle native reviewer gave the forms of 400 and 900. No native speaker has checked the other rows.
 
 ## Limits
 
