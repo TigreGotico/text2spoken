@@ -426,6 +426,7 @@ LANGUAGE = LanguageSpec(
                  Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction, Form.DATE: speak_date,
                  Form.DECIMAL: speak_decimal, Form.YEAR: speak_year, Form.ORDINAL: speak_ordinal,
                  Form.CARDINAL: speak_cardinal},
+    writers=("unicode-rbnf",),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.YEAR: SPELLER, Form.DECIMAL: SPELLER,
               Form.FRACTION: SPELLER},
     genders=frozenset(),

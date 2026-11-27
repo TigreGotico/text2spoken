@@ -871,6 +871,7 @@ LANGUAGE = LanguageSpec(
         Form.YEAR: speak_year, Form.ELECTRONIC: speak_electronic, Form.LETTERS: speak_letters,
         Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
+    writers=("numtag", "unicode-rbnf"),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},
     genders=frozenset(),

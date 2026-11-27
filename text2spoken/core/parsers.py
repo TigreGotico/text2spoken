@@ -24,6 +24,14 @@ CHRONOLOGIA_TAGS = frozenset({"pt-PT"})
 `ovos_date_parser.spoken`. Every other tag reads through `ovos_date_parser.spoken`."""
 
 
+DATES = "dates"
+"""The name in `LanguageSpec.writers` of the date writer of the tag, `date_distribution(tag)`."""
+
+
+def date_distribution(tag: str) -> str:
+    return "chronologia" if tag in CHRONOLOGIA_TAGS else "ovos-date-parser"
+
+
 def _date_writers(tag: str):
     return import_module("chronologia.spoken" if tag in CHRONOLOGIA_TAGS else "ovos_date_parser.spoken")
 
