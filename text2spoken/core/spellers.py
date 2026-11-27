@@ -406,7 +406,7 @@ def cardinal_digit_words(tag: str, language: LanguageSpec) -> tuple[str, ...] | 
     to a noun". Zero reads as the plain cardinal of the locale reads 0: the `zh` rule set `spellout-numbering` writes
     the digit sign 〇, and its cardinal writes the word 零. None when neither reads all ten, or a reading holds a
     digit."""
-    if language.code in parsers.number_writer_languages():
+    if language.code in parsers.NUMBER_PARSER_LANGUAGES:
         try:
             spoken = tuple(words(str(parsers.pronounce_number(digit, tag))) for digit in range(10))
         except (NotImplementedError, ValueError):

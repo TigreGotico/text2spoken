@@ -322,7 +322,7 @@ def core_language(code: str) -> LanguageSpec:
                         noun_classes=frozenset(), numeral_systems=frozenset(), context_words=True, options={},
                         not_applicable=frozenset(OPTIONS))
     locale = cldr_locale(tag, rbnf_locales(), bare)
-    if code in parsers.number_writer_languages() and code not in RBNF_HELD:
+    if code in parsers.NUMBER_PARSER_LANGUAGES and code not in RBNF_HELD:
         speller = OvosNumberSpeller({})
         one = words(parsers.pronounce_number(1, tag)).split()
         try:
@@ -359,7 +359,7 @@ def core_language(code: str) -> LanguageSpec:
         speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal},
                               decimal=decimal)
         ordinal_speller, genders = speller if ordinals else None, frozenset()
-        if not ordinals and code in parsers.number_writer_languages():
+        if not ordinals and code in parsers.NUMBER_PARSER_LANGUAGES:
             ordinal_speller, genders = writer_ordinals(tag)
         decimal_speller = speller
         minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)

@@ -2,12 +2,10 @@
 
 Each name of `WRITERS` imports its library on its first use, so `import text2spoken` imports neither library, and a
 language pays for the import at its first number or date. When the writers move to another package, `WRITERS` and
-`number_writer_languages` are the one place to change.
+`NUMBER_PARSER_LANGUAGES` are the one place to change.
 """
 from __future__ import annotations
 
-import pkgutil
-from functools import cache
 from importlib import import_module
 
 WRITERS = {
@@ -44,11 +42,11 @@ def __getattr__(name: str):
     return getattr(import_module(module), attribute)
 
 
-@cache
-def number_writer_languages() -> frozenset[str]:
-    """The languages that ovos-number-parser writes with a module of its own, `numbers_<code>`. It reads every other
-    language through CLDR RBNF: the docstring of `pronounce_number` says "Falls back to Unicode RBNF for unsupported
-    languages"."""
-    package = import_module("ovos_number_parser")
-    return frozenset(module.name.removeprefix("numbers_") for module in pkgutil.iter_modules(package.__path__)
-                     if module.name.startswith("numbers_"))
+NUMBER_PARSER_LANGUAGES = frozenset({
+    "an", "ar", "ast", "az", "bg", "ca", "cs", "da", "de", "el", "en", "es", "et", "eu", "fa", "fi", "fr", "fy", "gl",
+    "he", "hr", "hu", "id", "it", "kab", "mwl", "nb", "nl", "nn", "oc", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "tr",
+    "uk",
+})
+"""The languages that ovos-number-parser>=0.30.0a1 writes with a module of its own, `numbers_<code>`. It reads every
+other language through CLDR RBNF: the docstring of `pronounce_number` says "Falls back to Unicode RBNF for unsupported
+languages". The set shrinks as each language moves to numtag."""
