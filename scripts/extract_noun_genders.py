@@ -16,6 +16,10 @@ words of both categories and the members of "French nouns with multiple genders"
 the words with a capital letter, such as the demonyms "Parisienne" and "Québécois", and the words with a hyphen, such
 as "grand-mère", and leaves out the words with a space or another mark. It reads no function words, which the French
 file takes from the French Wiktionary.
+
+`scripts/fr_noun_gender_corrections.json` corrects the gender of the nouns whose English category is the opposite of
+the gender of their French Wiktionary entry, as "bobsleigh", which the English category gives as feminine and the
+French Wiktionary as "bobsleigh {{m}}", and "bureaucratisation", the other way round. The file names its source.
 """
 import json
 import sys
@@ -36,6 +40,7 @@ OUT = DATA / "it_noun_genders.json"
 FRENCH_GENDERS = {"masculine": "French masculine nouns", "feminine": "French feminine nouns"}
 FRENCH_BOTH = "French nouns with multiple genders"
 FRENCH_OUT = DATA / "fr_noun_genders.json"
+FRENCH_CORRECTIONS = Path(__file__).resolve().parent / "fr_noun_gender_corrections.json"
 
 
 def members(category: str) -> list[str]:
@@ -99,6 +104,13 @@ def main_french() -> None:
     lists = {name: set(members(category)) for name, category in FRENCH_GENDERS.items()}
     several = set(members(FRENCH_BOTH))
     both = (lists["masculine"] & lists["feminine"]) | several
+    counts = {name: len(words) for name, words in lists.items()}
+    corrections = json.loads(FRENCH_CORRECTIONS.read_text(encoding="utf-8"))
+    for word, gender in corrections["corrections"].items():
+        if word not in both:
+            other = "feminine" if gender == "masculine" else "masculine"
+            lists[other].discard(word)
+            lists[gender].add(word)
     kept = {name: sorted(w for w in words if french_word(w))
             for name, words in {"masculine": lists["masculine"] - both, "feminine": lists["feminine"] - both,
                                 "both": both}.items()}
@@ -110,11 +122,12 @@ def main_french() -> None:
             "both": "words in both gender categories or in the category of several genders, listed apart",
             "licence": "CC BY-SA 4.0",
             "retrieved": date.today().isoformat(),
-            "members": {**{name: len(words) for name, words in lists.items()}, "several": len(several)},
+            "members": {**counts, "several": len(several)},
+            "corrections": {**corrections["source"], "count": len(corrections["corrections"])},
         },
         **kept,
     }, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
-    print(f"in masculine {len(lists['masculine'])} feminine {len(lists['feminine'])} several {len(several)}; "
+    print(f"in masculine {counts['masculine']} feminine {counts['feminine']} several {len(several)}; "
           f"out masculine {len(kept['masculine'])} feminine {len(kept['feminine'])} both {len(kept['both'])}")
 
 

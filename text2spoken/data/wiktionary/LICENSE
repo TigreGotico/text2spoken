@@ -40,7 +40,10 @@ multiple genders", English Wiktionary. The contributors of each page are in its 
 
 Changes: the file keeps the words of two or more letters, with capital letters and with a hyphen between letters, and
 leaves out the words with a space or another mark. It lists apart, as `both`, the words of both gender categories and
-of the category of several genders. `python scripts/extract_noun_genders.py fr` makes the file.
+of the category of several genders. It moves to the other gender the nouns of
+scripts/fr_noun_gender_corrections.json, whose single gender in the French Wiktionary (https://fr.wiktionary.org/,
+CC BY-SA 4.0, entries read on 2026-11-26, contributors in the history of each page) is the opposite of their English
+category. `python scripts/extract_noun_genders.py fr` makes the file.
 
 Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
 Licence text: https://creativecommons.org/licenses/by-sa/4.0/legalcode

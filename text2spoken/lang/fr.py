@@ -10,7 +10,9 @@ The gender of a number comes, in this order, from the hint of the caller, from t
 
 The gender of a noun comes from the noun list `data/wiktionary/fr_noun_genders.json`, which
 `scripts/extract_noun_genders.py fr` makes from the categories "French masculine nouns", "French feminine nouns" and
-"French nouns with multiple genders" of the English Wiktionary (CC BY-SA 4.0). The list holds the singular, so a
+"French nouns with multiple genders" of the English Wiktionary (CC BY-SA 4.0), corrected by
+`scripts/fr_noun_gender_corrections.json` where the French Wiktionary gives the opposite single gender, as for
+"bobsleigh". The list holds the singular, so a
 plural reads through the singulars that `_singulars` gives it: `21 tonnes` reads "vingt et une tonnes". A noun of both
 categories or of several genders, as "élève", "enfant" and "livre", takes no gender from the list, so `1 livre` reads
 "un livre", and the table `feminine_nouns` names the few of them that count things only as feminine nouns, as "page".
