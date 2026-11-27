@@ -63,4 +63,4 @@ Japanese writes a number next to the word after it, with no space. The file keep
 | `残高: -50 €` | `ja-JP` | stays as written | Money stays as written, as in a language with no file. |
 
 ---
-[← Italian](it.md) · [Home](../index.md) · [Korean →](ko.md)
+[← Italian](it.md) · [Home](../index.md) · [Kabyle →](kab.md)
