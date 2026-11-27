@@ -61,6 +61,7 @@ LANGUAGE = LanguageSpec(
                  CARDINAL),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal},
     spellers={Form.CARDINAL: NumtagSpeller({})},
+    writers=("numtag",),
     genders=frozenset(),
     default_gender=None,
     animacies=frozenset(),
