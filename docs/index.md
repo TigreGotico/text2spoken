@@ -12,7 +12,7 @@ text2spoken rewrites written forms, such as `12/03/2024`, `£3.50` or `Dr`, into
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/forms-per-language-dark.svg">
-  <img alt="Forms that each of 19 language files reads, of 22: English reads all 22, Portuguese 20, French 18; Bengali reads 2." src="img/forms-per-language.svg">
+  <img alt="Forms that each of 20 language files reads, of 22: English reads all 22, Portuguese 20, French 18; Bengali and Kabyle read 2." src="img/forms-per-language.svg">
 </picture>
 
 `img/plot_forms_per_language.py` makes this figure from `supports(code).forms`.
@@ -70,6 +70,7 @@ Each language page gives what the language reads, its varieties and the codes th
 | [Hindi](languages/hi.md) | `hi-IN` |
 | [Italian](languages/it.md) | `it-IT`, `it-CH`, `it-SM` |
 | [Japanese](languages/ja.md) | `ja-JP` |
+| [Kabyle](languages/kab.md) | `kab-DZ` |
 | [Korean](languages/ko.md) | `ko-KR` |
 | [Dutch](languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` |
 | [Portuguese](languages/pt.md) | `pt-PT`, `pt-BR` |
