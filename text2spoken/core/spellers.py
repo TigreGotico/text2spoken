@@ -184,16 +184,19 @@ class OvosNumberSpeller:
 
 class NumtagSpeller:
     """numtag.spell. A value that numtag refuses declines the span. `cases` names the cases that numtag inflects
-    in the language; a speller with no cases passes no case."""
+    in the language; a speller with no cases passes no case. `plural` is the numtag gender of a plural number, for a
+    language whose plural has one form for all genders."""
 
-    def __init__(self, gender_arg: Mapping[GrammaticalGender, str], cases: tuple[str, ...] = ()):
+    def __init__(self, gender_arg: Mapping[GrammaticalGender, str], cases: tuple[str, ...] = (),
+                 plural: str | None = None):
         self.gender_arg = dict(gender_arg)
         self.cases = cases
+        self.plural = plural
 
     def spellings(self, value: str, features: Features, request: Request, form: str = "cardinal", **kwargs):
         """All the spellings of numtag, the standard one first."""
         from numtag import spell
-        gender = self.gender_arg.get(features.gender)
+        gender = self.plural if self.plural and features.number == "plural" else self.gender_arg.get(features.gender)
         case = features.case if gender and features.case in self.cases else None
         try:
             return spell(value, request.tag, form=form, gender=gender, case=case, scale=request.params.scale,
