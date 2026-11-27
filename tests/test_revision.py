@@ -38,7 +38,7 @@ def test_en_us_reads_numbers_through_numtag_and_no_date_writer():
 
 def test_a_language_with_no_file_reads_through_its_number_writer():
     assert distributions("pl-PL") == (*CORE, "ovos-number-parser")
-    assert distributions("bn-IN") == CORE
+    assert distributions("th-TH") == CORE
 
 
 def test_a_tag_with_no_region_has_the_revision_of_its_default_variety():
