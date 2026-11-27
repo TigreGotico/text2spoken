@@ -1,5 +1,6 @@
 {
  "order": [
+  "hi",
   "ja",
   "ko",
   "el",
@@ -168,6 +169,11 @@
    "telephone",
    "time",
    "year"
+  ],
+  "hi": [
+   "cardinal",
+   "decimal",
+   "lexicon"
   ],
   "it": [
    "abbreviation",

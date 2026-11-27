@@ -411,6 +411,25 @@ def test_clause_9_bites(gendered):
         contract.clause_9("qaa", gendered.LANGUAGE, expected_cells=["Tenho um carro."])
 
 
+class _OrdinalGender(_SameWords):
+    def ordinal(self, digits, features, request):
+        return {GrammaticalGender.FEMININE: "pahli"}.get(features.gender, "pahla")
+
+
+def test_clause_9_passes_when_only_the_ordinals_differ_by_gender(gendered):
+    speller = _OrdinalGender()
+    contract.clause_9("qaa", replace(gendered.LANGUAGE, spellers={Form.CARDINAL: speller, Form.ORDINAL: speller}),
+                      expected_cells=["un"])
+
+
+def test_clause_9_bites_when_no_words_differ_by_gender(gendered):
+    speller = _SameWords()
+    speller.ordinal = speller.cardinal
+    with pytest.raises(AssertionError, match="give the same words"):
+        contract.clause_9("qaa", replace(gendered.LANGUAGE, spellers={Form.CARDINAL: speller, Form.ORDINAL: speller}),
+                          expected_cells=["un"])
+
+
 def test_clause_10_bites(monkeypatch, en):
     broken = replace(en, context_words=False)
     monkeypatch.setattr(loader, "_registry", lambda: {"en": broken})

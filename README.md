@@ -65,6 +65,7 @@ Each language page gives what the language reads, its varieties, its options, it
 | [Spanish](docs/languages/es.md) | `es-ES`, `es-419` and the American varieties, such as `es-MX` |
 | [Basque](docs/languages/eu.md) | `eu-ES` |
 | [French](docs/languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`, and each other `fr-*` tag with the number words of its CLDR locale |
+| [Hindi](docs/languages/hi.md) | `hi-IN` |
 | [Italian](docs/languages/it.md) | `it-IT`, `it-CH`, `it-SM` |
 | [Japanese](docs/languages/ja.md) | `ja-JP` |
 | [Korean](docs/languages/ko.md) | `ko-KR` |

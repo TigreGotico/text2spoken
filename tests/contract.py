@@ -348,17 +348,26 @@ def clause_9(name: str, spec: LanguageSpec, expected_cells: list[str] | None = N
     cases = (None, *sorted({key.case for s in _rbnf_spellers(spec) for key in s.cardinal_sets if key.case}
                            | {case for s in _spellers(spec) if isinstance(s, NumtagSpeller) for case in s.cases}))
     keys = [(n, case) for n in ("1", "2") for case in cases]
+    ordinal = spec.spellers.get(Form.ORDINAL)
     for field, values in (("gender", spec.genders), ("animacy", spec.animacies), ("noun_class", spec.noun_classes),
                           ("numeral_system", spec.numeral_systems)):
         def spoken(value) -> dict:
             return {(n, case): speller.cardinal(n, Features(**{field: value}, case=case), request) for n, case in keys}
+
+        def ordinals(value) -> dict:
+            if field != "gender" or ordinal is None:
+                return {}
+            return {n: ordinal.ordinal(n, Features(gender=value), request) for n in ("1", "2")}
         for value in values:
-            words = spoken(value)
+            words, ords = spoken(value), ordinals(value)
             for other in values - {value}:
-                others = spoken(other)
-                assert any(words[k] != others[k] for k in words), f"{value} and {other} give the same words"
+                others, other_ords = spoken(other), ordinals(other)
+                assert any(words[k] != others[k] for k in words) or ords != other_ords, \
+                    f"{value} and {other} give the same words"
             distinct = [w for k, w in words.items() if all(w != spoken(o)[k] for o in values - {value})]
-            assert any(any(w in cell.split() for cell in cells) for w in distinct), f"no row holds a {value} word"
+            # A row of tests/data reads plain text, which sets no gender, so it can show a cardinal word only.
+            assert not distinct and ords or any(any(w in cell.split() for cell in cells) for w in distinct), \
+                f"no row holds a {value} word"
 
 
 def clause_10(name: str, spec: LanguageSpec) -> None:
