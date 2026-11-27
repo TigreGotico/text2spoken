@@ -19,8 +19,8 @@ number, so `Call ☎ 2125550123.` reads digit by digit.
 
 An emoji presentation selector (U+FE0F), a skin tone modifier or a zero width joiner next to a character makes it
 part of an emoji sequence, which the `EMOJI` form reads, so `©` followed by U+FE0F stays. The `EMOJI` form is off by
-default. With it on, each emoji sequence reads by its name (`text2spoken.core.emoji`), so `😂😂` reads "face with tears
-of joy face with tears of joy", and `❤` followed by U+FE0F reads "red heart".
+default. With it on, each emoji sequence reads by its spoken name (`text2spoken.core.emoji`), so `😂😂` reads "face with
+tears of joy face with tears of joy", and `❤` followed by U+FE0F reads "red heart".
 
 A name of either form is one word or more of the sentence, so it takes one space on each side where it touches a
 character that is no space. It takes none after an opening bracket or quote, and none before a closing bracket or quote
@@ -42,8 +42,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 
 from text2spoken.core.currencies import cldr_part, currency_signs, words_only
-from text2spoken.core.emoji import (JOINER, MODIFIERS, SELECTOR, emoji_name, name_reading, sequence_at, touches_word,
-                                    written_text)
+from text2spoken.core.emoji import emoji_reading, sequence_at, sequences_in, touches_word, written_text
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext
 from text2spoken.core.tokens import Token, is_digit
@@ -82,50 +81,48 @@ def symbol_name(char: str, request: Request) -> str | None:
     return None if name is None or _owned(char, request) else name
 
 
-def _in_emoji(text: str, index: int) -> bool:
-    after = text[index + 1:index + 2]
-    return after in (SELECTOR, JOINER) or after in MODIFIERS or text[index - 1:index] == JOINER
+def _in_emoji(text: str, index: int, memo: dict) -> bool:
+    """Whether text[index] belongs to an emoji sequence of more than one character, as the `©` of `©️` does."""
+    key = ("in emoji", text)
+    if key not in memo:
+        memo[key] = frozenset(index for start, end in sequences_in(text, memo) if end - start > 1
+                              for index in range(start, end))
+    return index in memo[key]
 
 
 def reads_symbol(text: str, index: int, request: Request) -> bool:
     """Whether the `SYMBOL` form reads the character text[index] as words."""
     char = text[index]
     return (Form.SYMBOL in request.params.forms and char in _names(request)
-            and not _in_emoji(text, index) and not _owned(char, request))
+            and not _in_emoji(text, index, request.memo) and not _owned(char, request))
 
 
-def _emoji_reading(text: str, start: int, request: Request) -> tuple[int, str, str | None] | None:
-    """The end, the CLDR name and the reading of the emoji sequence at text[start], or None when no sequence with a
-    name starts there. The reading is None when the name does not read, or when the sequence touches a word on its
-    left (`touches_word`), as `12️⃣` does: such a sequence stays as written."""
-    found = emoji_name(text, start, request)
-    if found is None or found[1] is None:
+def _emoji_reading(text: str, start: int, request: Request) -> tuple[int, str] | None:
+    """The end and the spoken name of the emoji sequence at text[start], or None when it stays as written: it has no
+    name, or it touches a word on its left (`touches_word`), as `12️⃣` does."""
+    found = emoji_reading(text, start, request)
+    if found is None or found[1] is None or touches_word(text, start, found[0]):
         return None
-    end, name = found
-    if touches_word(text, start, end):
-        return end, name, None
-    return end, name, name_reading(name, request.tag, request.params)
+    return found
 
 
 def reads_emoji(text: str, index: int, request: Request) -> bool:
     """Whether the `EMOJI` form reads an emoji sequence that starts at text[index]."""
     if Form.EMOJI not in request.params.forms:
         return False
-    found = _emoji_reading(written_text(text, request), index, request)
-    return found is not None and found[2] is not None
+    return _emoji_reading(written_text(text, request), index, request) is not None
 
 
-def _emoji_readings(text: str, request: Request) -> Iterator[tuple[int, int, str, str]]:
-    """The start, the end, the CLDR name and the reading of each emoji sequence that the `EMOJI` form reads, in text
-    order."""
+def _emoji_readings(text: str, request: Request) -> Iterator[tuple[int, int, str]]:
+    """The start, the end and the spoken name of each emoji sequence that the `EMOJI` form reads, in text order."""
     index = 0
     while index < len(text):
-        found = sequence_at(text, index, request.memo)
+        found = sequence_at(text, index)
         if found is None:
             index += 1
             continue
         reading = _emoji_reading(text, index, request)
-        if reading is not None and reading[2] is not None:
+        if reading is not None:
             yield index, *reading
         index = found[1]
 
@@ -138,7 +135,7 @@ def named_pieces(text: str, request: Request) -> list[tuple[int, int, str]]:
     if Form.EMOJI not in request.params.forms:
         return symbols
     return sorted(symbols + [(start, end, reading)
-                             for start, end, _, reading in _emoji_readings(written_text(text, request), request)])
+                             for start, end, reading in _emoji_readings(written_text(text, request), request)])
 
 
 def _spacing(text: str, start: int, end: int, leads: Sequence[str], request: Request) -> tuple[str, str]:
@@ -185,15 +182,14 @@ class Emoji:
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         written = written_text(text, request)
         leads = _leads(request)
-        for start, end, name, _ in _emoji_readings(written, request):
+        for start, end, reading in _emoji_readings(written, request):
             lead, trail = _spacing(written, start, end, leads, request)
-            yield Span(start, end, Form.EMOJI, FrozenMap({"sequence": written[start:end], "name": name}), lead=lead,
-                       trail=trail, recognizer=self.name)
+            yield Span(start, end, Form.EMOJI, FrozenMap({"sequence": written[start:end], "name": reading}),
+                       lead=lead, trail=trail, recognizer=self.name)
 
 
 def speak_emoji(span: Span, context: SpanContext) -> str:
-    request = context.request
-    return name_reading(span.fields["name"], request.tag, request.params)
+    return span.fields["name"]
 
 
 SYMBOL = Symbol()

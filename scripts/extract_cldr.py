@@ -8,7 +8,8 @@ The script reads the `cldr-units-full`, `cldr-numbers-full`, `cldr-annotations-f
 the CLDR parent chain of each tag (`pt-PT` to `pt` to `und`, `en-GB` to `en-001` to `en` to `und`), so the runtime
 reads one file and does no inheritance. Each data file records the release, the commit, the locale chain and the
 sha256 of each input file. It writes four files for each tag: `<tag>.json` with the units, `<tag>.currencies.json`,
-`<tag>.symbols.json` and `<tag>.emoji.json`, and one file for every tag, `emoji-sequences.json`. It also reads
+`<tag>.symbols.json` and `<tag>.emoji.json`, and one file for every tag, `emoji-keys.json`, with the keys of every
+emoji file. It also reads
 `cldr-dates-full` and writes `<locale>.dates.json` for each locale of `DATE_LOCALES`.
 
 A unit holds its `long` patterns by plural category, its grammatical gender when CLDR gives one, its per-unit
@@ -28,12 +29,14 @@ default (design section 4.7). The general category and the emoji property come f
 of the Unicode version of the release, `UnicodeData.txt` and `emoji/emoji-data.txt`, which the script fetches from
 unicode.org or reads from `--ucd`.
 
-The `EMOJI` form segments a text with the emoji sequences of the same Unicode version: each line of
-`emoji-sequences.txt` and `emoji-zwj-sequences.txt`, which the script fetches from unicode.org or reads from
-`--emoji`. `emoji-sequences.json` holds each sequence as Unicode writes it, with U+FE0F. `<tag>.emoji.json` holds the
-`tts` name of each sequence, with U+FE0F removed from the key, as CLDR keys it. The script prints, for each tag, the
-names whose reading the `EMOJI` form refuses, because the reading holds a character other than a letter, a combining
-mark, a space, `-` or `'` (design section 4.7).
+An emoji file maps each sequence of the Unicode emoji files of the same Unicode version, `emoji-sequences.txt` and
+`emoji-zwj-sequences.txt`, to its spoken name. The script fetches the files from unicode.org or reads them from
+`--emoji`. A key has no U+FE0F, as CLDR keys it. The spoken name is the `tts` name in three steps. First, each quote
+mark goes, and each `:`, `,`, `(` and `)` becomes a space. U+2019 between two letters is an apostrophe, so it stays.
+Second, `normalize` reads the result with the default params, so pt-PT `polegar para cima: tipo de pele 4` gives
+"polegar para cima tipo de pele quatro" and en `1st place medal` gives "first place medal". Third, a result that holds a
+character other than a letter, a combining mark, a space, `-`, `'` or U+2019 is no spoken name, so the sequence maps to
+null and stays as written, as en `flag: Antigua & Barbuda` and `keycap: #` do. The script prints each such name.
 
 A dates file holds the wide month names of the Gregorian calendar in the format context, the one that a date
 pattern uses, and the `long` date pattern. A date with no file reads through them (design section 17.5). The
@@ -48,6 +51,7 @@ import argparse
 import hashlib
 import json
 import sys
+import unicodedata
 import urllib.request
 from pathlib import Path
 
@@ -351,24 +355,36 @@ def emoji_sequences(emoji: Source) -> list[str]:
     return sorted(sequences)
 
 
+_QUOTES = frozenset("\"“”‘’")
+_SPACES = frozenset(":,()")
+
+
+def spoken_name(name: str, tag: str) -> str | None:
+    """The spoken form of a CLDR `tts` name in the three steps, or None when it holds a character that is no word."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from text2spoken import NormalizationParams, normalize
+
+    plain = "".join(" " if char in _SPACES else "" if char in _QUOTES and not (
+        char == "’" and 0 < index < len(name) - 1 and name[index - 1].isalpha() and name[index + 1].isalpha())
+        else char for index, char in enumerate(name))
+    spoken = normalize(" ".join(plain.split()), tag, NormalizationParams(strict=False))
+    if all(char.isalpha() or unicodedata.category(char).startswith("M") or char in " -'’" for char in spoken):
+        return spoken
+    return None
+
+
 def extract_emoji(tag: str, parents: dict[str, str], source: Source, shared: dict[str, str],
-                  sequences: list[str]) -> dict:
+                  sequences: list[str]) -> tuple[dict, list[str]]:
+    """The emoji file of a tag, and the names that give no spoken name."""
     locales, names = _tts_names(tag, parents, source, shared)
     keys = {sequence.replace(SELECTOR, "") for sequence in sequences}
-    return {
+    spoken = {key: spoken_name(name, tag) for key, name in sorted(names.items()) if key in keys}
+    data = {
         "source": {"release": RELEASE, "commit": COMMIT, "unicode": UNICODE,
                    "locales": [locale for locale, _ in locales], "files": dict(sorted(source.hashes.items()))},
-        "names": {key: name for key, name in sorted(names.items()) if key in keys},
+        "names": spoken,
     }
-
-
-def refused(tag: str, names: dict[str, str]) -> list[str]:
-    """The names whose reading the `EMOJI` form of the runtime refuses, by the default params."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from text2spoken import NormalizationParams
-    from text2spoken.core.emoji import name_reading
-
-    return sorted({name for name in names.values() if name_reading(name, tag, NormalizationParams()) is None})
+    return data, sorted({names[key] for key, name in spoken.items() if name is None})
 
 
 def write(path: Path, data: dict) -> None:
@@ -390,6 +406,8 @@ def main(argv: list[str] | None = None) -> int:
     emoji = Source(args.emoji, EMOJI)
     sequences = emoji_sequences(emoji)
     emoji_hashes = {f"emoji/{path}": digest for path, digest in emoji.hashes.items()}
+    write(args.out / "emoji-keys.json", {"source": {"unicode": UNICODE, "files": emoji_hashes},
+                                         "keys": sorted({sequence.replace(SELECTOR, "") for sequence in sequences})})
     parents, licence = source.read("cldr-json/cldr-core/supplemental/parentLocales.json"), source.read("LICENSE")
     if parents is None or licence is None:
         parser.error(f"{args.source or RAW} holds no cldr-json release with parentLocales.json and LICENSE")
@@ -397,8 +415,6 @@ def main(argv: list[str] | None = None) -> int:
     shared = dict(source.hashes)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "LICENSE").write_bytes(licence)
-    write(args.out / "emoji-sequences.json", {"source": {"unicode": UNICODE, "files": emoji_hashes},
-                                              "sequences": sequences})
     print(f"{len(sequences)} emoji sequences")
     for tag in TAGS:
         data, collisions = extract(tag, parents, source, shared)
@@ -414,10 +430,9 @@ def main(argv: list[str] | None = None) -> int:
         data = extract_symbols(tag, parents, source, {**shared, **ucd_hashes}, categories, presentation)
         write(args.out / f"{tag}.symbols.json", data)
         print(f"{tag}: {len(data['symbols'])} symbols")
-        data = extract_emoji(tag, parents, source, {**shared, **emoji_hashes}, sequences)
+        data, names = extract_emoji(tag, parents, source, {**shared, **emoji_hashes}, sequences)
         write(args.out / f"{tag}.emoji.json", data)
-        names = refused(tag, data["names"])
-        print(f"{tag}: {len(data['names'])} emoji names, {len(names)} refused")
+        print(f"{tag}: {len(data['names'])} emoji sequences, {len(names)} names refused")
         for name in names:
             print(f"  refused {name!r}")
     written = 0

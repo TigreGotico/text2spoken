@@ -101,7 +101,7 @@ python scripts/extract_cldr.py --source ~/cldr-json  # read a checkout of that r
 
 ## The emoji data
 
-The emoji sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. Some names stay as written, because their reading holds a character that is no word. Such a name holds `&`, `!`, `/`, the `#` or the `*` of a keycap, or a full stop that no abbreviation reads, as in `flag: St. Lucia`. `scripts/extract_cldr.py` prints each such name.
+`text2spoken/data/cldr/<tag>.emoji.json` maps each sequence of the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names, to its spoken name. The script reads each CLDR name through `normalize` when it writes the file, so the runtime does a lookup only. Some sequences map to null and stay as written, because the reading of their name holds a character that is no word. Such a name holds `&`, `!`, `/`, the `#` or the `*` of a keycap, or a full stop that no abbreviation reads, as in `flag: St. Lucia`. `scripts/extract_cldr.py` prints each such name.
 
 ## CI
 

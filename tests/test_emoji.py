@@ -17,46 +17,38 @@ from tests.known_limits import known_limit
 from tests.test_cldr_currencies_symbols import Files, data, extractor
 from text2spoken import (Form, FrozenMap, InvalidLexiconError, NormalizationParams, UnreadFormError, analyze,
                          normalize)
-from text2spoken.core.emoji import emoji_view, name_reading, sequence_at, sequences_in
+from text2spoken.core.emoji import emoji_view, sequence_at
 from text2spoken.core.tokens import STAND_IN, is_mark, is_word_char
 
 TAGS = ("en-GB", "en-US", "pt-PT", "pt-BR")
 
 
 def sequences() -> list[str]:
-    path = files("text2spoken") / "data" / "cldr" / "emoji-sequences.json"
-    return json.loads(path.read_text(encoding="utf-8"))["sequences"]
-
-
-def test_the_sequence_file_records_unicode_17_and_its_two_inputs():
-    source = json.loads((files("text2spoken") / "data" / "cldr" / "emoji-sequences.json")
-                        .read_text(encoding="utf-8"))["source"]
-    assert source["unicode"] == "17.0.0"
-    assert set(source["files"]) == {"emoji/emoji-sequences.txt", "emoji/emoji-zwj-sequences.txt"}
-
-
-def test_the_sequence_file_holds_the_sequences_as_unicode_writes_them():
-    """Unicode 17.0 adds 🫩 (U+1FAE9) and the keycap `#️⃣` is 0023 FE0F 20E3 in emoji-sequences.txt."""
-    written = set(sequences())
-    assert {"\U0001fae9", "#️⃣", "❤️", "🇵🇹", "👍🏽", "👨‍👩‍👧‍👦"} <= written
-    assert "❤" not in written and "#⃣" not in written
+    return sorted(data("en-GB", "emoji")["names"])
 
 
 @pytest.mark.parametrize("tag", TAGS)
-def test_each_tag_names_each_sequence_without_u_fe0f(tag):
+def test_each_tag_names_the_sequences_without_u_fe0f(tag):
+    """Unicode 17.0 adds 🫩 (U+1FAE9). CLDR keys `#️⃣` (0023 FE0F 20E3 in emoji-sequences.txt) as `#⃣`."""
     names = data(tag, "emoji")["names"]
-    assert set(names) == {sequence.replace("️", "") for sequence in sequences()}
+    assert {"\U0001fae9", "❤", "🇵🇹", "👍🏽", "👨‍👩‍👧‍👦"} <= set(names)
+    assert not any("️" in key for key in names)
+    keys = json.loads((files("text2spoken") / "data" / "cldr" / "emoji-keys.json").read_text(encoding="utf-8"))
+    assert set(names) == set(keys["keys"])
     assert data(tag, "emoji")["source"]["unicode"] == "17.0.0"
 
 
 @pytest.mark.parametrize(("tag", "key", "name"), [
-    ("en-GB", "👍🏽", "thumbs up: medium skin tone"),
-    ("pt-PT", "👍🏽", "polegar para cima: tipo de pele 4"),
-    ("pt-BR", "👍🏽", "polegar para cima: pele morena"),
-    ("pt-PT", "🥇", "medalha de 1.º lugar"),
+    ("en-GB", "👍🏽", "thumbs up medium skin tone"),
+    ("pt-PT", "👍🏽", "polegar para cima tipo de pele quatro"),
+    ("pt-BR", "👍🏽", "polegar para cima pele morena"),
+    ("pt-PT", "🥇", "medalha de primeiro lugar"),
     ("en-US", "🕐", "one o’clock"),
+    ("en-GB", "🥇", "first place medal"),
 ])
-def test_the_names_are_the_cldr_tts_names_of_the_parent_chain(tag, key, name):
+def test_the_names_are_the_spoken_cldr_tts_names_of_the_parent_chain(tag, key, name):
+    """The CLDR 49 `tts` names: `thumbs up: medium skin tone`, `polegar para cima: tipo de pele 4`, `polegar para
+    cima: pele morena`, `medalha de 1.º lugar`, `one o’clock` and `1st place medal`."""
     assert data(tag, "emoji")["names"][key] == name
 
 
@@ -67,11 +59,12 @@ def test_the_extractor_reads_ranges_and_sequences_and_keeps_only_the_names_of_se
                    "emoji-zwj-sequences.txt": b"1F468 200D 1F4BB ; RGI_Emoji_ZWJ_Sequence ; man technologist # x\n"})
     found = module.emoji_sequences(emoji)
     assert found == sorted(["⌚", "⌛", "©️", "👨‍💻"])
-    names = {key: {"tts": [f"name {key}"]} for key in ("⌚", "©", "👨‍💻", "→")}
-    release = Files({"cldr-json/cldr-annotations-full/annotations/qq/annotations.json":
+    names = {"⌚": {"tts": ["watch"]}, "©": {"tts": ["copyright"]}, "👨‍💻": {"tts": ["keycap: #"]}, "→": {"tts": ["x"]}}
+    release = Files({"cldr-json/cldr-annotations-full/annotations/en-GB/annotations.json":
                      {"annotations": {"annotations": names}}})
-    extracted = module.extract_emoji("qq", {}, release, {}, found)
-    assert extracted["names"] == {"⌚": "name ⌚", "©": "name ©", "👨‍💻": "name 👨‍💻"}
+    extracted, refused = module.extract_emoji("en-GB", {}, release, {}, found)
+    assert extracted["names"] == {"⌚": "watch", "©": "copyright", "👨‍💻": None}
+    assert refused == ["keycap: #"]
 
 
 @pytest.mark.parametrize(("name", "tag", "reading"), [
@@ -91,25 +84,16 @@ def test_the_extractor_reads_ranges_and_sequences_and_keeps_only_the_names_of_se
 def test_a_name_reads_in_three_steps(name, tag, reading):
     """Quotes go, `: , ( )` become spaces, U+2019 between two letters stays as an apostrophe, and a reading that
     still holds another character than a letter, a mark, a space, `-`, `'` or U+2019 does not read."""
-    assert name_reading(name, tag, NormalizationParams()) == reading
+    assert extractor().spoken_name(name, tag) == reading
 
 
 @pytest.mark.parametrize(("text", "end"), [
-    ("😂😂", 1), ("👍🏽!", 2), ("❤️ x", 2), ("❤ x", None), ("❤‍🔥", 3), ("👍🏽‍🔥", 4), ("1️⃣", 3),
-    ("1⃣", 2), ("a🏽", 2), ("⋂🏿", 2), (" 🏽", None), ("🇵🇹🇧🇷", 2), ("🇵🇵🇹", None),
+    ("😂😂", 1), ("👍🏽!", 2), ("❤️ x", 2), ("❤ x", 1), ("❤‍🔥", 3), ("👍🏽‍🔥", 4), ("1️⃣", 3),
+    ("1⃣", 2), ("a🏽", None), ("1 x", None), (" 🏽", None), ("🇵🇹🇧🇷", 2), ("👍‍😀", 3),
 ])
 def test_an_emoji_sequence_ends_after_its_skin_tones_selectors_and_joined_emoji(text, end):
-    found = sequence_at(text, 0, {})
+    found = sequence_at(text, 0)
     assert (found and found[1]) == end
-
-
-@pytest.mark.parametrize(("text", "found"), [
-    ("🇵🇵🇹", []), ("🇸🇪🇸🇪🇸", [(0, 2), (2, 4)]), ("x🇵🇵🇵🇹", [(3, 5)]),
-])
-def test_regional_indicators_pair_from_the_start_of_a_run(text, found):
-    """UAX #29 GB12 and GB13: "do not break between regional indicator (RI) symbols if there is an odd number of RI
-    characters before the break point". So `🇵🇵🇹` is the pair `🇵🇵`, which names no flag, and a lone `🇹`."""
-    assert list(sequences_in(text, {})) == found
 
 
 def test_the_view_hides_each_character_of_a_sequence_that_an_emoji_mark_follows_and_is_no_symbol():
@@ -152,6 +136,7 @@ def test_an_address_keeps_an_emoji_sequence_whole(tag):
     assert normalize("x@a👨‍💻b.com", tag, EMOJI_ON) == "ex at a man technologist bee dot com"
     assert normalize("x@a©️b.com", tag, EMOJI_ON) == "ex at a copyright bee dot com"
     assert normalize("x@a🇦🇬b.com", tag, EMOJI_ON) == "ex at a 🇦🇬 bee dot com"
+    assert normalize("x@a👍‍😀b.com", tag, EMOJI_ON) == "ex at a thumbs up bee dot com"
 
 
 def test_the_form_reads_inside_an_address_only_through_its_name():
@@ -243,9 +228,10 @@ def test_an_emoji_that_a_word_joins_on_the_left_stays_as_written(tag, text, para
 @pytest.mark.parametrize("params", [None, EMOJI_ON], ids=["off", "on"])
 def test_a_digit_before_a_skin_tone_reads_next_to_a_digit(params):
     """The rule for a sequence that touches a word covers a sequence with U+FE0E, U+FE0F or U+20E3, the sequences
-    that the view hides. A digit before a skin tone reads, as the README limit says, so `5🏽` after `1` reads with it,
-    with the form on or off."""
-    assert normalize("Room 15🏽 now", "en-GB", params) == "Room fifteen🏽 now"
+    that the view hides. A digit before a skin tone reads, so `5🏽` after `1` reads with it, and the skin tone reads
+    by its own name with the form on."""
+    tone = "🏽" if params is None else " medium skin tone"
+    assert normalize("Room 15🏽 now", "en-GB", params) == f"Room fifteen{tone} now"
 
 
 @pytest.mark.parametrize(("text", "word"), [
@@ -264,7 +250,7 @@ def test_the_view_hides_the_word_that_a_sequence_touches(text, word):
     assert emoji_view(text, {}) == text[:start] + STAND_IN * len(word) + text[start + len(word):]
 
 
-MARKED = ["❤️", "☑️", "✈️", "1️⃣", "#️⃣", "1⃣", "©️", "🏳️‍🌈", "5️"]
+MARKED = ["❤️", "☑️", "✈️", "1️⃣", "#️⃣", "1⃣", "©️", "🏳️‍🌈"]
 CONTEXTS = {
     "en": ["Call 0800 123 456 {e} to cancel", "call 911{e} now", "Call (555) 123-4567{e} for sales",
            "Call me on 07700 900123{e}", "call {e}07700 900123 now", "ring +44 20 7946 0958{e}", "I paid £5{e} today.",
@@ -388,19 +374,20 @@ def test_a_call_keeps_nothing_of_a_long_text_after_it_returns(params):
 
 
 def test_a_run_of_regional_indicators_takes_linear_work(monkeypatch):
-    """UAX #29 pairs regional indicators from the start of a run. The pairing reads each character of the run a
-    bounded number of times, so twice the run takes about twice the work, with the form on or off."""
+    """The lookup reads at most the length of the longest key at each position, so twice the run takes about twice
+    the work, with the form on or off."""
     from text2spoken.core import emoji
 
     checks = 0
+    keys, longest = emoji._keys()
 
     class Counted(frozenset):
-        def __contains__(self, char):
+        def __contains__(self, key):
             nonlocal checks
             checks += 1
-            return frozenset.__contains__(self, char)
+            return frozenset.__contains__(self, key)
 
-    monkeypatch.setattr(emoji, "REGIONAL_INDICATORS", Counted(emoji.REGIONAL_INDICATORS))
+    monkeypatch.setattr(emoji, "_keys", lambda: (Counted(keys), longest))
 
     def work(count, params, label):
         nonlocal checks

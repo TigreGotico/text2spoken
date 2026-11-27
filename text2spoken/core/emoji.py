@@ -1,112 +1,67 @@
-"""The emoji sequences of a text and their CLDR names, for the `EMOJI` form (design section 4.7).
+"""The emoji sequences of a text and their spoken names, for the `EMOJI` form (design section 4.7).
 
-`scripts/extract_cldr.py` writes `text2spoken/data/cldr/emoji-sequences.json`, each sequence of the Unicode emoji files
-as Unicode writes it, and `text2spoken/data/cldr/<tag>.emoji.json`, the CLDR `tts` name of each sequence. CLDR keys a
-sequence without U+FE0F, so the lookup ignores U+FE0F.
+`scripts/extract_cldr.py` writes `text2spoken/data/cldr/<tag>.emoji.json`, which maps each emoji sequence of the
+Unicode emoji files, without U+FE0F, to the spoken form of its CLDR `tts` name, or to null when the name does not read
+as words.
 
-An emoji is the longest sequence of the file at a position, with each U+FE0F in it and a U+FE0F after it. A character
-with text presentation by default, such as `❤` or `©`, is an emoji only before U+FE0F, a skin tone or a zero width
-joiner, so a bare `❤` stays with `SYMBOL`. Any other character that is no space is an emoji before one of these too,
-so `a🏽` and `⋂🏿` belong to `EMOJI`. An emoji sequence is an emoji with the skin tones, U+FE0F and zero width joiners
-after it, where each joiner takes the emoji after it. So `👍🏽` is one sequence, and `😂😂` is two.
-
-A sequence reads by its name. A sequence with no name reads by the name of its first emoji, and an emoji with no name
-stays as written, as `a🏽` does. A name reads in three steps. First, each quote mark goes, and each `:`, `,`, `(` and
-`)` becomes a space. U+2019 between two letters is an apostrophe, not a quote mark, so it stays. Second, the result goes
-through `normalize` with the same language and forms, without `EMOJI`, so pt-PT `polegar para cima: tipo de pele 4`
-reads "polegar para cima tipo de pele quatro" and en `1st place medal` reads "first place medal". Third, a reading that
-still holds a character other than a letter, a combining mark, a space, `-`, `'` or U+2019 does not read, and the
-emoji stays as written, as en `flag: Antigua & Barbuda` and `keycap: #` do. So en `one o’clock` reads.
+An emoji sequence is the longest key of a table at a position, with each U+FE0F in it and after it ignored, followed by
+the skin tones, U+FE0F and the zero width joiners after it, where each joiner takes the next key. Every table holds
+the same keys, which `emoji-keys.json` lists, so a text cuts the same way in each language and only the table of the
+variety loads. A sequence reads by its name in that table. A sequence that is no key reads by the name of its first
+key. A sequence with no name stays as written.
 """
 from __future__ import annotations
 
 import json
 import unicodedata
-from dataclasses import replace
 from functools import lru_cache
 from importlib.resources import files
 
 from text2spoken.core.currencies import cldr_part
 from text2spoken.core.language import Request
 from text2spoken.core.tokens import EMOJI_MARKS, STAND_IN, is_word_char
-from text2spoken.params import Form, NormalizationParams
 
 SELECTOR = "️"
 JOINER = "‍"
 MODIFIERS = frozenset(map(chr, range(0x1F3FB, 0x1F400)))
-REGIONAL_INDICATORS = frozenset(map(chr, range(0x1F1E6, 0x1F200)))
-_QUOTES = frozenset("\"“”‘’")
-_APOSTROPHE = "’"
-_SPACES = frozenset(":,()")
 
 
 @lru_cache(maxsize=1)
-def _sequences() -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
-    """The sequences with U+FE0F removed, each start of one, and the characters that Unicode writes with U+FE0F as
-    an emoji of their own: the characters with text presentation by default."""
-    path = files("text2spoken") / "data" / "cldr" / "emoji-sequences.json"
-    written = json.loads(path.read_text(encoding="utf-8"))["sequences"]
-    keys = frozenset(sequence.replace(SELECTOR, "") for sequence in written)
-    starts = frozenset(key[:end] for key in keys for end in range(1, len(key) + 1))
-    text = frozenset(sequence[0] for sequence in written if sequence[1:] == SELECTOR)
-    return keys, starts, text
+def _keys() -> tuple[frozenset[str], int]:
+    """The keys that every emoji table holds, and the length of the longest."""
+    path = files("text2spoken") / "data" / "cldr" / "emoji-keys.json"
+    keys = frozenset(json.loads(path.read_text(encoding="utf-8"))["keys"])
+    return keys, max(map(len, keys))
 
 
-def _second_indicators(text: str, memo: dict) -> frozenset[int]:
-    """The position of each regional indicator that pairs with the one before it. UAX #29 rules GB12 and GB13 pair
-    regional indicators from the start of a run: "Do not break within emoji flag sequences. That is, do not break
-    between regional indicator (RI) symbols if there is an odd number of RI characters before the break point." So
-    `🇵🇵🇹` is the pair `🇵🇵` and a lone `🇹`, and no flag of Portugal. `memo` keeps them for the call."""
-    key = ("indicators", text)
-    if key not in memo:
-        second, run = [], 0
-        for index, char in enumerate(text):
-            run = run + 1 if char in REGIONAL_INDICATORS else 0
-            if run and run % 2 == 0:
-                second.append(index)
-        memo[key] = frozenset(second)
-    return memo[key]
-
-
-def _emoji(text: str, index: int, joined: bool, memo: dict) -> int | None:
-    """The end of the emoji at text[index], or None. A character that is no space, before U+FE0F, a skin tone or a
-    zero width joiner, is an emoji, even when the emoji files do not hold it. After a zero width joiner (`joined`),
-    a character with text presentation is an emoji with nothing after it."""
-    if text[index:index + 1] in ("", SELECTOR) or index in _second_indicators(text, memo):
-        return None
-    keys, starts, text_presentation = _sequences()
+def _key_end(text: str, index: int) -> int | None:
+    """The end of the longest key at text[index], with the U+FE0F in it and after it, or None."""
+    keys, longest = _keys()
     key, end, position = "", None, index
-    while position < len(text):
+    while position < len(text) and len(key) < longest:
         char = text[position]
         position += 1
-        if char == SELECTOR:
-            continue
-        key += char
-        if key not in starts:
-            break
-        if key in keys:
-            end = position
-    after = text[index + 1:index + 2]
-    marked = (after in (SELECTOR, JOINER) or after in MODIFIERS) and not text[index].isspace()
-    if end == index + 1 and text[index] in text_presentation and not (joined or marked):
-        return None
-    if end is None:
-        if joined or not marked:
+        if char != SELECTOR:
+            key += char
+            if key in keys:
+                end = position
+        elif not key:
             return None
-        end = index + 1
-    return end + 1 if text[end:end + 1] == SELECTOR else end
+    if end is not None and text[end:end + 1] == SELECTOR:
+        end += 1
+    return end
 
 
-def sequence_at(text: str, index: int, memo: dict) -> tuple[int, int] | None:
-    """The end of the first emoji and the end of the emoji sequence that start at text[index], or None."""
-    first = _emoji(text, index, False, memo)
+def sequence_at(text: str, index: int) -> tuple[int, int] | None:
+    """The end of the first key and the end of the emoji sequence that start at text[index], or None."""
+    first = _key_end(text, index)
     if first is None:
         return None
     end = first
     while end < len(text):
         if text[end] == SELECTOR or text[end] in MODIFIERS:
             end += 1
-        elif text[end] == JOINER and (following := _emoji(text, end + 1, True, memo)) is not None:
+        elif text[end] == JOINER and (following := _key_end(text, end + 1)) is not None:
             end = following
         else:
             break
@@ -119,7 +74,7 @@ def sequences_in(text: str, memo: dict) -> tuple[tuple[int, int], ...]:
     if key not in memo:
         found, index = [], 0
         while index < len(text):
-            sequence = sequence_at(text, index, memo)
+            sequence = sequence_at(text, index)
             if sequence is None:
                 index += 1
             else:
@@ -186,32 +141,13 @@ def written_text(text: str, request: Request) -> str:
     return request.memo.get(("written", text), text)
 
 
-def _apostrophe(name: str, index: int) -> bool:
-    """Whether name[index] is U+2019 between two letters, an apostrophe and no quote mark."""
-    return (name[index] == _APOSTROPHE and 0 < index < len(name) - 1
-            and name[index - 1].isalpha() and name[index + 1].isalpha())
-
-
-@lru_cache(maxsize=4096)
-def name_reading(name: str, tag: str, params: NormalizationParams) -> str | None:
-    """The reading of a CLDR name in the three steps, or None when the reading holds a character that is no word."""
-    from text2spoken.core.pipeline import normalize
-
-    plain = "".join(" " if char in _SPACES else "" if char in _QUOTES and not _apostrophe(name, index) else char
-                    for index, char in enumerate(name))
-    spoken = normalize(" ".join(plain.split()), tag, replace(params.without(Form.EMOJI), strict=False))
-    if all(char.isalpha() or unicodedata.category(char).startswith("M") or char == " " or char in "-'’"
-           for char in spoken):
-        return spoken
-    return None
-
-
-def emoji_name(text: str, start: int, request: Request) -> tuple[int, str | None] | None:
-    """The end of the emoji sequence at text[start] and the CLDR name that it reads by, None when no name holds it,
-    or None when no sequence starts there."""
-    found = sequence_at(text, start, request.memo)
+def emoji_reading(text: str, start: int, request: Request) -> tuple[int, str | None] | None:
+    """The end of the emoji sequence at text[start] and its spoken name, None when no name reads it, or None when no
+    sequence starts there."""
+    found = sequence_at(text, start)
     if found is None:
         return None
     first, end = found
     names = cldr_part(request.variety.tag, "emoji").get("names", {})
-    return end, names.get(text[start:end].replace(SELECTOR, "")) or names.get(text[start:first].replace(SELECTOR, ""))
+    key = text[start:end].replace(SELECTOR, "")
+    return end, names[key] if key in names else names.get(text[start:first].replace(SELECTOR, ""))
