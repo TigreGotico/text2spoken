@@ -26,8 +26,15 @@ def say_as(row: dict) -> SayAs:
     return SayAs(interpret_as=row["interpret_as"], format=row["format"] or None, detail=row["detail"] or None)
 
 
+def params(row: dict) -> NormalizationParams | None:
+    """The `gender` column sets the default gender of the row's language, as a say-as ordinal reads it."""
+    if not row["gender"]:
+        return None
+    return NormalizationParams(default_gender=FrozenMap({row["tag"].split("-")[0]: GrammaticalGender(row["gender"])}))
+
+
 def read(row: dict) -> str:
-    return normalize(row["text"], row["tag"], say_as=say_as(row))
+    return normalize(row["text"], row["tag"], params(row), say_as=say_as(row))
 
 
 @pytest.mark.parametrize("row", ROWS, ids=[row["id"] for row in ROWS])

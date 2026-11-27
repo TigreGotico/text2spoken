@@ -1,4 +1,4 @@
-id	tag	text	interpret_as	format	detail	expected	source	checked_by
+id	tag	text	interpret_as	format	detail	expected	source	checked_by	gender
 SA01	en-US	123	ordinal			one hundred twenty-third	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.6: "One hundred twenty third"; en-US writes no and (Wikipedia, English numerals)	unchecked
 SA02	en-US	1,234,567	cardinal		,	one million two hundred thirty-four thousand five hundred sixty-seven	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.5: detail is the group mark; Wikipedia, English numerals: US writes no and	unchecked
 SA03	en-US	123.456	cardinal		.	one hundred twenty-three thousand four hundred fifty-six	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.5: detail "." groups the integral part	unchecked
@@ -36,3 +36,4 @@ SA40	pt-PT	(212) 555-0199	telephone			dois um dois cinco cinco cinco zero um nov
 SA41	pl-PL	(212) 555-0199	telephone			dwa jeden dwa pięć pięć pięć zero jeden dziewięć dziewięć	W3C Note "SSML 1.0 say-as attribute values" (2005-05-26) 3.3: "the chunking algorithm itself is processor specific"; read digit by digit (design section 17.5); Wiktionary: zero, jeden, dwa, pięć, dziewięć are the Polish cardinals 0, 1, 2, 5, 9	unchecked
 SA42	hi-IN	3	ordinal			तीसरा	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.2, p. 53: तीसरा; the masculine is the default gender of hi.py	unchecked
 SA43	hi-IN	6	ordinal			छठा	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.2, p. 53: छठा (छठवाँ नहीं); the masculine is the default gender of hi.py	unchecked
+SA44	hi-IN	3	ordinal			तीसरी	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.2, p. 53: तीसरा; silver: no source in the file writes the feminine तीसरी	unchecked	feminine
