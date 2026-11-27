@@ -12,19 +12,21 @@ A number reads in Latin digits and in Bengali digits (U+09E6 to U+09EF): the tok
 value. The group mark is the comma, in the Indian grouping of Wiktionary, "১,০০,০০০".
 
 A numeral classifier joins the number, with no space, as in `3টি`: Thompson 2012, section 5.2.4, p. 53: "Classifiers
-are attachments. They never occur alone", "singular: ta, ti, khana, khani", and the animate classifier jon. Section
+are attachments. They never occur alone", "singular: ta, ti, knana, khani" [OCR; read khana], and the animate classifier jon. Section
 5.2.5, pp. 54 to 56, joins each to numbers: "carta Sari four sarees, hajarta prosn6é a thousand questions, pécista
 narikel gach twenty-five coconut trees" (ta), "tinti boi three books, pacti caméc five spoons" (ti), "tinjon nay6k three
 actors, dosjan chatr6 ten students", "duijan montri two ministers" (jon), "tar duikhani hat both her hands", "khata
 carkhana the four notebooks" (khana, khani). The Bangla Academy, *Adhunik Bangla Abhidhan* (2016), gives the Bengali
-script: টি "সংখ্যানির্দেশক বাংলা প্রত্যয় (দুটি পাখি)", জন "ব্যক্তির সংখ্যা নির্দেশ করে এমন (পাঁচজন)". A number with a
+script: টি "সংব্যানির্দেশক বাংলা প্রত্যয় (দুটি" [OCR; read সংখ্যানির্দেশক], with "পাখি)" on the next line, and জন
+"সংখ্যা নির্দেশ করে এমন (পার্চজন)।" [OCR; read পাঁচজন]. A number with a
 word of `classifiers` after it reads the cardinal and the classifier as one word: `3টি` reads তিনটি.
 
 Two joins with দুই are one word of their own, and the table of each classifier gives it. The Bangla Academy headwords
-দুটা "দুই সংখ্যক" and দুটি "দুটা'র আদরার্থক রূপ"; Thompson writes "duti" and "duto". `harmony_classifiers` holds the
+দুটা "১ দুই সংখ্যক।" and দুটি "দুটা"র আদরার্থক রুপ" [OCR; read দুটা'র ... রূপ]; Thompson writes "duti" and "duto". `harmony_classifiers` holds the
 two allomorphs of ta, which Thompson, section 5.2.5.1, p. 54, gives only with some numbers: "ta has two allomorphs to
 and te which are used, mainly in West Bengal, for vowel harmony. duto two, tinte three, carte four". The Bangla
-Academy headwords দুটো "দুটা'-র কথ্য রূপ" and চারটে "চারটা'-র কথ্য রূপ", and তিনটে under তিনটা, give their script.
+Academy headwords দুটো "“দুটা'-র কথ্য রুপ।" and চারটে "“চারটা'-র কথ্য রুপ।" [OCR; read রূপ], and its table of clock
+times, "/তিন্টা, তিনটে", give their script. 0 with a classifier stays as written, because no source gives the form.
 টো and টে after another number stay as written. গুলো and গুলি stay as written after a number: Thompson, section
 5.2.5.5, p. 57, adds them "to nouns, possessive and deictic pronouns, quantifiers and other adjectives, but never to
 numbers". A cardinal of two or more words, as এক শ, and a classifier with a case ending after it, as `3টিতে`, stay
@@ -88,6 +90,8 @@ class BnCardinal(Cardinal):
 def classified(digits: str, classifier: str, request: Request) -> str | None:
     """The number and the classifier as one word, or None when no source gives the form."""
     data = request.data
+    if digits == "0":
+        return None
     if classifier in data["harmony_classifiers"]:
         return data["harmony_classifiers"][classifier].get(digits)
     if classifier not in data["classifiers"]:

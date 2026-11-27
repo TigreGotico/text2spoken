@@ -75,6 +75,7 @@ The docstring of [`bn.py`](../../text2spoken/lang/bn.py) quotes each source. Eac
 | `-5` | `bn-BD` | stays as written | numtag reads no Bengali minus sign. |
 | `5টে` | `bn-BD` | stays as written | The sources give টো and টে only after 2, 3 and 4. |
 | `১০০টি` | `bn-BD` | stays as written | No source gives a classifier after a cardinal of two words, as এক শ. |
+| `0টি` | `bn-BD` | stays as written | No source gives 0 with a classifier. |
 | `3টিতে` | `bn-BD` | stays as written | A classifier with a case ending after it stays as written. |
 | `20%` | `bn-BD` | stays as written | A percentage stays as written, as in a language with no file. |
 | `25/12/2024` | `bn-BD` | stays as written | A numeric date stays as written. |
