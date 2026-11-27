@@ -9,8 +9,10 @@ hundred, as "इक्कीस" for 21 and "निन्यानवे" for 99
 A number reads in Latin digits and in Devanagari digits (U+0966 to U+096F): the tokens read a digit by its Unicode
 value. The group mark is the comma, in the Indian grouping of the CLDR pattern `#,##,##0.###`.
 
-A minus sign reads "ऋण", the `-x: ऋण →→;` rule of the same rule set. A decimal reads its `x.x: ←← दशमलव →→;` rule:
-the whole part, "दशमलव", then each digit of the decimal part, so `2.75` reads "दो दशमलव सात पाँच".
+A minus sign reads "ऋण", the `-x: ऋण →→;` rule of the same rule set. The recognizer of a tag with no file,
+`RBNF_CARDINAL`, finds the cardinals, so a minus that may mark a range or an operation stays as written, as in
+`5 -3.5`. A decimal reads its `x.x: ←← दशमलव →→;` rule: the whole part, "दशमलव", then each digit of the decimal
+part, so `2.75` reads "दो दशमलव सात पाँच".
 
 `digit_words` holds the words of 0 to 9 of the same rule set, "0: शून्य;" to "9: नौ;". An ordinal of an SSML say-as
 reads the rule sets `spellout-ordinal-masculine` and `spellout-ordinal-feminine`, by gender, and a say-as date the
@@ -23,7 +25,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import replace
 
 from text2spoken.core.language import LanguageSpec, Request, Variety
-from text2spoken.core.recognizers import (CARDINAL, LEXICON, RBNF_DECIMAL, SHARED, OrdinalStop, Written,
+from text2spoken.core.recognizers import (LEXICON, RBNF_CARDINAL, RBNF_DECIMAL, SHARED, OrdinalStop, Written,
                                           speak_cardinal, speak_cldr_date, speak_lexicon, speak_rbnf_decimal,
                                           written_shapes)
 from text2spoken.core.spans import FIELDS, Features, Span
@@ -68,7 +70,7 @@ LANGUAGE = LanguageSpec(
     data=DATA,
     recognizers=(LEXICON, *map(Kept, (SHARED["money"], SHARED["percent"], SHARED["measure"], SHARED["date_numeric"],
                                        SHARED["fraction"], OrdinalStop(bare_stop=True))),
-                 CARDINAL, RBNF_DECIMAL),
+                 RBNF_CARDINAL, RBNF_DECIMAL),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DECIMAL: speak_rbnf_decimal,
                  Form.DATE: speak_cldr_date},
     spellers={Form.CARDINAL: NumtagSpeller({}), Form.DECIMAL: RBNF, Form.ORDINAL: RBNF},
