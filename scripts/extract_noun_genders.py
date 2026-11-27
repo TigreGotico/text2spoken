@@ -1,8 +1,10 @@
 """Write text2spoken/data/wiktionary/it_noun_genders.json from the Italian noun categories of the English Wiktionary,
-or text2spoken/data/wiktionary/fr_noun_genders.json from the French ones.
+text2spoken/data/wiktionary/fr_noun_genders.json from the French ones, or text2spoken/data/wiktionary/da_noun_genders.json
+from the Danish ones.
 
     python scripts/extract_noun_genders.py        # Italian
     python scripts/extract_noun_genders.py fr     # French
+    python scripts/extract_noun_genders.py da     # Danish
 
 The MediaWiki API lists the members of "Italian masculine nouns" and "Italian feminine nouns". A noun that is in both
 categories has no single gender, and the file lists it in `both`, as "cantante" and "abitante". `function_words` lists
@@ -20,6 +22,10 @@ file takes from the French Wiktionary.
 `scripts/fr_noun_gender_corrections.json` corrects the gender of the nouns whose English category is the opposite of
 the gender of their French Wiktionary entry, as "bobsleigh", which the English category gives as feminine and the
 French Wiktionary as "bobsleigh {{m}}", and "bureaucratisation", the other way round. The file names its source.
+
+The Danish file reads "Danish common-gender nouns" and "Danish neuter nouns", and lists in `both` the words of both
+categories and the members of "Danish nouns with multiple genders". It keeps lowercase words of two or more letters,
+which may hold a hyphen between letters.
 """
 import json
 import sys
@@ -40,6 +46,9 @@ OUT = DATA / "it_noun_genders.json"
 FRENCH_GENDERS = {"masculine": "French masculine nouns", "feminine": "French feminine nouns"}
 FRENCH_BOTH = "French nouns with multiple genders"
 FRENCH_OUT = DATA / "fr_noun_genders.json"
+DANISH_GENDERS = {"common": "Danish common-gender nouns", "neuter": "Danish neuter nouns"}
+DANISH_BOTH = "Danish nouns with multiple genders"
+DANISH_OUT = DATA / "da_noun_genders.json"
 FRENCH_CORRECTIONS = Path(__file__).resolve().parent / "fr_noun_gender_corrections.json"
 
 
@@ -131,5 +140,28 @@ def main_french() -> None:
           f"out masculine {len(kept['masculine'])} feminine {len(kept['feminine'])} both {len(kept['both'])}")
 
 
+def main_danish() -> None:
+    lists = {name: set(members(category)) for name, category in DANISH_GENDERS.items()}
+    several = set(members(DANISH_BOTH))
+    both = (lists["common"] & lists["neuter"]) | several
+    kept = {name: sorted(w for w in words if french_word(w) and w.islower())
+            for name, words in {"common": lists["common"] - both, "neuter": lists["neuter"] - both,
+                                "both": both}.items()}
+    DANISH_OUT.write_text(json.dumps({
+        "source": {
+            "name": "English Wiktionary",
+            "url": API,
+            "categories": [*DANISH_GENDERS.values(), DANISH_BOTH],
+            "both": "words in both gender categories or in the category of several genders, listed apart",
+            "licence": "CC BY-SA 4.0",
+            "retrieved": date.today().isoformat(),
+            "members": {**{name: len(words) for name, words in lists.items()}, "several": len(several)},
+        },
+        **kept,
+    }, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
+    print(f"in common {len(lists['common'])} neuter {len(lists['neuter'])} several {len(several)}; "
+          f"out common {len(kept['common'])} neuter {len(kept['neuter'])} both {len(kept['both'])}")
+
+
 if __name__ == "__main__":
-    main_french() if sys.argv[1:] == ["fr"] else main()
+    {("fr",): main_french, ("da",): main_danish}.get(tuple(sys.argv[1:]), main)()
