@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a163](https://github.com/TigreGotico/text2spoken/tree/0.0.2a163) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a162...0.0.2a163)
+
+**Merged pull requests:**
+
+- fix\(bn\): declare the numtag writer [\#711](https://github.com/TigreGotico/text2spoken/pull/711) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a162](https://github.com/TigreGotico/text2spoken/tree/0.0.2a162) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a161...0.0.2a162)
@@ -337,10 +345,6 @@
 ## [0.0.2a119](https://github.com/TigreGotico/text2spoken/tree/0.0.2a119) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a118...0.0.2a119)
-
-**Merged pull requests:**
-
-- fix\(core\): read a phone number only with evidence, in one shared recognizer [\#529](https://github.com/TigreGotico/text2spoken/pull/529) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a118](https://github.com/TigreGotico/text2spoken/tree/0.0.2a118) (2026-11-24)
 

@@ -87,7 +87,7 @@ def sweep_tags() -> list[str]:
     """Each variety tag of each language file, and each language with no file that reads cardinals."""
     specs = {spec.code: spec for spec in language._registry().values()}
     with_file = {variety.tag for spec in specs.values() for variety in spec.varieties}
-    no_file = {locale.split("_")[0] for locale in language.rbnf_locales()} | set(parsers.number_writer_languages())
+    no_file = {locale.split("_")[0] for locale in language.rbnf_locales()} | set(parsers.NUMBER_PARSER_LANGUAGES)
     return sorted(with_file | (no_file - set(specs)))
 
 

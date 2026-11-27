@@ -12,8 +12,6 @@ This page shows how to tune the reading: turn a form off or on, pick a variety, 
 
 ## Turn a form off or on
 
-Each written form has a `Form` value, and `NormalizationParams` holds the forms to read. Every form except `LETTERS` and `EMOJI` is on by default. `without` turns one form off, `plus` turns one on, and `only` keeps the forms that you name:
-
 ```python
 >>> from text2spoken import Form, NormalizationParams, normalize
 >>> normalize("Go → left at 9am.", "en-GB", NormalizationParams().without(Form.SYMBOL))
@@ -24,7 +22,10 @@ Each written form has a `Form` value, and `NormalizationParams` holds the forms 
 'Pay $5 for three items.'
 ```
 
-[How it reads text](how-it-reads.md#the-forms) lists every form.
+1. Find the `Form` value of the written form. [How it reads text](how-it-reads.md#the-forms) lists every form.
+2. Start from `NormalizationParams()`. Every form except `LETTERS` and `EMOJI` is on by default.
+3. Call `without` to turn one form off, `plus` to turn one on, or `only` to keep the forms that you name.
+4. Give the params to `normalize` as the third argument.
 
 ## Pick a language variety
 
@@ -47,8 +48,6 @@ The language pages give the options of each language and their defaults. [API](a
 
 ## Add your own words
 
-A lexicon entry reads a written form your way. The lexicon maps a language tag to a map of written forms to spoken words:
-
 ```python
 >>> from text2spoken import FrozenMap
 >>> params = NormalizationParams(lexicon=FrozenMap({"en": FrozenMap({"NHS": "N H S"})}))
@@ -56,18 +55,23 @@ A lexicon entry reads a written form your way. The lexicon maps a language tag t
 'Ask the N H S today.'
 ```
 
+1. Make a `FrozenMap` of written forms to spoken words.
+2. Put it in a second `FrozenMap`, under a language tag.
+3. Give it to `NormalizationParams` as `lexicon`, and give the params to `normalize`.
+
+A lexicon entry reads a written form your way.
 An entry matches a whole written form, with its case. The character before the match and the character after it must not be a letter, a digit or a combining mark. An apostrophe counts as a limit, so `ACME` matches in `ACME's` and in `l'ACME`. When two keys match at one position, the longer key wins. The library takes the entries of the primary language subtag, then the entries of the full tag, which replace them key by key. `without(Form.LEXICON)` turns the lexicon off for one call.
 
 A lexicon value that holds a form that the library reads raises `InvalidLexiconError`, because a second pass would read it. An entry that keeps its key, such as `{"MIX": "MIX"}`, is allowed.
 
 ## Keep text as written
 
-Text inside `[[` and `]]` passes through byte for byte, and no form reads it:
-
 ```python
 >>> normalize("Keep [[£5]] but pay £5.", "en-GB")
 'Keep [[£5]] but pay five pounds.'
 ```
+
+Put the text between `[[` and `]]`. It passes through byte for byte, and no form reads it.
 
 ## Text to speech
 
@@ -90,8 +94,6 @@ A grapheme-to-phoneme model or a rule set expects words. A digit or a symbol has
 
 ## Word error rate
 
-An ASR system writes "ten thirty" where a reference transcript writes "10:30". The two texts say the same thing, but a word error rate counts each difference as an error. Normalise the reference and the hypothesis with the same tag and the same params:
-
 ```python
 >>> normalize("The train leaves at 10:30 on 3 May from platform 2.", "en-GB")
 'The train leaves at ten thirty on the third of May from platform two.'
@@ -99,7 +101,12 @@ An ASR system writes "ten thirty" where a reference transcript writes "10:30". T
 'the train leaves at ten thirty on the third of may from platform two'
 ```
 
-Text that is already in words does not change. The library does not change case or punctuation, so lowercase both texts and remove punctuation before you score them.
+An ASR system writes "ten thirty" where a reference transcript writes "10:30". The two texts say the same thing, but a word error rate counts each difference as an error.
+
+1. Normalise the reference with `normalize`.
+2. Normalise the hypothesis with the same tag and the same params. Text that is already in words does not change.
+3. Lowercase both texts and remove the punctuation. The library does not change case or punctuation.
+4. Score the two texts.
 
 ## One set of params for a pipeline
 

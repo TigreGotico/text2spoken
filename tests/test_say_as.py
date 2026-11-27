@@ -12,7 +12,7 @@ from text2spoken import (ArgumentTypeError, Form, FrozenMap, GrammaticalGender, 
                          ParameterNotHonouredWarning, SayAs, UnreadFormError, UnsupportedParameterError, analyze,
                          normalize)
 from text2spoken.core import say_as as module
-from text2spoken.core.parsers import number_writer_languages
+from text2spoken.core.parsers import NUMBER_PARSER_LANGUAGES
 from text2spoken.core.spellers import RBNF_HELD
 
 with open(DATA / "say_as" / "rows.tsv", encoding="utf-8") as f:
@@ -247,7 +247,7 @@ ROUND_NUMBERS = [100, 200, 300, 1000, 2000, 10000, 1000000, 1000000000]
 """Round numbers, for which some writers of ovos-number-parser return the cardinal as the ordinal."""
 
 
-WRITER_LANGUAGES = sorted(number_writer_languages() - RBNF_HELD)
+WRITER_LANGUAGES = sorted(NUMBER_PARSER_LANGUAGES - RBNF_HELD)
 """The languages whose numbers the writer reads. RBNF `da` reads 2000 "to tusinde" as an ordinal, a Danish cardinal too."""
 
 
