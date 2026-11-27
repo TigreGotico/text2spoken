@@ -45,6 +45,20 @@ scripts/fr_noun_gender_corrections.json, whose single gender in the French Wikti
 CC BY-SA 4.0, entries read on 2026-11-26, contributors in the history of each page) is the opposite of their English
 category. `python scripts/extract_noun_genders.py fr` makes the file.
 
+da_noun_genders.json
+
+Source: English Wiktionary, https://en.wiktionary.org/
+Read through the MediaWiki API (https://en.wiktionary.org/w/api.php) on 2026-11-27, from the category
+members of "Danish common-gender nouns", "Danish neuter nouns" and "Danish nouns with multiple genders". The category
+state of that day is the source revision.
+
+Attribution: Wiktionary contributors, "Danish common-gender nouns", "Danish neuter nouns" and "Danish nouns with
+multiple genders", English Wiktionary. The contributors of each page are in its history at https://en.wiktionary.org/.
+
+Changes: the file keeps the lowercase words of two or more letters, with a hyphen between letters, and lists apart, as
+`both`, the words of both gender categories and of the category of several genders.
+`python scripts/extract_noun_genders.py da` makes the file.
+
 Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
 Licence text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
 Each file is shared under the same licence.

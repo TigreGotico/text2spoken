@@ -30,11 +30,15 @@ The file reads cardinals, decimals and lexicon entries. The decimal mark is the 
 
 ## Gender
 
-A number with no word after it ends in `en`, the form of counting. A number before a word ends in `et`, the neuter. The file reads no noun gender, so 1 before a common-gender noun reads `et` too. The option `default_gender` changes nothing.
+A number that ends in 1 takes the gender of the noun after it. Before a neuter noun it ends in `et`. Before a common-gender noun, before a word that is no noun, and with no word after it, it ends in `en`. The neuter nouns come from the list `text2spoken/data/wiktionary/da_noun_genders.json`. A noun that is not in the list reads `en`, because the list holds about three common-gender nouns for each neuter noun. The option `default_gender` changes nothing.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `1` | `da-DK` | en |
+| `1 bil` | `da-DK` | en bil |
+| `101 bil` | `da-DK` | hundrede og en bil |
+| `1 hus` | `da-DK` | et hus |
+| `1001 hus` | `da-DK` | tusind og et hus |
 | `1 element` | `da-DK` | et element |
 | `101 år` | `da-DK` | hundrede og et år |
 
@@ -64,10 +68,12 @@ A number with no word after it ends in `en`, the form of counting. A number befo
 | sproget.dk (Dansk Sprognævn and DSL), "Et eller flere ord", section "Talord" | A number under 100 is one word, as "halvtreds" and "femogfirs". A number over 100 is two or more words, as "to hundred(e)" |
 | sproget.dk, "Den 101. dalmatiner" | The forms "hundrede" and "hundred" of 100, and the two forms "én/ét" of 1 |
 | da.wikipedia, "Betydende cifre" | The decimals digit by digit after "komma": "10,11 (ti komma en en)", "100,0 (Et hundrede komma nul)". The counting form "en": "1.001 (et tusinde og en)" |
+| andlo, native Danish answers on text2spoken issue 709 | The form of 1 follows the noun: "en bil", "hundrede og en bil", but "et hus", "tusind og et hus", and "en" with no noun. The readings "en komma fem", "tusind og en" and "tusind" |
+| English Wiktionary, "Danish common-gender nouns", "Danish neuter nouns" and "Danish nouns with multiple genders" (CC BY-SA 4.0) | The gender of each noun in `da_noun_genders.json`: 10,682 common-gender and 3,417 neuter category members |
 | English Wiktionary, "nul" | The Danish example "nul komma fem" |
 | numtag | The words of each cardinal |
 
-The docstring of [`da.py`](../../text2spoken/lang/da.py) quotes each source. Each row in `tests/data/da.tsv` cites a source. No native speaker has checked the rows.
+The docstring of [`da.py`](../../text2spoken/lang/da.py) quotes each source. Each row in `tests/data/da.tsv` cites a source. A native speaker, andlo, checked the rows of the gender of 1, of `1,5`, of `1001` and of `1000`.
 
 ## Limits
 
@@ -77,7 +83,7 @@ The docstring of [`da.py`](../../text2spoken/lang/da.py) quotes each source. Eac
 | `20%` | `da-DK` | stays as written | A percentage stays as written, as in a language with no file. |
 | `5 €` | `da-DK` | stays as written | A sum of money stays as written. |
 | `25/12/2024` | `da-DK` | stays as written | A numeric date stays as written. |
-| `1 bil` | `da-DK` | et bil | The file reads no noun gender, so 1 before a common-gender noun reads `et`, not `en`. |
+| `1 postkontor` | `da-DK` | en postkontor | A neuter noun that is not in the noun list, as the compound "postkontor", reads `en`, not `et`. |
 
 ---
 [← Catalan](ca.md) · [Home](../index.md) · [German →](de.md)

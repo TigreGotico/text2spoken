@@ -7,8 +7,12 @@ dalmatiner", names "de to valgfrie bogstavskrevne former hundrede og hundred" of
 
 sproget.dk, "Den 101. dalmatiner", gives the two forms of 1: "én/ét". A number with no word after it ends in "en",
 the form of counting: da.wikipedia, "Betydende cifre": "1.001 (et tusinde og en)", "10,11 (ti komma en en)". A
-number before a word ends in "et", the neuter, through `noun_one`: the file reads no noun gender, so 1 before a
-common-gender noun, as "1 bil", reads "et" too.
+number that ends in 1 takes the gender of the noun after it. A native Danish speaker (andlo, text2spoken issue 709):
+"the form should follow the noun: "en bil", "hundrede og en bil", but "et hus", "tusind og et hus". With no noun after
+it, "en" is the default." The noun list `data/wiktionary/da_noun_genders.json`, which `scripts/extract_noun_genders.py
+da` makes from the categories "Danish common-gender nouns" and "Danish neuter nouns" of the English Wiktionary (CC BY-SA
+4.0), gives the neuter nouns: 1 before such a noun reads "et", through `noun_one`. Before every other word, 1 reads "en": a word that is
+no noun takes the default, and the list holds about three common-gender nouns for each neuter noun.
 
 A decimal reads its decimals digit by digit after "komma", with the zeros at the end. da.wikipedia, "Betydende
 cifre": "10,11 (ti komma en en)", "100,0 (Et hundrede komma nul)". The decimal mark is the comma and the group mark
@@ -26,6 +30,9 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from dataclasses import replace
+from functools import cache
+from importlib.resources import files
+import json
 
 from text2spoken.errors import DeclinedReading
 from text2spoken.core.language import LanguageSpec, Request, Variety
@@ -69,13 +76,21 @@ class DaSpeller(NumtagSpeller):
 SPELLER = DaSpeller({})
 
 
+@cache
+def neuter_nouns() -> frozenset[str]:
+    """The nouns of one gender, neuter, of `data/wiktionary/da_noun_genders.json`."""
+    path = files("text2spoken") / "data" / "wiktionary" / "da_noun_genders.json"
+    return frozenset(json.loads(path.read_text(encoding="utf-8"))["neuter"])
+
+
 def speak_da_cardinal(span: Span, context: SpanContext) -> str:
-    """A cardinal whose last word changes by `noun_one` before a word."""
+    """A cardinal whose last word changes by `noun_one` before a neuter noun."""
     words = speak_cardinal(span, context)
-    if context.after and context.after[0][:1].isalpha():
+    if context.after and context.after[0].lower() in neuter_nouns():
         *head, last = words.split(" ")
         words = " ".join([*head, context.request.data["noun_one"].get(last, last)])
     return words
+
 class DaOrdinalSpeller(RbnfSpeller):
     """CLDR gives the cardinal "tusinde" as the ordinal of 1000, so a span with that reading declines."""
 
