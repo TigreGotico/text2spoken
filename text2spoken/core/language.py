@@ -6,7 +6,7 @@ import warnings
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field, replace
 from decimal import Decimal, getcontext, localcontext
-from functools import cache, lru_cache
+from functools import cache, cached_property, lru_cache
 from importlib import import_module
 from importlib.resources import files
 from typing import TYPE_CHECKING
@@ -98,7 +98,7 @@ class Request:
     say_as: ResolvedSayAs | None = None
     """The say-as that the call reads (section 17), or None."""
 
-    @property
+    @cached_property
     def data(self) -> FrozenMap:
         return merged_data(self.language.data, self.variety.data)
 
