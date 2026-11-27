@@ -427,9 +427,9 @@ NO_DECIMAL_RULE = ("zu",)
 """The RBNF locales whose cardinal rule set has no `x.x` rule, in itself or in the rule set that its 0 rule names."""
 NO_CLDR_MARKS = ("an", "mwl")
 """The languages with no file that ovos-number-parser writes and CLDR 49 numbers.json has no locale for."""
-NO_PARSER_MINUS = ("kab",)
+NO_PARSER_MINUS = ()
 """The languages with no file whose ovos-number-parser module writes no minus word for -1."""
-NO_PARSER_DECIMAL = ("kab",)
+NO_PARSER_DECIMAL = ()
 """The languages with no file whose ovos-number-parser module raises for 1.5."""
 
 
@@ -473,13 +473,14 @@ def test_the_languages_without_the_rules_are_listed():
     assert [code for code in parser if raises(1.5, code)] == list(NO_PARSER_DECIMAL)
 
 
-@pytest.mark.parametrize("code", [code for code in NO_MINUS_RULE + NO_PARSER_MINUS if language_file(code) is None])
+@pytest.mark.parametrize("code", [code for code in NO_MINUS_RULE + NO_PARSER_MINUS if language_file(code) is None]
+                         + ["kab"])
 def test_a_language_with_no_minus_word_keeps_the_minus(code):
     for text in ("-5", "x -5 y", "-3.5", "-3,5"):
         assert normalize(text, code) == text
 
 
-@pytest.mark.parametrize("code", NO_DECIMAL_RULE + NO_CLDR_MARKS + NO_PARSER_DECIMAL)
+@pytest.mark.parametrize("code", NO_DECIMAL_RULE + NO_CLDR_MARKS + NO_PARSER_DECIMAL + ("kab",))
 def test_a_language_with_no_decimal_rule_or_marks_keeps_the_decimal(code):
     for text in ("3.5", "3,5", "-3.5", "-3,5"):
         assert normalize(text, code) == text
