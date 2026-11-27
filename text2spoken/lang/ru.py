@@ -192,9 +192,10 @@ class RussianSpeller(NumtagSpeller):
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
         """"одна целая шесть десятых" (Грамматика-80 § 1367), "ноль целых" (Розенталь § 45, п. 7). The parts are
         feminine, as "целая" and "десятая" are. numtag reads no fraction of zeros, so "1,0" reads "одна целая ноль
-        десятых" from the parts."""
+        десятых" from the parts. numtag drops the trailing zeros of a fraction, so a fraction that ends in zero
+        also reads from the parts: "две целых пятьдесят сотых"."""
         case = features.case or "nominative"
-        if fraction.strip("0"):
+        if fraction.strip("0") and not fraction.endswith("0"):
             return self._spell(f"{int(integer or '0')}.{fraction}", Features(gender=F, case=case), request,
                                decimals="fraction", places=len(fraction))
         stems = request.data["decimal_denominators"]
@@ -923,7 +924,7 @@ LANGUAGE = LanguageSpec(
         Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction, Form.ABBREVIATION: speak_abbreviation,
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
-    writers=("numtag",),
+    writers=("numtag", "ovos-number-parser"),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},
     attach=attach,

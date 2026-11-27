@@ -34,6 +34,17 @@ def test_a_cardinal_of_30_digits_reads():
     assert normalize("1" + "0" * 29, "ru-RU") == "сто октиллионов"
 
 
+@pytest.mark.parametrize("text, spoken", [
+    ("2,50", "две целых пятьдесят сотых"),
+    ("о 2,50", "о двух целых пятидесяти сотых"),
+    ("12,30", "двенадцать целых тридцать сотых"),
+    ("о 12,30", "о двенадцати целых тридцати сотых"),
+])
+def test_a_decimal_that_ends_in_zero_keeps_its_written_places(text, spoken):
+    # The written places give the denominator: "50" is fifty hundredths, not five tenths.
+    assert normalize(text, "ru-RU") == spoken
+
+
 def test_an_oblique_cardinal_from_10_to_the_42_keeps_its_digits():
     # numtag#423: numtag gives the exponent of 10**42 and above in the wrong case.
     text = "о 1" + "0" * 42 + " книгах"
