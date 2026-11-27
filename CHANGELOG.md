@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a166](https://github.com/TigreGotico/text2spoken/tree/0.0.2a166) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a165...0.0.2a166)
+
+**Merged pull requests:**
+
+- feat: read Russian numbers through numtag [\#712](https://github.com/TigreGotico/text2spoken/pull/712) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a165](https://github.com/TigreGotico/text2spoken/tree/0.0.2a165) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a164...0.0.2a165)
@@ -373,10 +381,6 @@
 ## [0.0.2a117](https://github.com/TigreGotico/text2spoken/tree/0.0.2a117) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a116...0.0.2a117)
-
-**Merged pull requests:**
-
-- fix\(ar\): read a number after a Latin code or موديل in its citation form [\#549](https://github.com/TigreGotico/text2spoken/pull/549) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a116](https://github.com/TigreGotico/text2spoken/tree/0.0.2a116) (2026-11-24)
 
