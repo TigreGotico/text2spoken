@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2a160](https://github.com/TigreGotico/text2spoken/tree/0.0.2a160) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a159...0.0.2a160)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a clock after an event verb or after é [\#693](https://github.com/TigreGotico/text2spoken/pull/693) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat: pt-PT dates and times read through chronologia.spoken [\#690](https://github.com/TigreGotico/text2spoken/pull/690) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a159](https://github.com/TigreGotico/text2spoken/tree/0.0.2a159) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a158...0.0.2a159)
@@ -367,25 +376,13 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a111...0.0.2a112)
 
-**Merged pull requests:**
-
-- fix\(pt\): raise the tugalex floor to 2.5.9a1 for uva, capital and grama [\#517](https://github.com/TigreGotico/text2spoken/pull/517) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a111](https://github.com/TigreGotico/text2spoken/tree/0.0.2a111) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a110...0.0.2a111)
 
-**Merged pull requests:**
-
-- fix\(pt\): the hour 1 takes the singular article [\#512](https://github.com/TigreGotico/text2spoken/pull/512) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a110](https://github.com/TigreGotico/text2spoken/tree/0.0.2a110) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a109...0.0.2a110)
-
-**Merged pull requests:**
-
-- docs: README, docs index, navigation and agent hints [\#511](https://github.com/TigreGotico/text2spoken/pull/511) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a109](https://github.com/TigreGotico/text2spoken/tree/0.0.2a109) (2026-11-24)
 
