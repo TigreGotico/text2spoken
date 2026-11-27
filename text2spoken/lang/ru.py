@@ -27,7 +27,7 @@ from text2spoken.core.numbers import written_amount
 from text2spoken.core.recognizers import (SHARED, DateNumeric, _sentence_period, digit_run_matches, numbers_in,
                                           speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, context_words
-from text2spoken.core.spellers import NumtagSpeller, bounded_integer
+from text2spoken.core.spellers import NumtagSpeller, OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_letter, is_word_char, next_visible,
                                      one_digit_set)
@@ -161,8 +161,16 @@ class RussianSpeller(NumtagSpeller):
 
     def __init__(self):
         super().__init__({M: "masculine", F: "feminine", N: "neuter"}, CASES, plural="plural")
+        self.nominative = OvosNumberSpeller({M: "masculine", F: "feminine", N: "neutral"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
+        """numtag names the scales up to "дуодециллион" (10^39). From 10^42 it gives the exponent in the wrong
+        case (numtag#423), so a nominative reads through ovos-number-parser and an oblique case declines."""
+        value = bounded_integer(digits)
+        if value is not None and value >= 10**42:
+            if features.case not in (None, "nominative"):
+                raise DeclinedReading(f"no {features.case} reading of {len(digits)} digits")
+            return self.nominative.cardinal(digits, Features(gender=features.gender), request)
         return super().cardinal(digits, replace(features, gender=features.gender or M), request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:

@@ -34,6 +34,12 @@ def test_a_cardinal_of_30_digits_reads():
     assert normalize("1" + "0" * 29, "ru-RU") == "сто октиллионов"
 
 
+def test_an_oblique_cardinal_from_10_to_the_42_keeps_its_digits():
+    # numtag#423: numtag gives the exponent of 10**42 and above in the wrong case.
+    text = "о 1" + "0" * 42 + " книгах"
+    assert normalize(text, "ru-RU") == text
+
+
 def test_a_plural_ordinal_reads_the_numtag_plural():
     # Розенталь § 45, п. 3: "две пятых" (2/5).
     from text2spoken.core.language import resolve
