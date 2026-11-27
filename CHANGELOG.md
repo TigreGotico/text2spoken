@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a175](https://github.com/TigreGotico/text2spoken/tree/0.0.2a175) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a174...0.0.2a175)
+
+**Merged pull requests:**
+
+- fix\(bn\): read a numeral classifier joined to a number [\#724](https://github.com/TigreGotico/text2spoken/pull/724) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a174](https://github.com/TigreGotico/text2spoken/tree/0.0.2a174) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a173...0.0.2a174)
@@ -364,10 +372,6 @@
 ## [0.0.2a128](https://github.com/TigreGotico/text2spoken/tree/0.0.2a128) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a127...0.0.2a128)
-
-**Merged pull requests:**
-
-- feat\(it,nl\): read telephone numbers digit by digit [\#601](https://github.com/TigreGotico/text2spoken/pull/601) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a127](https://github.com/TigreGotico/text2spoken/tree/0.0.2a127) (2026-11-25)
 
