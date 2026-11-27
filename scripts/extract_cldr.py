@@ -8,7 +8,8 @@ The script reads the `cldr-units-full`, `cldr-numbers-full`, `cldr-annotations-f
 the CLDR parent chain of each tag (`pt-PT` to `pt` to `und`, `en-GB` to `en-001` to `en` to `und`), so the runtime
 reads one file and does no inheritance. Each data file records the release, the commit, the locale chain and the
 sha256 of each input file. It writes four files for each tag: `<tag>.json` with the units, `<tag>.currencies.json`,
-`<tag>.symbols.json` and `<tag>.emoji.json`. It also reads
+`<tag>.symbols.json` and `<tag>.emoji.json`, and one file for every tag, `emoji-keys.json`, with the keys of every
+emoji file. It also reads
 `cldr-dates-full` and writes `<locale>.dates.json` for each locale of `DATE_LOCALES`.
 
 A unit holds its `long` patterns by plural category, its grammatical gender when CLDR gives one, its per-unit
@@ -405,6 +406,8 @@ def main(argv: list[str] | None = None) -> int:
     emoji = Source(args.emoji, EMOJI)
     sequences = emoji_sequences(emoji)
     emoji_hashes = {f"emoji/{path}": digest for path, digest in emoji.hashes.items()}
+    write(args.out / "emoji-keys.json", {"source": {"unicode": UNICODE, "files": emoji_hashes},
+                                         "keys": sorted({sequence.replace(SELECTOR, "") for sequence in sequences})})
     parents, licence = source.read("cldr-json/cldr-core/supplemental/parentLocales.json"), source.read("LICENSE")
     if parents is None or licence is None:
         parser.error(f"{args.source or RAW} holds no cldr-json release with parentLocales.json and LICENSE")

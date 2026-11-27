@@ -3,10 +3,12 @@
 Each expected value is read off the clause, the raw CLDR 49 JSON and the Unicode 17.0 emoji files, not off a run of the
 code."""
 import gc
+import json
 import random
 import re
 import tracemalloc
 from dataclasses import replace
+from importlib.resources import files
 
 import pytest
 
@@ -31,6 +33,8 @@ def test_each_tag_names_the_sequences_without_u_fe0f(tag):
     names = data(tag, "emoji")["names"]
     assert {"\U0001fae9", "❤", "🇵🇹", "👍🏽", "👨‍👩‍👧‍👦"} <= set(names)
     assert not any("️" in key for key in names)
+    keys = json.loads((files("text2spoken") / "data" / "cldr" / "emoji-keys.json").read_text(encoding="utf-8"))
+    assert set(names) == set(keys["keys"])
     assert data(tag, "emoji")["source"]["unicode"] == "17.0.0"
 
 

@@ -5,12 +5,14 @@ Unicode emoji files, without U+FE0F, to the spoken form of its CLDR `tts` name, 
 as words.
 
 An emoji sequence is the longest key of a table at a position, with each U+FE0F in it and after it ignored, followed by
-the skin tones, U+FE0F and the zero width joiners after it, where each joiner takes the next key. The keys of every
-table find the sequences, so a text cuts the same way in each language. A sequence reads by its name in the table of
-the variety. A sequence that is no key reads by the name of its first key. A sequence with no name stays as written.
+the skin tones, U+FE0F and the zero width joiners after it, where each joiner takes the next key. Every table holds
+the same keys, which `emoji-keys.json` lists, so a text cuts the same way in each language and only the table of the
+variety loads. A sequence reads by its name in that table. A sequence that is no key reads by the name of its first
+key. A sequence with no name stays as written.
 """
 from __future__ import annotations
 
+import json
 import unicodedata
 from functools import lru_cache
 from importlib.resources import files
@@ -26,9 +28,9 @@ MODIFIERS = frozenset(map(chr, range(0x1F3FB, 0x1F400)))
 
 @lru_cache(maxsize=1)
 def _keys() -> tuple[frozenset[str], int]:
-    """The keys of every emoji table, and the length of the longest."""
-    keys = frozenset(key for path in (files("text2spoken") / "data" / "cldr").iterdir()
-                     if path.name.endswith(".emoji.json") for key in cldr_part(path.name[:-11], "emoji")["names"])
+    """The keys that every emoji table holds, and the length of the longest."""
+    path = files("text2spoken") / "data" / "cldr" / "emoji-keys.json"
+    keys = frozenset(json.loads(path.read_text(encoding="utf-8"))["keys"])
     return keys, max(map(len, keys))
 
 
