@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a172](https://github.com/TigreGotico/text2spoken/tree/0.0.2a172) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a171...0.0.2a172)
+
+**Merged pull requests:**
+
+- refactor: emoji names from one lookup table [\#728](https://github.com/TigreGotico/text2spoken/pull/728) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a171](https://github.com/TigreGotico/text2spoken/tree/0.0.2a171) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a170...0.0.2a171)
@@ -365,17 +373,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a124...0.0.2a125)
 
-**Merged pull requests:**
-
-- fix\(pt\): read a list number before a dash in the masculine [\#583](https://github.com/TigreGotico/text2spoken/pull/583) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a124](https://github.com/TigreGotico/text2spoken/tree/0.0.2a124) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a123...0.0.2a124)
-
-**Merged pull requests:**
-
-- fix\(pt\): read a count in a phone list on the first pass [\#584](https://github.com/TigreGotico/text2spoken/pull/584) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a123](https://github.com/TigreGotico/text2spoken/tree/0.0.2a123) (2026-11-24)
 
