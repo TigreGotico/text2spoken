@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a173](https://github.com/TigreGotico/text2spoken/tree/0.0.2a173) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a172...0.0.2a173)
+
+**Merged pull requests:**
+
+- feat: Kabyle language file with numtag cardinals [\#706](https://github.com/TigreGotico/text2spoken/pull/706) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a172](https://github.com/TigreGotico/text2spoken/tree/0.0.2a172) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a171...0.0.2a172)
