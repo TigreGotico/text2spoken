@@ -112,7 +112,7 @@ The emoji sequences come from the Unicode 17.0 emoji files, the version whose em
 | Release Alpha and Propose Stable | A merged pull request to `dev` | Publishes an alpha release to PyPI |
 | Publish Stable Release | A push to `master` | Publishes a stable release |
 
-The release workflows set the version from the conventional commit titles, so a pull request does not change `text2spoken/version.py`.
+The release workflows set the version from the conventional commit titles, so a pull request does not change `text2spoken/version.py`. [CHANGELOG.md](../CHANGELOG.md) lists the changes of each release.
 
 ---
 [← Adding a language](adding-a-language.md) · [Home](index.md)
