@@ -14,11 +14,21 @@ The file `text2spoken/lang/fr.py` reads French. Its number words come from the C
 
 The file reads cardinals, ordinals, decimals, fractions, ranges, expressions, percentages and per mille, money, measures, times, dates, years, telephone numbers, colours, Roman numerals, abbreviations, idioms and lexicon entries. It does not read addresses, symbols, emoji, letter codes or identifiers.
 
-A number that ends in 1 says *un* or *une* with its noun. The gender comes from the hint of the caller, then from the noun after the number when the table `feminine_nouns` holds it, then from `default_gender`, and then from the file, which is masculine. A unit and a currency carry their own gender.
+A number that ends in 1 says *un* or *une* with its noun. The gender comes from the hint of the caller, then from the words after the number, then from `default_gender`, and then from the file, which is masculine. A unit and a currency carry their own gender.
+
+The gender of a noun comes from a noun list of the English Wiktionary, in the file `data/wiktionary/fr_noun_genders.json` (CC BY-SA 4.0), with the gender of the French Wiktionary where the two disagree, as for *bobsleigh*. A plural reads through its singular. A noun that the list gives both genders, such as *livre* or *élève*, takes the masculine of the file, and the table `feminine_nouns` names the few such nouns that count things only as feminine nouns, such as *page* and *orange*. An adjective before the noun, such as *belle*, *grande* or *petite*, gives the gender that its form marks, and *jeune*, which marks none, passes to the noun. After *des*, or *de* and a plural determiner, the noun after them decides, as in *une des filles*. A function word after the number, such as *de*, *par* or *plus*, gives no gender, so `default_gender` decides. A number after a singular determiner, as in *le 21*, or after a determiner and a word, as in *le joueur 1*, names a numeral or a numéro and takes no gender from the word after it, unless a plural word follows, which it counts, as in *le film 21 fois*.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `Il y a 21 pommes.` | `fr-FR` | Il y a vingt et une pommes. |
+| `Il y a 21 tonnes.` | `fr-FR` | Il y a vingt et une tonnes. |
+| `Il y a 1 idée.` | `fr-FR` | Il y a une idée. |
+| `Il y a 1 belle maison.` | `fr-FR` | Il y a une belle maison. |
+| `Il y a 1 jeune fille.` | `fr-FR` | Il y a une jeune fille. |
+| `Il y a 1 livre.` | `fr-FR` | Il y a un livre. |
+| `C'est 1 des filles.` | `fr-FR` | C'est une des filles. |
+| `Le joueur 1 marque un but.` | `fr-FR` | Le joueur un marque un but. |
+| `Il a vu le film 21 fois.` | `fr-FR` | Il a vu le film vingt et une fois. |
 | `Il y a 80 places.` | `fr-FR` | Il y a quatre-vingts places. |
 | `Il y a 280 places.` | `fr-FR` | Il y a deux cent quatre-vingts places. |
 | `Rendez-vous à 21 h.` | `fr-FR` | Rendez-vous à vingt et une heures. |
@@ -33,10 +43,15 @@ A number that ends in 1 says *un* or *une* with its noun. The gender comes from 
 | `Le roi Louis XIV règne.` | `fr-FR` | Le roi Louis quatorze règne. |
 | `Rendez-vous le 10/11/2026.` | `fr-FR` | Rendez-vous le dix novembre deux mille vingt-six. |
 | `Il part le 1er mars.` | `fr-FR` | Il part le premier mars. |
+| `Il part le 1ᵉʳ mars.` | `fr-FR` | Il part le premier mars. |
+| `Il habite au 2ᵉ étage.` | `fr-FR` | Il habite au deuxième étage. |
 | `Cela coûte 3,50 €.` | `fr-FR` | Cela coûte trois euros cinquante. |
 | `Cela coûte 0,50 €.` | `fr-FR` | Cela coûte cinquante centimes. |
 | `Il gagne 1 000 000 €.` | `fr-FR` | Il gagne un million d'euros. |
+| `Il gagne 1 million €.` | `fr-FR` | Il gagne un million d'euros. |
+| `Cela coûte 5 €/mois.` | `fr-FR` | Cela coûte cinq euros par mois. |
 | `Il fait 6 °C.` | `fr-FR` | Il fait six degrés Celsius. |
+| `Le réseau fournit 220 V.` | `fr-FR` | Le réseau fournit deux cent vingt volts. |
 | `Il pèse 3,5 kg.` | `fr-FR` | Il pèse trois virgule cinq kilogrammes. |
 | `Il pèse 3,14159 kg.` | `fr-FR` | Il pèse trois virgule un quatre un cinq neuf kilogrammes. |
 | `Le prix monte de 50 %.` | `fr-FR` | Le prix monte de cinquante pour cent. |
@@ -49,6 +64,9 @@ A number that ends in 1 says *un* or *une* with its noun. The gender comes from 
 | `M. Dupont et Mme Martin arrivent.` | `fr-FR` | Monsieur Dupont et Madame Martin arrivent. |
 | `Le Dr Martin habite à St-Denis.` | `fr-FR` | Le Docteur Martin habite à Saint-Denis. |
 | `Lisez le n° 5.` | `fr-FR` | Lisez le numéro cinq. |
+| `César meurt en 44 av. J.-C. à Rome.` | `fr-FR` | César meurt en quarante-quatre avant Jésus-Christ à Rome. |
+| `Voir Me Dupond, bd Haussmann.` | `fr-FR` | Voir Maître Dupond, boulevard Haussmann. |
+| `Il pèse env. 3 kg (cf. p. 2).` | `fr-FR` | Il pèse environ trois kilogrammes (confer page deux). |
 
 ### Numbers grouped with a space
 
@@ -99,7 +117,7 @@ Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunctio
 
 ### A number that stands for an ordinal
 
-*Cent* and *vingt* take no *s* when the number stands for an ordinal: in an ordinal, in a year, and in a number that labels a page or a year. The Académie française names two labels, *page* and *l'an*. Only spaces can stand between the label and the number. A comma, a full stop or another word ends the label, so the number after it agrees with its noun.
+*Cent* and *vingt* take no *s* when the number stands for an ordinal: in an ordinal, in a year, and in a number that labels a page, a year, a decade, a paragraph, an article or a number. The Académie française names *page* and *l'an*, the OQLF *paragraphe*, *article* and *numéro*, and Larousse *les années*. Only spaces can stand between the label and the number. A comma, a full stop or another word ends the label, so the number after it agrees with its noun.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
@@ -108,6 +126,9 @@ Only the counted noun takes *de*. A determiner, pronoun, preposition, conjunctio
 | `Voir p. 80 ici.` | `fr-FR` | Voir page quatre-vingt ici. |
 | `Voir la page 80-90 ici.` | `fr-FR` | Voir la page quatre-vingt à quatre-vingt-dix ici. |
 | `Il est mort en l'an 800.` | `fr-FR` | Il est mort en l'an huit cent. |
+| `Il a grandi dans les années 80.` | `fr-FR` | Il a grandi dans les années quatre-vingt. |
+| `Il habite au numéro 80.` | `fr-FR` | Il habite au numéro quatre-vingt. |
+| `Lisez l'article 200.` | `fr-FR` | Lisez l'article deux cent. |
 | `Depuis un an, 21 personnes attendent.` | `fr-FR` | Depuis un an, vingt et une personnes attendent. |
 | `Sur cette page, 21 recettes vous attendent.` | `fr-FR` | Sur cette page, vingt et une recettes vous attendent. |
 
@@ -156,7 +177,7 @@ The number words follow the CLDR locale of the tag. So `fr-BE` and `fr-CH` say *
 
 ## Sources
 
-The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second", and the Dictionnaire, "unième"), the Office québécois de la langue française for the plural, the aspirated h and the imperative, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
+The rules cite the Académie française (Questions de langue, "Nombres" and "Deuxième, second", and the Dictionnaire, "unième"), the Office québécois de la langue française for the agreement of *un*, the plural, the common abbreviations, the aspirated h and the imperative, the English Wiktionary for the gender of a noun, the Clés de la rédaction of the Bureau de la traduction for an adjective before a noun, the Wiktionnaire, the Lexique des règles typographiques en usage à l'Imprimerie nationale, the SI Brochure of the BIPM, CLDR, ITU-T E.164 and the ARCEP numbering plan. The docstring of [`fr.py`](../../text2spoken/lang/fr.py) gives each rule family its source.
 
 Some test rows in `tests/data/fr.tsv` quote a source that was fetched. Others say that a rule comes from memory. No native speaker has checked any row. The cited rows are the check for numbers. No other number engine checks them.
 
@@ -187,7 +208,12 @@ French leaves these forms as written or reads them in a limited way:
 | `Il y a 2 000 000 chez-moi.` | `fr-FR` | Il y a deux millions chez-moi. | A noun whose last part is an object pronoun, such as *chez-moi*, *chez-toi*, *revenez-y* or *aimez-moi* (the forget-me-not), reads as an imperative and takes no *de* if `invariable_plurals` lacks it. |
 | `Il y a 2 000 000 chromosomes-Y.` | `fr-FR` | Il y a deux millions chromosomes-Y. | A letter label after a hyphen that is also the pronoun *y* reads as an imperative and takes no *de*. Other letter labels, such as *lymphocytes-T* and *chromosomes-X*, keep it. |
 | `Il y a 2 000 000 tête-à-tête.` | `fr-FR` | Il y a deux millions tête-à-tête. | A noun with an invariable plural and no part in *s*, *x* or *z* takes no *de* if `invariable_plurals` lacks it. |
-| `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after *page* takes the invariable form, also where it counts the next noun. |
+| `La veille 1 personne est venue.` | `fr-FR` | La veille un personne est venue. | A number after a determiner and a word names a numéro, as in *le joueur 1*, when a singular word follows it, also where it counts that word. |
+| `Il y a 21 œuvres.` | `fr-FR` | Il y a vingt et un œuvres. | A noun that the Wiktionary list gives both genders takes the masculine, also where its feminine is the common one. |
+| `La classe 3 V gagne.` | `fr-FR` | La classe trois volts gagne. | A capital letter after a number reads as a unit symbol, here the volt, also where it is a letter label, as `W` does. |
+| `Me Paris? Non.` | `fr-FR` | Maître Paris? Non. | A capitalised word after *Me* reads as a surname, so *Me* reads *Maître*, unless a subject pronoun, *ne* or a capitalised word inside the sentence comes before it, a function word comes after it, or the name is *Me Too*. |
+| `Le réseau fournit 220 V/50 Hz.` | `fr-FR` | Le réseau fournit deux cent vingt volts/cinquante hertz. | A slash between two measures stays as written. |
+| `Une page 300 mots.` | `fr-FR` | Une page trois cent mots. | A number right after a label, such as *page* or *numéro*, takes the invariable form, also where it counts the next noun. |
 
 The *de* rule reads only spaces between a number and the noun that it counts. A line break between them stops the rule, and the noun on the next line takes no *de*.
 
