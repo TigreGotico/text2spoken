@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a170](https://github.com/TigreGotico/text2spoken/tree/0.0.2a170) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a169...0.0.2a170)
+
+**Merged pull requests:**
+
+- feat: Danish language file with numtag cardinals [\#705](https://github.com/TigreGotico/text2spoken/pull/705) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a169](https://github.com/TigreGotico/text2spoken/tree/0.0.2a169) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a168...0.0.2a169)
@@ -364,10 +372,6 @@
 ## [0.0.2a123](https://github.com/TigreGotico/text2spoken/tree/0.0.2a123) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a122...0.0.2a123)
-
-**Merged pull requests:**
-
-- fix\(pt\): read a space-grouped quantity in pt-BR as in pt-PT [\#574](https://github.com/TigreGotico/text2spoken/pull/574) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a122](https://github.com/TigreGotico/text2spoken/tree/0.0.2a122) (2026-11-24)
 
