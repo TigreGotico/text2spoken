@@ -545,8 +545,9 @@ def test_clause_12_sandbox_sees_a_file_read_and_a_new_module(tmp_path):
     import os
     import sys
 
-    (tmp_path / "reads_a_file.py").write_text("import csv\nopen(__file__.replace('.py', '.txt'), 'w').close()\n")
+    (tmp_path / "sandbox_new_module.py").write_text("")
+    (tmp_path / "reads_a_file.py").write_text("import sandbox_new_module\nopen(__file__.replace('.py', '.txt'), 'w').close()\n")
     events, added = contract.sandbox_import("reads_a_file", str(tmp_path / "__pycache__"),
                                             path=os.pathsep.join([str(tmp_path), *sys.path]))
     assert any(e.startswith("open ") and e.endswith("reads_a_file.txt") for e in events)
-    assert "csv" in added
+    assert "sandbox_new_module" in added
