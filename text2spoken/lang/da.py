@@ -5,9 +5,10 @@ Cardinals and decimals come from numtag. sproget.dk (Dansk Sprognævn and DSL), 
 i to eller flere ord: to hundred(e) fire tusind(e) (og) tre hundred(e) (og) treoghalvfems". sproget.dk, "Den 101.
 dalmatiner", names "de to valgfrie bogstavskrevne former hundrede og hundred" of 100.
 
-The file reads no noun, so 1 reads "en" before a noun of each gender. "en" is the form of counting: da.wikipedia,
-"Betydende cifre": "1.001 (et tusinde og en)", "10,11 (ti komma en en)". sproget.dk, "Den 101. dalmatiner", gives
-the two forms of 1: "én/ét".
+sproget.dk, "Den 101. dalmatiner", gives the two forms of 1: "én/ét". A number with no word after it ends in "en",
+the form of counting: da.wikipedia, "Betydende cifre": "1.001 (et tusinde og en)", "10,11 (ti komma en en)". A
+number before a word ends in "et", the neuter, through `noun_one`: the file reads no noun gender, so 1 before a
+common-gender noun, as "1 bil", reads "et" too.
 
 A decimal reads its decimals digit by digit after "komma", with the zeros at the end. da.wikipedia, "Betydende
 cifre": "10,11 (ti komma en en)", "100,0 (Et hundrede komma nul)". The decimal mark is the comma and the group mark
@@ -29,7 +30,7 @@ from dataclasses import replace
 from text2spoken.core.language import LanguageSpec, Request, Variety
 from text2spoken.core.recognizers import (CARDINAL, LEXICON, SHARED, OrdinalStop, Written, speak_cardinal,
                                           speak_cldr_date, speak_decimal, speak_lexicon, written_shapes)
-from text2spoken.core.spans import FIELDS, Features, Span
+from text2spoken.core.spans import FIELDS, Features, Span, SpanContext
 from text2spoken.core.spellers import NumtagSpeller, RbnfSpeller
 from text2spoken.core.tokens import Token
 from text2spoken.params import OPTIONS, Form, freeze
@@ -40,6 +41,7 @@ DATA = freeze({
     "sign_words": {"-": "minus"},
     "digit_words": ["nul", "en", "to", "tre", "fire", "fem", "seks", "syv", "otte", "ni"],
     "leads": {},
+    "noun_one": {"en": "et"},
 })
 
 KEPT_FIELDS = freeze(dict.fromkeys(FIELDS[Form.CARDINAL], ""))
@@ -64,6 +66,15 @@ class DaSpeller(NumtagSpeller):
 
 
 SPELLER = DaSpeller({})
+
+
+def speak_da_cardinal(span: Span, context: SpanContext) -> str:
+    """A cardinal whose last word changes by `noun_one` before a word."""
+    words = speak_cardinal(span, context)
+    if context.after and context.after[0][:1].isalpha():
+        *head, last = words.split(" ")
+        words = " ".join([*head, context.request.data["noun_one"].get(last, last)])
+    return words
 ORDINAL = RbnfSpeller(cardinal={Features(): "spellout-cardinal-common"},
                       ordinal={Features(): "spellout-ordinal-common"})
 
@@ -76,7 +87,7 @@ LANGUAGE = LanguageSpec(
     recognizers=(LEXICON, *map(Kept, (SHARED["money"], SHARED["percent"], SHARED["measure"], SHARED["date_numeric"],
                                        SHARED["fraction"], OrdinalStop(bare_stop=True))),
                  SHARED["decimal"], CARDINAL),
-    verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DECIMAL: speak_decimal,
+    verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_da_cardinal, Form.DECIMAL: speak_decimal,
                  Form.DATE: speak_cldr_date},
     spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.ORDINAL: ORDINAL},
     genders=frozenset(),
@@ -84,7 +95,7 @@ LANGUAGE = LanguageSpec(
     animacies=frozenset(),
     noun_classes=frozenset(),
     numeral_systems=frozenset(),
-    context_words=False,
+    context_words=True,
     options={},
     not_applicable=frozenset(OPTIONS),
 )

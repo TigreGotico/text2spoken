@@ -30,7 +30,13 @@ The file reads cardinals, decimals and lexicon entries. The decimal mark is the 
 
 ## Gender
 
-The file reads no noun, so 1 reads `en`, the form of counting, before a noun of each gender. The option `default_gender` changes nothing.
+A number with no word after it ends in `en`, the form of counting. A number before a word ends in `et`, the neuter. The file reads no noun gender, so 1 before a common-gender noun reads `et` too. The option `default_gender` changes nothing.
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `1` | `da-DK` | en |
+| `1 element` | `da-DK` | et element |
+| `101 år` | `da-DK` | hundrede og et år |
 
 ## Varieties
 
@@ -71,7 +77,7 @@ The docstring of [`da.py`](../../text2spoken/lang/da.py) quotes each source. Eac
 | `20%` | `da-DK` | stays as written | A percentage stays as written, as in a language with no file. |
 | `5 €` | `da-DK` | stays as written | A sum of money stays as written. |
 | `25/12/2024` | `da-DK` | stays as written | A numeric date stays as written. |
-| `1 hus` | `da-DK` | en hus | The file reads no noun, so 1 before a neuter noun reads `en`, not `et`. |
+| `1 bil` | `da-DK` | et bil | The file reads no noun gender, so 1 before a common-gender noun reads `et`, not `en`. |
 
 ---
 [← Catalan](ca.md) · [Home](../index.md) · [German →](de.md)
