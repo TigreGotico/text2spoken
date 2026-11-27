@@ -2149,6 +2149,7 @@ LANGUAGE = LanguageSpec(
         Form.DECIMAL: speak_point_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
         Form.ELECTRONIC: speak_electronic, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
+    writers=("numtag", "tugalex", parsers.DATES),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=drop_affixes,  # the one suffix, the `h` of `14:30h`, is a word of the time reading
     genders=frozenset({MASCULINE, FEMININE}),

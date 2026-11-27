@@ -46,7 +46,7 @@ Through scriptconv: `uv pip install --prerelease=allow "scriptconv[normalize]"`.
 | See how a text goes through the library, and what a call costs | [How it works](docs/how-it-works.md) |
 | Add your language, step by step | [Adding a language](docs/adding-a-language.md) |
 | Look up a function, a param or an error | [API](docs/api.md), [Errors and warnings](docs/errors.md) |
-| Know when the output of a language can change | [API, revision](docs/api.md#revision) |
+| Know which installed versions write the output of a language | [API, revision](docs/api.md#revision) |
 | Run the tests | [Development](docs/development.md) |
 
 The [docs index](docs/index.md) lists every page in reading order. A contributor reads [AGENTS.md](AGENTS.md) for the map of the repository and the rules that a pull request must meet.

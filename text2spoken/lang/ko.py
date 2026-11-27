@@ -249,6 +249,7 @@ LANGUAGE = LanguageSpec(
     recognizers=(SHARED["lexicon"], *map(Kept, SHAPES), RBNF_DECIMAL, KoCardinal()),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DECIMAL: speak_decimal,
                  Form.DATE: speak_date},
+    writers=("unicode-rbnf",),
     spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.ORDINAL: ORDINAL},
     genders=frozenset(),
     default_gender=None,

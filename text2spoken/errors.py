@@ -49,12 +49,6 @@ class DeclinedReading(Text2SpokenError):
     """A speller cannot read this number, so the span stays as written (design section 10)."""
 
 
-class RevisionError(Text2SpokenError):
-    """`revision` cannot read the files of a module on the output path, such as a package imported from a zip
-    file, so it gives no revision rather than a hash over less than the code. The probe that finds those modules
-    also raises it when it exits with an error, runs too long or prints no readable result."""
-
-
 class UnreadFormError(Text2SpokenError):
     """Strict mode: a written form stays in the output."""
 
