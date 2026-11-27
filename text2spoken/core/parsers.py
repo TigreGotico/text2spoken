@@ -1,4 +1,4 @@
-"""The one module that imports ovos-number-parser and ovos-date-parser (design section 5.4).
+"""The one module that imports ovos-number-parser, ovos-date-parser and chronologia (design section 5.4).
 
 Each name of `WRITERS` imports its library on its first use, so `import text2spoken` imports neither library, and a
 language pays for the import at its first number or date. When the writers move to another package, `WRITERS` and
@@ -16,10 +16,24 @@ WRITERS = {
     "pronounce_fraction": ("ovos_number_parser", "pronounce_fraction"),
     "GrammaticalGender": ("ovos_number_parser.util", "GrammaticalGender"),
     "Scale": ("ovos_number_parser.util", "Scale"),
-    "spoken_date": ("ovos_date_parser.spoken", "spoken_date"),
-    "spoken_time": ("ovos_date_parser.spoken", "spoken_time"),
 }
 """Each name that text2spoken reads from the parsers: its module and its attribute."""
+
+CHRONOLOGIA_TAGS = frozenset({"pt-PT"})
+"""The tags whose dates and times read through `chronologia.spoken`. Each tag joins after a parity check against
+`ovos_date_parser.spoken`. Every other tag reads through `ovos_date_parser.spoken`."""
+
+
+def _date_writers(tag: str):
+    return import_module("chronologia.spoken" if tag in CHRONOLOGIA_TAGS else "ovos_date_parser.spoken")
+
+
+def spoken_date(tag: str, **fields) -> str:
+    return _date_writers(tag).spoken_date(tag, **fields)
+
+
+def spoken_time(tag: str, *clock, **options) -> str:
+    return _date_writers(tag).spoken_time(tag, *clock, **options)
 
 
 def __getattr__(name: str):

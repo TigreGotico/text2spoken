@@ -1,7 +1,8 @@
-"""Portuguese readings outside the sentence rows: the refusal of ovos-date-parser and the hour symbol at 0 and 12."""
+"""Portuguese readings outside the sentence rows: the refusal of the date writers and the hour symbol at 0 and 12."""
 import sys
 
 import pytest
+from chronologia import spoken as chronologia_spoken
 from ovos_date_parser import spoken
 from ovos_date_parser.spoken import UnsupportedForm
 
@@ -15,9 +16,10 @@ def _refuse(error):
     return refuse
 
 
-@pytest.mark.parametrize("error", [UnsupportedForm("pt-PT", "date", "this language"), ValueError("no such day")])
+@pytest.mark.parametrize("error", [chronologia_spoken.UnsupportedForm("pt-PT", "date", "this language"),
+                                   ValueError("no such day")])
 def test_a_date_the_parser_refuses_stays_as_written(monkeypatch, error):
-    monkeypatch.setattr(spoken, "spoken_date", _refuse(error))
+    monkeypatch.setattr(chronologia_spoken, "spoken_date", _refuse(error))
     assert normalize("Nasceu em 1/5/2024 às 9h.", "pt-PT") == "Nasceu em 1/5/2024 às nove horas."
 
 
