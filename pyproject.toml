@@ -23,7 +23,7 @@ dependencies = [
     "quebra-frases>=0.3.7",
     "ovos-number-parser>=0.30.0a1",
     "ovos-date-parser>=0.39.0a1",
-    "chronologia>=0.44.0a2",
+    "chronologia>=0.45.12a1",
 ]
 
 [project.urls]

@@ -18,8 +18,9 @@ def test_pt_pt_reads_through_numtag_tugalex_and_chronologia():
     assert revision("pt-PT") == pinned(*CORE, "numtag", "tugalex", "chronologia")
 
 
-def test_pt_br_dates_read_through_ovos_date_parser():
-    assert distributions("pt-BR") == (*CORE, "numtag", "tugalex", "ovos-date-parser")
+def test_pt_br_dates_read_through_chronologia():
+    assert distributions("pt-BR") == (*CORE, "numtag", "tugalex", "chronologia")
+    assert revision("pt-BR") == pinned(*CORE, "numtag", "tugalex", "chronologia")
 
 
 @pytest.mark.parametrize("lang", ["pt-AO", "pt-MZ", "pt-PT-x-lisbon", "pt-PT-x-coimbra"])
