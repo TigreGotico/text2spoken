@@ -76,6 +76,7 @@ LANGUAGE = LanguageSpec(
                  RBNF_CARDINAL, RBNF_DECIMAL),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_rbnf_cardinal, Form.DECIMAL: speak_rbnf_decimal,
                  Form.DATE: speak_cldr_date},
+    writers=("unicode-rbnf",),
     spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.ORDINAL: SPELLER},
     genders=frozenset(),
     default_gender=None,

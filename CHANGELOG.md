@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.0.2a161](https://github.com/TigreGotico/text2spoken/tree/0.0.2a161) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a160...0.0.2a161)
+
+**Merged pull requests:**
+
+- refactor: drop the unused SPELLER\_METHODS constant [\#701](https://github.com/TigreGotico/text2spoken/pull/701) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- refactor: revision is a plain version string; add distributions\(lang\) [\#698](https://github.com/TigreGotico/text2spoken/pull/698) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat: Bengali language file with numtag cardinals [\#694](https://github.com/TigreGotico/text2spoken/pull/694) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a160](https://github.com/TigreGotico/text2spoken/tree/0.0.2a160) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a159...0.0.2a160)
+
+**Merged pull requests:**
+
+- fix\(pt\): read a clock after an event verb or after é [\#693](https://github.com/TigreGotico/text2spoken/pull/693) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat: pt-PT dates and times read through chronologia.spoken [\#690](https://github.com/TigreGotico/text2spoken/pull/690) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a159](https://github.com/TigreGotico/text2spoken/tree/0.0.2a159) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a158...0.0.2a159)
@@ -351,41 +370,21 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a113...0.0.2a114)
 
-**Merged pull requests:**
-
-- fix\(pt\): read a clock time with a full stop after às, das or pelas [\#522](https://github.com/TigreGotico/text2spoken/pull/522) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a113](https://github.com/TigreGotico/text2spoken/tree/0.0.2a113) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a112...0.0.2a113)
-
-**Merged pull requests:**
-
-- fix\(pt\): read a year before a comma, a colon or a bracket in the masculine [\#524](https://github.com/TigreGotico/text2spoken/pull/524) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a112](https://github.com/TigreGotico/text2spoken/tree/0.0.2a112) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a111...0.0.2a112)
 
-**Merged pull requests:**
-
-- fix\(pt\): raise the tugalex floor to 2.5.9a1 for uva, capital and grama [\#517](https://github.com/TigreGotico/text2spoken/pull/517) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a111](https://github.com/TigreGotico/text2spoken/tree/0.0.2a111) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a110...0.0.2a111)
 
-**Merged pull requests:**
-
-- fix\(pt\): the hour 1 takes the singular article [\#512](https://github.com/TigreGotico/text2spoken/pull/512) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a110](https://github.com/TigreGotico/text2spoken/tree/0.0.2a110) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a109...0.0.2a110)
-
-**Merged pull requests:**
-
-- docs: README, docs index, navigation and agent hints [\#511](https://github.com/TigreGotico/text2spoken/pull/511) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a109](https://github.com/TigreGotico/text2spoken/tree/0.0.2a109) (2026-11-24)
 

@@ -39,9 +39,6 @@ class NumberSpeller(Protocol):
     def fraction(self, numerator: str, denominator: str, features: Features, request: Request) -> str: ...
 
 
-SPELLER_METHODS = ("cardinal", "ordinal", "year", "decimal", "fraction")
-
-
 DIGIT_BOUND = 308
 """The longest run of digits that a speller reads. A float holds an integer part of 308 digits, so the decimal path
 reads no more. RBNF reads at most 17 digits in `en`, and ovos-number-parser names numbers up to 312 digits in `en`.
