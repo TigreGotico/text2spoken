@@ -1,6 +1,7 @@
 {
  "order": [
   "bn",
+  "da",
   "hi",
   "ja",
   "ko",
@@ -72,6 +73,11 @@
    "ordinal",
    "percent",
    "symbol"
+  ],
+  "da": [
+   "cardinal",
+   "decimal",
+   "lexicon"
   ],
   "de": [
    "abbreviation",

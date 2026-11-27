@@ -242,7 +242,7 @@ def check_errors(page: str, text: str):
             fail(page, f"{child} is not a subclass of {parent}")
 
 
-NAMES = {"ar": "Arabic", "bn": "Bengali", "ca": "Catalan", "de": "German", "el": "Greek", "en": "English",
+NAMES = {"ar": "Arabic", "bn": "Bengali", "ca": "Catalan", "da": "Danish", "de": "German", "el": "Greek", "en": "English",
          "es": "Spanish", "eu": "Basque", "fr": "French", "hi": "Hindi", "it": "Italian", "ja": "Japanese",
          "ko": "Korean",
          "nl": "Dutch", "pt": "Portuguese", "ru": "Russian", "tdt": "Tetun Dili", "zh": "Chinese"}
@@ -331,16 +331,16 @@ def check_coverage(page: str, text: str):
         fail(page, f"the files with the fewest forms are {least}, with {min(forms.values())}")
     counts = rows_by_language()
     biggest = sorted(counts, key=lambda code: -counts[code][0])[:3]
-    if biggest != ["pt", "en", "fr"] or "Portuguese, English and French hold the most rows" not in text:
+    if biggest != ["pt", "fr", "en"] or "Portuguese, French and English hold the most rows" not in text:
         fail(page, f"the files with the most rows are {biggest}")
     cited_only = [code for code, (_, silver) in counts.items() if not silver]
     if len(cited_only) != 9 or "nine files hold only cited rows" not in text:
         fail(page, f"{len(cited_only)} files hold only cited rows")
-    silver_names = {code: NAMES[code] for code in ("bn", "hi", "nl", "de", "it", "pt", "ru", "es", "tdt")}
+    silver_names = {code: NAMES[code] for code in ("bn", "da", "hi", "nl", "de", "it", "pt", "ru", "es", "tdt")}
     silvered = sorted(code for code, (_, silver) in counts.items() if silver)
-    if silvered != sorted(silver_names) or "Nine files hold silver rows" not in text:
+    if silvered != sorted(silver_names) or "Ten files hold silver rows" not in text:
         fail(page, f"the files with silver rows are {silvered}")
-    listed = re.search(r"^Nine files hold silver rows: those of (.+?)\.", text, re.M)[1]
+    listed = re.search(r"^Ten files hold silver rows: those of (.+?)\.", text, re.M)[1]
     if sorted(re.split(r", | and ", listed)) != sorted(silver_names.values()):
         fail(page, "the silver sentence names other languages")
     if "(22, 3)" not in text or (len(supports("en-GB").forms), len(supports("ja").forms)) != (22, 3):

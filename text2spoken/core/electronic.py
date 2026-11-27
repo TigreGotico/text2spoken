@@ -17,11 +17,11 @@ import unicodedata
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 
-from text2spoken.core.emoji import emoji_name, name_reading, sequence_at, written_text
+from text2spoken.core.emoji import emoji_reading, sequence_at, written_text
 from text2spoken.core.language import Request
 from text2spoken.core.spans import Span, SpanContext, splits_token
 from text2spoken.core.symbols import symbol_name
-from text2spoken.core.tokens import EMOJI_MARKS, Token, is_digit, is_letter, is_mark, is_word_char, protect_blocks
+from text2spoken.core.tokens import Token, is_digit, is_letter, is_mark, protect_blocks
 from text2spoken.params import FrozenMap, Form
 
 _LABEL = "[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
@@ -178,15 +178,12 @@ def _label(run: str, data) -> list[str]:
     return [data["letter_names"][c] for c in run.lower()]
 
 
-def _pieces(written: str, memo: dict) -> Iterator[str]:
+def _pieces(written: str) -> Iterator[str]:
     """The labels, the emoji sequences and the single characters of a claim, in order. A label is a run of letters
-    and marks. An emoji sequence stays whole. A letter or a digit before a skin tone or a zero width joiner is no
-    sequence here, as outside the claim, where `5🏽` reads the number."""
+    and marks. An emoji sequence stays whole."""
     label, index = None, 0
     while index < len(written):
-        char, found = written[index], sequence_at(written, index, memo)
-        if found is not None and is_word_char(char) and written[index + 1] not in EMOJI_MARKS:
-            found = None
+        char, found = written[index], sequence_at(written, index)
         if found is None and (is_letter(char) or is_mark(char)):
             if label is None:
                 label = index
@@ -202,14 +199,6 @@ def _pieces(written: str, memo: dict) -> Iterator[str]:
         yield written[label:]
 
 
-def _emoji_words(piece: str, request: Request) -> str | None:
-    """The reading of a piece that is one emoji sequence, with `EMOJI` on, or None."""
-    found = emoji_name(piece, 0, request)
-    if Form.EMOJI not in request.params.forms or found is None or found[0] != len(piece) or found[1] is None:
-        return None
-    return name_reading(found[1], request.tag, request.params)
-
-
 def _words(written: str, request: Request) -> list[str]:
     """The reading of each piece: a label as in an address, a digit of any script by its digit word, a symbol by
     its word, else by its `SYMBOL` name, an emoji sequence by its `EMOJI` name, and a piece with no word as
@@ -217,10 +206,11 @@ def _words(written: str, request: Request) -> list[str]:
     data = request.data
     named = Form.SYMBOL in request.params.forms
     words: list[str] = []
-    for piece in _pieces(written, request.memo):
-        emoji = _emoji_words(piece, request)
-        if emoji is not None:
-            words.append(emoji)
+    emoji = Form.EMOJI in request.params.forms
+    for piece in _pieces(written):
+        found = emoji_reading(piece, 0, request) if emoji else None
+        if found is not None and found[0] == len(piece) and found[1] is not None:
+            words.append(found[1])
         elif is_letter(piece[0]) or is_mark(piece[0]):
             words += _label(piece, data)
         elif len(piece) == 1 and is_digit(piece):

@@ -5,12 +5,27 @@ Number words come from the numtag writer, by the tag, so `fr-BE` and `fr-CH` say
 traditional spelling "vingt et un" and "soixante et onze".
 
 Agreement. A number that ends in 1 says "un" or "une" with its noun: "vingt et un kilos", "vingt et une heures".
-The gender of a number comes, in this order, from the hint of the caller, from the noun after the number when
-it is in the table `feminine_nouns`, from `default_gender`, and from the file, which is masculine. A unit and a
-currency carry their own gender.
+The gender of a number comes, in this order, from the hint of the caller, from the words after the number, from
+`default_gender`, and from the file, which is masculine. A unit and a currency carry their own gender.
+
+The gender of a noun comes from the noun list `data/wiktionary/fr_noun_genders.json`, which
+`scripts/extract_noun_genders.py fr` makes from the categories "French masculine nouns", "French feminine nouns" and
+"French nouns with multiple genders" of the English Wiktionary (CC BY-SA 4.0), corrected by
+`scripts/fr_noun_gender_corrections.json` where the French Wiktionary gives the opposite single gender, as for
+"bobsleigh". The list holds the singular, so a
+plural reads through the singulars that `_singulars` gives it: `21 tonnes` reads "vingt et une tonnes". A noun of both
+categories or of several genders, as "élève", "enfant" and "livre", takes no gender from the list, so `1 livre` reads
+"un livre", and the table `feminine_nouns` names the few of them that count things only as feminine nouns, as "page".
+An adjective of `preposed_adjectives` between the number and its noun agrees with the noun, so a form that marks a
+gender gives it: `1 belle maison` reads "une belle maison"; "jeune" marks none and passes to the noun. A function
+word gives no gender (`_noun_after`), and a number that names a numeral or a numéro takes none (`_named`).
 
 The rules cite these sources, by rule family:
 
+- The gender of "un": Office québécois de la langue française, Vitrine linguistique, "Déterminant numéral se
+  terminant par un": "Lorsqu'il fait partie d'un déterminant numéral composé, un est variable seulement en genre",
+  "Trente et une espèces de parulines", "Vingt et un mille personnes [...] Vingt et un détermine le nom mille, et non
+  le nom personnes".
 - Cardinals, the agreement of "cent", "vingt" and "mille", and years: Académie française, Questions de langue,
   "Nombres (écriture, lecture, accord)" (academie-francaise.fr/questions-de-langue). It gives the hyphen and "et"
   rule, "quatre-vingts hommes" but "quatre-vingt-deux hommes", "deux cents euros" but "deux cent vingt euros",
@@ -19,7 +34,13 @@ The rules cite these sources, by rule family:
   ordinaux : page deux cent ; page quatre-vingt ; l'an mille neuf cent." The file reads that singular in an
   ordinal ("deux cent millionième"), in a year, and in a number that labels a page or a year, as the passage
   writes them: "page" and "l'an", which the table `ordinal_nouns` holds, with only spaces before the number.
-  Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix".
+  Both ends of a range read so: "page 80-90" is "page quatre-vingt à quatre-vingt-dix". The table holds the other
+  labels of a numeral with "une valeur ordinale" of the Office québécois de la langue française, Vitrine
+  linguistique, "Pluriel de vingt, de cent et de mille": "Le paragraphe quatre-vingt (le 80e paragraphe)",
+  "L'article quatre-vingt (le 80e article)", "Le quatre-vingt de la rue des Érables (le numéro 80)", so "numéro",
+  and with it `n°`, reads so; and the decade of Larousse, "quatre-vingts, quatre-vingt", Difficultés: "S'écrit sans
+  s à vingt quand il est employé comme adjectif numéral ordinal [...] les années quatre-vingt", which "des années"
+  and "aux années" contract.
 - A mixed number of a half: Dictionnaire de l'Académie française, 9th edition, "demi", II.1: "La moitié d'une
   unité", "Douze et demi ou 12,5". So `12 1/2` reads "douze et demi". Before a noun, "demi" follows the noun and
   agrees with it, I.1: "Coordonné par et à un nom précédé d'un numéral, s'accorde en genre", "Il va bientôt être
@@ -62,6 +83,11 @@ The rules cite these sources, by rule family:
   des ordinaux complexes (vingt-deuxième, etc.)". Dictionnaire de l'Académie française, 9th edition, "unième":
   "Ne s'emploie qu'avec les nombres vingt, trente, quarante, cinquante, soixante, quatre-vingts, cent et mille,
   souvent précédé de et", with the example "la mille et unième nuit". So 101e is "cent et unième" and 1001e is "mille et unième".
+  The marks are "lettres minuscules surélevées", and "Lorsqu'il n'est pas possible de surélever les lettres, il est
+  admis de les écrire sur la ligne" (Office québécois de la langue française, Vitrine linguistique, "Abréviation de
+  l'adjectif ordinal"). Plain text writes the raised letters with the Unicode modifier letters ᵉ (U+1D49), ʳ
+  (U+02B3), ˢ (U+02E2), ᵈ (U+1D48) and ⁿ (U+207F), so `2ᵉ`, `1ᵉʳ`, `1ʳᵉ`, `2ᵈᵉ` and `XIXᵉ` read as `2e`, `1er`,
+  `1re`, `2de` and `XIXe` do, and so does `1ᵉʳ` in a date.
 - Times: the same "Nombres" entry ("deux heures et demie", "midi et quart"), and the SI Brochure, Table 8, for the
   symbol `h` of the hour.
 - Number marks and gaps: BIPM, The International System of Units (SI Brochure), 9th edition. Section 5.4.4 says
@@ -75,18 +101,31 @@ The rules cite these sources, by rule family:
   and the ARCEP numbering plan of France for the ten digits read in pairs.
 - Abbreviations, amounts (`k`, `M`, `Md`) and Roman numerals after a sovereign or before `e`: Lexique des règles
   typographiques en usage à l'Imprimerie nationale.
-- Unit, month and currency names: CLDR `common/main` `fr`, `fr_CA` and `fr_CH`.
+- `cf.`, `env.`, `av. J.-C.`, `apr. J.-C.`, `boul.` and `Me`: Office québécois de la langue française, Vitrine
+  linguistique, "Liste d'abréviations courantes": "confer (« reportez-vous à ») | cf.", "environ | env.", "avant
+  Jésus-Christ | av. J.-C.", "après Jésus-Christ | apr. J.-C.", "boulevard | boul.", and "Me" for "maître (avocat ou
+  avocate, notaire)". The Wiktionnaire gives `ap. J.-C.` ("Par abréviation de après Jésus-Christ") and `bd`
+  ("Abréviation de boulevard", "8, bd Bonne-Nouvelle"). `Me` and `bd` are also the pronoun "me" and the noun "bd",
+  so they read only as titles do, before a capitalised name: "Me Dupond", "bd Haussmann". The full stop of a
+  `J.-C.` abbreviation also ends a sentence, as the one of `etc.` does.
+- Unit, month and currency names: CLDR `common/main` `fr`, `fr_CA` and `fr_CH`. The volt and its multiples: SI
+  Brochure, Table 4 ("volt", "V") and Table 7 (the prefixes "kilo", "k", and "milli", "m").
+- A written "million" or "milliard" before a currency symbol, as in `1 million €`, reads as the scale `M` does, with
+  "de" before the currency, by the Larousse rule above: "un million d'euros".
+- A rate after a currency symbol, as in `5 €/mois`: see `speak_french_abbreviation`.
 
 The rows of `tests/data/fr.tsv` give the source of each expected reading. The rows of the telephone, abbreviation,
 date, money and Imprimerie nationale families say that their source was not fetched.
 """
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from functools import lru_cache
+from importlib.resources import files
 
 from text2spoken.core.currencies import currency_symbols
 from text2spoken.core.dates import is_valid
@@ -157,64 +196,39 @@ MONTHS = [
 ]
 _MONTH = "(" + "|".join(f"[{m[0].upper()}{m[0]}]{m[1:]}" for m in MONTHS) + ")"
 _YEAR = "([0-9][0-9][0-9][0-9])"
-_DAY = "([0-9][0-9]?)(er)?"
+_DAY = "([0-9][0-9]?)(er|\u1d49\u02b3)?"
 
-_FEMININE_SINGULAR = (
-    "heure",
-    "minute",
-    "seconde",
-    "semaine",
-    "année",
-    "journée",
-    "soirée",
-    "matinée",
-    "nuit",
-    "fois",
-    "personne",
-    "page",
-    "ligne",
-    "porte",
-    "chambre",
-    "place",
-    "pièce",
-    "voiture",
-    "maison",
-    "rue",
-    "ville",
-    "chose",
-    "question",
-    "réponse",
-    "version",
-    "photo",
-    "image",
-    "tâche",
-    "alarme",
-    "notification",
-    "minuterie",
-    "pomme",
-    "bouteille",
-    "tasse",
-    "cuillère",
-    "unité",
-    "feuille",
-    "fenêtre",
-    "lampe",
-    "chaîne",
-    "chanson",
-    "playlist",
-    "étape",
-    "table",
-    "famille",
-    "fille",
-    "femme",
-    "dame",
-    "bière",
-    "carte",
-    "touche",
-    "marche",
-    "recette",
-)
-FEMININE_NOUNS = tuple(w for noun in _FEMININE_SINGULAR for w in ((noun,) if noun == "fois" else (noun, noun + "s")))
+FEMININE_NOUNS = ("page", "pages", "part", "parts", "orange", "oranges", "souris")
+"""The nouns of both gender categories of `fr_noun_genders.json` that count things only as feminine nouns. The English
+Wiktionary gives the feminine "page" of a book and the masculine "page", a page boy; the feminine "part", a share or a
+slice, and the masculine "part", a newborn; the feminine "orange", the fruit, and the masculine "orange", the colour;
+and the feminine "souris", a mouse, and the masculine "souris", "archaic, literary" for a smile."""
+
+DETERMINERS = {
+    **dict.fromkeys(("le", "un", "ce", "cet", "mon", "ton", "son", "du", "au"), "masculine"),
+    **dict.fromkeys(("la", "une", "cette", "ma", "ta", "sa"), "feminine"),
+    **dict.fromkeys(("l'", "notre", "votre", "leur"), "singular"),
+    **dict.fromkeys(("les", "des", "ces", "mes", "tes", "ses", "nos", "vos", "leurs", "aux"), "plural"),
+}
+"""The articles, demonstratives and possessives, by the gender or the number that they mark: the forms of the French
+Wiktionary, "le", "la", "les", "ce", "cette", "ces", "mon", "ma", "mes", and the contractions "du", "au" and "aux"
+of "de" and "à" with "le" and "les"."""
+
+PREPOSED_ADJECTIVES = {
+    **dict.fromkeys(("vieux", "vieil", "beau", "bel", "beaux", "joli", "jolis", "bon", "bons", "petit", "petits",
+                     "grand", "grands", "gros", "meilleur", "meilleurs", "nouveau", "nouvel", "nouveaux", "seul",
+                     "seuls"), "masculine"),
+    **dict.fromkeys(("vieille", "vieilles", "belle", "belles", "jolie", "jolies", "bonne", "bonnes", "petite",
+                     "petites", "grande", "grandes", "grosse", "grosses", "meilleure", "meilleures", "nouvelle",
+                     "nouvelles", "seule", "seules"), "feminine"),
+    **dict.fromkeys(("jeune", "jeunes"), "both"),
+}
+"""The adjectives that come before the noun, in each form: Bureau de la traduction, Clés de la rédaction, "adjectif
+(place de l'adjectif avec un nom)": "L'adjectif est généralement placé avant le nom dans les cas suivants : il est
+court ou très courant (jeune, vieux, beau, joli, bon, petit, grand, gros, meilleur, nouveau, etc.) : une belle fille
+une nouvelle maison un vieux vêtement", and "un seul homme". An adjective agrees with its noun, so a form that marks a
+gender gives the gender of the number before it, as in "une belle maison", and "jeune", which marks none, passes to
+the next word."""
 
 
 NO_DE_WORDS = (
@@ -399,6 +413,9 @@ UNITS = {
     "dm": _unit("décimètre"),
     "ms": _unit("milliseconde", "feminine"),
     "W": _unit("watt"),
+    "V": _unit("volt"),
+    "kV": _unit("kilovolt"),
+    "mV": _unit("millivolt"),
 }
 
 
@@ -478,7 +495,7 @@ DATA = freeze(
         },
         "range_word": "à",
         "range_marks": ["-", "–"],
-        "ordinal_nouns": ["page", "l'an"],
+        "ordinal_nouns": ["page", "l'an", "les années", "des années", "aux années", "numéro", "paragraphe", "article"],
         "scale_nouns": [
             "million", "millions", "milliard", "milliards", "billion", "billions", "billiard", "billiards",
             "trillion", "trillions",
@@ -512,6 +529,10 @@ DATA = freeze(
             "Mrd": "milliard",
             "Mio": "million",
             "Mia": "milliard",
+            "million": "million",
+            "millions": "million",
+            "milliard": "milliard",
+            "milliards": "milliard",
         },
         "currencies": {"EUR": EURO, "USD": DOLLAR, "GBP": POUND, "CHF": FRANC, "CAD": CANADIAN},
         "percent": {"signs": ["%", "‰", "%o"], "position": "after", "word": "pour cent", "permille_word": "pour mille"},
@@ -747,10 +768,25 @@ DATA = freeze(
             "St.": "Saint",
             "Ste": "Sainte",
             "Ste.": "Sainte",
+            "Me": "Maître",
+            "M\u1d49": "Maître",
+            "bd": "boulevard",
+            "boul.": "boulevard",
         },
         "name_particles": ["le", "la", "de", "du", "des", "d'", "l'"],
-        "abbreviations": {"etc.": "et cetera", "c.-à-d.": "c'est-à-dire", "p. ex.": "par exemple", "&": "et"},
-        "sentence_final": ["etc."],
+        "abbreviations": {
+            "etc.": "et cetera", "c.-à-d.": "c'est-à-dire", "p. ex.": "par exemple", "&": "et", "cf.": "confer",
+            "env.": "environ", "av. J.-C.": "avant Jésus-Christ", "apr. J.-C.": "après Jésus-Christ",
+            "ap. J.-C.": "après Jésus-Christ",
+        },
+        "rate_words": {
+            "mois": "mois", "an": "an", "année": "année", "jour": "jour", "j": "jour", "semaine": "semaine",
+            "heure": "heure", "h": "heure", "nuit": "nuit", "personne": "personne",
+        },
+        "sentence_final": ["etc.", "env.", "av. J.-C.", "apr. J.-C.", "ap. J.-C."],
+        "pronoun_titles": ["Me"],
+        "street_titles": ["bd"],
+        "title_exceptions": ["Me Too"],
         "number_abbreviations": {
             "n°": "numéro",
             "N°": "numéro",
@@ -766,18 +802,25 @@ DATA = freeze(
             "vol.": "volume",
         },
         "ordinal_marks": {
-            "masculine": ["er"],
-            "feminine": ["re", "ère", "ere"],
-            "masculine_plural": ["ers"],
-            "feminine_plural": ["res", "ères", "eres"],
-            "other": ["e", "ème", "eme"],
-            "other_plural": ["es", "èmes", "emes"],
-            "second": ["nd", "d"],
-            "second_feminine": ["nde", "de"],
-            "second_plural": ["nds", "ds"],
-            "second_feminine_plural": ["ndes", "des"],
+            "masculine": ["er", "\u1d49\u02b3"],
+            "feminine": ["re", "ère", "ere", "\u02b3\u1d49"],
+            "masculine_plural": ["ers", "\u1d49\u02b3\u02e2"],
+            "feminine_plural": ["res", "ères", "eres", "\u02b3\u1d49\u02e2"],
+            "other": ["e", "ème", "eme", "\u1d49", "\u1d49\u1d50\u1d49"],
+            "other_plural": ["es", "èmes", "emes", "\u1d49\u02e2", "\u1d49\u1d50\u1d49\u02e2"],
+            "second": ["nd", "d", "\u207f\u1d48", "\u1d48"],
+            "second_feminine": ["nde", "de", "\u207f\u1d48\u1d49", "\u1d48\u1d49"],
+            "second_plural": ["nds", "ds", "\u207f\u1d48\u02e2", "\u1d48\u02e2"],
+            "second_feminine_plural": ["ndes", "des", "\u207f\u1d48\u1d49\u02e2", "\u1d48\u1d49\u02e2"],
         },
         "feminine_nouns": FEMININE_NOUNS,
+        "preposed_adjectives": PREPOSED_ADJECTIVES,
+        "adjective_links": ["et", "ou"],
+        "adjective_adverbs": ["très", "si", "plus", "bien", "assez", "trop"],
+        "no_noun_words": ["contre", "ensemble", "voici", "voilà"],
+        "determiners": DETERMINERS,
+        "era_abbreviations": ["av. J.-C.", "apr. J.-C.", "ap. J.-C."],
+        "label_links": [", ", " et ", " ou ", " à ", "-", "–"],
         "mixed_word": "et",
         "mixed_half": {"feminine": "demie", "other": "demi"},
         "patterns": {
@@ -912,12 +955,106 @@ def _feminine(nouns: tuple[str, ...]) -> frozenset[str]:
     return frozenset(nouns)
 
 
+@lru_cache(maxsize=1)
+def noun_genders() -> dict[str, str]:
+    """The gender of each noun of `data/wiktionary/fr_noun_genders.json`, by its singular as the list writes it:
+    "masculine", "feminine", or "both" for a word of both categories or of several genders, as "élève"."""
+    path = files("text2spoken") / "data" / "wiktionary" / "fr_noun_genders.json"
+    table = json.loads(path.read_text(encoding="utf-8"))
+    return {**dict.fromkeys(table["masculine"], "masculine"), **dict.fromkeys(table["feminine"], "feminine"),
+            **dict.fromkeys(table["both"], "both")}
+
+
+def _part_singulars(word: str) -> Iterator[str]:
+    """`_singulars` of a word, and for a word with a hyphen, the word whose parts each lose a final "s" or "x", as
+    "grands-mères" gives "grand-mère" and "eaux-de-vie" "eau-de-vie". Office québécois de la langue française,
+    Vitrine linguistique, "Pluriel des noms composés": "Les deux éléments prennent la marque du pluriel lorsqu'il
+    s'agit de deux noms dont le second qualifie le premier, d'un nom et d'un adjectif ou d'un adjectif et d'un nom",
+    as "des coffres-forts", "des basses-cours", "des ronds-points"."""
+    yield from _singulars(word)
+    if "-" in word:
+        yield "-".join(part[:-1] if len(part) > 2 and part.endswith(("s", "x")) else part for part in word.split("-"))
+
+
+def _singulars(word: str) -> Iterator[str]:
+    """The word, then the singulars that its plural can have: less a final "s" or "x", and "-al" or "-ail" for "-aux".
+    A noun takes "s" in the plural, as the OQLF page on the plural of foreign words gives the general rule (see
+    `_counted`), and the Office québécois de la langue française, Vitrine linguistique, gives the rest: "La plupart des
+    noms qui se terminent en -au et en -eu ainsi que tous les noms qui se terminent en -eau prennent un x au pluriel"
+    ("Pluriel des noms en -au, -eau et -eu"), "La plupart des noms qui se terminent en -al forment leur pluriel en
+    -aux" ("Pluriel des noms en -al"), and "bail, corail, émail, fermail, gemmail, soupirail, travail, vantail, ventail
+    et vitrail" form it "en -aux plutôt qu'en -ails" ("Pluriel des noms en -ail")."""
+    yield word
+    if word.endswith("aux"):
+        yield word[:-3] + "al"
+        yield word[:-3] + "ail"
+    if word.endswith(("s", "x")):
+        yield word[:-1]
+
+
+def _noun_gender(word: str, data: FrozenMap) -> str | None:
+    """The gender of a noun of `feminine_nouns` or of the noun list, in lowercase, and only then as the text writes
+    it, because the list also holds proper nouns, such as "Année" and "Ami", and in the singular or the plural."""
+    if word.lower() in _feminine(data["feminine_nouns"]):
+        return "feminine"
+    genders = noun_genders()
+    for form in dict.fromkeys((word.lower(), word)):
+        for singular in _part_singulars(form):
+            if singular in genders:
+                return genders[singular]
+    return None
+
+
+@lru_cache(maxsize=8)
+def _stops(function_words: tuple[str, ...], no_de_words: tuple[str, ...], no_noun_words: tuple[str, ...]):
+    return frozenset((*function_words, *no_de_words, *no_noun_words))
+
+
+def _noun_after(words: Sequence[str], data: FrozenMap) -> GrammaticalGender | None:
+    """The gender that the words after a number give it. "Des", or "de" and a plural determiner, starts a partitive,
+    "un des", "une de ses", in which "une, forme féminine du pronom numéral un" agrees with the noun after it:
+    "une des sculptrices", and "le féminin une ne peut être associé à un nom masculin" (Office québécois de la
+    langue française, Banque de dépannage linguistique, "Accord du verbe avec un des… qui, un de ceux qui…").
+
+    An adjective of `preposed_adjectives` that marks a gender gives it, and one that marks none, or a link of
+    `adjective_links` between two of them, passes to the next word, as in "une grande et belle maison" and "une
+    jeune fille". An adverb of `adjective_adverbs` before such an adjective passes too: "une très belle maison". Then
+    a noun of the list gives its gender, and a noun of both genders gives none. A function word of `function_words`,
+    `no_de_words` or `no_noun_words` is no noun, although the list holds "de", "une" and "plus" as nouns, so it gives
+    none either: "un de plus", "un des meilleurs films". The French Wiktionary gives the words of `no_noun_words`
+    as no noun: "contre" a preposition, "ensemble" an adverb, "voici" and "voilà" a verb and a preposition; and the
+    words of `adjective_adverbs` as adverbs ("Adverbes en français")."""
+    adjectives = data["preposed_adjectives"]
+    stops = _stops(tuple(data["function_words"]), tuple(data["no_de_words"]), tuple(data["no_noun_words"]))
+    lowers = [word.lower() for word in words]
+    start = 0
+    if lowers[:1] == ["des"]:
+        start = 1
+    elif lowers[:1] == ["de"] and len(lowers) > 1 and data["determiners"].get(lowers[1]) == "plural":
+        start = 2
+    for index in range(start, len(words)):
+        lower = lowers[index]
+        if lower in adjectives:
+            if adjectives[lower] != "both":
+                return GrammaticalGender(adjectives[lower])
+            continue
+        if index > start and lower in data["adjective_links"] and lowers[index - 1] in adjectives:
+            continue
+        if lower in data["adjective_adverbs"] and index + 1 < len(words) and lowers[index + 1] in adjectives:
+            continue
+        if lower in stops:
+            return None
+        gender = _noun_gender(words[index], data)
+        return GrammaticalGender(gender) if gender in ("masculine", "feminine") else None
+    return None
+
+
 def _gender(context: SpanContext, noun: bool = True) -> GrammaticalGender:
     """The agreement order: the hint, the noun after the number, `default_gender`, then the file."""
     if context.hint is not None and context.hint.gender is not None:
         return context.hint.gender
-    if noun and context.after and context.after[0].lower() in _feminine(context.request.data["feminine_nouns"]):
-        return FEMININE
+    if noun and (found := _noun_after(context.after, context.request.data)) is not None:
+        return found
     return context.request.params.default_gender.get(LANGUAGE.code) or MASCULINE
 
 
@@ -933,6 +1070,8 @@ def _name(record: FrozenMap, request: Request, written: str) -> str:
     """The unit or currency name for a written number: one for 0 and 1, "de ..." for a million."""
     return record.get(plural_category(request, written), record["other"])
 
+
+_UNIT_NAMES = frozenset(unit["one"] for unit in UNITS.values())
 
 _LABELLED = "fr_labelled"
 """The key of `Request.memo` that holds the starts of the cardinal and range spans that a label of `ordinal_nouns`
@@ -953,6 +1092,73 @@ def _labelled(text: str, start: int, data: FrozenMap, nouns: Sequence[str]) -> b
         ):
             return True
     return False
+
+
+def _word_before(text: str, start: int) -> tuple[str, int]:
+    """The word that ends before text[start:] with only spaces between, with an elided article whole, as "l'", and
+    its start; or "" when no such word is there."""
+    end = start
+    while end and text[end - 1] in GROUP_SPACES:
+        end -= 1
+    if end == start:
+        return "", start
+    begin = end
+    while begin and (is_letter(text[begin - 1]) or text[begin - 1] in "'\u2019"):
+        begin -= 1
+    return text[begin:end].replace("\u2019", "'"), begin
+
+
+def _named(text: str, span: Span, data: FrozenMap) -> bool:
+    """Whether the number names a numeral or a numéro: "Les numéraux employés comme noms sont précédés d'un
+    déterminant. Ils expriment alors soit le chiffre, soit le numéro auquel ils correspondent", and "Employés comme
+    noms, ces mots sont toujours invariables" (Office québécois de la langue française, Vitrine linguistique, "Les
+    numéraux employés comme noms"). So a number right after a singular determiner of `determiners`, as in "le 21",
+    names a number, as "le quatre-vingt de la rue des Érables (le numéro 80)" does ("Pluriel de vingt, de cent et de
+    mille"). So does a number after a determiner and a word, as in "le joueur 1" and "la chambre 80", unless a
+    plural word or an adjective of `preposed_adjectives` follows it, which belongs to the noun that the number
+    counts: "le film 21 fois", "ce film 1 seule fois". So does the name of a unit, which no verb shares: "le train
+    1 minute". A plural determiner counts: "les 21 pommes"."""
+    determiners = data["determiners"]
+    word, begin = _word_before(text, span.start)
+    lower = word.lower()
+    if determiners.get(lower, "plural") != "plural":
+        return True
+    if not word or lower in determiners or lower in data["function_words"] or not word.isalpha():
+        return False
+    if determiners.get(_word_before(text, begin)[0].lower()) is None:
+        return False
+    word = _word_after(text, span.end).lower()
+    if word in data["preposed_adjectives"] or word in _UNIT_NAMES:
+        return False
+    return not word or not word.endswith(("s", "x", "z")) or word in data["function_words"]
+
+
+def _word_after(text: str, end: int) -> str:
+    """The word, with its hyphens, that follows text[:end] after spaces, or ""."""
+    after = text[end:].lstrip(GROUP_SPACES)
+    stop = 0
+    while stop < len(after) and (is_letter(after[stop]) or after[stop] == "-"):
+        stop += 1
+    return after[:stop]
+
+
+def _counts(text: str, end: int, data: FrozenMap) -> bool:
+    """Whether the number that ends at `end` counts the word after it: a noun of the noun list that is no function
+    word, or an adjective of `preposed_adjectives`, as in "page 80 et 21 pages"."""
+    word = _word_after(text, end)
+    lower = word.lower()
+    if not word or lower in _stops(tuple(data["function_words"]), tuple(data["no_de_words"]),
+                                   tuple(data["no_noun_words"])):
+        return False
+    return lower in data["preposed_adjectives"] or _noun_gender(word, data) is not None
+
+
+def _era(text: str, end: int, data: FrozenMap) -> bool:
+    """Whether an era abbreviation of `era_abbreviations` follows the number, which is then a year: the Wiktionnaire
+    gives "av. J.-C." and "apr. J.-C." as "Utilisé pour nommer les années, les siècles et les millénaires", and a
+    year reads as `FrenchSpeller.year` does: "en quatre cent quatre-vingt avant Jésus-Christ"."""
+    rest = text[end:].lstrip(GROUP_SPACES)
+    return rest != text[end:] and rest.startswith(tuple(data["era_abbreviations"]))
 
 
 _COUNTED = "fr_counted"
@@ -1308,17 +1514,26 @@ def _count(span: Span, text: str, request: Request, round_million: bool) -> Span
 @dataclass(frozen=True)
 class FrenchCardinal(Cardinal):
     """The shared cardinal recognizer. The start of a span that a label of `ordinal_nouns` governs, with no lead or
-    prefix between them, goes into `Request.memo` under `_LABELLED`. A round million or milliard that a noun
+    prefix between them, goes into `Request.memo` under `_LABELLED`, and so does a number that `_named` finds, a year
+    before an era abbreviation (`_era`), and a number that a link of `label_links` joins to such a number, as in "les
+    années 70 et 80" and "les numéros 80 à 90", unless it counts the word after it (`_counts`), as in "page 80 et
+    21 pages". A round million or milliard that a noun
     follows reaches to the noun, as `_count` gives it, unless a noun of `number_abbreviations` labels it, as in
     "n° 1 000 000", which names a number and counts nothing."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
-        for span in super().find(text, tokens, request):
+        data = request.data
+        labelled_end = None
+        for span in sorted(super().find(text, tokens, request), key=lambda found: found.start):
             if span.fields["lead"] or span.fields["prefix"]:
                 yield span
                 continue
-            if _labelled(text, span.start, request.data, request.data["ordinal_nouns"]):
+            if (_labelled(text, span.start, data, data["ordinal_nouns"]) or _named(text, span, data)
+                    or _era(text, span.end, data)
+                    or labelled_end is not None and text[labelled_end:span.start] in data["label_links"]
+                    and not _counts(text, span.end, data)):
                 request.memo.setdefault(_LABELLED, set()).add(span.start)
+                labelled_end = span.end
                 yield span
                 continue
             if _labelled(text, span.start, request.data, tuple(request.data["number_abbreviations"].values())):
@@ -1552,6 +1767,18 @@ class Roman:
         return word in names and (len(numeral) >= 2 or numeral in ("V", "X"))
 
 
+def speak_french_abbreviation(span: Span, context: SpanContext) -> str:
+    """An abbreviation of the tables, or a rate: `€/mois` is "euros par mois". The slash marks a division, which reads
+    "par" (Office québécois de la langue française, Banque de dépannage linguistique, "Signe décimal et division dans
+    les unités de mesure": "Les divisions sont indiquées symboliquement par la barre oblique et littéralement par la
+    préposition par (ou à)")."""
+    key, data = span.fields["key"], context.request.data
+    if key.startswith("/"):
+        word = key[1:]
+        return f" par {data['rate_words'][word] if word in data['rate_words'] else data['units'][word]['one']}"
+    return speak_abbreviation(span, context)
+
+
 def speak_roman(span: Span, context: SpanContext) -> str:
     """`XXe` is "vingtième", `Ier` "premier", `Louis XIV` "quatorze" and `Acte II` "deux".
 
@@ -1632,13 +1859,15 @@ class Ordinal:
 @dataclass(frozen=True)
 class Abbreviation:
     """A title before a capitalised name, a saint before a capitalised name or after a hyphen, `n°` before a number,
-    and the abbreviations of the table. A title that an initial follows, as in `M. J. Dupont`, stays as written."""
+    and the abbreviations of the table. A title that an initial follows, as in `M. J. Dupont`, stays as written.
+    A slash between a currency symbol and a word of `rate_words`, as in `5 €/mois`, reads "par" and the word."""
 
     name: str = "abbreviation"
     form: Form = Form.ABBREVIATION
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         data = request.data
+        yield from self._rates(text, request)
         final = frozenset(data["sentence_final"])
         particles = tuple(data["name_particles"])
         for table in ("titles", "number_abbreviations", "abbreviations"):
@@ -1651,7 +1880,7 @@ class Abbreviation:
                     if position and is_word_char(text[position - 1]):
                         ok = False
                     elif table == "titles":
-                        ok = self._name_follows(text, end, particles)
+                        ok = self._name_follows(text, end, particles) and self._title_fits(text, position, key, data)
                     elif table == "number_abbreviations":
                         ok = following.isdigit()
                         trail = " " if text[end:end + 1].isdigit() else ""
@@ -1663,6 +1892,72 @@ class Abbreviation:
                         yield Span(position, end, Form.ABBREVIATION, FrozenMap({"key": key}), trail=trail,
                                    recognizer=self.name)
                     position = text.find(key, end)
+
+    @staticmethod
+    def _title_fits(text: str, position: int, key: str, data: FrozenMap) -> bool:
+        """Whether a title that is also another word reads as the title. `Me` is also the pronoun "me" (Wiktionnaire,
+        "me": "Pronom de la première personne du singulier en tant que complément d'objet direct", "Ça me paraît
+        logique", "Ne me le dis pas"), so it stays as written after a subject pronoun or "ne", as in
+        "Tu Me Manques", after a capitalised word inside a sentence, which writes a title in capitals, before a word
+        of `function_words`, `no_de_words` or `no_noun_words`, as in "Me Voici", and in a name of `title_exceptions`,
+        which the Wiktionnaire gives: "Me Too", "Variante orthographique de MeToo". `bd` is also the feminine noun
+        "bd", a bande dessinée (Wiktionnaire, "BD", f: "Bande dessinée", "Les aventures de Tintin sont une BD"), and
+        "bd", boulevard, is masculine (Wiktionnaire,
+        "bd": "Boulevard", m), so it stays as written after a feminine or plural determiner: "la bd Astérix"."""
+        before, begin = _word_before(text, position)
+        lower = before.lower()
+        if key in data["street_titles"]:
+            return data["determiners"].get(lower) not in ("feminine", "plural")
+        if key not in data["pronoun_titles"]:
+            return True
+        if lower in data["inverted_pronouns"] or lower == "ne":
+            return False
+        if before[:1].isupper():
+            head, _ = _word_before(text, begin)
+            stop = begin
+            while stop and text[stop - 1] in GROUP_SPACES:
+                stop -= 1
+            if head or (stop and text[stop - 1] not in ".!?:«\"(\u2026"):
+                return False
+        if any(text.startswith(name, position) and is_bounded(text, position, position + len(name))
+               for name in data["title_exceptions"]):
+            return False
+        following = text[position + len(key):].lstrip(GROUP_SPACES)
+        stop = 0
+        while stop < len(following) and is_letter(following[stop]):
+            stop += 1
+        word = following[:stop].lower()
+        return word not in _stops(tuple(data["function_words"]), tuple(data["no_de_words"]),
+                                  tuple(data["no_noun_words"]))
+
+    def _rates(self, text: str, request: Request) -> Iterator[Span]:
+        """The slash and the word after an amount and a currency symbol, "5 €/mois", "20 $/h", with a space on both
+        sides of the slash or on neither, and after such a rate, "5 €/an/personne". The word is a word of
+        `rate_words` or a unit symbol of `units`, as in "3 €/kg", and ends at a word boundary."""
+        data = request.data
+        symbols = tuple(symbol for symbol, _ in currency_symbols(request))
+        words = sorted((*data["rate_words"], *data["units"]), key=len, reverse=True)
+        rate_end = None
+        position = text.find("/")
+        while position != -1:
+            spaced = position and text[position - 1] == " " and text[position + 1:position + 2] == " "
+            begin = position - 1 if spaced else position
+            after = position + (2 if spaced else 1)
+            amount = text[:begin].endswith(symbols) and next(
+                (symbol for symbol in symbols if text[:begin].endswith(symbol)), "")
+            anchored = rate_end == begin
+            if amount:
+                head = text[:begin - len(amount)].rstrip(GROUP_SPACES)
+                anchored = anchored or bool(head) and is_digit(head[-1])
+            if anchored:
+                for word in words:
+                    end = after + len(word)
+                    if text.startswith(word, after) and is_bounded(text, after, end):
+                        yield Span(begin, end, Form.ABBREVIATION, FrozenMap({"key": "/" + word}),
+                                   recognizer=self.name)
+                        rate_end = end
+                        break
+            position = text.find("/", position + 1)
 
     @staticmethod
     def _name_follows(text: str, end: int, particles: tuple[str, ...]) -> bool:
@@ -1763,7 +2058,7 @@ LANGUAGE = LanguageSpec(
         Form.RANGE: speak_range,
         Form.ROMAN: speak_roman,
         Form.ORDINAL: speak_ordinal,
-        Form.ABBREVIATION: speak_abbreviation,
+        Form.ABBREVIATION: speak_french_abbreviation,
         Form.DECIMAL: speak_french_decimal,
         Form.CARDINAL: speak_cardinal,
     },

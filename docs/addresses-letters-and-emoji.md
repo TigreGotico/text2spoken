@@ -120,9 +120,9 @@ The `EMOJI` form reads an emoji by its CLDR name. It is off by default, because 
 | A sequence with no name | `😀🏽` | grinning face | cara sorridente |
 | A name that cannot be read | `#️⃣` | stays as written | stays as written |
 
-The form reads a whole emoji sequence as one emoji: an emoji with its skin tone, its U+FE0F, and the emoji that zero width joiners add to it. A sequence with no name of its own reads by the name of its first emoji. A name whose reading would hold a character that is no word stays as written, because a second pass would read that character.
+The form looks up each emoji in one table for each language. The table maps each emoji sequence to its spoken name. At each position, the longest sequence of the table wins. The skin tones, U+FE0F and the emoji that zero width joiners add come with it. A sequence that is not in the table reads by the name of its first emoji. A name whose reading would hold a character that is no word is not in the table, so the emoji stays as written: a second pass would read that character.
 
-Details for maintainers: the sequences come from the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. A name drops its quote marks, and its colons, commas and brackets become spaces. The language reads the digits and abbreviations of a name as in a sentence, and U+2019 between two letters is an apostrophe. The spacing of a name follows the `SYMBOL` form. [Development](development.md#the-emoji-data) gives the kinds of names that stay as written.
+Details for maintainers: the table holds the sequences of the Unicode 17.0 emoji files, the version whose emoji CLDR 49 names. `scripts/extract_cldr.py` writes the spoken names. A name drops its quote marks, and its colons, commas and brackets become spaces. The language reads the digits and abbreviations of a name as in a sentence, with the default params, and U+2019 between two letters is an apostrophe. The spacing of a name follows the `SYMBOL` form. [Development](development.md#the-emoji-data) gives the kinds of names that stay as written.
 
 | Written | Tag | Spoken, `EMOJI` on |
 | --- | --- | --- |
@@ -139,7 +139,7 @@ These cases come from tests that feed the library unusual text. A reader of ordi
 
 ### Emoji next to other text
 
-An emoji sequence is one character for every other form, with the `EMOJI` form on or off. U+FE0F, U+FE0E and U+20E3 are no part of a word next to another form, and the character before such a mark belongs to the emoji. The `EMOJI` form claims after every other form and before `SYMBOL`.
+An emoji sequence is one character for every other form, with the `EMOJI` form on or off. U+FE0F, U+FE0E and U+20E3 are no part of a word next to another form, and an emoji of the table before such a mark keeps it. The `EMOJI` form claims after every other form and before `SYMBOL`.
 
 | Written | Spoken (`en-GB`) | Spoken (`en-GB`, `EMOJI` on) | Why |
 | --- | --- | --- | --- |
@@ -155,23 +155,21 @@ An emoji sequence is one character for every other form, with the `EMOJI` form o
 | `well-known1️⃣` | stays as written | stays as written | Nothing reads the `well-` before the word, so it stays as written too. |
 | `I have 2,cats1️⃣` | `I have two,cats1️⃣` | `I have two,cats1️⃣` | A number before a punctuation mark still reads. |
 | `on 12/03/2024.Next1️⃣` | `on the twelfth of March twenty twenty-four.Next1️⃣` | `on the twelfth of March twenty twenty-four.Next1️⃣` | A date before a punctuation mark still reads. |
-| `15🏽` | fifteen🏽 | fifteen🏽 | A digit before a skin tone is outside the rule, so the number reads. |
+| `15🏽` | fifteen🏽 | fifteen medium skin tone | A digit before a skin tone is outside the rule, so the number reads, and the skin tone reads as an emoji of its own. |
 | `1❤️2❤️3` | stays as written | one red heart two red heart three | A sequence between two spans joins them as one character, as `1😀2😀3` does. |
 | `1😀2😀3` | stays as written | one grinning face two grinning face three | A sequence between two spans joins them as one character. |
 | `10+4 ₡👍🏽+4 ₴` | 10+4 ₡👍🏽plus four ₴ | stays as written | With the form on, it stays as `10+4 ₡😂+4 ₴` does. |
 | `10+4 ₡😂+4 ₴` | stays as written | stays as written | The comparison for the row above. |
 | `10+4 ₡-😂+4 ₴` | 10+4 ₡-😂plus four ₴ | 10+4 ₡-😂plus four ₴ | The `EMOJI` form takes its characters before `SYMBOL` does, so this reads as `10+4 ₡-©+4 ₴` does. |
 | `10+4 ₡-©+4 ₴` | 10+4 ₡-©plus four ₴ | 10+4 ₡-©plus four ₴ | The comparison for the row above. |
-| `🇵🇵🇹` | stays as written | stays as written | Regional indicators pair from the start of a run, so `🇵🇵` names no flag and `🇹` is alone. |
-
-The pairing of regional indicators follows rules GB12 and GB13 of UAX #29: "Do not break within emoji flag sequences. That is, do not break between regional indicator (RI) symbols if there is an odd number of RI characters before the break point."
+| `‼` | stays as written | double exclamation mark | A character with text presentation reads by its emoji name when `SYMBOL` does not read it. |
 
 ### Limits of the emoji form
 
 | Written | Spoken (`en-GB`) | Spoken (`en-GB`, `EMOJI` on) | Limit |
 | --- | --- | --- | --- |
-| `a🏽` | stays as written | stays as written | A character other than a space before a skin tone, U+FE0F or a zero width joiner belongs to the form. |
-| `5🏽` | five🏽 | five🏽 | A digit before a skin tone still reads. |
+| `a🏽` | stays as written | a medium skin tone | A skin tone after a character that is no emoji reads as an emoji of its own. |
+| `🇵🇵🇹` | stays as written | 🇵 flag Portugal | The longest sequence of the table wins, so `🇵🇹` is the flag and the first `🇵` is alone. |
 | `😂︎` | stays as written | `face with tears of joy ︎` | U+FE0E after an emoji asks for text presentation, and the form does not read it. The U+FE0E stays after a space. |
 | `❤︎` | `red heart ︎` | `red heart ︎` | `❤︎` is no emoji sequence, so `SYMBOL` reads it. |
 | `🏴󠁧󠁢󠁸󠁸󠁿` | stays as written | `black flag 󠁧󠁢󠁸󠁸󠁿` | A tag sequence that Unicode does not list, here `🏴` with the tags `gbxx`, reads by the name of its first emoji. The tag characters stay, and they are invisible. |
