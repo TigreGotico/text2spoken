@@ -40,7 +40,7 @@ The second argument is a BCP 47 tag. It selects the language file and the variet
 | See how a text goes through the library, and what a call costs | [How it works](docs/how-it-works.md) |
 | Add your language, step by step | [Adding a language](docs/adding-a-language.md) |
 | Look up a function, a param or an error | [API](docs/api.md), [Errors and warnings](docs/errors.md) |
-| Know when the output of a language can change | [API, revision](docs/api.md#revision) |
+| Know which installed versions write the output of a language | [API, revision](docs/api.md#revision) |
 | Use it before a phonemizer, a voice or a word error rate score | [How it works, where it fits](docs/how-it-works.md#where-it-fits), [Usage](docs/usage.md#text-to-speech) |
 | See the languages and their varieties | [Docs index, languages](docs/index.md#languages) |
 | Run the tests | [Development](docs/development.md) |

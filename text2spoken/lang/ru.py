@@ -1013,6 +1013,7 @@ LANGUAGE = LanguageSpec(
         Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction, Form.ABBREVIATION: speak_abbreviation,
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
+    writers=("ovos-number-parser", "unicode-rbnf"),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},
     attach=attach,

@@ -15,7 +15,7 @@ are true, and 1 with the first mismatch. The `verify` line of each agent hint ca
 - docs/money-units-and-symbols.md: the "such as" sentence of `COLOR`, and the languages and release of the CLDR
   sentence.
 - docs/addresses-letters-and-emoji.md: the "... offer the form" sentences of `ELECTRONIC` and `LETTERS`.
-- docs/api.md: `PROBE_TIMEOUT`.
+- docs/api.md: the revision prefix `FORMAT`.
 - docs/errors.md: each class name in backticks, and each sentence that names a subclass.
 - docs/how-it-works.md: that the committed timing figure is current, and that the stage list of the page names each
   stage.
@@ -45,7 +45,7 @@ import text2spoken
 from text2spoken import Form, NormalizationParams, supports
 from text2spoken.core import parsers
 from text2spoken.core.language import _registry, core_language, rbnf_locales
-from text2spoken.core.revision import PROBE_TIMEOUT
+from text2spoken.core.revision import FORMAT
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -220,8 +220,8 @@ def check_addresses(page: str, text: str):
 
 
 def check_api(page: str, text: str):
-    if f"longer than {PROBE_TIMEOUT} seconds" not in text:
-        fail(page, f"PROBE_TIMEOUT is {PROBE_TIMEOUT} seconds")
+    if f"'{FORMAT}:" not in text:
+        fail(page, f"the revision prefix is {FORMAT}:")
 
 
 def check_errors(page: str, text: str):

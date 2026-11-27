@@ -169,6 +169,7 @@ from text2spoken.core.recognizers import (PHONE_PLANS, SHARED, SPACE_GROUPS, Tel
 from text2spoken.core.recognizers import Abbreviation as CoreAbbreviation
 from text2spoken.core.recognizers import Money as CoreMoney, speak_fraction as core_speak_fraction
 from text2spoken.core.spans import Features, Span, SpanContext
+from text2spoken.core import parsers
 from text2spoken.core.spellers import NumtagSpeller, RbnfSpeller, bounded_integer, spell_digits
 from text2spoken.core.symbols import speak_emoji, speak_symbol
 from text2spoken.core.tokens import Token, digit_script, fold_digits, is_bounded, is_word_char
@@ -634,6 +635,7 @@ LANGUAGE = LanguageSpec(
         Form.ORDINAL: speak_ordinal, Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal,
         Form.CARDINAL: speak_cardinal, Form.YEAR: speak_year, Form.DATE: speak_spoken_date, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
+    writers=("numtag", "unicode-rbnf", parsers.DATES),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},
     genders=frozenset(),
