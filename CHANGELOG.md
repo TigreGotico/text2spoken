@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a168](https://github.com/TigreGotico/text2spoken/tree/0.0.2a168) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a167...0.0.2a168)
+
+**Merged pull requests:**
+
+- feat: Hindi language file with numtag cardinals [\#703](https://github.com/TigreGotico/text2spoken/pull/703) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a167](https://github.com/TigreGotico/text2spoken/tree/0.0.2a167) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a166...0.0.2a167)
@@ -357,10 +365,6 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a121...0.0.2a122)
 
-**Merged pull requests:**
-
-- fix\(ar\): read a list number and a number before a definite word in the citation form [\#568](https://github.com/TigreGotico/text2spoken/pull/568) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a121](https://github.com/TigreGotico/text2spoken/tree/0.0.2a121) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a120...0.0.2a121)
@@ -372,7 +376,6 @@
 **Merged pull requests:**
 
 - fix\(core\): find the phone word in one walk per text, so a run of brackets reads in linear time [\#571](https://github.com/TigreGotico/text2spoken/pull/571) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- fix\(ar\): read a number before a written percent word as before % [\#566](https://github.com/TigreGotico/text2spoken/pull/566) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a119](https://github.com/TigreGotico/text2spoken/tree/0.0.2a119) (2026-11-24)
 
