@@ -263,7 +263,7 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
     `normalize` call that reads an emoji name, and is not recorded."""
     read: dict[str, set[str]] = {name: set() for name in SHARED}
     used = set()
-    data = Request.data.fget
+    data = Request.data.func
 
     def recording(request):
         if "recognizer" not in request.memo:
