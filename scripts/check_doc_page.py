@@ -114,7 +114,7 @@ def check_readme(page: str, text: str):
     sentence = match[1]
     # Each code with CLDR spell-out rules or an ovos-number-parser writer, and no language file.
     no_file = ({re.split("[-_]", locale)[0] for locale in rbnf_locales()}
-               | set(parsers.number_writer_languages())) - set(registry)
+               | set(parsers.NUMBER_PARSER_LANGUAGES)) - set(registry)
     sources = {"OvosNumberSpeller": "ovos-number-parser", "RbnfSpeller": "CLDR spell-out"}
     for code in sorted(no_file):
         source = sources[type(core_language(code).spellers[Form.CARDINAL]).__name__]

@@ -326,7 +326,7 @@ def core_language(code: str) -> LanguageSpec:
                         not_applicable=frozenset(OPTIONS))
     locale = cldr_locale(tag, rbnf_locales(), bare)
     writers = ["unicode-rbnf"]
-    if code in parsers.number_writer_languages() and code not in RBNF_HELD:
+    if code in parsers.NUMBER_PARSER_LANGUAGES and code not in RBNF_HELD:
         writers.append("ovos-number-parser")
         speller = OvosNumberSpeller({})
         one = words(parsers.pronounce_number(1, tag)).split()
@@ -364,7 +364,7 @@ def core_language(code: str) -> LanguageSpec:
         speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal},
                               decimal=decimal)
         ordinal_speller, genders = speller if ordinals else None, frozenset()
-        if not ordinals and code in parsers.number_writer_languages():
+        if not ordinals and code in parsers.NUMBER_PARSER_LANGUAGES:
             ordinal_speller, genders = writer_ordinals(tag)
             writers.append("ovos-number-parser")
         decimal_speller = speller
