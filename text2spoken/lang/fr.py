@@ -1555,14 +1555,16 @@ def speak_french_decimal(span: Span, context: SpanContext) -> str:
 
 @dataclass(frozen=True)
 class FrenchRange(Range):
-    """The shared range recognizer. A labelled range goes into `Request.memo` as in `FrenchCardinal`. A range whose
-    high end is a round million reaches to the noun after it, as `_count` gives it."""
+    """The shared range recognizer. A labelled range goes into `Request.memo` as in `FrenchCardinal`, and so does a
+    range of years before an era abbreviation (`_era`), as in "80-200 av. J.-C.". A range whose high end is a round
+    million reaches to the noun after it, as `_count` gives it."""
 
     def find(self, text: str, tokens: Sequence[Token], request: Request) -> Iterator[Span]:
         for span in super().find(text, tokens, request):
             if span.fields["prefix"]:
                 yield span
-            elif _labelled(text, span.start, request.data, request.data["ordinal_nouns"]):
+            elif (_labelled(text, span.start, request.data, request.data["ordinal_nouns"])
+                    or _era(text, span.end, request.data)):
                 request.memo.setdefault(_LABELLED, set()).add(span.start)
                 yield span
             else:
@@ -1896,7 +1898,8 @@ class Abbreviation:
         "me": "Pronom de la première personne du singulier en tant que complément d'objet direct", "Ça me paraît
         logique", "Ne me le dis pas"), so it stays as written after a subject pronoun or "ne", as in
         "Tu Me Manques", after a capitalised word inside a sentence, which writes a title in capitals, before a word
-        of `function_words`, `no_de_words` or `no_noun_words`, as in "Me Voici", and in a name of `title_exceptions`,
+        of `function_words`, `no_de_words` or `no_noun_words`, as in "Me Voici", unless the word is a particle of
+        `name_particles` before a capitalised name, as in "Me Le Gall" and "Me d'Ornano", and in a name of `title_exceptions`,
         which the Wiktionnaire gives: "Me Too", "Variante orthographique de MeToo". `bd` is also the feminine noun
         "bd", a bande dessinée (Wiktionnaire, "BD", f: "Bande dessinée", "Les aventures de Tintin sont une BD"), and
         "bd", boulevard, is masculine (Wiktionnaire,
@@ -1924,6 +1927,10 @@ class Abbreviation:
         while stop < len(following) and is_letter(following[stop]):
             stop += 1
         word = following[:stop].lower()
+        elided = following[stop:stop + 1] == "'"
+        if (word + "'" if elided else word) in data["name_particles"]:
+            if following[stop + elided:].lstrip(GROUP_SPACES)[:1].isupper():
+                return True
         return word not in _stops(tuple(data["function_words"]), tuple(data["no_de_words"]),
                                   tuple(data["no_noun_words"]))
 
