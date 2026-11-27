@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a169](https://github.com/TigreGotico/text2spoken/tree/0.0.2a169) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a168...0.0.2a169)
+
+**Merged pull requests:**
+
+- feat: read pt-BR dates and times through chronologia [\#720](https://github.com/TigreGotico/text2spoken/pull/720) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a168](https://github.com/TigreGotico/text2spoken/tree/0.0.2a168) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a167...0.0.2a168)
@@ -372,10 +380,6 @@
 ## [0.0.2a120](https://github.com/TigreGotico/text2spoken/tree/0.0.2a120) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a119...0.0.2a120)
-
-**Merged pull requests:**
-
-- fix\(core\): find the phone word in one walk per text, so a run of brackets reads in linear time [\#571](https://github.com/TigreGotico/text2spoken/pull/571) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a119](https://github.com/TigreGotico/text2spoken/tree/0.0.2a119) (2026-11-24)
 
