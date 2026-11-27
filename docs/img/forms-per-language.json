@@ -1,5 +1,6 @@
 {
  "order": [
+  "bn",
   "ja",
   "ko",
   "el",
@@ -53,6 +54,10 @@
    "percent",
    "range",
    "time"
+  ],
+  "bn": [
+   "cardinal",
+   "lexicon"
   ],
   "ca": [
    "abbreviation",

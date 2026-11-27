@@ -58,6 +58,7 @@ Each language page gives what the language reads, its varieties, its options, it
 | Language | Varieties |
 | --- | --- |
 | [Arabic](docs/languages/ar.md) | `ar-001`, the regional `ar-*` tags, and the spoken lects of ISO 639-3, such as `arz` |
+| [Bengali](docs/languages/bn.md) | `bn-BD`, `bn-IN` |
 | [Catalan](docs/languages/ca.md) | `ca-ES`, `ca-AD`, `ca-ES-valencia` |
 | [German](docs/languages/de.md) | `de-DE`, `de-AT`, `de-CH` |
 | [Greek](docs/languages/el.md) | `el-GR` |

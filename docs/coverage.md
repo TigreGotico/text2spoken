@@ -26,14 +26,14 @@ Each language file reads the forms that its recognizers and verbalizers offer. `
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/forms-per-language-dark.svg">
-  <img alt="Matrix of 16 language files by 22 forms. English reads 22, Portuguese 20, French 18, German 17, Italian 15, Dutch 14, Basque 14, Spanish 14, Russian 12, Catalan 11, Chinese 10, Arabic 10, Tetun Dili 7, Greek 5, Korean 3, Japanese 3." src="img/forms-per-language.svg">
+  <img alt="Matrix of 17 language files by 22 forms. English reads 22, Portuguese 20, French 18, German 17, Italian 15, Dutch 14, Basque 14, Spanish 14, Russian 12, Catalan 11, Chinese 10, Arabic 10, Tetun Dili 7, Greek 5, Korean 3, Japanese 3, Bengali 2." src="img/forms-per-language.svg">
 </picture>
 
 `img/plot_forms_per_language.py` makes this figure from `supports(code).forms`.
 
-*Figure: the forms that each language file reads. A large dot means the file reads the form. English reads the most forms, and Japanese and Korean read three. The form `IDENTIFIER` has a column in no file, because no language file reads it, so the figure leaves it out.*
+*Figure: the forms that each language file reads. A large dot means the file reads the form. English reads the most forms, Japanese and Korean read three, and Bengali reads two. The form `IDENTIFIER` has a column in no file, because no language file reads it, so the figure leaves it out.*
 
-English reads all 22 forms that any file reads. Japanese and Korean read cardinals, decimals and the lexicon. A language page names the forms of its file in the sentence "The file reads ...". [How it reads text](how-it-reads.md#the-forms) lists every form and its default.
+English reads all 22 forms that any file reads. Japanese and Korean read cardinals, decimals and the lexicon. Bengali reads cardinals and the lexicon. A language page names the forms of its file in the sentence "The file reads ...". [How it reads text](how-it-reads.md#the-forms) lists every form and its default.
 
 A tag with no language file reads cardinals and decimals only. [How it reads text](how-it-reads.md#a-language-with-no-file) gives the rules.
 
@@ -43,14 +43,14 @@ Each language file has a file of test rows in `tests/data`. Each row holds a wri
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/rows-per-language-dark.svg">
-  <img alt="Horizontal bars of test rows for 16 languages, 4,207 rows in all, 4,075 with a cited source and 132 marked silver. Portuguese 941, English 678, French 588, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 179, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25." src="img/rows-per-language.svg">
+  <img alt="Horizontal bars of test rows for 17 languages, 4,229 rows in all, 4,096 with a cited source and 133 marked silver. Portuguese 941, English 678, French 588, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 179, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Japanese 25, Bengali 22." src="img/rows-per-language.svg">
 </picture>
 
 `img/plot_rows_per_language.py` makes this figure from `tests/data`.
 
 *Figure: the test rows of each language file, in blue where the row cites a source and in orange where it is marked silver. Portuguese, English and French hold the most rows, and nine files hold only cited rows.*
 
-Seven files hold silver rows: those of Dutch, German, Italian, Portuguese, Russian, Spanish and Tetun Dili. A silver row is a reading that no source states.
+Eight files hold silver rows: those of Bengali, Dutch, German, Italian, Portuguese, Russian, Spanish and Tetun Dili. A silver row is a reading that no source states.
 
 The figures come from the files that the page names. `python scripts/docs_figures.py` writes them again, and `python scripts/docs_figures.py --check` exits 1 when a committed figure is out of date.
 
