@@ -6,8 +6,8 @@ PAGE is a path from the checkout root, such as `docs/numbers.md`. The script run
 the check of the page compares the values of the sentences and tables below with the code. It exits 0 when they
 are true, and 1 with the first mismatch. The `verify` line of each agent hint calls it.
 
-- README.md: the variety tags of the Languages table, and the sentence "A tag with no language file reads ...".
-- docs/index.md: the page links, the sentence that places the language pages, and the footer of each page.
+- README.md: the Python floor.
+- docs/index.md: the page links, the sentence that places the language pages, the footer of each page, the variety tags of the Languages table, and the sentence "A tag with no language file reads ...".
 - docs/quickstart.md: the empty extras and the Python floor.
 - docs/how-it-reads.md: the Default column of the forms table.
 - docs/numbers.md, docs/dates-and-times.md: each "the `FORM` form, such as ..., reads" sentence, and in
@@ -70,10 +70,10 @@ def read(path: str) -> str:
 
 
 def language_code(page: str, name: str) -> str:
-    """The code of a language name, from the Languages table of README.md."""
-    codes = dict(re.findall(r"\[(\w+)\]\(docs/languages/(\w+)\.md\)", read("README.md")))
+    """The code of a language name, from the Languages table of docs/index.md."""
+    codes = dict(re.findall(r"\[(\w+)\]\(languages/(\w+)\.md\)", read("docs/index.md")))
     if name not in codes:
-        fail(page, f"{name!r} is not a language of the README Languages table")
+        fail(page, f"{name!r} is not a language of the index Languages table")
     return codes[name]
 
 
@@ -101,6 +101,13 @@ def check_such_as(page: str, text: str):
 
 
 def check_readme(page: str, text: str):
+    floor = tomllib.loads(read("pyproject.toml"))["project"]["requires-python"].removeprefix(">=")
+    if f"Python {floor} or later" not in text:
+        fail(page, f"the Python floor is {floor}")
+
+
+def check_languages(page: str, text: str):
+    """The variety tags of the Languages table, and the sentence "A tag with no language file reads ..."."""
     registry = _registry()
     for code, cell in re.findall(r"languages/(\w+)\.md\) \| (.*) \|", text):
         tags = {variety.tag for variety in registry[code].varieties}
@@ -128,6 +135,7 @@ def check_readme(page: str, text: str):
 
 def check_index(page: str, text: str):
     check_figures(page)
+    check_languages(page, text)
     listed = list(dict.fromkeys(re.findall(r"\]\(([\w/-]+\.md)\)", text)))
     for path in sorted((ROOT / "docs").glob("*.md")) + sorted((ROOT / "docs/languages").glob("*.md")):
         name = path.relative_to(ROOT / "docs").as_posix()
