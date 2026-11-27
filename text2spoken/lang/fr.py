@@ -1071,6 +1071,8 @@ def _name(record: FrozenMap, request: Request, written: str) -> str:
     return record.get(plural_category(request, written), record["other"])
 
 
+_UNIT_NAMES = frozenset(unit["one"] for unit in UNITS.values())
+
 _LABELLED = "fr_labelled"
 """The key of `Request.memo` that holds the starts of the cardinal and range spans that a label of `ordinal_nouns`
 governs, as `FrenchCardinal` and `FrenchRange` find them."""
@@ -1114,7 +1116,8 @@ def _named(text: str, span: Span, data: FrozenMap) -> bool:
     names a number, as "le quatre-vingt de la rue des Érables (le numéro 80)" does ("Pluriel de vingt, de cent et de
     mille"). So does a number after a determiner and a word, as in "le joueur 1" and "la chambre 80", unless a
     plural word or an adjective of `preposed_adjectives` follows it, which belongs to the noun that the number
-    counts: "le film 21 fois", "ce film 1 seule fois". A plural determiner counts: "les 21 pommes"."""
+    counts: "le film 21 fois", "ce film 1 seule fois". So does the name of a unit, which no verb shares: "le train
+    1 minute". A plural determiner counts: "les 21 pommes"."""
     determiners = data["determiners"]
     word, begin = _word_before(text, span.start)
     lower = word.lower()
@@ -1125,7 +1128,7 @@ def _named(text: str, span: Span, data: FrozenMap) -> bool:
     if determiners.get(_word_before(text, begin)[0].lower()) is None:
         return False
     word = _word_after(text, span.end).lower()
-    if word in data["preposed_adjectives"]:
+    if word in data["preposed_adjectives"] or word in _UNIT_NAMES:
         return False
     return not word or not word.endswith(("s", "x", "z")) or word in data["function_words"]
 
