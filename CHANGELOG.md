@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a167](https://github.com/TigreGotico/text2spoken/tree/0.0.2a167) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a166...0.0.2a167)
+
+**Merged pull requests:**
+
+- refactor\(ru\): trailing-zero decimals read through numtag [\#718](https://github.com/TigreGotico/text2spoken/pull/718) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a166](https://github.com/TigreGotico/text2spoken/tree/0.0.2a166) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a165...0.0.2a166)
@@ -373,10 +381,6 @@
 ## [0.0.2a118](https://github.com/TigreGotico/text2spoken/tree/0.0.2a118) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a117...0.0.2a118)
-
-**Merged pull requests:**
-
-- fix\(ar\): read the CLDR currency symbols and ISO codes of the Arabic varieties [\#558](https://github.com/TigreGotico/text2spoken/pull/558) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a117](https://github.com/TigreGotico/text2spoken/tree/0.0.2a117) (2026-11-24)
 
