@@ -17,7 +17,7 @@ WRITERS = {
 }
 """Each name that text2spoken reads from the parsers: its module and its attribute."""
 
-CHRONOLOGIA_TAGS = frozenset({"pt-PT"})
+CHRONOLOGIA_TAGS = frozenset({"pt-PT", "pt-BR"})
 """The tags whose dates and times read through `chronologia.spoken`. Each tag joins after a parity check against
 `ovos_date_parser.spoken`. Every other tag reads through `ovos_date_parser.spoken`."""
 
