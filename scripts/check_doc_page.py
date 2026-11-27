@@ -6,8 +6,8 @@ PAGE is a path from the checkout root, such as `docs/numbers.md`. The script run
 the check of the page compares the values of the sentences and tables below with the code. It exits 0 when they
 are true, and 1 with the first mismatch. The `verify` line of each agent hint calls it.
 
-- README.md: the variety tags of the Languages table, and the sentence "A tag with no language file reads ...".
-- docs/index.md: the page links, the sentence that places the language pages, and the footer of each page.
+- README.md: the Python floor.
+- docs/index.md: the page links, the sentence that places the language pages, the footer of each page, the variety tags of the Languages table, and the sentence "A tag with no language file reads ...".
 - docs/quickstart.md: the empty extras and the Python floor.
 - docs/how-it-reads.md: the Default column of the forms table.
 - docs/numbers.md, docs/dates-and-times.md: each "the `FORM` form, such as ..., reads" sentence, and in
@@ -15,7 +15,7 @@ are true, and 1 with the first mismatch. The `verify` line of each agent hint ca
 - docs/money-units-and-symbols.md: the "such as" sentence of `COLOR`, and the languages and release of the CLDR
   sentence.
 - docs/addresses-letters-and-emoji.md: the "... offer the form" sentences of `ELECTRONIC` and `LETTERS`.
-- docs/api.md: `PROBE_TIMEOUT`.
+- docs/api.md: the revision prefix `FORMAT`.
 - docs/errors.md: each class name in backticks, and each sentence that names a subclass.
 - docs/how-it-works.md: that the committed timing figure is current, and that the stage list of the page names each
   stage.
@@ -45,7 +45,7 @@ import text2spoken
 from text2spoken import Form, NormalizationParams, supports
 from text2spoken.core import parsers
 from text2spoken.core.language import _registry, core_language, rbnf_locales
-from text2spoken.core.revision import PROBE_TIMEOUT
+from text2spoken.core.revision import FORMAT
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -70,10 +70,10 @@ def read(path: str) -> str:
 
 
 def language_code(page: str, name: str) -> str:
-    """The code of a language name, from the Languages table of README.md."""
-    codes = dict(re.findall(r"\[(\w+)\]\(docs/languages/(\w+)\.md\)", read("README.md")))
+    """The code of a language name, from the Languages table of docs/index.md."""
+    codes = dict(re.findall(r"\[(\w+)\]\(languages/(\w+)\.md\)", read("docs/index.md")))
     if name not in codes:
-        fail(page, f"{name!r} is not a language of the README Languages table")
+        fail(page, f"{name!r} is not a language of the index Languages table")
     return codes[name]
 
 
@@ -101,6 +101,13 @@ def check_such_as(page: str, text: str):
 
 
 def check_readme(page: str, text: str):
+    floor = tomllib.loads(read("pyproject.toml"))["project"]["requires-python"].removeprefix(">=")
+    if f"Python {floor} or later" not in text:
+        fail(page, f"the Python floor is {floor}")
+
+
+def check_languages(page: str, text: str):
+    """The variety tags of the Languages table, and the sentence "A tag with no language file reads ..."."""
     registry = _registry()
     for code, cell in re.findall(r"languages/(\w+)\.md\) \| (.*) \|", text):
         tags = {variety.tag for variety in registry[code].varieties}
@@ -114,7 +121,7 @@ def check_readme(page: str, text: str):
     sentence = match[1]
     # Each code with CLDR spell-out rules or an ovos-number-parser writer, and no language file.
     no_file = ({re.split("[-_]", locale)[0] for locale in rbnf_locales()}
-               | set(parsers.number_writer_languages())) - set(registry)
+               | set(parsers.NUMBER_PARSER_LANGUAGES)) - set(registry)
     sources = {"OvosNumberSpeller": "ovos-number-parser", "RbnfSpeller": "CLDR spell-out"}
     for code in sorted(no_file):
         source = sources[type(core_language(code).spellers[Form.CARDINAL]).__name__]
@@ -128,6 +135,7 @@ def check_readme(page: str, text: str):
 
 def check_index(page: str, text: str):
     check_figures(page)
+    check_languages(page, text)
     listed = list(dict.fromkeys(re.findall(r"\]\(([\w/-]+\.md)\)", text)))
     for path in sorted((ROOT / "docs").glob("*.md")) + sorted((ROOT / "docs/languages").glob("*.md")):
         name = path.relative_to(ROOT / "docs").as_posix()
@@ -212,8 +220,8 @@ def check_addresses(page: str, text: str):
 
 
 def check_api(page: str, text: str):
-    if f"longer than {PROBE_TIMEOUT} seconds" not in text:
-        fail(page, f"PROBE_TIMEOUT is {PROBE_TIMEOUT} seconds")
+    if f"'{FORMAT}:" not in text:
+        fail(page, f"the revision prefix is {FORMAT}:")
 
 
 def check_errors(page: str, text: str):
@@ -234,9 +242,10 @@ def check_errors(page: str, text: str):
             fail(page, f"{child} is not a subclass of {parent}")
 
 
-NAMES = {"ar": "Arabic", "ca": "Catalan", "de": "German", "el": "Greek", "en": "English", "es": "Spanish",
-         "eu": "Basque", "fr": "French", "it": "Italian", "ja": "Japanese", "ko": "Korean", "nl": "Dutch",
-         "pt": "Portuguese", "ru": "Russian", "tdt": "Tetun Dili", "zh": "Chinese"}
+NAMES = {"ar": "Arabic", "bn": "Bengali", "ca": "Catalan", "da": "Danish", "de": "German", "el": "Greek", "en": "English",
+         "es": "Spanish", "eu": "Basque", "fr": "French", "hi": "Hindi", "it": "Italian", "ja": "Japanese",
+         "ko": "Korean",
+         "nl": "Dutch", "pt": "Portuguese", "ru": "Russian", "tdt": "Tetun Dili", "zh": "Chinese"}
 
 
 def figure_data(stem: str) -> dict:
@@ -257,7 +266,7 @@ def alt_forms_short(data: dict) -> str:
     return (f"Forms that each of {len(order)} language files reads, of {len(data['forms'])}: "
             f"{NAMES[order[0]]} reads all {count[order[0]]}, "
             + ", ".join(f"{NAMES[code]} {count[code]}" for code in order[1:3])
-            + f"; {' and '.join(fewest)} read {min(count.values())}.")
+            + f"; {', '.join(fewest[:-1])}{' and ' * (len(fewest) > 1)}{fewest[-1]} read{'s' if len(fewest) == 1 else ''} {min(count.values())}.")
 
 
 def alt_rows(data: dict) -> str:
@@ -318,7 +327,7 @@ def check_coverage(page: str, text: str):
     if not re.search(rf"^English reads all {len(read)} forms that any file reads\.", text, re.M) or top != ["en"]:
         fail(page, f"the files that read all {len(read)} forms are {top}")
     least = sorted(code for code, count in forms.items() if count == min(forms.values()))
-    if least != ["ja", "ko"] or "Japanese and Korean read three" not in text or min(forms.values()) != 3:
+    if least != ["bn"] or "Bengali reads two" not in text or min(forms.values()) != 2:
         fail(page, f"the files with the fewest forms are {least}, with {min(forms.values())}")
     counts = rows_by_language()
     biggest = sorted(counts, key=lambda code: -counts[code][0])[:3]
@@ -327,11 +336,11 @@ def check_coverage(page: str, text: str):
     cited_only = [code for code, (_, silver) in counts.items() if not silver]
     if len(cited_only) != 9 or "nine files hold only cited rows" not in text:
         fail(page, f"{len(cited_only)} files hold only cited rows")
-    silver_names = {code: NAMES[code] for code in ("nl", "de", "it", "pt", "ru", "es", "tdt")}
+    silver_names = {code: NAMES[code] for code in ("bn", "da", "hi", "nl", "de", "it", "pt", "ru", "es", "tdt")}
     silvered = sorted(code for code, (_, silver) in counts.items() if silver)
-    if silvered != sorted(silver_names) or "Seven files hold silver rows" not in text:
+    if silvered != sorted(silver_names) or "Ten files hold silver rows" not in text:
         fail(page, f"the files with silver rows are {silvered}")
-    listed = re.search(r"^Seven files hold silver rows: those of (.+?)\.", text, re.M)[1]
+    listed = re.search(r"^Ten files hold silver rows: those of (.+?)\.", text, re.M)[1]
     if sorted(re.split(r", | and ", listed)) != sorted(silver_names.values()):
         fail(page, "the silver sentence names other languages")
     if "(22, 3)" not in text or (len(supports("en-GB").forms), len(supports("ja").forms)) != (22, 3):

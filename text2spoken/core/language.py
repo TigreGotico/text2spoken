@@ -6,7 +6,7 @@ import warnings
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field, replace
 from decimal import Decimal, getcontext, localcontext
-from functools import cache, lru_cache
+from functools import cache, cached_property, lru_cache
 from importlib import import_module
 from importlib.resources import files
 from typing import TYPE_CHECKING
@@ -57,6 +57,9 @@ class LanguageSpec:
     recognizers: tuple[Recognizer, ...]
     verbalizers: Mapping[Form, Verbalizer]
     spellers: Mapping[Form, NumberSpeller]
+    writers: tuple[str, ...]
+    """The distributions that write words for the language, as `numtag`, and `parsers.DATES` when dates and times
+    read through `parsers.spoken_date` and `parsers.spoken_time`."""
     genders: frozenset[GrammaticalGender]
     default_gender: GrammaticalGender | None
     animacies: frozenset[Animacy]
@@ -95,7 +98,7 @@ class Request:
     say_as: ResolvedSayAs | None = None
     """The say-as that the call reads (section 17), or None."""
 
-    @property
+    @cached_property
     def data(self) -> FrozenMap:
         return merged_data(self.language.data, self.variety.data)
 
@@ -318,11 +321,13 @@ def core_language(code: str) -> LanguageSpec:
     tag = linguatag.with_default_region(code)
     bare = LanguageSpec(code=code, serves=(), cldr_aliases=(), varieties=(Variety(tag),), data=FrozenMap(),
                         recognizers=(recognizers.LEXICON,), verbalizers={Form.LEXICON: recognizers.speak_lexicon},
-                        spellers={}, genders=frozenset(), default_gender=None, animacies=frozenset(),
+                        spellers={}, writers=(), genders=frozenset(), default_gender=None, animacies=frozenset(),
                         noun_classes=frozenset(), numeral_systems=frozenset(), context_words=True, options={},
                         not_applicable=frozenset(OPTIONS))
     locale = cldr_locale(tag, rbnf_locales(), bare)
-    if code in parsers.number_writer_languages() and code not in RBNF_HELD:
+    writers = ["unicode-rbnf"]
+    if code in parsers.NUMBER_PARSER_LANGUAGES and code not in RBNF_HELD:
+        writers.append("ovos-number-parser")
         speller = OvosNumberSpeller({})
         one = words(parsers.pronounce_number(1, tag)).split()
         try:
@@ -359,8 +364,9 @@ def core_language(code: str) -> LanguageSpec:
         speller = RbnfSpeller(cardinal={Features(): cardinal}, ordinal=ordinals or {Features(): cardinal},
                               decimal=decimal)
         ordinal_speller, genders = speller if ordinals else None, frozenset()
-        if not ordinals and code in parsers.number_writer_languages():
+        if not ordinals and code in parsers.NUMBER_PARSER_LANGUAGES:
             ordinal_speller, genders = writer_ordinals(tag)
+            writers.append("ovos-number-parser")
         decimal_speller = speller
         minus = names[cardinal].find_special_rule(RbnfSpecialRule.NEGATIVE_NUMBER, names)
         sign_words = {} if minus is None else {
@@ -373,6 +379,7 @@ def core_language(code: str) -> LanguageSpec:
     try:
         parsers.spoken_date(tag, day=1, month=1, year=2000)
         verbalizers[Form.DATE] = recognizers.speak_spoken_date
+        writers.append(parsers.DATES)
     except NotImplementedError:
         date_locale = cldr_locale(tag, date_locales(), bare)
         pattern = None if date_locale is None else long_date(date_locale)
@@ -397,7 +404,7 @@ def core_language(code: str) -> LanguageSpec:
         spellers[Form.ORDINAL] = ordinal_speller
     return replace(bare, varieties=varieties, data=FrozenMap(data),
                    recognizers=(recognizers.LEXICON, *map(recognizers.Written, shapes), *numbers),
-                   verbalizers=verbalizers, spellers=spellers,
+                   verbalizers=verbalizers, spellers=spellers, writers=tuple(writers),
                    genders=genders | {features.gender for features in ordinals if features.gender is not None})
 
 

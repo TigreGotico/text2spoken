@@ -2059,6 +2059,7 @@ LANGUAGE = LanguageSpec(
         Form.DECIMAL: speak_french_decimal,
         Form.CARDINAL: speak_cardinal,
     },
+    writers=("numtag",),
     spellers={
         Form.CARDINAL: SPELLER,
         Form.ORDINAL: SPELLER,

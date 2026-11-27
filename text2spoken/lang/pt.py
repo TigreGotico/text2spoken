@@ -285,6 +285,19 @@ clocks are lot numbers. A clock `24:00` is midnight, the end of the day: Pribera
 hora do dia civil que acaba às 24h00 (ou 00h00, o mesmo momento em que começa a primeira hora do dia seguinte)". So it
 reads as `0:00` does, with the ruling above: `Fecha às 24:00` reads "Fecha à meia-noite".
 
+A clock right after a verb of `article_time_verbs`, an event at a time such as `começa` or `fecha`, reads with the
+article `às`, or the word of `time_contractions` for "uma", "meia-noite" and "meio-dia": Ciberdúvidas 32865: «ocorre
+o artigo definido, quando se pretende referir uma hora precisa ou uma hora marcada: «o comboio chegou às [= a + as]
+quatro e cinquenta»». So `O jogo começa 20:45.` reads "O jogo começa às vinte e quarenta e cinco." and `Abre 1:00`
+reads "Abre à uma hora". A verb of `singular_time_verbs` right before a clock takes the number of the hour:
+Ciberdúvidas 37265, after Raposo et al., Gramática do Português, pp. 2482–2483: «o verbo ser concorda em número com o
+constituinte que desempenha a função de predicativo do sujeito: (2) «São duas horas.» (3) «É uma da tarde.»». So
+`É 16:30.` reads "São dezasseis e trinta.", and `É 1:30.` "É uma e trinta.". "meia-noite" and "meio-dia" are
+singular, so `É 0:00` reads "É meia-noite". The verb keeps the case of its first letter. Any other time in the hour 0
+after `é` stays as written, because pt-BR reads the hour zero in the singular (Dicio, above). The `é` that tells the
+time has no subject, so a word right before it other than an adverb of `time_verb_adverbs` keeps the clock as
+written: in `A proporção da tela é 16:10.` the clock is a ratio.
+
 A time that `h`, `hora` or `horas` follows, with only spaces or tabs between, reads that word once. The word is the
 unit that `h` stands for (Ciberdúvidas 14648: "17:30 h"; "escrita por extenso da unidade"), and the reading of a whole
 hour or of a time with `h` already holds the unit once: "às onze horas e trinta minutos" (Ciberdúvidas, O nosso idioma,
@@ -569,12 +582,17 @@ DATA = freeze({
     "range_marks": ["-", "–"],
     "clock_marks": [{"mark": ":", "seconds": False, "needs": "evidence"},
                     {"mark": "h", "seconds": False, "needs": "none", "closes_hour": True}],
-    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são"],
+    "time_words": ["às", "as", "à", "pelas", "das", "até", "desde", "são", "é", "começa", "começam", "termina",
+                   "terminam", "abre", "fecha", "parte", "chega", "chegam", "sai"],
     "point_time_words": ["às", "das", "pelas"],
     "point_one_words": ["à"],
     "point_article_prepositions": {"as": ["até", "desde", "após", "para", "entre"]},
     "amount_words": ["vezes", "valores", "pp.", "p.p."],
     "plural_time_verbs": ["são"],
+    "singular_time_verbs": {"é": "são"},
+    "time_verb_adverbs": ["já", "agora", "ainda"],
+    "article_time_verbs": ["começa", "começam", "termina", "terminam", "abre", "fecha", "parte", "chega", "chegam",
+                           "sai"],
     "time_suffixes": ["h"],
     "time_units": {"h": {"one": "hora", "other": "horas"}},
     "time_contractions": {"às": {"0": "à", "1": "à", "12": "ao"}, "à": {"0": "à", "1": "à", "12": "ao"},
@@ -1076,7 +1094,18 @@ def speak_time(span: Span, context: SpanContext) -> str:
             reading = parsers.spoken_time(tag, hour, minute)
     except ValueError as error:
         raise DeclinedReading(f"ovos-date-parser reads no time {hour}:{minute:02}: {error}") from error
-    return _contracted_word(fields["prefix"] or "", hour, request) + reading
+    prefix = fields["prefix"] or ""
+    verb = prefix.rstrip()
+    if verb.lower() in request.data["article_time_verbs"]:
+        contracted = hour == 1 or _day_point(fields) is not None
+        return prefix + (request.data["time_contractions"]["às"][str(hour)] if contracted else "às") + " " + reading
+    plural = request.data["singular_time_verbs"].get(verb.lower())
+    if plural is not None:
+        if hour != 1 and _day_point(fields) is None:
+            plural = plural.capitalize() if verb[0].isupper() else plural
+            prefix = plural + prefix[len(verb):]
+        return prefix + reading
+    return _contracted_word(prefix, hour, request) + reading
 
 
 def _currency(currency: FrozenMap, category: str) -> str:
@@ -1260,6 +1289,21 @@ class Clock(TimeClock):
                 one_hour = fields["minute"] == 0 and day_hour(fields["hour"], fields["period"]) == 1
                 if (fields["suffix"] or fields["minute"] == 0) and (words[after].text.lower() != "hora" or one_hour):
                     span = replace(span, end=words[after].end)
+            spaced = word is not None and text[word.end:span.start].isspace() \
+                and not (span.fields["suffix"] or span.fields["period"])
+            verb = word.text.lower() if spaced else ""
+            if verb in request.data["singular_time_verbs"]:
+                previous = words[index - 2] if index > 1 else None
+                subject = previous is not None and text[previous.end:word.start].isspace() \
+                    and previous.text.lower() not in request.data["time_verb_adverbs"]
+                if not subject and (span.fields["hour"] != 0 or _day_point(span.fields) is not None):
+                    out.append(replace(span, start=word.start,
+                                       fields=FrozenMap({**span.fields, "prefix": text[word.start:span.start]})))
+                continue
+            if verb in request.data["article_time_verbs"]:
+                out.append(replace(span, start=word.start,
+                                   fields=FrozenMap({**span.fields, "prefix": text[word.start:span.start]})))
+                continue
             # Any time in the hour 1 reads "uma", which is singular.
             hour = 1 if day_hour(span.fields["hour"], span.fields["period"]) == 1 else _day_point(span.fields)
             if hour is None:
@@ -2105,6 +2149,7 @@ LANGUAGE = LanguageSpec(
         Form.DECIMAL: speak_point_decimal, Form.CARDINAL: speak_cardinal, Form.LETTERS: speak_letters,
         Form.ELECTRONIC: speak_electronic, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
     },
+    writers=("numtag", "tugalex", parsers.DATES),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=drop_affixes,  # the one suffix, the `h` of `14:30h`, is a word of the time reading
     genders=frozenset({MASCULINE, FEMININE}),

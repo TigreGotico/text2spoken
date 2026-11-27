@@ -154,4 +154,4 @@ Italian leaves these forms as written, or reads them as shown:
 | `Una temperatura di -1 gradi.` | `it-IT` | Una temperatura di meno uno gradi. | 1 after a minus sign reads the bare number before a plural noun. A speaker says "meno un grado". |
 
 ---
-[← French](fr.md) · [Home](../index.md) · [Japanese →](ja.md)
+[← Hindi](hi.md) · [Home](../index.md) · [Japanese →](ja.md)

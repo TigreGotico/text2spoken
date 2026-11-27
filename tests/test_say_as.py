@@ -12,7 +12,7 @@ from text2spoken import (ArgumentTypeError, Form, FrozenMap, GrammaticalGender, 
                          ParameterNotHonouredWarning, SayAs, UnreadFormError, UnsupportedParameterError, analyze,
                          normalize)
 from text2spoken.core import say_as as module
-from text2spoken.core.parsers import number_writer_languages
+from text2spoken.core.parsers import NUMBER_PARSER_LANGUAGES
 from text2spoken.core.spellers import RBNF_HELD
 
 with open(DATA / "say_as" / "rows.tsv", encoding="utf-8") as f:
@@ -26,8 +26,15 @@ def say_as(row: dict) -> SayAs:
     return SayAs(interpret_as=row["interpret_as"], format=row["format"] or None, detail=row["detail"] or None)
 
 
+def params(row: dict) -> NormalizationParams | None:
+    """The `gender` column sets the default gender of the row's language, as a say-as ordinal reads it."""
+    if not row["gender"]:
+        return None
+    return NormalizationParams(default_gender=FrozenMap({row["tag"].split("-")[0]: GrammaticalGender(row["gender"])}))
+
+
 def read(row: dict) -> str:
-    return normalize(row["text"], row["tag"], say_as=say_as(row))
+    return normalize(row["text"], row["tag"], params(row), say_as=say_as(row))
 
 
 @pytest.mark.parametrize("row", ROWS, ids=[row["id"] for row in ROWS])
@@ -127,7 +134,7 @@ UNSUPPORTED = [
     ("2024-01-02", "en-US", "vxml:date"),
     ("3", "cy-GB", "ordinal"),
     ("3", "yo-NG", "digits"),
-    ("W3C", "bn-IN", "characters"),
+    ("W3C", "ha-NG", "characters"),
 ]
 """A value that the core does not read, a prefixed value, and a value whose form the language does not read."""
 
@@ -240,7 +247,7 @@ ROUND_NUMBERS = [100, 200, 300, 1000, 2000, 10000, 1000000, 1000000000]
 """Round numbers, for which some writers of ovos-number-parser return the cardinal as the ordinal."""
 
 
-WRITER_LANGUAGES = sorted(number_writer_languages() - RBNF_HELD)
+WRITER_LANGUAGES = sorted(NUMBER_PARSER_LANGUAGES - RBNF_HELD)
 """The languages whose numbers the writer reads. RBNF `da` reads 2000 "to tusinde" as an ordinal, a Danish cardinal too."""
 
 
