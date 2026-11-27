@@ -1111,8 +1111,8 @@ def _named(text: str, span: Span, data: FrozenMap) -> bool:
     numéraux employés comme noms"). So a number right after a singular determiner of `determiners`, as in "le 21",
     names a number, as "le quatre-vingt de la rue des Érables (le numéro 80)" does ("Pluriel de vingt, de cent et de
     mille"). So does a number after a determiner and a word, as in "le joueur 1" and "la chambre 80", unless a
-    plural word follows it, which the number counts: "le film 21 fois". A plural determiner counts: "les 21
-    pommes"."""
+    plural word or an adjective of `preposed_adjectives` follows it, which belongs to the noun that the number
+    counts: "le film 21 fois", "ce film 1 seule fois". A plural determiner counts: "les 21 pommes"."""
     determiners = data["determiners"]
     word, begin = _word_before(text, span.start)
     lower = word.lower()
@@ -1122,11 +1122,30 @@ def _named(text: str, span: Span, data: FrozenMap) -> bool:
         return False
     if determiners.get(_word_before(text, begin)[0].lower()) is None:
         return False
-    after = text[span.end:].lstrip(GROUP_SPACES)
+    word = _word_after(text, span.end).lower()
+    if word in data["preposed_adjectives"]:
+        return False
+    return not word or not word.endswith(("s", "x", "z")) or word in data["function_words"]
+
+
+def _word_after(text: str, end: int) -> str:
+    """The word, with its hyphens, that follows text[:end] after spaces, or ""."""
+    after = text[end:].lstrip(GROUP_SPACES)
     stop = 0
     while stop < len(after) and (is_letter(after[stop]) or after[stop] == "-"):
         stop += 1
-    return stop == 0 or not after[:stop].endswith(("s", "x", "z")) or after[:stop].lower() in data["function_words"]
+    return after[:stop]
+
+
+def _counts(text: str, end: int, data: FrozenMap) -> bool:
+    """Whether the number that ends at `end` counts the word after it: a noun of the noun list that is no function
+    word, or an adjective of `preposed_adjectives`, as in "page 80 et 21 pages"."""
+    word = _word_after(text, end)
+    lower = word.lower()
+    if not word or lower in _stops(tuple(data["function_words"]), tuple(data["no_de_words"]),
+                                   tuple(data["no_noun_words"])):
+        return False
+    return lower in data["preposed_adjectives"] or _noun_gender(word, data) is not None
 
 
 def _era(text: str, end: int, data: FrozenMap) -> bool:
@@ -1492,7 +1511,8 @@ class FrenchCardinal(Cardinal):
     """The shared cardinal recognizer. The start of a span that a label of `ordinal_nouns` governs, with no lead or
     prefix between them, goes into `Request.memo` under `_LABELLED`, and so does a number that `_named` finds, a year
     before an era abbreviation (`_era`), and a number that a link of `label_links` joins to such a number, as in "les
-    années 70 et 80" and "les numéros 80 à 90". A round million or milliard that a noun
+    années 70 et 80" and "les numéros 80 à 90", unless it counts the word after it (`_counts`), as in "page 80 et
+    21 pages". A round million or milliard that a noun
     follows reaches to the noun, as `_count` gives it, unless a noun of `number_abbreviations` labels it, as in
     "n° 1 000 000", which names a number and counts nothing."""
 
@@ -1505,7 +1525,8 @@ class FrenchCardinal(Cardinal):
                 continue
             if (_labelled(text, span.start, data, data["ordinal_nouns"]) or _named(text, span, data)
                     or _era(text, span.end, data)
-                    or labelled_end is not None and text[labelled_end:span.start] in data["label_links"]):
+                    or labelled_end is not None and text[labelled_end:span.start] in data["label_links"]
+                    and not _counts(text, span.end, data)):
                 request.memo.setdefault(_LABELLED, set()).add(span.start)
                 labelled_end = span.end
                 yield span
