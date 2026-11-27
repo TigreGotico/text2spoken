@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a165](https://github.com/TigreGotico/text2spoken/tree/0.0.2a165) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a164...0.0.2a165)
+
+**Merged pull requests:**
+
+- docs: README, docs index, navigation and walk-throughs [\#699](https://github.com/TigreGotico/text2spoken/pull/699) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a164](https://github.com/TigreGotico/text2spoken/tree/0.0.2a164) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a163...0.0.2a164)
@@ -7,7 +15,6 @@
 **Merged pull requests:**
 
 - fix: read ovos-number-parser languages from a fixed set [\#707](https://github.com/TigreGotico/text2spoken/pull/707) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-- docs: README, docs index, navigation and walk-throughs [\#699](https://github.com/TigreGotico/text2spoken/pull/699) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a163](https://github.com/TigreGotico/text2spoken/tree/0.0.2a163) (2026-11-27)
 
