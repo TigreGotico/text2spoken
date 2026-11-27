@@ -224,7 +224,6 @@ class NumtagSpeller:
 
 
 RBNF_HELD = frozenset({
-    "da",  # "og" before the last part after tusind: 1001 reads "tusind en"; da.wikipedia writes "Tusind og en Nat"
     "sk",  # thousands 2000 to 2999: "dva tisíce", where Wiktionary writes "dvetisíc" and RBNF keeps "dve"
 })
 """Languages with a writer of their own in ovos-number-parser that a language with no file still reads through
