@@ -1,5 +1,6 @@
 {
  "order": [
+  "kab",
   "ja",
   "ko",
   "el",
@@ -189,6 +190,10 @@
   "ja": [
    "cardinal",
    "decimal",
+   "lexicon"
+  ],
+  "kab": [
+   "cardinal",
    "lexicon"
   ],
   "ko": [

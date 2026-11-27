@@ -67,6 +67,7 @@ Each language page gives what the language reads, its varieties, its options, it
 | [French](docs/languages/fr.md) | `fr-FR`, `fr-CA`, `fr-CH`, and each other `fr-*` tag with the number words of its CLDR locale |
 | [Italian](docs/languages/it.md) | `it-IT`, `it-CH`, `it-SM` |
 | [Japanese](docs/languages/ja.md) | `ja-JP` |
+| [Kabyle](docs/languages/kab.md) | `kab-DZ` |
 | [Korean](docs/languages/ko.md) | `ko-KR` |
 | [Dutch](docs/languages/nl.md) | `nl-NL`, `nl-BE`, `nl-SR` |
 | [Portuguese](docs/languages/pt.md) | `pt-PT`, `pt-BR` |
