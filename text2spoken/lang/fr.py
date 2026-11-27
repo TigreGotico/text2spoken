@@ -1930,7 +1930,7 @@ class Abbreviation:
         while stop < len(following) and is_letter(following[stop]):
             stop += 1
         word = following[:stop].lower()
-        elided = following[stop:stop + 1] == "'"
+        elided = following[stop:stop + 1] in tuple(data["elision_marks"])
         if (word + "'" if elided else word) in data["name_particles"]:
             if following[stop + elided:].lstrip(GROUP_SPACES)[:1].isupper():
                 return True
@@ -1979,9 +1979,11 @@ class Abbreviation:
         if index >= len(text):
             return False
         stop = index
-        while stop < len(text) and (is_letter(text[stop]) or text[stop] == "'"):
+        # an elided particle may be written with the typographic apostrophe
+        # ("d’Ornano"), as the elision_marks of the language list it
+        while stop < len(text) and (is_letter(text[stop]) or text[stop] in "'\u2019"):
             stop += 1
-        word = text[index:stop]
+        word = text[index:stop].replace("\u2019", "'")
         elided = word[:word.find("'") + 1] if "'" in word else word
         if word.lower() in particles or elided.lower() in particles:
             return stop < len(text)
