@@ -1,0 +1,22 @@
+id	tag	form	text	expected	source	checked_by
+hi-001	hi-IN	cardinal	कक्षा में 21 छात्र हैं।	कक्षा में इक्कीस छात्र हैं।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: इक्कीस	unchecked
+hi-002	hi-IN	cardinal	कक्षा में २१ छात्र हैं।	कक्षा में इक्कीस छात्र हैं।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: इक्कीस	unchecked
+hi-003	hi-IN	cardinal	उसकी उम्र 99 साल है।	उसकी उम्र निन्यानवे साल है।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: निन्यानवे	unchecked
+hi-004	hi-IN	cardinal	उसकी उम्र ९९ साल है।	उसकी उम्र निन्यानवे साल है।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: निन्यानवे	unchecked
+hi-005	hi-IN	cardinal	पुस्तक में 34 अध्याय हैं।	पुस्तक में चौंतीस अध्याय हैं।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: चौंतीस	unchecked
+hi-006	hi-IN	cardinal	गाँव में ६७ घर हैं।	गाँव में सड़सठ घर हैं।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: सड़सठ	unchecked
+hi-007	hi-IN	cardinal	देश की आबादी 1000000000 से अधिक थी।	देश की आबादी एक अरब से अधिक थी।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 53: अरब (सौ करोड नहीं); silver: no source writes एक before अरब	unchecked
+hi-008	hi-IN	cardinal	उसने १,००,००० रुपये दिए।	उसने एक लाख रुपये दिए।	Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 53: लाख; silver: no source writes एक before लाख	unchecked
+hi-009	hi-IN	cardinal	तापमान -5 डिग्री था।	तापमान ऋण पाँच डिग्री था।	CLDR RBNF hi (unicode-rbnf hi.xml), spellout-cardinal: -x: ऋण →→;; Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: पाँच	unchecked
+hi-010	hi-IN	decimal	दर 2.75 है।	दर दो दशमलव सात पाँच है।	CLDR RBNF hi (unicode-rbnf hi.xml), spellout-cardinal: x.x: ←← दशमलव →→;; Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: दो, सात, पाँच	unchecked
+hi-011	hi-IN	decimal	दर २.७५ है।	दर दो दशमलव सात पाँच है।	CLDR RBNF hi (unicode-rbnf hi.xml), spellout-cardinal: x.x: ←← दशमलव →→;; Kendriya Hindi Nideshalaya 2016, Devanagari Lipi tatha Hindi Vartani ka Manakikaran, 5.1, p. 52: दो, सात, पाँच	unchecked
+hi-012	hi-IN	none	स्क्रीन का अनुपात 16:9 है।	स्क्रीन का अनुपात 16:9 है।	Section 13: a row that must stay unread	unchecked
+hi-013	hi-IN	none	यूहन्ना 3:16 पढ़ो।	यूहन्ना 3:16 पढ़ो।	Section 13: a row that must stay unread	unchecked
+hi-014	hi-IN	none	हैशटैग #decade चला।	हैशटैग #decade चला।	Section 13: a row that must stay unread	unchecked
+hi-015	hi-IN	none	तारीख 13/13/2024 नहीं है।	तारीख 13/13/2024 नहीं है।	Section 13: a row that must stay unread	unchecked
+hi-016	hi-IN	none	कीमत 5 € है।	कीमत 5 € है।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; hi.py keeps that scope	unchecked
+hi-017	hi-IN	none	वृद्धि 20% है।	वृद्धि 20% है।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; hi.py keeps that scope	unchecked
+hi-018	hi-IN	none	वज़न 5 kg है।	वज़न 5 kg है।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; hi.py keeps that scope	unchecked
+hi-019	hi-IN	none	तारीख 25/12/2024 है।	तारीख 25/12/2024 है।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; hi.py keeps that scope	unchecked
+hi-020	hi-IN	none	संभावना 1/2 है।	संभावना 1/2 है।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; hi.py keeps that scope	unchecked
+hi-021	hi-IN	none	मद 1.a देखें।	मद 1.a देखें।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; hi.py keeps that scope	unchecked

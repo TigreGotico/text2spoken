@@ -881,6 +881,7 @@ LANGUAGE = LanguageSpec(
         Form.FRACTION: speak_fraction, Form.RANGE: speak_range, Form.ORDINAL: speak_ordinal, Form.ROMAN: speak_roman,
         Form.ABBREVIATION: speak_abbreviation, Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
+    writers=("ovos-number-parser",),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     genders=frozenset(),
     default_gender=None,

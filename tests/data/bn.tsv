@@ -1,0 +1,23 @@
+id	tag	form	text	expected	source	checked_by
+bn-001	bn-BD	cardinal	ক্লাসে 21 জন ছাত্র আছে।	ক্লাসে একুশ জন ছাত্র আছে।	English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ২১ একুশ; Thompson 2012, Bengali, Appendices, pp. 373-374: 21 ekus	unchecked
+bn-002	bn-BD	cardinal	ক্লাসে ২১ জন ছাত্র আছে।	ক্লাসে একুশ জন ছাত্র আছে।	English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ২১ একুশ; Thompson 2012, Bengali, Appendices, pp. 373-374: 21 ekus	unchecked
+bn-003	bn-BD	cardinal	তার বয়স ৬৭ বছর।	তার বয়স সাতষট্টি বছর।	English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ৬৭ সাতষট্টি	unchecked
+bn-004	bn-BD	cardinal	বইটিতে 34টি অধ্যায় নেই, 99 জন পাঠক আছে।	বইটিতে 34টি অধ্যায় নেই, নিরানব্বই জন পাঠক আছে।	English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ৯৯ নিরানব্বই; a digit joined to the classifier টি is one token and stays as written	unchecked
+bn-005	bn-BD	cardinal	গ্রামে ১০০ জন লোক থাকে।	গ্রামে এক শ জন লোক থাকে।	Thompson 2012, Bengali, Appendices, pp. 373-374: 100 ek so; English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ১০০ একশ, শ	unchecked
+bn-006	bn-BD	cardinal	মেলায় 1000 জন এসেছিল।	মেলায় এক হাজার জন এসেছিল।	Thompson 2012, Bengali, Appendices, pp. 373-374: 1000 ek hajar; English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ১,০০০ হাজার	unchecked
+bn-007	bn-BD	cardinal	সে ১,০০,০০০ টাকা পেয়েছে।	সে এক লাখ টাকা পেয়েছে।	Thompson 2012, Bengali, Appendices, pp. 373-374: 100.000 ek lakh; English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ১,০০,০০০ লাখ	unchecked
+bn-008	bn-BD	cardinal	দেশে 1,00,00,000 মানুষ ভোট দিয়েছে।	দেশে এক কোটি মানুষ ভোট দিয়েছে।	English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ১,০০,০০,০০০ কোটি; silver: no source writes এক before কোটি	unchecked
+bn-009	bn-IN	cardinal	আমার 1234567 টাকা আছে।	আমার বারো লাখ চৌত্রিশ হাজার পাঁচ শ সাতষট্টি টাকা আছে।	English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ১২ বারো, ৩৪ চৌত্রিশ, ৬৭ সাতষট্টি, লাখ, হাজার; Thompson 2012, Bengali, Appendices, pp. 373-374: 5 pac, 200 du so; the parts are added by hand	unchecked
+bn-010	bn-IN	cardinal	আমার ১২,৩৪,৫৬৭ টাকা আছে।	আমার বারো লাখ চৌত্রিশ হাজার পাঁচ শ সাতষট্টি টাকা আছে।	English Wiktionary, Appendix:Bengali numerals (oldid 95460450): ১২ বারো, ৩৪ চৌত্রিশ, ৬৭ সাতষট্টি, লাখ, হাজার; Thompson 2012, Bengali, Appendices, pp. 373-374: 5 pac, 200 du so; the parts are added by hand	unchecked
+bn-011	bn-BD	none	দাম 3.5 টাকা বাড়ল।	দাম 3.5 টাকা বাড়ল।	bn.py module docstring: numtag reads no Bengali decimal, and no source in the file gives the decimal word	unchecked
+bn-012	bn-BD	none	তাপমাত্রা -5 ডিগ্রি।	তাপমাত্রা -5 ডিগ্রি।	bn.py module docstring: numtag reads no Bengali minus sign	unchecked
+bn-013	bn-BD	none	পর্দার অনুপাত 16:9।	পর্দার অনুপাত 16:9।	Section 13: a row that must stay unread	unchecked
+bn-014	bn-BD	none	যোহন 3:16 পড়ুন।	যোহন 3:16 পড়ুন।	Section 13: a row that must stay unread	unchecked
+bn-015	bn-BD	none	হ্যাশট্যাগ #decade জনপ্রিয় হল।	হ্যাশট্যাগ #decade জনপ্রিয় হল।	Section 13: a row that must stay unread	unchecked
+bn-016	bn-BD	none	তারিখ 13/13/2024 নেই।	তারিখ 13/13/2024 নেই।	Section 13: a row that must stay unread	unchecked
+bn-017	bn-BD	none	দাম 5 € মাত্র।	দাম 5 € মাত্র।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; bn.py keeps that scope	unchecked
+bn-018	bn-BD	none	বৃদ্ধি 20% হয়েছে।	বৃদ্ধি 20% হয়েছে।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; bn.py keeps that scope	unchecked
+bn-019	bn-BD	none	ওজন 5 kg মাত্র।	ওজন 5 kg মাত্র।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; bn.py keeps that scope	unchecked
+bn-020	bn-BD	none	তারিখ 25/12/2024 ছিল।	তারিখ 25/12/2024 ছিল।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; bn.py keeps that scope	unchecked
+bn-021	bn-BD	none	সম্ভাবনা 1/2 মাত্র।	সম্ভাবনা 1/2 মাত্র।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; bn.py keeps that scope	unchecked
+bn-022	bn-BD	none	অনুচ্ছেদ 1.a দেখুন।	অনুচ্ছেদ 1.a দেখুন।	design section 6.1: a language with no file reads no money, percent, measure, numeric date, fraction or ordinal, so the form stays as written; bn.py keeps that scope	unchecked

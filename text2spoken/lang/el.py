@@ -571,6 +571,7 @@ LANGUAGE = LanguageSpec(
                  SignedMoney(), SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal, Form.DATE: speak_date,
                  Form.PERCENT: speak_percent, Form.FRACTION: speak_fraction},
+    writers=("unicode-rbnf",),
     spellers={Form.CARDINAL: SPELLER, Form.FRACTION: SPELLER, Form.ORDINAL: SPELLER},
     genders=frozenset({M, F, N}),
     default_gender=N,

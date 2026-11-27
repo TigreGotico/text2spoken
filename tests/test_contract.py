@@ -263,7 +263,7 @@ def test_each_shared_recognizer_reads_only_its_declared_keys(monkeypatch):
     `normalize` call that reads an emoji name, and is not recorded."""
     read: dict[str, set[str]] = {name: set() for name in SHARED}
     used = set()
-    data = Request.data.fget
+    data = Request.data.func
 
     def recording(request):
         if "recognizer" not in request.memo:
@@ -411,6 +411,50 @@ def test_clause_9_bites(gendered):
         contract.clause_9("qaa", gendered.LANGUAGE, expected_cells=["Tenho um carro."])
 
 
+class _OrdinalGender(_SameWords):
+    def ordinal(self, digits, features, request):
+        return {GrammaticalGender.FEMININE: "pahli"}.get(features.gender, "pahla")
+
+
+PAHLA_ROWS = [("1", "masculine", "pahla"), ("1", "feminine", "pahli")]
+
+
+def test_clause_9_passes_when_only_the_ordinals_differ_by_gender(gendered):
+    speller = _OrdinalGender()
+    contract.clause_9("qaa", replace(gendered.LANGUAGE, spellers={Form.CARDINAL: speller, Form.ORDINAL: speller}),
+                      expected_cells=["un"], ordinal_rows=PAHLA_ROWS)
+
+
+def test_clause_9_bites_when_a_gender_has_no_ordinal_row(gendered):
+    speller = _OrdinalGender()
+    with pytest.raises(AssertionError, match="no say-as ordinal row holds a feminine word"):
+        contract.clause_9("qaa", replace(gendered.LANGUAGE, spellers={Form.CARDINAL: speller, Form.ORDINAL: speller}),
+                          expected_cells=["un"], ordinal_rows=PAHLA_ROWS[:1])
+
+
+def test_clause_9_bites_when_no_words_differ_by_gender(gendered):
+    speller = _SameWords()
+    speller.ordinal = speller.cardinal
+    with pytest.raises(AssertionError, match="no say-as ordinal row holds"):
+        contract.clause_9("qaa", replace(gendered.LANGUAGE, spellers={Form.CARDINAL: speller, Form.ORDINAL: speller}),
+                          expected_cells=["un"], ordinal_rows=[("1", "masculine", "un"), ("1", "feminine", "un")])
+
+
+class _GenderBlind:
+    def __init__(self, speller):
+        self.speller = speller
+
+    def cardinal(self, digits, features, request):
+        return self.speller.cardinal(digits, replace(features, gender=None), request)
+
+
+def test_clause_9_bites_on_gender_blind_cardinals():
+    pt = import_module("text2spoken.lang.pt").LANGUAGE
+    blind = replace(pt, spellers={**pt.spellers, Form.CARDINAL: _GenderBlind(pt.spellers[Form.CARDINAL])})
+    with pytest.raises(AssertionError):
+        contract.clause_9("pt", blind)
+
+
 def test_clause_10_bites(monkeypatch, en):
     broken = replace(en, context_words=False)
     monkeypatch.setattr(loader, "_registry", lambda: {"en": broken})
@@ -545,8 +589,9 @@ def test_clause_12_sandbox_sees_a_file_read_and_a_new_module(tmp_path):
     import os
     import sys
 
-    (tmp_path / "reads_a_file.py").write_text("import csv\nopen(__file__.replace('.py', '.txt'), 'w').close()\n")
+    (tmp_path / "sandbox_new_module.py").write_text("")
+    (tmp_path / "reads_a_file.py").write_text("import sandbox_new_module\nopen(__file__.replace('.py', '.txt'), 'w').close()\n")
     events, added = contract.sandbox_import("reads_a_file", str(tmp_path / "__pycache__"),
                                             path=os.pathsep.join([str(tmp_path), *sys.path]))
     assert any(e.startswith("open ") and e.endswith("reads_a_file.txt") for e in events)
-    assert "csv" in added
+    assert "sandbox_new_module" in added

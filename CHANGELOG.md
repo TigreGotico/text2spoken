@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.0.2a167](https://github.com/TigreGotico/text2spoken/tree/0.0.2a167) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a166...0.0.2a167)
+
+**Merged pull requests:**
+
+- refactor\(ru\): trailing-zero decimals read through numtag [\#718](https://github.com/TigreGotico/text2spoken/pull/718) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a166](https://github.com/TigreGotico/text2spoken/tree/0.0.2a166) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a165...0.0.2a166)
+
+**Merged pull requests:**
+
+- feat: read Russian numbers through numtag [\#712](https://github.com/TigreGotico/text2spoken/pull/712) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a165](https://github.com/TigreGotico/text2spoken/tree/0.0.2a165) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a164...0.0.2a165)
+
+**Merged pull requests:**
+
+- docs: README, docs index, navigation and walk-throughs [\#699](https://github.com/TigreGotico/text2spoken/pull/699) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a164](https://github.com/TigreGotico/text2spoken/tree/0.0.2a164) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a163...0.0.2a164)
+
+**Merged pull requests:**
+
+- fix: read ovos-number-parser languages from a fixed set [\#707](https://github.com/TigreGotico/text2spoken/pull/707) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a163](https://github.com/TigreGotico/text2spoken/tree/0.0.2a163) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a162...0.0.2a163)
+
+**Merged pull requests:**
+
+- fix\(bn\): declare the numtag writer [\#711](https://github.com/TigreGotico/text2spoken/pull/711) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a162](https://github.com/TigreGotico/text2spoken/tree/0.0.2a162) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a161...0.0.2a162)
+
+**Merged pull requests:**
+
+- perf: compute Request.data once per request [\#702](https://github.com/TigreGotico/text2spoken/pull/702) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- refactor: drop the unused SPELLER\_METHODS constant [\#701](https://github.com/TigreGotico/text2spoken/pull/701) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+- feat: Bengali language file with numtag cardinals [\#694](https://github.com/TigreGotico/text2spoken/pull/694) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+## [0.0.2a161](https://github.com/TigreGotico/text2spoken/tree/0.0.2a161) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a160...0.0.2a161)
+
+**Merged pull requests:**
+
+- refactor: revision is a plain version string; add distributions\(lang\) [\#698](https://github.com/TigreGotico/text2spoken/pull/698) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a160](https://github.com/TigreGotico/text2spoken/tree/0.0.2a160) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a159...0.0.2a160)
@@ -320,57 +378,29 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a118...0.0.2a119)
 
-**Merged pull requests:**
-
-- fix\(core\): read a phone number only with evidence, in one shared recognizer [\#529](https://github.com/TigreGotico/text2spoken/pull/529) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a118](https://github.com/TigreGotico/text2spoken/tree/0.0.2a118) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a117...0.0.2a118)
-
-**Merged pull requests:**
-
-- fix\(ar\): read the CLDR currency symbols and ISO codes of the Arabic varieties [\#558](https://github.com/TigreGotico/text2spoken/pull/558) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a117](https://github.com/TigreGotico/text2spoken/tree/0.0.2a117) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a116...0.0.2a117)
 
-**Merged pull requests:**
-
-- fix\(ar\): read a number after a Latin code or موديل in its citation form [\#549](https://github.com/TigreGotico/text2spoken/pull/549) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a116](https://github.com/TigreGotico/text2spoken/tree/0.0.2a116) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a115...0.0.2a116)
-
-**Merged pull requests:**
-
-- fix\(pt\): read a full-stop time after à and as, and keep it before any CLDR unit [\#543](https://github.com/TigreGotico/text2spoken/pull/543) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a115](https://github.com/TigreGotico/text2spoken/tree/0.0.2a115) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a114...0.0.2a115)
 
-**Merged pull requests:**
-
-- fix\(ar\): read a number after رقم in its citation form, and كم؟ as the question word [\#541](https://github.com/TigreGotico/text2spoken/pull/541) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a114](https://github.com/TigreGotico/text2spoken/tree/0.0.2a114) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a113...0.0.2a114)
 
-**Merged pull requests:**
-
-- fix\(pt\): read a clock time with a full stop after às, das or pelas [\#522](https://github.com/TigreGotico/text2spoken/pull/522) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a113](https://github.com/TigreGotico/text2spoken/tree/0.0.2a113) (2026-11-24)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a112...0.0.2a113)
-
-**Merged pull requests:**
-
-- fix\(pt\): read a year before a comma, a colon or a bracket in the masculine [\#524](https://github.com/TigreGotico/text2spoken/pull/524) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a112](https://github.com/TigreGotico/text2spoken/tree/0.0.2a112) (2026-11-24)
 

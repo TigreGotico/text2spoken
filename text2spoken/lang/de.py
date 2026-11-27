@@ -724,6 +724,7 @@ LANGUAGE = LanguageSpec(
                  TitleAbbreviation(), SHARED["decimal"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon,
                  **{form: _swiss_verbalizer(verbalizer) for form, verbalizer in _VERBALIZERS.items()}},
+    writers=("numtag", "unicode-rbnf"),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},
     attach=attach,

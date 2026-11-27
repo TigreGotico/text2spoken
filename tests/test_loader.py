@@ -439,7 +439,7 @@ def test_the_languages_without_the_rules_are_listed():
     from unicode_rbnf.engine import RbnfSpecialRule, ReplaceRulePart
 
     from text2spoken.core.language import cldr_number_marks
-    from text2spoken.core.parsers import number_writer_languages
+    from text2spoken.core.parsers import NUMBER_PARSER_LANGUAGES
     from text2spoken.core.spellers import RBNF_HELD
 
     def holds(names, name, rule):
@@ -465,7 +465,7 @@ def test_the_languages_without_the_rules_are_listed():
         for rule, locales in missing.items():
             if not holds(names, cardinal, rule):
                 locales.add(locale)
-    parser = sorted(code for code in number_writer_languages() if code not in RBNF_HELD and not language_file(code))
+    parser = sorted(code for code in NUMBER_PARSER_LANGUAGES if code not in RBNF_HELD and not language_file(code))
     assert sorted(missing[RbnfSpecialRule.NEGATIVE_NUMBER]) == list(NO_MINUS_RULE)
     assert sorted(missing[RbnfSpecialRule.IMPROPER_FRACTION]) == list(NO_DECIMAL_RULE)
     assert [code for code in parser if code not in cldr_number_marks()] == list(NO_CLDR_MARKS)

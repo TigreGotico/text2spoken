@@ -90,6 +90,7 @@ LANGUAGE = LanguageSpec(
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_da_cardinal, Form.DECIMAL: speak_decimal,
                  Form.DATE: speak_cldr_date},
     spellers={Form.CARDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.ORDINAL: ORDINAL},
+    writers=("numtag", "unicode-rbnf"),
     genders=frozenset(),
     default_gender=None,
     animacies=frozenset(),

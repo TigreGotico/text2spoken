@@ -1,6 +1,8 @@
 {
  "order": [
+  "bn",
   "da",
+  "hi",
   "ja",
   "ko",
   "el",
@@ -54,6 +56,10 @@
    "percent",
    "range",
    "time"
+  ],
+  "bn": [
+   "cardinal",
+   "lexicon"
   ],
   "ca": [
    "abbreviation",
@@ -174,6 +180,11 @@
    "telephone",
    "time",
    "year"
+  ],
+  "hi": [
+   "cardinal",
+   "decimal",
+   "lexicon"
   ],
   "it": [
    "abbreviation",

@@ -1068,6 +1068,7 @@ LANGUAGE = LanguageSpec(
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal, Form.SYMBOL: speak_symbol, Form.EMOJI: speak_emoji,
         Form.TELEPHONE: speak_telephone,
     },
+    writers=("numtag", "ovos-number-parser", parsers.DATES),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER},
     attach=drop_affixes,  # the one prefix, a word of `time_articles` before a time, is a word of the time reading
     genders=frozenset({M, F}),
