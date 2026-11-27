@@ -72,6 +72,7 @@ LANGUAGE = LanguageSpec(
     code="id", serves=(), cldr_aliases=(), varieties=(Variety("id-ID"),), data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal},
+    writers=("unicode-rbnf",),
     spellers={Form.CARDINAL: SPELLER},
     genders=frozenset(), default_gender=None, animacies=frozenset(), noun_classes=frozenset(),
     numeral_systems=frozenset(), context_words=True, options={}, not_applicable=frozenset(OPTIONS),
@@ -85,6 +86,7 @@ Each part has one job:
 - `DATA` holds the tables of the language, as JSON values only. `number_marks` gives the decimal mark and the group mark of the Latin digits.
 - `recognizers` finds the written forms, in order. `SHARED` holds the recognizers of the core, by name.
 - `verbalizers` gives one verbalizer for each form that a recognizer claims, and `spellers` one speller for each form that speaks a number.
+- `writers` names the distributions that write the words, as `unicode-rbnf` for an `RbnfSpeller`. Add `parsers.DATES` when dates read through `parsers.spoken_date`. `revision` gives the version of each.
 - Indonesian has no grammatical gender, so `genders` is empty and `default_gender` is `None`. The file offers no option yet, so every option is in `not_applicable`.
 
 Run it. The file reads the same numbers, with the group mark of its own table:
@@ -130,6 +132,7 @@ LANGUAGE = LanguageSpec(
     code="id", serves=(), cldr_aliases=(), varieties=(Variety("id-ID"),), data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["date_numeric"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.CARDINAL: speak_cardinal},
+    writers=("unicode-rbnf",),
     spellers={Form.CARDINAL: SPELLER},
     genders=frozenset(), default_gender=None, animacies=frozenset(), noun_classes=frozenset(),
     numeral_systems=frozenset(), context_words=True, options={}, not_applicable=frozenset(OPTIONS),
@@ -338,6 +341,7 @@ LANGUAGE = LanguageSpec(
     code="id", serves=(), cldr_aliases=(), varieties=(Variety("id-ID"),), data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["date_numeric"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon, Form.DATE: speak_date, Form.CARDINAL: speak_cardinal},
+    writers=("unicode-rbnf",),
     spellers={Form.CARDINAL: SPELLER},
     genders=frozenset(), default_gender=None, animacies=frozenset(), noun_classes=frozenset(),
     numeral_systems=frozenset(), context_words=True, options={}, not_applicable=frozenset(OPTIONS),
@@ -367,6 +371,7 @@ The stub language [`tests/fixtures/qac.py`](../tests/fixtures/qac.py) is another
 | `recognizers` | The full claim order: the shared recognizers of the core, by name, and the recognizers of the file |
 | `verbalizers` | One verbalizer for each form that a recognizer claims |
 | `spellers` | One number speller for each form that speaks a number |
+| `writers` | The distributions that write the words, and `parsers.DATES` for the date writer |
 | `genders`, `default_gender` | The genders of the language, empty when it has none, and the gender that applies when nothing else decides |
 | `animacies`, `noun_classes`, `numeral_systems` | The values of each dimension, empty when the language has no such distinction |
 | `context_words` | `False` when no verbalizer reads the words around a span, as for a script with no word boundaries |

@@ -8,7 +8,17 @@ verify: `python scripts/check_doc_page.py docs/how-it-works.md`
 see: api.md, adding-a-language.md, how-it-reads.md
 -->
 
-This page follows one text through `normalize`: the tokens, the spans that the recognizers find, the claim step that settles overlaps, and the verbalizers that write the words. It ends with the cost of a call.
+This page follows one text through `normalize`: the tokens, the spans that the recognizers find, the claim step that settles overlaps, and the verbalizers that write the words. It ends with the cost of a call. The first section shows the libraries that call it.
+
+## Where it fits
+
+text2spoken is the normalisation stage before a phonemizer or a voice. These libraries call `normalize(text, lang)`:
+
+- the phonemizers tugaphone and euskaphone,
+- the voice library phoonnx,
+- the `TextFrontend` of scriptconv. `uv pip install --prerelease=allow "scriptconv[normalize]"` installs text2spoken with it.
+
+text2spoken calls numtag for the numbers of Portuguese. It also calls ovos-number-parser, ovos-date-parser, unicode-rbnf, linguatag and quebra-frases.
 
 ## The stages
 

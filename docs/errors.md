@@ -28,8 +28,6 @@ This page gives each error and warning of text2spoken, and the case that causes 
 | A hint at an offset where no span starts | `HintWarning` | `InvalidHintError` |
 | A lexicon value that contains a readable form | `InvalidLexiconError` | `InvalidLexiconError` |
 | A tokenizer result that is not a sequence of tokens that match the text | `TokenizerError` | `TokenizerError` |
-| `revision` finds a module of the output path in a zip file or in another place that is not a directory or a file | `RevisionError` | `RevisionError` |
-| The `revision` probe exits with an error, prints no readable result, or runs longer than `PROBE_TIMEOUT` | `RevisionError` | `RevisionError` |
 
 ## A form that the library cannot read
 

@@ -60,19 +60,28 @@ A version reads with "ponto": after `versão`, `atualização` or `v`, and after
 | `Durou 1.30 h.` | `pt-PT` | stays as written |
 | `A taxa é 0 vírgula 02.` | `pt-PT` | A taxa é zero vírgula zero dois. |
 
-The words of a date, a clock time and a year come from `ovos-date-parser`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. A time in the hour 1 reads "uma", so the article before it is singular. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
+The words of a date, a clock time and a year come from `chronologia`, in `pt-PT` and in `pt-BR`. A clock at 0:00 or 12:00 reads "meia-noite" or "meio-dia", and the article before it agrees with the noun. A time in the hour 1 reads "uma", so the article before it is singular. When the word stays as written, as after a lexicon entry for it, the time reads the hours that the word agrees with. A time with `h` reads the hours as written.
 
 | Written | Spoken (`pt-PT`, `lexicon=FrozenMap({"pt": FrozenMap({"às": "às"})})`) |
 | --- | --- |
 | `Chega às 0:00.` | Chega às zero horas. |
 
-A clock with a colon reads after a time word, such as `às`, `das` or the verb `são` (Priberam, "ser": "são 18h00"). A clock with no time word before it stays as written, because `16:10` may also be a ratio. `24:00` is the end of the day, and it reads as midnight.
+A clock with a colon reads after a time word, such as `às`, `das`, the verb `são` or `é`, or a verb of an event such as `começa` (Priberam, "ser": "são 18h00"). A clock with no time word before it stays as written, because `16:10` may also be a ratio. `24:00` is the end of the day, and it reads as midnight.
 
 | Written | Tag | Spoken |
 | --- | --- | --- |
 | `São 16:30.` | `pt-PT` | São dezasseis e trinta. |
 | `Já são 12:00!` | `pt-PT` | Já são doze horas! |
 | `Fecha às 24:00.` | `pt-PT` | Fecha à meia-noite. |
+
+A clock right after a verb of an event at a time, such as `começa`, `abre`, `fecha` or `chega`, reads with the article `às`, or `à` and `ao` before "uma", "meia-noite" and "meio-dia" (Ciberdúvidas 32865: "ocorre o artigo definido, quando se pretende referir uma hora precisa ou uma hora marcada"). The verb `é` right before a clock agrees in number with the hour (Ciberdúvidas 37265, after Raposo et al., Gramática do Português: "São duas horas." "É uma da tarde."). So it reads `são` before a plural hour, and it stays `é` before "uma", "meia-noite" and "meio-dia".
+
+| Written | Tag | Spoken |
+| --- | --- | --- |
+| `O jogo começa 20:45.` | `pt-PT` | O jogo começa às vinte e quarenta e cinco. |
+| `A loja abre 1:00 e fecha 12:00.` | `pt-PT` | A loja abre à uma hora e fecha ao meio-dia. |
+| `É 16:30.` | `pt-PT` | São dezasseis e trinta. |
+| `É 1:30.` | `pt-PT` | É uma e trinta. |
 
 A time with a full stop between the hour and the minutes reads only after a word that names the hours: `às`, `das` or `pelas`, `à` before the hour 1, and `as` after `até`, `desde`, `após`, `para` or `entre` (Ciberdúvidas 14648: "Há quem prefira a notação 17.30 h"; Dicio, "Crase antes de horas: quando usar?": "O ônibus chegará entre as 15h e as 16h."). A second time after `e as` reads too. With no such word, the number may also be a decimal, so it stays as written. A unit symbol or name of CLDR, a currency, `por cento`, a scale word, `vezes`, `valores`, `pp.` or `p.p.` after the number shows an amount, so the time reading does not apply. A number with a comma, as `às 10,30`, reads as a decimal.
 

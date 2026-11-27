@@ -16,7 +16,9 @@ EN = import_module("text2spoken.lang.en").LANGUAGE
 DELETE = object()
 ROW_SILENT = {"symbols"}
 """Tables that only the unread check of strict mode reads, so no row shows a dropped entry."""
-NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": {"leads"}, "tdt": {"defaults"},
+NO_ROW = {"bn": {"leads", "sign_words", "digit_words"},
+          "ca": {"leads", "operators"}, "el": {"leads"}, "hi": {"leads", "digit_words"}, "ja": {"leads"},
+          "ko": {"leads"}, "tdt": {"defaults"},
           "fr": {"day_part_words", "minute_phrases", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes",
                  "no_phone_shapes"},
           "pt": {"phone_shapes"},
@@ -24,7 +26,9 @@ NO_ROW = {"ca": {"leads", "operators"}, "el": {"leads"}, "ja": {"leads"}, "ko": 
           "nl": {"clock_marks", "phone_shapes", "phone_unit_shapes", "phone_kept_shapes"},
           "zh": {"leads", "scales", "dimension_marks"}}
 """Tables that no row of the language shows: the shared readers need the key and the language leaves it empty
-(the phone shape tables, and the Catalan leads and operators), or a row reads it only with a param other than the default (the 12-hour clock and the
+(the phone shape tables, the Catalan leads and operators, and the Bengali leads and sign words; the Bengali digit
+words read only in a say-as, and so do the Hindi digit words), or a row reads it only with a param other than the
+default (the 12-hour clock and the
 phrase style of French, which tests/test_french.py checks), or a default that equals the order which
 `dates.resolve` takes with no order (the `DMY` date order of Tetun Dili)."""
 
@@ -104,7 +108,8 @@ PT_ENTRIES = {
     "currency_noun_gender": "córdobas", "two_gender_feminine": "caixas",
     "gender_suffixes": freeze(["a", "feminine"]), "patterns": "date_named", "time_units": "h",
     "time_contractions": "às", "time_article_prepositions": "as",
-    "plural_time_verbs": "são", "point_time_words": "pelas", "point_one_words": "à",
+    "plural_time_verbs": "são", "singular_time_verbs": "é", "article_time_verbs": "começa",
+    "time_verb_adverbs": "agora", "point_time_words": "pelas", "point_one_words": "à",
     "point_article_prepositions": "as", "amount_words": "vezes",
     "range_articles": "das", "symbols_before_only": "$", "fraction_denominators": "1000",
     "electronic_symbols": "@", "electronic_vowels": "a", "electronic_schemes": "https", "electronic_tlds": "pt",
@@ -157,6 +162,8 @@ ENTRIES = {
         "months": "Μαρτίου", "half": "feminine", "fraction_names": "4",
         "halves": "2",
     },
+    "bn": {"number_marks": "Latn", "currencies": "Sc", "percent": "signs", "units": "kg"},
+    "hi": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg"},
     "ja": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg"},
     "ko": {"number_marks": "Latn", "sign_words": "-", "currencies": "Sc", "percent": "signs", "units": "kg",
            "counters": "개", "counter_followers": "이", "months": "유월"},

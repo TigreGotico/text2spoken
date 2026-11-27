@@ -34,6 +34,7 @@ LANGUAGE = LanguageSpec(
     code="qac", serves=(), cldr_aliases=(), varieties=(Variety("qac"),), data=DATA,
     recognizers=(SHARED["lexicon"], SHARED["cardinal"]),
     verbalizers={Form.LEXICON: speak_lexicon, Form.CARDINAL: speak_cardinal},
+    writers=(),
     spellers={Form.CARDINAL: TableSpeller()}, genders=frozenset(), default_gender=None, animacies=frozenset(),
     noun_classes=frozenset(), numeral_systems=frozenset(), context_words=True, options={},
     not_applicable=frozenset(OPTIONS),
