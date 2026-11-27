@@ -1,7 +1,6 @@
 """Russian: ru-RU, the one variety, which every other ru-* tag selects through closest_lang.
 
-Nominative cardinals come from ovos-number-parser, and the other cases from CLDR RBNF, with one rule set for each
-gender and case (design section 5.4). Ordinals follow the rules of Грамматика-80 over these cardinal words. A number
+Cardinals, ordinals and decimals come from numtag, in each gender and case (design section 5.4). A number
 agrees in gender and case with the noun it counts, and a preposition before it gives the case. The rules cite these
 sources:
 
@@ -28,7 +27,7 @@ from text2spoken.core.numbers import written_amount
 from text2spoken.core.recognizers import (SHARED, DateNumeric, _sentence_period, digit_run_matches, numbers_in,
                                           speak_lexicon)
 from text2spoken.core.spans import Features, Span, SpanContext, Word, context_words
-from text2spoken.core.spellers import OvosNumberSpeller, RbnfSpeller, bounded_integer
+from text2spoken.core.spellers import NumtagSpeller, OvosNumberSpeller, bounded_integer
 from text2spoken.core.times import clock_fields
 from text2spoken.core.tokens import (Token, fold_digits, is_bounded, is_letter, is_word_char, next_visible,
                                      one_digit_set)
@@ -152,125 +151,31 @@ genitive plural, in -ых or -их (Грамматика-80 § 1216: "выход
 
 VARIETIES = (Variety("ru-RU"),)
 
-_ONE_WORDS = ("один", "одна", "одно", "одну", "одного", "одной", "одному", "одним", "одном")
-_SCALE_WORD = re.compile("(?:тысяч|миллион|миллиард|триллион|квадриллион)")
-_INNER_THOUSAND = re.compile("((?:миллион|миллиард)[а-я]*) тысяча")
-_INNER_MILLION = re.compile("(миллиард[а-я]*) миллион( |$)")
-_YO = (("трех", "трёх"), ("четырех", "четырёх"), ("четырем", "четырём"), ("четверт", "четвёрт"))
-_ORDINAL_STEMS = {0: "нулев", 1: "перв", 2: "втор", 3: "трет", 4: "четвёрт", 7: "седьм", 40: "сороков", 100: "сот"}
-"""The ordinal stems that the genitive of the cardinal does not give (Грамматика-80 § 679 and its note): "первый",
-"второй", "третий", "четвёртый", "седьмой", "сороковой", "сотый". "нулевой" is the CLDR form (common/rbnf/ru.xml)."""
-_STRESSED = frozenset({0, 2, 6, 7, 8, 40})
-"""The ordinals with a stressed ending, which take -ой in the masculine nominative: "второй", "шестой", "седьмой",
-"восьмой", "сороковой" (Грамматика-80 § 679, § 1311 "молод-ой")."""
-_HARD_ENDINGS = {M: ("ый", "ого", "ому", "ый", "ым", "ом"), N: ("ое", "ого", "ому", "ое", "ым", "ом"),
-                 F: ("ая", "ой", "ой", "ую", "ой", "ой"), "plural": ("ые", "ых", "ым", "ые", "ыми", "ых")}
-"""The hard adjective declension (Грамматика-80 § 1311, "нов-ый"), by which ordinals decline (§ 1310)."""
-_THIRD_ENDINGS = {M: ("ий", "ьего", "ьему", "ий", "ьим", "ьем"), N: ("ье", "ьего", "ьему", "ье", "ьим", "ьем"),
-                  F: ("ья", "ьей", "ьей", "ью", "ьей", "ьей"), "plural": ("ьи", "ьих", "ьим", "ьи", "ьими", "ьих")}
-""""третий" declines by the first kind of the pronominal declension (Грамматика-80 § 1317, § 1318: треть-его,
-треть-ему, треть-ем)."""
-_COMPOUND_SCALES = ((10**6, "миллионн"), (1000, "тысячн"))
-_COMPOUND_WORDS = {"ста": "сто", "девяноста": "девяносто", "одного": "одно"}
-"""In an ordinal in -тысячный or -миллионный the words before it take the genitive and join (Грамматика-80 § 758,
-note: "двухсотпятидесятитысячный"), but "сто" and "девяносто" keep their form and "один" reads "одно" (Грамматика-80
-§ 775, п. 3; Розенталь § 42, п. 6: "одногодичный, девяностолетие, стократный")."""
 _ADJECTIVE_PLURAL = ("ых", "их", "ые", "ие", "ыми", "ими")
 _DISTRIBUTIVE_DATIVE = ("1000", "1000000", "1000000000")
-_PREPOSITIONAL_TENS = {"двадцать": "двадцати", "тридцать": "тридцати", "сорок": "сорока", "пятьдесят": "пятидесяти",
-                      "шестьдесят": "шестидесяти", "семьдесят": "семидесяти", "восемьдесят": "восьмидесяти",
-                      "девяносто": "девяноста"}
-"""The prepositional of the tens (Грамматика-80 § 1378: "о восьмидесяти семи"). The RBNF rule set of the
-prepositional keeps the tens of a count of millions in the nominative ("двадцать миллионах"), but each word of a
-compound cardinal declines (§ 1378), so "о двадцати миллионах"."""
-_RBNF_CASE = {"nominative": "", "genitive": "-genitive", "dative": "-dative", "accusative": "-accusative",
-              "instrumental": "-ablative", "prepositional": "-locative"}
 
 
-def standard(words: str) -> str:
-    """A reading in the standard form. The number 1 is not said before "тысяча" or "миллион" at the start, as
-    Грамматика-80 § 1378 declines "тысяча двести восемьдесят семь" and Розенталь § 164, п. 2 writes "в тысяча девятьсот
-    шестьдесят пятом году". Inside a number "одна тысяча" keeps "одна": a number has one word for each significant
-    digit, and the words "тысяча" and "миллион" besides (Розенталь § 45, п. 2). So "один миллион" keeps "один" after
-    "миллиард". The number words take ё (Грамматика-80 § 1374, Правила-2006 § 5)."""
-    first, _, rest = words.partition(" ")
-    if first in _ONE_WORDS and _SCALE_WORD.match(rest):
-        words = rest
-    words = _INNER_THOUSAND.sub(r"\1 одна тысяча", words)
-    words = _INNER_MILLION.sub(r"\1 один миллион\2", words)
-    for written, spelled in _YO:
-        words = words.replace(written, spelled)
-    return " ".join(f"трём{word[4:]}" if word.startswith("трем") and not word.startswith("тремя") else word
-                    for word in words.split())
-
-
-def _rule_sets() -> dict[Features, str]:
-    """The RBNF cardinal rule set of each gender and case. The masculine and the neuter decline the same in the
-    oblique cases (Грамматика-80 § 1374, § 1378), and the masculine of the prepositional takes the neuter rule set,
-    because the masculine one keeps the tens in the nominative: "двадцать одном" for "двадцати одном"."""
-    names = {Features(): "spellout-cardinal-masculine"}
-    for case, suffix in _RBNF_CASE.items():
-        masculine = "neuter" if case == "prepositional" else "masculine"
-        names[Features(case=case)] = f"spellout-cardinal-{masculine}{suffix}"
-        for gender in (M, F, N):
-            name = masculine if gender is M else gender.value
-            names[Features(gender=gender, case=case)] = f"spellout-cardinal-{name}{suffix}"
-    return names
-
-
-class RussianSpeller:
-    """Cardinals: ovos-number-parser for the nominative, and CLDR RBNF for the other cases. Ordinals: the rules of
-    Грамматика-80, over the cardinal words of this speller."""
+class RussianSpeller(NumtagSpeller):
+    """Cardinals, ordinals and decimals from numtag, in each gender and case. A number with no gender is
+    masculine."""
 
     def __init__(self):
+        super().__init__({M: "masculine", F: "feminine", N: "neuter"}, CASES, plural="plural")
         self.nominative = OvosNumberSpeller({M: "masculine", F: "feminine", N: "neutral"})
-        self.cases = RbnfSpeller(cardinal=_rule_sets(), ordinal={Features(): "spellout-ordinal-masculine"})
 
     def cardinal(self, digits: str, features: Features, request: Request) -> str:
-        if features.case in (None, "nominative"):
-            words = self.nominative.cardinal(digits, Features(gender=features.gender), request)
-        else:
-            words = self.cases.cardinal(digits, features, request)
-        if features.case == "prepositional":
-            words = " ".join(_PREPOSITIONAL_TENS.get(word, word) for word in words.split())
-        return standard(words)
+        """numtag names the scales up to "дуодециллион" (10^39). From 10^42 it gives the exponent in the wrong
+        case (numtag#423), so a nominative reads through ovos-number-parser and an oblique case declines."""
+        value = bounded_integer(digits)
+        if value is not None and value >= 10**42:
+            if features.case not in (None, "nominative"):
+                raise DeclinedReading(f"no {features.case} reading of {len(digits)} digits")
+            return self.nominative.cardinal(digits, Features(gender=features.gender), request)
+        return super().cardinal(digits, replace(features, gender=features.gender or M), request)
 
     def ordinal(self, digits: str, features: Features, request: Request) -> str:
-        """Only the last word of an ordinal declines, and the words before it are the cardinal in the nominative:
-        "тысяча двести сороковой" (Грамматика-80 § 758), "в тысяча девятьсот шестьдесят пятом году" (Розенталь
-        § 164, п. 2). The last word is an adjective whose stem is that of the oblique cases of its cardinal:
-        "восьми - восьмой, пятидесяти - пятидесятый, двухсот - двухсотый" (Грамматика-80 § 679). A round number of
-        thousands or millions ends in one word in -тысячный or -миллионный (§ 758, note). An ordinal of a billion
-        and above declines."""
-        value = bounded_integer(digits)
-        if value is None or value >= 10**9:
-            raise DeclinedReading(f"no ordinal reading of {len(digits)} digits")
-        stem, tail = self._ordinal_stem(value, request)
-        endings = _THIRD_ENDINGS if stem == _ORDINAL_STEMS[3] else _HARD_ENDINGS
-        case = CASES.index(features.case or "nominative")
-        if features.number == "plural":
-            ending = endings["plural"][case]
-        else:
-            gender = features.gender or M
-            stressed = gender is M and case in (0, 3) and tail in _STRESSED
-            ending = "ой" if stressed else endings[gender][case]
-        head = value - tail
-        words = f"{self.cardinal(str(head), Features(gender=M), request)} " if head else ""
-        return words + stem + ending
-
-    def _ordinal_stem(self, value: int, request: Request) -> tuple[str, int]:
-        """The stem of the last word and the part of the value that it reads."""
-        for scale, word in _COMPOUND_SCALES:
-            if value and value % scale == 0 and (count := value // scale % 1000):
-                if count == 1:
-                    return word, scale
-                genitive = self.cardinal(str(count), Features(gender=M, case="genitive"), request)
-                return "".join(_COMPOUND_WORDS.get(part, part) for part in genitive.split()) + word, count * scale
-        tail = value % 1000 if value % 100 == 0 else value % 100 if value % 100 < 20 or value % 10 == 0 \
-            else value % 10
-        if tail in _ORDINAL_STEMS:
-            return _ORDINAL_STEMS[tail], tail
-        return self.cardinal(str(tail), Features(gender=M, case="genitive"), request).rstrip("иа"), tail
+        """A plural ordinal has one form for the three genders: "пятых"."""
+        return super().ordinal(digits, replace(features, gender=features.gender or M), request)
 
     def year(self, digits: str, features: Features, request: Request) -> str:
         """A year is a masculine ordinal: "в тысяча девятьсот шестьдесят пятом году" (Розенталь § 164, п. 2)."""
@@ -285,11 +190,17 @@ class RussianSpeller:
         return f"{words} {stem}{endings['one' if one else 'other'][CASES.index(case)]}"
 
     def decimal(self, integer: str, fraction: str, features: Features, request: Request) -> str:
-        """"одна целая шесть десятых" (Грамматика-80 § 1367), "ноль целых" (Розенталь § 45, п. 7)."""
+        """"одна целая шесть десятых" (Грамматика-80 § 1367), "ноль целых" (Розенталь § 45, п. 7). The parts are
+        feminine, as "целая" and "десятая" are. numtag reads no fraction of zeros, so "1,0" reads "одна целая ноль
+        десятых" from the parts. numtag drops the trailing zeros of a fraction, so a fraction that ends in zero
+        also reads from the parts: "две целых пятьдесят сотых"."""
+        case = features.case or "nominative"
+        if fraction.strip("0") and not fraction.endswith("0"):
+            return self._spell(f"{int(integer or '0')}.{fraction}", Features(gender=F, case=case), request,
+                               decimals="fraction", places=len(fraction))
         stems = request.data["decimal_denominators"]
         if len(fraction) > len(stems):
             raise DeclinedReading(f"no denominator for {len(fraction)} decimal digits")
-        case = features.case or "nominative"
         whole = self._part(integer or "0", request.data["whole"], case, request)
         return f"{whole} {self._part(fraction, stems[len(fraction) - 1], case, request)}"
 
@@ -1013,7 +924,7 @@ LANGUAGE = LanguageSpec(
         Form.MEASURE: speak_measure, Form.FRACTION: speak_fraction, Form.ABBREVIATION: speak_abbreviation,
         Form.DECIMAL: speak_decimal, Form.CARDINAL: speak_cardinal,
     },
-    writers=("ovos-number-parser", "unicode-rbnf"),
+    writers=("numtag", "ovos-number-parser"),
     spellers={Form.CARDINAL: SPELLER, Form.ORDINAL: SPELLER, Form.DECIMAL: SPELLER, Form.FRACTION: SPELLER,
               Form.YEAR: SPELLER},
     attach=attach,
