@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a174](https://github.com/TigreGotico/text2spoken/tree/0.0.2a174) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a173...0.0.2a174)
+
+**Merged pull requests:**
+
+- fix\(fr\): a range of years before an era, and Me before a name particle \(carries \#731\) [\#734](https://github.com/TigreGotico/text2spoken/pull/734) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a173](https://github.com/TigreGotico/text2spoken/tree/0.0.2a173) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a172...0.0.2a173)
@@ -365,17 +373,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a126...0.0.2a127)
 
-**Merged pull requests:**
-
-- fix\(pt\): read the capital litre symbols cL and dL [\#598](https://github.com/TigreGotico/text2spoken/pull/598) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a126](https://github.com/TigreGotico/text2spoken/tree/0.0.2a126) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a125...0.0.2a126)
-
-**Merged pull requests:**
-
-- fix\(ar\): read a number before a masculine أفعلة plural as masculine [\#599](https://github.com/TigreGotico/text2spoken/pull/599) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a125](https://github.com/TigreGotico/text2spoken/tree/0.0.2a125) (2026-11-25)
 
