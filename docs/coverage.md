@@ -31,9 +31,9 @@ Each language file reads the forms that its recognizers and verbalizers offer. `
 
 `img/plot_forms_per_language.py` makes this figure from `supports(code).forms`.
 
-*Figure: the forms that each language file reads. A large dot means the file reads the form. English reads the most forms, Danish, Hindi, Japanese and Korean read three, and Bengali reads two. The form `IDENTIFIER` has a column in no file, because no language file reads it, so the figure leaves it out.*
+*Figure: the forms that each language file reads. A large dot means the file reads the form. English reads the most forms, Hindi, Japanese and Korean read three, and Bengali reads two. The form `IDENTIFIER` has a column in no file, because no language file reads it, so the figure leaves it out.*
 
-English reads all 22 forms that any file reads. Danish, Hindi, Japanese and Korean read cardinals, decimals and the lexicon. Bengali reads cardinals and the lexicon. A language page names the forms of its file in the sentence "The file reads ...". [How it reads text](how-it-reads.md#the-forms) lists every form and its default.
+English reads all 22 forms that any file reads. Hindi, Japanese and Korean read cardinals, decimals and the lexicon. Bengali reads cardinals and the lexicon. A language page names the forms of its file in the sentence "The file reads ...". [How it reads text](how-it-reads.md#the-forms) lists every form and its default.
 
 A tag with no language file reads cardinals and decimals only. [How it reads text](how-it-reads.md#a-language-with-no-file) gives the rules.
 
@@ -43,7 +43,7 @@ Each language file has a file of test rows in `tests/data`. Each row holds a wri
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/rows-per-language-dark.svg">
-  <img alt="Horizontal bars of test rows for 19 languages, 4,453 rows in all, 4,316 with a cited source and 137 marked silver. Portuguese 950, French 758, English 676, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 180, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Danish 25, Japanese 25, Bengali 22, Hindi 21." src="img/rows-per-language.svg">
+  <img alt="Horizontal bars of test rows for 19 languages, 4,457 rows in all, 4,320 with a cited source and 137 marked silver. Portuguese 950, French 762, English 676, Arabic 329, Italian 295, Dutch 202, Spanish 198, Russian 180, German 168, Basque 165, Greek 157, Catalan 82, Chinese 72, Tetun Dili 68, Korean 60, Danish 25, Japanese 25, Bengali 22, Hindi 21." src="img/rows-per-language.svg">
 </picture>
 
 `img/plot_rows_per_language.py` makes this figure from `tests/data`.
