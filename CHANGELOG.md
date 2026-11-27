@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a171](https://github.com/TigreGotico/text2spoken/tree/0.0.2a171) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a170...0.0.2a171)
+
+**Merged pull requests:**
+
+- fix\(fr\): un/une agreement and abbreviations \(carries \#689\) [\#725](https://github.com/TigreGotico/text2spoken/pull/725) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a170](https://github.com/TigreGotico/text2spoken/tree/0.0.2a170) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a169...0.0.2a170)
