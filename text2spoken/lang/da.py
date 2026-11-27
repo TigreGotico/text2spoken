@@ -27,6 +27,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from dataclasses import replace
 
+from text2spoken.errors import DeclinedReading
 from text2spoken.core.language import LanguageSpec, Request, Variety
 from text2spoken.core.recognizers import (CARDINAL, LEXICON, SHARED, OrdinalStop, Written, speak_cardinal,
                                           speak_cldr_date, speak_decimal, speak_lexicon, written_shapes)
@@ -75,8 +76,18 @@ def speak_da_cardinal(span: Span, context: SpanContext) -> str:
         *head, last = words.split(" ")
         words = " ".join([*head, context.request.data["noun_one"].get(last, last)])
     return words
-ORDINAL = RbnfSpeller(cardinal={Features(): "spellout-cardinal-common"},
-                      ordinal={Features(): "spellout-ordinal-common"})
+class DaOrdinalSpeller(RbnfSpeller):
+    """CLDR gives the cardinal "tusinde" as the ordinal of 1000, so a span with that reading declines."""
+
+    def ordinal(self, digits: str, features: Features, request: Request) -> str:
+        words = super().ordinal(digits, features, request)
+        if words == self.cardinal(digits, features, request):
+            raise DeclinedReading(f"the CLDR da ordinal of {digits} is its cardinal")
+        return words
+
+
+ORDINAL = DaOrdinalSpeller(cardinal={Features(): "spellout-cardinal-common"},
+                           ordinal={Features(): "spellout-ordinal-common"})
 
 LANGUAGE = LanguageSpec(
     code="da",
