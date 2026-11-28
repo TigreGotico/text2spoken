@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a178](https://github.com/TigreGotico/text2spoken/tree/0.0.2a178) (2026-11-28)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a177...0.0.2a178)
+
+**Merged pull requests:**
+
+- ci: add docs standard check [\#742](https://github.com/TigreGotico/text2spoken/pull/742) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.0.2a177](https://github.com/TigreGotico/text2spoken/tree/0.0.2a177) (2026-11-28)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a176...0.0.2a177)
