@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2a177](https://github.com/TigreGotico/text2spoken/tree/0.0.2a177) (2026-11-28)
+
+[Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a176...0.0.2a177)
+
+**Merged pull requests:**
+
+- ci: release on a merged fork pull request too \(pull\_request\_target\) [\#735](https://github.com/TigreGotico/text2spoken/pull/735) ([goldyfruit](https://github.com/goldyfruit))
+
 ## [0.0.2a176](https://github.com/TigreGotico/text2spoken/tree/0.0.2a176) (2026-11-27)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a175...0.0.2a176)
@@ -357,17 +365,9 @@
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a130...0.0.2a131)
 
-**Merged pull requests:**
-
-- fix: parse language tags through linguatag [\#606](https://github.com/TigreGotico/text2spoken/pull/606) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
-
 ## [0.0.2a130](https://github.com/TigreGotico/text2spoken/tree/0.0.2a130) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2spoken/compare/0.0.2a129...0.0.2a130)
-
-**Merged pull requests:**
-
-- docs: name feminine\_plurals in ar docstrings, rewrap long pt lines [\#607](https://github.com/TigreGotico/text2spoken/pull/607) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [0.0.2a129](https://github.com/TigreGotico/text2spoken/tree/0.0.2a129) (2026-11-25)
 
