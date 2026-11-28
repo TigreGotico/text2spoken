@@ -33,6 +33,7 @@ The second argument is a BCP 47 tag. It selects the language file and the variet
 | You want to | Read |
 | --- | --- |
 | Install it and make a first call | [Quickstart](docs/quickstart.md) |
+| Try it in the browser, with examples for each language | [Hugging Face Space](https://huggingface.co/spaces/TigreGotico/text2spoken) |
 | Turn a form off or on, or add your own words | [Usage](docs/usage.md) |
 | Read a form that SSML `say-as` markup names | [API, say_as](docs/api.md#say_as) |
 | Know why a text reads as it does | [How it reads text](docs/how-it-reads.md) |
