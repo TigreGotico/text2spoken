@@ -832,6 +832,13 @@ def _warn_no_extra() -> None:
         "install text2spoken[pt]")
 
 
+@cache
+def _warn_no_noun_lexicon() -> None:
+    logging.getLogger("text2spoken").warning(
+        "the pt extra is not installed, so the gender of a noun comes from noun_gender and gender_suffixes alone, "
+        "else the default gender; install text2spoken[pt]")
+
+
 def _known_word(word: str, request: Request) -> bool:
     """Whether tugalex knows `word`, in lower case, as a word form of the variety (design section 4.6). tugalex names
     the pt-BR forms by the region `rjx` and the pt-PT forms by `lbx`. Without tugalex, it knows no word, and one
@@ -926,6 +933,8 @@ def _counted_gender(context: SpanContext) -> GrammaticalGender:
     listed = _listed_gender(noun, data)
     code = _lexicon_gender(noun) if noun and listed is None and noun.lower() not in data["function_words"] else None
     if code is None:
+        if noun and listed is None and not _tugalex_installed():
+            _warn_no_noun_lexicon()
         found = _gender_of(noun, request, endings=not _tugalex_installed()) if noun else None
         gender = found or (GrammaticalGender(determiner) if determiner else None)
     else:

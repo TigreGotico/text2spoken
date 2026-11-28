@@ -158,3 +158,16 @@ def test_portuguese_without_tugalex_takes_the_gender_from_the_endings(monkeypatc
     monkeypatch.setitem(sys.modules, "tugalex", None)
     assert normalize("Comprei 2 coisas.", "pt-PT") == "Comprei duas coisas."
     assert normalize("Comprei 2 coisas.", "pt-BR") == "Comprei duas coisas."
+
+
+def test_portuguese_without_tugalex_warns_once_and_keeps_the_default(monkeypatch, caplog):
+    """Issue 733: without tugalex, `maçãs` has no gender in pt.py, so the number takes the masculine and one
+    warning names the extra."""
+    from text2spoken.lang import pt
+    monkeypatch.setitem(sys.modules, "tugalex", None)
+    pt._warn_no_noun_lexicon.cache_clear()
+    with caplog.at_level("WARNING", logger="text2spoken"):
+        assert normalize("Comprei 2 maçãs e 1 laranja.", "pt-PT") == "Comprei dois maçãs e uma laranja."
+        normalize("Comprei 2 maçãs.", "pt-PT")
+    warned = [r for r in caplog.records if "text2spoken[pt]" in r.getMessage() and "gender" in r.getMessage()]
+    assert len(warned) == 1
