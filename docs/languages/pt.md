@@ -1,6 +1,14 @@
 # Portuguese
 
-The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken[pt]`, which adds `tugalex` for the gender of nouns and given names.
+<!-- agent-hint
+covers: what the Portuguese file reads, its varieties, options, sources and limits.
+source: text2spoken/lang/pt.py, tests/data/pt.tsv
+generated: no
+verify: `python scripts/check_doc_page.py docs/languages/pt.md`
+see: es.md, ../how-it-reads.md
+-->
+
+The file `text2spoken/lang/pt.py` reads Portuguese. Install it with `text2spoken[pt]`, which adds `tugalex` for the gender of nouns and given names. Without the extra, the gender of a noun after a number comes from the `noun_gender` table and the endings of `gender_suffixes`, else the number takes the default gender, the masculine. A noun that neither one gives, such as `maçãs`, takes the masculine. The first time a noun needs a gender, one log warning on the `text2spoken` logger names the extra.
 
 ## What it reads
 
