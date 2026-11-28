@@ -1,0 +1,32 @@
+{
+  "source": "How a date of a language with no file reads where its CLDR long date pattern does not give the words, by CLDR locale. `written` is the long pattern of the dates file of the locale, and the entry applies only while the file holds that pattern. `spoken` is the pattern that the date reads by, in the syntax of UTS #35, Part 4, when it differs from `written`. `day` and `year` give the reading of the field, `ordinal` or `cardinal`, and the endings that turn the ordinal speller's word into the form of the date: each word of the ordinal (`every`) or its last word (`last`) ends in one of the endings, which the second string replaces.",
+  "locales": {
+    "cs": {
+      "written": "d. MMMM y",
+      "day": {"reading": "ordinal", "declines": "every", "endings": [["ý", "ého"], ["í", "ího"]]},
+      "source": "Czech Online, 'Čeština jako cizí jazyk pro specifické účely', table 'The date' (czechonline.org, g-25-datum-en.pdf): \"The question asking about the date is Kolikátého je dnes(ka)? The ordinal numeral indicating the day and the name of the month are used in the genitive singular masculine/neutral form, for example: 1. 1. prvního ledna [...] 23. 4. dvacátého třetího dubna [...] 31. 8. třicátého prvního srpna [...] 2. 10. druhého října\", and \"28. 9. 2010 = dvacátého osmého září dva tisíce deset\"."
+    },
+    "hu": {
+      "written": "y. MMMM d.",
+      "spoken": "y MMMM d",
+      "source": "e-nyelv.hu, 'március 15.' (2014-08-20): \"Akár tőszámnévként (március tizenöt), akár sorszámnévként (március tizenötödike) olvassuk ki, a dátumban a nap után pont áll\". English Wikipedia, 'Date and time notation in Hungary', of the format 1999. augusztus 1.: \"As year and day elements in Hungarian are ordinal numbers, they are followed by a dot. However, unless a suffix is added, they are said as cardinal numbers.\""
+    },
+    "oc": {
+      "written": "y MMMM d",
+      "spoken": "d MMMM 'de' y",
+      "source": "The dates file takes `written` from the root locale `und`, because cldr-json omits draft data. CLDR main, common/main/oc.xml, gregorian long date: `<pattern draft=\"unconfirmed\">d MMMM 'de' y</pattern>`. glibc, localedata/locales/oc_FR: `date_fmt \"%A %-d %b de %Y, %T %Z\"`, the day before the month and 'de' before the year, with the month names of `mon` \"de novembre\", \"d’abril\", as the CLDR file writes them."
+    },
+    "pl": {
+      "written": "d MMMM y",
+      "day": {"reading": "ordinal"},
+      "source": "Adam Wolański, Poradnia Językowa PWN, 'Odczytywanie daty zapisanej cyfrowo' (2023-07-09): \"W odpowiedzi na pytanie: Który dziś jest? podajemy liczebnik oznaczający dzień w formie mianownikowej, por. – Który dziś jest? – 30.06.2023 r. (= trzydziesty czerwca dwa tysiące dwudziestego trzeciego roku).\" A date that names the day, with no sentence around it, reads in the nominative."
+    },
+    "uk": {
+      "written": "d MMMM y\u202f'р'.",
+      "spoken": "d MMMM y 'року'",
+      "day": {"reading": "ordinal", "declines": "last", "endings": [["ий", "е"], ["ій", "є"]]},
+      "year": {"reading": "ordinal", "declines": "last", "endings": [["ий", "ого"], ["ій", "ього"]]},
+      "source": "Ivanna Voitsekhovych, Ukrainian Lessons, 'How to Write Dates in Ukrainian' (ukrainianlessons.com/dates-in-ukrainian): \"Двадцять четверте серпня 1991 року [...] Both серпня and року are the genitive case of nouns\"; \"When saying the dates in Ukrainian, you will need the ordinal number of the neuter gender: сьоме березня, п’ятнадцяте квітня. Bear in mind that if the number consists of multiple words, you only need to change the last word: двадцять шосте вересня, тридцять перше грудня\"; \"Мій тато народився тисяча дев’ятсот шістдесят сьомого року\". English Wikipedia, 'Date and time notation in Ukraine': \"the trailing 'р.' is short for 'рік' ('year')\". МійКлас, 'Відмінювання та правопис порядкових числівників' (6 клас): \"У середньому роді числівники мають такі самі закінчення, як і в чоловічому, за винятком лише називного й знахідного відмінків, де в середньому роді виступає закінчення -е (-є)\", the table \"Н. в. третій четверте / Р. в. третього четвертого\", and \"У складених порядкових числівниках відмінюється остання складова частина\"."
+    }
+  }
+}

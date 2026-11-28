@@ -1,0 +1,64 @@
+el_nouns.json
+
+Source: English Wiktionary, https://en.wiktionary.org/
+Read through the MediaWiki API (https://en.wiktionary.org/w/api.php) on 2026-11-17, from the category members of
+"Greek masculine nouns", "Greek feminine nouns", "Greek neuter nouns" and "Greek adjectives". The inflected forms come
+from the Wiktextract dump of the English Wiktionary at kaikki.org
+(https://kaikki.org/dictionary/Greek/kaikki.org-dictionary-Greek.jsonl), read on the same day. The category state and
+the dump of that day are the source revision.
+
+Attribution: Wiktionary contributors, the Greek noun and adjective entries of the English Wiktionary. The contributors
+of each page are in its history at https://en.wiktionary.org/. Wiktextract, by Tatu Ylonen, extracts the forms.
+
+Changes: the file keeps the lowercase forms of Greek letters, groups the forms of nouns and adjectives by gender and
+case, leaves out the vocative, and leaves out the words of articles, pronouns, determiners, prepositions, conjunctions,
+particles and contractions. scripts/extract_el_nouns.py makes the file.
+
+it_noun_genders.json
+
+Source: English Wiktionary, https://en.wiktionary.org/
+Read through the MediaWiki API (https://en.wiktionary.org/w/api.php) on 2026-11-16, from the category
+members of "Italian masculine nouns", "Italian feminine nouns", "Italian prepositions", "Italian conjunctions",
+"Italian adverbs", "Italian pronouns", "Italian determiners" and "Italian articles". The category state of that
+day is the source revision.
+
+Attribution: Wiktionary contributors, "Italian masculine nouns" and "Italian feminine nouns", English Wiktionary.
+The contributors of each page are in its history at https://en.wiktionary.org/.
+
+Changes: the file keeps the lowercase words of two or more letters, lists the words of both gender categories
+apart, and lists the words of the function-word categories. scripts/extract_noun_genders.py makes the file.
+
+fr_noun_genders.json
+
+Source: English Wiktionary, https://en.wiktionary.org/
+Read through the MediaWiki API (https://en.wiktionary.org/w/api.php) on 2026-11-26, from the category
+members of "French masculine nouns", "French feminine nouns" and "French nouns with multiple genders". The category
+state of that day is the source revision.
+
+Attribution: Wiktionary contributors, "French masculine nouns", "French feminine nouns" and "French nouns with
+multiple genders", English Wiktionary. The contributors of each page are in its history at https://en.wiktionary.org/.
+
+Changes: the file keeps the words of two or more letters, with capital letters and with a hyphen between letters, and
+leaves out the words with a space or another mark. It lists apart, as `both`, the words of both gender categories and
+of the category of several genders. It moves to the other gender the nouns of
+scripts/fr_noun_gender_corrections.json, whose single gender in the French Wiktionary (https://fr.wiktionary.org/,
+CC BY-SA 4.0, entries read on 2026-11-26, contributors in the history of each page) is the opposite of their English
+category. `python scripts/extract_noun_genders.py fr` makes the file.
+
+da_noun_genders.json
+
+Source: English Wiktionary, https://en.wiktionary.org/
+Read through the MediaWiki API (https://en.wiktionary.org/w/api.php) on 2026-11-27, from the category
+members of "Danish common-gender nouns", "Danish neuter nouns" and "Danish nouns with multiple genders". The category
+state of that day is the source revision.
+
+Attribution: Wiktionary contributors, "Danish common-gender nouns", "Danish neuter nouns" and "Danish nouns with
+multiple genders", English Wiktionary. The contributors of each page are in its history at https://en.wiktionary.org/.
+
+Changes: the file keeps the lowercase words of two or more letters, with a hyphen between letters, and lists apart, as
+`both`, the words of both gender categories and of the category of several genders.
+`python scripts/extract_noun_genders.py da` makes the file.
+
+Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+Licence text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+Each file is shared under the same licence.

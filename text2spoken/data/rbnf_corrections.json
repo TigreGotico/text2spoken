@@ -1,0 +1,863 @@
+{
+  "source": "Words that the CLDR RBNF data of unicode-rbnf spells wrong, with the right word and its source. RbnfSpeller replaces each wrong word in the output of every locale of the language.",
+  "corrections": [
+    {
+      "language": "da",
+      "wrong": "etogtyvende",
+      "right": "enogtyvende",
+      "source": "Dansk Sprognævn, Retskrivningsordbogen, entry enogtyvende [talord]; English Wiktionary, Appendix:Danish numerals: \"1 is pronounced en if it is the last digit, and the penultimate digit is non-zero. So 31 is enogtredive, not *etogtredive.\""
+    },
+    {
+      "language": "da",
+      "wrong": "etogtredivte",
+      "right": "enogtredivte",
+      "source": "Dansk Sprognævn, Retskrivningsordbogen, entry tredivte [talord]; English Wiktionary, Appendix:Danish numerals: \"1 is pronounced en if it is the last digit, and the penultimate digit is non-zero. So 31 is enogtredive, not *etogtredive.\""
+    },
+    {
+      "language": "da",
+      "wrong": "etogfyrrende",
+      "right": "enogfyrrende",
+      "source": "Dansk Sprognævn, Retskrivningsordbogen, entry fyrrende [talord]; English Wiktionary, Appendix:Danish numerals: \"1 is pronounced en if it is the last digit, and the penultimate digit is non-zero. So 31 is enogtredive, not *etogtredive.\""
+    },
+    {
+      "language": "el",
+      "wrong": "χίλιάδες",
+      "right": "χιλιάδες",
+      "source": "CLDR 49, unicode-org/cldr release-49/common/rbnf/el.xml: 2000: <%spellout-cardinal-feminine< χιλιάδες[ >>]; English Wiktionary, χιλιάδα, plural χιλιάδες"
+    },
+    {
+      "language": "el",
+      "wrong": "εννενήντα",
+      "right": "ενενήντα",
+      "source": "CLDR 49, unicode-org/cldr release-49/common/rbnf/el.xml: 90: ενενήντα[ >>]; English Wiktionary, ενενήντα"
+    },
+    {
+      "language": "el",
+      "wrong": "δεκατρεις",
+      "right": "δεκατρείς",
+      "source": "English Wiktionary, δεκατρείς, /ðe.kaˈtɾis/"
+    },
+    {
+      "language": "hi",
+      "wrong": "शून्यवी",
+      "right": "शून्यवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पाँचवी",
+      "right": "पाँचवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सातवी",
+      "right": "सातवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "आठवी",
+      "right": "आठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "नौवी",
+      "right": "नौवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "दसवी",
+      "right": "दसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "ग्यारहवी",
+      "right": "ग्यारहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बारहवी",
+      "right": "बारहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तेरहवी",
+      "right": "तेरहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौदहवी",
+      "right": "चौदहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पन्द्रहवी",
+      "right": "पन्द्रहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सोलहवी",
+      "right": "सोलहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सत्रहवी",
+      "right": "सत्रहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अठारहवी",
+      "right": "अठारहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "उन्नीसवी",
+      "right": "उन्नीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बीसवी",
+      "right": "बीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इक्कीसवी",
+      "right": "इक्कीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बाईसवी",
+      "right": "बाईसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तेईसवी",
+      "right": "तेईसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौबीसवी",
+      "right": "चौबीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पच्चीसवी",
+      "right": "पच्चीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छब्बीसवी",
+      "right": "छब्बीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सत्ताईसवी",
+      "right": "सत्ताईसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अट्ठाईसवी",
+      "right": "अट्ठाईसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "उनतीसवी",
+      "right": "उनतीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तीसवी",
+      "right": "तीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इकतीसवी",
+      "right": "इकतीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बत्तीसवी",
+      "right": "बत्तीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तैंतीसवी",
+      "right": "तैंतीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौंतीसवी",
+      "right": "चौंतीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पैंतीसवी",
+      "right": "पैंतीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छत्तीसवी",
+      "right": "छत्तीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सैंतीसवी",
+      "right": "सैंतीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अड़तीसवी",
+      "right": "अड़तीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "उनतालीसवी",
+      "right": "उनतालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चालीसवी",
+      "right": "चालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इकतालीसवी",
+      "right": "इकतालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बयालीसवी",
+      "right": "बयालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तैंतालीसवी",
+      "right": "तैंतालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौवालीसवी",
+      "right": "चौवालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पैंतालीसवी",
+      "right": "पैंतालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छियालीसवी",
+      "right": "छियालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सैंतालीसवी",
+      "right": "सैंतालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अड़तालीसवी",
+      "right": "अड़तालीसवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "उनचासवी",
+      "right": "उनचासवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पचासवी",
+      "right": "पचासवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इक्यावनवी",
+      "right": "इक्यावनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बावनवी",
+      "right": "बावनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तिरेपनवी",
+      "right": "तिरेपनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौवनवी",
+      "right": "चौवनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पचपनवी",
+      "right": "पचपनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छप्पनवी",
+      "right": "छप्पनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सत्तावनवी",
+      "right": "सत्तावनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अट्ठावनवी",
+      "right": "अट्ठावनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "उनसठवी",
+      "right": "उनसठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "साठवी",
+      "right": "साठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इकसठवी",
+      "right": "इकसठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बासठवी",
+      "right": "बासठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तिरेसठवी",
+      "right": "तिरेसठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौंसठवी",
+      "right": "चौंसठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पैंसठवी",
+      "right": "पैंसठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छियासठवी",
+      "right": "छियासठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सड़सठवी",
+      "right": "सड़सठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अड़सठवी",
+      "right": "अड़सठवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "उनहत्तरवी",
+      "right": "उनहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सत्तरवी",
+      "right": "सत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इकहत्तरवी",
+      "right": "इकहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बहत्तरवी",
+      "right": "बहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तिहत्तरवी",
+      "right": "तिहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौहत्तरवी",
+      "right": "चौहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पचहत्तरवी",
+      "right": "पचहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छिहत्तरवी",
+      "right": "छिहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सतहत्तरवी",
+      "right": "सतहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अठहत्तरवी",
+      "right": "अठहत्तरवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "उनासीवी",
+      "right": "उनासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अस्सीवी",
+      "right": "अस्सीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इक्यासीवी",
+      "right": "इक्यासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बयासीवी",
+      "right": "बयासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तिरासीवी",
+      "right": "तिरासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौरासीवी",
+      "right": "चौरासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पचासीवी",
+      "right": "पचासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छियासीवी",
+      "right": "छियासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सत्तासीवी",
+      "right": "सत्तासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अट्ठासीवी",
+      "right": "अट्ठासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "नवासीवी",
+      "right": "नवासीवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "नब्बेवी",
+      "right": "नब्बेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "इक्यानबेवी",
+      "right": "इक्यानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "बानबेवी",
+      "right": "बानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तिरानबेवी",
+      "right": "तिरानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चौरानबेवी",
+      "right": "चौरानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "पंचानबेवी",
+      "right": "पंचानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छियानबेवी",
+      "right": "छियानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सत्तानबेवी",
+      "right": "सत्तानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अट्ठानबेवी",
+      "right": "अट्ठानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "निन्यानबेवी",
+      "right": "निन्यानबेवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "सौवी",
+      "right": "सौवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "एकवी",
+      "right": "एकवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "दोवी",
+      "right": "दोवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "तीनवी",
+      "right": "तीनवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "चारवी",
+      "right": "चारवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "छहवी",
+      "right": "छहवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "हज़ारवी",
+      "right": "हज़ारवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "लाखवी",
+      "right": "लाखवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "करोड़वी",
+      "right": "करोड़वीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "अरबवी",
+      "right": "अरबवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "hi",
+      "wrong": "खरबवी",
+      "right": "खरबवीं",
+      "source": "English Wiktionary, पाँचवाँ: feminine पाँचवीं; इक्कीसवाँ: feminine इक्कीसवीं. The feminine ordinal ends in वीं, with the nasal sign ं (anusvara); CLDR writes वी in spellout-ordinal-feminine"
+    },
+    {
+      "language": "is",
+      "wrong": "sjó",
+      "right": "sjö",
+      "source": "Árnastofnun, Íslensk nútímamálsorðabók: sjö, töluorð, \"talan 7\"; sjó is a form of sjór, nafnorð, \"mikið flæmi af söltu vatni sem umlykur lönd jarðar\". CLDR writes 70 as sjötíu"
+    },
+    {
+      "language": "is",
+      "wrong": "sjóhundrað",
+      "right": "sjöhundrað",
+      "source": "Árnastofnun, Íslensk nútímamálsorðabók: sjö, töluorð, \"talan 7\"; sjó is a form of sjór, nafnorð, \"mikið flæmi af söltu vatni sem umlykur lönd jarðar\". CLDR writes 70 as sjötíu"
+    },
+    {
+      "language": "lo",
+      "wrong": "ศูนย์",
+      "right": "ສູນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 0 is ສູນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ร้อย",
+      "right": "ຮ້ອຍ",
+      "source": "English Wiktionary, Module:number list/data/lo: 100 is ຮ້ອຍ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "พัน",
+      "right": "ພັນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 1000 is ພັນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "หมื่น",
+      "right": "ໝື່ນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 10000 is ໝື່ນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "แสน",
+      "right": "ແສນ",
+      "source": "English Wiktionary, Module:number list/data/lo: 100000 is ແສນ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ล้าน",
+      "right": "ລ້ານ",
+      "source": "English Wiktionary, Module:number list/data/lo: 1000000 is ລ້ານ. CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ลบ",
+      "right": "ລົບ",
+      "source": "SEAlang Lao dictionary (sealang.net/lao), entry ລົບ: \"preposition minus\". CLDR writes the Thai word"
+    },
+    {
+      "language": "lo",
+      "wrong": "ที่",
+      "right": "ທີ່",
+      "source": "English Wiktionary, Module:number list/data/lo: each ordinal is ທີ່ and the cardinal; SEAlang Lao dictionary (sealang.net/lao), entry ທີ່: \"together with a number forms a combination that corresponds to an ordinal number\". CLDR writes the Thai word"
+    },
+    {
+      "language": "sr",
+      "wrong": "двестати",
+      "right": "двестоти",
+      "source": "Правописни приручник српског језика (ITHS, 2019), section on numbers: \"двестоти, тристоти… деветстоти\""
+    },
+    {
+      "language": "sr",
+      "wrong": "тристати",
+      "right": "тристоти",
+      "source": "Правописни приручник српског језика (ITHS, 2019), section on numbers: \"двестоти, тристоти… деветстоти\""
+    },
+    {
+      "language": "sr",
+      "wrong": "dvestati",
+      "right": "dvestoti",
+      "source": "Правописни приручник српског језика (ITHS, 2019), section on numbers: \"двестоти, тристоти… деветстоти\"; Serbian writes the same word in Latin letters, one letter for one"
+    },
+    {
+      "language": "sr",
+      "wrong": "tristati",
+      "right": "tristoti",
+      "source": "Правописни приручник српског језика (ITHS, 2019), section on numbers: \"двестоти, тристоти… деветстоти\"; Serbian writes the same word in Latin letters, one letter for one"
+    },
+    {
+      "language": "sr",
+      "wrong": "dvadeset‘",
+      "right": "dvadeset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "trideset‘",
+      "right": "trideset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "četrdeset‘",
+      "right": "četrdeset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "pedeset‘",
+      "right": "pedeset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "šezdeset‘",
+      "right": "šezdeset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "sedamdeset‘",
+      "right": "sedamdeset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "osamdeset‘",
+      "right": "osamdeset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "devedeset‘",
+      "right": "devedeset",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "sto‘",
+      "right": "sto",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "dvesta‘",
+      "right": "dvesta",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "trista‘",
+      "right": "trista",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "četiristo‘",
+      "right": "četiristo",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "petsto‘",
+      "right": "petsto",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "šeststo‘",
+      "right": "šeststo",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "sedamsto‘",
+      "right": "sedamsto",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "osamsto‘",
+      "right": "osamsto",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    },
+    {
+      "language": "sr",
+      "wrong": "devetsto‘",
+      "right": "devetsto",
+      "source": "UTS #35 Part 3, Rule-Based Number Formatting: \"If a rule body begins with an apostrophe, the apostrophe is ignored\". CLDR sr.xml writes the apostrophe ' there, and sr_Latn.xml writes U+2018, which RBNF keeps in the word"
+    }
+  ]
+}

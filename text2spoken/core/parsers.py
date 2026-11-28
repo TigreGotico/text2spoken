@@ -1,0 +1,60 @@
+"""The one module that imports ovos-number-parser, ovos-date-parser and chronologia (design section 5.4).
+
+Each name of `WRITERS` imports its library on its first use, so `import text2spoken` imports neither library, and a
+language pays for the import at its first number or date. When the writers move to another package, `WRITERS` and
+`NUMBER_PARSER_LANGUAGES` are the one place to change.
+"""
+from __future__ import annotations
+
+from importlib import import_module
+
+WRITERS = {
+    "pronounce_number": ("ovos_number_parser", "pronounce_number"),
+    "pronounce_ordinal": ("ovos_number_parser", "pronounce_ordinal"),
+    "pronounce_fraction": ("ovos_number_parser", "pronounce_fraction"),
+    "GrammaticalGender": ("ovos_number_parser.util", "GrammaticalGender"),
+    "Scale": ("ovos_number_parser.util", "Scale"),
+}
+"""Each name that text2spoken reads from the parsers: its module and its attribute."""
+
+CHRONOLOGIA_TAGS = frozenset({"pt-PT", "pt-BR"})
+"""The tags whose dates and times read through `chronologia.spoken`. Each tag joins after a parity check against
+`ovos_date_parser.spoken`. Every other tag reads through `ovos_date_parser.spoken`."""
+
+
+DATES = "dates"
+"""The name in `LanguageSpec.writers` of the date writer of the variety, `date_distribution(variety.tag)`."""
+
+
+def date_distribution(tag: str) -> str:
+    return "chronologia" if tag in CHRONOLOGIA_TAGS else "ovos-date-parser"
+
+
+def _date_writers(tag: str):
+    return import_module("chronologia.spoken" if tag in CHRONOLOGIA_TAGS else "ovos_date_parser.spoken")
+
+
+def spoken_date(tag: str, **fields) -> str:
+    return _date_writers(tag).spoken_date(tag, **fields)
+
+
+def spoken_time(tag: str, *clock, **options) -> str:
+    return _date_writers(tag).spoken_time(tag, *clock, **options)
+
+
+def __getattr__(name: str):
+    try:
+        module, attribute = WRITERS[name]
+    except KeyError:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
+    return getattr(import_module(module), attribute)
+
+
+NUMBER_PARSER_LANGUAGES = frozenset({
+    "an", "ar", "ast", "az", "bg", "ca", "cs", "da", "de", "el", "en", "es", "et", "eu", "fa", "fi", "fr", "fy", "gl",
+    "he", "hr", "hu", "id", "it", "kab", "mwl", "nb", "nl", "nn", "oc", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "tr",
+    "uk",
+})
+"""The languages that ovos-number-parser>=0.30.0a1 writes with a module of its own, `numbers_<code>`. It reads every
+other language through CLDR RBNF: the docstring of `pronounce_number` says "Falls back to Unicode RBNF for unsupported
+languages". The set shrinks as each language moves to numtag."""

@@ -1,79 +1,52 @@
 # text2spoken
 
-text2spoken rewrites written text into the words a voice speaks. It expands numbers, dates, times, units, titles and contractions. A phonemizer then reads words, not digits or symbols.
+<!-- agent-hint
+covers: what text2spoken does, how to install and call it, and where each other fact is.
+source: text2spoken/__init__.py, pyproject.toml, text2spoken/lang/
+generated: no
+verify: `python scripts/check_doc_page.py README.md`
+see: docs/index.md, docs/quickstart.md, docs/how-it-works.md, AGENTS.md
+-->
+
+text2spoken rewrites written text into the words that a person says when they read it aloud. It reads numbers, dates, times, money, measures, percentages, telephone numbers, colours, abbreviations, and e-mail and web addresses. The rest of the text stays as it is, character for character. It uses no network and no model.
 
 ## Quickstart
 
 ```bash
-pip install --pre text2spoken
+uv pip install --prerelease=allow text2spoken
 ```
 
 ```python
-from text2spoken import normalize
-
-print(normalize("Dr. Smith paid 3/4 of the bill at 25°C.", "en"))
-print(normalize("O Sr. Silva pagou 10kg às 14h30.", "pt-PT"))
+>>> from text2spoken import normalize
+>>> normalize("Dr Smith paid £3.50 for 2 tickets on 14 March 2024.", "en-GB")
+'Doctor Smith paid three pounds and fifty pence for two tickets on the fourteenth of March twenty twenty-four.'
+>>> normalize("Meet on 03/04/2025 at 7:30 pm.", "en-US")
+'Meet on March fourth twenty twenty-five at seven thirty PM.'
+>>> normalize("O Dr. Silva pagou 2,50 € às 14:30.", "pt-PT")
+'O Doutor Silva pagou dois euros e cinquenta cêntimos às catorze e trinta.'
 ```
 
-```text
-Doctor Smith paid three quarters of the bill at twenty five degrees celsius.
-O Senhor Silva pagou dez quilogramas às catorze e trinta.
-```
+The second argument is a BCP 47 tag. It selects the language file and the variety. The library needs Python 3.11 or later. Every language reads with the base install. Portuguese takes the `pt` extra for the gender of nouns and names, from `tugalex`.
 
-## Where this fits
+## Find your answer
 
-Alone: it turns written text into spoken words, with `from text2spoken import normalize`.
-In the stack: it is the normalisation stage. A frontend or a TTS library calls it before phonemization, and it calls `ovos-number-parser`, `ovos-date-parser` and `unicode_rbnf`.
-Through scriptconv: scriptconv has no `normalize` extra. Install `text2spoken` directly.
-
-## What `normalize` does
-
-`normalize(text, lang)` runs four passes in this order:
-
-1. It expands dates and times, such as `03/08/2025` and `14h30`.
-2. It splits a word from a digit that a hyphen joins, such as `sub-23`. A range such as `3-2` stays as it is.
-3. It expands units and ordinal indicators, such as `10kg`, `25°C` and `1º`.
-4. It reads each word, and expands contractions, titles, fractions and numbers.
-
-Each pass is also a plain function, so a frontend can compose them and add its own rules. See [docs/api.md](docs/api.md).
-
-The language tag selects the rules. The tables use the part before the first hyphen, so `pt-BR` and `pt-PT` share one table. `en-US` reads an ambiguous date as month first, and every other tag reads it as day first.
-
-## Languages
-
-These languages have tables in `text2spoken/tables.py`:
-
-| Table | Languages |
+| You want to | Read |
 | --- | --- |
-| `CONTRACTIONS` | en |
-| `TITLES` | ca, de, en, es, fr, gl, it, nl, pt |
-| `UNITS` | de, en, es, fr, pt |
+| Install it and make a first call | [Quickstart](docs/quickstart.md) |
+| Turn a form off or on, or add your own words | [Usage](docs/usage.md) |
+| Read a form that SSML `say-as` markup names | [API, say_as](docs/api.md#say_as) |
+| Know why a text reads as it does | [How it reads text](docs/how-it-reads.md) |
+| See which forms each language reads | [Languages at a glance](docs/coverage.md) |
+| See how a text goes through the library, and what a call costs | [How it works](docs/how-it-works.md) |
+| Add your language, step by step | [Adding a language](docs/adding-a-language.md) |
+| Look up a function, a param or an error | [API](docs/api.md), [Errors and warnings](docs/errors.md) |
+| Know which installed versions write the output of a language | [API, revision](docs/api.md#revision) |
+| Use it before a phonemizer, a voice or a word error rate score | [How it works, where it fits](docs/how-it-works.md#where-it-fits), [Usage](docs/usage.md#text-to-speech) |
+| See the languages and their varieties | [Docs index, languages](docs/index.md#languages) |
+| Run the tests | [Development](docs/development.md) |
 
-This command prints the same list from the installed package:
-
-```bash
-python -c "from text2spoken import CONTRACTIONS, TITLES, UNITS; [print(sorted(t)) for t in (CONTRACTIONS, TITLES, UNITS)]"
-```
-
-Numbers, dates and times come from `ovos-number-parser` and `ovos-date-parser`, so those packages set their language coverage.
-
-To add a language, add its entries to `text2spoken/tables.py`. A new language needs no code change.
-
-## Behaviour to know
-
-- The library uses no network and loads no model, so it works offline.
-- A language that the parsers do not support keeps its digits. The library logs an error and returns the text.
-- A `text` or `lang` value of the wrong type raises `TypeError` or `AttributeError` from the code that reads it.
-- Importing the library imports `ovos-date-parser`, which sets the import time.
-- `ovos-config`, a dependency of `ovos-date-parser`, creates `~/.config/mycroft` at import.
-
-## Development
-
-```bash
-uv pip install --prerelease=allow -e ".[test]"
-pytest tests
-```
+The [docs index](docs/index.md) lists every page in reading order. A contributor reads [AGENTS.md](AGENTS.md) for the map of the repository and the rules that a pull request must meet.
 
 ## Licence
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0, in [LICENSE](LICENSE). The CLDR data in `text2spoken/data/cldr/` ships under the [Unicode License v3](text2spoken/data/cldr/LICENSE).
